@@ -31,25 +31,3 @@ tools-proto:
 	go get     github.com/gogo/protobuf/protoc-gen-gogo
 	go get     github.com/gogo/protobuf/gogoproto
 
-
-## generate .cs and .go from .proto files
-generate:
-#   protoc: https://github.com/protocolbuffers/protobuf/releases
-	${PROTOC} \
-	    --gogoslick_out=plugins:. --gogoslick_opt=paths=source_relative \
-	    --csharp_out "${AMP_UNITY_PATH}/amp.runtime/" \
-	    --proto_path=. \
-		amp/amp.proto
-
-	${PROTOC} \
-	    --gogoslick_out=plugins:. --gogoslick_opt=paths=source_relative \
-	    --csharp_out "${AMP_UNITY_PATH}/amp.std/" \
-	    --proto_path=. \
-		amp/std/std.proto
-
-	${PROTOC} \
-	    --gogoslick_out=plugins:. --gogoslick_opt=paths=source_relative \
-	    --csharp_out "${AMP_UNITY_PATH}/amp.runtime.crates/" \
-	    --proto_path=. \
-		crates/api.amp.crates.proto
-
