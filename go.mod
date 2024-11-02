@@ -1,4 +1,4 @@
-module github.com/art-media-platform/amp-sdk-go
+module github.com/art-media-platform/amp.SDK
 
 go 1.22
 

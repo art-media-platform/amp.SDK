@@ -1,6 +1,6 @@
 package memory_table
 
-import "github.com/art-media-platform/amp-sdk-go/stdlib/symbol"
+import "github.com/art-media-platform/amp.SDK/stdlib/symbol"
 
 // CreateTable creates a new memory-based symbol.Table intended to handle extreme loading.
 //

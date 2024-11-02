@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/art-media-platform/amp-sdk-go/amp"
+	"github.com/art-media-platform/amp.SDK/amp"
 )
 
 func Global() amp.Registry {

@@ -3,8 +3,8 @@ package std
 import (
 	"time"
 
-	"github.com/art-media-platform/amp-sdk-go/amp"
-	"github.com/art-media-platform/amp-sdk-go/stdlib/tag"
+	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 var (

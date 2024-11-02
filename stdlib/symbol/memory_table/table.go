@@ -5,8 +5,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/art-media-platform/amp-sdk-go/stdlib/bufs"
-	"github.com/art-media-platform/amp-sdk-go/stdlib/symbol"
+	"github.com/art-media-platform/amp.SDK/stdlib/bufs"
+	"github.com/art-media-platform/amp.SDK/stdlib/symbol"
 )
 
 func createTable(opts TableOpts) (symbol.Table, error) {
@@ -183,7 +183,7 @@ func (st *symbolTable) SetSymbolID(val []byte, symID symbol.ID) (symbol.ID, bool
 //	if symID != 0:
 //	    if autoIssue == false, a new value-to-ID assignment is (over)written and any existing ID-to-value assignment remains.
 //	    if autoIssue == true, both value-to-ID and ID-to-value assignments are (over)written.
-func (st *symbolTable) getsetValueIDPair(val []byte, symID symbol.ID, autoIssue bool) (symbol.ID, bool){
+func (st *symbolTable) getsetValueIDPair(val []byte, symID symbol.ID, autoIssue bool) (symbol.ID, bool) {
 
 	// The empty string is always mapped to ID 0
 	if len(val) == 0 {

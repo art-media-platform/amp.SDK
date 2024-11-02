@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/art-media-platform/amp-sdk-go/stdlib/bufs"
+	"github.com/art-media-platform/amp.SDK/stdlib/bufs"
 )
 
 var (

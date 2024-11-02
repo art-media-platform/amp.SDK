@@ -14,7 +14,7 @@ import (
 
 	"github.com/rs/cors"
 
-	"github.com/art-media-platform/amp-sdk-go/stdlib/errors"
+	"github.com/art-media-platform/amp.SDK/stdlib/errors"
 )
 
 type HTTPClient struct {

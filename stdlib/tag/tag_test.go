@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/art-media-platform/amp-sdk-go/stdlib/tag"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 func TestTag(t *testing.T) {

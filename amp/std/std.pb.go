@@ -7,7 +7,7 @@ import (
 	bytes "bytes"
 	encoding_binary "encoding/binary"
 	fmt "fmt"
-	amp "github.com/art-media-platform/amp-sdk-go/amp"
+	amp "github.com/art-media-platform/amp.SDK/amp"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"

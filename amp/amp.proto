@@ -8,7 +8,7 @@ syntax = "proto3";
 package amp;
 
 // Tells protoc that a .proto file importing amp.proto what package import to use within Go.
-option go_package = "github.com/art-media-platform/amp-sdk-go/amp";
+option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
 // import "github.com/gogo/protobuf/gogoproto/gogo.proto";  // https://stackoverflow.com/questions/43026449/gogo-proto-file-not-found
 

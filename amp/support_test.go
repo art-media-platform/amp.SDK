@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/art-media-platform/amp-sdk-go/stdlib/tag"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 func TestTxSerialize(t *testing.T) {

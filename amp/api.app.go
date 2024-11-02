@@ -2,9 +2,9 @@
 package amp
 
 import (
-	"github.com/art-media-platform/amp-sdk-go/stdlib/media"
-	"github.com/art-media-platform/amp-sdk-go/stdlib/tag"
-	"github.com/art-media-platform/amp-sdk-go/stdlib/task"
+	"github.com/art-media-platform/amp.SDK/stdlib/media"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
 // App is how an app module registers with amp.Host and is used for internal components as well as for third parties. During runtime, amp.Host instantiates an amp.App when a client request invokes one of the app's registered tags.
