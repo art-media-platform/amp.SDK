@@ -12,7 +12,7 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
   - Deploying content "crates" independently of your app release cycle.
   - Integrated hardware-based authentication & signing (e.g. [Yubikey](https://yubico.com))
 
-- Direct integration with **[Unity](https://unity.com)** and **[Unreal](https://unreal.com)** by embedding Amp's **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings.
+- Direct integration with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** by embedding Amp's **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings.
 
 - A lightweight, stand-alone "headless" executable named `amp.host` that offers federated and decentralized support and storage options.
 
