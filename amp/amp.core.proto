@@ -3,7 +3,7 @@ syntax = "proto3";
 // package amp is an implementation-independent API for a pluggable client-server UI/UX system,
 // featuring support and integration for files, media, and communication.
 //
-// Welcome to art.media.platform (c) 2023 ("amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
+// Welcome to art.media.platform (c) 2023 ("Amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
 //   something we can all agree on.
 package amp;
 
@@ -12,7 +12,7 @@ option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
 // import "github.com/gogo/protobuf/gogoproto/gogo.proto";  // https://stackoverflow.com/questions/43026449/gogo-proto-file-not-found
 
-option csharp_namespace = "AMP";
+option csharp_namespace = "Amp";
 
 
 enum Const {
@@ -34,7 +34,7 @@ enum Const {
     Const_TxHeader_Version = 0x33;
 
 	// The first byte of the TxHeader is the header size and version and
-	// the following 3 bytes of a serialized TxMsg ("amp")
+	// the following 3 bytes of a serialized TxMsg ("Amp")
     Const_TxHeader_Marker = 0x616D70;
 
     // בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
@@ -346,46 +346,59 @@ message EditableTextAttr {
 
 
 
-
-// ErrCode expresses status and error codes.
+    // ErrCode expresses status and error codes.
 enum ErrCode {
-    ErrCode_NoErr                       = 0;
+    ErrCode_Nil                         = 0;
 
-    ErrCode_UnnamedErr                  = 5000;
-    ErrCode_InternalErr                 = 5001;
-    ErrCode_UnsupportedOp               = 5002;
-    ErrCode_Unimplemented               = 5003;
-    ErrCode_Timeout                     = 5004;
-    ErrCode_ShuttingDown                = 5005;
-    ErrCode_NotConnected                = 5006;
-    ErrCode_AuthFailed                  = 5007;
-    ErrCode_LoginFailed                 = 5008;
-    ErrCode_SessionExpired              = 5009;
-    ErrCode_NotReady                    = 5010;
+    ErrCode_Unnamed                     = -23001;
+    ErrCode_AssertFailed                = -23002;
+    ErrCode_UnsupportedOp               = -23003;
+    ErrCode_Unimplemented               = -23004;
+    ErrCode_Timeout                     = -23005;
+    ErrCode_ShuttingDown                = -23006;
+    ErrCode_NotConnected                = -23007;
+    ErrCode_AuthFailed                  = -23008;
+    ErrCode_LoginFailed                 = -23009;
+    ErrCode_SessionExpired              = -23010;
+    ErrCode_NotReady                    = -23011;
 
-    ErrCode_RequestNotFound             = 5020;
-    ErrCode_RequestClosed               = 5021;
-    ErrCode_BadRequest                  = 5022;
-    ErrCode_InvalidURI                  = 5023;
-    ErrCode_BadValue                    = 5024;
-    ErrCode_InvalidTag                  = 5025;
-    ErrCode_AttrNotFound                = 5029;
-    ErrCode_NothingToCommit             = 5030;
-    ErrCode_CommitFailed                = 5031;
-    ErrCode_SpaceNotFound               = 5032;
-    ErrCode_StorageFailure              = 5033;
-    ErrCode_AppNotFound                 = 5034;
-    ErrCode_MalformedTx                 = 5040;
+    ErrCode_RequestNotFound             = -23020;
+    ErrCode_RequestClosed               = -23021;
+    ErrCode_BadRequest                  = -23022;
+    ErrCode_InvalidURI                  = -23023;
+    ErrCode_BadValue                    = -23024;
+    ErrCode_InvalidTag                  = -23025;
+    ErrCode_AttrNotFound                = -23026;
+    ErrCode_NothingToCommit             = -23027;
+    ErrCode_CommitFailed                = -23028;
+    ErrCode_SpaceNotFound               = -23029;
+    ErrCode_StorageFailure              = -23030;
+    ErrCode_AppNotFound                 = -23031;
+    ErrCode_MalformedTx                 = -23032;
 
-    ErrCode_BadSchema                   = 5052;
-    ErrCode_DataFailure                 = 5053;
-    ErrCode_ExportErr                   = 5054;
-    ErrCode_PinFailed                   = 5055;
-    ErrCode_CellNotFound                = 5058;
-    ErrCode_ProviderErr                 = 5059;
+    ErrCode_BadSchema                   = -23040;
+    ErrCode_DataFailure                 = -23041;
+    ErrCode_ExportErr                   = -23042;
+    ErrCode_PinFailed                   = -23043;
+    ErrCode_CellNotFound                = -23044;
+    ErrCode_ProviderErr                 = -23045;
 
-    ErrCode_ViolatesAppendOnly          = 5100;
-    ErrCode_InsufficientPermissions     = 5101;
+    ErrCode_ViolatesAppendOnly          = -23050;
+    ErrCode_InsufficientPermissions     = -23051;
+
+    ErrCode_CryptoKitAlreadyRegistered  = -23100;
+    ErrCode_UnrecognizedCryptoKit       = -23101;
+    ErrCode_DecryptFailed               = -23102;
+    ErrCode_VerifySignatureFailed       = -23103;
+    ErrCode_BadKeyFormat                = -23104;
+    ErrCode_KeyGenerationFailed         = -23105;
+    ErrCode_KeyringNotFound             = -23106;
+    ErrCode_KeyEntryNotFound            = -23107;
+    ErrCode_HashKitNotFound             = -23108;
+    ErrCode_SessionNotReady             = -23109;
+    ErrCode_UnrecognizedCryptOp         = -23110;
+    ErrCode_MarshalFailed               = -23111;
+    ErrCode_UnmarshalFailed             = -23112;
 }
 
 enum LogLevel {

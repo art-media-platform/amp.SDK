@@ -8,7 +8,7 @@ var (
 	ErrMalformedTx   = ErrCode_MalformedTx.Error("bad varint")
 	ErrStreamClosed  = ErrCode_NotConnected.Error("stream closed")
 	ErrCellNotFound  = ErrCode_CellNotFound.Error("cell not found")
-	ErrRequestClosed = ErrCode_RequestClosed .Error("client request closed")
+	ErrRequestClosed = ErrCode_RequestClosed.Error("client request closed")
 	ErrNotPinnable   = ErrCode_PinFailed.Error("not pinnable")
 	ErrUnimplemented = ErrCode_PinFailed.Error("not implemented")
 	ErrBadTarget     = ErrCode_MalformedTx.Error("missing target ID")
@@ -22,7 +22,7 @@ var (
 func (err *Err) Error() string {
 	codeStr, exists := ErrCode_name[int32(err.Code)]
 	if !exists {
-		codeStr = ErrCode_name[int32(ErrCode_UnnamedErr)]
+		codeStr = ErrCode_name[int32(ErrCode_Unnamed)]
 	}
 
 	if len(err.Msg) == 0 {
@@ -34,7 +34,7 @@ func (err *Err) Error() string {
 
 // Error returns an *Err with the given error code
 func (code ErrCode) Error(msg string) error {
-	if code == ErrCode_NoErr {
+	if code == ErrCode_Nil {
 		return nil
 	}
 	return &Err{
@@ -46,7 +46,7 @@ func (code ErrCode) Error(msg string) error {
 // Errorf returns an *Err with the given error code and msg.
 // If one or more args are given, msg is used as a format string
 func (code ErrCode) Errorf(format string, msgArgs ...interface{}) error {
-	if code == ErrCode_NoErr {
+	if code == ErrCode_Nil {
 		return nil
 	}
 
@@ -62,6 +62,23 @@ func (code ErrCode) Errorf(format string, msgArgs ...interface{}) error {
 	return err
 }
 
+// IsError tests if the given error is a Err error code (below).
+// If err == nil, this returns false.
+func IsError(err error, errCodes ...ErrCode) bool {
+	if err == nil {
+		return false
+	}
+	if perr, ok := err.(*Err); ok && perr != nil {
+		for _, errCode := range errCodes {
+			if perr.Code == errCode {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // Wrap returns a ReqErr with the given error code and "cause" error
 func (code ErrCode) Wrap(cause error) error {
 	if cause == nil {
@@ -75,12 +92,12 @@ func (code ErrCode) Wrap(cause error) error {
 
 func GetErrCode(err error) ErrCode {
 	if err == nil {
-		return ErrCode_NoErr
+		return ErrCode_Nil
 	}
 
 	if artErr, ok := err.(*Err); ok {
 		return artErr.Code
 	}
 
-	return ErrCode_UnnamedErr
+	return ErrCode_Unnamed
 }

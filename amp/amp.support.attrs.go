@@ -1,6 +1,7 @@
 package amp
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -54,7 +55,7 @@ func ErrorToValue(v error) tag.Value {
 	}
 	artErr, _ := v.(*Err)
 	if artErr == nil {
-		wrapped := ErrCode_UnnamedErr.Wrap(v)
+		wrapped := ErrCode_Unnamed.Wrap(v)
 		artErr = wrapped.(*Err)
 	}
 	return artErr
@@ -144,6 +145,38 @@ func (v *Err) TagSpec() tag.Spec {
 
 func (v *Err) New() tag.Value {
 	return &Err{}
+}
+
+// Err returns a Err with the given error code
+func (code ErrCode) Err() error {
+	if code == ErrCode_Nil {
+		return nil
+	}
+	return &Err{
+		Code: code,
+	}
+}
+
+// FormError returns a Err with the given error code and msg set.
+func (code ErrCode) FormError(msg string) error {
+	if code == ErrCode_Nil {
+		return nil
+	}
+	return &Err{
+		Code: code,
+		Msg:  msg,
+	}
+}
+
+// FormErrorf returns a Err with the given error code and formattable msg set.
+func (code ErrCode) FormErrorf(msgFormat string, msgArgs ...interface{}) error {
+	if code == ErrCode_Nil {
+		return nil
+	}
+	return &Err{
+		Code: code,
+		Msg:  fmt.Sprintf(msgFormat, msgArgs...),
+	}
 }
 
 func (v *LaunchURL) MarshalToStore(in []byte) (out []byte, err error) {

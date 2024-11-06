@@ -92,7 +92,7 @@ func MarshalAttr(cellID, attrID tag.ID, attrVal tag.Value) (*TxMsg, error) {
 	if attrID.IsNil() && attrVal != nil {
 		attrID = attrVal.TagSpec().ID
 		if attrID.IsNil() {
-			return nil, ErrCode_InternalErr.Error("MarshalAttr: missing builtin tag.Spec")
+			return nil, ErrCode_AssertFailed.Error("MarshalAttr: missing builtin tag.Spec")
 		}
 	}
 	op := TxOp{}

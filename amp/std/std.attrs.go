@@ -54,10 +54,25 @@ const (
 
 // Common universal glyphs
 var (
-	GenericFolderGlyph = &amp.Tag{
-		URL: GenericGlyphURL + "application/x-directory",
-	}
+	GenericFolderTags = TagsForContentType("application/x-directory")
 )
+
+func TagsForContentType(contentType string) *amp.Tags {
+	return &amp.Tags{
+		ID: &amp.Tag{
+			URL: GenericGlyphURL + contentType,
+		},
+	}
+}
+
+func TagsForImageURL(imageURL string) *amp.Tags {
+	return &amp.Tags{
+		ID: &amp.Tag{
+			URL:         imageURL,
+			ContentType: GenericImageType,
+		},
+	}
+}
 
 type PinnableAttr struct {
 	Spec tag.Spec

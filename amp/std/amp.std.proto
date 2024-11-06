@@ -1,10 +1,10 @@
 syntax = "proto3";
 package std;
 
-option csharp_namespace = "AMP.Std";
-option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
+option csharp_namespace = "Amp.Std";
+//option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 
-import "amp/amp.proto";
+import "amp/amp.core.proto";
 
 
 

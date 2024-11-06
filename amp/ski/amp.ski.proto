@@ -1,0 +1,237 @@
+
+syntax = "proto3";
+
+package ski;
+
+// KeyType identifies how a key operates
+enum KeyType {
+    KeyType_Unspecified             = 0;
+
+    KeyType_SymmetricKey            = 1;
+    KeyType_AsymmetricKey           = 2;
+    KeyType_SigningKey              = 3;
+}
+
+// CryptoKitID identifies an encryption suite that implements ski.CryptoKit
+enum  CryptoKitID {
+    CryptoKitID_UnspecifiedCrypto       = 0;
+
+    CryptoKitID_NaCl                    = 1;
+    CryptoKitID_ED25519                 = 2;
+}
+
+// CryptoKitID identifies a hash algorithm that implements ski.HaskKit
+enum  HashKitID {
+    HashKitID_UnspecifiedHashKit      = 0;
+
+    HashKitID_LegacyKeccak_256        = 1;
+    HashKitID_LegacyKeccak_512        = 2;
+    HashKitID_SHA3_256                = 3;
+    HashKitID_SHA3_512                = 4;
+    HashKitID_Blake2b_256             = 5;
+    HashKitID_Blake2b_512             = 6;
+}
+
+
+enum CryptOp {
+
+    // Generates a signature for BufIn using the referenced signing key, placing the signature into BufOut.
+    CryptOp_Sign                    = 0;
+
+    // Inverse of DecryptSym
+    // Encrypts BufIn using the symmetric key referenced by OpKey.
+    CryptOp_EncryptSym              = 1;
+
+    // Inverse of EncryptSym
+    // Decrypts BufIn using the symmetric key referenced by OpKey.
+    CryptOp_DecryptSym              = 2;
+
+    // Encrypts BufIn for a recipient holding the private key associated with the pub key contained in PeerKey,
+    //    encrypting using the referenced asymmetric key and placing the encrypted result into BufOut.
+    CryptOp_EncryptToPeer           = 3;
+
+    // Decrypts BufIn from a sender holding the private key associated with the pub key contained in PeerKey,
+    //    decrypting using the referenced asymmetric key and placing the decrypted result into BufOut.
+    CryptOp_DecryptFromPeer         = 4;
+
+    // Inverse of ExportUsingPw
+    // Identical to ImportFromPeer except that BufIn is instead decrypted via CryptoKit.DecryptUsingPassword(),
+    //    using CryptOp.PeerKey as a the password.  The CryptoKit invoked is determined by CryptOpArgs.DefaultCryptoKit.
+    CryptOp_ImportUsingPw           = 5;
+
+    // Inverse of ImportUsingPw
+    // Identical to ExportToPeer except the output serialized KeyTome is encrypted via CryptoKit.EncryptUsingPassword(),
+    //    using CryptOp.PeerKey as a the password.  The CryptoKit invoked is determined by CryptOpArgs.DefaultCryptoKit.
+    CryptOp_ExportUsingPw           = 6;
+
+    // Inverse of ExportToPeer
+    // First, performs as DecryptFromPeer.
+    // The result/output buf is then unmarshalled (assumed to be a ski.KeyTome protobuf) and is merged into the host KeyTome.
+    // See ski.ImportKeys() for how the incoming KeyTome is merged into the host KeyTome.
+    CryptOp_ImportFromPeer          = 7;
+
+    // Inverse of ImportFromPeer
+    // For each entry in CryptOpArgs.TomeIn, PubKey is used to lookup a corresponding KeyEntry in the host KeyTome.
+    // Each KeyEntry with a matching PubKey is copied into a new temp KeyTome, into the appropriate Keyring,
+    //    creating a Keyring if it does not yet exist.
+    // If a Keyring appears in CryptOpArgs.TomeIn but contains no entries, the entire Keyring will be exported.
+    // If a Keyring or KeyEntry from TomeIn isn't found, an error is returned.
+    // See KeyTome.ExportUsingGuide() for how TomeIn is handled.
+    // On completion, the temp KeyTome is serialized, assigned to CryptOpArgs.BufIn, and EncryptToPeer is executed.
+    CryptOp_ExportToPeer            = 8;
+
+}
+
+
+message CryptOpArgs {
+
+    // Specifies which op to invoke for these given set of args
+                CryptOp             CryptOp                     = 1;
+
+    // Specifies the default CryptoKit for ops when not specified.
+                CryptoKitID         DefaultCryptoKit            = 2;
+
+    // The source/input buffer that is signed/encrypted/decrypted.
+                bytes               BufIn                       = 3;
+
+    // A reference to an existing KeyEntry in the host's KeyTome used as the key for this op's encryption/decryption.
+                KeyRef              OpKey                       = 4;
+
+    // For EncryptToPeer and ExportToPeer, this is what the recipient will use for OpKey.PubKey.
+    // For DecryptFromPeer and ImportFromPeer, this is what the sender used for OpKey.PubKey.
+    // For ImportUsingPw and ExportUsingPw, this is the password.
+                bytes               PeerKey                     = 5;
+
+    // Keyring and key info used to identify existing (or to-be-created) keys in the host's KeyTome.
+    // Used for ExportToPeer and GenerateKeys().
+                KeyTome             TomeIn                      = 6;
+}
+
+
+message CryptOpOut {
+
+    // Output buf from the given crypto op (and depends on the given CryptOp)
+                bytes               BufOut                      = 1;
+
+    // Returns the pub key used in the op (needed when CryptOpArgs.OpKey.PubKey wasn't specified)
+                bytes               OpPubKey                    = 2;
+
+}
+
+// KeyInfo specifies info an existing KeyEntry or and KeyEntry this is to be created.
+//
+// KeyInfo exists in two modes/uses:
+//    1) Generated/copied from an existing KeyEntry
+//    2) Key gen mode: used as a guide to generate a new key
+//         a) Fields used: KeyType and CryptoKitID (other fields ignored)
+message KeyInfo {
+
+    // Specifies the type of key this is (optional)
+                KeyType             KeyType                     = 1;
+
+    // Specifies which crypto suite to invoke.
+                CryptoKitID         CryptoKitID                 = 2;
+
+   // Unix timestamp << 16 ("UTC16") when this key was created (or 0 if not set)
+                int64               TimeCreated                 = 3;
+
+    // Public part of the key; how this key is also referenced publicly (in base-256 form)
+                bytes               PubKey                      = 4;
+
+}
+
+
+message KeyRef {
+
+   // Specifies the Keyring that the key resides on (required when referencing a KeyEntry in a KeyTome).
+                bytes               KeyringName                 = 1;
+
+    // The pub key of the key being referenced (or len()==0 to imply the newest key in the cited keyring).
+    // Note that the complete pub key isn't required, just a sufficiently long matching prefix (typically 16-64 bytes).
+                bytes               PubKey                      = 2;
+
+}
+
+
+// KeyEntry is used in 3 ways:
+//    1) Storage/Export mode: used to store all fields of a fully generated key
+//         - KeyEntry.PrivKey != nil
+//    2) Ref/Spec mode: used to reference an existing key somewhere else
+//         - KeyEntry.PrivKey == nil
+//         - Fields used: KeyInfo.PubKey (other fields ignored)
+//    3) GenerateKeys "guide" mode: KeyInfo used as a guide to generate a new key
+//         - Fields used: KeyInfo.KeyType and KeyInfo.CryptoKitID (other fields ignored)
+message KeyEntry {
+
+    // Info about this key
+                KeyInfo             KeyInfo                     = 1;
+
+    // Private part of the key -- should be used and copied carefully.
+    // When a KeyEntry is used to reference/specify an existing key, this field is not set and/or is ignored.
+                bytes               PrivKey                     = 6;
+
+}
+
+
+
+message Keyring {
+
+    // Any binary name for this Keyring (except a zero-length name).
+                bytes               Name                        = 1;
+
+    // Ordered list of KeyEntry (potentially sorted by KeyInfo.PubKey)
+    repeated    KeyEntry            Keys                        = 2;
+
+    // If set, []Keys is sorted by KeyInfo.PubKey via ski.CompareEntries()
+                bool                SortedByPubKey              = 3;
+
+    // PubKey of the KeyEntry in this keyring that has the largest TimeCreated (or nil if not known/determined)
+                bytes               NewestPubKey                = 4;
+}
+
+
+message KeyTome {
+
+    // Incremented each time this KeyTome is altered.
+                int64               Rev                         = 1;
+
+    // Ordered list of Keyrings (potentially sorted by Keyring.Name)
+    repeated    Keyring             Keyrings                    = 2;
+
+    // If set, []Keyrings is sorted by Keyring.Name via bytes.Compare()
+                bool                SortedByName                = 3;
+
+}
+
+
+
+message SigHeader {
+
+    // References a signing key -- who and what crypto kit signed the payload header.
+                CryptoKitID         SignerCryptoKit             = 1;
+                bytes               SignerPubKey                = 2;
+
+    // Specifies which hash kit to use to perform payload hashing
+                HashKitID           HashKitID                   = 6;
+
+    // Size of the "header" payload (i.e. the payload that is also hashed and signed)
+                uint32              HeaderSz                    = 7;
+
+    // HeaderCodec allows the client store/signal how it should be unmarshalled or handled.
+                uint32              HeaderCodec                 = 8;
+
+    // Size of the "body" payload (i.e. the payload that is NOT hashed signed)
+                uint64              BodySz                      = 9;
+
+}
+
+
+message KeyTomeCrypt {
+
+    // A serialized ski.KeyTome encrypted in accordance with the accompanying key params
+                bytes               Tome                        = 1;
+
+    // Optional -- used to identify how (or with what key) the KeyTome in KeyTomeCrypt.Tpme is encrypted.
+                KeyRef              KeyRef                      = 10;
+                KeyInfo             KeyInfo                     = 11;
+}
