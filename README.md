@@ -24,23 +24,29 @@ Traditional file and asset management systems are inadequate when there are hund
 
 Teams often collaborate over large file sets, yet they deploy using production systems that are entirely different from their development workflows. Many sharing and collaboration solutions exist, but they lack first-class spatial linking and native 3D content integration while suffering from inflexible, confining web or OS-based user experiences.
 
-Meanwhile, _web-based_ 3D frameworks such as [three.js](https://threejs.org/) do not compare to _native_ Unreal and Unity experiences and offer no path for real-world asset deployments. For example, 3D experiences require asset deployments often exceeding _many gigabytes_ and are impossible through a web-based approach. Worse, _web stacks pose many blockers that publishers have little or no ability to address, such as texturing features, performance potholes, scene management, and AI support._
+Meanwhile, _web-based_ 3D frameworks like [Three.js](https://threejs.org/) do not compare to _native_ Unreal and Unity experiences nor offer a path for real-world asset deployments. For example, 3D experiences require asset deployments often exceeding _many gigabytes_ and are impossible through a web browser. Worse, _web stacks pose many blockers that publishers have little or no ability to address, such as texturing features, performance potholes, or animation._
 
-***art.media.platform*** is a bridge and toolbox that allows 3D app developers to focus on their core value proposition. It offers rich support for persistent state, user interfaces, and content immersion and allows you to break free of limiting web or OS infrastructure. _Teams, leads, designers, artists, organizers, and ultimately consumers need better tools to richly and safely share assets._
+***art.media.platform*** is a bridge and toolbox that allows 3D app developers to focus on their core value proposition. It offers rich support for persistent state, user interfaces, and content immersion, allowing apps to break free of web _and_ OS limitations. _Teams, leads, designers, artists, organizers, and ultimately consumers need better tools to richly and safely share assets._
+
+## A Next Generation
+
+Previous [generations](https://github.com/plan-systems/plan-go/tags) of this work went into production in 2019 to become [PLAN 3D](https://plan-systems.org/plan-technology-components/). This past and present [architecture](https://github.com/plan-systems/design-docs), though ambitious, is being increasingly recognized as the inevitable step in the evolution of 3D applications.
+
+In a world where AI-assisted exploits will only get worse, our [security model](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md) prioritizes security and privacy. It uses a nested containers and offers "state-grade" protection — all while the client runtime delivers rich, native 3D experiences for business, organizations, and creatives.
 
 ### Spatial Web
 
-This stack makes infrastructure more accessible through spatial idioms — and web is no exception. Amp offers support for integrated, in-app web browsing that pairs powerfully with spatial linking. Frameworks such as [Webview](https://developer.vuplex.com/webview/overview) are just another component in the Amp client, allowing your app to have an embedded web browser out of the box. This allows URLs and web experiences to be linked spatially or from multiple map locations.
+This framework offers in-app web browsing that pairs powerfully with spatial linking. Frameworks such as [Webview](https://developer.vuplex.com/webview/overview) are just another component in the Amp client, allowing your app to have an embedded web browser out of the box. This allows URLs and web experiences to be linked spatially or from multiple map locations.
 
 ### Geo/Spatial Linking
 
-Geographic and spatial-centric applications such as GIS, CAD, and BIM, are everywhere in modern construction, contracting, and real-time logistics. Amp's 3D client natively integrates [maps and locations](https://infinity-code.com/assets/online-maps), allowing you to unify location-based linking, spatially precise environments, and first-class 3D asset integration.
+Geographic and spatial-centric applications such as GIS, CAD, and BIM, are everywhere in modern construction and real-time logistics. Amp's 3D client natively integrates [maps and locations](https://infinity-code.com/assets/online-maps), allowing you to unify location-based linking, spatially precise environments, and first-class 3D asset integration.
 
 ### Extensibility
 
 The less obvious value of Amp is its _extensibility_. The [`amp.App`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go) interface is flexible and unrestricted, allowing you to expose anything compatible with Go. This means any Go, C, C++, or any native static or dynamic module can be wrapped and push a 3D-native UX (with stock or custom assets).
 
-## Integration Flow
+## Integration Overview
 
 This repo is lightweight and dependency-free so it can be added to your project without consequence.
 
@@ -53,12 +59,6 @@ At a high level:
 5. On startup, [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.App` instances as needed. During runtime, `amp.host.lib` dispatches URL requests addressed to your app and are "pinned".
 6. The Amp UX runtime manages the user's experience of currently pinned URLs while providing a toolbox of extendable "stock" and "skinnable" components. Pinned requests receive state updates until they are canceled.
 
-## Previous Work
-
-[Previous generations](https://github.com/plan-systems/plan-go/tags) of this framework went into production in 2019 to become [PLAN 3D](https://plan-systems.org/). This overall [architecture](https://github.com/plan-systems/design-docs), though ambitious, continues to accurately describe many purposes of this framework.
-
-In a world increasingly vulnerable to AI-assisted exploits, Amp's [security model](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md) prioritizes security and privacy. It uses a container-based approach to ensure state-grade protection while the client runtime supports rich, native 3D experiences.
-
 ## Points of Interest
 
 |                                                                                                   |                                                                                                                                                                                 |
@@ -66,4 +66,4 @@ In a world increasingly vulnerable to AI-assisted exploits, Amp's [security mode
 | [api.tag.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go)    | versatile tagging and hash scheme that is AI and search friendly                                                                                                                  |
 | [api.task.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go) | goroutine wrapper inspired by a conventional parent-child process model                                                                                                    |
 | [api.app.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go)           | defines how state is requested, pushed, and merged                                                                                              |
-| [api.host.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go)         | types and interfaces that [`amp.host`](https://github.com/art-media-platform/amp.host) / `amp.host` implements                                                              |
+| [api.host.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go)         | types and interfaces that [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) implements                                                              |
