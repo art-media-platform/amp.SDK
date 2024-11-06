@@ -15,7 +15,7 @@ var (
 	// sTagSeparator expresses the delimiters that separate tag literals in a tag.Spec string -- period, comma, colon, slash, backslash, plus, and whitespace
 	//
 	// By convention, the suggested separator is a period since it helps visually identify a tag, is compatible with a domain name, and is a common scoping character.
-	sTagSeparator = regexp.MustCompile(`[/\\\.+:\s\~]+`)
+	sTagSeparator = regexp.MustCompile(TagDelimiters)
 )
 
 // Genesis returns a tag.ID that denotes an edit lineage root based on a given seed.

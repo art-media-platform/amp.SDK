@@ -7,38 +7,6 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/generics"
 )
 
-// ID is a persistent integer value associated with an immutable string or buffer value.
-// ID == 0 always maps to the empty string / buf.
-type ID uint32
-
-// Ord returns the ordinal value of this ID (a type recasting to uint32)
-func (id ID) Ord() uint32 {
-	return uint32(id)
-}
-
-// IDSz is the byte size of a symbol.ID (big endian)
-// The tradeoff is between key bytes idle (wasted) in a massive db and exponentially more IDs available.
-//
-// The thinking of a 4 byte ID is that an symbol table exceeding 100 million entries is impractical and inefficient.
-// If a billion symbol IDs is "not enough"  then you are issuing IDs for the wrong purpose.
-const IDSz = 4
-
-// DefaultIssuerMin specifies the default minimum ID value for newly issued IDs.
-//
-// ID values less than this value are reserved for clients to represent hard-wired or "out of band" meaning.
-// "Hard-wired" meaning that Table.SetSymbolID() can be called with IDs less than MinIssuedID without risk
-// of an auto-issued ID contending with it.
-const DefaultIssuerMin = 600
-
-type Issuer interface {
-	generics.RefCloser
-
-	// Issues the next sequential unique ID, starting at MinIssuedID.
-	IssueNextID() (ID, error)
-}
-
-var ErrIssuerNotOpen = errors.New("issuer not open")
-
 // Table abstracts value-ID storage and two-way lookup.
 type Table interface {
 	generics.RefCloser
@@ -61,6 +29,39 @@ type Table interface {
 	// If ID is invalid or not found, nil is returned.
 	GetSymbol(ID ID, io []byte) []byte
 }
+
+// Issuer atomically issues unique IDs.
+type Issuer interface {
+	generics.RefCloser
+
+	// Issues the next sequential unique ID, starting at DefaultIssuerMinID.
+	IssueNextID() (ID, error)
+}
+
+// ID is a persistent integer value associated with an immutable string or buffer value.
+// ID == 0 always maps to the empty string / buf.
+type ID uint32
+
+// Ord returns the ordinal value of this ID (a type recasting to uint32)
+func (id ID) Ord() uint32 {
+	return uint32(id)
+}
+
+// IDSz is the byte size of a symbol.ID (big endian)
+// The tradeoff is between key bytes idle (wasted) in a massive db and exponentially more IDs available.
+//
+// The thinking of a 4 byte ID is that an symbol table exceeding 100 million entries is impractical and inefficient.
+// If a billion symbol IDs is "not enough"  then you are issuing IDs for the wrong purpose.
+const IDSz = 4
+
+// DefaultIssuerMin specifies the default minimum ID value for newly issued IDs.
+//
+// ID values less than this value are reserved for clients to represent hard-wired or "out of band" meaning.
+// "Hard-wired" meaning that Table.SetSymbolID() can be called with IDs less than DefaultIssuerMinID without risk
+// of an auto-issued ID contending with it.
+const DefaultIssuerMin = 600
+
+var ErrIssuerNotOpen = errors.New("issuer not open")
 
 // Reads a big endian encoded uint32 ID from the given byte slice
 func ReadID(in []byte) (uint32, []byte) {

@@ -83,7 +83,7 @@ func (tt *tableTester) fillTable(table symbol.Table) {
 	vals := tt.vals
 	totalEntries := len(vals)
 
-	// Test reserved symbol ID space -- set symbol IDs less than symbol.MinIssuedID
+	// Test reserved symbol ID space -- set symbol IDs less than symbol.DefaultIssuerMin
 	// Do multiple write passes to check overwrites don't cause issues.
 	for k := 0; k < 3; k++ {
 		for j := 0; j < hardwireTestCount; j++ {
