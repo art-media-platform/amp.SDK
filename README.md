@@ -3,22 +3,22 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
 
 **_art.media.platform_** "Amp" is a potent 3D client-to-infrastructure aid that provides a secure, scalable, and extensible runtime for 3D applications. It supports 3D and media-centric apps with pluggable infrastructure, and allows artists, publishers, creators, and organizations to control asset deployments and experiences within high-fidelity spatial or geographic environments.
 
-### Key Features
+## Key Features
 
 - Secure, "turn-key" support for:
-  - Distributing _spatially_ organized media and files, transforming human accessibility.
+  - Distributing _spatially_ organized media and files, transforming accessibility.
   - Browsing and previewing assets and content for public or private consumption or sale.
   - Publishing first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and XR headsets like _Oculus_ and _VisionPro_.
-  - Deploying content "crates" independently of your app release cycle.
+  - Deploying content "crates" independently of app release cycles.
   - Integrated hardware-based authentication & signing (e.g. [Yubikey](https://yubico.com))
 
-- Direct integration with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** by embedding Amp's **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings.
+- Seamless integration with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** through Amp's embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings.
 
-- A lightweight, stand-alone "headless" executable named `amp.host` that offers federated and decentralized support and storage options.
+- A lightweight, stand-alone "headless" executable called `amp.host` that offers federated and decentralized service and storage.
 
-## _What does this solve?_
+## What Does This Solve?
 
-***Amp bridges native 3D apps to system, network, and infrastructure services, solving key problems.***
+***Amp bridges native 3D apps to system, network, and infrastructure services, addressing key challenges:***
 
 Traditional file and asset management systems are inadequate when there are hundreds or thousands of assets to organize, experience, or review. Teams often resort to makeshift solutions for collaboration and sharing which compromise efficiency and security.
 
@@ -30,15 +30,15 @@ Meanwhile, _web-based_ 3D frameworks like [Three.js](https://threejs.org/) do no
 
 ## A Next Generation
 
-Previous [generations](https://github.com/plan-systems/plan-go/tags) of this work went into production in 2019 to become [PLAN 3D](https://plan-systems.org/plan-technology-components/). This past and present [architecture](https://github.com/plan-systems/design-docs), though ambitious, is being increasingly recognized as the inevitable step in the evolution of 3D applications.
+Previous [generations](https://github.com/plan-systems/plan-go/tags) of this work went into production in 2019 to become [PLAN 3D](https://plan-systems.org/plan-technology-components/). This [architecture](https://github.com/plan-systems/design-docs) trajectory, though ambitious, is being increasingly recognized as the next inevitable step in the evolution of 3D application building.
 
-In a world where AI-assisted exploits will only get worse, our [security model](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md) prioritizes security and privacy. It uses a nested containers and offers "state-grade" protection — all while the client runtime delivers rich, native 3D experiences for business, organizations, and creatives.
+In a world where AI-assisted exploits will only worsen, our [security model](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md) prioritizes security and privacy. It uses a nested containers and offers "state-grade" protection — all while the client runtime delivers rich, native 3D experiences for business, organizations, and creatives.
 
 ### Spatial Web
 
 This framework offers in-app web browsing that pairs powerfully with spatial linking. Frameworks such as [Webview](https://developer.vuplex.com/webview/overview) are just another component in the Amp client, allowing your app to have an embedded web browser out of the box. This allows URLs and web experiences to be linked spatially or from multiple map locations.
 
-### Geo/Spatial Linking
+### Geo-Spatial Linking
 
 Geographic and spatial-centric applications such as GIS, CAD, and BIM, are everywhere in modern construction and real-time logistics. Amp's 3D client natively integrates [maps and locations](https://infinity-code.com/assets/online-maps), allowing you to unify location-based linking, spatially precise environments, and first-class 3D asset integration.
 
@@ -59,7 +59,7 @@ At a high level:
 5. On startup, [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.App` instances as needed. During runtime, `amp.host.lib` dispatches URL requests addressed to your app and are "pinned".
 6. The Amp UX runtime manages the user's experience of currently pinned URLs while providing a toolbox of extendable "stock" and "skinnable" components. Pinned requests receive state updates until they are canceled.
 
-## Points of Interest
+### Points of Interest
 
 |                                                                                                   |                                                                                                                                                                                 |
 | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
