@@ -191,7 +191,9 @@ namespace Amp {
   }
 
   /// <summary>
-  /// TxBody contains a max number of uint64 fields usable for any purpose.
+  /// TxField maps a fixed count of int64 payload fields.enum
+  ///
+  /// Why not as a proto message?  Because compression is much better since values mostly repeat.
   /// </summary>
   public enum TxField {
     [pbr::OriginalName("TxField_Nil")] Nil = 0,

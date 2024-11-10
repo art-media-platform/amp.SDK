@@ -29,8 +29,8 @@ namespace Ski {
             "ASgOMhAuc2tpLkNyeXB0b0tpdElEEg0KBUJ1ZkluGAMgASgMEhoKBU9wS2V5",
             "GAQgASgLMgsuc2tpLktleVJlZhIPCgdQZWVyS2V5GAUgASgMEhwKBlRvbWVJ",
             "bhgGIAEoCzIMLnNraS5LZXlUb21lIi4KCkNyeXB0T3BPdXQSDgoGQnVmT3V0",
-            "GAEgASgMEhAKCE9wUHViS2V5GAIgASgMInQKB0tleUluZm8SHQoHS2V5VHlw",
-            "ZRgBIAEoDjIMLnNraS5LZXlUeXBlEiUKC0NyeXB0b0tpdElEGAIgASgOMhAu",
+            "GAEgASgMEhAKCE9wUHViS2V5GAIgASgMInQKB0tleUluZm8SHQoHS2V5Rm9y",
+            "bRgBIAEoDjIMLnNraS5LZXlGb3JtEiUKC0NyeXB0b0tpdElEGAIgASgOMhAu",
             "c2tpLkNyeXB0b0tpdElEEhMKC1RpbWVDcmVhdGVkGAMgASgDEg4KBlB1Yktl",
             "eRgEIAEoDCItCgZLZXlSZWYSEwoLS2V5cmluZ05hbWUYASABKAwSDgoGUHVi",
             "S2V5GAIgASgMIjoKCEtleUVudHJ5Eh0KB0tleUluZm8YASABKAsyDC5za2ku",
@@ -44,9 +44,9 @@ namespace Ski {
             "RBIQCghIZWFkZXJTehgHIAEoDRITCgtIZWFkZXJDb2RlYxgIIAEoDRIOCgZC",
             "b2R5U3oYCSABKAQiWAoMS2V5VG9tZUNyeXB0EgwKBFRvbWUYASABKAwSGwoG",
             "S2V5UmVmGAogASgLMgsuc2tpLktleVJlZhIdCgdLZXlJbmZvGAsgASgLMgwu",
-            "c2tpLktleUluZm8qbwoHS2V5VHlwZRIXChNLZXlUeXBlX1Vuc3BlY2lmaWVk",
-            "EAASGAoUS2V5VHlwZV9TeW1tZXRyaWNLZXkQARIZChVLZXlUeXBlX0FzeW1t",
-            "ZXRyaWNLZXkQAhIWChJLZXlUeXBlX1NpZ25pbmdLZXkQAypfCgtDcnlwdG9L",
+            "c2tpLktleUluZm8qbwoHS2V5Rm9ybRIXChNLZXlGb3JtX1Vuc3BlY2lmaWVk",
+            "EAASGAoUS2V5Rm9ybV9TeW1tZXRyaWNLZXkQARIZChVLZXlGb3JtX0FzeW1t",
+            "ZXRyaWNLZXkQAhIWChJLZXlGb3JtX1NpZ25pbmdLZXkQAypfCgtDcnlwdG9L",
             "aXRJRBIhCh1DcnlwdG9LaXRJRF9VbnNwZWNpZmllZENyeXB0bxAAEhQKEENy",
             "eXB0b0tpdElEX05hQ2wQARIXChNDcnlwdG9LaXRJRF9FRDI1NTE5EAIq0wEK",
             "CUhhc2hLaXRJRBIgChxIYXNoS2l0SURfVW5zcGVjaWZpZWRIYXNoS2l0EAAS",
@@ -62,10 +62,10 @@ namespace Ski {
             "EAhiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
-          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Ski.KeyType), typeof(global::Ski.CryptoKitID), typeof(global::Ski.HashKitID), typeof(global::Ski.CryptOp), }, null, new pbr::GeneratedClrTypeInfo[] {
+          new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Ski.KeyForm), typeof(global::Ski.CryptoKitID), typeof(global::Ski.HashKitID), typeof(global::Ski.CryptOp), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Ski.CryptOpArgs), global::Ski.CryptOpArgs.Parser, new[]{ "CryptOp", "DefaultCryptoKit", "BufIn", "OpKey", "PeerKey", "TomeIn" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Ski.CryptOpOut), global::Ski.CryptOpOut.Parser, new[]{ "BufOut", "OpPubKey" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Ski.KeyInfo), global::Ski.KeyInfo.Parser, new[]{ "KeyType", "CryptoKitID", "TimeCreated", "PubKey" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Ski.KeyInfo), global::Ski.KeyInfo.Parser, new[]{ "KeyForm", "CryptoKitID", "TimeCreated", "PubKey" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Ski.KeyRef), global::Ski.KeyRef.Parser, new[]{ "KeyringName", "PubKey" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Ski.KeyEntry), global::Ski.KeyEntry.Parser, new[]{ "KeyInfo", "PrivKey" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Ski.Keyring), global::Ski.Keyring.Parser, new[]{ "Name", "Keys", "SortedByPubKey", "NewestPubKey" }, null, null, null, null),
@@ -79,13 +79,13 @@ namespace Ski {
   }
   #region Enums
   /// <summary>
-  /// KeyType identifies how a key operates
+  /// KeyForm identifies how a key operates
   /// </summary>
-  public enum KeyType {
-    [pbr::OriginalName("KeyType_Unspecified")] Unspecified = 0,
-    [pbr::OriginalName("KeyType_SymmetricKey")] SymmetricKey = 1,
-    [pbr::OriginalName("KeyType_AsymmetricKey")] AsymmetricKey = 2,
-    [pbr::OriginalName("KeyType_SigningKey")] SigningKey = 3,
+  public enum KeyForm {
+    [pbr::OriginalName("KeyForm_Unspecified")] Unspecified = 0,
+    [pbr::OriginalName("KeyForm_SymmetricKey")] SymmetricKey = 1,
+    [pbr::OriginalName("KeyForm_AsymmetricKey")] AsymmetricKey = 2,
+    [pbr::OriginalName("KeyForm_SigningKey")] SigningKey = 3,
   }
 
   /// <summary>
@@ -821,7 +821,7 @@ namespace Ski {
   /// KeyInfo exists in two modes/uses:
   ///    1) Generated/copied from an existing KeyEntry
   ///    2) Key gen mode: used as a guide to generate a new key
-  ///         a) Fields used: KeyType and CryptoKitID (other fields ignored)
+  ///         a) Fields used: KeyForm and CryptoKitID (other fields ignored)
   /// </summary>
   public sealed partial class KeyInfo : pb::IMessage<KeyInfo>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
@@ -857,7 +857,7 @@ namespace Ski {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public KeyInfo(KeyInfo other) : this() {
-      keyType_ = other.keyType_;
+      keyForm_ = other.keyForm_;
       cryptoKitID_ = other.cryptoKitID_;
       timeCreated_ = other.timeCreated_;
       pubKey_ = other.pubKey_;
@@ -870,18 +870,18 @@ namespace Ski {
       return new KeyInfo(this);
     }
 
-    /// <summary>Field number for the "KeyType" field.</summary>
-    public const int KeyTypeFieldNumber = 1;
-    private global::Ski.KeyType keyType_ = global::Ski.KeyType.Unspecified;
+    /// <summary>Field number for the "KeyForm" field.</summary>
+    public const int KeyFormFieldNumber = 1;
+    private global::Ski.KeyForm keyForm_ = global::Ski.KeyForm.Unspecified;
     /// <summary>
     /// Specifies the type of key this is (optional)
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public global::Ski.KeyType KeyType {
-      get { return keyType_; }
+    public global::Ski.KeyForm KeyForm {
+      get { return keyForm_; }
       set {
-        keyType_ = value;
+        keyForm_ = value;
       }
     }
 
@@ -945,7 +945,7 @@ namespace Ski {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (KeyType != other.KeyType) return false;
+      if (KeyForm != other.KeyForm) return false;
       if (CryptoKitID != other.CryptoKitID) return false;
       if (TimeCreated != other.TimeCreated) return false;
       if (PubKey != other.PubKey) return false;
@@ -956,7 +956,7 @@ namespace Ski {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (KeyType != global::Ski.KeyType.Unspecified) hash ^= KeyType.GetHashCode();
+      if (KeyForm != global::Ski.KeyForm.Unspecified) hash ^= KeyForm.GetHashCode();
       if (CryptoKitID != global::Ski.CryptoKitID.UnspecifiedCrypto) hash ^= CryptoKitID.GetHashCode();
       if (TimeCreated != 0L) hash ^= TimeCreated.GetHashCode();
       if (PubKey.Length != 0) hash ^= PubKey.GetHashCode();
@@ -978,9 +978,9 @@ namespace Ski {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (KeyType != global::Ski.KeyType.Unspecified) {
+      if (KeyForm != global::Ski.KeyForm.Unspecified) {
         output.WriteRawTag(8);
-        output.WriteEnum((int) KeyType);
+        output.WriteEnum((int) KeyForm);
       }
       if (CryptoKitID != global::Ski.CryptoKitID.UnspecifiedCrypto) {
         output.WriteRawTag(16);
@@ -1004,9 +1004,9 @@ namespace Ski {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (KeyType != global::Ski.KeyType.Unspecified) {
+      if (KeyForm != global::Ski.KeyForm.Unspecified) {
         output.WriteRawTag(8);
-        output.WriteEnum((int) KeyType);
+        output.WriteEnum((int) KeyForm);
       }
       if (CryptoKitID != global::Ski.CryptoKitID.UnspecifiedCrypto) {
         output.WriteRawTag(16);
@@ -1030,8 +1030,8 @@ namespace Ski {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (KeyType != global::Ski.KeyType.Unspecified) {
-        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) KeyType);
+      if (KeyForm != global::Ski.KeyForm.Unspecified) {
+        size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) KeyForm);
       }
       if (CryptoKitID != global::Ski.CryptoKitID.UnspecifiedCrypto) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) CryptoKitID);
@@ -1054,8 +1054,8 @@ namespace Ski {
       if (other == null) {
         return;
       }
-      if (other.KeyType != global::Ski.KeyType.Unspecified) {
-        KeyType = other.KeyType;
+      if (other.KeyForm != global::Ski.KeyForm.Unspecified) {
+        KeyForm = other.KeyForm;
       }
       if (other.CryptoKitID != global::Ski.CryptoKitID.UnspecifiedCrypto) {
         CryptoKitID = other.CryptoKitID;
@@ -1082,7 +1082,7 @@ namespace Ski {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 8: {
-            KeyType = (global::Ski.KeyType) input.ReadEnum();
+            KeyForm = (global::Ski.KeyForm) input.ReadEnum();
             break;
           }
           case 16: {
@@ -1113,7 +1113,7 @@ namespace Ski {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, ref input);
             break;
           case 8: {
-            KeyType = (global::Ski.KeyType) input.ReadEnum();
+            KeyForm = (global::Ski.KeyForm) input.ReadEnum();
             break;
           }
           case 16: {
@@ -1376,7 +1376,7 @@ namespace Ski {
   ///         - KeyEntry.PrivKey == nil
   ///         - Fields used: KeyInfo.PubKey (other fields ignored)
   ///    3) GenerateKeys "guide" mode: KeyInfo used as a guide to generate a new key
-  ///         - Fields used: KeyInfo.KeyType and KeyInfo.CryptoKitID (other fields ignored)
+  ///         - Fields used: KeyInfo.KeyForm and KeyInfo.CryptoKitID (other fields ignored)
   /// </summary>
   public sealed partial class KeyEntry : pb::IMessage<KeyEntry>
   #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE

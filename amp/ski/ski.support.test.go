@@ -92,7 +92,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 	** Symmetric test
 	**/
 	{
-		entry.KeyInfo.KeyType = KeyType_SymmetricKey
+		entry.KeyInfo.KeyForm = KeyForm_SymmetricKey
 		err := kit.GenerateNewKey(inKeyLen, reader, &entry)
 		if !amp.IsError(err, amp.ErrCode_Unimplemented) {
 			if err != nil {
@@ -139,7 +139,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 	** Asymmetric test
 	**/
 	{
-		entry.KeyInfo.KeyType = KeyType_AsymmetricKey
+		entry.KeyInfo.KeyForm = KeyForm_AsymmetricKey
 		err := kit.GenerateNewKey(inKeyLen, reader, &entry)
 		if !amp.IsError(err, amp.ErrCode_Unimplemented) {
 			if err != nil {
@@ -195,7 +195,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 	** Signing test
 	**/
 	{
-		entry.KeyInfo.KeyType = KeyType_SigningKey
+		entry.KeyInfo.KeyForm = KeyForm_SigningKey
 		err := kit.GenerateNewKey(inKeyLen, reader, &entry)
 		if !amp.IsError(err, amp.ErrCode_Unimplemented) {
 			if err != nil {

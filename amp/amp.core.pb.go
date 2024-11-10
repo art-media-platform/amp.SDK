@@ -104,7 +104,9 @@ func (TxOpCode) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_ab24c3800b7c0c17, []int{1}
 }
 
-// TxBody contains a max number of uint64 fields usable for any purpose.
+// TxField maps a fixed count of int64 payload fields.enum
+//
+// Why not as a proto message?  Because compression is much better since values mostly repeat.
 type TxField int32
 
 const (

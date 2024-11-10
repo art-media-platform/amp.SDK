@@ -26,7 +26,7 @@ type CryptoKit interface {
 	// CryptoKitID univeserally identifies a specific crypto suite and version.
 	CryptoKitID() CryptoKitID
 
-	// Pre: ioEntry.KeyType, .KeyDomain, .CryptoKitID, and .TimeCreated are set.
+	// Pre: ioEntry.KeyForm, .KeyDomain, .CryptoKitID, and .TimeCreated are set.
 	// inRequestedKeySz is the requested length of the private key (ignored for some implementations)
 	GenerateNewKey(
 		inRequestedKeySz int,
@@ -176,7 +176,7 @@ type EnclaveSession interface {
 	// Note: incoming duplicate key entries are ignored/dropped.
 	//ImportKeys(srcTome *KeyTome) error
 
-	// Generates a new KeyEntry for each entry in srcTome (based on the entry's KeyType and CryptoKitID, ignoring the rest) and merges it
+	// Generates a new KeyEntry for each entry in srcTome (based on the entry's KeyForm and CryptoKitID, ignoring the rest) and merges it
 	// with the host KeyTome. A copy of each newly generated entry (except for PrivKey) is placed into result KeyTome.
 	// See "KeyGen mode" notes where KeyEntry is declared.
 	GenerateKeys(srcTome *KeyTome) (*KeyTome, error)

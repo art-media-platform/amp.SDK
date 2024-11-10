@@ -54,7 +54,7 @@ func CompareKeyInfo(a, b *KeyInfo) int {
 	if diff == 0 {
 		diff = int(b.TimeCreated - a.TimeCreated) // Reverse time for newer keys to appear first
 		if diff == 0 {
-			diff = int(a.KeyType - b.KeyType)
+			diff = int(a.KeyForm - b.KeyForm)
 			if diff == 0 {
 				diff = int(a.CryptoKitID - b.CryptoKitID)
 			}
@@ -599,7 +599,7 @@ func (tome *KeyTome) GenerateFork(
 
 			newEntry := &KeyEntry{
 				KeyInfo: &KeyInfo{
-					KeyType:     srcInfo.KeyType,
+					KeyForm:     srcInfo.KeyForm,
 					CryptoKitID: curKitID,
 					TimeCreated: int64(timeCreated),
 				},
@@ -613,7 +613,7 @@ func (tome *KeyTome) GenerateFork(
 			if err != nil {
 				return nil, err
 			}
-			if srcInfo.KeyType != newEntry.KeyInfo.KeyType || curKitID != newEntry.KeyInfo.CryptoKitID {
+			if srcInfo.KeyForm != newEntry.KeyInfo.KeyForm || curKitID != newEntry.KeyInfo.CryptoKitID {
 				return nil,amp.ErrCode_KeyGenerationFailed.Error("generate key altered key type")
 			}
 
@@ -632,7 +632,7 @@ func (entry *KeyEntry) EqualTo(other *KeyEntry) bool {
 	a := entry.KeyInfo
 	b := entry.KeyInfo
 
-	return a.KeyType != b.KeyType ||
+	return a.KeyForm != b.KeyForm ||
 		a.CryptoKitID != b.CryptoKitID ||
 		a.TimeCreated != b.TimeCreated ||
 		!bytes.Equal(a.PubKey, b.PubKey) ||
@@ -752,7 +752,7 @@ func GenerateNewKeys(
 		}
 
 		newKey := &KeyEntry{
-			KeyType:     keySpec.KeyType,
+			KeyForm:     keySpec.KeyForm,
 			CryptoKit: kit.CryptoKit,
 			TimeCreated: timeCreated,
 		}
@@ -806,7 +806,7 @@ func GenerateNewKey(
 		return nil, amp.ErrCode_AssertFailed.Error("no keys returned")
 	}
 
-	if kr.Keys[0].KeyInfo.KeyType != inKeyInfo.KeyType {
+	if kr.Keys[0].KeyInfo.KeyForm != inKeyInfo.KeyForm {
 		return nil, amp.ErrCode_AssertFailed.Error("unexpected key type")
 	}
 
@@ -863,7 +863,7 @@ func (P *PayloadPacker) ResetSession(
 	if err != nil {
 		return err
 	}
-	if keyEntry.KeyType != KeyType_SigningKey {
+	if keyEntry.KeyForm != KeyForm_SigningKey {
 		return amp.ErrCode_SessionNotReady.Error("not a signing key")
 	}
 
@@ -1125,7 +1125,7 @@ func (U *PayloadUnpacker) UnpackAndVerify(
 	out.HashSig = inSignedBuf[sigPos:sigEnd]
 	out.Body = inSignedBuf[bodyPos:bodyEnd]
 	out.Signer.PubKey = hdr.SignerPubKey
-	out.Signer.KeyType = KeyType_SigningKey
+	out.Signer.KeyForm = KeyForm_SigningKey
 	out.Signer.CryptoKitID = hdr.SignerCryptoKit
 
 	return err

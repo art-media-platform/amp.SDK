@@ -3,13 +3,13 @@ syntax = "proto3";
 
 package ski;
 
-// KeyType identifies how a key operates
-enum KeyType {
-    KeyType_Unspecified             = 0;
+// KeyForm identifies how a key operates
+enum KeyForm {
+    KeyForm_Unspecified             = 0;
 
-    KeyType_SymmetricKey            = 1;
-    KeyType_AsymmetricKey           = 2;
-    KeyType_SigningKey              = 3;
+    KeyForm_SymmetricKey            = 1;
+    KeyForm_AsymmetricKey           = 2;
+    KeyForm_SigningKey              = 3;
 }
 
 // CryptoKitID identifies an encryption suite that implements ski.CryptoKit
@@ -123,11 +123,11 @@ message CryptOpOut {
 // KeyInfo exists in two modes/uses:
 //    1) Generated/copied from an existing KeyEntry
 //    2) Key gen mode: used as a guide to generate a new key
-//         a) Fields used: KeyType and CryptoKitID (other fields ignored)
+//         a) Fields used: KeyForm and CryptoKitID (other fields ignored)
 message KeyInfo {
 
     // Specifies the type of key this is (optional)
-                KeyType             KeyType                     = 1;
+                KeyForm             KeyForm                     = 1;
 
     // Specifies which crypto suite to invoke.
                 CryptoKitID         CryptoKitID                 = 2;
@@ -160,7 +160,7 @@ message KeyRef {
 //         - KeyEntry.PrivKey == nil
 //         - Fields used: KeyInfo.PubKey (other fields ignored)
 //    3) GenerateKeys "guide" mode: KeyInfo used as a guide to generate a new key
-//         - Fields used: KeyInfo.KeyType and KeyInfo.CryptoKitID (other fields ignored)
+//         - Fields used: KeyInfo.KeyForm and KeyInfo.CryptoKitID (other fields ignored)
 message KeyEntry {
 
     // Info about this key
