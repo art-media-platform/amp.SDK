@@ -11,11 +11,17 @@ import (
 	"reflect"
 )
 
-// GeohashBase32Alphabet is the standard geo-hash alphabet used for Base32Encoding.
-// It chooses particular characters that are not visually similar to each other.
-//
-// https://en.wikipedia.org/wiki/Geohash
-const GeohashBase32Alphabet = "0123456789bcdefghjkmnpqrstuvwxyz"
+const (
+	// GeohashBase32Alphabet is the standard geo-hash alphabet used for Base32Encoding.
+	// It chooses particular characters that are not visually similar to each other.
+	//
+	// Although a geohash is case insensitive, common convention is UPPER CASE
+	//    since they are read aloud as if an acronym (versus spoken as a word or syllable).
+	//
+	// https://en.wikipedia.org/wiki/Geohash
+	GeohashBase32Alphabet       = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
+	GeohashBase32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
+)
 
 var (
 	// Base32Encoding is used to encode/decode binary buffer to/from base 32

@@ -115,7 +115,7 @@ func TestRegistry(t *testing.T) {
 	if spec.Canonic != AttrSpec.Canonic+".av.Hello.World.Tag" {
 		t.Fatal("RegisterPrototype failed")
 	}
-	if spec.ID != (tag.Spec{}.With("amp.attr.World.Tag.Hello.av")).ID {
+	if spec.ID != (tag.Expr{}.With("amp.attr.World.Tag.Hello.av")).ID {
 		t.Fatalf("tag.FormSpec failed")
 	}
 	if spec.ID != AttrSpec.With("av").With("World.Hello.Tag").ID {
@@ -125,7 +125,7 @@ func TestRegistry(t *testing.T) {
 		t.Fatalf("unexpected spec.ID: %v", spec.ID)
 	}
 	if (tag.ID{}).Base32() != "0" {
-		t.Fatalf("tag.Spec{}.Base32() failed")
+		t.Fatalf("tag.Expr{}.Base32() failed")
 	}
 	if spec.ID.Base32() != "3t1sm7v1ycu8rzmysqc2d93wsyg70m6cn" {
 		t.Errorf("tag.ID.Base32() failed: %v", spec.ID.Base32())

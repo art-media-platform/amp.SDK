@@ -11,7 +11,7 @@ var (
 	// CellID hard-wired to denote the root c
 	MetaNodeID = tag.ID{0, 0, 2701}
 
-	TagRoot  = tag.Spec{}.With("amp")
+	TagRoot  = tag.Expr{}.With("amp")
 	AttrSpec = TagRoot.With("attr")
 	AppSpec  = TagRoot.With("app")
 )
@@ -65,7 +65,7 @@ func (v *Tag) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *Tag) TagSpec() tag.Spec {
+func (v *Tag) TagExpr() tag.Expr {
 	return AttrSpec.With("Tag")
 }
 
@@ -84,7 +84,7 @@ func (v *Tags) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *Tags) TagSpec() tag.Spec {
+func (v *Tags) TagExpr() tag.Expr {
 	return AttrSpec.With("Tags")
 }
 
@@ -107,7 +107,7 @@ func (v *Tag) AsID() tag.ID {
 		if v.UID != "" {
 			v.SetID(tag.FromLiteral([]byte(v.UID)))
 		} else if v.Text != "" {
-			v.SetID(tag.FromString(v.Text))
+			v.SetID(tag.FromExpr(v.Text))
 		}
 	}
 	return [3]uint64{
@@ -139,7 +139,7 @@ func (v *Err) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *Err) TagSpec() tag.Spec {
+func (v *Err) TagExpr() tag.Expr {
 	return AttrSpec.With("Err")
 }
 
@@ -183,7 +183,7 @@ func (v *LaunchURL) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *LaunchURL) TagSpec() tag.Spec {
+func (v *LaunchURL) TagExpr() tag.Expr {
 	return AttrSpec.With("LaunchURL")
 }
 
@@ -195,7 +195,7 @@ func (v *Login) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *Login) TagSpec() tag.Spec {
+func (v *Login) TagExpr() tag.Expr {
 	return AttrSpec.With("Login")
 }
 
@@ -207,7 +207,7 @@ func (v *LoginChallenge) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *LoginChallenge) TagSpec() tag.Spec {
+func (v *LoginChallenge) TagExpr() tag.Expr {
 	return AttrSpec.With("LoginChallenge")
 }
 
@@ -219,7 +219,7 @@ func (v *LoginResponse) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *LoginResponse) TagSpec() tag.Spec {
+func (v *LoginResponse) TagExpr() tag.Expr {
 	return AttrSpec.With("LoginResponse")
 }
 
@@ -231,7 +231,7 @@ func (v *LoginCheckpoint) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *LoginCheckpoint) TagSpec() tag.Spec {
+func (v *LoginCheckpoint) TagExpr() tag.Expr {
 	return AttrSpec.With("LoginCheckpoint")
 }
 
@@ -243,7 +243,7 @@ func (v *PinRequest) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *PinRequest) TagSpec() tag.Spec {
+func (v *PinRequest) TagExpr() tag.Expr {
 	return AttrSpec.With("PinRequest")
 }
 
@@ -265,7 +265,7 @@ func (v *Request) AttrsToPin() map[tag.ID]struct{} {
 	for _, attr := range v.PinAttrs {
 		attrID := attr.AttrID()
 		if attrID.IsNil() && attr.URL != "" {
-			attrID = tag.FormSpec(tag.Spec{}, attr.URL).ID
+			attrID = tag.FormSpec(tag.Expr{}, attr.URL).ID
 		}
 		if !attrID.IsNil() {
 			pinAttrs[attrID] = struct{}{}

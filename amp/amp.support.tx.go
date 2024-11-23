@@ -90,9 +90,9 @@ func (tx *TxMsg) ReleaseRef() {
 func MarshalAttr(cellID, attrID tag.ID, attrVal tag.Value) (*TxMsg, error) {
 	tx := NewTxMsg(true)
 	if attrID.IsNil() && attrVal != nil {
-		attrID = attrVal.TagSpec().ID
+		attrID = attrVal.TagExpr().ID
 		if attrID.IsNil() {
-			return nil, ErrCode_AssertFailed.Error("MarshalAttr: missing builtin tag.Spec")
+			return nil, ErrCode_AssertFailed.Error("MarshalAttr: missing builtin tag.Expr")
 		}
 	}
 	op := TxOp{}
@@ -199,7 +199,7 @@ func (tx *TxMsg) Upsert(cellID, attrID, itemID tag.ID, val tag.Value) error {
 	return tx.MarshalOp(&op, val)
 }
 
-// Marshals a TxOp and optional value to the given Tx's to and data store.
+// Marshals a TxOp and optional value to the given Tx's data store.
 //
 // On success:
 //   - TxOp.DataOfs and TxOp.DataLen are overwritten,

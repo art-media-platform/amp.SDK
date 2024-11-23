@@ -84,10 +84,10 @@ type Registry interface {
 	// When a Session is created, its registry starts by importing the Host's registry.
 	Import(other Registry) error
 
-	// Registers an element value type (tag.Value) as a prototype under its pure scalar element type name (also a valid tag.Spec type expression).
+	// Registers an element value type (tag.Value) as a prototype under its pure scalar element type name (also a valid tag.Expr type expression).
 	// If an entry already exists (common for a type used by multiple apps), then this is a no-op.
 	// if registerAs == "", reflect is used find the underlying element type name.
-	RegisterPrototype(context tag.Spec, prototype tag.Value, registerAs string) tag.Spec
+	RegisterPrototype(context tag.Expr, prototype tag.Value, registerAs string) tag.Expr
 
 	// Registers an app by its UTag, URI, and schemas it supports.
 	RegisterApp(app *App) error

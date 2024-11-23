@@ -53,7 +53,9 @@ enum TxOpCode {
 }
 
 
-// TxBody contains a max number of uint64 fields usable for any purpose.
+// TxField maps a fixed count of int64 payload fields.enum
+//
+// Why not as a proto message?  Because compression is much better since values mostly repeat.
 enum TxField {
     TxField_Nil = 0;
 
@@ -251,7 +253,7 @@ message Tag {
 
     string  ContentType = 10; // e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
     string  UID         = 12; // UID, SKU, or other literal
-    string  Text        = 13; // tag.Spec, custom content, or expression
+    string  Text        = 13; // tag.Expr, custom content, or expression
     string  URL         = 15; // IEEE 1738 URL: schema://hostname.com/path/query
 
     // Metric specifies the metric system used for the size metric values
@@ -371,7 +373,7 @@ enum ErrCode {
     ErrCode_AttrNotFound                = -23026;
     ErrCode_NothingToCommit             = -23027;
     ErrCode_CommitFailed                = -23028;
-    ErrCode_SpaceNotFound               = -23029;
+    ErrCode_StoreNotFound               = -23029;
     ErrCode_StorageFailure              = -23030;
     ErrCode_AppNotFound                 = -23031;
     ErrCode_MalformedTx                 = -23032;

@@ -13,11 +13,11 @@ var (
 	LoginResponseSpec   = amp.AttrSpec.With("LoginResponse").ID
 	LoginCheckpointSpec = amp.AttrSpec.With("LoginCheckpoint").ID
 
-	CellChildren   = amp.AttrSpec.With("children.TagID") // ID suffix denotes SeriesIndex is used to store a CellID
+	CellChildren   = amp.AttrSpec.With("children.Tag.ID") // ID suffix denotes SeriesIndex is used to store a CellID
 	CellProperties = amp.AttrSpec.With("cell-properties")
 	LaunchURL      = amp.AttrSpec.With("LaunchURL").ID
 
-	CellProperty   = tag.Spec{}.With("cell-property")
+	CellProperty   = tag.Expr{}.With("cell-property")
 	TextTag        = CellProperty.With("text.Tag")
 	CellLabel      = TextTag.With("label").ID
 	CellCaption    = TextTag.With("caption").ID
@@ -25,7 +25,7 @@ var (
 	CellCollection = TextTag.With("collection").ID
 	CellAuthor     = TextTag.With("author").ID
 
-	CellPropertyTagID = CellProperty.With("TagID")
+	CellPropertyTagID = CellProperty.With("Tag.ID")
 	OrderByPlayID     = CellPropertyTagID.With("order-by.play").ID
 	OrderByTimeID     = CellPropertyTagID.With("order-by.time").ID
 	OrderByGeoID      = CellPropertyTagID.With("order-by.geo").ID
@@ -74,15 +74,11 @@ func TagsForImageURL(imageURL string) *amp.Tags {
 	}
 }
 
-type PinnableAttr struct {
-	Spec tag.Spec
-}
-
 func (v *Position) MarshalToStore(in []byte) (out []byte, err error) {
 	return amp.MarshalPbToStore(v, in)
 }
 
-func (v *Position) TagSpec() tag.Spec {
+func (v *Position) TagExpr() tag.Expr {
 	return amp.AttrSpec.With("Position")
 }
 
@@ -94,7 +90,7 @@ func (v *FSInfo) MarshalToStore(in []byte) (out []byte, err error) {
 	return amp.MarshalPbToStore(v, in)
 }
 
-func (v *FSInfo) TagSpec() tag.Spec {
+func (v *FSInfo) TagExpr() tag.Expr {
 	return amp.AttrSpec.With("FSInfo")
 }
 
