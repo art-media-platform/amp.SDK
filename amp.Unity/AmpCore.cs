@@ -99,7 +99,7 @@ namespace Amp {
             "ChJFcnJDb2RlX0ludmFsaWRUYWcQj8z+////////ARIhChRFcnJDb2RlX0F0",
             "dHJOb3RGb3VuZBCOzP7///////8BEiQKF0VyckNvZGVfTm90aGluZ1RvQ29t",
             "bWl0EI3M/v///////wESIQoURXJyQ29kZV9Db21taXRGYWlsZWQQjMz+////",
-            "////ARIiChVFcnJDb2RlX1NwYWNlTm90Rm91bmQQi8z+////////ARIjChZF",
+            "////ARIiChVFcnJDb2RlX1N0b3JlTm90Rm91bmQQi8z+////////ARIjChZF",
             "cnJDb2RlX1N0b3JhZ2VGYWlsdXJlEIrM/v///////wESIAoTRXJyQ29kZV9B",
             "cHBOb3RGb3VuZBCJzP7///////8BEiAKE0VyckNvZGVfTWFsZm9ybWVkVHgQ",
             "iMz+////////ARIeChFFcnJDb2RlX0JhZFNjaGVtYRCAzP7///////8BEiAK",
@@ -346,7 +346,7 @@ namespace Amp {
     [pbr::OriginalName("ErrCode_AttrNotFound")] AttrNotFound = -23026,
     [pbr::OriginalName("ErrCode_NothingToCommit")] NothingToCommit = -23027,
     [pbr::OriginalName("ErrCode_CommitFailed")] CommitFailed = -23028,
-    [pbr::OriginalName("ErrCode_SpaceNotFound")] SpaceNotFound = -23029,
+    [pbr::OriginalName("ErrCode_StoreNotFound")] StoreNotFound = -23029,
     [pbr::OriginalName("ErrCode_StorageFailure")] StorageFailure = -23030,
     [pbr::OriginalName("ErrCode_AppNotFound")] AppNotFound = -23031,
     [pbr::OriginalName("ErrCode_MalformedTx")] MalformedTx = -23032,
@@ -2836,7 +2836,7 @@ namespace Amp {
     public const int TextFieldNumber = 13;
     private string text_ = "";
     /// <summary>
-    /// tag.Spec, custom content, or expression
+    /// tag.Expr, custom content, or expression
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]

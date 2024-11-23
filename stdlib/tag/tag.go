@@ -1,6 +1,7 @@
 package tag
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
@@ -12,10 +13,8 @@ import (
 )
 
 var (
-	// sTagSeparator expresses the delimiters that separate tag literals in a tag.Spec string -- period, comma, colon, slash, backslash, plus, and whitespace
-	//
-	// By convention, the suggested separator is a period since it helps visually identify a tag, is compatible with a domain name, and is a common scoping character.
-	sTagSeparator = regexp.MustCompile(TagDelimiters)
+	sWithDelimiters = regexp.MustCompile(WithDelimiters) // regex for tag processing
+	sThenDelimiters = regexp.MustCompile(ThenDelimiters) // regex for tag processing
 )
 
 // Genesis returns a tag.ID that denotes an edit lineage root based on a given seed.
@@ -45,8 +44,14 @@ func (predecessor ID) FormEditID(seed ID) ID {
 }
 
 const (
-	CanonicWithRune = '.'
-	CanonicHideRune = '~'
+
+	// The "with" delimiter can be thought of as ADD or SUM and combines two terms in a commutative way like addition.
+	// A '.' by convention helps visually identify an tag string, it's compatible with domain names, and is already a familiar scoping character.
+	CanonicWith     = "."
+	CanonicWithChar = byte('.')
+
+	CanonicThen     = "-"
+	CanonicThenChar = byte('-')
 )
 
 func (id ID) AppendAsOctals(enc []OctalDigit) []OctalDigit {
@@ -83,72 +88,106 @@ func (id ID) FormAsciiBadge() string {
 	return string(str)
 }
 
-/*
-func (spec Spec) CanonicString() string {
-	if spec.Canonic == "" {
-		b := strings.Builder{}
-		for _, tag := range spec.Tags {
-			if b.Len() > 0 {
-				b.WriteRune(CanonicWithRune)
-			}
-			b.WriteString(tag.Token)
-		}
-		spec.Canonic = b.String()
-	}
-	return spec.Canonic
-}
-*/
-
 // LeafTags splits the tag spec the given number of tags for the right.
 // E.g. LeafTags(2) on "a.b.c.d.ee" yields ("a.b.c", "d.ee")
-func (spec Spec) LeafTags(n int) (string, string) {
+func (expr Expr) LeafTags(n int) (string, string) {
 	if n <= 0 {
-		return spec.Canonic, ""
+		return expr.Canonic, ""
 	}
 
-	expr := spec.Canonic
-	R := len(expr)
+	canonic := expr.Canonic
+	R := len(canonic)
 	for p := R - 1; p >= 0; p-- {
-		switch expr[p] {
-		case CanonicHideRune, CanonicWithRune:
+		switch c := canonic[p]; c {
+		case CanonicThenChar, CanonicWithChar:
 			n--
 			if n <= 0 {
-				return expr[:p], expr[p+1:]
+				prefix := canonic[:p]
+				if c == CanonicWithChar {
+					p++ // omit canonic with operator
+				}
+				return prefix, canonic[p:]
 			}
 		}
 	}
-	return "", expr
+	return "", canonic
 }
 
-// A tag.Spec produces a tag.ID such that each tag.ID is unique and is independent of its component tag literals.
+// A tag.Expr produces a tag.ID such that each tag.ID is unique and is independent of its component tag literals.
 //
 //	e.g. "a.b.cc" == "b.a.cc" == "a.cc.b" != "a.cC.b"
-func (spec Spec) With(subTags string) Spec {
-	newSpec := Spec{
-		ID:      spec.ID,
-		Canonic: spec.Canonic,
-	}
+func (expr Expr) With(tagExpr string) Expr {
 
-	canonic := make([]byte, 0, len(spec.Canonic)+len(subTags))
-	canonic = append(canonic, spec.Canonic...)
-	tags := sTagSeparator.Split(subTags, 37)
-	if len(tags) > 0 {
-		for _, ti := range tags {
-			if ti == "" { // empty tokens are no-ops
-				continue
+	// Cleanup into two operators: With and Then (commutative and non-commutative summation)
+	tagExpr = sWithDelimiters.ReplaceAllString(tagExpr, CanonicWith)
+	tagExpr = sThenDelimiters.ReplaceAllString(tagExpr, CanonicThen)
+	terms := []byte(tagExpr)
+	termsLower := bytes.ToLower(terms)
+	termsUpper := bytes.ToUpper(terms)
+
+	body := make([]byte, 0, len(expr.Canonic)+len(terms))
+	body = append(body, []byte(expr.Canonic)...)
+
+	exprID := expr.ID
+
+	N := len(terms)
+	for i := 0; i < N; {
+		op := CanonicWithChar
+
+		// extract operator
+		for ; i < N; i++ {
+			c := terms[i]
+			if c == CanonicThenChar {
+				op = c
+			} else if c != CanonicWithChar {
+				break
 			}
-			if len(canonic) > 0 {
-				canonic = append(canonic, CanonicWithRune)
-			}
-			canonic = append(canonic, []byte(ti)...)
-			newSpec.ID = newSpec.ID.WithLiteral([]byte(ti))
 		}
-		newSpec.Canonic = string(canonic)
-	} else {
-		newSpec.Canonic = spec.Canonic
+
+		// find end of tag literal
+		start := i
+		lowerCount := 0
+		for ; i < N; i++ {
+			c := terms[i]
+			if c == CanonicWithChar || c == CanonicThenChar {
+				break
+			}
+			if c == termsLower[i] && c != termsUpper[i] {
+				lowerCount++
+			}
+		}
+		if i == start {
+			continue // skip empty terms
+		}
+
+		// lower-case is canonic unless literal is a single character or ALL upper-case
+		termLen := i - start
+		var term []byte
+		if termLen == 1 || lowerCount > 0 {
+			term = termsLower[start:i]
+		} else {
+			term = terms[start:i]
+		}
+
+		termID := FromLiteral(term)
+		switch op {
+		case CanonicWithChar:
+			exprID = exprID.With(termID)
+		case CanonicThenChar:
+			exprID = exprID.Then(termID)
+		}
+
+		// {tag_operator}{tag_literal}...
+		if len(body) > 0 || op != CanonicWithChar {
+			body = append(body, op)
+		}
+		body = append(body, term...)
 	}
 
-	return newSpec
+	return Expr{
+		ID:      exprID,
+		Canonic: string(body),
+	}
 }
 
 const (
@@ -170,9 +209,9 @@ func FromLiteral(tagLiteral []byte) ID {
 	}
 }
 
-func FromString(unclean string) ID {
-	tagLiteral := sTagSeparator.ReplaceAll([]byte(unclean), nil)
-	return FromLiteral(tagLiteral)
+func FromExpr(tagsExpr string) ID {
+	spec := Expr{}.With(tagsExpr)
+	return spec.ID
 }
 
 func FromToken(literal string) ID {
@@ -251,6 +290,10 @@ func (id ID) Then(other ID) ID {
 		id[1] - other[1], // overflow is normal
 		id[2] - other[2], // overflow is normal
 	}
+}
+
+func (id ID) WithExpr(expr string) ID {
+	return id.With(FromExpr(expr))
 }
 
 func (id ID) WithToken(tagToken string) ID {

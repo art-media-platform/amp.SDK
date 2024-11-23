@@ -26,7 +26,7 @@ type registry struct {
 	attrDefs     map[tag.ID]AttrDef
 }
 
-func (reg *registry) RegisterPrototype(context tag.Spec, prototype tag.Value, subTags string) tag.Spec {
+func (reg *registry) RegisterPrototype(context tag.Expr, prototype tag.Value, subTags string) tag.Expr {
 	if subTags == "" {
 		typeOf := reflect.TypeOf(prototype)
 		if typeOf.Kind() == reflect.Ptr {
@@ -35,14 +35,14 @@ func (reg *registry) RegisterPrototype(context tag.Spec, prototype tag.Value, su
 		subTags = typeOf.Name()
 	}
 
-	attrSpec := context.With(subTags)
+	attrExpr := context.With(subTags)
 	reg.mu.Lock()
 	defer reg.mu.Unlock()
-	reg.attrDefs[attrSpec.ID] = AttrDef{
-		Spec:      attrSpec,
+	reg.attrDefs[attrExpr.ID] = AttrDef{
+		Expr:      attrExpr,
 		Prototype: prototype,
 	}
-	return attrSpec
+	return attrExpr
 }
 
 func (reg *registry) Import(other Registry) error {
@@ -141,9 +141,9 @@ func (reg *registry) MakeValue(attrSpec tag.ID) (tag.Value, error) {
 /*
 func (reg *registry) RegisterDefs(defs *RegisterDefs) error {
 
-	for _, tagSpec := range defs.TagSpecs {
+	for _, tagExpr := range defs.TagExprs {
 		def := AttrDef{
-			Spec: tag.FormSpec(tag.Spec{}, tagSpec),
+			Spec: tag.FormSpec(tag.Expr{}, tagExpr),
 		}
 		reg.attrDefs[def.Spec.ID] = def
 	}
@@ -158,20 +158,20 @@ func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 	schema := &AttrSchema{
 		CellDataModel: valTyp.Name(),
 		SchemaName:    "on-demand-reflect",
-		Attrs:         make([]*tag.Spec, 0, numFields),
+		Attrs:         make([]*tag.Expr, 0, numFields),
 	}
 
 	for i := 0; i < numFields; i++ {
 
-		// Importantly, TagSpecID is always set to the field index + 1, so we know what field to inspect when given an TagSpecID.
+		// Importantly, TagExprID is always set to the field index + 1, so we know what field to inspect when given an TagExprID.
 		field := valTyp.Field(i)
 		if !field.IsExported() {
 			continue
 		}
 
-		attr := &tag.Spec{
+		attr := &tag.Expr{
 			TypedName: field.Name,
-			TagSpecID:  int32(i + 1),
+			TagExprID:  int32(i + 1),
 		}
 
 		attrType := field.Type
@@ -233,7 +233,7 @@ func ReadCell(ctx AppContext, subKey string, schema *AttrSchema, dstStruct any) 
 		for _, ai := range schema.Attrs {
 			if ai.TypedName == field.Name {
 				for _, msg := range msgs {
-					if msg.TagSpecID == ai.TagSpecID {
+					if msg.TagExprID == ai.TagExprID {
 						msg.LoadVal(dst.Field(fi).Addr().Interface())
 						goto nextField
 					}
@@ -271,7 +271,7 @@ func WriteCell(ctx AppContext, subKey string, schema *AttrSchema, srcStruct any)
 		for _, attr := range schema.Attrs {
 			msg := tx.AddMsg()
 			msg.Op = MsgOp_PushAttr
-			msg.TagSpecID = attr.TagSpecID
+			msg.TagExprID = attr.TagExprID
 			for i := 0; i < numFields; i++ {
 				if valType.Field(i).Name == attr.TypedName {
 					msg.setVal(src.Field(i).Interface())

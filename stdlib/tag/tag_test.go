@@ -2,41 +2,57 @@ package tag_test
 
 import (
 	"fmt"
+	"math/rand/v2"
+	"strings"
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 func TestTag(t *testing.T) {
-	amp_tags := tag.Spec{}.With("..amp+.app.")
-	if amp_tags.ID != tag.FromString(".amp...").WithToken("app") {
+	amp_tags := tag.Expr{}.With("..amp+.app.")
+	if amp_tags.ID != tag.FromExpr(".amp...").WithToken("app") {
 		t.Fatalf("FormSpec.ID failed: %v", amp_tags.ID)
 	}
-	spec := amp_tags.With("some-tag+thing")
-	if spec.Canonic != "amp.app.some-tag.thing" {
+	expr := amp_tags.With("some-tag+thing")
+	if expr.Canonic != "amp.app.some-tag.thing" {
 		t.Errorf("FormSpec failed")
 	}
-	if spec.ID != amp_tags.ID.WithToken("some-tag").WithToken("thing") {
-		t.Fatalf("FormSpec.ID failed: %v", spec.ID)
+	if expr.ID != amp_tags.ID.WithExpr("some-tag").WithToken("thing") {
+		t.Fatalf("FormSpec.ID failed: %v", expr.ID)
 	}
-	if base32 := spec.ID.Base32(); base32 != "28n1xcwsd1q27g4xus3errv17c4r9ecqx" {
+	if base32 := expr.ID.Base32(); base32 != "MUFKXXG22D3JUMC38V43HD11CVH57DDD" {
 		t.Fatalf("tag.ID.Base32() failed: %v", base32)
 	}
-	if base16 := spec.ID.Base16(); base16 != "24503d5f30c0d847793bac0db7bec27592e96aedd" {
+	if base16 := expr.ID.Base16(); base16 != "9e9d2ef5e213071d4d6346c83830215ee053b18c" {
 		t.Fatalf("tag.ID.Base16() failed: %v", base16)
 	}
-	if prefix, suffix := spec.LeafTags(2); prefix != "amp.app" || suffix != "some-tag.thing" {
+	if prefix, suffix := expr.LeafTags(2); prefix != "amp.app.some" || suffix != "-tag.thing" {
 		t.Errorf("LeafTags failed")
 	}
-	genesisStr := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
-	if id := tag.FromToken(genesisStr); id[0] != 0xaf07b523 && id[1] != 0xe28f0f37f843664a && id[2] != 0x2c445b67f2be39a0 {
-		t.Fatalf("tag.FromString() failed: %v", id)
+	{
+		genesisStr := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
+		if id := tag.FromToken(genesisStr); id[0] != 0xaf07b523 && id[1] != 0xe28f0f37f843664a && id[2] != 0x2c445b67f2be39a0 {
+			t.Fatalf("tag.FromExpr() failed: %v", id)
+		}
+		parts := strings.Split(genesisStr, " ")
+		for i := 0; i < 3773; i++ {
+			rand.Shuffle(len(parts), func(i, j int) {
+				parts[i], parts[j] = parts[j], parts[i]
+			})
+			tryExpr := strings.Join(parts, ".")
+			tryID := tag.Expr{}.With(tryExpr).ID
+			if tryID[0] != 0x2f4aa1bc0 && tryID[1] != 0xa743a23a89605f6a && tryID[2] != 0xcfec4cf239b7d3fa {
+				t.Fatalf("tag literals commutation test failed: %v", tryID)
+			}
+		}
 	}
+
 	tid := tag.ID{0x3, 0x7777777777777777, 0x123456789abcdef0}
-	if tid.Base32Suffix() != "g2ectrrh" {
+	if tid.Base32Suffix() != "G2ECTRRH" {
 		t.Errorf("tag.ID.Base32Suffix() failed")
 	}
-	if tid.Base32() != "vrfxvrfxvrfxvj4e2qg2ectrrh" {
+	if tid.Base32() != "VRFXVRFXVRFXVJ4E2QG2ECTRRH" {
 		t.Errorf("tag.ID.Base32() failed: %v", tid.Base32())
 	}
 	if b16 := tid.Base16(); b16 != "37777777777777777123456789abcdef0" {
@@ -45,9 +61,6 @@ func TestTag(t *testing.T) {
 	if tid.Base16Suffix() != "abcdef0" {
 		t.Errorf("tag.ID.Base16Suffix() failed")
 	}
-
-	//fmt.Print(tid.FormAsciiBadge())
-
 }
 
 func TestTagEncodings(t *testing.T) {

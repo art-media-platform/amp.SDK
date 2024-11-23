@@ -1,0 +1,130 @@
+                                    amp.spec.tag.v.0.8  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+9FDP7NU5U8N2PQU8BHSNUF82B77BBZUQE   amp.spec.tag.v.0.8.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+
+                                    Hello World!
+ B3EJD9HGSN053Z2TWV6920UP70HDZPNP   hello.world
+                                    Hello, World!
+ B3EJD9HGSN053Z2TWV6920UP70HDZPNP   hello.world
+                                    hello  world
+ B3EJD9HGSN053Z2TWV6920UP70HDZPNP   hello.world
+                                    world  hello
+ B3EJD9HGSN053Z2TWV6920UP70HDZPNP   world.hello
+                                    World, hello.
+ B3EJD9HGSN053Z2TWV6920UP70HDZPNP   world.hello
+
+                                    Hello and welcome to tags!
+39ZRS85V2W78NZ5NE13YWFHUHJSKRRX3R   hello.and.welcome.to.tags
+                                    hello, and welcome to tags!
+39ZRS85V2W78NZ5NE13YWFHUHJSKRRX3R   hello.and.welcome.to.tags
+                                    hello, and Welcome to tags!!
+39ZRS85V2W78NZ5NE13YWFHUHJSKRRX3R   hello.and.welcome.to.tags
+                                    hello, and..welcome to... tags.
+39ZRS85V2W78NZ5NE13YWFHUHJSKRRX3R   hello.and.welcome.to.tags
+                                    hello+and+welcome+to+tags
+39ZRS85V2W78NZ5NE13YWFHUHJSKRRX3R   hello.and.welcome.to.tags
+
+
+                                    UTF8 whitespace, commas, +, and . and : denote the "with" operator.   This operator adds the hash of each operand and is also therefore commutative.
+9J5QZPJ2XGSNR0NHH7UF72J36FFD5N46G   UTF8.whitespace.commas.and.and.denote.the."with".operator.this.operator.adds.the.hash.of.each.operand.and.is.also.therefore.commutative
+
+                                    Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
+BNVBK7822R57ZDWVFBT5BM82FTSMP02VD   text.having."homophone.case".or."homophonic.case".means.its.component.words.are.considered.interchangeable.with.words.that.sound.the.same.but.have.different.spelling
+
+                                    The words Center, center, centre, and Centre are homophonic and should have the same hash.
+7E26XPRYV8BYUSJEU5EUUCPW538SG320Z   the.words.center.center.centre.and.centre.are.homophonic.and.should.have.the.same.hash
+                                    The words center, Center, Centre, and centre are homophonic and should have the same hash.
+7E26XPRYV8BYUSJEU5EUUCPW538SG320Z   the.words.center.center.centre.and.centre.are.homophonic.and.should.have.the.same.hash
+                                    The words Centre, centre, center, and Center are homophonic and should have the same hash.
+7E26XPRYV8BYUSJEU5EUUCPW538SG320Z   the.words.centre.centre.center.and.center.are.homophonic.and.should.have.the.same.hash
+
+                                    This has very helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
+HNGM76C66X9WYF9G32P0G5T2ZMZ52WHWE   this.has.very.helpful.implications.for.those.with.sight.or.hearing.impairments.or.in.search.result.ranking.since.the.query.word.order.is.usually.less.important.the.presence.of.particular.words.especially.once.there.are.dozen.words.or.more
+
+                                    However: dashes and slashes are order dependent!?  Yes, order-dependent!
+36711JP6E0TBK2Z84NS5WJ8NNKEWB7G3P   however.dashes.and.slashes.are.order.dependent.yes.order-dependent
+                                    However, dashes and slashes are order dependent?!  yes, order-dependent
+36711JP6E0TBK2Z84NS5WJ8NNKEWB7G3P   however.dashes.and.slashes.are.order.dependent.yes.order-dependent
+                                    However, Slashes and dashes are order dependent?  Yes, order-dependent
+36711JP6E0TBK2Z84NS5WJ8NNKEWB7G3P   however.slashes.and.dashes.are.order.dependent.yes.order-dependent
+                                    However: Order-dependent?  Yes, slashes, and dashes are order dependent.
+36711JP6E0TBK2Z84NS5WJ8NNKEWB7G3P   however.order-dependent.yes.slashes.and.dashes.are.order.dependent
+                                    however: dashes and slashes are order-dependent! yES! Order dependent!
+36711JP6E0TBK2Z84NS5WJ8NNKEWB7G3P   however.dashes.and.slashes.are.order-dependent.yes.order.dependent
+
+                                    However: dependent-order?  Yes, slashes and dashes are order dependent.
+4FCMDX3008CJD7PD9QJZZQT80X82NTVYC   however.dependent-order.yes.slashes.and.dashes.are.order.dependent
+                                    However: Slashes and dashes are order dependent. Yes, dependent-order?
+4FCMDX3008CJD7PD9QJZZQT80X82NTVYC   however.slashes.and.dashes.are.order.dependent.yes.dependent-order
+                                    -order dependent, yes. Slashes and dashes are order dependent.  However.
+4FCMDX3008CJD7PD9QJZZQT80X82NTVYC   -order.dependent.yes.slashes.and.dashes.are.order.dependent.however
+
+                                    Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
+713VSQXU2V4JVRQQG2DMGNFS0CDRBDN4K   acronyms.like.NBA.NFL.USA.CIA.PRC.and.EU.are.capitalized.since.they.are.spoken.letter.by.letter
+
+                                    Words that are not upper case, are considered spoken or otherwise phonetic.
+2VV31GCDGVHJP4VHZFGU7FN85P8GP660W   words.that.are.not.upper.case.are.considered.spoken.or.otherwise.phonetic
+
+                                    This also means we can communicate proper nouns and titles easily, such as A Game of Thrones
+9X1QZ2F0P8ET35Q15H94BS0RN83Q4J050   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
+                                    This also means we can communicate proper nouns and titles easily, such as Game of Thrones, A.
+9X1QZ2F0P8ET35Q15H94BS0RN83Q4J050   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.game.of.thrones.a
+                                    This also means we can communicate proper nouns and titles easily, such as a Game Of Thrones.
+9X1QZ2F0P8ET35Q15H94BS0RN83Q4J050   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
+
+                                    Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL-CAPS should be used intentionally.
+9NWT2RZYNHUQQQZUEX71T04N9MJZ9NTNK   notice.how.acronyms.are.spoken.differently.and.have.their.own.unique.meanings.so.that.means.ALL-CAPS.should.be.used.intentionally
+
+                                    ADA is an acronym for the Americans with Disabilities Act, Ms. Ada is a computer programmer.
+7RBXE95STWGNE346S007PGSU2KZQZ2Y1E   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ms.ada.is.a.computer.programmer
+                                    ADA is an acronym for the Americans with Disabilities Act. ms ada is a computer programmer!
+7RBXE95STWGNE346S007PGSU2KZQZ2Y1E   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ms.ada.is.a.computer.programmer
+                                    ADA is an acronym for the Americans with Disabilities Act. Ada is a computer programmer, Ms!
+7RBXE95STWGNE346S007PGSU2KZQZ2Y1E   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ada.is.a.computer.programmer.ms
+                                    ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
+7RBXE95STWGNE346S007PGSU2KZQZ2Y1E   ADA.is.an.acronym.for.the.americans.with.disabilities.act.a.computer.programmer.ms.ada.is
+
+                                    Dig into the amp SDK today!
+2YX2T7C2GP0U21SH339FBHZJC3UR2CTTH   dig.into.the.amp.SDK.today
+                                    Dig into the amp.SDK today!
+2YX2T7C2GP0U21SH339FBHZJC3UR2CTTH   dig.into.the.amp.SDK.today
+                                    Dig into the Amp SDK today!
+2YX2T7C2GP0U21SH339FBHZJC3UR2CTTH   dig.into.the.amp.SDK.today
+
+
+                                    Yoda said this is not a drill.
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   yoda.said.this.is.not.a.drill
+                                    Yoda said, a drill this is not.
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   yoda.said.a.drill.this.is.not
+                                    Yoda said, a drill this is not!
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   yoda.said.a.drill.this.is.not
+                                    a drill this is not, Yoda said!
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   a.drill.this.is.not.yoda.said
+                                    said a drill, this is not Yoda.
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   said.a.drill.this.is.not.yoda
+                                    said a drill, is this not Yoda?
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   said.a.drill.is.this.not.yoda
+                                    said a drill: Is this not Yoda?
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   said.a.drill.is.this.not.yoda
+                                    Said a drill,: Is this not Yoda??
+2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   said.a.drill.is.this.not.yoda
+
+
+                                    Dots are the canonical way, ya know.  after a dozen words, 24 bytes is 2^192!
+732E17Y29S949QPXEXEF6Y9HPKHPGSTQZ   dots.are.the.canonical.way.ya.know.after.a.dozen.words.24.bytes.is.2-192
+                                    Ya know, dots are the canonical way.  after a dozen words, 24 bytes is 2^192!
+732E17Y29S949QPXEXEF6Y9HPKHPGSTQZ   ya.know.dots.are.the.canonical.way.after.a.dozen.words.24.bytes.is.2-192
+
+
+                                    The 24-byte tag.ID you see to the left is 2^192 wide (in base 32).  For reference, a Bitcoin address is 20 bytes.
+BY2ZN562PFNTBRS7FR3JC657JZYRF06XM   the.24-byte.tag.ID.you.see.to.the.left.is.2-192.wide.(in.base.32).for.reference.a.bitcoin.address.is.20.bytes
+
+                                    Base16 of the ID above (8kj00c8gw8406tugx9bx417whqj3y0qkg) is 160 bits wide.  The leading 32 bits are part of a "minting" when a tag is made decidedly private.
+BJ897FM9MU23Y9FFKY5E4PWDG2RJ08M5W   base16.of.the.ID.above.(8kj00c8gw8406tugx9bx417whqj3y0qkg).is.160.bits.wide.the.leading.32.bits.are.part.of.a."minting".when.a.tag.is.made.decidedly.private
+
+                                    The number of possible hashes for a string of 10 words randomly chosen from the worlds dictionaries well over a million words. Even with the English dictionary's 200,000 words, there are 10^50 (2^160) outputs.
+DY3HHE06BYH5C53YP9KC8R1N6K3Q9RN0X   the.number.of.possible.hashes.for.a.string.of.10.words.randomly.chosen.from.the.worlds.dictionaries.well.over.a.million.words.even.with.the.english.dictionary's.200.000.words.there.are.10-50.(2-160).outputs
+
+
+                                    TODO:   go get github.com/alecthomas/participle/v2 -- for tags.Parse() implementation?
+337G3KTDQKUX4EN253JKK8QGWFEKER7Q7   TODO.go.get.github.com-alecthomas-participle-v2-for.tags.parse().implementation
+

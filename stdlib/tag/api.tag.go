@@ -8,23 +8,27 @@ type ID [3]uint64
 
 // Specifies a set of tag literals and its corresponding tag.ID.
 //
-//	tag.Spec := "[{utf8_tag_literal}[TagDelimiters]*]*"
-type Spec struct {
+//	tag.Expr := "[{TagOp}*[{utf8_token}]*"
+type Expr struct {
 	ID      ID
-	Canonic string
+	Canonic string // UTF-8 encoded canonical tag expression
 }
 
 const (
-	// TagDelimiters separate utf8 tag literals in tag strings.
-	TagDelimiters = `[/\\\.+:\s\~]+`
+	PackageTags = "amp.spec.tag.v.0.8"
+
+	WithDelimiters = `[\.+\s,\:\!\?]+` // commutative (symmetric) binary delimiters
+	ThenDelimiters = `[\-/\\\~\^\@]+`  // non-commutative binary or unary delimiter
+
+	GroupDelimiters = `[]()<>{}¿?¡!` // TODO group delimiter pairs
 )
 
 // tag.Value wraps a data element type, exposing tags, serialization, and instantiation methods.
 type Value interface {
 	ValuePb
 
-	// Returns the element type name (a scalar tag.Spec).
-	TagSpec() Spec
+	// Returns the element type name (a scalar tag.Expr).
+	TagExpr() Expr
 
 	// Marshals this Value to a buffer, reallocating if needed.
 	MarshalToStore(in []byte) (out []byte, err error)

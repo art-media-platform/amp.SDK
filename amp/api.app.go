@@ -11,7 +11,7 @@ import (
 //
 // Similar to a traditional OS service, an amp.App responds to queries it recognizes and operates on client requests. The stock amp runtime offers essential apps, such as file system access and user account services.
 type App struct {
-	AppSpec      tag.Spec // unique and persistent ID for this module
+	AppSpec      tag.Expr // unique and persistent ID for this module
 	Desc         string   // human-readable description of this app
 	Version      string   // "v{MajorVers}.{MinorID}.{RevID}"
 	Dependencies []tag.ID // module Tags this app may access
@@ -33,7 +33,7 @@ type AppContext interface {
 	// This directory is scoped by App.AppSpec
 	LocalDataPath() string
 
-	// Gets the named attribute from the user's home space -- used high-level app settings.
+	// Gets the named attribute from the user's home storage -- used high-level app settings.
 	// The attr is scoped by both the app Tag so key collision with other users or apps is not possible.
 	// This is how an app can store and retrieve its settings for the current user.
 	GetAppAttr(attrSpec tag.ID, dst tag.Value) error
@@ -89,7 +89,7 @@ type ElementID [3]tag.ID
 
 // TxOpID is TxOp atomic edit entry ID, functioning as a multi-part LSM key: CellID / AttrID / SI / EditID.
 type TxOpID struct {
-	CellID tag.ID // target cell or space ID
+	CellID tag.ID // target cell / storage / container ID
 	AttrID tag.ID // references an attribute or protocol specification
 	ItemID tag.ID // user-defined UID, SKU, inline value, or element ID
 	EditID tag.ID // references previous revision(s); see tag.ForkEdit()
@@ -104,6 +104,6 @@ type TxOp struct {
 }
 
 type AttrDef struct {
-	tag.Spec
+	tag.Expr
 	Prototype tag.Value
 }
