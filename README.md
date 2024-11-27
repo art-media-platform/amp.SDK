@@ -1,18 +1,18 @@
 # art.media.platform.SDK
-_A fully provisioned solution for files, media, and 3D asset sharing and deployment we can all agree on._
+_A fully provisioned solution for files, media, and 3D asset sharing and deployment that we can all agree on._
 
 **_art.media.platform_** ("Amp") is a potent 3D client-to-infrastructure suite that provides a secure, scalable, and extensible runtime for 3D applications. It supports 3D and media-centric apps with pluggable infrastructure, allowing artists, publishers, creators, and organizations to control asset deployments and experiences within high-fidelity spatial or geographic environments.
 
 ## Key Features
 
 - Secure, "turn-key" support for:
-  - __3D spaces and linking__: Users experience _spatially_ placed media and files and can be linked to any real or virtual space, _transforming human accessibility_.
+  - __3D spaces and linking__: Spatially place media and files and link them to real or virtual space, transforming your ussrs accessibility.
   - __Payment processing__: Built-in payment suite **amp.nile** offers easy integration with [Stripe](https://stripe.com/) and [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/).
-  - __Platform coverage__: Amp lets you ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _VisionPro_, _Horizon_, and other OEM ecosystems (e.g. HoloLens, Magic Leap).
+  - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _VisionPro_, _Horizon_, and other OEM ecosystems (e.g. HoloLens, Magic Leap).
   - __Continuous deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
   - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [Yubikey](https://yubico.com)).
 
-- Seamless integration with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
+- integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
 
 - A lightweight, stand-alone "headless" native executable and shared library **amp.host.lib** with tags **amp.host** that offers federated and decentralized service and storage.
 
