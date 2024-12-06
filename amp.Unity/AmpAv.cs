@@ -28,13 +28,14 @@ namespace Amp {
             "ZGlhSXRlbRIdCgVGbGFncxgBIAEoDjIOLmF2Lk1lZGlhRmxhZ3MSHAoKU25h",
             "cHNob3RJRBgDIAEoCzIILmFtcC5UYWcSDwoHU3RhcnRBdBgFIAEoARIPCgdT",
             "ZWNvbmRzGAYgASgBEhIKClBvcHVsYXJpdHkYECABKAISEAoIT3JkZXJpbmcY",
-            "ESABKAIq+wEKCk1lZGlhRmxhZ3MSFgoSTWVkaWFGbGFnc19Vbmtub3duEAAS",
-            "GAoTTWVkaWFGbGFnc19IYXNBdWRpbxCAAhIYChNNZWRpYUZsYWdzX0hhc1Zp",
-            "ZGVvEIAEEhkKFE1lZGlhRmxhZ3NfSGFzU3BlZWNoEIAIEhwKF01lZGlhRmxh",
-            "Z3NfTmVlZHNOZXR3b3JrEIAQEhUKEU1lZGlhRmxhZ3NfSXNMaXZlEAESGQoV",
-            "TWVkaWFGbGFnc19Jc1NlZWthYmxlEAISGQoVTWVkaWFGbGFnc19Jc1VuZW5k",
-            "aW5nEAQSGwoXTWVkaWFGbGFnc19Ta2lwSXNMaWtlbHkQEEIGqgIDQW1wYgZw",
-            "cm90bzM="));
+            "ESABKAIqrwIKCk1lZGlhRmxhZ3MSEwoPTWVkaWFGbGFnc19Ob25lEAASFQoR",
+            "TWVkaWFGbGFnc19Jc0xpdmUQARIZChVNZWRpYUZsYWdzX0lzU2Vla2FibGUQ",
+            "AhIZChVNZWRpYUZsYWdzX0lzVW5lbmRpbmcQBBIZChVNZWRpYUZsYWdzX05l",
+            "d0NoYXB0ZXIQCBIXChNNZWRpYUZsYWdzX05ld1RyYWNrEBASGAoTTWVkaWFG",
+            "bGFnc19IYXNBdWRpbxCAAhIYChNNZWRpYUZsYWdzX0hhc1ZpZGVvEIAEEhkK",
+            "FE1lZGlhRmxhZ3NfSGFzU3BlZWNoEIAIEhwKF01lZGlhRmxhZ3NfTmVlZHNO",
+            "ZXR3b3JrEIAQEh4KF01lZGlhRmxhZ3NfU2tpcElzTGlrZWx5EICAgAhCBqoC",
+            "A0FtcGIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Amp.AmpCoreReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Amp.MediaFlags), }, null, new pbr::GeneratedClrTypeInfo[] {
@@ -46,18 +47,20 @@ namespace Amp {
   }
   #region Enums
   public enum MediaFlags {
-    [pbr::OriginalName("MediaFlags_Unknown")] Unknown = 0,
+    [pbr::OriginalName("MediaFlags_None")] None = 0,
+    [pbr::OriginalName("MediaFlags_IsLive")] IsLive = 1,
+    [pbr::OriginalName("MediaFlags_IsSeekable")] IsSeekable = 2,
+    [pbr::OriginalName("MediaFlags_IsUnending")] IsUnending = 4,
+    [pbr::OriginalName("MediaFlags_NewChapter")] NewChapter = 8,
+    [pbr::OriginalName("MediaFlags_NewTrack")] NewTrack = 16,
     [pbr::OriginalName("MediaFlags_HasAudio")] HasAudio = 256,
     [pbr::OriginalName("MediaFlags_HasVideo")] HasVideo = 512,
     [pbr::OriginalName("MediaFlags_HasSpeech")] HasSpeech = 1024,
     [pbr::OriginalName("MediaFlags_NeedsNetwork")] NeedsNetwork = 2048,
-    [pbr::OriginalName("MediaFlags_IsLive")] IsLive = 1,
-    [pbr::OriginalName("MediaFlags_IsSeekable")] IsSeekable = 2,
-    [pbr::OriginalName("MediaFlags_IsUnending")] IsUnending = 4,
     /// <summary>
     /// When set, the user is more likely to skipping short intervals than switch media items.
     /// </summary>
-    [pbr::OriginalName("MediaFlags_SkipIsLikely")] SkipIsLikely = 16,
+    [pbr::OriginalName("MediaFlags_SkipIsLikely")] SkipIsLikely = 16777216,
   }
 
   #endregion
@@ -117,7 +120,7 @@ namespace Amp {
 
     /// <summary>Field number for the "Flags" field.</summary>
     public const int FlagsFieldNumber = 1;
-    private global::Amp.MediaFlags flags_ = global::Amp.MediaFlags.Unknown;
+    private global::Amp.MediaFlags flags_ = global::Amp.MediaFlags.None;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public global::Amp.MediaFlags Flags {
@@ -230,7 +233,7 @@ namespace Amp {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override int GetHashCode() {
       int hash = 1;
-      if (Flags != global::Amp.MediaFlags.Unknown) hash ^= Flags.GetHashCode();
+      if (Flags != global::Amp.MediaFlags.None) hash ^= Flags.GetHashCode();
       if (snapshotID_ != null) hash ^= SnapshotID.GetHashCode();
       if (StartAt != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(StartAt);
       if (Seconds != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Seconds);
@@ -254,7 +257,7 @@ namespace Amp {
     #if !GOOGLE_PROTOBUF_REFSTRUCT_COMPATIBILITY_MODE
       output.WriteRawMessage(this);
     #else
-      if (Flags != global::Amp.MediaFlags.Unknown) {
+      if (Flags != global::Amp.MediaFlags.None) {
         output.WriteRawTag(8);
         output.WriteEnum((int) Flags);
       }
@@ -288,7 +291,7 @@ namespace Amp {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     void pb::IBufferMessage.InternalWriteTo(ref pb::WriteContext output) {
-      if (Flags != global::Amp.MediaFlags.Unknown) {
+      if (Flags != global::Amp.MediaFlags.None) {
         output.WriteRawTag(8);
         output.WriteEnum((int) Flags);
       }
@@ -322,7 +325,7 @@ namespace Amp {
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public int CalculateSize() {
       int size = 0;
-      if (Flags != global::Amp.MediaFlags.Unknown) {
+      if (Flags != global::Amp.MediaFlags.None) {
         size += 1 + pb::CodedOutputStream.ComputeEnumSize((int) Flags);
       }
       if (snapshotID_ != null) {
@@ -352,7 +355,7 @@ namespace Amp {
       if (other == null) {
         return;
       }
-      if (other.Flags != global::Amp.MediaFlags.Unknown) {
+      if (other.Flags != global::Amp.MediaFlags.None) {
         Flags = other.Flags;
       }
       if (other.snapshotID_ != null) {

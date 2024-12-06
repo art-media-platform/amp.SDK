@@ -31,9 +31,8 @@ var (
 	OrderByGeoID      = CellPropertyTagID.With("order-by.geo").ID
 	OrderByAreaID     = CellPropertyTagID.With("order-by.area").ID
 
-	CellTags   = CellProperty.With("Tags")
-	CellLinks  = CellTags.With("links").ID
-	CellGlyphs = CellTags.With("glyphs").ID
+	CellLinks  = CellProperty.With("Tags.links").ID
+	CellGlyphs = CellProperty.With("Tags.glyphs").ID //
 
 	CellTag   = CellProperty.With("Tag")
 	CellMedia = CellTag.With("content.media").ID
