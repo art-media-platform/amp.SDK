@@ -24,17 +24,21 @@ func TestGold(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	const suffix = ".out.txt"
 	for _, fi := range files {
 		itemName := fi.Name()
 		if itemName == "" || fi.IsDir() || itemName[0] == '.' {
 			continue
 		}
-		if !strings.HasSuffix(itemName, ".in.txt") {
+
+		if strings.HasSuffix(itemName, suffix) {
+			continue
+		}
+		if !strings.HasSuffix(itemName, ".txt") {
 			continue
 		}
 
-		outName := itemName[:len(itemName)-7] + ".out.txt"
+		outName := itemName[:len(itemName)-4] + suffix
 		processTags(
 			path.Join(scriptDir, itemName),
 			path.Join(scriptDir, outName),

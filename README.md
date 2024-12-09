@@ -6,13 +6,13 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
 ## Key Features
 
 - Secure, "turn-key" support for:
-  - __3D spaces and linking__: Spatially place media and files and link them to real or virtual space, transforming your ussrs accessibility.
+  - __3D spaces and linking__: Spatially place media and files and link them to real or virtual space, transforming user accessibility.
   - __Payment processing__: Built-in payment suite **amp.nile** offers easy integration with [Stripe](https://stripe.com/) and [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/).
-  - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _VisionPro_, _Horizon_, and other OEM ecosystems (e.g. HoloLens, Magic Leap).
+  - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _VisionPro_, _Horizon_, and other OEM ecosystems (e.g., HoloLens, Magic Leap).
   - __Continuous deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
   - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [Yubikey](https://yubico.com)).
 
-- integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
+- Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
 
 - A lightweight, stand-alone "headless" native executable and shared library **amp.host.lib** with tags **amp.host** that offers federated and decentralized service and storage.
 
@@ -31,7 +31,7 @@ Meanwhile, _web-based_ 3D frameworks like [Three.js](https://threejs.org/) do no
 ### Benefits
   - __Content distribution__: Choose how to deploy your projects in a way that makes the most sense for your team and budget.
   - __Flexibility__: Enjoy strategic flexibility on how you publish apps and distribute content.
-  - __Asset management__: Leverage Amp's content deployment system that allows you to deploy content updates without having to deploy new App builds.
+  - __Asset management__: Leverage Amp's content deployment system that allows you to deploy content updates without having to deploy new app builds.
   - __Savings__: Save resources by not maintaining UIs and custom behavior for each OS, web browser, and form factor.
   - __Cash flow__: Use Amp's payment processing module to monetize your work and receive payments through your Stripe or PayFlow account.
 

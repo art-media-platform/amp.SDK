@@ -17,10 +17,9 @@ type Expr struct {
 const (
 	PackageTags = "amp.spec.tag.v.0.8"
 
-	WithDelimiters = `[\.+\s,\:\!\?]+` // commutative (symmetric) binary delimiters
-	ThenDelimiters = `[\-/\\\~\^\@]+`  // non-commutative binary or unary delimiter
-
-	GroupDelimiters = `[]()<>{}¿?¡!` // TODO group delimiter pairs
+	WithDelimiters  = `[\.+\s,\:\!\?]+` // commutative (symmetric) binary delimiters
+	ThenDelimiters  = `[\-/\\\~\^\@]+`  // non-commutative binary or unary delimiter
+	GroupDelimiters = `[]()<>{}¿?¡!`    // TODO group delimiter pairs
 )
 
 // tag.Value wraps a data element type, exposing tags, serialization, and instantiation methods.

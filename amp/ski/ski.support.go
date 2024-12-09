@@ -106,15 +106,12 @@ func NewKeyTomeMgr() *KeyTomeMgr {
 //
 // THREADSAFE
 func (mgr *KeyTomeMgr) Clear() {
-
-	// TODO: zero out each key entry to protect private keys
 	mgr.mutex.Lock()
 	keySets := mgr.keyTome.Keyrings
 	for _, keySet := range keySets {
 		keySet.ZeroOut()
 	}
 	mgr.mutex.Unlock()
-
 }
 
 // FetchKey returns the first KeyEntry in the specified key set with a matching pub key prefix.
