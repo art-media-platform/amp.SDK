@@ -18,13 +18,11 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
 
 ## What Does This Solve?
 
-***Amp bridges native 3D apps to system, network, and infrastructure services, addressing key challenges:***
+Traditional file and asset management systems are inadequate for hundreds or thousands of items. Teams often resort to makeshift solutions for collaboration and sharing, compromising efficiency and security.
 
-Traditional file and asset management systems are inadequate for organizing, experiencing, or reviewing hundreds or thousands of assets. Teams often resort to makeshift solutions for collaboration and sharing, compromising efficiency and security.
+Teams that collaborate over large filesets often deploy using production systems _entirely_ different from their development workflows. Many sharing and collaboration solutions exist, but they lack first-class spatial linking and native 3D content integration while suffering from inflexible, confining web or OS-based user experiences.
 
-Teams often collaborate over large file sets but deploy using production systems entirely different from their development workflows. Many sharing and collaboration solutions exist, but they lack first-class spatial linking and native 3D content integration while suffering from inflexible, confining web or OS-based user experiences.
-
-Meanwhile, _web-based_ 3D frameworks like [Three.js](https://threejs.org/) do not compare to hardware-native Unreal and Unity experiences nor offer a path for real-world asset deployments. For example, 3D experiences often require asset deployments exceeding many gigabytes, which are impossible through a web browser. Worse, _web stacks pose many blockers that publishers have little or no ability to address, such as texturing features, performance issues, or animation pain_.
+Meanwhile, _web-based_ 3D frameworks like [Three.js](https://threejs.org/) do not compare to platform-native experiences nor offer a path for real-world asset deployments. For example, 3D experiences often require asset deployments exceeding many gigabytes, which are impossible through a web browser. Worse, _web stacks pose many blockers that publishers have little or no ability to address, such as texturing features, performance issues, or animation pain_.
 
 ***art.media.platform*** is a bridge and toolbox that allows 3D app developers to focus on their core value proposition. It offers rich support for persistent state, user interfaces, and content immersion, allowing apps to break free of web _and_ OS limitations. _Teams, organizers, artists, engineers, scientists, and ultimately consumers need better tools to richly and safely share assets_.
 
