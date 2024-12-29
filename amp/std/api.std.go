@@ -43,10 +43,17 @@ type Pin[AppT amp.AppInstance] struct {
 }
 
 type CellWriter interface {
-	Upsert(op *amp.TxOp, val tag.Value)
 
-	PutText(propertyID tag.ID, val string)
-	PutItem(propertyID tag.ID, val tag.Value)
+	// Pushes a tx operation attribute to the cell's pinned state.
+	Push(op *amp.TxOp, value tag.Value)
+
+	// Convenience methods for pushing string and generic tag.Value attributes bound to std.Item000 (aka tag.ID{})
+	PushText(attrID tag.ID, value string)
+	PushItem(attrID tag.ID, value tag.Value)
+
+	// Convenience methods for pushing string and generic attributes bound to an item ID.
+	PushTextWithID(attrID tag.ID, itemID tag.ID, value string)
+	PushItemWithID(attrID tag.ID, itemID tag.ID, value tag.Value)
 }
 
 const (

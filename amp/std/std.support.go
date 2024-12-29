@@ -127,7 +127,7 @@ func (pin *Pin[AppT]) pushState() error {
 			cellID: pinnedID,
 		}
 
-		tx.Upsert(amp.MetaNodeID, CellChildren.ID, pinnedID, nil) // export the root cell ID
+		tx.Upsert(amp.MetaNodeID, CellChildren.ID, pinnedID, nil) // publish root cell ID using the meta node
 		pin.Cell.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
@@ -153,15 +153,15 @@ type cellWriter struct {
 	err    error
 }
 
-func (w *cellWriter) PutText(propertyID tag.ID, value string) {
+func (w *cellWriter) PushTextWithID(attrID, itemID tag.ID, value string) {
 	if w.err != nil {
 		return
 	}
 	op := amp.TxOp{}
 	op.OpCode = amp.TxOpCode_UpsertElement
 	op.CellID = w.cellID
-	op.AttrID = CellProperties.ID
-	op.ItemID = propertyID
+	op.AttrID = attrID
+	op.ItemID = itemID
 	err := w.tx.MarshalOp(&op, &amp.Tag{
 		Text: value,
 	})
@@ -170,21 +170,29 @@ func (w *cellWriter) PutText(propertyID tag.ID, value string) {
 	}
 }
 
-func (w *cellWriter) PutItem(propertyID tag.ID, value tag.Value) {
+func (w *cellWriter) PushItemWithID(attrID, itemID tag.ID, value tag.Value) {
 	if w.err != nil {
 		return
 	}
 	op := amp.TxOp{}
 	op.OpCode = amp.TxOpCode_UpsertElement
 	op.CellID = w.cellID
-	op.AttrID = CellProperties.ID
-	op.ItemID = propertyID
+	op.AttrID = attrID
+	op.ItemID = itemID
 	if err := w.tx.MarshalOp(&op, value); err != nil {
 		w.err = err
 	}
 }
 
-func (w *cellWriter) Upsert(op *amp.TxOp, val tag.Value) {
+func (w *cellWriter) PushText(attrID tag.ID, value string) {
+	w.PushTextWithID(attrID, Item000, value)
+}
+
+func (w *cellWriter) PushItem(attrID tag.ID, value tag.Value) {
+	w.PushItemWithID(attrID, Item000, value)
+}
+
+func (w *cellWriter) Push(op *amp.TxOp, val tag.Value) {
 	if w.err != nil {
 		return
 	}

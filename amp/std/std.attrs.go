@@ -13,9 +13,10 @@ var (
 	LoginResponseSpec   = amp.AttrSpec.With("LoginResponse").ID
 	LoginCheckpointSpec = amp.AttrSpec.With("LoginCheckpoint").ID
 
-	CellChildren   = amp.AttrSpec.With("children.Tag.ID") // ID suffix denotes SeriesIndex is used to store a CellID
-	CellProperties = amp.AttrSpec.With("cell-properties")
-	LaunchURL      = amp.AttrSpec.With("LaunchURL").ID
+	Item000 = tag.Nil
+
+	CellChildren = amp.AttrSpec.With("children.Tag.ID") // ID suffix denotes SeriesIndex is used to store a CellID
+	LaunchURL    = amp.AttrSpec.With("LaunchURL").ID
 
 	CellProperty   = tag.Expr{}.With("cell-property")
 	TextTag        = CellProperty.With("text.Tag")

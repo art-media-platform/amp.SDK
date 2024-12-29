@@ -17,28 +17,31 @@ var (
 	sThenDelimiters = regexp.MustCompile(ThenDelimiters) // regex for tag processing
 )
 
-// Genesis returns a tag.ID that denotes an edit lineage root based on a given seed.
+// Genesis returns a tag.ID that denotes an edit lineage root based on a single given "seed".
 //
 //	בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 func Genesis(seed ID) ID {
 	return [3]uint64{
 		seed[0],
-		seed[1] >> 32, // 00 00 00 00 helps identify a tag.ID as a genesis seed
+		seed[1] >> 32, // 00 00 00 00 hint that helps identify a tag.ID as a genesis seed
 		seed[2],
 	}
 }
 
-// FormEditID combines a predecessor and "seed" tag.ID, yielding a new "EditID" tag.  A collection of EditIDs securely reflect a revision lineage that can be reassembled in O(n*n).
+// Entangle symmetrically merges two tag IDs, yielding a new determintic and pseudo-unique tag.
+// A collection of these "edit" tag IDs securely reflect a revision lineage (merkle) tree that can be reassembled in O(n*n).
 //
-// This means a sorted list of CellID + AttrID + ItemID + EditID forms a CRDT, where EditID encompasses "height" as described in https://peerlinks.io/protocol.html
-func (predecessor ID) FormEditID(seed ID) ID {
-	if predecessor.IsNil() {
-		return Genesis(seed)
+// This means a sorted list of CellID + AttrID + ItemID + EditID forms a CRDT, where EditID expresses "height" as described in https://peerlinks.io/protocol.html
+func (id ID) Entangle(other ID) ID {
+	if id.IsNil() {
+		return Genesis(other)
+	} else if other.IsNil() {
+		return Genesis(id)
 	} else {
 		return [3]uint64{
-			((predecessor[0] + seed[0]) >> 1),
-			predecessor[1] ^ seed[1],
-			predecessor[2] ^ seed[2],
+			(id[0] + other[0]) >> 1, // timestamp midpoint
+			(id[1] + other[1]),      // mux entropy
+			(id[2] + other[2]),      // mux entropy
 		}
 	}
 }
@@ -304,77 +307,77 @@ func (id ID) WithLiteral(tagLiteral []byte) ID {
 	return id.With(FromLiteral(tagLiteral))
 }
 
-func (tag ID) String() string {
-	return tag.Base32()
+func (id ID) String() string {
+	return id.Base32()
 }
 
-func (tag ID) CompareTo(oth ID) int {
-	if tag[0] < oth[0] {
+func (id ID) CompareTo(oth ID) int {
+	if id[0] < oth[0] {
 		return -1
 	}
-	if tag[0] > oth[0] {
+	if id[0] > oth[0] {
 		return 1
 	}
-	if tag[1] < oth[1] {
+	if id[1] < oth[1] {
 		return -1
 	}
-	if tag[1] > oth[1] {
+	if id[1] > oth[1] {
 		return 1
 	}
-	if tag[2] < oth[2] {
+	if id[2] < oth[2] {
 		return -1
 	}
-	if tag[2] > oth[2] {
+	if id[2] > oth[2] {
 		return 1
 	}
 	return 0
 }
 
-func (tag ID) Add(oth ID) ID {
+func (id ID) Add(oth ID) ID {
 	var out ID
 	var carry uint64
 
-	sum := tag[2] + oth[2]
+	sum := id[2] + oth[2]
 	out[2] = sum
-	if sum < tag[2] || sum < oth[2] {
+	if sum < id[2] || sum < oth[2] {
 		carry = 1
 	}
 
-	// no carry for tag[0]
-	out[1] = tag[1] + oth[1] + carry
-	out[0] = tag[0] + oth[0]
+	// no carry for id[0]
+	out[1] = id[1] + oth[1] + carry
+	out[0] = id[0] + oth[0]
 	return out
 }
 
-func (tag ID) Sub(oth ID) ID {
+func (id ID) Sub(oth ID) ID {
 	var out ID
 	var borrow uint64
 
-	dif := tag[2] - oth[2]
+	dif := id[2] - oth[2]
 	out[2] = dif
-	if tag[2] < oth[2] || dif > tag[2] {
+	if id[2] < oth[2] || dif > id[2] {
 		borrow = 1
 	}
-	// no borrow for tag[0] -- by convention, first bytes are a signed UTC seconds value with 16 bits of fixed seconds precision
-	out[1] = tag[1] - oth[1] - borrow
-	out[0] = tag[0] - oth[0]
+	// no borrow for id[0] -- by convention, first bytes are a signed UTC seconds value with 16 bits of fixed seconds precision
+	out[1] = id[1] - oth[1] - borrow
+	out[0] = id[0] - oth[0]
 	return out
 }
 
 // Returns Unix UTC time in milliseconds
-func (tag ID) UnixMilli() int64 {
-	return int64(tag[0]*1000) >> 16
+func (id ID) UnixMilli() int64 {
+	return int64(id[0]*1000) >> 16
 }
 
 // Returns Unix UTC time in seconds
-func (tag ID) Unix() int64 {
-	return int64(tag[0]) >> 16
+func (id ID) Unix() int64 {
+	return int64(id[0]) >> 16
 }
 
 // Returns this tag.ID in canonic Base32 form
-func (tag ID) Base32() string {
+func (id ID) Base32() string {
 	var buf [25]byte // (25 * 8) % 5 == 0
-	binary := tag.AppendTo(buf[:1])
+	binary := id.AppendTo(buf[:1])
 	str := bufs.Base32Encoding.EncodeToString(binary)
 	str = strings.TrimLeft(str, "0")
 	if str != "" {
@@ -383,9 +386,9 @@ func (tag ID) Base32() string {
 	return "0"
 }
 
-func (tag ID) Base16() string {
+func (id ID) Base16() string {
 	buf := make([]byte, 0, 48)
-	tagBytes := tag.AppendTo(buf)
+	tagBytes := id.AppendTo(buf)
 	str := hex.EncodeToString(tagBytes)
 	str = strings.TrimLeft(str, "0")
 	if str != "" {
@@ -395,42 +398,33 @@ func (tag ID) Base16() string {
 }
 
 // Base32Suffix returns the last few digits of this TID in string form (for easy reading, logs, etc)
-func (tag ID) Base32Suffix() string {
+func (id ID) Base32Suffix() string {
 	const lcm_bits = 40 // divisible by 5 (bits) and 8 (bytes).
 	const lcm_bytes = lcm_bits / 8
 
 	var suffix [lcm_bytes]byte
 	for i := uint(0); i < lcm_bytes; i++ {
 		shift := uint(8 * (lcm_bytes - 1 - i))
-		suffix[i] = byte(tag[2] >> shift)
+		suffix[i] = byte(id[2] >> shift)
 	}
 	base32 := bufs.Base32Encoding.EncodeToString(suffix[:])
 	return base32
 }
 
 // Base16Suffix returns the last few digits of this TID in string form (for easy reading, logs, etc)
-func (tag ID) Base16Suffix() string {
+func (id ID) Base16Suffix() string {
 	const nibbles = 7
 	const HexChars = "0123456789abcdef"
 
 	var suffix [nibbles]byte
 	for i := uint(0); i < nibbles; i++ {
 		shift := uint(4 * (nibbles - 1 - i))
-		hex := byte(tag[2]>>shift) & 0xF
+		hex := byte(id[2]>>shift) & 0xF
 		suffix[i] = HexChars[hex]
 	}
 	base16 := string(suffix[:])
 	return base16
 }
-
-// // CopyNext copies the given TID and increments it by 1, typically useful for seeking the next entry after a given one.
-// func (tag ID) Xor(other ID) ID {
-// 	return ID{
-// 		tag[0] ^ other[0],
-// 		tag[1] ^ other[1],
-// 		tag[2] ^ other[2],
-// 	}
-// }
 
 // Forms an amp.UID explicitly from two uint64 values.
 func IntsToID(x0 int64, x1, x2 uint64) ID {
@@ -449,27 +443,27 @@ var (
 	Nil = ID{}
 )
 
-func FromBytes(in []byte) (tag ID, err error) {
+func FromBytes(in []byte) (id ID, err error) {
 	var buf [24]byte
 	startAt := max(0, 24-len(in))
 	copy(buf[startAt:], in)
 
-	tag[0] = binary.BigEndian.Uint64(buf[0:8])
-	tag[1] = binary.BigEndian.Uint64(buf[8:16])
-	tag[2] = binary.BigEndian.Uint64(buf[16:24])
-	return tag, nil
+	id[0] = binary.BigEndian.Uint64(buf[0:8])
+	id[1] = binary.BigEndian.Uint64(buf[8:16])
+	id[2] = binary.BigEndian.Uint64(buf[16:24])
+	return id, nil
 }
 
-func (tag ID) AppendTo(dst []byte) []byte {
-	dst = binary.BigEndian.AppendUint64(dst, tag[0])
-	dst = binary.BigEndian.AppendUint64(dst, tag[1])
-	dst = binary.BigEndian.AppendUint64(dst, tag[2])
+func (id ID) AppendTo(dst []byte) []byte {
+	dst = binary.BigEndian.AppendUint64(dst, id[0])
+	dst = binary.BigEndian.AppendUint64(dst, id[1])
+	dst = binary.BigEndian.AppendUint64(dst, id[2])
 	return dst
 }
 
-func (tag ID) AsKey() Key {
+func (id ID) AsKey() Key {
 	var key Key
-	tag.ToLSM(key[:])
+	id.ToLSM(key[:])
 	return key
 }
 
@@ -481,8 +475,8 @@ func DecodeLSM(lsm []byte) ID {
 	}
 }
 
-func (tag ID) ToLSM(dst []byte) {
-	binary.BigEndian.PutUint64(dst[0:], ^tag[0]) // higher UTC values appear first
-	binary.BigEndian.PutUint64(dst[8:], tag[1])
-	binary.BigEndian.PutUint64(dst[16:], tag[2])
+func (id ID) ToLSM(dst []byte) {
+	binary.BigEndian.PutUint64(dst[0:], ^id[0]) // higher UTC values appear first
+	binary.BigEndian.PutUint64(dst[8:], id[1])
+	binary.BigEndian.PutUint64(dst[16:], id[2])
 }

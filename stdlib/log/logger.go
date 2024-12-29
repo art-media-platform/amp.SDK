@@ -42,8 +42,12 @@ type Logger interface {
 	Fatalf(inFormat string, args ...interface{})
 }
 
-func InitFlags(flagset *flag.FlagSet) {
+func InitFlags(flagset *flag.FlagSet, verboseLevel int32) {
 	klog.InitFlags(flagset)
+	flagset.Set("logtostderr", "true")
+	if verboseLevel >= 0 {
+		flagset.Set("v", fmt.Sprint(verboseLevel))
+	}
 }
 
 // Uses the stock log formatter with the given settings
@@ -63,7 +67,6 @@ func Flush() {
 }
 
 type logger struct {
-	hasPrefix bool
 	logPrefix string
 	logLabel  string
 }
@@ -80,6 +83,13 @@ func (l *logger) Padding() string {
 	} else {
 		return gSpacing[:gLongestLabel-labelLen]
 	}
+}
+
+func (l *logger) PrefixLabel() string {
+	if len(l.logPrefix) == 0 {
+		return ""
+	}
+	return l.logPrefix + l.Padding()
 }
 
 // NewLogger creates and inits a new Logger with the given label.
@@ -99,8 +109,7 @@ var gLogger = logger{}
 // SetLogLabel sets the label prefix for all entries logged.
 func (l *logger) SetLogLabel(inLabel string) {
 	l.logLabel = inLabel
-	l.hasPrefix = len(inLabel) > 0
-	if l.hasPrefix {
+	if len(inLabel) > 0 {
 		l.logPrefix = fmt.Sprintf("[%s] ", inLabel)
 
 		// Find length of longest line
@@ -140,51 +149,27 @@ func (l *logger) LogV(inVerboseLevel int32) bool {
 }
 
 func (l *logger) Debug(args ...interface{}) {
-	if l.hasPrefix {
-		klog.DebugDepth(1, l.logPrefix, l.Padding(), fmt.Sprint(args...))
-	} else {
-		klog.DebugDepth(1, args...)
-	}
+	klog.DebugDepth(1, l.PrefixLabel(), fmt.Sprint(args...))
 }
 
 func (l *logger) Debugf(inFormat string, args ...interface{}) {
-	if l.hasPrefix {
-		klog.DebugDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(inFormat, args...))
-	} else {
-		klog.DebugDepth(1, fmt.Sprintf(inFormat, args...))
-	}
+	klog.DebugDepth(1, l.PrefixLabel(), fmt.Sprintf(inFormat, args...))
 }
 
 func (l *logger) Debugw(msg string, fields Fields) {
-	if l.hasPrefix {
-		klog.DebugDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(msg+" %v", fields))
-	} else {
-		klog.DebugDepth(1, fmt.Sprintf(msg+" %v", fields))
-	}
+	klog.DebugDepth(1, l.PrefixLabel(), fmt.Sprintf(msg+" %v", fields))
 }
 
 func (l *logger) Success(args ...interface{}) {
-	if l.hasPrefix {
-		klog.SuccessDepth(1, l.logPrefix, l.Padding(), fmt.Sprint(args...))
-	} else {
-		klog.SuccessDepth(1, args...)
-	}
+	klog.SuccessDepth(1, l.PrefixLabel(), fmt.Sprint(args...))
 }
 
 func (l *logger) Successf(inFormat string, args ...interface{}) {
-	if l.hasPrefix {
-		klog.SuccessDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(inFormat, args...))
-	} else {
-		klog.SuccessDepth(1, fmt.Sprintf(inFormat, args...))
-	}
+	klog.SuccessDepth(1, l.PrefixLabel(), fmt.Sprintf(inFormat, args...))
 }
 
 func (l *logger) Successw(msg string, fields Fields) {
-	if l.hasPrefix {
-		klog.SuccessDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(msg+" %v", fields))
-	} else {
-		klog.SuccessDepth(1, fmt.Sprintf(msg+" %v", fields))
-	}
+	klog.SuccessDepth(1, l.PrefixLabel(), fmt.Sprintf(msg+" %v", fields))
 }
 
 // Info logs to the INFO log.
@@ -201,11 +186,7 @@ func (l *logger) Info(inVerboseLevel int32, args ...interface{}) {
 	}
 
 	if logIt {
-		if l.hasPrefix {
-			klog.InfoDepth(1, l.logPrefix, l.Padding(), fmt.Sprint(args...))
-		} else {
-			klog.InfoDepth(1, args...)
-		}
+		klog.InfoDepth(1, l.PrefixLabel(), fmt.Sprint(args...))
 	}
 }
 
@@ -220,20 +201,12 @@ func (l *logger) Infof(inVerboseLevel int32, inFormat string, args ...interface{
 	}
 
 	if logIt {
-		if l.hasPrefix {
-			klog.InfoDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(inFormat, args...))
-		} else {
-			klog.InfoDepth(1, fmt.Sprintf(inFormat, args...))
-		}
+		klog.InfoDepth(1, l.PrefixLabel(), fmt.Sprintf(inFormat, args...))
 	}
 }
 
 func (l *logger) Infow(msg string, fields Fields) {
-	if l.hasPrefix {
-		klog.InfoDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(msg+" %v", fields))
-	} else {
-		klog.InfoDepth(1, fmt.Sprintf(msg+" %v", fields))
-	}
+	klog.InfoDepth(1, l.PrefixLabel(), fmt.Sprintf(msg+" %v", fields))
 }
 
 // Warn logs to the WARNING and INFO logs.
@@ -242,11 +215,7 @@ func (l *logger) Infow(msg string, fields Fields) {
 // Warnings are reserved for situations that indicate an inconsistency or an error that
 // won't result in a departure of specifications, correctness, or expected behavior.
 func (l *logger) Warn(args ...interface{}) {
-	if l.hasPrefix {
-		klog.WarningDepth(1, l.logPrefix, l.Padding(), fmt.Sprint(args...))
-	} else {
-		klog.WarningDepth(1, args...)
-	}
+	klog.WarningDepth(1, l.PrefixLabel(), fmt.Sprint(args...))
 }
 
 // Warnf logs to the WARNING and INFO logs.
@@ -254,19 +223,11 @@ func (l *logger) Warn(args ...interface{}) {
 //
 // See comments above for Warn() for guidelines on errors vs warnings.
 func (l *logger) Warnf(inFormat string, args ...interface{}) {
-	if l.hasPrefix {
-		klog.WarningDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(inFormat, args...))
-	} else {
-		klog.WarningDepth(1, fmt.Sprintf(inFormat, args...))
-	}
+	klog.WarningDepth(1, l.PrefixLabel(), fmt.Sprintf(inFormat, args...))
 }
 
 func (l *logger) Warnw(msg string, fields Fields) {
-	if l.hasPrefix {
-		klog.WarningDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(msg+" %v", fields))
-	} else {
-		klog.WarningDepth(1, fmt.Sprintf(msg+" %v", fields))
-	}
+	klog.WarningDepth(1, l.PrefixLabel(), fmt.Sprintf(msg+" %v", fields))
 }
 
 // Error logs to the ERROR, WARNING, and INFO logs.
@@ -276,13 +237,7 @@ func (l *logger) Warnw(msg string, fields Fields) {
 // corruption of data or resources, or an issue that if not addressed could spiral into deeper issues.
 // Logging an error reflects that correctness or expected behavior is either broken or under threat.
 func (l *logger) Error(args ...interface{}) {
-	{
-		if l.hasPrefix {
-			klog.ErrorDepth(1, l.logPrefix, l.Padding(), fmt.Sprint(args...))
-		} else {
-			klog.ErrorDepth(1, args...)
-		}
-	}
+	klog.ErrorDepth(1, l.PrefixLabel(), fmt.Sprint(args...))
 }
 
 // Errorf logs to the ERROR, WARNING, and INFO logs.
@@ -290,33 +245,17 @@ func (l *logger) Error(args ...interface{}) {
 //
 // See comments above for Error() for guidelines on errors vs warnings.
 func (l *logger) Errorf(inFormat string, args ...interface{}) {
-	{
-		if l.hasPrefix {
-			klog.ErrorDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(inFormat, args...))
-		} else {
-			klog.ErrorDepth(1, fmt.Sprintf(inFormat, args...))
-		}
-	}
+	klog.ErrorDepth(1, l.PrefixLabel(), fmt.Sprintf(inFormat, args...))
 }
 
 func (l *logger) Errorw(msg string, fields Fields) {
-	if l.hasPrefix {
-		klog.ErrorDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(msg+" %v", fields))
-	} else {
-		klog.ErrorDepth(1, fmt.Sprintf(msg+" %v", fields))
-	}
+	klog.ErrorDepth(1, l.PrefixLabel(), fmt.Sprintf(msg+" %v", fields))
 }
 
 // Fatalf logs to the FATAL, ERROR, WARNING, and INFO logs,
 // Arguments are handled like fmt.Printf(); a newline is appended if missing.
 func (l *logger) Fatalf(inFormat string, args ...interface{}) {
-	{
-		if l.hasPrefix {
-			klog.FatalDepth(1, l.logPrefix, l.Padding(), fmt.Sprintf(inFormat, args...))
-		} else {
-			klog.FatalDepth(1, fmt.Sprintf(inFormat, args...))
-		}
-	}
+	klog.FatalDepth(1, l.PrefixLabel(), fmt.Sprintf(inFormat, args...))
 }
 
 func AwaitInterrupt() (

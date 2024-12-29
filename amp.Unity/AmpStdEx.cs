@@ -10,7 +10,6 @@ namespace Amp.Std {
         public static readonly TagExpr AttrSpec         = TagRoot.With("attr");
         public static readonly TagExpr AppSpec          = TagRoot.With("app");
         public static readonly TagExpr CellChildren     = AttrSpec.With("children.Tag.ID");
-        public static readonly TagExpr CellProperties   = AttrSpec.With("cell-properties");
 
         public static readonly TagExpr Property         = new TagExpr().With("cell-property");
 

@@ -87,7 +87,7 @@ type TxMsg struct {
 // ElementID is a multi-part LSM key consisting of CellID / AttrID / ItemID
 type ElementID [3]tag.ID
 
-// TxOpID is TxOp atomic edit entry ID, functioning as a multi-part LSM key: CellID / AttrID / SI / EditID.
+// TxOpID is TxOp atomic edit entry ID, functioning as a multi-part LSM key: CellID / AttrID / ItemID / EditID.
 type TxOpID struct {
 	CellID tag.ID // target cell / storage / container ID
 	AttrID tag.ID // references an attribute or protocol specification
