@@ -16,9 +16,9 @@ UTF8 whitespace, commas, +, and . and : denote the "with" operator.   This opera
 
 Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
 
-The words Center, center, centre, and Centre are homophonic and should have the same hash.
-The words center, Center, Centre, and centre are homophonic and should have the same hash.
-The words Centre, centre, center, and Center are homophonic and should have the same hash.
+The words Center, center, centre, and Centre are homophonic.
+The words center, Center, Centre, and centre are homophonic.
+The words Centre, centre, center, and Center are homophonic.
 
 This has very helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
 
@@ -34,11 +34,11 @@ However: Slashes and dashes are order dependent. Yes, dependent-order?
 
 Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
 
-Words that are not upper case, are considered spoken or otherwise phonetic.
+Words that are not upper case, are considered spoken / phonetic.
 
-This also means we can communicate proper nouns and titles easily, such as A Game of Thrones
+This also means we can communicate proper nouns and titles easily, such as A Game Of Thrones
 This also means we can communicate proper nouns and titles easily, such as Game of Thrones, A.
-This also means we can communicate proper nouns and titles easily, such as a Game Of Thrones.
+This also means we can communicate proper nouns and titles easily, such as a game of thrones.
 
 Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL-CAPS should be used intentionally.
 
@@ -47,9 +47,9 @@ ADA is an acronym for the Americans with Disabilities Act. ms ada is a computer 
 ADA is an acronym for the Americans with Disabilities Act. Ada is a computer programmer, Ms!
 ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
 
-Dig into the amp SDK today!
-Dig into the amp.SDK today!
-Dig into the Amp SDK today!
+Get into the amp SDK today!
+Get into the amp.SDK today!
+Get into the Amp SDK today!
 
 
 Yoda said this is not a drill.
@@ -71,6 +71,3 @@ The 24-byte tag.ID you see to the left is 2^192 wide (in base 32).  For referenc
 Base16 of the ID above (8kj00c8gw8406tugx9bx417whqj3y0qkg) is 160 bits wide.  The leading 32 bits are part of a "minting" when a tag is made decidedly private.
 
 The number of possible hashes for a string of 10 words randomly chosen from the worlds dictionaries well over a million words. Even with the English dictionary's 200,000 words, there are 10^50 (2^160) outputs.
-
-
-TODO:   go get github.com/alecthomas/participle/v2 -- for tags.Parse() implementation?

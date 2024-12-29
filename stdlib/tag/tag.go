@@ -221,26 +221,35 @@ func FromToken(literal string) ID {
 	return FromLiteral([]byte(literal))
 }
 
+const (
+	prime1 = (uint64(1) << 63) - 471
+	prime2 = (uint64(1) << 62) - 143
+	prime3 = (uint64(1) << 55) - 99
+)
+
+var gTagSeed = uint64(1<<63) - 301 // prime number
+
 func FromTime(t time.Time, addEntropy bool) ID {
-	ns_b10 := uint64(t.Nanosecond())
-	ns_f64 := ns_b10 * NanosecStep // map 0..999999999 to 0..(2^64-1)
+	ns_b10 := uint64(t.Nanosecond()) // 0..999999999
+	ns_f64 := ns_b10 * NanosecStep   // map to 0..(2^64-1)
 
 	t_00_06 := uint64(t.Unix()) << 16
 	t_06_08 := ns_f64 >> 48
 	t_08_15 := ns_f64 << 16
-	tag := ID{
-		t_00_06 | uint64(t_06_08),
+
+	id := ID{
+		t_00_06 | t_06_08,
 		t_08_15,
-		0, // reserved
+		0,
 	}
 
 	if addEntropy {
-		gTagSeed = 377377733*ns_f64 ^ gTagSeed
-		tag[1] ^= gTagSeed & EntropyMask
-		tag[2] ^= gTagSeed * ns_f64
+		seed := (prime1*ns_f64 + 0xCCCCAAAACCCCAAAA) ^ (prime2 * gTagSeed)
+		id[1] ^= seed & EntropyMask
+		id[2] = seed + prime3*ns_f64
+		gTagSeed = seed
 	}
-
-	return tag
+	return id
 }
 
 func Join(prefixTags, suffixTags string) string {
@@ -436,8 +445,6 @@ func IntsToID(x0 int64, x1, x2 uint64) ID {
 }
 
 type Key [24]byte
-
-var gTagSeed = uint64(0x3773000000003773)
 
 var (
 	Nil = ID{}

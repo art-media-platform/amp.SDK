@@ -103,6 +103,9 @@ func TestNewTag(t *testing.T) {
 		upperLimit := now.Add(epsilon)
 
 		for _, prev := range prevIDs {
+			if prev.CompareTo(now) == 0 {
+				t.Errorf("got duplicate time value")
+			}
 			comp := prev.CompareTo(upperLimit)
 			if comp >= 0 {
 				t.Errorf("got time value outside of epsilon (%v > %v) ", prev, now)

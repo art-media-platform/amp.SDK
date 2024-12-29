@@ -30,12 +30,12 @@
                                     Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
 BNVBK7822R57ZDWVFBT5BM82FTSMP02VD   text.having."homophone.case".or."homophonic.case".means.its.component.words.are.considered.interchangeable.with.words.that.sound.the.same.but.have.different.spelling
 
-                                    The words Center, center, centre, and Centre are homophonic and should have the same hash.
-7E26XPRYV8BYUSJEU5EUUCPW538SG320Z   the.words.center.center.centre.and.centre.are.homophonic.and.should.have.the.same.hash
-                                    The words center, Center, Centre, and centre are homophonic and should have the same hash.
-7E26XPRYV8BYUSJEU5EUUCPW538SG320Z   the.words.center.center.centre.and.centre.are.homophonic.and.should.have.the.same.hash
-                                    The words Centre, centre, center, and Center are homophonic and should have the same hash.
-7E26XPRYV8BYUSJEU5EUUCPW538SG320Z   the.words.centre.centre.center.and.center.are.homophonic.and.should.have.the.same.hash
+                                    The words Center, center, centre, and Centre are homophonic.
+4PBUM8VHVRVN9H8F4Q9NP9HRJZ5UY5Z9Z   the.words.center.center.centre.and.centre.are.homophonic
+                                    The words center, Center, Centre, and centre are homophonic.
+4PBUM8VHVRVN9H8F4Q9NP9HRJZ5UY5Z9Z   the.words.center.center.centre.and.centre.are.homophonic
+                                    The words Centre, centre, center, and Center are homophonic.
+4PBUM8VHVRVN9H8F4Q9NP9HRJZ5UY5Z9Z   the.words.centre.centre.center.and.center.are.homophonic
 
                                     This has very helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
 HNGM76C66X9WYF9G32P0G5T2ZMZ52WHWE   this.has.very.helpful.implications.for.those.with.sight.or.hearing.impairments.or.in.search.result.ranking.since.the.query.word.order.is.usually.less.important.the.presence.of.particular.words.especially.once.there.are.dozen.words.or.more
@@ -61,14 +61,14 @@ HNGM76C66X9WYF9G32P0G5T2ZMZ52WHWE   this.has.very.helpful.implications.for.those
                                     Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
 713VSQXU2V4JVRQQG2DMGNFS0CDRBDN4K   acronyms.like.NBA.NFL.USA.CIA.PRC.and.EU.are.capitalized.since.they.are.spoken.letter.by.letter
 
-                                    Words that are not upper case, are considered spoken or otherwise phonetic.
-2VV31GCDGVHJP4VHZFGU7FN85P8GP660W   words.that.are.not.upper.case.are.considered.spoken.or.otherwise.phonetic
+                                    Words that are not upper case, are considered spoken / phonetic.
+1Y3K9HH71TK5P049NG42QJ3MBD9RDYKXN   words.that.are.not.upper.case.are.considered.spoken-phonetic
 
-                                    This also means we can communicate proper nouns and titles easily, such as A Game of Thrones
+                                    This also means we can communicate proper nouns and titles easily, such as A Game Of Thrones
 9X1QZ2F0P8ET35Q15H94BS0RN83Q4J050   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
                                     This also means we can communicate proper nouns and titles easily, such as Game of Thrones, A.
 9X1QZ2F0P8ET35Q15H94BS0RN83Q4J050   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.game.of.thrones.a
-                                    This also means we can communicate proper nouns and titles easily, such as a Game Of Thrones.
+                                    This also means we can communicate proper nouns and titles easily, such as a game of thrones.
 9X1QZ2F0P8ET35Q15H94BS0RN83Q4J050   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
 
                                     Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL-CAPS should be used intentionally.
@@ -83,12 +83,12 @@ HNGM76C66X9WYF9G32P0G5T2ZMZ52WHWE   this.has.very.helpful.implications.for.those
                                     ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
 7RBXE95STWGNE346S007PGSU2KZQZ2Y1E   ADA.is.an.acronym.for.the.americans.with.disabilities.act.a.computer.programmer.ms.ada.is
 
-                                    Dig into the amp SDK today!
-2YX2T7C2GP0U21SH339FBHZJC3UR2CTTH   dig.into.the.amp.SDK.today
-                                    Dig into the amp.SDK today!
-2YX2T7C2GP0U21SH339FBHZJC3UR2CTTH   dig.into.the.amp.SDK.today
-                                    Dig into the Amp SDK today!
-2YX2T7C2GP0U21SH339FBHZJC3UR2CTTH   dig.into.the.amp.SDK.today
+                                    Get into the amp SDK today!
+3RZ1NT53UHXHU9DQXW40QW90WTEJ39HFM   get.into.the.amp.SDK.today
+                                    Get into the amp.SDK today!
+3RZ1NT53UHXHU9DQXW40QW90WTEJ39HFM   get.into.the.amp.SDK.today
+                                    Get into the Amp SDK today!
+3RZ1NT53UHXHU9DQXW40QW90WTEJ39HFM   get.into.the.amp.SDK.today
 
 
                                     Yoda said this is not a drill.
@@ -123,8 +123,4 @@ BJ897FM9MU23Y9FFKY5E4PWDG2RJ08M5W   base16.of.the.ID.above.(8kj00c8gw8406tugx9bx
 
                                     The number of possible hashes for a string of 10 words randomly chosen from the worlds dictionaries well over a million words. Even with the English dictionary's 200,000 words, there are 10^50 (2^160) outputs.
 DY3HHE06BYH5C53YP9KC8R1N6K3Q9RN0X   the.number.of.possible.hashes.for.a.string.of.10.words.randomly.chosen.from.the.worlds.dictionaries.well.over.a.million.words.even.with.the.english.dictionary's.200.000.words.there.are.10-50.(2-160).outputs
-
-
-                                    TODO:   go get github.com/alecthomas/participle/v2 -- for tags.Parse() implementation?
-337G3KTDQKUX4EN253JKK8QGWFEKER7Q7   TODO.go.get.github.com-alecthomas-participle-v2-for.tags.parse().implementation
 
