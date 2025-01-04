@@ -8,39 +8,38 @@ import (
 )
 
 var (
-	LoginSpec           = amp.AttrSpec.With("Login").ID
-	LoginChallengeSpec  = amp.AttrSpec.With("LoginChallenge").ID
-	LoginResponseSpec   = amp.AttrSpec.With("LoginResponse").ID
-	LoginCheckpointSpec = amp.AttrSpec.With("LoginCheckpoint").ID
+	LoginSpec           = amp.SystemAttr.With("Login").ID
+	LoginChallengeSpec  = amp.SystemAttr.With("LoginChallenge").ID
+	LoginResponseSpec   = amp.SystemAttr.With("LoginResponse").ID
+	LoginCheckpointSpec = amp.SystemAttr.With("LoginCheckpoint").ID
 
 	Item000 = tag.Nil
 
-	CellChildren = amp.AttrSpec.With("children.Tag.ID") // ID suffix denotes SeriesIndex is used to store a CellID
-	LaunchURL    = amp.AttrSpec.With("LaunchURL").ID
+	CellChildren = amp.SystemAttr.With("children.Tag.ID") // ID suffix denotes SeriesIndex is used to store a CellID
+	LaunchURL    = amp.SystemAttr.With("LaunchURL").ID
 
-	CellProperty   = tag.Expr{}.With("cell-property")
-	TextTag        = CellProperty.With("text.Tag")
-	CellLabel      = TextTag.With("label").ID
-	CellCaption    = TextTag.With("caption").ID
-	CellSynopsis   = TextTag.With("synopsis").ID
-	CellCollection = TextTag.With("collection").ID
-	CellAuthor     = TextTag.With("author").ID
+	CellAttr       = amp.SystemAttr.With("cell")
+	CellText       = CellAttr.With("text.Tag")
+	CellLabel      = CellText.With("label").ID
+	CellCaption    = CellText.With("caption").ID
+	CellSynopsis   = CellText.With("synopsis").ID
+	CellCollection = CellText.With("collection").ID
+	CellAuthor     = CellText.With("author").ID
 
-	CellPropertyTagID = CellProperty.With("Tag.ID")
-	OrderByPlayID     = CellPropertyTagID.With("order-by.play").ID
-	OrderByTimeID     = CellPropertyTagID.With("order-by.time").ID
-	OrderByGeoID      = CellPropertyTagID.With("order-by.geo").ID
-	OrderByAreaID     = CellPropertyTagID.With("order-by.area").ID
+	// CellPropertyTagID = CellProperty.With("Tag.ID")
+	// OrderByPlayID     = CellPropertyTagID.With("order-by.play").ID
+	// OrderByTimeID     = CellPropertyTagID.With("order-by.time").ID
+	// OrderByGeoID      = CellPropertyTagID.With("order-by.geo").ID
+	// OrderByAreaID     = CellPropertyTagID.With("order-by.area").ID
 
-	CellLinks  = CellProperty.With("Tags.links").ID
-	CellGlyphs = CellProperty.With("Tags.glyphs").ID //
+	CellFSInfo = CellAttr.With("FSInfo").ID
+	CellLinks  = CellAttr.With("Tags.links").ID
+	CellGlyphs = CellAttr.With("Tags.glyphs").ID
 
-	CellTag   = CellProperty.With("Tag")
-	CellMedia = CellTag.With("content.media").ID
-	CellCover = CellTag.With("content.cover").ID
-	CellVis   = CellTag.With("content.vis").ID
-
-	CellFileInfo = CellProperty.With("FileInfo").ID
+	CellContent = CellAttr.With("content.Tag")
+	CellMedia   = CellContent.With("media").ID
+	CellCover   = CellContent.With("cover").ID
+	CellVis     = CellContent.With("vis").ID
 )
 
 const (
@@ -79,7 +78,7 @@ func (v *Position) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *Position) TagExpr() tag.Expr {
-	return amp.AttrSpec.With("Position")
+	return amp.SystemAttr.With("Position")
 }
 
 func (v *Position) New() tag.Value {
@@ -91,7 +90,7 @@ func (v *FSInfo) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *FSInfo) TagExpr() tag.Expr {
-	return amp.AttrSpec.With("FSInfo")
+	return amp.SystemAttr.With("FSInfo")
 }
 
 func (v *FSInfo) New() tag.Value {

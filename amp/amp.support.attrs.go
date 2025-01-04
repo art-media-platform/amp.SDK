@@ -11,9 +11,9 @@ var (
 	// CellID hard-wired to denote the root c
 	MetaNodeID = tag.ID{0, 0, 2701}
 
-	TagRoot  = tag.Expr{}.With("amp")
-	AttrSpec = TagRoot.With("attr")
-	AppSpec  = TagRoot.With("app")
+	SystemTag  = tag.Expr{}.With("amp")
+	SystemAttr = SystemTag.With("attr")
+	AppTag     = SystemTag.With("app")
 )
 
 func RegisterBuiltinTypes(reg Registry) error {
@@ -30,7 +30,7 @@ func RegisterBuiltinTypes(reg Registry) error {
 	}
 
 	for _, pi := range prototypes {
-		reg.RegisterPrototype(AttrSpec, pi, "")
+		reg.RegisterPrototype(SystemAttr, pi, "")
 	}
 
 	return nil
@@ -66,7 +66,7 @@ func (v *Tag) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *Tag) TagExpr() tag.Expr {
-	return AttrSpec.With("Tag")
+	return SystemAttr.With("Tag")
 }
 
 func (v *Tag) New() tag.Value {
@@ -85,7 +85,7 @@ func (v *Tags) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *Tags) TagExpr() tag.Expr {
-	return AttrSpec.With("Tags")
+	return SystemAttr.With("Tags")
 }
 
 func (v *Tags) New() tag.Value {
@@ -140,7 +140,7 @@ func (v *Err) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *Err) TagExpr() tag.Expr {
-	return AttrSpec.With("Err")
+	return SystemAttr.With("Err")
 }
 
 func (v *Err) New() tag.Value {
@@ -184,7 +184,7 @@ func (v *LaunchURL) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *LaunchURL) TagExpr() tag.Expr {
-	return AttrSpec.With("LaunchURL")
+	return SystemAttr.With("LaunchURL")
 }
 
 func (v *LaunchURL) New() tag.Value {
@@ -196,7 +196,7 @@ func (v *Login) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *Login) TagExpr() tag.Expr {
-	return AttrSpec.With("Login")
+	return SystemAttr.With("Login")
 }
 
 func (v *Login) New() tag.Value {
@@ -208,7 +208,7 @@ func (v *LoginChallenge) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *LoginChallenge) TagExpr() tag.Expr {
-	return AttrSpec.With("LoginChallenge")
+	return SystemAttr.With("LoginChallenge")
 }
 
 func (v *LoginChallenge) New() tag.Value {
@@ -220,7 +220,7 @@ func (v *LoginResponse) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *LoginResponse) TagExpr() tag.Expr {
-	return AttrSpec.With("LoginResponse")
+	return SystemAttr.With("LoginResponse")
 }
 
 func (v *LoginResponse) New() tag.Value {
@@ -232,7 +232,7 @@ func (v *LoginCheckpoint) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *LoginCheckpoint) TagExpr() tag.Expr {
-	return AttrSpec.With("LoginCheckpoint")
+	return SystemAttr.With("LoginCheckpoint")
 }
 
 func (v *LoginCheckpoint) New() tag.Value {
@@ -244,7 +244,7 @@ func (v *PinRequest) MarshalToStore(in []byte) (out []byte, err error) {
 }
 
 func (v *PinRequest) TagExpr() tag.Expr {
-	return AttrSpec.With("PinRequest")
+	return SystemAttr.With("PinRequest")
 }
 
 func (v *PinRequest) New() tag.Value {

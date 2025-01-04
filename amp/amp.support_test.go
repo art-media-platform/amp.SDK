@@ -111,14 +111,14 @@ func (r *bufReader) Read(p []byte) (n int, err error) {
 
 func TestRegistry(t *testing.T) {
 	reg := NewRegistry()
-	spec := reg.RegisterPrototype(AttrSpec.With("av.Hello.World"), &Tag{}, "")
-	if spec.Canonic != AttrSpec.Canonic+".av.Hello.World.Tag" {
+	spec := reg.RegisterPrototype(SystemAttr.With("av.Hello.World"), &Tag{}, "")
+	if spec.Canonic != SystemAttr.Canonic+".av.Hello.World.Tag" {
 		t.Fatal("RegisterPrototype failed")
 	}
 	if spec.ID != (tag.Expr{}.With("amp.attr.World.Tag.Hello.av")).ID {
 		t.Fatalf("tag.FormSpec failed")
 	}
-	if spec.ID != AttrSpec.With("av").With("World.Hello.Tag").ID {
+	if spec.ID != SystemAttr.With("av").With("World.Hello.Tag").ID {
 		t.Fatalf("tag.FormSpec failed")
 	}
 	if spec.ID.Base32Suffix() != "yg70m6cn" {

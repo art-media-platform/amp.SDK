@@ -4,7 +4,7 @@
 // package amp is an implementation-independent API for a pluggable client-server UI/UX system,
 // featuring support and integration for files, media, and communication.
 //
-// Welcome to art.media.platform (c) 2023 ("Amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
+// Welcome to art.media.platform (c) 2023 ("amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
 //   something we can all agree on.
 
 package amp
@@ -50,7 +50,7 @@ const (
 	// Version of the TxHeader -- first byte
 	Const_TxHeader_Version Const = 51
 	// The first byte of the TxHeader is the header size and version and
-	// the following 3 bytes of a serialized TxMsg ("Amp")
+	// the following 3 bytes of a serialized TxMsg ("amp")
 	Const_TxHeader_Marker Const = 6385008
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 	// Oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar.
@@ -587,7 +587,7 @@ type TxEnvelope struct {
 	From *Tag `protobuf:"bytes,14,opt,name=From,proto3" json:"From,omitempty"`
 	// recipient of this TxEnvelope
 	To *Tag `protobuf:"bytes,15,opt,name=To,proto3" json:"To,omitempty"`
-	// authority / trust snapshot
+	// authority / trust ID
 	Epoch *Tag `protobuf:"bytes,16,opt,name=Epoch,proto3" json:"Epoch,omitempty"`
 	// headers / metadata / context
 	Tags *Tags `protobuf:"bytes,17,opt,name=Tags,proto3" json:"Tags,omitempty"`
@@ -1535,8 +1535,8 @@ var fileDescriptor_ab24c3800b7c0c17 = []byte{
 	0x4e, 0x4a, 0x13, 0x4f, 0x4e, 0x4a, 0xc6, 0x1b, 0x8f, 0x4b, 0x13, 0x0f, 0x1f, 0x97, 0x26, 0xde,
 	0x7f, 0x5c, 0x9a, 0xb8, 0xf3, 0xb1, 0xae, 0x23, 0x7b, 0x83, 0xbb, 0x57, 0xdb, 0xbc, 0x7f, 0x8d,
 	0x0a, 0xf9, 0x52, 0x1f, 0x6c, 0x87, 0xbe, 0xe4, 0xb9, 0x54, 0xaa, 0x72, 0xbe, 0xa6, 0x7f, 0x33,
-	0xd7, 0xb6, 0xd5, 0xff, 0x3f, 0xcb, 0xe5, 0xd7, 0xfb, 0xde, 0xdd, 0x29, 0xfd, 0x37, 0xb2, 0x1b,
-	0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x8a, 0xf5, 0x15, 0x54, 0x35, 0x13, 0x00, 0x00,
+	0xd7, 0xb6, 0xd5, 0xff, 0x3f, 0xcb, 0xe5, 0x69, 0xdf, 0xbb, 0x3b, 0xa5, 0xff, 0x46, 0x76, 0xe3,
+	0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x5d, 0x7a, 0x89, 0xd2, 0x35, 0x13, 0x00, 0x00,
 }
 
 func (x Const) String() string {

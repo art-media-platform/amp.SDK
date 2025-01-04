@@ -3,7 +3,7 @@ syntax = "proto3";
 // package amp is an implementation-independent API for a pluggable client-server UI/UX system,
 // featuring support and integration for files, media, and communication.
 //
-// Welcome to art.media.platform (c) 2023 ("Amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
+// Welcome to art.media.platform (c) 2023 ("amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
 //   something we can all agree on.
 package amp;
 
@@ -12,7 +12,7 @@ option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
 // import "github.com/gogo/protobuf/gogoproto/gogo.proto";  // https://stackoverflow.com/questions/43026449/gogo-proto-file-not-found
 
-option csharp_namespace = "Amp";
+option csharp_namespace = "amp";
 
 
 enum Const {
@@ -34,7 +34,7 @@ enum Const {
     Const_TxHeader_Version = 0x33;
 
 	// The first byte of the TxHeader is the header size and version and
-	// the following 3 bytes of a serialized TxMsg ("Amp")
+	// the following 3 bytes of a serialized TxMsg ("amp")
     Const_TxHeader_Marker = 0x616D70;
 
     // בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
@@ -107,7 +107,7 @@ message TxEnvelope {
     // recipient of this TxEnvelope
     Tag                 To = 15;
 
-    // authority / trust snapshot
+    // authority / trust ID
     Tag                 Epoch = 16;
 
     // headers / metadata / context
