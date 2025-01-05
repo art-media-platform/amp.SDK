@@ -47,13 +47,14 @@ type CellWriter interface {
 	// Pushes a tx operation attribute to the cell's pinned state.
 	Push(op *amp.TxOp, value tag.Value)
 
-	// Convenience methods for pushing string and generic tag.Value attributes bound to std.Item000 (aka tag.ID{})
-	PushText(attrID tag.ID, value string)
-	PushItem(attrID tag.ID, value tag.Value)
-
 	// Convenience methods for pushing string and generic attributes bound to an item ID.
 	PushTextWithID(attrID tag.ID, itemID tag.ID, value string)
 	PushItemWithID(attrID tag.ID, itemID tag.ID, value tag.Value)
+
+	// Convenience methods for pushing string and generic tag.Value attributes bound to std.Item000 (aka tag.ID{})
+	// Push*WithID(), if the value is nil, the attribute item is skipped.
+	PushText(attrID tag.ID, value string)
+	PushItem(attrID tag.ID, value tag.Value)
 }
 
 const (

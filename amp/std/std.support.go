@@ -127,7 +127,7 @@ func (pin *Pin[AppT]) pushState() error {
 			cellID: pinnedID,
 		}
 
-		tx.Upsert(amp.MetaNodeID, CellChildren.ID, pinnedID, nil) // publish root cell ID using the meta node
+		tx.Upsert(amp.MetaNodeID, CellChild.ID, pinnedID, nil) // publish root cell ID using the meta node
 		pin.Cell.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
@@ -135,7 +135,7 @@ func (pin *Pin[AppT]) pushState() error {
 
 		for childID, child := range pin.children {
 			w.cellID = childID
-			tx.Upsert(pinnedID, CellChildren.ID, childID, nil) // link child to pinned cell
+			tx.Upsert(pinnedID, CellChild.ID, childID, nil) // link child to pinned cell
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err
@@ -185,10 +185,16 @@ func (w *cellWriter) PushItemWithID(attrID, itemID tag.ID, value tag.Value) {
 }
 
 func (w *cellWriter) PushText(attrID tag.ID, value string) {
+	if value == "" {
+		return
+	}
 	w.PushTextWithID(attrID, Item000, value)
 }
 
 func (w *cellWriter) PushItem(attrID tag.ID, value tag.Value) {
+	if value == nil {
+		return
+	}
 	w.PushItemWithID(attrID, Item000, value)
 }
 

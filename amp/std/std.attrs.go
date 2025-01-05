@@ -15,16 +15,16 @@ var (
 
 	Item000 = tag.Nil
 
-	CellChildren = amp.SystemAttr.With("children.Tag.ID") // ID suffix denotes SeriesIndex is used to store a CellID
+	CellChild    = amp.SystemAttr.With("child.Tag.ID")       // each TxOp.ItemID expresses a child cell ID
+	CellPosition = amp.SystemAttr.With("position.QRS.mm").ID // https://www.redblobgames.com/grids/hexagons/#neighbors-cube
 	LaunchURL    = amp.SystemAttr.With("LaunchURL").ID
 
-	CellAttr       = amp.SystemAttr.With("cell")
-	CellText       = CellAttr.With("text.Tag")
+	CellProperty   = amp.SystemAttr.With("cell.property")
+	CellText       = CellProperty.With("text.Tag")
 	CellLabel      = CellText.With("label").ID
 	CellCaption    = CellText.With("caption").ID
 	CellSynopsis   = CellText.With("synopsis").ID
 	CellCollection = CellText.With("collection").ID
-	CellAuthor     = CellText.With("author").ID
 
 	// CellPropertyTagID = CellProperty.With("Tag.ID")
 	// OrderByPlayID     = CellPropertyTagID.With("order-by.play").ID
@@ -32,13 +32,12 @@ var (
 	// OrderByGeoID      = CellPropertyTagID.With("order-by.geo").ID
 	// OrderByAreaID     = CellPropertyTagID.With("order-by.area").ID
 
-	CellFSInfo = CellAttr.With("FSInfo").ID
-	CellLinks  = CellAttr.With("Tags.links").ID
-	CellGlyphs = CellAttr.With("Tags.glyphs").ID
+	CellFSInfo = CellProperty.With("FSInfo").ID
 
-	CellContent = CellAttr.With("content.Tag")
+	CellContent = CellProperty.With("content.Tag")
+	CellGlyphs  = CellContent.With("Tags.glyphs").ID
+	CellLinks   = CellContent.With("Tags.links").ID
 	CellMedia   = CellContent.With("media").ID
-	CellCover   = CellContent.With("cover").ID
 	CellVis     = CellContent.With("vis").ID
 )
 
