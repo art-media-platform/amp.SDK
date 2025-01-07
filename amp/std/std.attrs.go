@@ -15,16 +15,24 @@ var (
 
 	Item000 = tag.Nil
 
-	CellChild    = amp.SystemAttr.With("child.Tag.ID")       // each TxOp.ItemID expresses a child cell ID
-	CellPosition = amp.SystemAttr.With("position.QRS.mm").ID // https://www.redblobgames.com/grids/hexagons/#neighbors-cube
+	//PositionQRS  = amp.SystemAttr.With("position.QRS.mm").ID // https://www.redblobgames.com/grids/hexagons/#neighbors-cube
 	LaunchURL    = amp.SystemAttr.With("LaunchURL").ID
+	CellProperty = amp.SystemAttr.With("cell.property")
 
-	CellProperty   = amp.SystemAttr.With("cell.property")
-	CellText       = CellProperty.With("text.Tag")
+	CellChild   = CellProperty.With("child.Tag.ID") // each TxOp.ItemID expresses a child cell ID
+	CellFSInfo  = CellProperty.With("FSInfo").ID
+	CellContent = CellProperty.With("content")
+	CellText    = CellProperty.With("text.Tag")
+
 	CellLabel      = CellText.With("label").ID
 	CellCaption    = CellText.With("caption").ID
-	CellSynopsis   = CellText.With("synopsis").ID
 	CellCollection = CellText.With("collection").ID
+	CellSynopsis   = CellText.With("synopsis").ID
+
+	CellGlyphs = CellContent.With("Tags.glyphs").ID
+	CellLinks  = CellContent.With("Tags.links").ID
+	CellMedia  = CellContent.With("Tag.media").ID
+	CellVis    = CellContent.With("Tag.vis").ID
 
 	// CellPropertyTagID = CellProperty.With("Tag.ID")
 	// OrderByPlayID     = CellPropertyTagID.With("order-by.play").ID
@@ -32,13 +40,6 @@ var (
 	// OrderByGeoID      = CellPropertyTagID.With("order-by.geo").ID
 	// OrderByAreaID     = CellPropertyTagID.With("order-by.area").ID
 
-	CellFSInfo = CellProperty.With("FSInfo").ID
-
-	CellContent = CellProperty.With("content.Tag")
-	CellGlyphs  = CellContent.With("Tags.glyphs").ID
-	CellLinks   = CellContent.With("Tags.links").ID
-	CellMedia   = CellContent.With("media").ID
-	CellVis     = CellContent.With("vis").ID
 )
 
 const (
