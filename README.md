@@ -74,9 +74,9 @@ At a high level:
 
 ### Points of Interest
 
-|                                                                                                   |                                                                                                                                                                                 |
-| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [api.tag.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go)    | Versatile tagging and hash scheme that is AI and search friendly                                                                                                                  |
-| [api.task.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go) | Goroutine wrapper inspired by a conventional parent-child process model                                                                                                    |
-| [api.app.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go)           | Defines how state is requested, pushed, and merged                                                                                              |
-| [api.host.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go)         | Types and interfaces that [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) implements                                                              |
+|                                                                                                |                                                                                                                             |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| [api.tag.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go)    | Versatile tagging and hash scheme that is AI and search friendly                                                            |
+| [api.task.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go) | Goroutine wrapper inspired by a conventional parent-child process model                                                     |
+| [api.app.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go)           | Defines how state is requested, pushed, and merged                                                                          |
+| [api.host.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go)         | Types and interfaces that [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) implements  |

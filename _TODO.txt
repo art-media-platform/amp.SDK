@@ -1,3 +1,0 @@
-./stdlib/task/task.go:238:		// TODO: merge CloseWhenIdle() into this block?
-./stdlib/tag/tag.badge.go:40:const AsciiTemplate_v2 = "" + // TODO: mirror along Y
-./stdlib/tag/api.tag.go:22:	GroupDelimiters = `[]()<>{}¿?¡!`    // TODO group delimiter pairs
