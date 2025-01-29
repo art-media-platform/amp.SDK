@@ -1,7 +1,7 @@
 # art.media.platform.SDK
 _A fully provisioned solution for files, media, and 3D asset sharing and deployment that we can all agree on._
 
-**_art.media.platform_** ("Amp") is a potent 3D client-to-infrastructure suite that provides a secure, scalable, and extensible runtime for 3D applications. It supports 3D and media-centric apps with pluggable infrastructure, allowing artists, publishers, creators, and organizations to control asset deployments and experiences within high-fidelity spatial or geographic environments.
+**_art.media.platform_** ("Amp") is a potent 3D client-to-infrastructure suite that provides a secure, scalable, and extensible runtime for 3D applications. Amp builds 3D geo-spatial and media-centric applications, offering pluggable infrastructure and experiences, allowing artists, publishers, creators, and organizations to control asset deployments and experiences within high-fidelity spatial or geographic environments.
 
 ## Key Features
 
@@ -14,7 +14,7 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
 
 - Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
 
-- A lightweight, stand-alone "headless" native executable and shared library **amp.host.lib** with tags **amp.host** that offers federated and decentralized service and storage.
+- A lightweight, stand-alone native shared library **amp.planet.lib** that encapsulates federated and decentralized services and storage.
 
 ## What Does This Solve?
 
@@ -66,10 +66,10 @@ This repo is lightweight and dependency-free, so it can be added to your project
 At a high level:
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project. If you want to expose additional functionality, implement your own [`amp.App`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go).
-2. Clone [amp.host](https://github.com/art-media-platform/amp.host) (not yet public) and include your `amp.App`, similar to how a library in a C project registers a static or dynamic dependency.
-3. Build `amp.host` with your additions embedded within it.
-4. In your Unity or Unreal app, link in `amp.host.lib` and add the Amp UX runtime support glue.
-5. On startup, [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.App` instances as needed. During runtime, `amp.host.lib` dispatches URL requests addressed to your app and are "pinned".
+2. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) (not yet public) and include your `amp.App`, similar to how a library in a C project registers a static or dynamic dependency.
+3. Build `amp.planet` with your additions embedded within it.
+4. In your Unity or Unreal app, link in `amp.planet.lib` and add the Amp UX runtime support glue.
+5. On startup, [`amp.planet`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.App` instances as needed. During runtime, `amp.planet.lib` dispatches URL requests addressed to your app and are "pinned".
 6. The Amp UX runtime manages the user's experience of currently pinned URLs while providing a toolbox of extendable "stock" and "skinnable" components. Pinned requests receive state updates until they are canceled.
 
 ### Points of Interest
