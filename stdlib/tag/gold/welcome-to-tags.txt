@@ -61,13 +61,9 @@ said a drill, is this not Yoda?
 said a drill: Is this not Yoda?
 Said a drill,: Is this not Yoda??
 
+12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
 
-Dots are the canonical way, ya know.  after a dozen words, 24 bytes is 2^192!
-Ya know, dots are the canonical way.  after a dozen words, 24 bytes is 2^192!
+The above hash ID G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB demonstrates a standardized way to precisely witness a set of unordered literals. In creating a subsequent hash ID, we are cryptographically chaining tag sets together.
 
+And so by citing both G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB and BSJ6041BGWJM08K4S0M05995JZSQRHPV2 as literals, we can conveniently validate tag relationships and groups.
 
-The 24-byte tag.ID you see to the left is 2^192 wide (in base 32).  For reference, a Bitcoin address is 20 bytes.
-
-Base16 of the ID above (8kj00c8gw8406tugx9bx417whqj3y0qkg) is 160 bits wide.  The leading 32 bits are part of a "minting" when a tag is made decidedly private.
-
-The number of possible hashes for a string of 10 words randomly chosen from the worlds dictionaries well over a million words. Even with the English dictionary's 200,000 words, there are 10^50 (2^160) outputs.

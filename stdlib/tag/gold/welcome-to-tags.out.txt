@@ -108,19 +108,13 @@ HNGM76C66X9WYF9G32P0G5T2ZMZ52WHWE   this.has.very.helpful.implications.for.those
                                     Said a drill,: Is this not Yoda??
 2HKM9422MHYS0Z36YM9BH9J48W7Q0YS8G   said.a.drill.is.this.not.yoda
 
+                                    12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
+G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB   12.words.randomly.chosen.from.but.not.limited.to.the.english.dictionary.exceeds.10-56.possible.combinations.for.reference.that's.over.10.million.times.the.number.of.possible.bitcoin.public.addresses.(2-160)
 
-                                    Dots are the canonical way, ya know.  after a dozen words, 24 bytes is 2^192!
-732E17Y29S949QPXEXEF6Y9HPKHPGSTQZ   dots.are.the.canonical.way.ya.know.after.a.dozen.words.24.bytes.is.2-192
-                                    Ya know, dots are the canonical way.  after a dozen words, 24 bytes is 2^192!
-732E17Y29S949QPXEXEF6Y9HPKHPGSTQZ   ya.know.dots.are.the.canonical.way.after.a.dozen.words.24.bytes.is.2-192
+                                    The above hash ID G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB demonstrates a standardized way to precisely witness a set of unordered literals. In creating a subsequent hash ID, we are cryptographically chaining tag sets together.
+BSJ6041BGWJM08K4S0M05995JZSQRHPV2   the.above.hash.ID.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.demonstrates.a.standardized.way.to.precisely.witness.a.set.of.unordered.literals.in.creating.a.subsequent.hash.ID.we.are.cryptographically.chaining.tag.sets.together
 
+                                    And so by citing both G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB and BSJ6041BGWJM08K4S0M05995JZSQRHPV2 as literals, we can conveniently validate tag relationships and groups.
+9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3   and.so.by.citing.both.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.and.BSJ6041BGWJM08K4S0M05995JZSQRHPV2.as.literals.we.can.conveniently.validate.tag.relationships.and.groups
 
-                                    The 24-byte tag.ID you see to the left is 2^192 wide (in base 32).  For reference, a Bitcoin address is 20 bytes.
-BY2ZN562PFNTBRS7FR3JC657JZYRF06XM   the.24-byte.tag.ID.you.see.to.the.left.is.2-192.wide.(in.base.32).for.reference.a.bitcoin.address.is.20.bytes
-
-                                    Base16 of the ID above (8kj00c8gw8406tugx9bx417whqj3y0qkg) is 160 bits wide.  The leading 32 bits are part of a "minting" when a tag is made decidedly private.
-BJ897FM9MU23Y9FFKY5E4PWDG2RJ08M5W   base16.of.the.ID.above.(8kj00c8gw8406tugx9bx417whqj3y0qkg).is.160.bits.wide.the.leading.32.bits.are.part.of.a."minting".when.a.tag.is.made.decidedly.private
-
-                                    The number of possible hashes for a string of 10 words randomly chosen from the worlds dictionaries well over a million words. Even with the English dictionary's 200,000 words, there are 10^50 (2^160) outputs.
-DY3HHE06BYH5C53YP9KC8R1N6K3Q9RN0X   the.number.of.possible.hashes.for.a.string.of.10.words.randomly.chosen.from.the.worlds.dictionaries.well.over.a.million.words.even.with.the.english.dictionary's.200.000.words.there.are.10-50.(2-160).outputs
 
