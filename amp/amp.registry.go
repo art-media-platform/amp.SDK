@@ -119,7 +119,7 @@ func (reg *registry) GetAppForInvocation(invocation string) (*App, error) {
 
 	app := reg.appsByInvoke[invocation]
 	if app == nil {
-		return nil, ErrCode_AppNotFound.Errorf("app not found for invocation %q", invocation)
+		return nil, ErrCode_AppNotFound.Errorf("app not found for %q", invocation)
 	}
 	return app, nil
 }

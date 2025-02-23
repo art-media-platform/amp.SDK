@@ -2,7 +2,7 @@ package amp
 
 import (
 	"bytes"
-	fmt "fmt"
+	"fmt"
 	io "io"
 	"reflect"
 	"testing"
@@ -15,9 +15,12 @@ func TestTxSerialize(t *testing.T) {
 
 	tx := NewTxMsg(true)
 	tx.Status = OpStatus_Syncing
-	tx.ContextID_0 = 888854513
-	tx.ContextID_1 = 7777435
-	tx.ContextID_2 = 77743773
+	tx.SetContextID(tag.ID{
+		888854513,
+		7777435,
+		77743773,
+	})
+
 	{
 		op := TxOp{
 			OpCode: TxOpCode_UpsertElement,
@@ -31,7 +34,7 @@ func TestTxSerialize(t *testing.T) {
 
 		tx.MarshalOp(&op, &Login{
 			UserID: &Tag{
-				UID: "cmdr5",
+				Text: "cmdr5",
 			},
 			HostAddress: "batwing ave",
 		})
@@ -46,7 +49,7 @@ func TestTxSerialize(t *testing.T) {
 		}
 		tx.MarshalOp(&op, &Login{
 			UserID: &Tag{
-				UID: "anonymous",
+				Text: "anonymous",
 			},
 			HostAddress: "http://localhost:8080",
 		})
@@ -77,11 +80,11 @@ func TestTxSerialize(t *testing.T) {
 	if err != nil {
 		t.Errorf("ReadTxMsg failed: %v", err)
 	}
-	if tx2.TxEnvelope != tx.TxEnvelope {
-		t.Errorf("ReadTxMsg failed: TxEnvelope mismatch")
+	if tx2.TxHeader != tx.TxHeader {
+		t.Errorf("ReadTxMsg failed: TxHeader mismatch")
 	}
 	if len(tx2.Ops) != len(tx.Ops) {
-		t.Errorf("ReadTxMsg failed: TxEnvelope mismatch")
+		t.Errorf("ReadTxMsg failed: TxHeader mismatch")
 	}
 	if !bytes.Equal(tx.DataStore, tx2.DataStore) {
 		t.Errorf("ReadTxMsg failed: DataStore mismatch")
@@ -90,7 +93,7 @@ func TestTxSerialize(t *testing.T) {
 		op2 := tx2.Ops[i]
 
 		if op1.OpCode != op2.OpCode || op1 != op2 || op1.DataOfs != op2.DataOfs || op1.DataLen != op2.DataLen {
-			t.Errorf("ReadTxMsg failed: Op mismatch")
+			t.Errorf("ReadTxMsg failed: TxOp mismatch")
 		}
 	}
 }

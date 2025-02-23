@@ -109,7 +109,7 @@ func (pin *Pin[AppT]) Context() task.Context {
 
 func (pin *Pin[AppT]) ServeRequest(op amp.Requester) (amp.Pin, error) {
 	req := op.Request()
-	cell := pin.GetCell(req.TargetID())
+	cell := pin.GetCell(req.Select.CompositeID())
 	if cell == nil {
 		return nil, amp.ErrCellNotFound
 	}
@@ -127,7 +127,7 @@ func (pin *Pin[AppT]) pushState() error {
 			cellID: pinnedID,
 		}
 
-		tx.Upsert(amp.MetaNodeID, CellChild.ID, pinnedID, nil) // publish root cell ID using the meta node
+		tx.Upsert(amp.HeadCellID, CellChild.ID, pinnedID, nil) // publish root cell ID using the meta node
 		pin.Cell.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
@@ -188,14 +188,14 @@ func (w *cellWriter) PushText(attrID tag.ID, value string) {
 	if value == "" {
 		return
 	}
-	w.PushTextWithID(attrID, Item000, value)
+	w.PushTextWithID(attrID, tag.ID{}, value)
 }
 
 func (w *cellWriter) PushItem(attrID tag.ID, value tag.Value) {
 	if value == nil {
 		return
 	}
-	w.PushItemWithID(attrID, Item000, value)
+	w.PushItemWithID(attrID, tag.ID{}, value)
 }
 
 func (w *cellWriter) Push(op *amp.TxOp, val tag.Value) {

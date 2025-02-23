@@ -32,12 +32,12 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type AssetFlags int32
 
 const (
-	NoFlags     AssetFlags = 0
-	IsTexture   AssetFlags = 1
-	IsSprite    AssetFlags = 2
-	IsMaterial  AssetFlags = 4
-	IsPlaceable AssetFlags = 8
-	IsMonoCell  AssetFlags = 16
+	NoFlags         AssetFlags = 0
+	IsTexture       AssetFlags = 1
+	IsSprite        AssetFlags = 2
+	IsMaterial      AssetFlags = 4
+	IsPlaceable     AssetFlags = 8
+	IsRectTransform AssetFlags = 16
 	// HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
 	HasIcon AssetFlags = 256
 	// IsPrivate means this item is not intended for general use and is not normally visible.
@@ -58,7 +58,7 @@ var AssetFlags_name = map[int32]string{
 	2:    "IsSprite",
 	4:    "IsMaterial",
 	8:    "IsPlaceable",
-	16:   "IsMonoCell",
+	16:   "IsRectTransform",
 	256:  "HasIcon",
 	512:  "IsPrivate",
 	1024: "IsSkybox",
@@ -67,17 +67,17 @@ var AssetFlags_name = map[int32]string{
 }
 
 var AssetFlags_value = map[string]int32{
-	"NoFlags":     0,
-	"IsTexture":   1,
-	"IsSprite":    2,
-	"IsMaterial":  4,
-	"IsPlaceable": 8,
-	"IsMonoCell":  16,
-	"HasIcon":     256,
-	"IsPrivate":   512,
-	"IsSkybox":    1024,
-	"AutoScale":   2048,
-	"IsSurface":   4096,
+	"NoFlags":         0,
+	"IsTexture":       1,
+	"IsSprite":        2,
+	"IsMaterial":      4,
+	"IsPlaceable":     8,
+	"IsRectTransform": 16,
+	"HasIcon":         256,
+	"IsPrivate":       512,
+	"IsSkybox":        1024,
+	"AutoScale":       2048,
+	"IsSurface":       4096,
 }
 
 func (AssetFlags) EnumDescriptor() ([]byte, []int) {
@@ -107,187 +107,19 @@ func (CrateSchema) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_39eb848e8ca52014, []int{1}
 }
 
-// KVEntry is a generic entry for any key-value pair.
-type KVEntry struct {
-	Key   string `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
-	Value string `protobuf:"bytes,2,opt,name=Value,proto3" json:"Value,omitempty"`
-}
-
-func (m *KVEntry) Reset()      { *m = KVEntry{} }
-func (*KVEntry) ProtoMessage() {}
-func (*KVEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_39eb848e8ca52014, []int{0}
-}
-func (m *KVEntry) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *KVEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_KVEntry.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *KVEntry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KVEntry.Merge(m, src)
-}
-func (m *KVEntry) XXX_Size() int {
-	return m.Size()
-}
-func (m *KVEntry) XXX_DiscardUnknown() {
-	xxx_messageInfo_KVEntry.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_KVEntry proto.InternalMessageInfo
-
-func (m *KVEntry) GetKey() string {
-	if m != nil {
-		return m.Key
-	}
-	return ""
-}
-
-func (m *KVEntry) GetValue() string {
-	if m != nil {
-		return m.Value
-	}
-	return ""
-}
-
-type AppVars struct {
-	// AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
-	AppDomain string `protobuf:"bytes,2,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"`
-	// AppDesc succinctly describes this org and is for humans.
-	AppDesc string `protobuf:"bytes,4,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
-	// OrgHomeURL is the home link for this org (e.g. "https://blockcities.com")
-	OrgHomeURL string `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"`
-	// AppHomeURL points to the home URL for the app
-	AppHomeURL string `protobuf:"bytes,12,opt,name=AppHomeURL,proto3" json:"AppHomeURL,omitempty"`
-	// CratesSnapshotURL specifies where to load this org's CratesSnapshot
-	CratesSnapshotURL string `protobuf:"bytes,14,opt,name=CratesSnapshotURL,proto3" json:"CratesSnapshotURL,omitempty"`
-	// AppDownloadURLs are a download URL for a given platform.
-	// A key of "" denotes an unknown platform
-	AppDownloadURLs map[string]string `protobuf:"bytes,16,rep,name=AppDownloadURLs,proto3" json:"AppDownloadURLs,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// URLSchemes declare URL schemes for this app's custom URL scheme (e.g. "amp://")
-	// The first entry is the primary scheme and the rest are alternately recognized schemes.
-	// URL schemas should always end with "://"
-	URLSchemes []string `protobuf:"bytes,18,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"`
-	// Overrides default settings
-	Settings map[string]string `protobuf:"bytes,20,rep,name=Settings,proto3" json:"Settings,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// Links is a list of channel URIs for easy access.
-	Links []*KVEntry `protobuf:"bytes,40,rep,name=Links,proto3" json:"Links,omitempty"`
-}
-
-func (m *AppVars) Reset()      { *m = AppVars{} }
-func (*AppVars) ProtoMessage() {}
-func (*AppVars) Descriptor() ([]byte, []int) {
-	return fileDescriptor_39eb848e8ca52014, []int{1}
-}
-func (m *AppVars) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *AppVars) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_AppVars.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *AppVars) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AppVars.Merge(m, src)
-}
-func (m *AppVars) XXX_Size() int {
-	return m.Size()
-}
-func (m *AppVars) XXX_DiscardUnknown() {
-	xxx_messageInfo_AppVars.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_AppVars proto.InternalMessageInfo
-
-func (m *AppVars) GetAppDomain() string {
-	if m != nil {
-		return m.AppDomain
-	}
-	return ""
-}
-
-func (m *AppVars) GetAppDesc() string {
-	if m != nil {
-		return m.AppDesc
-	}
-	return ""
-}
-
-func (m *AppVars) GetOrgHomeURL() string {
-	if m != nil {
-		return m.OrgHomeURL
-	}
-	return ""
-}
-
-func (m *AppVars) GetAppHomeURL() string {
-	if m != nil {
-		return m.AppHomeURL
-	}
-	return ""
-}
-
-func (m *AppVars) GetCratesSnapshotURL() string {
-	if m != nil {
-		return m.CratesSnapshotURL
-	}
-	return ""
-}
-
-func (m *AppVars) GetAppDownloadURLs() map[string]string {
-	if m != nil {
-		return m.AppDownloadURLs
-	}
-	return nil
-}
-
-func (m *AppVars) GetURLSchemes() []string {
-	if m != nil {
-		return m.URLSchemes
-	}
-	return nil
-}
-
-func (m *AppVars) GetSettings() map[string]string {
-	if m != nil {
-		return m.Settings
-	}
-	return nil
-}
-
-func (m *AppVars) GetLinks() []*KVEntry {
-	if m != nil {
-		return m.Links
-	}
-	return nil
-}
-
 type AssetEntry struct {
 	// AssetFlags specifies properties about this AssetEntry.
 	Flags AssetFlags `protobuf:"varint,1,opt,name=Flags,proto3,enum=crates.AssetFlags" json:"Flags,omitempty"`
-	// URI is a unix-style pathname that identifies an asset within a crate.
+	// EntryURI is a unix-style pathname that identifies an asset within a crate.
 	// By convention this URI does *not* start or end with '/'
 	// An asset URI has the form "{CrateURI}/{EntryURI}"
 	// If two or more assets have same EntryURI then only one is accessible.
 	EntryURI string `protobuf:"bytes,2,opt,name=EntryURI,proto3" json:"EntryURI,omitempty"`
 	// Name is the human-readable label for this asset.
 	Label string `protobuf:"bytes,3,opt,name=Label,proto3" json:"Label,omitempty"`
+	// NameID is an alternative name for this asset that is used to identify the asset in code.
+	// DEPRECATED -- EntryURI should be used instead of NameID (or use [2]uint64 that Unity returns)
+	AssetID string `protobuf:"bytes,4,opt,name=AssetID,proto3" json:"AssetID,omitempty"`
 	// CenterX and CenterZ specify the positional center of this asset (and are typically 0).
 	// CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
 	// Y is considered to be the *vertical* (up) direction and by convention rest on the plane y=0.
@@ -314,7 +146,7 @@ type AssetEntry struct {
 func (m *AssetEntry) Reset()      { *m = AssetEntry{} }
 func (*AssetEntry) ProtoMessage() {}
 func (*AssetEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_39eb848e8ca52014, []int{2}
+	return fileDescriptor_39eb848e8ca52014, []int{0}
 }
 func (m *AssetEntry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -360,6 +192,13 @@ func (m *AssetEntry) GetEntryURI() string {
 func (m *AssetEntry) GetLabel() string {
 	if m != nil {
 		return m.Label
+	}
+	return ""
+}
+
+func (m *AssetEntry) GetAssetID() string {
+	if m != nil {
+		return m.AssetID
 	}
 	return ""
 }
@@ -441,7 +280,7 @@ type BundleManifest struct {
 func (m *BundleManifest) Reset()      { *m = BundleManifest{} }
 func (*BundleManifest) ProtoMessage() {}
 func (*BundleManifest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_39eb848e8ca52014, []int{3}
+	return fileDescriptor_39eb848e8ca52014, []int{1}
 }
 func (m *BundleManifest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -498,7 +337,7 @@ func (m *BundleManifest) GetLoadAllHint() bool {
 	return false
 }
 
-// CrateInfo represents a Crate, the fundamental unit of PLAN's asset/package manager.
+// CrateInfo represents a Crate, the fundamental unit of amp's asset/package manager.
 type CrateInfo struct {
 	// CrateSchema communicates which build and packaging schema was used for this crate build .
 	// This value should be the integer value of a valid CrateSchema.vNNN enum.
@@ -550,7 +389,7 @@ type CrateInfo struct {
 func (m *CrateInfo) Reset()      { *m = CrateInfo{} }
 func (*CrateInfo) ProtoMessage() {}
 func (*CrateInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_39eb848e8ca52014, []int{4}
+	return fileDescriptor_39eb848e8ca52014, []int{2}
 }
 func (m *CrateInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -691,10 +530,10 @@ func (m *CrateInfo) GetApproxSize() int64 {
 	return 0
 }
 
-// CrateManifest is the top-level manifest/catalog for a PLAN asset module called a "crate".
-// It contains catalog and type info that PLAN loads at runtime to know what's inside binary asset bundles without having to load them.
+// CrateManifest is the top-level manifest/catalog for a amp asset module called a "crate".
+// It contains catalog and type info that amp loads at runtime to know what's inside binary asset bundles without having to load them.
 //
-// A reference to a PLAN asset is via a URI with the form:
+// A reference to a amp asset is via a URI with the form:
 //
 //	assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.Pathname}"
 type CrateManifest struct {
@@ -708,7 +547,7 @@ type CrateManifest struct {
 func (m *CrateManifest) Reset()      { *m = CrateManifest{} }
 func (*CrateManifest) ProtoMessage() {}
 func (*CrateManifest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_39eb848e8ca52014, []int{5}
+	return fileDescriptor_39eb848e8ca52014, []int{3}
 }
 func (m *CrateManifest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -758,8 +597,8 @@ func (m *CrateManifest) GetBundles() []*BundleManifest {
 	return nil
 }
 
-// CratesSnapshot is a general purpose container to track multiple crates and associated build IDs.
-type CratesSnapshot struct {
+// CrateSnapshot is a general purpose container to track multiple crates and associated build IDs.
+type CrateSnapshot struct {
 	RevID int64 `protobuf:"varint,1,opt,name=RevID,proto3" json:"RevID,omitempty"`
 	// This is a template URL where the symbols "CrateURI", "CrateBuildID", "PlatformID" are delimited with { }.
 	// The symbol "{.}" is to be replaced with a local pathname if the URL refers to a local file system pathname.
@@ -770,17 +609,17 @@ type CratesSnapshot struct {
 	Crates      []*CrateInfo `protobuf:"bytes,10,rep,name=Crates,proto3" json:"Crates,omitempty"`
 }
 
-func (m *CratesSnapshot) Reset()      { *m = CratesSnapshot{} }
-func (*CratesSnapshot) ProtoMessage() {}
-func (*CratesSnapshot) Descriptor() ([]byte, []int) {
-	return fileDescriptor_39eb848e8ca52014, []int{6}
+func (m *CrateSnapshot) Reset()      { *m = CrateSnapshot{} }
+func (*CrateSnapshot) ProtoMessage() {}
+func (*CrateSnapshot) Descriptor() ([]byte, []int) {
+	return fileDescriptor_39eb848e8ca52014, []int{4}
 }
-func (m *CratesSnapshot) XXX_Unmarshal(b []byte) error {
+func (m *CrateSnapshot) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *CratesSnapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *CrateSnapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_CratesSnapshot.Marshal(b, m, deterministic)
+		return xxx_messageInfo_CrateSnapshot.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -790,122 +629,295 @@ func (m *CratesSnapshot) XXX_Marshal(b []byte, deterministic bool) ([]byte, erro
 		return b[:n], nil
 	}
 }
-func (m *CratesSnapshot) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_CratesSnapshot.Merge(m, src)
+func (m *CrateSnapshot) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CrateSnapshot.Merge(m, src)
 }
-func (m *CratesSnapshot) XXX_Size() int {
+func (m *CrateSnapshot) XXX_Size() int {
 	return m.Size()
 }
-func (m *CratesSnapshot) XXX_DiscardUnknown() {
-	xxx_messageInfo_CratesSnapshot.DiscardUnknown(m)
+func (m *CrateSnapshot) XXX_DiscardUnknown() {
+	xxx_messageInfo_CrateSnapshot.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_CratesSnapshot proto.InternalMessageInfo
+var xxx_messageInfo_CrateSnapshot proto.InternalMessageInfo
 
-func (m *CratesSnapshot) GetRevID() int64 {
+func (m *CrateSnapshot) GetRevID() int64 {
 	if m != nil {
 		return m.RevID
 	}
 	return 0
 }
 
-func (m *CratesSnapshot) GetDownloadURL() string {
+func (m *CrateSnapshot) GetDownloadURL() string {
 	if m != nil {
 		return m.DownloadURL
 	}
 	return ""
 }
 
-func (m *CratesSnapshot) GetCrates() []*CrateInfo {
+func (m *CrateSnapshot) GetCrates() []*CrateInfo {
 	if m != nil {
 		return m.Crates
 	}
 	return nil
 }
 
+// App vars needed for an art-media-platform app to function.
+type AppVars struct {
+	// AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
+	AppDomain string `protobuf:"bytes,2,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"`
+	// AppDesc succinctly describes this org and is for humans.
+	AppDesc string `protobuf:"bytes,4,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
+	// OrgHomeURL is the home link for this org (e.g. "https://blockcities.com")
+	OrgHomeURL string `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"`
+	// AppHomeURL points to the home URL for the app
+	AppHomeURL string `protobuf:"bytes,12,opt,name=AppHomeURL,proto3" json:"AppHomeURL,omitempty"`
+	// CrateSnapshotURL specifies where to load this org's CrateSnapshot
+	CrateSnapshotURL string `protobuf:"bytes,14,opt,name=CrateSnapshotURL,proto3" json:"CrateSnapshotURL,omitempty"`
+	// AppDownloadURLs are a download URL for a given platform.
+	// A key of "" denotes an unknown platform
+	AppDownloadURLs map[string]string `protobuf:"bytes,16,rep,name=AppDownloadURLs,proto3" json:"AppDownloadURLs,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// URLSchemes declare URL schemes for this app's custom URL scheme (e.g. "any-scheme://")
+	// The first entry is the primary scheme and the rest are alternately recognized schemes.
+	// URL schemas should always end with "://"
+	URLSchemes []string `protobuf:"bytes,18,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"`
+	// Overrides default settings
+	Settings map[string]string `protobuf:"bytes,20,rep,name=Settings,proto3" json:"Settings,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// Links is a list of channel URIs for easy access.
+	Links []*KVEntry `protobuf:"bytes,40,rep,name=Links,proto3" json:"Links,omitempty"`
+}
+
+func (m *AppVars) Reset()      { *m = AppVars{} }
+func (*AppVars) ProtoMessage() {}
+func (*AppVars) Descriptor() ([]byte, []int) {
+	return fileDescriptor_39eb848e8ca52014, []int{5}
+}
+func (m *AppVars) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AppVars) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AppVars.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AppVars) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AppVars.Merge(m, src)
+}
+func (m *AppVars) XXX_Size() int {
+	return m.Size()
+}
+func (m *AppVars) XXX_DiscardUnknown() {
+	xxx_messageInfo_AppVars.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AppVars proto.InternalMessageInfo
+
+func (m *AppVars) GetAppDomain() string {
+	if m != nil {
+		return m.AppDomain
+	}
+	return ""
+}
+
+func (m *AppVars) GetAppDesc() string {
+	if m != nil {
+		return m.AppDesc
+	}
+	return ""
+}
+
+func (m *AppVars) GetOrgHomeURL() string {
+	if m != nil {
+		return m.OrgHomeURL
+	}
+	return ""
+}
+
+func (m *AppVars) GetAppHomeURL() string {
+	if m != nil {
+		return m.AppHomeURL
+	}
+	return ""
+}
+
+func (m *AppVars) GetCrateSnapshotURL() string {
+	if m != nil {
+		return m.CrateSnapshotURL
+	}
+	return ""
+}
+
+func (m *AppVars) GetAppDownloadURLs() map[string]string {
+	if m != nil {
+		return m.AppDownloadURLs
+	}
+	return nil
+}
+
+func (m *AppVars) GetURLSchemes() []string {
+	if m != nil {
+		return m.URLSchemes
+	}
+	return nil
+}
+
+func (m *AppVars) GetSettings() map[string]string {
+	if m != nil {
+		return m.Settings
+	}
+	return nil
+}
+
+func (m *AppVars) GetLinks() []*KVEntry {
+	if m != nil {
+		return m.Links
+	}
+	return nil
+}
+
+// KVEntry is a generic entry for any key-value pair.
+type KVEntry struct {
+	Key   string `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=Value,proto3" json:"Value,omitempty"`
+}
+
+func (m *KVEntry) Reset()      { *m = KVEntry{} }
+func (*KVEntry) ProtoMessage() {}
+func (*KVEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_39eb848e8ca52014, []int{6}
+}
+func (m *KVEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *KVEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_KVEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *KVEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KVEntry.Merge(m, src)
+}
+func (m *KVEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *KVEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_KVEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_KVEntry proto.InternalMessageInfo
+
+func (m *KVEntry) GetKey() string {
+	if m != nil {
+		return m.Key
+	}
+	return ""
+}
+
+func (m *KVEntry) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterEnum("crates.AssetFlags", AssetFlags_name, AssetFlags_value)
 	proto.RegisterEnum("crates.CrateSchema", CrateSchema_name, CrateSchema_value)
-	proto.RegisterType((*KVEntry)(nil), "crates.KVEntry")
-	proto.RegisterType((*AppVars)(nil), "crates.AppVars")
-	proto.RegisterMapType((map[string]string)(nil), "crates.AppVars.AppDownloadURLsEntry")
-	proto.RegisterMapType((map[string]string)(nil), "crates.AppVars.SettingsEntry")
 	proto.RegisterType((*AssetEntry)(nil), "crates.AssetEntry")
 	proto.RegisterType((*BundleManifest)(nil), "crates.BundleManifest")
 	proto.RegisterType((*CrateInfo)(nil), "crates.CrateInfo")
 	proto.RegisterType((*CrateManifest)(nil), "crates.CrateManifest")
-	proto.RegisterType((*CratesSnapshot)(nil), "crates.CratesSnapshot")
+	proto.RegisterType((*CrateSnapshot)(nil), "crates.CrateSnapshot")
+	proto.RegisterType((*AppVars)(nil), "crates.AppVars")
+	proto.RegisterMapType((map[string]string)(nil), "crates.AppVars.AppDownloadURLsEntry")
+	proto.RegisterMapType((map[string]string)(nil), "crates.AppVars.SettingsEntry")
+	proto.RegisterType((*KVEntry)(nil), "crates.KVEntry")
 }
 
 func init() { proto.RegisterFile("amp.crates.proto", fileDescriptor_39eb848e8ca52014) }
 
 var fileDescriptor_39eb848e8ca52014 = []byte{
-	// 1043 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0x4f, 0x4f, 0xe3, 0x46,
-	0x14, 0x8f, 0x93, 0x10, 0x92, 0x17, 0x12, 0xbc, 0x53, 0xb4, 0xb2, 0x50, 0xeb, 0x46, 0xd1, 0x6e,
-	0x95, 0x45, 0x5b, 0xc4, 0xd2, 0x43, 0xdb, 0x6d, 0x2f, 0x81, 0xb4, 0xc2, 0xda, 0x40, 0x91, 0x03,
-	0x68, 0xe1, 0x36, 0x49, 0x06, 0x70, 0x71, 0x6c, 0xcb, 0x33, 0xa1, 0xd0, 0x53, 0xd4, 0x4f, 0xb0,
-	0x1f, 0xa2, 0x87, 0xaa, 0xe7, 0x7e, 0x88, 0x1e, 0x39, 0x72, 0x2c, 0xe1, 0xd0, 0x1e, 0xf7, 0x23,
-	0x54, 0xf3, 0xc6, 0x7f, 0xd3, 0xbd, 0xf4, 0xe6, 0xf7, 0xfb, 0xfd, 0xde, 0xcc, 0xbc, 0xbf, 0x32,
-	0xe8, 0x74, 0x12, 0x6c, 0x8e, 0x42, 0x2a, 0x18, 0xdf, 0x0c, 0x42, 0x5f, 0xf8, 0xa4, 0xa2, 0xac,
-	0xf6, 0x2b, 0x58, 0x7e, 0x73, 0xf2, 0x9d, 0x27, 0xc2, 0x5b, 0xa2, 0x43, 0xe9, 0x0d, 0xbb, 0x35,
-	0xb4, 0x96, 0xd6, 0xa9, 0xd9, 0xf2, 0x93, 0xac, 0xc1, 0xd2, 0x09, 0x75, 0xa7, 0xcc, 0x28, 0x22,
-	0xa6, 0x8c, 0xf6, 0x2f, 0x65, 0x58, 0xee, 0x06, 0xc1, 0x09, 0x0d, 0x39, 0xf9, 0x18, 0x6a, 0xdd,
-	0x20, 0xe8, 0xf9, 0x13, 0xea, 0x78, 0x91, 0x2a, 0x05, 0x88, 0x81, 0xc2, 0x1e, 0xe3, 0x23, 0xa3,
-	0x8c, 0x5c, 0x6c, 0x12, 0x13, 0xe0, 0x87, 0xf0, 0x62, 0xcf, 0x9f, 0xb0, 0x63, 0xbb, 0x6f, 0x54,
-	0x90, 0xcc, 0x20, 0x92, 0xef, 0x06, 0x41, 0xcc, 0xaf, 0x28, 0x3e, 0x45, 0xc8, 0x4b, 0x78, 0xb2,
-	0x8b, 0x01, 0x0c, 0x3c, 0x1a, 0xf0, 0x4b, 0x5f, 0x48, 0x59, 0x13, 0x65, 0xff, 0x25, 0xc8, 0x01,
-	0xac, 0xe2, 0xa3, 0x7e, 0xf2, 0x5c, 0x9f, 0x8e, 0x8f, 0xed, 0x3e, 0x37, 0xf4, 0x56, 0xa9, 0x53,
-	0xdf, 0x7e, 0x16, 0x27, 0x25, 0x8a, 0x67, 0x73, 0x41, 0x86, 0x89, 0xb1, 0x17, 0x9d, 0xe5, 0xeb,
-	0x8e, 0xed, 0xfe, 0x60, 0x74, 0xc9, 0x26, 0x8c, 0x1b, 0xa4, 0x55, 0x92, 0xaf, 0x4b, 0x11, 0xf2,
-	0x35, 0x54, 0x07, 0x4c, 0x08, 0xc7, 0xbb, 0xe0, 0xc6, 0x1a, 0x5e, 0xf4, 0xc9, 0xe2, 0x45, 0x31,
-	0xaf, 0x6e, 0x48, 0xe4, 0xe4, 0x39, 0x2c, 0xf5, 0x1d, 0xef, 0x8a, 0x1b, 0x1d, 0xf4, 0x5b, 0x8d,
-	0xfd, 0xa2, 0x22, 0xd9, 0x8a, 0x5d, 0xdf, 0x81, 0xb5, 0x0f, 0x3d, 0x55, 0xd6, 0xf0, 0x2a, 0xad,
-	0xe1, 0x95, 0xaa, 0xe1, 0x75, 0xb6, 0x86, 0x68, 0xbc, 0x2e, 0x7e, 0xa5, 0xad, 0x7f, 0x03, 0x8d,
-	0xdc, 0x2b, 0xfe, 0x8f, 0x73, 0xfb, 0xbe, 0x08, 0xd0, 0xe5, 0x9c, 0x09, 0xe5, 0xda, 0x81, 0xa5,
-	0xef, 0x5d, 0x7a, 0xc1, 0xd1, 0xb9, 0xb9, 0x4d, 0x92, 0x70, 0xa5, 0x04, 0x19, 0x5b, 0x09, 0xc8,
-	0x3a, 0x54, 0xd1, 0xe5, 0xd8, 0xb6, 0xa2, 0x53, 0x13, 0x5b, 0x5e, 0xd7, 0xa7, 0x43, 0xe6, 0x1a,
-	0x25, 0x75, 0x1d, 0x1a, 0xb2, 0x8b, 0x76, 0x99, 0x27, 0x58, 0xf8, 0xd6, 0x58, 0x6a, 0x69, 0x9d,
-	0xa2, 0x1d, 0x9b, 0x29, 0x73, 0x8a, 0x2d, 0x94, 0x30, 0xa7, 0x29, 0x73, 0x66, 0x2c, 0x67, 0x99,
-	0x33, 0xbc, 0xff, 0x46, 0x30, 0x4f, 0xf0, 0xb7, 0x06, 0x20, 0x95, 0xd8, 0x19, 0xee, 0xd4, 0xa8,
-	0xe7, 0xb8, 0xd3, 0x0c, 0x77, 0x86, 0xfd, 0x98, 0x72, 0x78, 0x66, 0xdf, 0x1f, 0x51, 0x57, 0xc6,
-	0x64, 0xaa, 0x98, 0x62, 0x9b, 0x10, 0x28, 0x1f, 0xc9, 0xc4, 0x7c, 0x8a, 0x38, 0x7e, 0xcb, 0xa9,
-	0x19, 0x5c, 0xfa, 0xa1, 0xc0, 0xc9, 0x68, 0xa9, 0xa9, 0x49, 0x80, 0xf6, 0xaf, 0x1a, 0x34, 0x77,
-	0xa6, 0xde, 0xd8, 0x65, 0xfb, 0xd4, 0x73, 0xce, 0x19, 0x17, 0xa4, 0x05, 0x75, 0x85, 0x1c, 0x39,
-	0xc2, 0x8d, 0xab, 0x91, 0x85, 0x48, 0x1b, 0x56, 0x94, 0x79, 0x40, 0x27, 0xcc, 0xea, 0x45, 0x19,
-	0xcc, 0x61, 0x64, 0x03, 0x2a, 0x58, 0x0f, 0x6e, 0x00, 0x36, 0x57, 0xbe, 0x4a, 0xaa, 0xbf, 0x22,
-	0x85, 0xbc, 0xb1, 0xef, 0xd3, 0x71, 0xd7, 0x75, 0xf7, 0x1c, 0x4f, 0x18, 0x6b, 0x2d, 0xad, 0x53,
-	0xb5, 0xb3, 0x50, 0xfb, 0xef, 0x12, 0xd4, 0x70, 0xd4, 0x2c, 0xef, 0xdc, 0x97, 0x7a, 0x34, 0x70,
-	0x04, 0x28, 0xb6, 0xc1, 0x92, 0x9d, 0x85, 0xc8, 0x53, 0xa8, 0x58, 0x1e, 0x17, 0x56, 0x0f, 0x9f,
-	0xdf, 0xb0, 0x23, 0x4b, 0x26, 0x0f, 0x65, 0x32, 0x79, 0x6a, 0x4b, 0x24, 0x36, 0x79, 0x06, 0x8d,
-	0xc3, 0xe9, 0xd0, 0x75, 0xf8, 0x25, 0x0b, 0x65, 0x10, 0xd1, 0xa6, 0xc8, 0x83, 0x32, 0x9d, 0xe8,
-	0x81, 0x0a, 0x50, 0xe9, 0x4c, 0x80, 0x7c, 0xb2, 0xeb, 0x0b, 0xc9, 0x4e, 0xca, 0xb3, 0x9a, 0x29,
-	0x4f, 0x0b, 0xea, 0x47, 0xce, 0x84, 0xed, 0x86, 0x8c, 0x0a, 0x36, 0xc6, 0x8a, 0x96, 0xec, 0x2c,
-	0x24, 0xcf, 0x94, 0xe6, 0xce, 0xd4, 0x71, 0x05, 0x56, 0xb6, 0x64, 0xa7, 0x80, 0xac, 0xc5, 0x3e,
-	0xfd, 0xd1, 0x0f, 0x4f, 0x58, 0xc8, 0x1d, 0xdf, 0x33, 0x3a, 0x98, 0x8c, 0x1c, 0x86, 0x1a, 0xc7,
-	0x4b, 0x35, 0x2f, 0x22, 0x4d, 0x06, 0x53, 0x55, 0x77, 0xdc, 0xf1, 0xc1, 0x74, 0x32, 0x64, 0xa1,
-	0xb1, 0xa1, 0x72, 0x9a, 0x81, 0x64, 0x9b, 0xa3, 0x69, 0xf5, 0x8c, 0xcf, 0xd5, 0x82, 0x8d, 0x4c,
-	0xc9, 0xc4, 0xdb, 0x73, 0x5b, 0x31, 0xf1, 0xea, 0xd4, 0xa1, 0x24, 0xd1, 0x2f, 0xd5, 0x94, 0xa7,
-	0xcb, 0x36, 0xf4, 0x6f, 0x06, 0xce, 0xcf, 0xcc, 0xf8, 0x16, 0xc3, 0xc9, 0x20, 0xed, 0x77, 0x1a,
-	0x34, 0x30, 0x9f, 0x49, 0x3f, 0x3e, 0x87, 0xb2, 0xac, 0x3a, 0x96, 0xb9, 0xbe, 0xfd, 0x24, 0xee,
-	0xa3, 0xa4, 0x1d, 0x6c, 0xa4, 0xc9, 0x67, 0xd0, 0xb4, 0x46, 0xbe, 0x97, 0x36, 0x21, 0x0e, 0x70,
-	0xcd, 0x5e, 0x40, 0xc9, 0x96, 0x0c, 0x43, 0x5a, 0x71, 0x67, 0x3e, 0x8d, 0x4f, 0xcc, 0xcf, 0x81,
-	0x1d, 0xcb, 0xda, 0x1c, 0x9a, 0xf9, 0x35, 0x2f, 0x77, 0x87, 0xcd, 0xae, 0xad, 0x1e, 0xbe, 0xa9,
-	0x64, 0x2b, 0x43, 0xa6, 0x30, 0xb3, 0x24, 0xa3, 0xa9, 0xc8, 0x42, 0xe4, 0x05, 0x54, 0xd4, 0x49,
-	0xd1, 0xd5, 0x1f, 0x08, 0x26, 0x12, 0x6c, 0xfc, 0xa1, 0x45, 0x3b, 0x4f, 0x6d, 0xb2, 0x3a, 0x2c,
-	0x1f, 0xf8, 0xf8, 0xa9, 0x17, 0x48, 0x03, 0x6a, 0x16, 0x3f, 0x62, 0x37, 0x62, 0x1a, 0x32, 0x5d,
-	0x23, 0x2b, 0x50, 0xb5, 0xf8, 0x20, 0x08, 0x1d, 0xc1, 0xf4, 0x22, 0x69, 0x02, 0x58, 0x7c, 0x9f,
-	0x0a, 0x16, 0x3a, 0xd4, 0xd5, 0xcb, 0x64, 0x15, 0xea, 0x16, 0x3f, 0x74, 0xe9, 0x88, 0xd1, 0xa1,
-	0xcb, 0xf4, 0x6a, 0x24, 0xf0, 0x3d, 0x7f, 0x97, 0xb9, 0xae, 0xae, 0x93, 0x15, 0x58, 0xde, 0xa3,
-	0x5c, 0x66, 0x49, 0x9f, 0x49, 0xf7, 0x9a, 0xc5, 0x0f, 0x43, 0xe7, 0x9a, 0x0a, 0xa6, 0xcf, 0xca,
-	0xa4, 0x81, 0x87, 0x5f, 0xdd, 0x0e, 0xfd, 0x1b, 0x7d, 0x26, 0x9d, 0x6b, 0xdd, 0xa9, 0xf0, 0x07,
-	0x23, 0xea, 0x32, 0x7d, 0xa6, 0x2b, 0xf9, 0x60, 0x1a, 0x9e, 0xd3, 0x11, 0xd3, 0x67, 0xad, 0x8d,
-	0x97, 0xb9, 0xd1, 0x24, 0x1f, 0xc1, 0xea, 0xb1, 0x37, 0x66, 0xe7, 0x8e, 0xc7, 0xc6, 0x0a, 0xd2,
-	0x0b, 0xa4, 0x0a, 0xe5, 0xeb, 0x57, 0x5b, 0x5b, 0xfa, 0x78, 0xe7, 0xf5, 0xdd, 0x83, 0x59, 0xb8,
-	0x7f, 0x30, 0x0b, 0xef, 0x1f, 0x4c, 0x6d, 0x36, 0x37, 0xb5, 0xdf, 0xe6, 0xa6, 0xf6, 0xe7, 0xdc,
-	0xd4, 0xee, 0xe6, 0xa6, 0xf6, 0xd7, 0xdc, 0xd4, 0xfe, 0x99, 0x9b, 0x85, 0xf7, 0x73, 0x53, 0x7b,
-	0xf7, 0x68, 0x16, 0xee, 0x1e, 0xcd, 0xc2, 0xfd, 0xa3, 0x59, 0xf8, 0xbd, 0x58, 0xa2, 0x93, 0x60,
-	0x58, 0xc1, 0x7f, 0x8b, 0x2f, 0xfe, 0x0d, 0x00, 0x00, 0xff, 0xff, 0xd1, 0xfb, 0x91, 0xd4, 0x6f,
+	// 1059 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0x4d, 0x6e, 0x23, 0x45,
+	0x14, 0x76, 0xdb, 0x8e, 0x7f, 0x9e, 0xe3, 0xa4, 0x29, 0xa2, 0x51, 0x69, 0x04, 0x8d, 0x65, 0xcd,
+	0x20, 0x4f, 0x04, 0xa3, 0x99, 0xb0, 0x00, 0x06, 0x36, 0x4e, 0x0c, 0x4a, 0x2b, 0x4e, 0x88, 0xda,
+	0x49, 0x34, 0xc9, 0xae, 0x6c, 0x57, 0x92, 0x26, 0xed, 0xee, 0x56, 0x55, 0x39, 0x24, 0xac, 0x7c,
+	0x84, 0x39, 0x04, 0x0b, 0xc4, 0x0d, 0xb8, 0x01, 0xcb, 0x2c, 0x67, 0x49, 0x9c, 0x05, 0x2c, 0x47,
+	0x9c, 0x00, 0xd5, 0xab, 0x6e, 0xbb, 0x6d, 0x66, 0xc3, 0xae, 0xbf, 0xef, 0x7b, 0xaf, 0xea, 0xfd,
+	0x96, 0x0d, 0x36, 0x1b, 0xc5, 0xcf, 0x07, 0x82, 0x29, 0x2e, 0x9f, 0xc7, 0x22, 0x52, 0x11, 0x29,
+	0x19, 0xd4, 0xfc, 0x27, 0x0f, 0xd0, 0x96, 0x92, 0xab, 0xef, 0x42, 0x25, 0x6e, 0x49, 0x0b, 0x56,
+	0xbe, 0x0f, 0xd8, 0x85, 0xa4, 0x56, 0xc3, 0x6a, 0xad, 0x6d, 0x91, 0xd4, 0x09, 0x4d, 0x50, 0xf1,
+	0x8c, 0x01, 0x79, 0x0c, 0x15, 0x74, 0x39, 0xf6, 0x5c, 0x9a, 0x6f, 0x58, 0xad, 0xaa, 0x37, 0xc3,
+	0x64, 0x03, 0x56, 0xba, 0xac, 0xcf, 0x03, 0x5a, 0x40, 0xc1, 0x00, 0x42, 0xa1, 0x8c, 0xc7, 0xb8,
+	0x1d, 0x5a, 0x44, 0x3e, 0x85, 0x5a, 0xd9, 0xe1, 0xa1, 0xe2, 0xe2, 0x35, 0x5d, 0x69, 0x58, 0xad,
+	0xbc, 0x97, 0xc2, 0xb9, 0x72, 0x4a, 0x4b, 0x59, 0xe5, 0x74, 0xae, 0x9c, 0xd1, 0x72, 0x56, 0x39,
+	0xc3, 0xc8, 0x6e, 0x14, 0x0f, 0x95, 0x7c, 0x4d, 0x01, 0xa5, 0x19, 0xce, 0x68, 0xa7, 0xb4, 0xb6,
+	0xa0, 0x9d, 0x66, 0xb4, 0x33, 0xba, 0xba, 0xa0, 0xe1, 0x99, 0xdd, 0x68, 0xc0, 0x02, 0x9d, 0xad,
+	0x63, 0xb2, 0x4d, 0x31, 0x21, 0x50, 0x3c, 0xd2, 0x25, 0xfb, 0x04, 0x79, 0xfc, 0x26, 0x1f, 0x41,
+	0xb5, 0x77, 0x19, 0x09, 0xd5, 0xe1, 0x72, 0x40, 0x1b, 0x28, 0xcc, 0x89, 0xe6, 0x2f, 0x16, 0xac,
+	0x6d, 0x8f, 0xc3, 0x61, 0xc0, 0xf7, 0x59, 0xe8, 0x9f, 0x73, 0xa9, 0x48, 0x03, 0x6a, 0x86, 0x39,
+	0xf2, 0x55, 0xc0, 0x93, 0x8a, 0x66, 0x29, 0xd2, 0x84, 0x55, 0x03, 0x0f, 0xd8, 0x88, 0xbb, 0x9d,
+	0xa4, 0xb6, 0x0b, 0x1c, 0xd9, 0x84, 0x12, 0xd6, 0x54, 0x52, 0x68, 0x14, 0x5a, 0xb5, 0xa5, 0xfe,
+	0x61, 0x7f, 0xbc, 0xc4, 0x42, 0xdf, 0xd8, 0x8d, 0xd8, 0xb0, 0x1d, 0x04, 0xbb, 0x7e, 0xa8, 0xe8,
+	0x46, 0xc3, 0x6a, 0x55, 0xbc, 0x2c, 0xd5, 0xfc, 0xab, 0x00, 0xd5, 0x1d, 0xed, 0xef, 0x86, 0xe7,
+	0x91, 0xb6, 0x47, 0xd0, 0x1b, 0x5c, 0xf2, 0x11, 0xc3, 0x01, 0x59, 0xf1, 0xb2, 0x14, 0x79, 0x04,
+	0x25, 0x37, 0x94, 0xba, 0xbf, 0x3a, 0xfc, 0xba, 0x97, 0x20, 0x5d, 0x3c, 0x34, 0xd3, 0xc5, 0x33,
+	0x9d, 0x9f, 0x61, 0xf2, 0x04, 0xea, 0x87, 0xe3, 0x7e, 0xe0, 0xcb, 0x4b, 0x2e, 0x74, 0x12, 0xd8,
+	0xe6, 0xaa, 0xb7, 0x48, 0xea, 0x72, 0xa2, 0x07, 0x5a, 0x80, 0x29, 0xe7, 0x8c, 0x58, 0x2c, 0x76,
+	0x6d, 0xa9, 0xd8, 0xb3, 0xf6, 0xac, 0x67, 0xda, 0xd3, 0x80, 0xda, 0x91, 0x3f, 0xe2, 0x3b, 0x82,
+	0x33, 0xc5, 0x87, 0xd8, 0xd1, 0x82, 0x97, 0xa5, 0xf4, 0x99, 0x1a, 0x6e, 0x8f, 0xfd, 0x40, 0x61,
+	0x67, 0x0b, 0xde, 0x9c, 0xd0, 0xbd, 0xd8, 0x67, 0x3f, 0x46, 0xe2, 0x84, 0x0b, 0xe9, 0x47, 0x21,
+	0x6d, 0x61, 0x31, 0x16, 0x38, 0xb4, 0xf1, 0xc3, 0xb9, 0xcd, 0xb3, 0xc4, 0x26, 0xc3, 0x99, 0xae,
+	0xfb, 0xc1, 0xf0, 0x60, 0x3c, 0xea, 0x73, 0x41, 0x37, 0x4d, 0x4d, 0x33, 0x94, 0x1e, 0x73, 0x84,
+	0x6e, 0x87, 0x7e, 0x6e, 0x96, 0x26, 0x81, 0x5a, 0xd9, 0x8d, 0x46, 0xfc, 0xd8, 0xeb, 0xd2, 0x2d,
+	0xa3, 0x24, 0x90, 0xd8, 0x50, 0xd0, 0xec, 0x97, 0xc8, 0xea, 0x4f, 0xe2, 0x00, 0xb4, 0xe3, 0x58,
+	0x44, 0x37, 0x3d, 0xff, 0x67, 0x4e, 0xbf, 0xc5, 0x74, 0x32, 0x4c, 0xf3, 0x8d, 0x05, 0x75, 0xac,
+	0xe7, 0x6c, 0x1e, 0x9f, 0x42, 0x51, 0x77, 0x1d, 0xdb, 0x5c, 0xdb, 0xfa, 0x20, 0x9d, 0xa3, 0xd9,
+	0x38, 0x78, 0x28, 0x93, 0x4f, 0x61, 0xcd, 0x1d, 0x44, 0xe1, 0x7c, 0x08, 0x71, 0x81, 0xab, 0xde,
+	0x12, 0x4b, 0x5e, 0xe8, 0x34, 0x34, 0x4a, 0x27, 0xf3, 0x51, 0x7a, 0xe2, 0xe2, 0x1e, 0x78, 0xa9,
+	0x59, 0x53, 0x24, 0x11, 0xf5, 0x42, 0x16, 0xcb, 0xcb, 0x48, 0xe9, 0x47, 0xc5, 0xe3, 0xd7, 0x6e,
+	0x07, 0x43, 0x2a, 0x78, 0x06, 0xe8, 0x0a, 0x76, 0xa2, 0x9f, 0xc2, 0x20, 0x62, 0x43, 0x9d, 0xb3,
+	0x59, 0x8a, 0x2c, 0x45, 0x9e, 0x41, 0x09, 0x0f, 0x4a, 0x6f, 0x7e, 0x4f, 0x2e, 0x89, 0x41, 0x73,
+	0x52, 0x84, 0x72, 0x3b, 0x8e, 0x4f, 0x98, 0xc0, 0x0d, 0x6e, 0xc7, 0x71, 0x27, 0x1a, 0x31, 0x3f,
+	0x4c, 0xd6, 0x71, 0x4e, 0xe0, 0x5b, 0x16, 0xc7, 0x38, 0x70, 0xe9, 0x5b, 0x66, 0xa0, 0x2e, 0xf5,
+	0x0f, 0xe2, 0x22, 0xed, 0x8c, 0x99, 0xe6, 0x0c, 0x93, 0xb4, 0x22, 0xd5, 0x57, 0x8d, 0x3e, 0x67,
+	0xc8, 0x26, 0xd8, 0x0b, 0x79, 0x6b, 0xab, 0x35, 0xb4, 0xfa, 0x0f, 0x4f, 0x0e, 0x60, 0x1d, 0x43,
+	0x9a, 0x25, 0x2b, 0xa9, 0x8d, 0x39, 0x3e, 0x99, 0xed, 0xbd, 0xc9, 0xe6, 0xf9, 0x92, 0x99, 0x79,
+	0x09, 0x96, 0x9d, 0x75, 0x6c, 0xc7, 0x5e, 0x17, 0xb7, 0x99, 0x4b, 0x4a, 0x1a, 0x05, 0x1d, 0xdb,
+	0x9c, 0x21, 0x5f, 0x43, 0xa5, 0xc7, 0x95, 0xf2, 0xc3, 0x0b, 0x49, 0x37, 0xf0, 0xa2, 0x8f, 0x97,
+	0x2f, 0x4a, 0x75, 0x73, 0xc3, 0xcc, 0x9c, 0x3c, 0x85, 0x95, 0xae, 0x1f, 0x5e, 0x49, 0xda, 0x42,
+	0xbf, 0xf5, 0xd4, 0x6f, 0xef, 0xc4, 0x58, 0x1a, 0xf5, 0xf1, 0x36, 0x6c, 0xbc, 0x2f, 0x54, 0x3d,
+	0xd2, 0x57, 0xfc, 0x16, 0x5b, 0x5f, 0xf5, 0xf4, 0xa7, 0x1e, 0x87, 0x6b, 0x16, 0x8c, 0xd3, 0xa7,
+	0xd2, 0x80, 0x57, 0xf9, 0xaf, 0xac, 0xc7, 0xdf, 0x40, 0x7d, 0x21, 0x8a, 0xff, 0xe3, 0xdc, 0x7c,
+	0x09, 0xe5, 0x24, 0x24, 0xed, 0xb6, 0x37, 0x77, 0xdb, 0x33, 0x6e, 0x27, 0x59, 0x37, 0x04, 0x9b,
+	0xbf, 0x5b, 0xc9, 0x4f, 0xa8, 0xf9, 0x61, 0xac, 0x41, 0xf9, 0x20, 0xc2, 0x4f, 0x3b, 0x47, 0xea,
+	0x50, 0x75, 0xe5, 0x11, 0xbf, 0x51, 0x63, 0xc1, 0x6d, 0x8b, 0xac, 0x42, 0xc5, 0x95, 0xbd, 0x58,
+	0xf8, 0x8a, 0xdb, 0x79, 0xb2, 0x06, 0xe0, 0xca, 0x7d, 0xa6, 0xb8, 0xf0, 0x59, 0x60, 0x17, 0xc9,
+	0x3a, 0xd4, 0x5c, 0x79, 0x18, 0xb0, 0x01, 0x67, 0xfd, 0x80, 0xdb, 0x15, 0xf2, 0x21, 0xac, 0xbb,
+	0xd2, 0xe3, 0x03, 0x75, 0x24, 0x58, 0x28, 0xcf, 0x23, 0x31, 0xb2, 0x6d, 0xb2, 0x0a, 0xe5, 0x5d,
+	0x26, 0xf5, 0x7e, 0xd9, 0x13, 0x7d, 0x46, 0xd5, 0x95, 0x87, 0xc2, 0xbf, 0x66, 0x8a, 0xdb, 0x93,
+	0x22, 0xa9, 0xe3, 0x0d, 0x57, 0xb7, 0xfd, 0xe8, 0xc6, 0x9e, 0x54, 0xb4, 0xdc, 0x1e, 0xab, 0xa8,
+	0x37, 0x60, 0x01, 0xb7, 0x27, 0xb6, 0x31, 0xef, 0x8d, 0xc5, 0x39, 0x1b, 0x70, 0x7b, 0xd2, 0xd8,
+	0xfc, 0x6c, 0xe1, 0x51, 0xd7, 0x17, 0x1e, 0x87, 0x43, 0x7e, 0xee, 0x87, 0x7c, 0x68, 0x28, 0x3b,
+	0x47, 0x2a, 0x50, 0xbc, 0x7e, 0xf9, 0xe2, 0x85, 0x3d, 0xdc, 0x7e, 0x75, 0x77, 0xef, 0xe4, 0xde,
+	0xde, 0x3b, 0xb9, 0x77, 0xf7, 0x8e, 0x35, 0x99, 0x3a, 0xd6, 0xaf, 0x53, 0xc7, 0xfa, 0x63, 0xea,
+	0x58, 0x77, 0x53, 0xc7, 0xfa, 0x73, 0xea, 0x58, 0x7f, 0x4f, 0x9d, 0xdc, 0xbb, 0xa9, 0x63, 0xbd,
+	0x79, 0x70, 0x72, 0x77, 0x0f, 0x4e, 0xee, 0xed, 0x83, 0x93, 0xfb, 0x2d, 0x5f, 0x60, 0xa3, 0xb8,
+	0x5f, 0xc2, 0xff, 0x1d, 0x5f, 0xfc, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x69, 0x8f, 0xda, 0x41, 0x8b,
 	0x08, 0x00, 0x00,
 }
 
@@ -922,101 +934,6 @@ func (x CrateSchema) String() string {
 		return s
 	}
 	return strconv.Itoa(int(x))
-}
-func (this *KVEntry) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*KVEntry)
-	if !ok {
-		that2, ok := that.(KVEntry)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Key != that1.Key {
-		return false
-	}
-	if this.Value != that1.Value {
-		return false
-	}
-	return true
-}
-func (this *AppVars) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*AppVars)
-	if !ok {
-		that2, ok := that.(AppVars)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.AppDomain != that1.AppDomain {
-		return false
-	}
-	if this.AppDesc != that1.AppDesc {
-		return false
-	}
-	if this.OrgHomeURL != that1.OrgHomeURL {
-		return false
-	}
-	if this.AppHomeURL != that1.AppHomeURL {
-		return false
-	}
-	if this.CratesSnapshotURL != that1.CratesSnapshotURL {
-		return false
-	}
-	if len(this.AppDownloadURLs) != len(that1.AppDownloadURLs) {
-		return false
-	}
-	for i := range this.AppDownloadURLs {
-		if this.AppDownloadURLs[i] != that1.AppDownloadURLs[i] {
-			return false
-		}
-	}
-	if len(this.URLSchemes) != len(that1.URLSchemes) {
-		return false
-	}
-	for i := range this.URLSchemes {
-		if this.URLSchemes[i] != that1.URLSchemes[i] {
-			return false
-		}
-	}
-	if len(this.Settings) != len(that1.Settings) {
-		return false
-	}
-	for i := range this.Settings {
-		if this.Settings[i] != that1.Settings[i] {
-			return false
-		}
-	}
-	if len(this.Links) != len(that1.Links) {
-		return false
-	}
-	for i := range this.Links {
-		if !this.Links[i].Equal(that1.Links[i]) {
-			return false
-		}
-	}
-	return true
 }
 func (this *AssetEntry) Equal(that interface{}) bool {
 	if that == nil {
@@ -1044,6 +961,9 @@ func (this *AssetEntry) Equal(that interface{}) bool {
 		return false
 	}
 	if this.Label != that1.Label {
+		return false
+	}
+	if this.AssetID != that1.AssetID {
 		return false
 	}
 	if this.CenterX != that1.CenterX {
@@ -1217,14 +1137,14 @@ func (this *CrateManifest) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *CratesSnapshot) Equal(that interface{}) bool {
+func (this *CrateSnapshot) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*CratesSnapshot)
+	that1, ok := that.(*CrateSnapshot)
 	if !ok {
-		that2, ok := that.(CratesSnapshot)
+		that2, ok := that.(CrateSnapshot)
 		if ok {
 			that1 = &that2
 		} else {
@@ -1252,70 +1172,111 @@ func (this *CratesSnapshot) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *KVEntry) GoString() string {
-	if this == nil {
-		return "nil"
+func (this *AppVars) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
 	}
-	s := make([]string, 0, 6)
-	s = append(s, "&crates.KVEntry{")
-	s = append(s, "Key: "+fmt.Sprintf("%#v", this.Key)+",\n")
-	s = append(s, "Value: "+fmt.Sprintf("%#v", this.Value)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
+
+	that1, ok := that.(*AppVars)
+	if !ok {
+		that2, ok := that.(AppVars)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.AppDomain != that1.AppDomain {
+		return false
+	}
+	if this.AppDesc != that1.AppDesc {
+		return false
+	}
+	if this.OrgHomeURL != that1.OrgHomeURL {
+		return false
+	}
+	if this.AppHomeURL != that1.AppHomeURL {
+		return false
+	}
+	if this.CrateSnapshotURL != that1.CrateSnapshotURL {
+		return false
+	}
+	if len(this.AppDownloadURLs) != len(that1.AppDownloadURLs) {
+		return false
+	}
+	for i := range this.AppDownloadURLs {
+		if this.AppDownloadURLs[i] != that1.AppDownloadURLs[i] {
+			return false
+		}
+	}
+	if len(this.URLSchemes) != len(that1.URLSchemes) {
+		return false
+	}
+	for i := range this.URLSchemes {
+		if this.URLSchemes[i] != that1.URLSchemes[i] {
+			return false
+		}
+	}
+	if len(this.Settings) != len(that1.Settings) {
+		return false
+	}
+	for i := range this.Settings {
+		if this.Settings[i] != that1.Settings[i] {
+			return false
+		}
+	}
+	if len(this.Links) != len(that1.Links) {
+		return false
+	}
+	for i := range this.Links {
+		if !this.Links[i].Equal(that1.Links[i]) {
+			return false
+		}
+	}
+	return true
 }
-func (this *AppVars) GoString() string {
-	if this == nil {
-		return "nil"
+func (this *KVEntry) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
 	}
-	s := make([]string, 0, 13)
-	s = append(s, "&crates.AppVars{")
-	s = append(s, "AppDomain: "+fmt.Sprintf("%#v", this.AppDomain)+",\n")
-	s = append(s, "AppDesc: "+fmt.Sprintf("%#v", this.AppDesc)+",\n")
-	s = append(s, "OrgHomeURL: "+fmt.Sprintf("%#v", this.OrgHomeURL)+",\n")
-	s = append(s, "AppHomeURL: "+fmt.Sprintf("%#v", this.AppHomeURL)+",\n")
-	s = append(s, "CratesSnapshotURL: "+fmt.Sprintf("%#v", this.CratesSnapshotURL)+",\n")
-	keysForAppDownloadURLs := make([]string, 0, len(this.AppDownloadURLs))
-	for k, _ := range this.AppDownloadURLs {
-		keysForAppDownloadURLs = append(keysForAppDownloadURLs, k)
+
+	that1, ok := that.(*KVEntry)
+	if !ok {
+		that2, ok := that.(KVEntry)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForAppDownloadURLs)
-	mapStringForAppDownloadURLs := "map[string]string{"
-	for _, k := range keysForAppDownloadURLs {
-		mapStringForAppDownloadURLs += fmt.Sprintf("%#v: %#v,", k, this.AppDownloadURLs[k])
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
 	}
-	mapStringForAppDownloadURLs += "}"
-	if this.AppDownloadURLs != nil {
-		s = append(s, "AppDownloadURLs: "+mapStringForAppDownloadURLs+",\n")
+	if this.Key != that1.Key {
+		return false
 	}
-	s = append(s, "URLSchemes: "+fmt.Sprintf("%#v", this.URLSchemes)+",\n")
-	keysForSettings := make([]string, 0, len(this.Settings))
-	for k, _ := range this.Settings {
-		keysForSettings = append(keysForSettings, k)
+	if this.Value != that1.Value {
+		return false
 	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForSettings)
-	mapStringForSettings := "map[string]string{"
-	for _, k := range keysForSettings {
-		mapStringForSettings += fmt.Sprintf("%#v: %#v,", k, this.Settings[k])
-	}
-	mapStringForSettings += "}"
-	if this.Settings != nil {
-		s = append(s, "Settings: "+mapStringForSettings+",\n")
-	}
-	if this.Links != nil {
-		s = append(s, "Links: "+fmt.Sprintf("%#v", this.Links)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
+	return true
 }
 func (this *AssetEntry) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 17)
 	s = append(s, "&crates.AssetEntry{")
 	s = append(s, "Flags: "+fmt.Sprintf("%#v", this.Flags)+",\n")
 	s = append(s, "EntryURI: "+fmt.Sprintf("%#v", this.EntryURI)+",\n")
 	s = append(s, "Label: "+fmt.Sprintf("%#v", this.Label)+",\n")
+	s = append(s, "AssetID: "+fmt.Sprintf("%#v", this.AssetID)+",\n")
 	s = append(s, "CenterX: "+fmt.Sprintf("%#v", this.CenterX)+",\n")
 	s = append(s, "CenterY: "+fmt.Sprintf("%#v", this.CenterY)+",\n")
 	s = append(s, "CenterZ: "+fmt.Sprintf("%#v", this.CenterZ)+",\n")
@@ -1384,17 +1345,72 @@ func (this *CrateManifest) GoString() string {
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
-func (this *CratesSnapshot) GoString() string {
+func (this *CrateSnapshot) GoString() string {
 	if this == nil {
 		return "nil"
 	}
 	s := make([]string, 0, 7)
-	s = append(s, "&crates.CratesSnapshot{")
+	s = append(s, "&crates.CrateSnapshot{")
 	s = append(s, "RevID: "+fmt.Sprintf("%#v", this.RevID)+",\n")
 	s = append(s, "DownloadURL: "+fmt.Sprintf("%#v", this.DownloadURL)+",\n")
 	if this.Crates != nil {
 		s = append(s, "Crates: "+fmt.Sprintf("%#v", this.Crates)+",\n")
 	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *AppVars) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 13)
+	s = append(s, "&crates.AppVars{")
+	s = append(s, "AppDomain: "+fmt.Sprintf("%#v", this.AppDomain)+",\n")
+	s = append(s, "AppDesc: "+fmt.Sprintf("%#v", this.AppDesc)+",\n")
+	s = append(s, "OrgHomeURL: "+fmt.Sprintf("%#v", this.OrgHomeURL)+",\n")
+	s = append(s, "AppHomeURL: "+fmt.Sprintf("%#v", this.AppHomeURL)+",\n")
+	s = append(s, "CrateSnapshotURL: "+fmt.Sprintf("%#v", this.CrateSnapshotURL)+",\n")
+	keysForAppDownloadURLs := make([]string, 0, len(this.AppDownloadURLs))
+	for k, _ := range this.AppDownloadURLs {
+		keysForAppDownloadURLs = append(keysForAppDownloadURLs, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForAppDownloadURLs)
+	mapStringForAppDownloadURLs := "map[string]string{"
+	for _, k := range keysForAppDownloadURLs {
+		mapStringForAppDownloadURLs += fmt.Sprintf("%#v: %#v,", k, this.AppDownloadURLs[k])
+	}
+	mapStringForAppDownloadURLs += "}"
+	if this.AppDownloadURLs != nil {
+		s = append(s, "AppDownloadURLs: "+mapStringForAppDownloadURLs+",\n")
+	}
+	s = append(s, "URLSchemes: "+fmt.Sprintf("%#v", this.URLSchemes)+",\n")
+	keysForSettings := make([]string, 0, len(this.Settings))
+	for k, _ := range this.Settings {
+		keysForSettings = append(keysForSettings, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForSettings)
+	mapStringForSettings := "map[string]string{"
+	for _, k := range keysForSettings {
+		mapStringForSettings += fmt.Sprintf("%#v: %#v,", k, this.Settings[k])
+	}
+	mapStringForSettings += "}"
+	if this.Settings != nil {
+		s = append(s, "Settings: "+mapStringForSettings+",\n")
+	}
+	if this.Links != nil {
+		s = append(s, "Links: "+fmt.Sprintf("%#v", this.Links)+",\n")
+	}
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *KVEntry) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&crates.KVEntry{")
+	s = append(s, "Key: "+fmt.Sprintf("%#v", this.Key)+",\n")
+	s = append(s, "Value: "+fmt.Sprintf("%#v", this.Value)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1406,170 +1422,6 @@ func valueToGoStringAmpCrates(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func (m *KVEntry) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *KVEntry) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *KVEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Value) > 0 {
-		i -= len(m.Value)
-		copy(dAtA[i:], m.Value)
-		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.Value)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Key) > 0 {
-		i -= len(m.Key)
-		copy(dAtA[i:], m.Key)
-		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.Key)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *AppVars) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *AppVars) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *AppVars) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Links) > 0 {
-		for iNdEx := len(m.Links) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Links[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintAmpCrates(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x2
-			i--
-			dAtA[i] = 0xc2
-		}
-	}
-	if len(m.Settings) > 0 {
-		for k := range m.Settings {
-			v := m.Settings[k]
-			baseI := i
-			i -= len(v)
-			copy(dAtA[i:], v)
-			i = encodeVarintAmpCrates(dAtA, i, uint64(len(v)))
-			i--
-			dAtA[i] = 0x12
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintAmpCrates(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintAmpCrates(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x1
-			i--
-			dAtA[i] = 0xa2
-		}
-	}
-	if len(m.URLSchemes) > 0 {
-		for iNdEx := len(m.URLSchemes) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.URLSchemes[iNdEx])
-			copy(dAtA[i:], m.URLSchemes[iNdEx])
-			i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.URLSchemes[iNdEx])))
-			i--
-			dAtA[i] = 0x1
-			i--
-			dAtA[i] = 0x92
-		}
-	}
-	if len(m.AppDownloadURLs) > 0 {
-		for k := range m.AppDownloadURLs {
-			v := m.AppDownloadURLs[k]
-			baseI := i
-			i -= len(v)
-			copy(dAtA[i:], v)
-			i = encodeVarintAmpCrates(dAtA, i, uint64(len(v)))
-			i--
-			dAtA[i] = 0x12
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintAmpCrates(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintAmpCrates(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0x1
-			i--
-			dAtA[i] = 0x82
-		}
-	}
-	if len(m.CratesSnapshotURL) > 0 {
-		i -= len(m.CratesSnapshotURL)
-		copy(dAtA[i:], m.CratesSnapshotURL)
-		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.CratesSnapshotURL)))
-		i--
-		dAtA[i] = 0x72
-	}
-	if len(m.AppHomeURL) > 0 {
-		i -= len(m.AppHomeURL)
-		copy(dAtA[i:], m.AppHomeURL)
-		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.AppHomeURL)))
-		i--
-		dAtA[i] = 0x62
-	}
-	if len(m.OrgHomeURL) > 0 {
-		i -= len(m.OrgHomeURL)
-		copy(dAtA[i:], m.OrgHomeURL)
-		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.OrgHomeURL)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.AppDesc) > 0 {
-		i -= len(m.AppDesc)
-		copy(dAtA[i:], m.AppDesc)
-		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.AppDesc)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.AppDomain) > 0 {
-		i -= len(m.AppDomain)
-		copy(dAtA[i:], m.AppDomain)
-		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.AppDomain)))
-		i--
-		dAtA[i] = 0x12
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *AssetEntry) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1652,6 +1504,13 @@ func (m *AssetEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.CenterX))))
 		i--
 		dAtA[i] = 0x2d
+	}
+	if len(m.AssetID) > 0 {
+		i -= len(m.AssetID)
+		copy(dAtA[i:], m.AssetID)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.AssetID)))
+		i--
+		dAtA[i] = 0x22
 	}
 	if len(m.Label) > 0 {
 		i -= len(m.Label)
@@ -1931,7 +1790,7 @@ func (m *CrateManifest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *CratesSnapshot) Marshal() (dAtA []byte, err error) {
+func (m *CrateSnapshot) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1941,12 +1800,12 @@ func (m *CratesSnapshot) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *CratesSnapshot) MarshalTo(dAtA []byte) (int, error) {
+func (m *CrateSnapshot) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *CratesSnapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *CrateSnapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1980,6 +1839,170 @@ func (m *CratesSnapshot) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *AppVars) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppVars) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AppVars) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Links) > 0 {
+		for iNdEx := len(m.Links) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Links[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAmpCrates(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2
+			i--
+			dAtA[i] = 0xc2
+		}
+	}
+	if len(m.Settings) > 0 {
+		for k := range m.Settings {
+			v := m.Settings[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintAmpCrates(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintAmpCrates(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintAmpCrates(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xa2
+		}
+	}
+	if len(m.URLSchemes) > 0 {
+		for iNdEx := len(m.URLSchemes) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.URLSchemes[iNdEx])
+			copy(dAtA[i:], m.URLSchemes[iNdEx])
+			i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.URLSchemes[iNdEx])))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x92
+		}
+	}
+	if len(m.AppDownloadURLs) > 0 {
+		for k := range m.AppDownloadURLs {
+			v := m.AppDownloadURLs[k]
+			baseI := i
+			i -= len(v)
+			copy(dAtA[i:], v)
+			i = encodeVarintAmpCrates(dAtA, i, uint64(len(v)))
+			i--
+			dAtA[i] = 0x12
+			i -= len(k)
+			copy(dAtA[i:], k)
+			i = encodeVarintAmpCrates(dAtA, i, uint64(len(k)))
+			i--
+			dAtA[i] = 0xa
+			i = encodeVarintAmpCrates(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x82
+		}
+	}
+	if len(m.CrateSnapshotURL) > 0 {
+		i -= len(m.CrateSnapshotURL)
+		copy(dAtA[i:], m.CrateSnapshotURL)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.CrateSnapshotURL)))
+		i--
+		dAtA[i] = 0x72
+	}
+	if len(m.AppHomeURL) > 0 {
+		i -= len(m.AppHomeURL)
+		copy(dAtA[i:], m.AppHomeURL)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.AppHomeURL)))
+		i--
+		dAtA[i] = 0x62
+	}
+	if len(m.OrgHomeURL) > 0 {
+		i -= len(m.OrgHomeURL)
+		copy(dAtA[i:], m.OrgHomeURL)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.OrgHomeURL)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.AppDesc) > 0 {
+		i -= len(m.AppDesc)
+		copy(dAtA[i:], m.AppDesc)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.AppDesc)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.AppDomain) > 0 {
+		i -= len(m.AppDomain)
+		copy(dAtA[i:], m.AppDomain)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.AppDomain)))
+		i--
+		dAtA[i] = 0x12
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *KVEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *KVEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *KVEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Key) > 0 {
+		i -= len(m.Key)
+		copy(dAtA[i:], m.Key)
+		i = encodeVarintAmpCrates(dAtA, i, uint64(len(m.Key)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintAmpCrates(dAtA []byte, offset int, v uint64) int {
 	offset -= sovAmpCrates(v)
 	base := offset
@@ -1991,80 +2014,6 @@ func encodeVarintAmpCrates(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *KVEntry) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Key)
-	if l > 0 {
-		n += 1 + l + sovAmpCrates(uint64(l))
-	}
-	l = len(m.Value)
-	if l > 0 {
-		n += 1 + l + sovAmpCrates(uint64(l))
-	}
-	return n
-}
-
-func (m *AppVars) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.AppDomain)
-	if l > 0 {
-		n += 1 + l + sovAmpCrates(uint64(l))
-	}
-	l = len(m.AppDesc)
-	if l > 0 {
-		n += 1 + l + sovAmpCrates(uint64(l))
-	}
-	l = len(m.OrgHomeURL)
-	if l > 0 {
-		n += 1 + l + sovAmpCrates(uint64(l))
-	}
-	l = len(m.AppHomeURL)
-	if l > 0 {
-		n += 1 + l + sovAmpCrates(uint64(l))
-	}
-	l = len(m.CratesSnapshotURL)
-	if l > 0 {
-		n += 1 + l + sovAmpCrates(uint64(l))
-	}
-	if len(m.AppDownloadURLs) > 0 {
-		for k, v := range m.AppDownloadURLs {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovAmpCrates(uint64(len(k))) + 1 + len(v) + sovAmpCrates(uint64(len(v)))
-			n += mapEntrySize + 2 + sovAmpCrates(uint64(mapEntrySize))
-		}
-	}
-	if len(m.URLSchemes) > 0 {
-		for _, s := range m.URLSchemes {
-			l = len(s)
-			n += 2 + l + sovAmpCrates(uint64(l))
-		}
-	}
-	if len(m.Settings) > 0 {
-		for k, v := range m.Settings {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovAmpCrates(uint64(len(k))) + 1 + len(v) + sovAmpCrates(uint64(len(v)))
-			n += mapEntrySize + 2 + sovAmpCrates(uint64(mapEntrySize))
-		}
-	}
-	if len(m.Links) > 0 {
-		for _, e := range m.Links {
-			l = e.Size()
-			n += 2 + l + sovAmpCrates(uint64(l))
-		}
-	}
-	return n
-}
-
 func (m *AssetEntry) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2079,6 +2028,10 @@ func (m *AssetEntry) Size() (n int) {
 		n += 1 + l + sovAmpCrates(uint64(l))
 	}
 	l = len(m.Label)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	l = len(m.AssetID)
 	if l > 0 {
 		n += 1 + l + sovAmpCrates(uint64(l))
 	}
@@ -2229,7 +2182,7 @@ func (m *CrateManifest) Size() (n int) {
 	return n
 }
 
-func (m *CratesSnapshot) Size() (n int) {
+func (m *CrateSnapshot) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2251,65 +2204,85 @@ func (m *CratesSnapshot) Size() (n int) {
 	return n
 }
 
+func (m *AppVars) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AppDomain)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	l = len(m.AppDesc)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	l = len(m.OrgHomeURL)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	l = len(m.AppHomeURL)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	l = len(m.CrateSnapshotURL)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	if len(m.AppDownloadURLs) > 0 {
+		for k, v := range m.AppDownloadURLs {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovAmpCrates(uint64(len(k))) + 1 + len(v) + sovAmpCrates(uint64(len(v)))
+			n += mapEntrySize + 2 + sovAmpCrates(uint64(mapEntrySize))
+		}
+	}
+	if len(m.URLSchemes) > 0 {
+		for _, s := range m.URLSchemes {
+			l = len(s)
+			n += 2 + l + sovAmpCrates(uint64(l))
+		}
+	}
+	if len(m.Settings) > 0 {
+		for k, v := range m.Settings {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovAmpCrates(uint64(len(k))) + 1 + len(v) + sovAmpCrates(uint64(len(v)))
+			n += mapEntrySize + 2 + sovAmpCrates(uint64(mapEntrySize))
+		}
+	}
+	if len(m.Links) > 0 {
+		for _, e := range m.Links {
+			l = e.Size()
+			n += 2 + l + sovAmpCrates(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *KVEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Key)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	l = len(m.Value)
+	if l > 0 {
+		n += 1 + l + sovAmpCrates(uint64(l))
+	}
+	return n
+}
+
 func sovAmpCrates(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozAmpCrates(x uint64) (n int) {
 	return sovAmpCrates(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *KVEntry) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&KVEntry{`,
-		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
-		`Value:` + fmt.Sprintf("%v", this.Value) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *AppVars) String() string {
-	if this == nil {
-		return "nil"
-	}
-	repeatedStringForLinks := "[]*KVEntry{"
-	for _, f := range this.Links {
-		repeatedStringForLinks += strings.Replace(f.String(), "KVEntry", "KVEntry", 1) + ","
-	}
-	repeatedStringForLinks += "}"
-	keysForAppDownloadURLs := make([]string, 0, len(this.AppDownloadURLs))
-	for k, _ := range this.AppDownloadURLs {
-		keysForAppDownloadURLs = append(keysForAppDownloadURLs, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForAppDownloadURLs)
-	mapStringForAppDownloadURLs := "map[string]string{"
-	for _, k := range keysForAppDownloadURLs {
-		mapStringForAppDownloadURLs += fmt.Sprintf("%v: %v,", k, this.AppDownloadURLs[k])
-	}
-	mapStringForAppDownloadURLs += "}"
-	keysForSettings := make([]string, 0, len(this.Settings))
-	for k, _ := range this.Settings {
-		keysForSettings = append(keysForSettings, k)
-	}
-	github_com_gogo_protobuf_sortkeys.Strings(keysForSettings)
-	mapStringForSettings := "map[string]string{"
-	for _, k := range keysForSettings {
-		mapStringForSettings += fmt.Sprintf("%v: %v,", k, this.Settings[k])
-	}
-	mapStringForSettings += "}"
-	s := strings.Join([]string{`&AppVars{`,
-		`AppDomain:` + fmt.Sprintf("%v", this.AppDomain) + `,`,
-		`AppDesc:` + fmt.Sprintf("%v", this.AppDesc) + `,`,
-		`OrgHomeURL:` + fmt.Sprintf("%v", this.OrgHomeURL) + `,`,
-		`AppHomeURL:` + fmt.Sprintf("%v", this.AppHomeURL) + `,`,
-		`CratesSnapshotURL:` + fmt.Sprintf("%v", this.CratesSnapshotURL) + `,`,
-		`AppDownloadURLs:` + mapStringForAppDownloadURLs + `,`,
-		`URLSchemes:` + fmt.Sprintf("%v", this.URLSchemes) + `,`,
-		`Settings:` + mapStringForSettings + `,`,
-		`Links:` + repeatedStringForLinks + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func (this *AssetEntry) String() string {
 	if this == nil {
@@ -2319,6 +2292,7 @@ func (this *AssetEntry) String() string {
 		`Flags:` + fmt.Sprintf("%v", this.Flags) + `,`,
 		`EntryURI:` + fmt.Sprintf("%v", this.EntryURI) + `,`,
 		`Label:` + fmt.Sprintf("%v", this.Label) + `,`,
+		`AssetID:` + fmt.Sprintf("%v", this.AssetID) + `,`,
 		`CenterX:` + fmt.Sprintf("%v", this.CenterX) + `,`,
 		`CenterY:` + fmt.Sprintf("%v", this.CenterY) + `,`,
 		`CenterZ:` + fmt.Sprintf("%v", this.CenterZ) + `,`,
@@ -2392,7 +2366,7 @@ func (this *CrateManifest) String() string {
 	}, "")
 	return s
 }
-func (this *CratesSnapshot) String() string {
+func (this *CrateSnapshot) String() string {
 	if this == nil {
 		return "nil"
 	}
@@ -2401,10 +2375,64 @@ func (this *CratesSnapshot) String() string {
 		repeatedStringForCrates += strings.Replace(f.String(), "CrateInfo", "CrateInfo", 1) + ","
 	}
 	repeatedStringForCrates += "}"
-	s := strings.Join([]string{`&CratesSnapshot{`,
+	s := strings.Join([]string{`&CrateSnapshot{`,
 		`RevID:` + fmt.Sprintf("%v", this.RevID) + `,`,
 		`DownloadURL:` + fmt.Sprintf("%v", this.DownloadURL) + `,`,
 		`Crates:` + repeatedStringForCrates + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *AppVars) String() string {
+	if this == nil {
+		return "nil"
+	}
+	repeatedStringForLinks := "[]*KVEntry{"
+	for _, f := range this.Links {
+		repeatedStringForLinks += strings.Replace(f.String(), "KVEntry", "KVEntry", 1) + ","
+	}
+	repeatedStringForLinks += "}"
+	keysForAppDownloadURLs := make([]string, 0, len(this.AppDownloadURLs))
+	for k, _ := range this.AppDownloadURLs {
+		keysForAppDownloadURLs = append(keysForAppDownloadURLs, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForAppDownloadURLs)
+	mapStringForAppDownloadURLs := "map[string]string{"
+	for _, k := range keysForAppDownloadURLs {
+		mapStringForAppDownloadURLs += fmt.Sprintf("%v: %v,", k, this.AppDownloadURLs[k])
+	}
+	mapStringForAppDownloadURLs += "}"
+	keysForSettings := make([]string, 0, len(this.Settings))
+	for k, _ := range this.Settings {
+		keysForSettings = append(keysForSettings, k)
+	}
+	github_com_gogo_protobuf_sortkeys.Strings(keysForSettings)
+	mapStringForSettings := "map[string]string{"
+	for _, k := range keysForSettings {
+		mapStringForSettings += fmt.Sprintf("%v: %v,", k, this.Settings[k])
+	}
+	mapStringForSettings += "}"
+	s := strings.Join([]string{`&AppVars{`,
+		`AppDomain:` + fmt.Sprintf("%v", this.AppDomain) + `,`,
+		`AppDesc:` + fmt.Sprintf("%v", this.AppDesc) + `,`,
+		`OrgHomeURL:` + fmt.Sprintf("%v", this.OrgHomeURL) + `,`,
+		`AppHomeURL:` + fmt.Sprintf("%v", this.AppHomeURL) + `,`,
+		`CrateSnapshotURL:` + fmt.Sprintf("%v", this.CrateSnapshotURL) + `,`,
+		`AppDownloadURLs:` + mapStringForAppDownloadURLs + `,`,
+		`URLSchemes:` + fmt.Sprintf("%v", this.URLSchemes) + `,`,
+		`Settings:` + mapStringForSettings + `,`,
+		`Links:` + repeatedStringForLinks + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *KVEntry) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&KVEntry{`,
+		`Key:` + fmt.Sprintf("%v", this.Key) + `,`,
+		`Value:` + fmt.Sprintf("%v", this.Value) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2416,650 +2444,6 @@ func valueToStringAmpCrates(v interface{}) string {
 	}
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
-}
-func (m *KVEntry) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAmpCrates
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: KVEntry: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: KVEntry: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Key = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Value = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAmpCrates(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *AppVars) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAmpCrates
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: AppVars: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: AppVars: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppDomain", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AppDomain = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppDesc", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AppDesc = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field OrgHomeURL", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.OrgHomeURL = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 12:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppHomeURL", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AppHomeURL = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 14:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CratesSnapshotURL", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CratesSnapshotURL = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 16:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppDownloadURLs", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.AppDownloadURLs == nil {
-				m.AppDownloadURLs = make(map[string]string)
-			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowAmpCrates
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowAmpCrates
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowAmpCrates
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipAmpCrates(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.AppDownloadURLs[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 18:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field URLSchemes", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.URLSchemes = append(m.URLSchemes, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 20:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Settings", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Settings == nil {
-				m.Settings = make(map[string]string)
-			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowAmpCrates
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowAmpCrates
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowAmpCrates
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipAmpCrates(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthAmpCrates
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Settings[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 40:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Links", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpCrates
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Links = append(m.Links, &KVEntry{})
-			if err := m.Links[len(m.Links)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAmpCrates(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthAmpCrates
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *AssetEntry) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -3172,6 +2556,38 @@ func (m *AssetEntry) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Label = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetID = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
 			if wireType != 5 {
@@ -4134,7 +3550,7 @@ func (m *CrateManifest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *CratesSnapshot) Unmarshal(dAtA []byte) error {
+func (m *CrateSnapshot) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -4157,10 +3573,10 @@ func (m *CratesSnapshot) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: CratesSnapshot: wiretype end group for non-group")
+			return fmt.Errorf("proto: CrateSnapshot: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CratesSnapshot: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: CrateSnapshot: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -4247,6 +3663,650 @@ func (m *CratesSnapshot) Unmarshal(dAtA []byte) error {
 			if err := m.Crates[len(m.Crates)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAmpCrates(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppVars) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAmpCrates
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppVars: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppVars: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppDomain", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AppDomain = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppDesc", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AppDesc = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OrgHomeURL", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OrgHomeURL = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppHomeURL", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AppHomeURL = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CrateSnapshotURL", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CrateSnapshotURL = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppDownloadURLs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AppDownloadURLs == nil {
+				m.AppDownloadURLs = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowAmpCrates
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAmpCrates
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAmpCrates
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipAmpCrates(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.AppDownloadURLs[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 18:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field URLSchemes", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.URLSchemes = append(m.URLSchemes, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 20:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Settings", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Settings == nil {
+				m.Settings = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowAmpCrates
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAmpCrates
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowAmpCrates
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipAmpCrates(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthAmpCrates
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Settings[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 40:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Links", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Links = append(m.Links, &KVEntry{})
+			if err := m.Links[len(m.Links)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAmpCrates(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *KVEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAmpCrates
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: KVEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: KVEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Key = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpCrates
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpCrates
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Value = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

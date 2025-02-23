@@ -5,6 +5,7 @@ import (
 	"math/rand/v2"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
@@ -45,6 +46,15 @@ func TestTag(t *testing.T) {
 			if tryID[0] != 0x2f4aa1bc0 && tryID[1] != 0xa743a23a89605f6a && tryID[2] != 0xcfec4cf239b7d3fa {
 				t.Fatalf("tag literals commutation test failed: %v", tryID)
 			}
+		}
+	}
+
+	{
+		now := time.Now()
+		nowTag := tag.FromTime(now, false)
+		nowTime := nowTag.Time()
+		if !now.Equal(nowTag.Time()) {
+			t.Errorf("tag.FromTime() failed: %v != %v", now, nowTime)
 		}
 	}
 

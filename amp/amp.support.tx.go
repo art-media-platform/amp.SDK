@@ -11,31 +11,27 @@ import (
 )
 
 // TxDataStore is a message packet sent to / from a client.
-// It is leads with a fixed-size header (TxHeader_Size) followed by a variable-size body.
+// It leads with a fixed-size header (TxPreamble_Size).
 type TxDataStore []byte
 
-// TxHeader is the fixed-size header that leads every TxMsg.
-// See comments for Const_TxHeader_Size.
-type TxHeader [Const_TxHeader_Size]byte
+// TxPreamble is the fixed-size header that leads every TxMsg.
+// See comments for Const_TxPreamble_Size.
+type TxPreamble [Const_TxPreamble_Size]byte
 
-func (header TxHeader) TxBodyLen() int {
-	return int(binary.LittleEndian.Uint32(header[4:8]))
+func (preamble TxPreamble) TxHeadLen() int {
+	return int(binary.BigEndian.Uint32(preamble[4:8]))
 }
 
-func (header TxHeader) TxDataLen() int {
-	return int(binary.LittleEndian.Uint32(header[8:12]))
+func (preamble TxPreamble) TxDataLen() int {
+	return int(binary.BigEndian.Uint32(preamble[8:12]))
 }
 
 func NewTxMsg(genesis bool) *TxMsg {
 	tx := gTxMsgPool.Get().(*TxMsg)
 	tx.refCount = 1
 	if genesis {
-		tid := tag.Now()
-		tx.GenesisID_0 = int64(tid[0])
-		tx.GenesisID_1 = tid[1]
-		tx.GenesisID_2 = tid[2]
+		tx.SetID(tag.Now())
 	}
-
 	return tx
 }
 
@@ -45,31 +41,25 @@ var gTxMsgPool = sync.Pool{
 	},
 }
 
-func (tx *TxEnvelope) SetContextID(ID tag.ID) {
+func (tx *TxHeader) SetContextID(ID tag.ID) {
 	tx.ContextID_0 = int64(ID[0])
 	tx.ContextID_1 = ID[1]
 	tx.ContextID_2 = ID[2]
 }
 
-func (tx *TxEnvelope) ContextID() tag.ID {
+func (tx *TxHeader) ContextID() tag.ID {
 	return tag.ID{uint64(tx.ContextID_0), tx.ContextID_1, tx.ContextID_2}
 }
 
-func (tx *TxEnvelope) SetGenesisID(ID tag.ID) {
-	tx.GenesisID_0 = int64(ID[0])
-	tx.GenesisID_1 = ID[1]
-	tx.GenesisID_2 = ID[2]
+func (tx *TxHeader) SetID(ID tag.ID) {
+	tx.TxID_0 = int64(ID[0])
+	tx.TxID_1 = ID[1]
+	tx.TxID_2 = ID[2]
 }
 
-func (tx *TxEnvelope) GenesisID() tag.ID {
-	return tag.ID{uint64(tx.GenesisID_0), tx.GenesisID_1, tx.GenesisID_2}
+func (tx *TxHeader) ID() tag.ID {
+	return tag.ID{uint64(tx.TxID_0), tx.TxID_1, tx.TxID_2}
 }
-
-// // If this were Java, I'd call this a TxMsgBuilder
-// func (tx *TxMsg) AddRef() tag.ID {
-// func (tx *TxMsg) Witnessed() tag.ID {
-// 	atomic.AddInt32(&tx.refCount, 1)
-// }
 
 func (tx *TxMsg) AddRef() {
 	atomic.AddInt32(&tx.refCount, 1)
@@ -90,17 +80,14 @@ func (tx *TxMsg) ReleaseRef() {
 func MarshalAttr(cellID, attrID tag.ID, attrVal tag.Value) (*TxMsg, error) {
 	tx := NewTxMsg(true)
 	if attrID.IsNil() && attrVal != nil {
-		attrID = attrVal.TagExpr().ID
-		if attrID.IsNil() {
-			return nil, ErrCode_AssertFailed.Error("MarshalAttr: missing builtin tag.Expr")
-		}
+		return nil, ErrCode_AssertFailed.Error("MarshalAttr: missing attrID")
 	}
 	op := TxOp{}
 	op.CellID = cellID
 	op.AttrID = attrID
-	op.EditID = tag.Genesis(tx.GenesisID())
-	op.OpCode = TxOpCode_UpsertElement
+	op.EditID = tag.Genesis(tx.ID())
 
+	op.OpCode = TxOpCode_UpsertElement
 	if err := tx.MarshalOp(&op, attrVal); err != nil {
 		return nil, err
 	}
@@ -138,15 +125,14 @@ func (tx *TxMsg) Load(cellID, attrID, itemID tag.ID, dst tag.Value) error {
 		return tx.Ops[i].CompareTo(find)
 	})
 	if !found {
-		return ErrPropertyNotFound
+		return ErrAttrNotFound
 	}
 
 	return tx.UnmarshalOpValue(idx, dst)
 }
 
 var (
-	ErrAttrNotFound     = ErrCode_BadRequest.Error("attribute not found")
-	ErrPropertyNotFound = ErrCode_BadRequest.Error("property not found")
+	ErrAttrNotFound = ErrCode_BadRequest.Error("attribute not found")
 )
 
 func (tx *TxMsg) sortOps() {
@@ -158,24 +144,28 @@ func (tx *TxMsg) sortOps() {
 	}
 }
 
-// If reqID == 0, then this sends an attr to the client's session controller (vs a specific request)
-func SendMetaAttr(sess Session, context tag.ID, status OpStatus, attrID tag.ID, val tag.Value) error {
-	tx, err := MarshalAttr(MetaNodeID, attrID, val)
+// Sends the single given value with attribute ID to the client's session agent for handling (e.g. LaunchOAuth)
+func SendToClientAgent(sess Session, attrID tag.ID, value tag.Value) error {
+	return SendMonoAttr(sess, attrID, value, ClientAgent, OpStatus_Synced)
+}
+
+func SendMonoAttr(sess Session, attrID tag.ID, value tag.Value, contextID tag.ID, status OpStatus) error {
+	tx, err := MarshalAttr(HeadCellID, attrID, value)
 	if err != nil {
 		return err
 	}
-	tx.SetContextID(context)
+	tx.SetContextID(contextID)
 	tx.Status = status
 	return sess.SendTx(tx)
 }
 
-// If nil, nil is returned, then this Tx is a valid TxMsg to be merged into the target Pin.
-func (tx *TxMsg) CheckMetaAttr(reg Registry) (tag.Value, error) {
-	genesisID := tx.GenesisID()
-	if genesisID.IsNil() {
-		return nil, ErrCode_MalformedTx.Error("missing tx.GenesisID")
+// Unmarshals the single value contained in a TxMsg.
+func (tx *TxMsg) UnmarshalMonoAttr(reg Registry) (tag.Value, error) {
+	txID := tx.ID()
+	if txID.IsNil() {
+		return nil, ErrCode_MalformedTx.Error("missing tx ID")
 	}
-	if len(tx.Ops) != 1 || tx.Ops[0].CellID != MetaNodeID {
+	if len(tx.Ops) != 1 || tx.Ops[0].CellID != HeadCellID {
 		return nil, nil
 	}
 	val, err := reg.MakeValue(tx.Ops[0].AttrID)
@@ -194,7 +184,7 @@ func (tx *TxMsg) Upsert(cellID, attrID, itemID tag.ID, val tag.Value) error {
 	op.CellID = cellID
 	op.AttrID = attrID
 	op.ItemID = itemID
-	op.EditID = tag.Genesis(tx.GenesisID())
+	op.EditID = tag.Genesis(tx.ID())
 
 	return tx.MarshalOp(&op, val)
 }
@@ -244,36 +234,35 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 		return nil
 	}
 
-	var header TxHeader
-	if err := readBytes(header[:]); err != nil {
+	var preamble TxPreamble
+	if err := readBytes(preamble[:]); err != nil {
 		return nil, err
 	}
 
-	marker := uint32(header[0])<<16 | uint32(header[1])<<8 | uint32(header[2])
-	if marker != uint32(Const_TxHeader_Marker) {
+	marker := uint32(preamble[0])<<16 | uint32(preamble[1])<<8 | uint32(preamble[2])
+	if marker != uint32(Const_TxPreamble_Marker) {
 		return nil, ErrMalformedTx
 	}
-	if header[3] < byte(Const_TxHeader_Version) {
+	if preamble[3] < byte(Const_TxPreamble_Version) {
 		return nil, ErrMalformedTx
 	}
 
 	tx := NewTxMsg(false)
-	bodyLen := header.TxBodyLen()
-	dataLen := header.TxDataLen()
+	headLen := preamble.TxHeadLen()
+	dataLen := preamble.TxDataLen()
 
-	// Use tx.DataStore to hold the body for unmarshalling.
-	// The tx body contains TxMsg fields and TxOps
+	// Use tx.DataStore to hold 'head" for unmarshalling, containing TxMsg fields and TxOps
 	{
-		needSz := max(bodyLen, dataLen)
+		needSz := max(headLen, dataLen)
 		if cap(tx.DataStore) < needSz {
 			tx.DataStore = make([]byte, max(needSz, 2048))
 		}
 
-		buf := tx.DataStore[:bodyLen-int(Const_TxHeader_Size)]
+		buf := tx.DataStore[:headLen-int(Const_TxPreamble_Size)]
 		if err := readBytes(buf); err != nil {
 			return nil, err
 		}
-		if err := tx.UnmarshalBody(buf); err != nil {
+		if err := tx.UnmarshalHead(buf); err != nil {
 			return nil, err
 		}
 	}
@@ -320,31 +309,31 @@ func (tx *TxMsg) MarshalHeaderAndOps(dst *[]byte) {
 		buf = make([]byte, 2048)
 	}
 
-	headerAndOps := tx.MarshalOps(buf[:Const_TxHeader_Size])
+	headerAndOps := tx.MarshalOps(buf[:Const_TxPreamble_Size])
 
-	header := headerAndOps[:Const_TxHeader_Size]
-	header[0] = byte((Const_TxHeader_Marker >> 16) & 0xFF)
-	header[1] = byte((Const_TxHeader_Marker >> 8) & 0xFF)
-	header[2] = byte((Const_TxHeader_Marker >> 0) & 0xFF)
-	header[3] = byte(Const_TxHeader_Version)
+	header := headerAndOps[:Const_TxPreamble_Size]
+	header[0] = byte((Const_TxPreamble_Marker >> 16) & 0xFF)
+	header[1] = byte((Const_TxPreamble_Marker >> 8) & 0xFF)
+	header[2] = byte((Const_TxPreamble_Marker >> 0) & 0xFF)
+	header[3] = byte(Const_TxPreamble_Version)
 
-	binary.LittleEndian.PutUint32(header[4:8], uint32(len(headerAndOps)))
-	binary.LittleEndian.PutUint32(header[8:12], uint32(len(tx.DataStore)))
+	binary.BigEndian.PutUint32(header[4:8], uint32(len(headerAndOps)))
+	binary.BigEndian.PutUint32(header[8:12], uint32(len(tx.DataStore)))
 
 	*dst = headerAndOps
 }
 
 func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 
-	// TxEnvelope
+	// TxHeader
 	{
 		tx.OpCount = uint64(len(tx.Ops))
-		infoLen := tx.TxEnvelope.Size()
+		infoLen := tx.TxHeader.Size()
 		dst = binary.AppendUvarint(dst, uint64(infoLen))
 
 		p := len(dst)
 		dst = append(dst, make([]byte, infoLen)...)
-		tx.TxEnvelope.MarshalToSizedBuffer(dst[p : p+infoLen])
+		tx.TxHeader.MarshalToSizedBuffer(dst[p : p+infoLen])
 	}
 
 	var (
@@ -358,7 +347,7 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 		dst = binary.AppendUvarint(dst, op.DataLen)
 		dst = binary.AppendUvarint(dst, op.DataOfs)
 
-		// detect body repeated fields and write only what changes (with corresponding flags)
+		// detect repeated fields and write only what changes (with corresponding flags)
 		{
 			op_cur[TxField_CellID_0] = op.CellID[0]
 			op_cur[TxField_CellID_1] = op.CellID[1]
@@ -397,10 +386,10 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 	return dst
 }
 
-func (tx *TxMsg) UnmarshalBody(src []byte) error {
+func (tx *TxMsg) UnmarshalHead(src []byte) error {
 	p := 0
 
-	// TxEnvelope
+	// TxHeader
 	{
 		infoLen, n := binary.Uvarint(src[0:])
 		if n <= 0 {
@@ -408,8 +397,8 @@ func (tx *TxMsg) UnmarshalBody(src []byte) error {
 		}
 		p += n
 
-		tx.TxEnvelope = TxEnvelope{}
-		err := tx.TxEnvelope.Unmarshal(src[p : p+int(infoLen)])
+		tx.TxHeader = TxHeader{}
+		err := tx.TxHeader.Unmarshal(src[p : p+int(infoLen)])
 		if err != nil {
 			return ErrMalformedTx
 		}

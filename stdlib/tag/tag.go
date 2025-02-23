@@ -17,21 +17,21 @@ var (
 	sThenDelimiters = regexp.MustCompile(ThenDelimiters) // regex for tag processing
 )
 
-// Genesis returns a tag.ID that denotes an edit lineage root based on a single given "seed".
+// Genesis returns a tag.ID intended to be used as merkle root based on the seed ID.
 //
 //	בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 func Genesis(seed ID) ID {
 	return [3]uint64{
 		seed[0],
-		seed[1] >> 32, // 00 00 00 00 hint that helps identify a tag.ID as a genesis seed
+		seed[1] >> 24, // 00 00 00 helps easily identify a tag.ID as a genesis ID
 		seed[2],
 	}
 }
 
-// Entangle symmetrically merges two tag IDs, yielding a new determintic and pseudo-unique tag.
-// A collection of these "edit" tag IDs securely reflect a revision lineage (merkle) tree that can be reassembled in O(n*n).
+// Entangle symmetrically merges two tag IDs, yielding a determintic, pseudo-unique tag.
+// Given a collection of these "edit" IDs, we can express any revision lineage (aka merkle tree) and can be reassembled in O(n*n).
 //
-// This means a sorted list of CellID + AttrID + ItemID + EditID forms a CRDT, where EditID expresses "height" as described in https://peerlinks.io/protocol.html
+// This means any set of (CellID, AttrID, ItemID, EditID) LSM entries imply a singular CRDT, where EditID assumes the role of "height" such as in https://peerlinks.io/protocol.html
 func (id ID) Entangle(other ID) ID {
 	if id.IsNil() {
 		return Genesis(other)
@@ -198,11 +198,21 @@ const (
 	EntropyMask = uint64(0x3FFFFFFFF) // entropy bit mask for ID[1] -- slightly smaller than 1 ns resolution
 )
 
+// Returns the tag.ID formed by the hash the given string as a byte array.
+func FromToken(literal string) ID {
+	return FromLiteral([]byte(literal))
+}
+
+// Returns the tag.ID formed by the hash of the given byte string exactly.
 func FromLiteral(tagLiteral []byte) ID {
+
+	// hardwire {} / "" / {}byte / null / nil => (0,0,0)
+	if len(tagLiteral) == 0 {
+		return ID{}
+	}
 	hasher := sha1.New()
 	hasher.Write(tagLiteral)
-
-	var hashBuf [20]byte
+	var hashBuf [24]byte
 	hash := hasher.Sum(hashBuf[:0])
 
 	return ID{
@@ -217,19 +227,37 @@ func FromExpr(tagsExpr string) ID {
 	return spec.ID
 }
 
-func FromToken(literal string) ID {
-	return FromLiteral([]byte(literal))
+// Returns the tag.ID formed by three ordered 64 bit integers.
+//
+// The first is signed to reflect that times before 1970-01-01 are valid.
+func FromInts(x0 int64, x1, x2 uint64) ID {
+	return ID{
+		uint64(x0),
+		x1,
+		x2,
+	}
 }
 
-const (
-	prime1 = (uint64(1) << 63) - 471
-	prime2 = (uint64(1) << 62) - 143
-	prime3 = (uint64(1) << 55) - 99
-)
+// Returns the tag.ID formed by the first 24 bytes of the given bytes.
+func FromBytes(in []byte) (id ID, err error) {
+	var buf [24]byte
+	startAt := max(0, 24-len(in))
+	copy(buf[startAt:], in)
 
-var gTagSeed = uint64(1<<63) - 301 // prime number
+	id[0] = binary.BigEndian.Uint64(buf[0:8])
+	id[1] = binary.BigEndian.Uint64(buf[8:16])
+	id[2] = binary.BigEndian.Uint64(buf[16:24])
+	return id, nil
+}
 
+// Generates a tag.ID from the given time, with optional entropy to effectively randomize the
 func FromTime(t time.Time, addEntropy bool) ID {
+	const (
+		prime1 = (uint64(1) << 63) - 471
+		prime2 = (uint64(1) << 62) - 143
+		prime3 = (uint64(1) << 55) - 99
+	)
+
 	ns_b10 := uint64(t.Nanosecond()) // 0..999999999
 	ns_f64 := ns_b10 * NanosecStep   // map to 0..(2^64-1)
 
@@ -252,21 +280,7 @@ func FromTime(t time.Time, addEntropy bool) ID {
 	return id
 }
 
-func Join(prefixTags, suffixTags string) string {
-	if prefixTags == "" {
-		return suffixTags
-	}
-	if suffixTags == "" {
-		return prefixTags
-	}
-	if (prefixTags[len(prefixTags)-1] != '.') && (suffixTags[0] != '.') {
-		return prefixTags + "." + suffixTags
-	}
-	if (prefixTags[len(prefixTags)-1] == '.') && (suffixTags[0] == '.') {
-		return prefixTags + suffixTags[1:]
-	}
-	return prefixTags + suffixTags
-}
+var gTagSeed = uint64(1<<63) - 301 // prime number
 
 // Returns the current time as a tag.ID, statistically guaranteed to be unique even when called in rapid succession.
 func Now() ID {
@@ -373,14 +387,26 @@ func (id ID) Sub(oth ID) ID {
 	return out
 }
 
-// Returns Unix UTC time in milliseconds
-func (id ID) UnixMilli() int64 {
-	return int64(id[0]*1000) >> 16
+// Converts ID[0] to a Unix UTC timestamp in milliseconds
+func (id ID) UnixMs() int64 {
+	return int64(id[0]*125) >> 13 // 1000 / 2^16 == 125 / 2^13
 }
 
-// Returns Unix UTC time in seconds
+// Converts ID[0] to a Unix UTC timestamp in seconds
 func (id ID) Unix() int64 {
 	return int64(id[0]) >> 16
+}
+
+// Converts ID[0] to a Unix UTC timestamp in 1/65536 ticks
+func (id ID) UTC16() UTC16 {
+	return UTC16(id[0])
+}
+
+// Returns this ID to a time.Time
+func (id ID) Time() time.Time {
+	ns_f64 := ((id[0] & 0xFFFF) << 48) | (id[1] >> 16)
+	ns_b10 := 1 + ns_f64/(1+NanosecStep)
+	return time.Unix(id.Unix(), int64(ns_b10))
 }
 
 // Returns this tag.ID in canonic Base32 form
@@ -435,31 +461,11 @@ func (id ID) Base16Suffix() string {
 	return base16
 }
 
-// Forms an amp.UID explicitly from two uint64 values.
-func IntsToID(x0 int64, x1, x2 uint64) ID {
-	return ID{
-		uint64(x0),
-		x1,
-		x2,
-	}
-}
-
 type Key [24]byte
 
 var (
 	Nil = ID{}
 )
-
-func FromBytes(in []byte) (id ID, err error) {
-	var buf [24]byte
-	startAt := max(0, 24-len(in))
-	copy(buf[startAt:], in)
-
-	id[0] = binary.BigEndian.Uint64(buf[0:8])
-	id[1] = binary.BigEndian.Uint64(buf[8:16])
-	id[2] = binary.BigEndian.Uint64(buf[16:24])
-	return id, nil
-}
 
 func (id ID) AppendTo(dst []byte) []byte {
 	dst = binary.BigEndian.AppendUint64(dst, id[0])

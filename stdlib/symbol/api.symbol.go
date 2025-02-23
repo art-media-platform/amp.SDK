@@ -34,8 +34,9 @@ type Table interface {
 type Issuer interface {
 	generics.RefCloser
 
-	// Issues the next sequential unique ID, starting at DefaultIssuerMinID.
-	IssueNextID() (ID, error)
+	// Issues the next sequentual unique ID, however that may be defined in the context.
+	// 4 x (2^192) bits should be enough address space for anyone.
+	MintNext() (ID, error)
 }
 
 // ID is a persistent integer value associated with an immutable string or buffer value.
@@ -57,7 +58,7 @@ const IDSz = 4
 // DefaultIssuerMin specifies the default minimum ID value for newly issued IDs.
 //
 // ID values less than this value are reserved for clients to represent hard-wired or "out of band" meaning.
-// "Hard-wired" meaning that Table.SetSymbolID() can be called with IDs less than DefaultIssuerMinID without risk
+// "Hard-wired" meaning that Table.SetSymbolID() can be called with IDs less than DefaultIssuerMin without risk
 // of an auto-issued ID contending with it.
 const DefaultIssuerMin = 600
 

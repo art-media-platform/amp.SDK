@@ -1,21 +1,29 @@
 package tag
 
-// ID is a signed 24 byte UTC time index in big endian form, with 6 bytes of signed seconds and 10 bytes of fractional precision.
-// This means there are 47 bits dedicated to whole seconds, offering a range of ±4.4 million years.
+// UTC16 is a 64 bit signed UTC timestamp with 16 bits of fractional precision.
 //
-// This also means (ID[0] >> 16) always yields a standard 64-bit Unix UTC timestamp.
+// This format expresses timestamps within ±4.4 million years with 1/65536 second accuracy.
+type UTC16 int64
+
+// ID is a 24 byte LSM index, and leads with an 8 byte UTC16 timestamp.
+//
+// Since UTC16 is generally sufficient for applications, the trailing 16 bytes are available for any use,
+// such as geo-tile IDs, lattice coordinates, or other LSM friendly values.
+//
+//		unixSecs := ID.Unix()   // ID[0] >> 16
+//	    unixMs   := ID.UnixMs() // ID[0]*1000 >> 16
 type ID [3]uint64
 
 // Specifies a set of tag literals and its corresponding tag.ID.
 //
 //	tag.Expr := "[{TagOp}*[{utf8_token}]*"
 type Expr struct {
-	ID      ID
-	Canonic string // UTF-8 encoded canonical tag expression
+	ID      ID     // hash of any art-media-platform or other tag expression
+	Canonic string // optional UTF8 canonic tag expression that generates Expr.ID
 }
 
 const (
-	PackageTags = "amp.spec.tag.v.0.8"
+	PackageTags = "amp.spec.tag.v0.7000"
 
 	WithDelimiters  = `[\.+\s,\:\!\?]+` // commutative (symmetric) binary delimiters
 	ThenDelimiters  = `[\-/\\\~\^\@]+`  // non-commutative binary or unary delimiter
@@ -25,9 +33,6 @@ const (
 // tag.Value wraps a data element type, exposing tags, serialization, and instantiation methods.
 type Value interface {
 	ValuePb
-
-	// Returns the element type name (a scalar tag.Expr).
-	TagExpr() Expr
 
 	// Marshals this Value to a buffer, reallocating if needed.
 	MarshalToStore(in []byte) (out []byte, err error)

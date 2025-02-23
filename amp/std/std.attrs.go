@@ -8,43 +8,39 @@ import (
 )
 
 var (
-	LoginSpec           = amp.SystemAttr.With("Login").ID
-	LoginChallengeSpec  = amp.SystemAttr.With("LoginChallenge").ID
-	LoginResponseSpec   = amp.SystemAttr.With("LoginResponse").ID
-	LoginCheckpointSpec = amp.SystemAttr.With("LoginCheckpoint").ID
+	LoginSpec           = amp.SessionAttr.With("Login").ID
+	LoginChallengeSpec  = amp.SessionAttr.With("LoginChallenge").ID
+	LoginResponseSpec   = amp.SessionAttr.With("LoginResponse").ID
+	LoginCheckpointSpec = amp.SessionAttr.With("LoginCheckpoint").ID
+	SessionErr          = amp.SessionAttr.With("Err").ID
 
-	Item000 = tag.Nil
+	LaunchTag   = amp.SessionAttr.With("launch.Tag")
+	LaunchOAuth = LaunchTag.With("oauth").ID
 
-	//PositionQRS  = amp.SystemAttr.With("position.QRS.mm").ID // https://www.redblobgames.com/grids/hexagons/#neighbors-cube
-	LaunchURL    = amp.SystemAttr.With("LaunchURL").ID
-	CellProperty = amp.SystemAttr.With("cell.property")
+	CellAttr  = amp.SystemAttr.With("cell")
+	CellChild = CellAttr.With("child.Tag.ID") // each TxOp.ItemID expresses a child cell ID
 
-	CellChild   = CellProperty.With("child.Tag.ID") // each TxOp.ItemID expresses a child cell ID
-	CellFSInfo  = CellProperty.With("FSInfo").ID
-	CellContent = CellProperty.With("content")
-	CellText    = CellProperty.With("text.Tag")
+	CellTextTag    = CellAttr.With("text.Tag")
+	CellLabel      = CellTextTag.With("label").ID
+	CellCaption    = CellTextTag.With("caption").ID
+	CellCollection = CellTextTag.With("collection").ID
+	CellSynopsis   = CellTextTag.With("synopsis").ID
 
-	CellLabel      = CellText.With("label").ID
-	CellCaption    = CellText.With("caption").ID
-	CellCollection = CellText.With("collection").ID
-	CellSynopsis   = CellText.With("synopsis").ID
+	CellContent = CellAttr.With("content")
+	CellFSInfo  = CellContent.With("FSInfo").ID
+	CellGlyphs  = CellContent.With("Tags.glyphs").ID
+	CellLinks   = CellContent.With("Tags.links").ID
+	CellMedia   = CellContent.With("Tag.media").ID
+	CellVis     = CellContent.With("Tag.vis").ID
 
-	CellGlyphs = CellContent.With("Tags.glyphs").ID
-	CellLinks  = CellContent.With("Tags.links").ID
-	CellMedia  = CellContent.With("Tag.media").ID
-	CellVis    = CellContent.With("Tag.vis").ID
-
-	// CellPropertyTagID = CellProperty.With("Tag.ID")
-	// OrderByPlayID     = CellPropertyTagID.With("order-by.play").ID
-	// OrderByTimeID     = CellPropertyTagID.With("order-by.time").ID
-	// OrderByGeoID      = CellPropertyTagID.With("order-by.geo").ID
-	// OrderByAreaID     = CellPropertyTagID.With("order-by.area").ID
-
+	// TileAttr denotes attributes of a cell's background tile, framing, and appearance (in contrast to the "content" of the cell)
+	TileAttr   = CellAttr.With("tile")
+	TileLayout = TileAttr.With("Tag.layout").ID
 )
 
 const (
 	// URL prefix for a glyph and is typically followed by a media (mime) type.
-	GenericGlyphURL = "amp:glyph/"
+	ContentGlyphURI = "amp:glyph/"
 
 	GenericImageType = "image/*"
 	GenericAudioType = "audio/*"
@@ -58,16 +54,16 @@ var (
 
 func TagsForContentType(contentType string) *amp.Tags {
 	return &amp.Tags{
-		ID: &amp.Tag{
-			URL: GenericGlyphURL + contentType,
+		Head: &amp.Tag{
+			URI: ContentGlyphURI + contentType,
 		},
 	}
 }
 
 func TagsForImageURL(imageURL string) *amp.Tags {
 	return &amp.Tags{
-		ID: &amp.Tag{
-			URL:         imageURL,
+		Head: &amp.Tag{
+			URI:         imageURL,
 			ContentType: GenericImageType,
 		},
 	}
@@ -77,20 +73,12 @@ func (v *Position) MarshalToStore(in []byte) (out []byte, err error) {
 	return amp.MarshalPbToStore(v, in)
 }
 
-func (v *Position) TagExpr() tag.Expr {
-	return amp.SystemAttr.With("Position")
-}
-
 func (v *Position) New() tag.Value {
 	return &Position{}
 }
 
 func (v *FSInfo) MarshalToStore(in []byte) (out []byte, err error) {
 	return amp.MarshalPbToStore(v, in)
-}
-
-func (v *FSInfo) TagExpr() tag.Expr {
-	return amp.SystemAttr.With("FSInfo")
 }
 
 func (v *FSInfo) New() tag.Value {

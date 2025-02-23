@@ -262,9 +262,9 @@ type Placement struct {
 	// Expresses the position of this placement in space.
 	// The coordinate system is specified within (or implied) from the hosting attribute spec.
 	// Here's to the 3 domains that reflect completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s) -- https://www.youtube.com/watch?v=SrU9YDoXE88
-	Pos0 float64 `protobuf:"fixed64,1,opt,name=Pos0,proto3" json:"Pos0,omitempty"`
-	Pos1 float64 `protobuf:"fixed64,2,opt,name=Pos1,proto3" json:"Pos1,omitempty"`
-	Pos2 float64 `protobuf:"fixed64,3,opt,name=Pos2,proto3" json:"Pos2,omitempty"`
+	X float64 `protobuf:"fixed64,1,opt,name=X,proto3" json:"X,omitempty"`
+	Y float64 `protobuf:"fixed64,2,opt,name=Y,proto3" json:"Y,omitempty"`
+	Z float64 `protobuf:"fixed64,3,opt,name=Z,proto3" json:"Z,omitempty"`
 	// Expresses the scale of this Node.
 	// If all three values are 0, they are all implicitly 1.
 	// If Scale2 or Scale3 == 0, then they are each implicitly Scale1.
@@ -272,10 +272,10 @@ type Placement struct {
 	Scale1 float32 `protobuf:"fixed32,5,opt,name=Scale1,proto3" json:"Scale1,omitempty"`
 	Scale2 float32 `protobuf:"fixed32,6,opt,name=Scale2,proto3" json:"Scale2,omitempty"`
 	// Expresses the orientation of this placement using Euler angles.
-	EulerX float32    `protobuf:"fixed32,7,opt,name=EulerX,proto3" json:"EulerX,omitempty"`
-	EulerY float32    `protobuf:"fixed32,8,opt,name=EulerY,proto3" json:"EulerY,omitempty"`
-	EulerZ float32    `protobuf:"fixed32,9,opt,name=EulerZ,proto3" json:"EulerZ,omitempty"`
-	Metric amp.Metric `protobuf:"varint,12,opt,name=Metric,proto3,enum=amp.Metric" json:"Metric,omitempty"`
+	EulerX float32   `protobuf:"fixed32,7,opt,name=EulerX,proto3" json:"EulerX,omitempty"`
+	EulerY float32   `protobuf:"fixed32,8,opt,name=EulerY,proto3" json:"EulerY,omitempty"`
+	EulerZ float32   `protobuf:"fixed32,9,opt,name=EulerZ,proto3" json:"EulerZ,omitempty"`
+	Units  amp.Units `protobuf:"varint,12,opt,name=Units,proto3,enum=amp.Units" json:"Units,omitempty"`
 }
 
 func (m *Placement) Reset()      { *m = Placement{} }
@@ -310,23 +310,23 @@ func (m *Placement) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Placement proto.InternalMessageInfo
 
-func (m *Placement) GetPos0() float64 {
+func (m *Placement) GetX() float64 {
 	if m != nil {
-		return m.Pos0
+		return m.X
 	}
 	return 0
 }
 
-func (m *Placement) GetPos1() float64 {
+func (m *Placement) GetY() float64 {
 	if m != nil {
-		return m.Pos1
+		return m.Y
 	}
 	return 0
 }
 
-func (m *Placement) GetPos2() float64 {
+func (m *Placement) GetZ() float64 {
 	if m != nil {
-		return m.Pos2
+		return m.Z
 	}
 	return 0
 }
@@ -373,11 +373,11 @@ func (m *Placement) GetEulerZ() float32 {
 	return 0
 }
 
-func (m *Placement) GetMetric() amp.Metric {
+func (m *Placement) GetUnits() amp.Units {
 	if m != nil {
-		return m.Metric
+		return m.Units
 	}
-	return amp.Metric_Nil
+	return amp.Units_Unspecified
 }
 
 type BadgeDigit struct {
@@ -436,11 +436,17 @@ func (m *BadgeDigit) GetAmplitudeModulus() int64 {
 	return 0
 }
 
+// TRS (translate rotate scale)
+// A general-purpose placement spec in time, space, geo-position, and orientation.
 type TRS struct {
-	// X1, X2, and X3 are coordinates or values expressed in any unit.
-	// A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
+	// Typically an anchoring coordinate in time, space, geo-position, and orientation.
+	// Often used to spacify the a grid and unit convention.
+	Anchor *amp.Tag `protobuf:"bytes,1,opt,name=Anchor,proto3" json:"Anchor,omitempty"`
+	// XX coordinates or values expressed in any any contextual or implied metric
+	// An AttrID conveys how to interpret this coordinate tuple.
 	// Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
 	// Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
+	X0 float64 `protobuf:"fixed64,40,opt,name=X0,proto3" json:"X0,omitempty"`
 	X1 float64 `protobuf:"fixed64,41,opt,name=X1,proto3" json:"X1,omitempty"`
 	X2 float64 `protobuf:"fixed64,42,opt,name=X2,proto3" json:"X2,omitempty"`
 	X3 float64 `protobuf:"fixed64,43,opt,name=X3,proto3" json:"X3,omitempty"`
@@ -452,10 +458,14 @@ type TRS struct {
 	Scale1 float32 `protobuf:"fixed32,51,opt,name=Scale1,proto3" json:"Scale1,omitempty"`
 	Scale2 float32 `protobuf:"fixed32,52,opt,name=Scale2,proto3" json:"Scale2,omitempty"`
 	Scale3 float32 `protobuf:"fixed32,53,opt,name=Scale3,proto3" json:"Scale3,omitempty"`
+	Qi     float32 `protobuf:"fixed32,12,opt,name=Qi,proto3" json:"Qi,omitempty"`
+	Qj     float32 `protobuf:"fixed32,13,opt,name=Qj,proto3" json:"Qj,omitempty"`
+	Qn     float32 `protobuf:"fixed32,14,opt,name=Qn,proto3" json:"Qn,omitempty"`
+	Qm     float32 `protobuf:"fixed32,15,opt,name=Qm,proto3" json:"Qm,omitempty"`
 	// Rotate1 - Rotate3 the orientation of this placement using Euler angles.
-	Rotate1 float32 `protobuf:"fixed32,61,opt,name=Rotate1,proto3" json:"Rotate1,omitempty"`
-	Rotate2 float32 `protobuf:"fixed32,62,opt,name=Rotate2,proto3" json:"Rotate2,omitempty"`
-	Rotate3 float32 `protobuf:"fixed32,63,opt,name=Rotate3,proto3" json:"Rotate3,omitempty"`
+	EulerX float32 `protobuf:"fixed32,61,opt,name=EulerX,proto3" json:"EulerX,omitempty"`
+	EulerY float32 `protobuf:"fixed32,62,opt,name=EulerY,proto3" json:"EulerY,omitempty"`
+	EulerZ float32 `protobuf:"fixed32,63,opt,name=EulerZ,proto3" json:"EulerZ,omitempty"`
 }
 
 func (m *TRS) Reset()      { *m = TRS{} }
@@ -489,6 +499,20 @@ func (m *TRS) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_TRS proto.InternalMessageInfo
+
+func (m *TRS) GetAnchor() *amp.Tag {
+	if m != nil {
+		return m.Anchor
+	}
+	return nil
+}
+
+func (m *TRS) GetX0() float64 {
+	if m != nil {
+		return m.X0
+	}
+	return 0
+}
 
 func (m *TRS) GetX1() float64 {
 	if m != nil {
@@ -539,23 +563,51 @@ func (m *TRS) GetScale3() float32 {
 	return 0
 }
 
-func (m *TRS) GetRotate1() float32 {
+func (m *TRS) GetQi() float32 {
 	if m != nil {
-		return m.Rotate1
+		return m.Qi
 	}
 	return 0
 }
 
-func (m *TRS) GetRotate2() float32 {
+func (m *TRS) GetQj() float32 {
 	if m != nil {
-		return m.Rotate2
+		return m.Qj
 	}
 	return 0
 }
 
-func (m *TRS) GetRotate3() float32 {
+func (m *TRS) GetQn() float32 {
 	if m != nil {
-		return m.Rotate3
+		return m.Qn
+	}
+	return 0
+}
+
+func (m *TRS) GetQm() float32 {
+	if m != nil {
+		return m.Qm
+	}
+	return 0
+}
+
+func (m *TRS) GetEulerX() float32 {
+	if m != nil {
+		return m.EulerX
+	}
+	return 0
+}
+
+func (m *TRS) GetEulerY() float32 {
+	if m != nil {
+		return m.EulerY
+	}
+	return 0
+}
+
+func (m *TRS) GetEulerZ() float32 {
+	if m != nil {
+		return m.EulerZ
 	}
 	return 0
 }
@@ -649,57 +701,59 @@ func init() {
 func init() { proto.RegisterFile("amp.std.proto", fileDescriptor_f19235ecf4b48ee7) }
 
 var fileDescriptor_f19235ecf4b48ee7 = []byte{
-	// 790 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x94, 0x4f, 0x73, 0xdb, 0x44,
-	0x18, 0xc6, 0xb5, 0x72, 0xec, 0x58, 0xaf, 0x93, 0xa0, 0xd9, 0x09, 0xb0, 0x94, 0x8e, 0xc6, 0x63,
-	0x2e, 0x6e, 0x98, 0x31, 0xb1, 0x54, 0x18, 0x2e, 0x94, 0x49, 0xec, 0xb6, 0x78, 0x06, 0x13, 0x77,
-	0x95, 0x94, 0xb4, 0x97, 0x8c, 0x6a, 0x6d, 0x82, 0x66, 0x64, 0xad, 0x91, 0xd6, 0x4c, 0xdb, 0x13,
-	0x1f, 0x81, 0x0b, 0xdf, 0x81, 0xe9, 0x9d, 0xef, 0xc0, 0x31, 0xc7, 0x1e, 0x38, 0x10, 0xe7, 0xc2,
-	0x31, 0x1f, 0x80, 0x03, 0xb3, 0xaf, 0xfe, 0xd8, 0x84, 0xe9, 0xc9, 0xef, 0xf3, 0x7b, 0x64, 0xed,
-	0xbe, 0xef, 0x3e, 0x5a, 0xd8, 0x0e, 0x66, 0xf3, 0x5e, 0xa6, 0xc2, 0xde, 0x3c, 0x95, 0x4a, 0xd2,
-	0x5a, 0xa6, 0xc2, 0x3b, 0x34, 0x98, 0xcd, 0x3f, 0xd3, 0x7c, 0x2a, 0x53, 0x91, 0x1b, 0x9d, 0x1f,
-	0xa1, 0x39, 0x91, 0x59, 0xa4, 0x22, 0x99, 0xd0, 0x7b, 0xd0, 0x1c, 0xc8, 0x34, 0x3c, 0x7e, 0x35,
-	0x17, 0x8c, 0xb4, 0x49, 0x77, 0xc7, 0xdd, 0xc6, 0x57, 0x94, 0x90, 0x57, 0x36, 0xdd, 0x02, 0xf2,
-	0x84, 0xd5, 0xda, 0xa4, 0x4b, 0x38, 0x79, 0xa2, 0x15, 0x67, 0x1b, 0xb9, 0xe2, 0x5a, 0xf9, 0xac,
-	0x9e, 0x2b, 0x9f, 0xda, 0x50, 0xe3, 0x47, 0x27, 0xac, 0xd1, 0x26, 0x5d, 0x93, 0xeb, 0xb2, 0xf3,
-	0x27, 0x81, 0xc6, 0x23, 0x7f, 0x94, 0x9c, 0x4b, 0x4a, 0x61, 0x63, 0x2c, 0xc3, 0x7c, 0x35, 0x8b,
-	0x63, 0x4d, 0x77, 0xa1, 0x3e, 0xca, 0x86, 0x51, 0xca, 0xcc, 0x36, 0xe9, 0x36, 0x79, 0x2e, 0xf4,
-	0x93, 0xdf, 0x05, 0x33, 0x81, 0x6b, 0x5a, 0x1c, 0x6b, 0xca, 0x60, 0x53, 0xff, 0x7e, 0x2b, 0x12,
-	0x5c, 0xbc, 0xce, 0x4b, 0x49, 0xdb, 0xd0, 0x1a, 0xc8, 0x44, 0x89, 0x44, 0x61, 0x33, 0x75, 0xfc,
-	0xd3, 0x3a, 0xa2, 0x77, 0xc1, 0x1a, 0xa4, 0x22, 0x50, 0x22, 0x3c, 0x50, 0x6c, 0xb3, 0x4d, 0xba,
-	0x35, 0xbe, 0x02, 0xd4, 0x01, 0x18, 0xcb, 0x30, 0x3a, 0x8f, 0xd0, 0x6e, 0xa2, 0xbd, 0x46, 0xe8,
-	0x1d, 0x68, 0x1e, 0xbe, 0x52, 0xc2, 0x8f, 0x5e, 0x0b, 0x66, 0xa1, 0x5b, 0xe9, 0xce, 0x3f, 0x04,
-	0xac, 0x49, 0x1c, 0x4c, 0xc5, 0x4c, 0x24, 0x4a, 0xef, 0x7b, 0x22, 0xb3, 0x7d, 0xec, 0x90, 0x70,
-	0xac, 0x0b, 0xd6, 0xc7, 0x06, 0x73, 0xd6, 0x2f, 0x98, 0x5b, 0xcc, 0x14, 0x6b, 0xfa, 0x01, 0x34,
-	0xfc, 0x69, 0x10, 0x8b, 0x7d, 0x6c, 0xcf, 0xe4, 0x85, 0xaa, 0x78, 0x1f, 0x1b, 0x2b, 0x79, 0xbf,
-	0xe2, 0x6e, 0x31, 0xed, 0x42, 0x69, 0xfe, 0x70, 0x11, 0x8b, 0xf4, 0x14, 0x1b, 0x35, 0x79, 0xa1,
-	0x2a, 0xfe, 0x0c, 0x3b, 0x2c, 0xf9, 0xb3, 0x8a, 0x3f, 0xc7, 0xde, 0x4a, 0xfe, 0x9c, 0x7e, 0x02,
-	0x8d, 0xb1, 0x50, 0x69, 0x34, 0x65, 0x5b, 0x98, 0x8e, 0x56, 0x4f, 0x87, 0x29, 0x47, 0xbc, 0xb0,
-	0x3a, 0x4f, 0x01, 0x0e, 0x83, 0xf0, 0x42, 0x0c, 0xa3, 0x8b, 0x48, 0xe9, 0x31, 0x1f, 0xcc, 0xe6,
-	0x71, 0xa4, 0x16, 0xc5, 0x29, 0xd7, 0xf8, 0x0a, 0xd0, 0x3d, 0xb0, 0x2b, 0x31, 0x96, 0xe1, 0x22,
-	0x5e, 0x64, 0x38, 0x94, 0x1a, 0xff, 0x1f, 0xef, 0xfc, 0x6e, 0x42, 0xed, 0x98, 0xfb, 0x74, 0x07,
-	0xcc, 0xd3, 0x3e, 0xbb, 0x87, 0x63, 0x32, 0x4f, 0xfb, 0xa8, 0x5d, 0xb6, 0x57, 0x68, 0x17, 0xb5,
-	0xc7, 0x3e, 0x2d, 0xb4, 0x47, 0xbf, 0x00, 0x0b, 0xc7, 0x80, 0x39, 0x73, 0x71, 0xdf, 0x0c, 0x53,
-	0x7d, 0xcc, 0xfd, 0xde, 0xd3, 0x28, 0x5b, 0x04, 0x71, 0xe5, 0xf3, 0xd5, 0xa3, 0x6b, 0x43, 0xf6,
-	0xde, 0x31, 0xe4, 0xfb, 0xb7, 0x87, 0x8c, 0x95, 0xc7, 0x3e, 0x5f, 0xe3, 0x9e, 0x0e, 0x29, 0x97,
-	0x2a, 0x50, 0xa2, 0xcf, 0xbe, 0x42, 0xa3, 0x94, 0x2b, 0xc7, 0x65, 0x0f, 0xd6, 0x1d, 0x77, 0xe5,
-	0x78, 0xec, 0xeb, 0x75, 0xc7, 0xeb, 0xec, 0xc3, 0x7b, 0xb7, 0xf6, 0x4c, 0xb7, 0xc1, 0x3a, 0x58,
-	0x28, 0x89, 0xc0, 0x36, 0xe8, 0x0e, 0xc0, 0xa3, 0xe8, 0xa5, 0x08, 0x73, 0x4d, 0x3a, 0xbf, 0x12,
-	0x68, 0x0d, 0x03, 0x15, 0xf8, 0xe2, 0x02, 0x03, 0xc9, 0x60, 0x53, 0x47, 0xf5, 0xe8, 0x3c, 0xc3,
-	0xf4, 0x6c, 0xf0, 0x52, 0xea, 0x0e, 0x30, 0xc4, 0xaf, 0x31, 0x3e, 0x1b, 0xbc, 0x50, 0xfa, 0x63,
-	0x18, 0x25, 0x71, 0x94, 0x08, 0xfd, 0x1a, 0x8c, 0xd0, 0x16, 0x5f, 0x23, 0xfa, 0x8c, 0x7d, 0x95,
-	0x8a, 0x60, 0x76, 0xc2, 0x47, 0x98, 0x18, 0x8b, 0xaf, 0x00, 0xbe, 0x35, 0x96, 0x2f, 0x46, 0x43,
-	0x06, 0x78, 0xb2, 0x85, 0xda, 0x7b, 0x43, 0x56, 0xb7, 0x0d, 0x65, 0xb0, 0x5b, 0xd6, 0x67, 0x27,
-	0x49, 0x36, 0x17, 0x53, 0xfc, 0xd2, 0x6c, 0x83, 0xee, 0x82, 0x5d, 0x39, 0x47, 0x69, 0x28, 0x52,
-	0x11, 0xda, 0x84, 0xde, 0x05, 0x56, 0xd1, 0x49, 0x1c, 0x24, 0xe2, 0x6c, 0x10, 0xa4, 0x4a, 0x64,
-	0x51, 0x90, 0xd8, 0x75, 0xfa, 0x31, 0x7c, 0x78, 0xcb, 0xfd, 0x46, 0xbc, 0x7c, 0xf8, 0x93, 0x48,
-	0xb8, 0xdd, 0xa0, 0x1f, 0xc1, 0xfb, 0x95, 0xf9, 0x58, 0xc8, 0x28, 0x3c, 0xf3, 0xe7, 0x3f, 0x88,
-	0x54, 0xd8, 0xf0, 0x9f, 0x5d, 0xe4, 0xd6, 0xf7, 0x8f, 0xfd, 0x2f, 0xef, 0xdb, 0xad, 0xc3, 0x07,
-	0x97, 0x57, 0x8e, 0xf1, 0xf6, 0xca, 0x31, 0x6e, 0xae, 0x1c, 0xf2, 0xf3, 0xd2, 0x21, 0xbf, 0x2d,
-	0x1d, 0xf2, 0xc7, 0xd2, 0x21, 0x97, 0x4b, 0x87, 0xfc, 0xb5, 0x74, 0xc8, 0xdf, 0x4b, 0xc7, 0xb8,
-	0x59, 0x3a, 0xe4, 0x97, 0x6b, 0xc7, 0xb8, 0xbc, 0x76, 0x8c, 0xb7, 0xd7, 0x8e, 0xf1, 0xc6, 0xdc,
-	0x2c, 0x2e, 0xe1, 0x17, 0x0d, 0xbc, 0x6c, 0xbd, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xed, 0x54,
-	0x70, 0x3b, 0x96, 0x05, 0x00, 0x00,
+	// 825 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x94, 0xcb, 0x6e, 0xdb, 0x46,
+	0x14, 0x40, 0x35, 0x94, 0x25, 0x8b, 0xd7, 0x8f, 0x10, 0x03, 0xb7, 0x9d, 0xa6, 0x01, 0x41, 0x68,
+	0xa5, 0xb8, 0x80, 0x6b, 0x4b, 0x69, 0xd1, 0x4d, 0x53, 0xf8, 0x91, 0xa4, 0x02, 0xea, 0xda, 0x1e,
+	0xda, 0xa9, 0xec, 0x8d, 0xc1, 0x88, 0x63, 0x65, 0x02, 0x72, 0xa8, 0x92, 0xa3, 0x22, 0xc9, 0xaa,
+	0x9f, 0xd0, 0x4d, 0x3f, 0xa0, 0xbb, 0x22, 0x5f, 0xd2, 0xa5, 0x97, 0x59, 0x74, 0x51, 0xcb, 0x8b,
+	0x76, 0xe9, 0x4f, 0x28, 0xe6, 0xf2, 0x21, 0xd5, 0x81, 0x57, 0x9a, 0x73, 0x2e, 0x35, 0xc3, 0xfb,
+	0x18, 0xc2, 0x4a, 0x10, 0x8f, 0x37, 0x32, 0x1d, 0x6e, 0x8c, 0xd3, 0x44, 0x27, 0xb4, 0x9e, 0xe9,
+	0xf0, 0x3e, 0x0d, 0xe2, 0xf1, 0x17, 0xc6, 0x0f, 0x93, 0x54, 0xe4, 0x81, 0xf6, 0x4f, 0xd0, 0x3a,
+	0x4c, 0x32, 0xa9, 0x65, 0xa2, 0xe8, 0x43, 0x68, 0xed, 0x26, 0x69, 0x78, 0xfc, 0x66, 0x2c, 0x18,
+	0xf1, 0x48, 0x67, 0xb5, 0xbb, 0x82, 0x5b, 0x94, 0x92, 0x57, 0x61, 0xba, 0x0c, 0xe4, 0x88, 0xd5,
+	0x3d, 0xd2, 0x21, 0x9c, 0x1c, 0x19, 0xe2, 0x6c, 0x21, 0x27, 0x6e, 0xc8, 0x67, 0x8d, 0x9c, 0x7c,
+	0xea, 0x40, 0x9d, 0x1f, 0x9c, 0xb0, 0xa6, 0x47, 0x3a, 0x16, 0x37, 0xcb, 0xf6, 0x5f, 0x04, 0x9a,
+	0x4f, 0xfd, 0xbe, 0xba, 0x48, 0x28, 0x85, 0x85, 0xfd, 0x24, 0xcc, 0x4f, 0xb3, 0x39, 0xae, 0xe9,
+	0x1a, 0x34, 0xfa, 0xd9, 0x9e, 0x4c, 0x99, 0xe5, 0x91, 0x4e, 0x8b, 0xe7, 0x60, 0x9e, 0xfc, 0x21,
+	0x88, 0x05, 0x9e, 0x69, 0x73, 0x5c, 0x53, 0x06, 0x8b, 0xe6, 0xf7, 0x7b, 0xa1, 0xf0, 0xf0, 0x06,
+	0x2f, 0x91, 0x7a, 0xb0, 0xb4, 0x9b, 0x28, 0x2d, 0x94, 0xc6, 0x64, 0x1a, 0xf8, 0xa7, 0x79, 0x45,
+	0x1f, 0x80, 0xbd, 0x9b, 0x8a, 0x40, 0x8b, 0x70, 0x5b, 0xb3, 0x45, 0x8f, 0x74, 0xea, 0x7c, 0x26,
+	0xa8, 0x0b, 0xb0, 0x9f, 0x84, 0xf2, 0x42, 0x62, 0xb8, 0x85, 0xe1, 0x39, 0x43, 0xef, 0x43, 0x6b,
+	0xe7, 0x8d, 0x16, 0xbe, 0x7c, 0x2b, 0x98, 0x8d, 0xd1, 0x8a, 0xdb, 0xff, 0x10, 0xb0, 0x0f, 0xa3,
+	0x60, 0x28, 0x62, 0xa1, 0xb4, 0x29, 0xc6, 0x00, 0xd3, 0x23, 0x9c, 0x0c, 0x0c, 0x9d, 0x62, 0x5e,
+	0x84, 0x93, 0x53, 0x43, 0x67, 0x65, 0x11, 0xcf, 0xe8, 0xc7, 0xd0, 0xf4, 0x87, 0x41, 0x24, 0x36,
+	0x31, 0x19, 0x8b, 0x17, 0x54, 0xf9, 0x2d, 0x4c, 0xa3, 0xf4, 0x5b, 0x95, 0xef, 0x16, 0xb5, 0x2d,
+	0xc8, 0xf8, 0x27, 0x93, 0x48, 0xa4, 0x03, 0x4c, 0xcb, 0xe2, 0x05, 0x55, 0xfe, 0x14, 0xf3, 0x29,
+	0xfd, 0x69, 0xe5, 0xcf, 0x30, 0x93, 0xd2, 0x9f, 0x51, 0x0f, 0x1a, 0x27, 0x4a, 0xea, 0x8c, 0x2d,
+	0xe3, 0x28, 0xc0, 0x86, 0x99, 0x1c, 0x34, 0x3c, 0x0f, 0xb4, 0x9f, 0x03, 0xec, 0x04, 0xe1, 0x48,
+	0xec, 0xc9, 0x91, 0xd4, 0xa6, 0xa2, 0xdb, 0xf1, 0x38, 0x92, 0x7a, 0x52, 0x34, 0xb4, 0xce, 0x67,
+	0x82, 0xae, 0x83, 0x53, 0xc1, 0x7e, 0x12, 0x4e, 0xa2, 0x49, 0x86, 0x85, 0xa8, 0xf3, 0x0f, 0x7c,
+	0xfb, 0xf7, 0x3a, 0xd4, 0x8f, 0xb9, 0x4f, 0x3d, 0x68, 0x6e, 0xab, 0xe1, 0xcb, 0x24, 0xc5, 0xed,
+	0x96, 0xba, 0x2d, 0x7c, 0x85, 0xe3, 0x60, 0xc4, 0x0b, 0x4f, 0x57, 0xc1, 0x1a, 0x6c, 0xb2, 0x0e,
+	0x96, 0xd0, 0x1a, 0x6c, 0x22, 0x6f, 0xb1, 0x87, 0x05, 0x6f, 0x21, 0x77, 0xd9, 0x7a, 0xc1, 0x5d,
+	0xe4, 0x1e, 0xfb, 0xbc, 0xe0, 0x1e, 0xfd, 0x0a, 0x6c, 0xac, 0x1a, 0x0e, 0x61, 0x17, 0xf3, 0x64,
+	0x38, 0xf2, 0xc7, 0xdc, 0xdf, 0x78, 0x2e, 0xb3, 0x49, 0x10, 0x55, 0x71, 0x3e, 0x7b, 0x74, 0xae,
+	0x27, 0xbd, 0x3b, 0x7a, 0xf2, 0xe8, 0x76, 0x4f, 0x70, 0xd5, 0x63, 0x5f, 0xce, 0xf9, 0x9e, 0x79,
+	0x9f, 0x23, 0x89, 0x05, 0xb6, 0xb8, 0x75, 0x24, 0x91, 0x5f, 0xb1, 0x95, 0x82, 0x5f, 0x21, 0x2b,
+	0xb6, 0x5a, 0xb0, 0x42, 0x8e, 0xd9, 0xbd, 0x82, 0xe3, 0xb9, 0x5e, 0x7f, 0x73, 0x47, 0xaf, 0x1f,
+	0xdf, 0xd1, 0xeb, 0x6f, 0xe7, 0x7b, 0xdd, 0xde, 0x84, 0x7b, 0xb7, 0xb2, 0xa5, 0x2b, 0x60, 0x6f,
+	0x4f, 0x74, 0x82, 0xc2, 0xa9, 0xd1, 0x55, 0x80, 0xa7, 0xf2, 0xb5, 0x08, 0x73, 0x26, 0xed, 0xdf,
+	0x08, 0x2c, 0xed, 0x05, 0x3a, 0xf0, 0xc5, 0x08, 0xe7, 0x9c, 0xc1, 0xa2, 0xb9, 0x01, 0x07, 0x17,
+	0x19, 0x8e, 0xe9, 0x02, 0x2f, 0xd1, 0x9c, 0x89, 0x77, 0xe3, 0x2d, 0xce, 0xe9, 0x02, 0x2f, 0xc8,
+	0xdc, 0xb1, 0xbe, 0x8a, 0xa4, 0x12, 0x66, 0x1b, 0x9c, 0xd5, 0x65, 0x3e, 0x67, 0xcc, 0x3c, 0xf9,
+	0x3a, 0x15, 0x41, 0x7c, 0xc2, 0xfb, 0x38, 0x9a, 0x36, 0x9f, 0x09, 0xdc, 0x35, 0x4a, 0x5e, 0xf4,
+	0xf7, 0x18, 0xe0, 0x14, 0x15, 0xb4, 0xfe, 0x8e, 0xcc, 0x3e, 0x62, 0x94, 0xc1, 0x5a, 0xb9, 0x3e,
+	0x3f, 0x51, 0xd9, 0x58, 0x0c, 0xf1, 0x02, 0x3b, 0x35, 0xba, 0x06, 0x4e, 0x15, 0x39, 0x48, 0x43,
+	0x91, 0x8a, 0xd0, 0x21, 0xf4, 0x01, 0xb0, 0xca, 0x1e, 0x46, 0x81, 0x12, 0xe7, 0xbb, 0x41, 0xaa,
+	0x45, 0x26, 0x03, 0xe5, 0x34, 0xe8, 0x67, 0xf0, 0xc9, 0xad, 0xe8, 0x77, 0xe2, 0xf5, 0x93, 0x9f,
+	0x85, 0xe2, 0x4e, 0x93, 0x7e, 0x0a, 0x1f, 0x55, 0xc1, 0x67, 0x22, 0x91, 0xe1, 0xb9, 0x3f, 0x7e,
+	0x29, 0x52, 0xe1, 0xc0, 0xff, 0xde, 0x22, 0x0f, 0xfd, 0xf8, 0xcc, 0xff, 0xfa, 0x91, 0xb3, 0xb4,
+	0xf3, 0xf8, 0xf2, 0xca, 0xad, 0xbd, 0xbf, 0x72, 0x6b, 0x37, 0x57, 0x2e, 0xf9, 0x65, 0xea, 0x92,
+	0x3f, 0xa6, 0x2e, 0xf9, 0x73, 0xea, 0x92, 0xcb, 0xa9, 0x4b, 0xfe, 0x9e, 0xba, 0xe4, 0xdf, 0xa9,
+	0x5b, 0xbb, 0x99, 0xba, 0xe4, 0xd7, 0x6b, 0xb7, 0x76, 0x79, 0xed, 0xd6, 0xde, 0x5f, 0xbb, 0xb5,
+	0x77, 0xd6, 0x62, 0xf1, 0x6d, 0x7f, 0xd1, 0xc4, 0x6f, 0x78, 0xef, 0xbf, 0x00, 0x00, 0x00, 0xff,
+	0xff, 0x8a, 0xfc, 0xfa, 0x4b, 0xed, 0x05, 0x00, 0x00,
 }
 
 func (x CordType) String() string {
@@ -816,13 +870,13 @@ func (this *Placement) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.Pos0 != that1.Pos0 {
+	if this.X != that1.X {
 		return false
 	}
-	if this.Pos1 != that1.Pos1 {
+	if this.Y != that1.Y {
 		return false
 	}
-	if this.Pos2 != that1.Pos2 {
+	if this.Z != that1.Z {
 		return false
 	}
 	if this.Scale0 != that1.Scale0 {
@@ -843,7 +897,7 @@ func (this *Placement) Equal(that interface{}) bool {
 	if this.EulerZ != that1.EulerZ {
 		return false
 	}
-	if this.Metric != that1.Metric {
+	if this.Units != that1.Units {
 		return false
 	}
 	return true
@@ -894,6 +948,12 @@ func (this *TRS) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
+	if !this.Anchor.Equal(that1.Anchor) {
+		return false
+	}
+	if this.X0 != that1.X0 {
+		return false
+	}
 	if this.X1 != that1.X1 {
 		return false
 	}
@@ -915,13 +975,25 @@ func (this *TRS) Equal(that interface{}) bool {
 	if this.Scale3 != that1.Scale3 {
 		return false
 	}
-	if this.Rotate1 != that1.Rotate1 {
+	if this.Qi != that1.Qi {
 		return false
 	}
-	if this.Rotate2 != that1.Rotate2 {
+	if this.Qj != that1.Qj {
 		return false
 	}
-	if this.Rotate3 != that1.Rotate3 {
+	if this.Qn != that1.Qn {
+		return false
+	}
+	if this.Qm != that1.Qm {
+		return false
+	}
+	if this.EulerX != that1.EulerX {
+		return false
+	}
+	if this.EulerY != that1.EulerY {
+		return false
+	}
+	if this.EulerZ != that1.EulerZ {
 		return false
 	}
 	return true
@@ -999,16 +1071,16 @@ func (this *Placement) GoString() string {
 	}
 	s := make([]string, 0, 14)
 	s = append(s, "&std.Placement{")
-	s = append(s, "Pos0: "+fmt.Sprintf("%#v", this.Pos0)+",\n")
-	s = append(s, "Pos1: "+fmt.Sprintf("%#v", this.Pos1)+",\n")
-	s = append(s, "Pos2: "+fmt.Sprintf("%#v", this.Pos2)+",\n")
+	s = append(s, "X: "+fmt.Sprintf("%#v", this.X)+",\n")
+	s = append(s, "Y: "+fmt.Sprintf("%#v", this.Y)+",\n")
+	s = append(s, "Z: "+fmt.Sprintf("%#v", this.Z)+",\n")
 	s = append(s, "Scale0: "+fmt.Sprintf("%#v", this.Scale0)+",\n")
 	s = append(s, "Scale1: "+fmt.Sprintf("%#v", this.Scale1)+",\n")
 	s = append(s, "Scale2: "+fmt.Sprintf("%#v", this.Scale2)+",\n")
 	s = append(s, "EulerX: "+fmt.Sprintf("%#v", this.EulerX)+",\n")
 	s = append(s, "EulerY: "+fmt.Sprintf("%#v", this.EulerY)+",\n")
 	s = append(s, "EulerZ: "+fmt.Sprintf("%#v", this.EulerZ)+",\n")
-	s = append(s, "Metric: "+fmt.Sprintf("%#v", this.Metric)+",\n")
+	s = append(s, "Units: "+fmt.Sprintf("%#v", this.Units)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1027,8 +1099,12 @@ func (this *TRS) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 20)
 	s = append(s, "&std.TRS{")
+	if this.Anchor != nil {
+		s = append(s, "Anchor: "+fmt.Sprintf("%#v", this.Anchor)+",\n")
+	}
+	s = append(s, "X0: "+fmt.Sprintf("%#v", this.X0)+",\n")
 	s = append(s, "X1: "+fmt.Sprintf("%#v", this.X1)+",\n")
 	s = append(s, "X2: "+fmt.Sprintf("%#v", this.X2)+",\n")
 	s = append(s, "X3: "+fmt.Sprintf("%#v", this.X3)+",\n")
@@ -1036,9 +1112,13 @@ func (this *TRS) GoString() string {
 	s = append(s, "Scale1: "+fmt.Sprintf("%#v", this.Scale1)+",\n")
 	s = append(s, "Scale2: "+fmt.Sprintf("%#v", this.Scale2)+",\n")
 	s = append(s, "Scale3: "+fmt.Sprintf("%#v", this.Scale3)+",\n")
-	s = append(s, "Rotate1: "+fmt.Sprintf("%#v", this.Rotate1)+",\n")
-	s = append(s, "Rotate2: "+fmt.Sprintf("%#v", this.Rotate2)+",\n")
-	s = append(s, "Rotate3: "+fmt.Sprintf("%#v", this.Rotate3)+",\n")
+	s = append(s, "Qi: "+fmt.Sprintf("%#v", this.Qi)+",\n")
+	s = append(s, "Qj: "+fmt.Sprintf("%#v", this.Qj)+",\n")
+	s = append(s, "Qn: "+fmt.Sprintf("%#v", this.Qn)+",\n")
+	s = append(s, "Qm: "+fmt.Sprintf("%#v", this.Qm)+",\n")
+	s = append(s, "EulerX: "+fmt.Sprintf("%#v", this.EulerX)+",\n")
+	s = append(s, "EulerY: "+fmt.Sprintf("%#v", this.EulerY)+",\n")
+	s = append(s, "EulerZ: "+fmt.Sprintf("%#v", this.EulerZ)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1210,8 +1290,8 @@ func (m *Placement) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Metric != 0 {
-		i = encodeVarintAmpStd(dAtA, i, uint64(m.Metric))
+	if m.Units != 0 {
+		i = encodeVarintAmpStd(dAtA, i, uint64(m.Units))
 		i--
 		dAtA[i] = 0x60
 	}
@@ -1251,21 +1331,21 @@ func (m *Placement) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x25
 	}
-	if m.Pos2 != 0 {
+	if m.Z != 0 {
 		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Pos2))))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Z))))
 		i--
 		dAtA[i] = 0x19
 	}
-	if m.Pos1 != 0 {
+	if m.Y != 0 {
 		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Pos1))))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Y))))
 		i--
 		dAtA[i] = 0x11
 	}
-	if m.Pos0 != 0 {
+	if m.X != 0 {
 		i -= 8
-		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Pos0))))
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.X))))
 		i--
 		dAtA[i] = 0x9
 	}
@@ -1325,25 +1405,25 @@ func (m *TRS) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Rotate3 != 0 {
+	if m.EulerZ != 0 {
 		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Rotate3))))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.EulerZ))))
 		i--
 		dAtA[i] = 0x3
 		i--
 		dAtA[i] = 0xfd
 	}
-	if m.Rotate2 != 0 {
+	if m.EulerY != 0 {
 		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Rotate2))))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.EulerY))))
 		i--
 		dAtA[i] = 0x3
 		i--
 		dAtA[i] = 0xf5
 	}
-	if m.Rotate1 != 0 {
+	if m.EulerX != 0 {
 		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Rotate1))))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.EulerX))))
 		i--
 		dAtA[i] = 0x3
 		i--
@@ -1403,6 +1483,50 @@ func (m *TRS) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		dAtA[i] = 0x2
 		i--
 		dAtA[i] = 0xc9
+	}
+	if m.X0 != 0 {
+		i -= 8
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.X0))))
+		i--
+		dAtA[i] = 0x2
+		i--
+		dAtA[i] = 0xc1
+	}
+	if m.Qm != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Qm))))
+		i--
+		dAtA[i] = 0x7d
+	}
+	if m.Qn != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Qn))))
+		i--
+		dAtA[i] = 0x75
+	}
+	if m.Qj != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Qj))))
+		i--
+		dAtA[i] = 0x6d
+	}
+	if m.Qi != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Qi))))
+		i--
+		dAtA[i] = 0x65
+	}
+	if m.Anchor != nil {
+		{
+			size, err := m.Anchor.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAmpStd(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -1536,13 +1660,13 @@ func (m *Placement) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Pos0 != 0 {
+	if m.X != 0 {
 		n += 9
 	}
-	if m.Pos1 != 0 {
+	if m.Y != 0 {
 		n += 9
 	}
-	if m.Pos2 != 0 {
+	if m.Z != 0 {
 		n += 9
 	}
 	if m.Scale0 != 0 {
@@ -1563,8 +1687,8 @@ func (m *Placement) Size() (n int) {
 	if m.EulerZ != 0 {
 		n += 5
 	}
-	if m.Metric != 0 {
-		n += 1 + sovAmpStd(uint64(m.Metric))
+	if m.Units != 0 {
+		n += 1 + sovAmpStd(uint64(m.Units))
 	}
 	return n
 }
@@ -1590,6 +1714,25 @@ func (m *TRS) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Anchor != nil {
+		l = m.Anchor.Size()
+		n += 1 + l + sovAmpStd(uint64(l))
+	}
+	if m.Qi != 0 {
+		n += 5
+	}
+	if m.Qj != 0 {
+		n += 5
+	}
+	if m.Qn != 0 {
+		n += 5
+	}
+	if m.Qm != 0 {
+		n += 5
+	}
+	if m.X0 != 0 {
+		n += 10
+	}
 	if m.X1 != 0 {
 		n += 10
 	}
@@ -1611,13 +1754,13 @@ func (m *TRS) Size() (n int) {
 	if m.Scale3 != 0 {
 		n += 6
 	}
-	if m.Rotate1 != 0 {
+	if m.EulerX != 0 {
 		n += 6
 	}
-	if m.Rotate2 != 0 {
+	if m.EulerY != 0 {
 		n += 6
 	}
-	if m.Rotate3 != 0 {
+	if m.EulerZ != 0 {
 		n += 6
 	}
 	return n
@@ -1691,16 +1834,16 @@ func (this *Placement) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&Placement{`,
-		`Pos0:` + fmt.Sprintf("%v", this.Pos0) + `,`,
-		`Pos1:` + fmt.Sprintf("%v", this.Pos1) + `,`,
-		`Pos2:` + fmt.Sprintf("%v", this.Pos2) + `,`,
+		`X:` + fmt.Sprintf("%v", this.X) + `,`,
+		`Y:` + fmt.Sprintf("%v", this.Y) + `,`,
+		`Z:` + fmt.Sprintf("%v", this.Z) + `,`,
 		`Scale0:` + fmt.Sprintf("%v", this.Scale0) + `,`,
 		`Scale1:` + fmt.Sprintf("%v", this.Scale1) + `,`,
 		`Scale2:` + fmt.Sprintf("%v", this.Scale2) + `,`,
 		`EulerX:` + fmt.Sprintf("%v", this.EulerX) + `,`,
 		`EulerY:` + fmt.Sprintf("%v", this.EulerY) + `,`,
 		`EulerZ:` + fmt.Sprintf("%v", this.EulerZ) + `,`,
-		`Metric:` + fmt.Sprintf("%v", this.Metric) + `,`,
+		`Units:` + fmt.Sprintf("%v", this.Units) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1721,6 +1864,12 @@ func (this *TRS) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&TRS{`,
+		`Anchor:` + strings.Replace(fmt.Sprintf("%v", this.Anchor), "Tag", "amp.Tag", 1) + `,`,
+		`Qi:` + fmt.Sprintf("%v", this.Qi) + `,`,
+		`Qj:` + fmt.Sprintf("%v", this.Qj) + `,`,
+		`Qn:` + fmt.Sprintf("%v", this.Qn) + `,`,
+		`Qm:` + fmt.Sprintf("%v", this.Qm) + `,`,
+		`X0:` + fmt.Sprintf("%v", this.X0) + `,`,
 		`X1:` + fmt.Sprintf("%v", this.X1) + `,`,
 		`X2:` + fmt.Sprintf("%v", this.X2) + `,`,
 		`X3:` + fmt.Sprintf("%v", this.X3) + `,`,
@@ -1728,9 +1877,9 @@ func (this *TRS) String() string {
 		`Scale1:` + fmt.Sprintf("%v", this.Scale1) + `,`,
 		`Scale2:` + fmt.Sprintf("%v", this.Scale2) + `,`,
 		`Scale3:` + fmt.Sprintf("%v", this.Scale3) + `,`,
-		`Rotate1:` + fmt.Sprintf("%v", this.Rotate1) + `,`,
-		`Rotate2:` + fmt.Sprintf("%v", this.Rotate2) + `,`,
-		`Rotate3:` + fmt.Sprintf("%v", this.Rotate3) + `,`,
+		`EulerX:` + fmt.Sprintf("%v", this.EulerX) + `,`,
+		`EulerY:` + fmt.Sprintf("%v", this.EulerY) + `,`,
+		`EulerZ:` + fmt.Sprintf("%v", this.EulerZ) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2143,7 +2292,7 @@ func (m *Placement) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pos0", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field X", wireType)
 			}
 			var v uint64
 			if (iNdEx + 8) > l {
@@ -2151,10 +2300,10 @@ func (m *Placement) Unmarshal(dAtA []byte) error {
 			}
 			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Pos0 = float64(math.Float64frombits(v))
+			m.X = float64(math.Float64frombits(v))
 		case 2:
 			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pos1", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Y", wireType)
 			}
 			var v uint64
 			if (iNdEx + 8) > l {
@@ -2162,10 +2311,10 @@ func (m *Placement) Unmarshal(dAtA []byte) error {
 			}
 			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Pos1 = float64(math.Float64frombits(v))
+			m.Y = float64(math.Float64frombits(v))
 		case 3:
 			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Pos2", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Z", wireType)
 			}
 			var v uint64
 			if (iNdEx + 8) > l {
@@ -2173,7 +2322,7 @@ func (m *Placement) Unmarshal(dAtA []byte) error {
 			}
 			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.Pos2 = float64(math.Float64frombits(v))
+			m.Z = float64(math.Float64frombits(v))
 		case 4:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Scale0", wireType)
@@ -2242,9 +2391,9 @@ func (m *Placement) Unmarshal(dAtA []byte) error {
 			m.EulerZ = float32(math.Float32frombits(v))
 		case 12:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Metric", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Units", wireType)
 			}
-			m.Metric = 0
+			m.Units = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAmpStd
@@ -2254,7 +2403,7 @@ func (m *Placement) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Metric |= amp.Metric(b&0x7F) << shift
+				m.Units |= amp.Units(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2397,6 +2546,97 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: TRS: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Anchor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Anchor == nil {
+				m.Anchor = &amp.Tag{}
+			}
+			if err := m.Anchor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Qi", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Qi = float32(math.Float32frombits(v))
+		case 13:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Qj", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Qj = float32(math.Float32frombits(v))
+		case 14:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Qn", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Qn = float32(math.Float32frombits(v))
+		case 15:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Qm", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Qm = float32(math.Float32frombits(v))
+		case 40:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field X0", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.X0 = float64(math.Float64frombits(v))
 		case 41:
 			if wireType != 1 {
 				return fmt.Errorf("proto: wrong wireType = %d for field X1", wireType)
@@ -2484,7 +2724,7 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			m.Scale3 = float32(math.Float32frombits(v))
 		case 61:
 			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rotate1", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EulerX", wireType)
 			}
 			var v uint32
 			if (iNdEx + 4) > l {
@@ -2492,10 +2732,10 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			}
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Rotate1 = float32(math.Float32frombits(v))
+			m.EulerX = float32(math.Float32frombits(v))
 		case 62:
 			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rotate2", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EulerY", wireType)
 			}
 			var v uint32
 			if (iNdEx + 4) > l {
@@ -2503,10 +2743,10 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			}
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Rotate2 = float32(math.Float32frombits(v))
+			m.EulerY = float32(math.Float32frombits(v))
 		case 63:
 			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Rotate3", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EulerZ", wireType)
 			}
 			var v uint32
 			if (iNdEx + 4) > l {
@@ -2514,7 +2754,7 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			}
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Rotate3 = float32(math.Float32frombits(v))
+			m.EulerZ = float32(math.Float32frombits(v))
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAmpStd(dAtA[iNdEx:])

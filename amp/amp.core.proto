@@ -18,24 +18,27 @@ option csharp_namespace = "amp";
 enum Const {
     Const_Defs = 0;
 
+    // By convention, the bootstrap ("head") cell ID for a TxMsg.
+    Const_HeadCellSeed = 2701;
+
     // DefaultServicePort  is the default TCP port used to expose amp.Host service.
     Const_DefaultServicePort = 5192;
 
-	// Byte size and version of a TxMsg encoding -- sizes are little endian
-	// A TxHeader has the following layout:
-    //   Bytes  00:03 -- TxHeader marker ('amp')
-	//          03:04 -- Const_TxHeader_Version
-    //          04:08 -- TxMsg body size: header + serialized TxOp(s)
+	// Byte size and version of a TxMsg encoding -- values are little endian
+	// A TxPreamble has the following layout:
+    //   Bytes  00:03 -- TxPreamble marker ('amp')
+	//          03:04 -- Const_TxPreamble_Version
+    //          04:08 -- sizeof(TxPreamble, TxHeader, serialized []TxOp)
     //          08:12 -- TxMsg.DataStore size
     //          12:16 -- Reserved
-	Const_TxHeader_Size = 16;
+	Const_TxPreamble_Size = 16;
 
-	// Version of the TxHeader -- first byte
-    Const_TxHeader_Version = 0x33;
+	// Version of the TxPreamble -- first byte
+    Const_TxPreamble_Version = 0x33;
 
-	// The first byte of the TxHeader is the header size and version and
+	// The first byte of the TxPreamble is the header size and version and
 	// the following 3 bytes of a serialized TxMsg ("amp")
-    Const_TxHeader_Marker = 0x616D70;
+    Const_TxPreamble_Marker = 0x616D70;
 
     // בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
     // Oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar.
@@ -79,39 +82,35 @@ enum TxField {
     TxField_MaxFields = 24;
 }
 
-
-// TxEnvelope contains information for a TxMsg
-message TxEnvelope {
+// TxHeader contains information for a TxMsg
+message TxHeader {
 
     // communicates request status / completion.
-    OpStatus            Status = 2;
+    OpStatus            Status = 1;
 
-    // The number of TxOps in this TxEnvelope
-    uint64              OpCount = 4;
+    // The number of TxOps in this TxHeader
+    uint64              OpCount = 2;
 
-    // A universally unique tag assigned when this Tx was created.
-    // Used to identify this tx and also serves as context ID for subsequent responses.
-    int64               GenesisID_0 = 5;
-    fixed64             GenesisID_1 = 6;
-    fixed64             GenesisID_2 = 7;
+    // Epoch that this Tx was created within.
+    Tag                 Epoch = 3;
 
-    // If set, this references a previously witnessed tx -- typically used for a response to a request.
-    // If nil, this is a context-free tx and GenesisID becomes the implied context ID.
+    // A universally unique, securely generated tag.ID assigned when is Tx originates.
+    // Also serves as context ID for subsequent requests and responses.
+    int64               TxID_0 = 5;
+    fixed64             TxID_1 = 6;
+    fixed64             TxID_2 = 7;
+
+    // If set, this references a previously witnessed tx -- typically used to respond to a request.
+    // If nil or equal to TxID, then this tx is context-free and TxID is implied context ID.
     int64               ContextID_0 = 10;
     fixed64             ContextID_1 = 11;
     fixed64             ContextID_2 = 12;
 
-    // sender of this TxEnvelope
-    Tag                 From = 14;
-
-    // recipient of this TxEnvelope
-    Tag                 To = 15;
-
-    // authority / trust ID
-    Tag                 Epoch = 16;
+    // recipient of this TxHeader
+    Tag                 RouteTo = 15;
 
     // headers / metadata / context
-    Tags                Tags = 17;
+    Tags                Attachments = 32;
 
 }
 
@@ -177,8 +176,8 @@ message LoginCheckpoint {
     string              RefreshToken = 3;
     int64               Expiry       = 4; // Unix UTC
 
-    string              UserID      = 11;
-    string              URI         = 12;
+    string              UserID       = 11;
+    string              URI          = 12;
 }
 
 
@@ -203,26 +202,13 @@ enum StateSync {
 // PinRequest is a client request to "pin" a cell, meaning selected attrs and child cells will be pushed to the client.
 message PinRequest {
 
-    // Specifies a target URL or tag / cell ID to be pinned with the above available mint templates available.
-    Tag            PinTarget = 2;
-
-    // Attributes to be synchronized -- if nil, all attrs are pinned
-    repeated Tag   PinAttrs  = 4;
+    // Expresses a planet and/or cell subset to pin
+    Tags           Select = 1;
 
     // Options for this request.
     StateSync      StateSync = 6;
 
-    // future proofing
-    Tag            Tags = 17;
-
 }
-
-// LaunchURL is used as a meta attribute handle a URL, such as an oauth request (host to client) or an oauth response (client to host).
-message LaunchURL {
-    string URL = 1;
-}
-
-
 
 enum Enable {
     Enable_LatentOff  = 0x0;
@@ -232,96 +218,93 @@ enum Enable {
 }
 
 
-enum UrlScheme {
-    UrlScheme_Nil             = 0;
-    UrlScheme_Unrecognized    = 1;  // Unrecognized URL scheme
-    UrlScheme_Http            = 2;  // "[http[s]://]{hostname}[:{port}]/{query}"
-    UrlScheme_Data            = 3;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
-    UrlScheme_File            = 4;  // "[file://]{hfs-pathname}"
-    UrlScheme_Amp             = 7;  // "[amp:[//app-alias/]]{cmd}[/{uri}]?{query}"
+enum UriScheme {
+    UriScheme_Nil             = 0;
 
-    UrlScheme_Git             = 16; // "[git://]{hostname}/{repo}[/{path}]"
+    UriScheme_Path            = 2;  // "any/posix/pathname"
+    UriScheme_Http            = 4;  // "[http[s]://]{hostname}[:{port}]/{query}"
+    UriScheme_Data            = 5;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
+    UriScheme_File            = 6;  // "[file://]{hfs-pathname}"
+    UriScheme_App             = 9;  // "[app:[//app-alias/]]{cmd}[/{uri}]?{query}"
 }
 
-// Tag is a multi-purpose, human-readable, intuitive, phonetically / hands-free, friendly cryptographically anonymous tagging and system actor "tag" or "badge" identifier.
-// Typically, a "Tags" string is parsed and hashed for safe and high performance data access.
-// SHA1 or any compatible 24 byte UTF8 literal hash DFA.
-message Tag {
-    int64   ID_0 = 2; // tag.ID[0]
-    fixed64 ID_1 = 3; // tag.ID[1]
-    fixed64 ID_2 = 4; // tag.ID[2]
-
-    string  ContentType = 10; // e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
-    string  UID         = 12; // UID, SKU, or other literal
-    string  Text        = 13; // tag.Expr, custom content, or expression
-    string  URL         = 15; // IEEE 1738 URL: schema://hostname.com/path/query
-
-    // Metric specifies the metric system used for the size metric values
-    Metric  Metric      = 20;
-
-    // SizeX, SizeY, SizeZ specify the size of the object in a given metric system
-    int64   SizeX       = 21;
-    int64   SizeY       = 22;
-    int64   SizeZ       = 23;
-
-}
-
-
-// Tags is a multi-purpose, automatically serializable and customable tree.
+// Tag is a versitile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
 //
 // All fields are optional and whose meaning is contextual.
 //
+// Also see tag.ID.
+message Tag {
+
+    /// inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes ///
+
+    int64    ID_0    = 1;  // tag.ID[0] -- typically a UTC16 timestamp
+    fixed64  ID_1    = 2;  // tag.ID[1] -- typically a H3 index; 'geo tile'
+    fixed64  ID_2    = 3;  // tag.ID[2] -- typically a H3 index; "local tile"`
+    Swizzle  Swizzle = 5;  // Swizzle(ID[0..2])
+
+    Grid     Grid    = 7;  // grid convention for T/I/J
+    Units    Units   = 8;  // unit convention for T/I/J
+    int64    R       = 12; // as ticks on Grid on an expanding sphere, or a UTC16 timestamp
+    int64    I       = 13; // as Units on Grid horizontally
+    int64    J       = 14; // as Units on Grid vertically
+
+
+    /// trusted agent assistant fields ///
+
+    string  ContentType = 17; // IANA RFC 2045 media type; e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
+    string  URI         = 18; // Unix style pathname *or* IANA RFC 1738 URL (schema://hostname.com/path/query)
+    string  Text        = 19; // UTF8 text: plain-text, XML, RTF
+}
+
+// Tags is a multi-purpose, automatically serializable and customizable tree of tags.
+//
+// All fields are optional and whose meaning is contextual.
 message Tags {
-    Tag           ID      = 1; // optional Tag
-    repeated Tags SubTags = 8;
+    Tag           Head     = 1; // indentifies this branch
+    bytes         Store    = 2; // optional binary store
+    repeated Tag  SubTags  = 4; // seqential sub tags
+    repeated Tags SubTrees = 6; // seqential sub trees
 }
 
-
-
-
-
-enum Metric {
-    Metric_Nil                           = 0;
-    Metric_OrthoPixel                    = 1;
-    Metric_OrthoMeter                    = 2;
-    Metric_OrthoMillimeter               = 3;
-    Metric_OrthoPlank                    = 4;
-    Metric_HexGridMillimeter             = 5;
-    Metric_TrapezoDodecahedronMillimeter = 6;
+// Grid specifies a standard lattice or coordinate convention.
+enum Grid {
+    Grid_Ortho                 = 0;  // X, Y, Z are a linear othonormal basis
+    Grid_Cylinder              = 5;  // X: longitude,    Y: vertical,      Z: radius
+    Grid_Sphere                = 6;  // X: longitude,    Y: latitude,      Z: radius
+    Grid_Tile                  = 7;  // X: H3 geo-tile,  Y: H3 sub-tile,   Z: altitude
+    Grid_EquallaterialRhomboid = 16; // TODO
+    Grid_TrapezoDodecahedron   = 17; // TODO
 }
 
-
-/*
-enum MetaFlags {
-    MetaFlags_None             = 0;
-    MetaFlags_Asset            = 0x01;  // Unrecognized URL scheme
-    MetaFlags_Texture          = 0x02;  // Unrecognized URL scheme
-    MetaFlags_TwoD             = 0x04;  // "[http[s]://]{hostname}[:{port}]/{query}"
-    MetaFlags_ThreeD           = 0x08;  // "[http[s]://]{hostname}[:{port}]/{query}"
-    MetaFlags_Artwork          = 0x10;  // "[http[s]://]{hostname}[:{port}]/{query}"
-    MetaFlags_Badge            = 0x20;  // Unrecognized URL scheme
-    MetaFlags_File             = 0x40;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
-    MetaFlags_Protocol         = 0x80;  // "[file://]{hfs-pathname}"
+enum Swizzle {
+    Swizzle_UTC16_Geo_Local = 0;
+    Swizzle_Geo_Local_UTC16 = 1;
 }
-*/
+
+// Units specifies a standard units convention.
+enum Units {
+    Units_Unspecified = 0;  // units not specified
+    Units_Operations  = 1;  // total operation count
+    Units_Bytes       = 2;  // any byte offset
+    Units_Pixels      = 3;  // texels or device pixels; not for typographic sizes
+    Units_Plank       = 5;  // TOE length
+    Units_Nanometers  = 7;  // 10^9 nm == 1 m
+    Units_Millimeters = 10;  // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
+    Units_Meters      = 11; // IEEE 3773 length for humans
+    Units_LightYears  = 16; // 1 light year == 9460730472580800. meters
+}
 
 
 // CryptoKitID identifies an encryption suite that implements ski.CryptoKit
 enum CryptoKitID {
-    CryptoKit_Nil             = 0;
+    CryptoKit_Nil = 0;
+
     CryptoKit_SecretBox_NaCl  = 100;
     CryptoKit_AsymMsg_NaCl    = 101;
     CryptoKit_Signing_NaCl    = 102;
     CryptoKit_Signing_ED25519 = 202;
 
 }
-
-message CryptoKey {
-    CryptoKitID         CryptoKitID     = 1;
-    bytes               KeyBytes        = 4;
-}
-
-
 
 
 /*
@@ -348,7 +331,7 @@ message EditableTextAttr {
 
 
 
-    // ErrCode expresses status and error codes.
+// ErrCode expresses status and error codes.
 enum ErrCode {
     ErrCode_Nil                         = 0;
 

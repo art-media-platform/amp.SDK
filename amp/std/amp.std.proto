@@ -38,26 +38,24 @@ message FSInfo {
     int32  NameLen     = 4; // name length minus extension
     string ContentType = 5;
 
-    int64 CreatedAt    = 7; // UTC << 16
-    int64 ModifiedAt   = 8; // UTC << 16
-
-    int64 ByteSize     = 9; // size in bytes
+    int64  CreatedAt   = 7; // UTC << 16
+    int64  ModifiedAt  = 8; // UTC << 16
+    int64  ByteSize    = 9; // size in bytes
 }
 
 
 
-
 message Placement {
-    // SI: coord
+    // IEEE 3773: coord
     // ElemType: tag.ID (where tag is CellID or is a hard asset ref)
 
 
  	// Expresses the position of this placement in space.
 	// The coordinate system is specified within (or implied) from the hosting attribute spec.
 	// Here's to the 3 domains that reflect completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s) -- https://www.youtube.com/watch?v=SrU9YDoXE88
-    double Pos0   = 1;
-    double Pos1   = 2;
-    double Pos2   = 3;
+    double X = 1;
+    double Y = 2;
+    double Z = 3;
 
 	// Expresses the scale of this Node.
 	// If all three values are 0, they are all implicitly 1.
@@ -71,12 +69,12 @@ message Placement {
 	float  EulerY = 8;
 	float  EulerZ = 9;
 
-    amp.Metric Metric = 12; // specifies the metric system used
+    amp.Units Units = 12;
 
-    // Implies a specific interpretation or spatial encoding of the size metric values
-    //      exp(LogScale) => units linear scale metric -
+    // Implies a interpretation or space and metrics.
+    //      exp(LogScale) => units linear scale units -
     //      e.g.  0.0 => 1, 1 => e^1,  3773.7337 => e^(8.23582016170069) ... )
-    //double              LogScale   = 25; // natural log of the unit-to-physical scale metric (default 0.0 => 1.0)
+    //double              LogScale   = 25; // natural log of the unit-to-physical metric (default 0.0 => 1.0)
 
 }
 
@@ -97,9 +95,8 @@ message BadgeDigit {
 }
 
 
-
-
-
+// TRS (translate rotate scale)
+// A general-purpose placement spec in time, space, geo-position, and orientation.
 message TRS {
 
     enum VisualScaleMode {
@@ -107,10 +104,16 @@ message TRS {
         FixedScale = 1;
     }
 
-    // X1, X2, and X3 are coordinates or values expressed in any unit.
-    // A channel client can later declare how to interpret these coordinates so that a channel server and provide indexed services.
+    // Typically an anchoring coordinate in time, space, geo-position, and orientation.
+    // Often used to spacify the a grid and unit convention.
+    amp.Tag             Anchor = 1;
+    //amp.Tag             Actor  = 2;
+
+    // XX coordinates or values expressed in any any contextual or implied metric
+    // An AttrID conveys how to interpret this coordinate tuple.
     // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
     // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
+    double              X0 = 40;
     double              X1 = 41;
     double              X2 = 42;
     double              X3 = 43;
@@ -125,10 +128,19 @@ message TRS {
     float               Scale2  = 52;
     float               Scale3  = 53;
 
+    float               Qi = 12;
+    float               Qj = 13;
+    float               Qn = 14;
+    float               Qm = 15;
+
     // Rotate1 - Rotate3 the orientation of this placement using Euler angles.
-    float               Rotate1 = 61;
-    float               Rotate2 = 62;
-    float               Rotate3 = 63;
+    float               EulerX = 61;
+    float               EulerY = 62;
+    float               EulerZ = 63;
+
+
+
+
 
 }
 

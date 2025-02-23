@@ -1,4 +1,4 @@
-// Package amp provides core types and interfaces for art.media.platform.
+// package amp provides core types and interfaces for art.media.platform.
 package amp
 
 import (
@@ -42,7 +42,7 @@ type AppContext interface {
 	PutAppAttr(attrSpec tag.ID, src tag.Value) error
 }
 
-// Pinner is characterized by the ability to emit Pins.
+// Pinners process and "pin" request, pushing responses to the client.
 type Pinner interface {
 
 	// Creates and serves the given request, providing a wrapper for the request.
@@ -77,30 +77,32 @@ type Pin interface {
 
 // TxMsg is workhorse generic transport serialization sent between client and host.
 type TxMsg struct {
-	TxEnvelope        // public fields and routing tags
-	Ops        []TxOp // operations to perform on the target
-	OpsSorted  bool   // describes order of []Ops
-	DataStore  []byte // stores serialized TxOp data
-	refCount   int32  // see AddRef() / ReleaseRef()
+	TxHeader         // public fields and routing tags
+	Ops       []TxOp // operations to perform on the target
+	OpsSorted bool   // describes order of []Ops
+	DataStore []byte // stores serialized TxOp data
+	refCount  int32  // see AddRef() / ReleaseRef()
 }
 
 // ElementID is a multi-part LSM key consisting of CellID / AttrID / ItemID
 type ElementID [3]tag.ID
 
-// TxOpID is TxOp atomic edit entry ID, functioning as a multi-part LSM key: CellID / AttrID / ItemID / EditID.
+// TxOp is a transaction op and the most granular unit of change.
+// A TxOp's serialized data is located in a TxMsg.DataStore or some other data segment.
+type TxOp struct {
+	TxOpID           // applicable cell, attribute, element, and edit IDs
+	OpCode  TxOpCode // operation to perform
+	DataLen uint64   // byte length of associated serialized data
+	DataOfs uint64   // byte offset to where serialized data is stored
+}
+
+// TxOpID is TxOp is a multi-part LSM key (CellID, AttrID, ItemID, EditID), forming an atomic CRDT entry ID.
+// In other words, TxOpID is a LSM-based CRDT address scheme.
 type TxOpID struct {
 	CellID tag.ID // target cell / storage / container ID
 	AttrID tag.ID // references an attribute or protocol specification
 	ItemID tag.ID // user-defined UID, SKU, inline value, or element ID
 	EditID tag.ID // references previous revision(s); see tag.ForkEdit()
-}
-
-// TxOp is an atomic operation and is a unit of change (or message).
-type TxOp struct {
-	TxOpID           // applicable cell, attribute, element, and edit IDs
-	OpCode  TxOpCode // operation to perform
-	DataLen uint64   // length of data in TxMsg.DataStore
-	DataOfs uint64   // offset into TxMsg.DataStore
 }
 
 type AttrDef struct {

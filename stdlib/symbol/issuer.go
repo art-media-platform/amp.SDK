@@ -17,7 +17,7 @@ type atomicIssuer struct {
 	nextID   atomic.Uint32
 }
 
-func (iss *atomicIssuer) IssueNextID() (ID, error) {
+func (iss *atomicIssuer) MintNext() (ID, error) {
 	if iss.refCount.Load() <= 0 {
 		return 0, ErrIssuerNotOpen
 	}

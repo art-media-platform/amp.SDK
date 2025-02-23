@@ -8,12 +8,16 @@ import (
 )
 
 var (
-	// CellID hard-wired to denote the root c
-	MetaNodeID = tag.ID{0, 0, 2701}
+	// Default bootstrap cell ID in a TxMsg.
+	HeadCellID = tag.ID{0, 0, uint64(Const_HeadCellSeed)}
 
-	SystemTag  = tag.Expr{}.With("amp")
-	SystemAttr = SystemTag.With("attr")
-	AppTag     = SystemTag.With("app")
+	SystemTag   = tag.Expr{}.With("amp")
+	SystemAttr  = SystemTag.With("attr")
+	AppTag      = SystemTag.With("app")
+	SessionAttr = SystemAttr.With("session")
+	SessionErr  = SessionAttr.With("Err").ID
+	ClientAgent = SessionAttr.With("context.agent").ID // denotes client session context
+
 )
 
 func RegisterBuiltinTypes(reg Registry) error {
@@ -21,7 +25,6 @@ func RegisterBuiltinTypes(reg Registry) error {
 	prototypes := []tag.Value{
 		&Err{},
 		&Tag{},
-		&LaunchURL{},
 		&Login{},
 		&LoginChallenge{},
 		&LoginResponse{},
@@ -30,7 +33,7 @@ func RegisterBuiltinTypes(reg Registry) error {
 	}
 
 	for _, pi := range prototypes {
-		reg.RegisterPrototype(SystemAttr, pi, "")
+		reg.RegisterPrototype(SessionAttr, pi, "")
 	}
 
 	return nil
@@ -53,20 +56,16 @@ func ErrorToValue(v error) tag.Value {
 	if v == nil {
 		return nil
 	}
-	artErr, _ := v.(*Err)
-	if artErr == nil {
+	ampErr, _ := v.(*Err)
+	if ampErr == nil {
 		wrapped := ErrCode_Unnamed.Wrap(v)
-		artErr = wrapped.(*Err)
+		ampErr = wrapped.(*Err)
 	}
-	return artErr
+	return ampErr
 }
 
 func (v *Tag) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
-}
-
-func (v *Tag) TagExpr() tag.Expr {
-	return SystemAttr.With("Tag")
 }
 
 func (v *Tag) New() tag.Value {
@@ -80,18 +79,6 @@ func (v *Tag) SetFromTime(t time.Time) {
 	v.ID_2 = tag[2]
 }
 
-func (v *Tags) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
-}
-
-func (v *Tags) TagExpr() tag.Expr {
-	return SystemAttr.With("Tags")
-}
-
-func (v *Tags) New() tag.Value {
-	return &Tags{}
-}
-
 func (v *Tag) SetID(tagID tag.ID) {
 	v.ID_0 = int64(tagID[0])
 	v.ID_1 = tagID[1]
@@ -99,48 +86,66 @@ func (v *Tag) SetID(tagID tag.ID) {
 }
 
 func (v *Tag) IsNil() bool {
-	return v.URL != "" && v.UID == "" && v.Text == "" && v.ID_0 == 0 && v.ID_1 == 0 && v.ID_2 == 0
+	return v.URI != "" && v.Text == "" && v.ID_0 == 0 && v.ID_1 == 0 && v.ID_2 == 0
 }
 
-func (v *Tag) AsID() tag.ID {
-	if v.ID_0 == 0 && v.ID_1 == 0 && v.ID_2 == 0 {
-		if v.UID != "" {
-			v.SetID(tag.FromLiteral([]byte(v.UID)))
-		} else if v.Text != "" {
-			v.SetID(tag.FromExpr(v.Text))
-		}
+func (v *Tag) CompositeID() tag.ID {
+	local := [3]uint64{
+		uint64(v.R),
+		uint64(v.I),
+		uint64(v.J),
 	}
-	return [3]uint64{
-		uint64(v.ID_0),
-		v.ID_1,
-		v.ID_2,
+	sum := tag.FromInts(int64(v.ID_0), v.ID_1, v.ID_2).With(local)
+	if v.URI != "" {
+		sum = sum.WithToken(v.URI)
 	}
+	if v.Text != "" {
+		sum = sum.WithToken(v.Text)
+	}
+	return sum
 }
 
-func (v *Tag) AsLiteral() string {
-	if v.UID != "" {
-		return v.UID
-	}
+func (v *Tag) MintNext(seed tag.ID, addEntropy bool) tag.ID {
+	now := time.Now()
+	timeID := tag.FromTime(now, addEntropy)
+	mintID := seed.With(timeID).With(v.CompositeID())
+	return mintID
+}
+
+func (v *Tag) AsLabel() string {
 	if v.Text != "" {
 		return v.Text
 	}
 	if v.ID_0 == 0 && v.ID_1 == 0 && v.ID_2 == 0 {
 		return ""
 	}
-	var tagID tag.ID
-	tagID[0] = uint64(v.ID_0)
-	tagID[1] = v.ID_1
-	tagID[2] = v.ID_2
+	tagID := tag.FromInts(int64(v.ID_0), v.ID_1, v.ID_2)
 	return tagID.Base32()
+}
 
+func (v *Tags) MarshalToStore(in []byte) (out []byte, err error) {
+	return MarshalPbToStore(v, in)
+}
+
+func (v *Tags) New() tag.Value {
+	return &Tags{}
+}
+
+func (v *Tags) CompositeID() tag.ID {
+	var composite tag.ID
+	if v.Head != nil {
+		composite = v.Head.CompositeID()
+	}
+	for i, subTag := range v.SubTags {
+		subID := subTag.CompositeID()
+		subID[2] ^= uint64(i+1) * uint64(Const_HeadCellSeed)
+		composite = composite.With(subID)
+	}
+	return composite
 }
 
 func (v *Err) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
-}
-
-func (v *Err) TagExpr() tag.Expr {
-	return SystemAttr.With("Err")
 }
 
 func (v *Err) New() tag.Value {
@@ -179,24 +184,8 @@ func (code ErrCode) FormErrorf(msgFormat string, msgArgs ...interface{}) error {
 	}
 }
 
-func (v *LaunchURL) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
-}
-
-func (v *LaunchURL) TagExpr() tag.Expr {
-	return SystemAttr.With("LaunchURL")
-}
-
-func (v *LaunchURL) New() tag.Value {
-	return &LaunchURL{}
-}
-
 func (v *Login) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
-}
-
-func (v *Login) TagExpr() tag.Expr {
-	return SystemAttr.With("Login")
 }
 
 func (v *Login) New() tag.Value {
@@ -207,20 +196,12 @@ func (v *LoginChallenge) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *LoginChallenge) TagExpr() tag.Expr {
-	return SystemAttr.With("LoginChallenge")
-}
-
 func (v *LoginChallenge) New() tag.Value {
 	return &LoginChallenge{}
 }
 
 func (v *LoginResponse) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
-}
-
-func (v *LoginResponse) TagExpr() tag.Expr {
-	return SystemAttr.With("LoginResponse")
 }
 
 func (v *LoginResponse) New() tag.Value {
@@ -231,10 +212,6 @@ func (v *LoginCheckpoint) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *LoginCheckpoint) TagExpr() tag.Expr {
-	return SystemAttr.With("LoginCheckpoint")
-}
-
 func (v *LoginCheckpoint) New() tag.Value {
 	return &LoginCheckpoint{}
 }
@@ -243,23 +220,43 @@ func (v *PinRequest) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *PinRequest) TagExpr() tag.Expr {
-	return SystemAttr.With("PinRequest")
-}
-
 func (v *PinRequest) New() tag.Value {
 	return &PinRequest{}
 }
 
-func (v *PinRequest) TargetID() tag.ID {
-	target := v.PinTarget
-	if target == nil {
+func (v *PinRequest) PinTarget() tag.ID {
+	if v.Select == nil {
 		return tag.ID{}
 	}
-	return target.AsID()
+	return v.Select.CompositeID()
+}
+
+func (v *PinRequest) PinTag() *Tag {
+	if v.Select == nil {
+		return nil
+	}
+	return v.Select.Head
 }
 
 /*
+
+// return standard go string getter
+func (v *Request) String() string {
+	tag := v.PinTag()
+	return fmt.Sprintf("Request{%s}", v.Select.Tag.AsLiteral())
+}
+
+func (v *Request) Label() string {
+	var strBuf [128]byte
+	str := fmt.Appendf(strBuf[:0], "[req_%s] ", v.ID.Base32Suffix())
+	if target := v.Select; target != nil {
+		if target.URL != "" {
+			str = fmt.Append(str, target.URL)
+		}
+	}
+	return string(str)
+}
+
 func (v *Request) AttrsToPin() map[tag.ID]struct{} {
 	pinAttrs := make(map[tag.ID]struct{}, len(v.PinAttrs))
 	for _, attr := range v.PinAttrs {

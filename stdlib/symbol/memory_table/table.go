@@ -193,7 +193,7 @@ func (st *symbolTable) getsetValueIDPair(val []byte, symID symbol.ID, autoIssue 
 	issued := false
 	if symID == 0 && autoIssue {
 		issued = true
-		symID, _ = st.opts.Issuer.IssueNextID()
+		symID, _ = st.opts.Issuer.MintNext()
 	}
 
 	// Update the cache

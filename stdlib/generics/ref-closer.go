@@ -18,7 +18,7 @@ type RefCloser interface {
 }
 
 // Wraps the given io.Closer into a RefCloser, initializing its reference count to 1.
-func WrapInRefCloser(target io.Closer) RefCloser {
+func WrapRefCloser(target io.Closer) RefCloser {
 	rc := &refCloser{
 		closer:   target,
 		refCount: 1,

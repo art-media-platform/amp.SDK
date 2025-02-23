@@ -6,154 +6,76 @@ package crates;
 option csharp_namespace = "amp";
 
 
-enum AssetFlags {
-    NoFlags                         = 0;
-
-    IsTexture                       = 0x0001;
-    IsSprite                        = 0x0002;
-    IsMaterial                      = 0x0004;
-    IsPlaceable                     = 0x0008;
-    IsMonoCell                      = 0x0010;
-
-    // HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
-    HasIcon                         = 0x0100;
-
-    // IsPrivate means this item is not intended for general use and is not normally visible.
-    IsPrivate                       = 0x0200;
-
-    // IsSkybox means this is a transform containing a Skybox component.
-    IsSkybox                        = 0x0400;
-
-    // AutoScale means this asset should be placed with auto scale enabled by default.
-    AutoScale                       = 0x0800;
-
-    // IsSurface means this asset behaves like terrain and/or should be considered a constituent part of a scene.
-    // These objects should be opaque and have colliders attached to them
-    // e.g.  a building, a terrain formation, a wall
-    IsSurface                       = 0x1000;
-
-}
-
-// KVEntry is a generic entry for any key-value pair.
-message KVEntry {
-                string              Key                         = 1;
-                string              Value                       = 2;
-}
-
-
-message AppVars {
-
-    // AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
-                string              AppDomain                   = 2;
-
-    // AppDesc succinctly describes this org and is for humans.
-                string              AppDesc                     = 4;
-
-    // OrgHomeURL is the home link for this org (e.g. "https://blockcities.com")
-                string              OrgHomeURL                  = 6;
-
-    // AppHomeURL points to the home URL for the app
-                string              AppHomeURL                  = 12;
-
-    // CratesSnapshotURL specifies where to load this org's CratesSnapshot
-                string              CratesSnapshotURL           = 14;
-
-    // AppDownloadURLs are a download URL for a given platform.
-    // A key of "" denotes an unknown platform
-                map<string, string> AppDownloadURLs             = 16;
-
-    // URLSchemes declare URL schemes for this app's custom URL scheme (e.g. "amp://")
-    // The first entry is the primary scheme and the rest are alternately recognized schemes.
-    // URL schemas should always end with "://"
-    repeated    string              URLSchemes                  = 18;
-
-    // Overrides default settings
-                map<string, string> Settings                    = 20;
-
-    // Links is a list of channel URIs for easy access.
-    repeated    KVEntry             Links                       = 40;
-
-}
-
-
 message AssetEntry {
 
     // AssetFlags specifies properties about this AssetEntry.
-                AssetFlags          Flags                       = 1;
+    AssetFlags              Flags = 1;
 
-    // URI is a unix-style pathname that identifies an asset within a crate.
+    // EntryURI is a unix-style pathname that identifies an asset within a crate.
     // By convention this URI does *not* start or end with '/'
     // An asset URI has the form "{CrateURI}/{EntryURI}"
     // If two or more assets have same EntryURI then only one is accessible.
-                string              EntryURI                    = 2;
+    string                  EntryURI = 2;
 
     // Name is the human-readable label for this asset.
-                string              Label                       = 3;
+    string                  Label = 3;
+
+    // NameID is an alternative name for this asset that is used to identify the asset in code.
+    // DEPRECATED -- EntryURI should be used instead of NameID (or use [2]uint64 that Unity returns)
+    string                  AssetID = 4;
 
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
     // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
     // Y is considered to be the *vertical* (up) direction and by convention rest on the plane y=0.
-                float               CenterX                     = 5;
-                float               CenterY                     = 6;
-                float               CenterZ                     = 7;
+    float                   CenterX = 5;
+    float                   CenterY = 6;
+    float                   CenterZ = 7;
 
     // Extents specify the extents as distance from the center to the extent of the asset on each axis.
-                float               ExtentsX                    = 10;
-                float               ExtentsY                    = 11;
-                float               ExtentsZ                    = 12;
+    float                   ExtentsX = 10;
+    float                   ExtentsY = 11;
+    float                   ExtentsZ = 12;
 
     // Reserved for runtime use -- defaults to empty
-                string              LocalURI                    = 30;
+    string                  LocalURI = 30;
 
     // Comma delimited and whitespace-trimmed list of of tags
-                string              Tags                        = 31;
+    string                  Tags = 31;
 
     // A short phrase or fragment describing this asset, starting with an article where appropriate. e.g.:
     //      "A typical 6 crew member fire truck"
     //      "A leading U.S. naval ship-based helicopter"
     //      "The Texas capital building located in Austin"
     //      "An animated scared-geometry inspired flat seal"
-                string              ShortDesc                   = 32;
-
+    string                  ShortDesc = 32;
 }
-
 
 message BundleManifest {
 
     // BundleTitle is how the outside world sees this bundle and has no other impact.
     // This means it can change from build to build and contain any Unicode characters.
-                string              BundleTitle                 = 2;
+    string                  BundleTitle = 2;
 
     // BundleNameID is how this bundle is internally identified and expressed the filename of this bundle
     // This is case sensitive, contains only path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or whitespace.
-                string              BundleNameID                = 3;
+    string                  BundleNameID = 3;
 
-    repeated    AssetEntry          Assets                      = 10;
+    repeated AssetEntry     Assets = 10;
 
-                bool                LoadAllHint                 = 20;
-
+    bool                    LoadAllHint = 20;
 }
 
 
-// Enum values should be three base10 digits corresponding to the major, minor, and revision number.
-enum CrateSchema {
-    UndefinedSchema         = 0;
-
-    // v100 (April 2020) should be used for CrateInfo.CrateSchema
-    v100                    = 100;
-}
-
-
-// CrateInfo represents a Crate, the fundamental unit of PLAN's asset/package manager.
+// CrateInfo represents a Crate, the fundamental unit of amp's asset/package manager.
 message CrateInfo {
 
     // CrateSchema communicates which build and packaging schema was used for this crate build .
     // This value should be the integer value of a valid CrateSchema.vNNN enum.
-                int32               CrateSchema                 = 1;
+    int32                   CrateSchema = 1;
 
     // InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
     // If non-zero, it will not change and no other instance will have the same value.
-                uint32              InstID                      = 2;
+    uint32                  InstID = 2;
 
     // CrateURI takes the form "{PublisherID}/{CrateID}" is used to globally reference assets in this crate.
     // This URI string can only contains chars in [A-Za-z0-9_.-] (other than the separating '/' char).
@@ -164,82 +86,152 @@ message CrateInfo {
     //    "themushroom.farm/land"
     //    "themushroom.farm/mycology-201"
     //    "the-smiths.family/123-Maple"
-                string              CrateURI                    = 4;
+    string                  CrateURI = 4;
 
     // PublisherName is a human-readable of the author/owner/publisher of this crate and can change without repercussions (i.e. is purely optical).
-                string              PublisherName               = 6;
+    string                  PublisherName = 6;
 
     // CrateName is a human-readable title for this crate and can change without repercussions.
-                string              CrateName                   = 10;
+    string                  CrateName = 10;
 
     // ShortDesc describes this crate in a brief phrase
-                string              ShortDesc                   = 11;
+    string                  ShortDesc = 11;
 
     // Comma delimited and whitespace-trimmed list of of tags
-                string              Tags                        = 15;
+    string                  Tags = 15;
 
     // TimeCreated is UTC value (in seconds) when this crate first created (and does not change)
-                int64               TimeCreated                 = 30;
+    int64                   TimeCreated  = 30;
 
     // TimeBuilt is UTC value (in seconds) when this crate was built.
-                int64               TimeBuilt                   = 31;
+    int64                   TimeBuilt    = 31;
 
     // VersionID uniquely identifies this build and has the form "v{MajorNum}.{MinorNum}.{BuildNum}"
     // e.g. "v1.11.201"
-                int32               MajorVersion                = 40;
-                int32               MinorVersion                = 41;
-                int32               BuildNumber                 = 42;
+    int32                   MajorVersion = 40;
+    int32                   MinorVersion = 41;
+    int32                   BuildNumber  = 42;
 
     // BuildID uniquely identifies a particular crate build/version.
     // This value should have no spaces and only have '.', '_', or '-' (and starts and ends with an alpha-numeric)
     // By convention, the format is "yyMMdd-{VersionID}" (so that sorting by BuildID string yields the most recent release).
     // e.g. "210320-v0.1.11"
-                string              BuildID                     = 45;
+    string                  BuildID = 45;
 
     // HomeURL is an optional link that allows a human to learn more about this crate.
-                string              HomeURL                     = 50;
+    string                  HomeURL = 50;
 
     // URL is an optional string available to specifying URL to download this crate.
-                string              URL                         = 55;
+    string                  URL = 55;
 
     // Approximate size of this crate in bytes (or 0 if unknown)
-                int64               ApproxSize                  = 60;
-
+    int64                   ApproxSize = 60;
 }
 
-
-
-// CrateManifest is the top-level manifest/catalog for a PLAN asset module called a "crate".
-// It contains catalog and type info that PLAN loads at runtime to know what's inside binary asset bundles without having to load them.
+// CrateManifest is the top-level manifest/catalog for a amp asset module called a "crate".
+// It contains catalog and type info that amp loads at runtime to know what's inside binary asset bundles without having to load them.
 //
-// A reference to a PLAN asset is via a URI with the form:
+// A reference to a amp asset is via a URI with the form:
 //   assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.Pathname}"
 //
 message CrateManifest {
 
-                CrateInfo           Info                        = 1;
+    CrateInfo               Info = 1;
 
     // IconBundleName is the bundle name ID of the bundle containing icons (Sprites) used to represent the "real" crate assets.
     // Asset name IDs in this bundle correspond to assets in all the other Crate's bundles.
-                string              IconBundleName              = 5;
+    string                  IconBundleName = 5;
 
-    repeated    BundleManifest      Bundles                     = 10;
+    repeated BundleManifest Bundles = 10;
 }
 
+// CrateSnapshot is a general purpose container to track multiple crates and associated build IDs.
+message CrateSnapshot {
 
-
-// CratesSnapshot is a general purpose container to track multiple crates and associated build IDs.
-message CratesSnapshot {
-
-                int64               RevID                       = 1;
+    int64                   RevID = 1;
 
     // This is a template URL where the symbols "CrateURI", "CrateBuildID", "PlatformID" are delimited with { }.
     // The symbol "{.}" is to be replaced with a local pathname if the URL refers to a local file system pathname.
     // e.g. "https://whatever.com/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
     //      "{.}/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
-                string              DownloadURL                 = 3;
+    string                  DownloadURL = 3;
 
-    repeated    CrateInfo           Crates                      = 10;
+    repeated CrateInfo      Crates = 10;
+}
 
+// App vars needed for an art-media-platform app to function.
+message AppVars {
+
+    // AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
+    string                  AppDomain = 2;
+
+    // AppDesc succinctly describes this org and is for humans.
+    string                  AppDesc = 4;
+
+    // OrgHomeURL is the home link for this org (e.g. "https://blockcities.com")
+    string                  OrgHomeURL = 6;
+
+    // AppHomeURL points to the home URL for the app
+    string                  AppHomeURL = 12;
+
+    // CrateSnapshotURL specifies where to load this org's CrateSnapshot
+    string                  CrateSnapshotURL = 14;
+
+    // AppDownloadURLs are a download URL for a given platform.
+    // A key of "" denotes an unknown platform
+    map<string, string>     AppDownloadURLs = 16;
+
+    // URLSchemes declare URL schemes for this app's custom URL scheme (e.g. "any-scheme://")
+    // The first entry is the primary scheme and the rest are alternately recognized schemes.
+    // URL schemas should always end with "://"
+    repeated string         URLSchemes = 18;
+
+    // Overrides default settings
+    map<string, string>     Settings = 20;
+
+    // Links is a list of channel URIs for easy access.
+    repeated KVEntry        Links = 40;
+}
+
+
+enum AssetFlags {
+    NoFlags                 = 0;
+
+    IsTexture               = 0x0001; // asset is a Texture
+    IsSprite                = 0x0002; // asset is a Sprite
+    IsMaterial              = 0x0004; // asset is a Material
+    IsPlaceable             = 0x0008; // asset can be placed in a space
+    IsRectTransform         = 0x0010; // has a RectTransform component.
+
+    // HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
+    HasIcon                 = 0x0100;
+
+    // IsPrivate means this item is not intended for general use and is not normally visible.
+    IsPrivate               = 0x0200;
+
+    // IsSkybox means this is a transform containing a Skybox component.
+    IsSkybox                = 0x0400;
+
+    // AutoScale means this asset should be placed with auto scale enabled by default.
+    AutoScale               = 0x0800;
+
+    // IsSurface means this asset behaves like terrain and/or should be considered a constituent part of a scene.
+    // These objects should be opaque and have colliders attached to them
+    // e.g.  a building, a terrain formation, a wall
+    IsSurface               = 0x1000;
+}
+
+// Enum values should be three base10 digits corresponding to the major, minor, and revision number.
+enum CrateSchema {
+    UndefinedSchema         = 0;
+
+    // v100 (April 2020) should be used for CrateInfo.CrateSchema
+    v100                    = 100;
+}
+
+// KVEntry is a generic entry for any key-value pair.
+message KVEntry {
+    string                  Key   = 1;
+    string                  Value = 2;
 }
 

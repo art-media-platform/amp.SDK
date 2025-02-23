@@ -1,5 +1,5 @@
-                                    amp.spec.tag.v.0.8  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-9FDP7NU5U8N2PQU8BHSNUF82B77BBZUQE   amp.spec.tag.v.0.8.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                                    amp.spec.tag.v0.7000  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+82SQZRQWR7BVDXCW0E5DKTT4ST591HET9   amp.spec.tag.v0.7000.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                     Hello World!
  B3EJD9HGSN053Z2TWV6920UP70HDZPNP   hello.world
@@ -117,4 +117,5 @@ BSJ6041BGWJM08K4S0M05995JZSQRHPV2   the.above.hash.ID.G5NRUJZEX37FZE7J38C0PRSQNC
                                     And so by citing both G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB and BSJ6041BGWJM08K4S0M05995JZSQRHPV2 as literals, we can conveniently validate tag relationships and groups.
 9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3   and.so.by.citing.both.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.and.BSJ6041BGWJM08K4S0M05995JZSQRHPV2.as.literals.we.can.conveniently.validate.tag.relationships.and.groups
 
-
+                                    Hashing 9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3 with H3 geo-tiles 8D489E34600637F and 872AA845AFFFFFF demonstrates how locations can be cryptographically bound together in this system.  This offers easy "DIY" layering of security and permissions.
+GDF9KW1UG3UN1HFF5BV1J4F7CM3G0V4XH   hashing.9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3.with.H3.geo-tiles.8D489E34600637F.and.872AA845AFFFFFF.demonstrates.how.locations.can.be.cryptographically.bound.together.in.this.system.this.offers.easy."DIY".layering.of.security.and.permissions

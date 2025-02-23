@@ -102,7 +102,7 @@ type Registry interface {
 	MakeValue(attrSpec tag.ID) (tag.Value, error)
 }
 
-// Requester wraps a client request to receive a cell's state / updates.
+// Requester wraps a client request to receive one or more state updates.
 type Requester interface {
 
 	// Returns all Request parameters.
