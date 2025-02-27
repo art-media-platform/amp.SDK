@@ -37,7 +37,7 @@ const AsciiTemplate_v1 = "" +
 	"            N N N           \n" +
 	"                            \n"
 
-const AsciiTemplate_v2 = "" + // TODO: mirror along Y
+const AsciiTemplate_v2 = "" +
 	"        * N N N\n" +
 	"       * N N N \n" +
 	"      : N N N N\n" +
@@ -53,6 +53,23 @@ const AsciiTemplate_v2 = "" + // TODO: mirror along Y
 	"      O N N N N\n" +
 	"       0 N N N \n" +
 	"        0 N N N\n"
+
+const AsciiTemplate_v3 = "" + // TODO: mirror + rotate to form a regular hexagon symmetrical along the y-axis
+	"  x x x x x x x x " + // 8
+	"   x x x x x x x  " + // 7
+	"  x x x x x x x   " + // 7
+	"   x x x x x x    " + // 6
+	"  x x x x x x     " + // 6
+	"   x x x x x      " + // 5
+	"  x x x x x       " + // 5
+	"   x x x x        " + // 4
+	"  x x x x         " + // 4
+	"   x x x          " + // 3
+	"  x x x           " + // 3
+	"   x x            " + // 2
+	"  x x             " + // 2
+	"   x              " + // 1
+	"  x               " // 1 == 64
 
 type Dot struct {
 	X, Y      float32 // 0..1
