@@ -139,17 +139,6 @@ func (reg *registry) MakeValue(attrSpec tag.ID) (tag.Value, error) {
 }
 
 /*
-func (reg *registry) RegisterDefs(defs *RegisterDefs) error {
-
-	for _, tagExpr := range defs.TagExprs {
-		def := AttrDef{
-			Spec: tag.FormSpec(tag.Expr{}, tagExpr),
-		}
-		reg.attrDefs[def.Spec.ID] = def
-	}
-
-	return nil
-}
 
 
 func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {

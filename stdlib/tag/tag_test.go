@@ -13,14 +13,14 @@ import (
 func TestTag(t *testing.T) {
 	amp_tags := tag.Expr{}.With("..amp+.app.")
 	if amp_tags.ID != tag.FromExpr(".amp...").WithToken("app") {
-		t.Fatalf("FormSpec.ID failed: %v", amp_tags.ID)
+		t.Fatalf("tag.FromExpr.ID failed: %v", amp_tags.ID)
 	}
 	expr := amp_tags.With("some-tag+thing")
 	if expr.Canonic != "amp.app.some-tag.thing" {
-		t.Errorf("FormSpec failed")
+		t.Errorf("With failed")
 	}
 	if expr.ID != amp_tags.ID.WithExpr("some-tag").WithToken("thing") {
-		t.Fatalf("FormSpec.ID failed: %v", expr.ID)
+		t.Fatalf("WithExpr failed: %v", expr.ID)
 	}
 	if base32 := expr.ID.Base32(); base32 != "MUFKXXG22D3JUMC38V43HD11CVH57DDD" {
 		t.Fatalf("tag.ID.Base32() failed: %v", base32)

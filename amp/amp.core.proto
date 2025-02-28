@@ -12,14 +12,14 @@ option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
 // import "github.com/gogo/protobuf/gogoproto/gogo.proto";  // https://stackoverflow.com/questions/43026449/gogo-proto-file-not-found
 
-option csharp_namespace = "amp";
+option csharp_namespace = "art.media.platform";
 
 
 enum Const {
     Const_Defs = 0;
 
     // By convention, the bootstrap ("head") cell ID for a TxMsg.
-    Const_HeadCellSeed = 2701;
+    Const_HeadCellSeed = 0x37;
 
     // DefaultServicePort  is the default TCP port used to expose amp.Host service.
     Const_DefaultServicePort = 5192;
@@ -225,7 +225,7 @@ enum UriScheme {
     UriScheme_Http            = 4;  // "[http[s]://]{hostname}[:{port}]/{query}"
     UriScheme_Data            = 5;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
     UriScheme_File            = 6;  // "[file://]{hfs-pathname}"
-    UriScheme_App             = 9;  // "[app:[//app-alias/]]{cmd}[/{uri}]?{query}"
+    UriScheme_Amp             = 9;  // "[amp:[//app-alias/]]{cmd}[/{uri}]?{query}"
 }
 
 // Tag is a versitile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.

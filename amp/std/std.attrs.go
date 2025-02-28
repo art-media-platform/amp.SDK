@@ -8,16 +8,16 @@ import (
 )
 
 var (
-	LoginSpec           = amp.SessionAttr.With("Login").ID
-	LoginChallengeSpec  = amp.SessionAttr.With("LoginChallenge").ID
-	LoginResponseSpec   = amp.SessionAttr.With("LoginResponse").ID
-	LoginCheckpointSpec = amp.SessionAttr.With("LoginCheckpoint").ID
-	SessionErr          = amp.SessionAttr.With("Err").ID
+	LoginID           = amp.SessionAttr.With("Login").ID
+	LoginChallengeID  = amp.SessionAttr.With("LoginChallenge").ID
+	LoginResponseID   = amp.SessionAttr.With("LoginResponse").ID
+	LoginCheckpointID = amp.SessionAttr.With("LoginCheckpoint").ID
+	SessionErr        = amp.SessionAttr.With("Err").ID
 
 	LaunchTag   = amp.SessionAttr.With("launch.Tag")
 	LaunchOAuth = LaunchTag.With("oauth").ID
 
-	CellAttr  = amp.SystemAttr.With("cell")
+	CellAttr  = amp.AttrTag.With("cell")
 	CellChild = CellAttr.With("child.Tag.ID") // each TxOp.ItemID expresses a child cell ID
 
 	CellTextTag    = CellAttr.With("text.Tag")

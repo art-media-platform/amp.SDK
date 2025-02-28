@@ -8,13 +8,12 @@ import (
 )
 
 var (
-	// Default bootstrap cell ID in a TxMsg.
+	// HeadCellID is a hardwired CellID and stores a tx's "head attributes"
 	HeadCellID = tag.ID{0, 0, uint64(Const_HeadCellSeed)}
 
-	SystemTag   = tag.Expr{}.With("amp")
-	SystemAttr  = SystemTag.With("attr")
-	AppTag      = SystemTag.With("app")
-	SessionAttr = SystemAttr.With("session")
+	AppTag      = tag.Expr{}.With("app")
+	AttrTag     = tag.Expr{}.With("attr")
+	SessionAttr = AttrTag.With("session")
 	SessionErr  = SessionAttr.With("Err").ID
 	ClientAgent = SessionAttr.With("context.agent").ID // denotes client session context
 
@@ -257,17 +256,4 @@ func (v *Request) Label() string {
 	return string(str)
 }
 
-func (v *Request) AttrsToPin() map[tag.ID]struct{} {
-	pinAttrs := make(map[tag.ID]struct{}, len(v.PinAttrs))
-	for _, attr := range v.PinAttrs {
-		attrID := attr.AttrID()
-		if attrID.IsNil() && attr.URL != "" {
-			attrID = tag.FormSpec(tag.Expr{}, attr.URL).ID
-		}
-		if !attrID.IsNil() {
-			pinAttrs[attrID] = struct{}{}
-		}
-	}
-	return pinAttrs
-}
 */
