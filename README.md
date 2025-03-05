@@ -57,7 +57,7 @@ People with loss of sight, hearing, or motor skills rely on third-party peripher
 
 ### Tagging
 
-Amp's [tag system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go) is phonetic, AI-friendly, search-friendly, and privacy-friendly. It offers powerful and flexible linking similar to how #hashtags and [wikis](https://www.wikipedia.org/) add value. We see this system as an excellent candidate to become an [IEEE](https://www.ieee.org/) standard for markup and hashing.
+Amp's [tag system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/gold/welcome-to-tags.out.txt) is phonetic, AI-friendly, search-friendly, and privacy-friendly. It offers powerful and flexible linking similar to how #hashtags and [wikis](https://www.wikipedia.org/) add value. We see this system as an excellent candidate to become an [IEEE](https://www.ieee.org/) standard for markup and hashing.
 
 ## Integration Overview
 
@@ -66,7 +66,7 @@ This repo is lightweight and dependency-free, so it can be added to your project
 At a high level:
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project. If you want to expose additional functionality, implement your own [`amp.App`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go).
-2. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) (not yet public) and include your `amp.App`, similar to how a library in a C project registers a static or dynamic dependency.
+2. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) (not public) and include your `amp.App`, similar to how a library in a C project registers a static or dynamic dependency.
 3. Build `amp.planet` with your additions embedded within it.
 4. In your Unity or Unreal app, link in `amp.planet.lib` and add the Amp UX runtime support glue.
 5. On startup, [`amp.planet`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.App` instances as needed. During runtime, `amp.planet.lib` dispatches URL requests addressed to your app and are "pinned".
