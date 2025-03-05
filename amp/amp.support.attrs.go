@@ -10,33 +10,7 @@ import (
 var (
 	// HeadCellID is a hardwired CellID and stores a tx's "head attributes"
 	HeadCellID = tag.ID{0, 0, uint64(Const_HeadCellSeed)}
-
-	AppTag      = tag.Expr{}.With("app")
-	AttrTag     = tag.Expr{}.With("attr")
-	SessionAttr = AttrTag.With("session")
-	SessionErr  = SessionAttr.With("Err").ID
-	ClientAgent = SessionAttr.With("context.agent").ID // denotes client session context
-
 )
-
-func RegisterBuiltinTypes(reg Registry) error {
-
-	prototypes := []tag.Value{
-		&Err{},
-		&Tag{},
-		&Login{},
-		&LoginChallenge{},
-		&LoginResponse{},
-		&LoginCheckpoint{},
-		&PinRequest{},
-	}
-
-	for _, pi := range prototypes {
-		reg.RegisterPrototype(SessionAttr, pi, "")
-	}
-
-	return nil
-}
 
 func MarshalPbToStore(src tag.ValuePb, dst []byte) ([]byte, error) {
 	oldLen := len(dst)

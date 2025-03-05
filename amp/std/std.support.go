@@ -10,6 +10,11 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
+// Sends the single given value with attribute ID to the client's session agent for handling (e.g. LaunchOAuth)
+func SendToClientAgent(sess amp.Session, attrID tag.ID, value tag.Value) error {
+	return amp.SendMonoAttr(sess, attrID, value, ClientAgent, amp.OpStatus_Synced)
+}
+
 func (root *CellNode[AppT]) Root() *CellNode[AppT] {
 	return root
 }

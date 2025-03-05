@@ -8,16 +8,25 @@ import (
 )
 
 var (
-	LoginID           = amp.SessionAttr.With("Login").ID
-	LoginChallengeID  = amp.SessionAttr.With("LoginChallenge").ID
-	LoginResponseID   = amp.SessionAttr.With("LoginResponse").ID
-	LoginCheckpointID = amp.SessionAttr.With("LoginCheckpoint").ID
-	SessionErr        = amp.SessionAttr.With("Err").ID
 
-	LaunchTag   = amp.SessionAttr.With("launch.Tag")
+	// TODO: https://github.com/art-media-platform/amp.planet/issues/15
+	AppSpec     = tag.Expr{}.With("app")
+	CellAttr    = tag.Expr{}.With("cell")
+	SessionAttr = tag.Expr{}.With("session")
+	//Channel     = tag.Expr{}.With("channel")
+
+	AppState = AppSpec.With("state")
+
+	LoginID           = SessionAttr.With("Login").ID
+	LoginChallengeID  = SessionAttr.With("LoginChallenge").ID
+	LoginResponseID   = SessionAttr.With("LoginResponse").ID
+	LoginCheckpointID = SessionAttr.With("LoginCheckpoint").ID
+	SessionErr        = SessionAttr.With("Err").ID
+	ClientAgent       = SessionAttr.With("ClientAgent").ID
+
+	LaunchTag   = SessionAttr.With("launch.Tag")
 	LaunchOAuth = LaunchTag.With("oauth").ID
 
-	CellAttr  = amp.AttrTag.With("cell")
 	CellChild = CellAttr.With("child.Tag.ID") // each TxOp.ItemID expresses a child cell ID
 
 	CellTextTag    = CellAttr.With("text.Tag")
@@ -67,14 +76,6 @@ func TagsForImageURL(imageURL string) *amp.Tags {
 			ContentType: GenericImageType,
 		},
 	}
-}
-
-func (v *Position) MarshalToStore(in []byte) (out []byte, err error) {
-	return amp.MarshalPbToStore(v, in)
-}
-
-func (v *Position) New() tag.Value {
-	return &Position{}
 }
 
 func (v *FSInfo) MarshalToStore(in []byte) (out []byte, err error) {

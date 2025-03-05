@@ -6,280 +6,60 @@ option csharp_namespace = "art.media.platform.std";
 
 import "amp/amp.core.proto";
 
-
-
-// CordType describes how to interpret coordinates contained in a Position.
-enum CordType {
-    CordType_Unspecified     = 0;
-    CordType_Ordered         = 1;  // U is order ranking
-    CordType_Plane_Cartesian = 5;  // (U,V,W) are cartesian coordinates
-    CordType_Plane_HexEvenR  = 6;  // (U,V) are hexagonal "even-r" coordinates
-    CordType_Geoid_Sphere    = 10; // U is lat, V is long, W is altitude (m)
-    CordType_Geoid_WGS84     = 11; // U is lat, V is long, W is altitude (m)
-}
-
-
-// Position describes a position in space and/or time using a given coordinate system.
-message Position {
-    CordType            CordType    = 1; // CordType describing how to interpret U,V,W
-
-    double              Q           = 3;
-    double              R           = 4;
-    double              S           = 5;
-
-    float               ROU         = 6; // radius of uncertainty (meters)
-}
-
-
+// FSInfo a general-purpose file system meta info block.
 message FSInfo {
     string Mode        = 1;
     bool   IsDir       = 2;
-    string Name        = 3;
-    int32  NameLen     = 4; // name length minus extension
+
+    string FileName    = 3;
     string ContentType = 5;
 
     int64  CreatedAt   = 7; // UTC << 16
     int64  ModifiedAt  = 8; // UTC << 16
-    int64  ByteSize    = 9; // size in bytes
+    int64  ByteSize    = 9; // data fork byte length
 }
 
 
-
-message Placement {
-    // IEEE 3773: coord
-    // ElemType: tag.ID (where tag is CellID or is a hard asset ref)
-
-
- 	// Expresses the position of this placement in space.
-	// The coordinate system is specified within (or implied) from the hosting attribute spec.
-	// Here's to the 3 domains that reflect completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s) -- https://www.youtube.com/watch?v=SrU9YDoXE88
-    double X = 1;
-    double Y = 2;
-    double Z = 3;
-
-	// Expresses the scale of this Node.
-	// If all three values are 0, they are all implicitly 1.
-	// If Scale2 or Scale3 == 0, then they are each implicitly Scale1.
-	float  Scale0 = 4;
-	float  Scale1 = 5;
-	float  Scale2 = 6;
-
-	// Expresses the orientation of this placement using Euler angles.
-	float  EulerX = 7;
-	float  EulerY = 8;
-	float  EulerZ = 9;
-
-    amp.Units Units = 12;
-
-    // Implies a interpretation or space and metrics.
-    //      exp(LogScale) => units linear scale units -
-    //      e.g.  0.0 => 1, 1 => e^1,  3773.7337 => e^(8.23582016170069) ... )
-    //double              LogScale   = 25; // natural log of the unit-to-physical metric (default 0.0 => 1.0)
-
-}
-
-
-
-
-
-message BadgeDigit {
-    // // values assumed to be in range [1-{AmplitudeModulus}])
-    // Importantly, this shifts the domain to have +0 be separate from -0.
-    // Typically   -4,   -3,   -2,  -1,   +1,  +2,  +3, +4
-    //              0,    1,    2,   3,    4,   5,   6,  7
-    //            -1.0 -0.75 -0.50 -0.25 0.25 0.50 0.75 1.0
-    int64 Amplitude = 1;
-    int64 AmplitudeModulus = 2; // typically 8 (3-bit)
-    // float64  Position = 3;
-    // float64  Radius   = 4;
-}
-
-
-// TRS (translate rotate scale)
+// TRS (translate rotate scale) INA IEEE 1207
 // A general-purpose placement spec in time, space, geo-position, and orientation.
 message TRS {
 
+    // Anchor in time, space, and/or geo-position.
+    // May also specify a grid system or unit convention.
+    amp.Tag             Anchor = 1;
+
+    // Specifies how scale dynamically changes based on observer position.
     enum VisualScaleMode {
         AutoScale  = 0;
         FixedScale = 1;
     }
 
-    // Typically an anchoring coordinate in time, space, geo-position, and orientation.
-    // Often used to spacify the a grid and unit convention.
-    amp.Tag             Anchor = 1;
-    //amp.Tag             Actor  = 2;
-
-    // XX coordinates or values expressed in any any contextual or implied metric
-    // An AttrID conveys how to interpret this coordinate tuple.
-    // Shoutout to the 3 domains that reflect all theoretical completeness: alpha (finite), omega (unending), and the inaccessible cardinal(s).
-    // Special thanks to Michael at Vsauce: https://www.youtube.com/watch?v=SrU9YDoXE88
-    double              X0 = 40;
-    double              X1 = 41;
-    double              X2 = 42;
-    double              X3 = 43;
-
     // Specifies how scale dynamically changes based on observer position.
-    VisualScaleMode     ScaleMode = 50;
+    VisualScaleMode     ScaleMode = 2;
+
+    // a relative position in space
+    float               X1 = 6;
+    float               X2 = 7;
+    float               X3 = 8;
 
     // Scale1..3 express the scale of this placement.
     // If all three values are 0, they are all implicitly 1.
     // If Scale2 or Scale3 == 0, then it is implicitly Scale1.
-    float               Scale1  = 51;
-    float               Scale2  = 52;
-    float               Scale3  = 53;
+    float               Scale1 = 11;
+    float               Scale2 = 12;
+    float               Scale3 = 13;
 
-    float               Qi = 12;
-    float               Qj = 13;
-    float               Qn = 14;
-    float               Qm = 15;
+    // a Quaternion rotation in space.
+    float               Qi = 16;
+    float               Qj = 17;
+    float               Qn = 18;
+    float               Qm = 19;
 
     // Rotate1 - Rotate3 the orientation of this placement using Euler angles.
     float               EulerX = 61;
     float               EulerY = 62;
     float               EulerZ = 63;
-
-
-
-
-
 }
-
-
-
-
-
-
-message DataSegment {
-
-
-    uint64              ByteOfs = 5;
-    uint64              ByteSz = 6;
-    bytes               InlineData = 7;
-    string              StreamURI  = 9;
-
-    int64               BlobID = 10;
-
-
-}
-
-
-
-
-
-
-/*
-// It's either the below or RootTabsSpec.  Choosing the latter since it's simpler to grok. ~ ACO 31MAY2024
-
-// ChannelRef specifies properties that reference a particular channel instance.
-// It implies the presence of a particular set of attrs that, if pinned, have a particular format and intended usage.
-// This allows a client to present UI elements and behavior that are appropriate for the channel.
-//
-// For a given ChannelSpec, there is a corresponding set of pin ops, UI tab, and UI sheet (though the sheet may often be hidden or obscured).
-message ChannelRef {  // AttrLayer, AttrSheet, AttrBundle, AttrSet
-
-    // Specifies an attr element and/or sequence format.
-    //    e.g. "amp.app.ch.Chat",
-    //         "amp.app.ch.Notes",
-    //         "amp.app.ch.Links",
-    //         "amp.app.ch.Spreadsheet",
-    //
-    // This spec implies an format and interpretation of the data elements in this series and their collective meaning,
-    // and typically invokes particular UI elements that specifically handle or visualize the elements of this series.
-    //
-    //
-    // Any particular format spec can imply the existence of any number of attr series (e.g. an attr that binds particular attr series as columns).
-    string              ChannelTypeSpec = 1;
-
-    // Specifies an attr usage and/or intention, e.g.
-    //    "properties" -- protocol-defined channels (or another other string literal tagID)
-    //    {any tag.ID} -- user-created channels where tag.Now() is used.
-    //
-    // This can be considered an additional tag used with the SeriesSpec, and is used to refine UI presentation and behavior as appropriate.
-    // This means the attr specs for this channel that have tags "amp.attr.{ChannelTypeSpec}.{InstanceID}.{ImpliedChSubAttr}"
-    Tag                 InstanceID = 3;
-
-    // Specifies a specific instance of this format and context spec.
-    //
-    // This means the spec that is actually pinned is "{FormatSpec}.{ContextSpec}.{InstanceID}"
-    //Tag                 InstanceID = 4;
-
-    // Optional sub collection of feeds also part of this feed - e.g. columns of a spreadsheet
-    //repeated Feed       Elements = 9;
-}
-
-
-message PermissionsOp {
-
-    // Conventional op codes (tag.IDs):
-    //      "amp.epoch.entries.{clear|write}.{admin|commons|group}"
-    //      "amp.epoch.entries.{clear|write}.{admin|commons|group}"
-    Tag OpCode = 1;
-
-    string Payload = 3; // TODO
-}
-
-
-
-
-// By convention, every cell (or channel) carries a "amp.attr.history.Epoch" attr which in turn is a time series insert/remove edits of sub-channels and associated permissions.
-message Epoch {
-
-    // Typically a few ops that express user permissions, corresponding permissions tokens, and tag-wide public tokens
-    // by convention, the first follows the "constitution rule" where you list things like organization or group mission and offer a purpose.Tag that goes into ore detail about purpose and mission.
-    repeated PermissionsOp PermissionsOps = 2;
-
-    repeated ChannelRef    InsertChannels = 4;
-    repeated ChannelRef    RemoveChannels = 5;
-
-}
-
-
-message Ballot {
-
-}
-
-
-message NotesEntry {
-
-}
-
-
-message ChatEntry {
-
-}
-
-
-message Channel {
-
-    // Identifies a specific target tag ID this link points to.
-    int64   TagUID_0  = 2;
-    fixed64 TagUID_1  = 3;
-    fixed64 TagUID_2  = 4;
-
-    int64   SpecID_0 = 6;
-    fixed64 SpecID_1 = 7;
-    fixed64 SpecID_2 = 8;
-
-
-    repeated Channel Subs = 12;
-}
-
-
-enum CellKind {
-    CellKind_Static      = 0; // static text, mono glyph, etc (via UIAsset)
-
-    CellKind_EditField   = 16;
-    CellKind_Button      = 17;
-    CellKind_ItemPicker  = 18;
-    CellKind_Toggle      = 19;
-    CellKind_Slider      = 20;
-    CellKind_Progress    = 21;
-    CellKind_Spinner     = 22;
-}
-
-
-
-*/
 
 
 

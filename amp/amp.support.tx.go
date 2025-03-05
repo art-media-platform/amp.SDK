@@ -144,17 +144,12 @@ func (tx *TxMsg) sortOps() {
 	}
 }
 
-// Sends the single given value with attribute ID to the client's session agent for handling (e.g. LaunchOAuth)
-func SendToClientAgent(sess Session, attrID tag.ID, value tag.Value) error {
-	return SendMonoAttr(sess, attrID, value, ClientAgent, OpStatus_Synced)
-}
-
-func SendMonoAttr(sess Session, attrID tag.ID, value tag.Value, contextID tag.ID, status OpStatus) error {
+func SendMonoAttr(sess Session, attrID tag.ID, value tag.Value, clientAgentID tag.ID, status OpStatus) error {
 	tx, err := MarshalAttr(HeadCellID, attrID, value)
 	if err != nil {
 		return err
 	}
-	tx.SetContextID(contextID)
+	tx.SetContextID(clientAgentID)
 	tx.Status = status
 	return sess.SendTx(tx)
 }
