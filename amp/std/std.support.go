@@ -1,8 +1,8 @@
 package std
 
 import (
-	fmt "fmt"
-	reflect "reflect"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/amp"
@@ -12,7 +12,7 @@ import (
 
 // Sends the single given value with attribute ID to the client's session agent for handling (e.g. LaunchOAuth)
 func SendToClientAgent(sess amp.Session, attrID tag.ID, value tag.Value) error {
-	return amp.SendMonoAttr(sess, attrID, value, ClientAgent, amp.OpStatus_Synced)
+	return amp.SendMonoAttr(sess, attrID, value, ClientAgentID, amp.OpStatus_Synced)
 }
 
 func (root *CellNode[AppT]) Root() *CellNode[AppT] {

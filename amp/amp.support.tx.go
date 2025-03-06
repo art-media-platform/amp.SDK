@@ -144,12 +144,12 @@ func (tx *TxMsg) sortOps() {
 	}
 }
 
-func SendMonoAttr(sess Session, attrID tag.ID, value tag.Value, clientAgentID tag.ID, status OpStatus) error {
+func SendMonoAttr(sess Session, attrID tag.ID, value tag.Value, contextID tag.ID, status OpStatus) error {
 	tx, err := MarshalAttr(HeadCellID, attrID, value)
 	if err != nil {
 		return err
 	}
-	tx.SetContextID(clientAgentID)
+	tx.SetContextID(contextID)
 	tx.Status = status
 	return sess.SendTx(tx)
 }

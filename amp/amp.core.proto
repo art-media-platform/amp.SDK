@@ -45,8 +45,6 @@ enum Const {
     Const_Invocation = 3773;
 }
 
-
-
 // TxOpCode specifies a particular cell transaction operation.
 enum TxOpCode {
     TxOpCode_Nil = 0;
@@ -54,7 +52,6 @@ enum TxOpCode {
     TxOpCode_UpsertElement = 2; // insert / update single attribute element
     TxOpCode_DeleteElement = 4; // delete single attribute element
 }
-
 
 // TxField maps a fixed count of int64 payload fields.enum
 //
@@ -111,13 +108,6 @@ message TxHeader {
 
     // headers / metadata / context
     Tags                Attachments = 32;
-
-}
-
-enum SelectOp {
-    SelectOp_Neutral = 0;
-    SelectOp_Include = 1;
-    SelectOp_Exclude = 2;
 }
 
 // OpStatus allows a sender to express the status of a request.
@@ -225,14 +215,12 @@ enum UriScheme {
     UriScheme_Http            = 4;  // "[http[s]://]{hostname}[:{port}]/{query}"
     UriScheme_Data            = 5;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
     UriScheme_File            = 6;  // "[file://]{hfs-pathname}"
-    UriScheme_Amp             = 9;  // "[amp:[//app-alias/]]{cmd}[/{uri}]?{query}"
+    UriScheme_Amp             = 9;  // "[amp:[//app-identifier/]]{cmd}[/{uri}]?{query}"
 }
 
 // Tag is a versitile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
 //
-// All fields are optional and whose meaning is contextual.
-//
-// Also see tag.ID.
+// All fields are optional and whose meaning is contextual.  See tag.ID.
 message Tag {
 
     /// inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes ///
@@ -261,7 +249,7 @@ message Tag {
 // All fields are optional and whose meaning is contextual.
 message Tags {
     Tag           Head     = 1; // indentifies this branch
-    bytes         Store    = 2; // optional binary store
+    bytes         Bytes    = 2; // optional binary store
     repeated Tag  SubTags  = 4; // seqential sub tags
     repeated Tags SubTrees = 6; // seqential sub trees
 }
@@ -289,7 +277,7 @@ enum Units {
     Units_Pixels      = 3;  // texels or device pixels; not for typographic sizes
     Units_Plank       = 5;  // TOE length
     Units_Nanometers  = 7;  // 10^9 nm == 1 m
-    Units_Millimeters = 10;  // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
+    Units_Millimeters = 10; // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
     Units_Meters      = 11; // IEEE 3773 length for humans
     Units_LightYears  = 16; // 1 light year == 9460730472580800. meters
 }
@@ -303,7 +291,6 @@ enum CryptoKitID {
     CryptoKit_AsymMsg_NaCl    = 101;
     CryptoKit_Signing_NaCl    = 102;
     CryptoKit_Signing_ED25519 = 202;
-
 }
 
 
@@ -350,9 +337,9 @@ enum ErrCode {
     ErrCode_RequestNotFound             = -23020;
     ErrCode_RequestClosed               = -23021;
     ErrCode_BadRequest                  = -23022;
-    ErrCode_InvalidURI                  = -23023;
+    ErrCode_BadTag                      = -23023;
     ErrCode_BadValue                    = -23024;
-    ErrCode_InvalidTag                  = -23025;
+    ErrCode_AlreadyExists               = -23025;
     ErrCode_AttrNotFound                = -23026;
     ErrCode_NothingToCommit             = -23027;
     ErrCode_CommitFailed                = -23028;

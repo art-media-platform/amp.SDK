@@ -8,8 +8,6 @@ import (
 )
 
 var (
-
-	// TODO: https://github.com/art-media-platform/amp.planet/issues/15
 	AppSpec     = tag.Expr{}.With("app")
 	CellAttr    = tag.Expr{}.With("cell")
 	SessionAttr = tag.Expr{}.With("session")
@@ -17,15 +15,17 @@ var (
 
 	AppState = AppSpec.With("state")
 
-	LoginID           = SessionAttr.With("Login").ID
-	LoginChallengeID  = SessionAttr.With("LoginChallenge").ID
-	LoginResponseID   = SessionAttr.With("LoginResponse").ID
-	LoginCheckpointID = SessionAttr.With("LoginCheckpoint").ID
-	SessionErr        = SessionAttr.With("Err").ID
-	ClientAgent       = SessionAttr.With("ClientAgent").ID
+	LoginID           = RegisterAttr(SessionAttr, &amp.Login{}, "").ID
+	LoginChallengeID  = RegisterAttr(SessionAttr, &amp.LoginChallenge{}, "").ID
+	LoginResponseID   = RegisterAttr(SessionAttr, &amp.LoginResponse{}, "").ID
+	LoginCheckpointID = RegisterAttr(SessionAttr, &amp.LoginCheckpoint{}, "").ID
+	SessionErr        = RegisterAttr(SessionAttr, &amp.Err{}, "").ID
+	PinRequestID      = RegisterAttr(SessionAttr, &amp.PinRequest{}, "").ID
+	PinAdjustID       = RegisterAttr(SessionAttr, &amp.Tags{}, "PinAdjust").ID
 
-	LaunchTag   = SessionAttr.With("launch.Tag")
-	LaunchOAuth = LaunchTag.With("oauth").ID
+	ClientAgentID = SessionAttr.With("ClientAgent").ID
+	LaunchTag     = SessionAttr.With("launch.Tag")
+	LaunchOAuth   = LaunchTag.With("oauth").ID
 
 	CellChild = CellAttr.With("child.Tag.ID") // each TxOp.ItemID expresses a child cell ID
 

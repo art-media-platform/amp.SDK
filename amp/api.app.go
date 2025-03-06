@@ -105,7 +105,8 @@ type TxOpID struct {
 	EditID tag.ID // references previous revision(s); see tag.ForkEdit()
 }
 
+// AttrDef specifies a value prototype and its associated attribute tag.
 type AttrDef struct {
-	tag.Expr
-	Prototype tag.Value
+	tag.Expr            // maps the value Prototype to an explicit attr ID
+	Prototype tag.Value // cloned when this attribute is instantiated
 }

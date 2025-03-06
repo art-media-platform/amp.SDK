@@ -1,36 +1,43 @@
 package std
 
 import (
+	"reflect"
+
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-func Registry() amp.Registry {
-	if gRegistry == nil {
-		gRegistry = amp.NewRegistry()
-		AddBuiltins(gRegistry)
-	}
+var gRegistry = amp.NewRegistry()
 
+func Registry() amp.Registry {
 	return gRegistry
 }
 
-func AddBuiltins(reg amp.Registry) {
-
-	// these aren't' reallt in
-	prototypes := []tag.Value{
-		&amp.Err{},
-		&amp.Tag{},
-		&amp.Login{},
-		&amp.LoginChallenge{},
-		&amp.LoginResponse{},
-		&amp.LoginCheckpoint{},
-		&amp.PinRequest{},
+func RegisterApp(app *amp.App) {
+	err := gRegistry.RegisterApp(app)
+	if err != nil {
+		panic(err)
 	}
-
-	for _, pi := range prototypes {
-		gRegistry.RegisterPrototype(SessionAttr, pi, "")
-	}
-
 }
 
-var gRegistry amp.Registry
+func RegisterAttr(attr tag.Expr, prototype tag.Value, subTags string) tag.Expr {
+
+	typeOf := reflect.TypeOf(prototype)
+	if typeOf.Kind() == reflect.Ptr {
+		typeOf = typeOf.Elem()
+	}
+	attrID := attr.With(typeOf.Name())
+	if subTags != "" {
+		attrID = attrID.With(subTags)
+	}
+
+	err := gRegistry.RegisterAttr(amp.AttrDef{
+		Expr:      attrID,
+		Prototype: prototype,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return attrID
+}

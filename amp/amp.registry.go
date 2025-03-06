@@ -1,7 +1,6 @@
 package amp
 
 import (
-	"reflect"
 	"sync"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -26,23 +25,18 @@ type registry struct {
 	attrDefs     map[tag.ID]AttrDef
 }
 
-func (reg *registry) RegisterPrototype(context tag.Expr, prototype tag.Value, subTags string) tag.Expr {
-	if subTags == "" {
-		typeOf := reflect.TypeOf(prototype)
-		if typeOf.Kind() == reflect.Ptr {
-			typeOf = typeOf.Elem()
-		}
-		subTags = typeOf.Name()
+func (reg *registry) RegisterAttr(def AttrDef) error {
+
+	if def.ID.IsNil() || def.ID == HeadCellID {
+		return ErrCode_BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
 
-	attrExpr := context.With(subTags)
 	reg.mu.Lock()
 	defer reg.mu.Unlock()
-	reg.attrDefs[attrExpr.ID] = AttrDef{
-		Expr:      attrExpr,
-		Prototype: prototype,
+	if _, exist := reg.elemDefs[def.ID]; !exist {
+		reg.attrDefs[def.ID] = def
 	}
-	return attrExpr
+	return nil
 }
 
 func (reg *registry) Import(other Registry) error {

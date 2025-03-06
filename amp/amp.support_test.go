@@ -3,7 +3,7 @@ package amp
 import (
 	"bytes"
 	"fmt"
-	io "io"
+	"io"
 	"reflect"
 	"testing"
 
@@ -115,10 +115,28 @@ func (r *bufReader) Read(p []byte) (n int, err error) {
 func TestRegistry(t *testing.T) {
 	reg := NewRegistry()
 	someAttr := tag.Expr{}.With("hello sailor")
-	spec := reg.RegisterPrototype(someAttr.With("av.Hello.World"), &Tag{}, "")
-	if spec.Canonic != someAttr.Canonic+".av.hello.world.tag" {
-		t.Fatal("RegisterPrototype failed")
+	spec := AttrDef{
+		Expr:      someAttr.With("av.Hello.World.Tag"),
+		Prototype: &Tag{},
 	}
+
+	{
+		err := reg.RegisterAttr(spec)
+		if err != nil {
+			t.Fatalf("RegisterAttr failed: %v", err)
+		}
+		elem, err := reg.MakeValue(spec.ID)
+		if err != nil {
+			t.Fatalf("MakeValue failed: %v", err)
+		}
+		if spec.Canonic != someAttr.Canonic+".av.hello.world.tag" {
+			t.Fatal("RegisterAttr failed")
+		}
+		if reflect.TypeOf(elem) != reflect.TypeOf(&Tag{}) {
+			t.Fatalf("MakeValue returned wrong type: %v", reflect.TypeOf(elem))
+		}
+	}
+
 	if spec.ID != (tag.Expr{}.With("hello.sailor.World.Tag.Hello.av")).ID {
 		t.Fatalf("tag.With failed")
 	}
@@ -138,11 +156,5 @@ func TestRegistry(t *testing.T) {
 	if str := spec.ID.Base16(); str != "1bddcbc53bafa7dc164b2723d1f6c8b178423f0cd" {
 		t.Errorf("tag.ID.Base16() failed: %v", str)
 	}
-	elem, err := reg.MakeValue(spec.ID)
-	if err != nil {
-		t.Fatalf("MakeValue failed: %v", err)
-	}
-	if reflect.TypeOf(elem) != reflect.TypeOf(&Tag{}) {
-		t.Fatalf("MakeValue returned wrong type: %v", reflect.TypeOf(elem))
-	}
+
 }
