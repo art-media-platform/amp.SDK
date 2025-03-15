@@ -13,16 +13,15 @@ import (
 type Host interface {
 	task.Context
 
-	// Offers Go runtime and package level access to this Host's primary symbol and amp.App registry.
-	// The amp.Registry interface bakes security and efficiently and tries to serve as effective package manager.
+	// HostRegistry offers runtime access to this Host's tag and amp.App registry.
 	HostRegistry() Registry
 
-	// StartNewSession creates a new Session and binds its Msg transport to a stream.
+	// StartNewSession creates a new host session, binding the specified Transport to it.
 	StartNewSession(parent HostService, via Transport) (Session, error)
 }
 
-// Transport wraps a Msg transport abstraction, allowing a Host to connect over any data transport layer.
-// For example, a tcp-based transport as well as a dll-based transport are both implemented..
+// Transport wraps a TxMsg transport abstraction, allowing a Host to connect over any data transport layer.
+// For example, a tcp_service and lib_service are implemented within amp.planet.
 type Transport interface {
 
 	// Describes this transport for logging and debugging.

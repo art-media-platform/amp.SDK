@@ -614,7 +614,7 @@ type TxHeader struct {
 	OpCount uint64 `protobuf:"varint,2,opt,name=OpCount,proto3" json:"OpCount,omitempty"`
 	// Epoch that this Tx was created within.
 	Epoch *Tag `protobuf:"bytes,3,opt,name=Epoch,proto3" json:"Epoch,omitempty"`
-	// A universally unique, securely generated tag.ID assigned when is Tx originates.
+	// Universally unique, securely generated tag.ID assigned when is Tx originates.
 	// Also serves as context ID for subsequent requests and responses.
 	TxID_0 int64  `protobuf:"varint,5,opt,name=TxID_0,json=TxID0,proto3" json:"TxID_0,omitempty"`
 	TxID_1 uint64 `protobuf:"fixed64,6,opt,name=TxID_1,json=TxID1,proto3" json:"TxID_1,omitempty"`
@@ -624,7 +624,7 @@ type TxHeader struct {
 	ContextID_0 int64  `protobuf:"varint,10,opt,name=ContextID_0,json=ContextID0,proto3" json:"ContextID_0,omitempty"`
 	ContextID_1 uint64 `protobuf:"fixed64,11,opt,name=ContextID_1,json=ContextID1,proto3" json:"ContextID_1,omitempty"`
 	ContextID_2 uint64 `protobuf:"fixed64,12,opt,name=ContextID_2,json=ContextID2,proto3" json:"ContextID_2,omitempty"`
-	// recipient of this TxHeader
+	// Recipient of this tx
 	RouteTo *Tag `protobuf:"bytes,15,opt,name=RouteTo,proto3" json:"RouteTo,omitempty"`
 	// headers / metadata / context
 	Attachments *Tags `protobuf:"bytes,32,opt,name=Attachments,proto3" json:"Attachments,omitempty"`

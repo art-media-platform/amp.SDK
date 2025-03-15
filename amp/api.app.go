@@ -75,7 +75,7 @@ type Pin interface {
 	Context() task.Context
 }
 
-// TxMsg is workhorse generic transport serialization sent between client and host.
+// TxMsg is the the serialized transport container sent between client and host.
 type TxMsg struct {
 	TxHeader         // public fields and routing tags
 	Ops       []TxOp // operations to perform on the target

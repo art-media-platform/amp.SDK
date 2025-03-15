@@ -12,20 +12,23 @@ import (
 )
 
 const (
-	// GeohashBase32Alphabet is the standard geo-hash alphabet used for Base32Encoding.
-	// It chooses particular characters that are not visually similar to each other.
-	//
-	// Although a geohash is case insensitive, common convention is UPPER CASE
-	//    since they are read aloud as if an acronym (versus spoken as a word or syllable).
+	// GeohashBase32Alphabet is the standard geo-hash alphabet used for "base32" with 5-bit symbols.
+	// It chooses particular symbols that are not visually similar to each other in the ASCII latin alphabet.
 	//
 	// https://en.wikipedia.org/wiki/Geohash
-	GeohashBase32Alphabet       = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
-	GeohashBase32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
+	//
+	// Although a geohash is case insensitive ('a' vs 'A'), UPPER CASE is preferred to communicate that
+	//    it is read aloud as if a phonetic acronym, rather than spoken as if a real word.
+	//
+	GeoBase32Alphabet       = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
+	GeoBase32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
+
+	// GeoH3Alphabet = "0123456_"  just use hex except _ also maps to ffffff..
 )
 
 var (
 	// Base32Encoding is used to encode/decode binary buffer to/from base 32
-	Base32Encoding = base32.NewEncoding(GeohashBase32Alphabet).WithPadding(base32.NoPadding)
+	Base32Encoding = base32.NewEncoding(GeoBase32Alphabet).WithPadding(base32.NoPadding)
 
 	// GenesisMemberID is the genesis member ID
 	GenesisMemberID = uint32(1)

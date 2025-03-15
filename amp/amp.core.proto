@@ -230,8 +230,8 @@ message Tag {
     fixed64  ID_2    = 3;  // tag.ID[2] -- typically a H3 index; "local tile"`
     Swizzle  Swizzle = 5;  // Swizzle(ID[0..2])
 
-    Grid     Grid    = 7;  // grid convention for T/I/J
-    Units    Units   = 8;  // unit convention for T/I/J
+    Grid     Grid    = 7;  // grid convention for R/I/J
+    Units    Units   = 8;  // unit convention for R/I/J
     int64    R       = 12; // as ticks on Grid on an expanding sphere, or a UTC16 timestamp
     int64    I       = 13; // as Units on Grid horizontally
     int64    J       = 14; // as Units on Grid vertically
