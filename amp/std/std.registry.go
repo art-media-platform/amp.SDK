@@ -1,34 +1,72 @@
-package amp
+package std
 
 import (
+	"reflect"
 	"sync"
 
+	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-func NewRegistry() Registry {
+// see type Registry
+var gRegistry = NewRegistry()
+
+func Registry() amp.Registry {
+	return gRegistry
+}
+
+func NewRegistry() amp.Registry {
 	reg := &registry{
-		appsByInvoke: make(map[string]*App),
-		appsByTag:    make(map[tag.ID]*App),
-		elemDefs:     make(map[tag.ID]AttrDef),
-		attrDefs:     make(map[tag.ID]AttrDef),
+		appsByInvoke: make(map[string]*amp.App),
+		appsByTag:    make(map[tag.ID]*amp.App),
+		elemDefs:     make(map[tag.ID]amp.AttrDef),
+		attrDefs:     make(map[tag.ID]amp.AttrDef),
 	}
 	return reg
+}
+
+func RegisterApp(app *amp.App) {
+	err := gRegistry.RegisterApp(app)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func RegisterAttr(attr tag.Expr, prototype tag.Value, subTags string) tag.Expr {
+
+	typeOf := reflect.TypeOf(prototype)
+	if typeOf.Kind() == reflect.Ptr {
+		typeOf = typeOf.Elem()
+	}
+	attrID := attr.With(typeOf.Name())
+	if subTags != "" {
+		attrID = attrID.With(subTags)
+	}
+
+	err := gRegistry.RegisterAttr(amp.AttrDef{
+		Expr:      attrID,
+		Prototype: prototype,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return attrID
 }
 
 // Implements Registry
 type registry struct {
 	mu           sync.RWMutex
-	appsByInvoke map[string]*App
-	appsByTag    map[tag.ID]*App
-	elemDefs     map[tag.ID]AttrDef
-	attrDefs     map[tag.ID]AttrDef
+	appsByInvoke map[string]*amp.App
+	appsByTag    map[tag.ID]*amp.App
+	elemDefs     map[tag.ID]amp.AttrDef
+	attrDefs     map[tag.ID]amp.AttrDef
 }
 
-func (reg *registry) RegisterAttr(def AttrDef) error {
+func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 
-	if def.ID.IsNil() || def.ID == HeadCellID {
-		return ErrCode_BadTag.Errorf("RegisterAttr: missing Attr.ID")
+	if def.ID.IsNil() || def.ID == amp.HeadCellID {
+		return amp.ErrCode_BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
 
 	reg.mu.Lock()
@@ -39,7 +77,7 @@ func (reg *registry) RegisterAttr(def AttrDef) error {
 	return nil
 }
 
-func (reg *registry) Import(other Registry) error {
+func (reg *registry) Import(other amp.Registry) error {
 	src := other.(*registry)
 
 	src.mu.Lock()
@@ -65,7 +103,7 @@ func (reg *registry) Import(other Registry) error {
 }
 
 // Implements Registry
-func (reg *registry) RegisterApp(app *App) error {
+func (reg *registry) RegisterApp(app *amp.App) error {
 	appTag := app.AppSpec.ID
 
 	reg.mu.Lock()
@@ -90,22 +128,22 @@ func (reg *registry) RegisterApp(app *App) error {
 }
 
 // Implements Registry
-func (reg *registry) GetAppByTag(appTag tag.ID) (*App, error) {
+func (reg *registry) GetAppByTag(appTag tag.ID) (*amp.App, error) {
 	reg.mu.RLock()
 	defer reg.mu.RUnlock()
 
 	app := reg.appsByTag[appTag]
 	if app == nil {
-		return nil, ErrCode_AppNotFound.Errorf("app not found: %s", appTag)
+		return nil, amp.ErrCode_AppNotFound.Errorf("app not found: %s", appTag)
 	} else {
 		return app, nil
 	}
 }
 
-// Implements Registry
-func (reg *registry) GetAppForInvocation(invocation string) (*App, error) {
+// type interface Registry
+func (reg *registry) GetAppForInvocation(invocation string) (*amp.App, error) { // TODO refactor to use tag,ID
 	if invocation == "" {
-		return nil, ErrCode_AppNotFound.Errorf("missing app invocation")
+		return nil, amp.ErrCode_AppNotFound.Errorf("missing app invocation")
 	}
 
 	reg.mu.RLock()
@@ -113,20 +151,21 @@ func (reg *registry) GetAppForInvocation(invocation string) (*App, error) {
 
 	app := reg.appsByInvoke[invocation]
 	if app == nil {
-		return nil, ErrCode_AppNotFound.Errorf("app not found for %q", invocation)
+		return nil, amp.ErrCode_AppNotFound.Errorf("app not found: %q", invocation)
 	}
 	return app, nil
 }
 
-func (reg *registry) MakeValue(attrSpec tag.ID) (tag.Value, error) {
+// Makes an instance of the given attribute "spec"" tag.ID
+func (reg *registry) MakeValue(attrExprID tag.ID) (tag.Value, error) {
 
 	// Often, an attrID will be a unnamed scalar attr (which means we can get the elemDef directly.
 	// This is also essential during bootstrapping when the client sends a RegisterDefs is not registered yet.
-	def, exists := reg.elemDefs[attrSpec]
+	def, exists := reg.elemDefs[attrExprID]
 	if !exists {
-		def, exists = reg.attrDefs[attrSpec]
+		def, exists = reg.attrDefs[attrExprID]
 		if !exists {
-			return nil, ErrCode_AttrNotFound.Errorf("MakeValue: attr %s not found", attrSpec.String())
+			return nil, amp.ErrCode_AttrNotFound.Errorf("MakeValue: attr %s not found", attrExprID.String())
 		}
 	}
 	return def.Prototype.New(), nil
@@ -135,7 +174,7 @@ func (reg *registry) MakeValue(attrSpec tag.ID) (tag.Value, error) {
 /*
 
 
-func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
+TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 	numFields := valTyp.NumField()
 
 	schema := &AttrSchema{

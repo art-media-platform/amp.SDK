@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"reflect"
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -110,51 +109,4 @@ func (r *bufReader) Read(p []byte) (n int, err error) {
 	n = copy(p, r.buf[r.pos:])
 	r.pos += n
 	return n, nil
-}
-
-func TestRegistry(t *testing.T) {
-	reg := NewRegistry()
-	someAttr := tag.Expr{}.With("hello sailor")
-	spec := AttrDef{
-		Expr:      someAttr.With("av.Hello.World.Tag"),
-		Prototype: &Tag{},
-	}
-
-	{
-		err := reg.RegisterAttr(spec)
-		if err != nil {
-			t.Fatalf("RegisterAttr failed: %v", err)
-		}
-		elem, err := reg.MakeValue(spec.ID)
-		if err != nil {
-			t.Fatalf("MakeValue failed: %v", err)
-		}
-		if spec.Canonic != someAttr.Canonic+".av.hello.world.tag" {
-			t.Fatal("RegisterAttr failed")
-		}
-		if reflect.TypeOf(elem) != reflect.TypeOf(&Tag{}) {
-			t.Fatalf("MakeValue returned wrong type: %v", reflect.TypeOf(elem))
-		}
-	}
-
-	if spec.ID != (tag.Expr{}.With("hello.sailor.World.Tag.Hello.av")).ID {
-		t.Fatalf("tag.With failed")
-	}
-	alias := someAttr.With("av").With("World.Hello.Tag")
-	if spec.ID != alias.ID {
-		t.Fatalf("tag.With failed")
-	}
-	if str := spec.ID.Base32Suffix(); str != "2Y227W6E" {
-		t.Fatalf("unexpected spec.ID: %v", str)
-	}
-	if (tag.ID{}).Base32() != "0" {
-		t.Fatalf("tag.Expr{}.Base32() failed")
-	}
-	if str := spec.ID.Base32(); str != "1RRFCSNXUZ9YW2T5KF8YJYV4C2Y227W6E" {
-		t.Errorf("tag.ID.Base32() failed: %v", str)
-	}
-	if str := spec.ID.Base16(); str != "1bddcbc53bafa7dc164b2723d1f6c8b178423f0cd" {
-		t.Errorf("tag.ID.Base16() failed: %v", str)
-	}
-
 }

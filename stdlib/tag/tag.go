@@ -116,9 +116,9 @@ func (expr Expr) LeafTags(n int) (string, string) {
 	return "", canonic
 }
 
-// A tag.Expr produces a tag.ID such that each tag.ID is unique and is independent of its component tag literals.
+// With() is a communative tag.ID operator that combines two tag.IDs into a new tag.ID.
 //
-//	e.g. "a.b.cc" == "b.a.cc" == "a.cc.b" != "a.cC.b"
+// a tag.Expr converts to a "blind" tag.ID as well as a canonic string representation.
 func (expr Expr) With(tagExpr string) Expr {
 
 	// Cleanup into two operators: With and Then (commutative and non-commutative summation)
@@ -180,7 +180,7 @@ func (expr Expr) With(tagExpr string) Expr {
 			exprID = exprID.Then(termID)
 		}
 
-		// {tag_operator}{tag_literal}...
+		// ({tag_operator}{tag_literal})...
 		if len(body) > 0 || op != CanonicWithChar {
 			body = append(body, op)
 		}
@@ -422,14 +422,7 @@ func (id ID) Base32() string {
 }
 
 func (id ID) Base16() string {
-	buf := make([]byte, 0, 48)
-	tagBytes := id.AppendTo(buf)
-	str := hex.EncodeToString(tagBytes)
-	str = strings.TrimLeft(str, "0")
-	if str != "" {
-		return str
-	}
-	return "0"
+	return id.Base16Suffix(127)
 }
 
 // Base32Suffix returns the last few digits of this TID in string form (for easy reading, logs, etc)

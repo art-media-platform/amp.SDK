@@ -91,7 +91,7 @@ message TxHeader {
     // Epoch that this Tx was created within.
     Tag                 Epoch = 3;
 
-    // A universally unique, securely generated tag.ID assigned when is Tx originates.
+    // Universally unique, securely generated tag.ID assigned when is Tx originates.
     // Also serves as context ID for subsequent requests and responses.
     int64               TxID_0 = 5;
     fixed64             TxID_1 = 6;
@@ -103,7 +103,7 @@ message TxHeader {
     fixed64             ContextID_1 = 11;
     fixed64             ContextID_2 = 12;
 
-    // recipient of this TxHeader
+    // Recipient of this tx
     Tag                 RouteTo = 15;
 
     // headers / metadata / context
