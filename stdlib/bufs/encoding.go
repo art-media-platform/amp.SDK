@@ -4,7 +4,6 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"encoding/json"
-	"math/rand"
 
 	//"github.com/mmcloughlin/geohash"
 
@@ -258,27 +257,6 @@ func BufDesc(inBuf []byte) string {
 	}
 
 	return outStr + suffix
-}
-
-// Generates a random string of the given length using GeohashBase32Alphabet
-func RandomString(length int) string {
-	if length <= 0 {
-		return ""
-	}
-	s := make([]byte, length)
-	bitsRemain := 0
-	bits := uint64(0)
-	for i := range s {
-		if bitsRemain < 5 {
-			bits = rand.Uint64()
-			bitsRemain = 64
-		}
-		idx := bits & 0x1F
-		bits >>= 5
-		bitsRemain -= 5
-		s[i] = GeohashBase32Alphabet[idx]
-	}
-	return string(s)
 }
 
 // Encodes a int64 to a zig-zag uint64
