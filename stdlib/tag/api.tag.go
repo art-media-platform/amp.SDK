@@ -1,52 +1,78 @@
 package tag
 
-// UTC16 is a 64 bit signed UTC timestamp with 16 bits of fractional precision.
-//
-// This format expresses timestamps within ±4.4 million years with 1/65536 second accuracy.
-type UTC16 int64
+type (
 
-// ID is a 24 byte LSM index, and leads with an 8 byte UTC16 timestamp.
-//
-// Since UTC16 is generally sufficient for applications, the trailing 16 bytes are available for any use,
-// such as geo-tile IDs, lattice coordinates, or other LSM friendly values.
-//
-//		unixSecs := ID.Unix()   // ID[0] >> 16
-//	    unixMs   := ID.UnixMs() // ID[0]*1000 >> 16
-type ID [3]uint64
+	// UID is a 16 byte universally unique identifier (UUID) or a timestamp with fixed precision.
+	//
+	// When used as a timestamp, the first 6 bytes are UTC whole seconds followed by 12 bytes of fractional precision.
+	UID [2]uint64
 
-// Specifies a set of tag literals and its corresponding tag.ID.
-//
-//	tag.Expr := "[{TagOp}*[{utf8_token}]*"
-type Expr struct {
-	ID      ID     // hash of any art-media-platform or other tag expression
-	Canonic string // optional UTF8 canonic tag expression that generates Expr.ID
-}
+	// U3D is a 24 byte LSM index that clients use to store 2 or 3 element tuple -- see enum U3DFormat.
+	U3D [3]uint64
 
-const (
-	PackageTags = "amp.spec.tag.v0.7000"
+	// Expr expresses a set of UTF8 literals and its corresponding hash (UID).
+	//
+	//	tag.Expr := "[{TagOp}*[{utf8_token}]*"
+	Expr struct {
+		ID      UID    // hash of any art-media-platform or other tag expression
+		Canonic string // optional UTF8 canonic tag expression that generates Expr.ID
+	}
 
-	WithDelimiters  = `[\.+\s,\:\!\?]+` // commutative (symmetric) binary delimiters
-	ThenDelimiters  = `[\-/\\\~\^\@]+`  // non-commutative binary or unary delimiter
-	GroupDelimiters = `[]()<>{}¿?¡!`    // TODO group delimiter pairs
+	// Addresses a value element address in amp's CRDT schema.
+	//
+	// When EditID is zero, this signals to get/set the most appropriate EditID.
+	Address struct {
+		ChanID U3D //   00:24   Channel ID
+		AttrID UID //   24:40   Any attribute schema UID or hash; specifies how ItemID is interpreted.
+		ItemID U3D //   40:64   Any client-defined UID or store any channel ID (TimeID,TimeID)
+		EditID UID //   64:80   (edit.TimeID + replacing.TimeID) / 2
+	}
+
+	// AddressLSM is an Address serialized into its corresponding LSM key format.
+	AddressLSM [AddressLength]byte
+
+	// AddressID is AddressLSM sans an EditID.
+	AddressID [AddressIDLength]byte
+
+	// EditTable tracks the most recent EditID for a given AddressID.
+	EditTable map[AddressID]UID
+
+	// AddressRange expresses an ordered range of Addresses
+	AddressRange struct {
+		Lo     Address // inclusive lower bound
+		Hi     Address // inclusive upper bound
+		Weight float32 // > 0 includes, < 0 excludes, 0 no-op
+	}
+
+	OctalDigit    byte           // base 8 (3 least significant bits)
+	OctalEncoding [64]OctalDigit // octal encoding of a U3D or UID
 )
 
-// tag.Value wraps a data element type, exposing tags, serialization, and instantiation methods.
-type Value interface {
-	ValuePb
+const (
+	// Byte length of a serialized Address / AddressLSM.
+	AddressLength = AddressIDLength + 16
+	// Byte length of a serialized AddressID (an Address sans EditID).
+	AddressIDLength = (8 + 16) + 16 + 24
 
-	// Marshals this Value to a buffer, reallocating if needed.
-	MarshalToStore(in []byte) (out []byte, err error)
+	PackageTags  = "amp.spec.tag.v0.702"
+	Base32Length = (8*24 + 4) / 5
 
-	// Unmarshals and merges value state from a buffer.
-	Unmarshal(src []byte) error
+	U3D_0_Max    = 0x7FFFFFFFFFFFFFFF // max allowed value of U3D[0]
+	U3D_0_Symbol = 0xFFFFFFFFFFFFFFFF // signals a U3D symbolic token
+	U3D_First    = 0x04               // symbol that matches first (smallest) U3D in a list
+	U3D_Last     = 0x06               // symbol that matches last (largest) U3D in a list
 
-	// Creates a default instance of this same Tag type
-	New() Value
-}
+	WithOperators   = `[\.+\s,\!\?]+`    // commutative (symmetric) binary delimiters
+	ThenOperators   = `[\-/\\\~\:\^\@]+` // non-commutative binary or unary delimiter
+	GroupDelimiters = `[]()<>{}¿?¡!`     // TODO group delimiter pairs
 
-// ValuePb is a serialization shim for protobufs
-type ValuePb interface {
-	Size() int
-	MarshalToSizedBuffer(dAtA []byte) (int, error)
-	Unmarshal(dAtA []byte) error
-}
+	// The "with" delimiter can be thought of as ADD or SUM and combines two terms in a commutative way like addition.
+	// A '.' by convention helps visually identify an tag string, it's compatible with domain names, and is already a familiar scoping character.
+	CanonicWith     = "."
+	CanonicWithChar = byte('.')
+
+	CanonicThen     = "-"
+	CanonicThenChar = byte('-')
+
+	GenesisEditClearBits = uint64(0xFFFFFF)
+)

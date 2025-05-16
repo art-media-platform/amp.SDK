@@ -11,26 +11,21 @@ import (
 )
 
 const (
-	// GeohashBase32Alphabet is the standard geo-hash alphabet used for "base32" with 5-bit symbols.
-	// It chooses particular symbols that are not visually similar to each other in the ASCII latin alphabet.
+	// Base32Alphabet is a base32 (5-bit) based symbol set also used by geohash.
+	// It chooses ascii chatacters that are visually distinct and easy to read.
 	//
 	// https://en.wikipedia.org/wiki/Geohash
 	//
-	// Although a geohash is case insensitive ('a' vs 'A'), UPPER CASE is preferred to communicate that
-	//    it is read aloud as if a phonetic acronym, rather than spoken as if a real word.
-	//
-	GeoBase32Alphabet       = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
-	GeoBase32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
+	Base32Alphabet_Upper = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
+	Base32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
 
-	// GeoH3Alphabet = "0123456_"  just use hex except _ also maps to ffffff..
+	// IDEA: GeoH3Alphabet = "0123456_"  just use hex except _ also maps to ffffff..
+	// TODO: 7 sub hexes correspond to outward, larger hexes (1-2 resloutions higher)
 )
 
 var (
 	// Base32Encoding is used to encode/decode binary buffer to/from base 32
-	Base32Encoding = base32.NewEncoding(GeoBase32Alphabet).WithPadding(base32.NoPadding)
-
-	// GenesisMemberID is the genesis member ID
-	GenesisMemberID = uint32(1)
+	Base32Encoding = base32.NewEncoding(Base32Alphabet_Upper).WithPadding(base32.NoPadding)
 )
 
 // Zero zeros out a given slice
@@ -70,6 +65,8 @@ func SmartMarshal(item Marshaler, tryDst []byte) []byte {
 
 	return tryDst[:encSz]
 }
+
+/*
 
 // SmartMarshalToBase32 marshals the given item and then encodes it into a base32 (ASCII) byte string.
 //
@@ -117,6 +114,7 @@ func SmartDecodeFromBase32(srcBase32 []byte, tryDst []byte) ([]byte, error) {
 	binSz, err = Base32Encoding.Decode(tryDst[:binSz], srcBase32)
 	return tryDst[:binSz], err
 }
+*/
 
 // Buf is a flexible buffer designed for reuse.
 type Buf struct {

@@ -1,4 +1,4 @@
-// A collection of types and functions that form a support template when building an amp.App.
+// A collection of types and functions that form a support template when building an amp.AppModule.
 // Most amp.Apps build upon this template but a specialized app may opt to build their own foundation upon the amp api.
 package std
 
@@ -8,9 +8,9 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
-// App is a helper for implementing AppInstance.
-// An amp.App implementation embeds this into their app instance struct, instantly providing a skeleton of amp.AppInstance interface.
-type App[AppT amp.AppInstance] struct {
+// AppModule is a helper for implementing AppInstance.
+// An amp.AppModule implementation embeds this into their app instance struct, instantly providing a skeleton of amp.AppInstance interface.
+type AppModule[AppT amp.AppInstance] struct {
 	amp.AppContext
 	Instance AppT
 }
@@ -28,33 +28,34 @@ type Cell[AppT amp.AppInstance] interface {
 
 // CellNode is a helper for implementing the Cell interface.
 type CellNode[AppT amp.AppInstance] struct {
-	ID tag.ID
+	ID tag.U3D
 }
 
 // Wraps the pinned state of a cell -- implements amp.Pin
 type Pin[AppT amp.AppInstance] struct {
-	Op   amp.Requester // originating request
-	Cell Cell[AppT]    // pinned cell
-	App  AppT          // parent app instance
-	Sync amp.StateSync // Op.Request().StateSync
+	Request *amp.Request // originating request
+	Cell    Cell[AppT]   // pinned cell
+	App     AppT         // parent app instance
+	Sync    amp.PinMode  // Op.Request().PinMode
 
-	children map[tag.ID]Cell[AppT] // child cells
-	ctx      task.Context          // task context for this pin
+	fatal    error                  // fatal error, if any
+	children map[tag.U3D]Cell[AppT] // child cells
+	ctx      task.Context           // task context for this pin
 }
 
 type CellWriter interface {
 
 	// Pushes a tx operation attribute to the cell's pinned state.
-	Push(op *amp.TxOp, value tag.Value)
+	Push(op *amp.TxOp, value amp.Value)
 
 	// Convenience methods for pushing string and generic attributes bound to an item ID.
-	PushTextWithID(attrID tag.ID, itemID tag.ID, value string)
-	PushItemWithID(attrID tag.ID, itemID tag.ID, value tag.Value)
+	PushTextWithID(attrID tag.UID, itemID tag.U3D, value string)
+	PushItemWithID(attrID tag.UID, itemID tag.U3D, value amp.Value)
 
-	// Convenience methods for pushing string and generic tag.Value attributes bound to std.Item000 (aka tag.ID{})
+	// Convenience methods for pushing an attribute value at item 0,0,0.
 	// Push*WithID(), if the value is nil, the attribute item is skipped.
-	PushText(attrID tag.ID, value string)
-	PushItem(attrID tag.ID, value tag.Value)
+	PushText(attrID tag.UID, value string)
+	PushItem(attrID tag.UID, value amp.Value)
 }
 
 const (

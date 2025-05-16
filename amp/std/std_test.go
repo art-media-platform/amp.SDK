@@ -41,17 +41,18 @@ func TestRegistry(t *testing.T) {
 	if spec.ID != alias.ID {
 		t.Fatalf("tag.With failed")
 	}
-	if str := spec.ID.Base32Suffix(); str != "2Y227W6E" {
+	if str := spec.ID.AsLabel(); str != "227W6E" {
 		t.Fatalf("unexpected spec.ID: %v", str)
 	}
-	if (tag.ID{}).Base32() != "0" {
+	if (tag.U3D{}).Base32() != "0" {
 		t.Fatalf("tag.Expr{}.Base32() failed")
 	}
-	if str := spec.ID.Base32(); str != "1RRFCSNXUZ9YW2T5KF8YJYV4C2Y227W6E" {
-		t.Errorf("tag.ID.Base32() failed: %v", str)
+	base32 := spec.ID.Base32()
+	if base32 != "5UZ9YW2T5KF8YJYV4C2Y227W6E" {
+		t.Errorf("tag.U3D.Base32() failed: %v", base32)
 	}
-	if str := spec.ID.Base16(); str != "1bddcbc53bafa7dc164b2723d1f6c8b178423f0cd" {
-		t.Errorf("tag.ID.Base16() failed: %v", str)
+	if str := spec.ID.Base16(); str != "0xBAFA7DC164B2723D1F6C8B178423F0CD" {
+		t.Errorf("tag.U3D.Base16() failed: %v", str)
 	}
 
 }

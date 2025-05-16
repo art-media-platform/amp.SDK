@@ -1,7 +1,10 @@
 package std
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"path"
 	"reflect"
 	"time"
 
@@ -10,58 +13,108 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
-// Sends the single given value with attribute ID to the client's session agent for handling (e.g. LaunchOAuth)
-func SendToClientAgent(sess amp.Session, attrID tag.ID, value tag.Value) error {
-	return amp.SendMonoAttr(sess, attrID, value, ClientAgentID, amp.OpStatus_Synced)
+var SessionContextID = tag.UID{0, 8675309}
+
+// Sends the given attr-value pair to the client's session agent for handling (e.g. LaunchOAuth)
+func PushSessionOp(sess amp.Session, attrID tag.UID, value amp.Value) error {
+	kv := amp.ValueEntry{
+		Value: value,
+	}
+	kv.Addr.ChanID = amp.HeadChannelID
+	kv.Addr.AttrID = attrID
+	return PushMetaOp(sess, sess, kv, SessionContextID, amp.PinStatus_Synced)
+}
+
+// PushMetaOp sends a TxOp to the given destination with the given value.
+func PushMetaOp(dst amp.TxReceiver, ctx context.Context, kv amp.ValueEntry, contextID tag.UID, status amp.PinStatus) error {
+	op := amp.TxOp{
+		OpCode: amp.TxOpCode_MetaOp,
+		Addr:   kv.Addr,
+	}
+
+	tx := amp.TxGenesis()
+	tx.SetContextID(contextID)
+	tx.Status = status
+	if err := tx.MarshalOp(&op, kv.Value); err != nil {
+		return err
+	}
+
+	return dst.PushTx(tx, ctx)
+}
+
+// Convenience function to parse the named URL value into the destinaation type
+func ParseParamAsPath(req *amp.Request, paramKey string) (dirpath string, finfo os.FileInfo, err error) {
+	var paramStr string
+	err = req.ParseParam(paramKey, &paramStr)
+	if err != nil {
+		return
+	}
+
+	pathname := path.Clean(paramStr) // TODO: is this sufficent protection?
+	finfo, err = os.Stat(pathname)
+	if err != nil {
+		err = amp.ErrCode_BadRequest.Errorf("param %q path error: %v", paramKey, err)
+	}
+
+	dirpath, _ = path.Split(pathname)
+	return
 }
 
 func (root *CellNode[AppT]) Root() *CellNode[AppT] {
 	return root
 }
 
-func PinAndServe[AppT amp.AppInstance](cell Cell[AppT], app AppT, op amp.Requester) (amp.Pin, error) {
+func PinAndServe[AppT amp.AppInstance](cell Cell[AppT], app AppT, req *amp.Request) (amp.Pin, error) {
 	root := cell.Root()
 	if root.ID.IsNil() {
-		root.ID = tag.Now()
+		root.ID = tag.NowID()
 	}
 
 	pin := &Pin[AppT]{
-		Op:       op,
+		Request:  req,
 		App:      app,
 		Cell:     cell,
-		children: make(map[tag.ID]Cell[AppT]),
+		children: make(map[tag.U3D]Cell[AppT]),
 	}
 
-	label := "pin: " + root.ID.Base32Suffix()
+	label := "pin: " + root.ID.AsLabel()
 	if app.Info().DebugMode {
 		label += fmt.Sprintf(", Cell.(*%v)", reflect.TypeOf(cell).Elem().Name())
 	}
 
 	var err error
-	pin.ctx, err = app.StartChild(&task.Task{
+	pin.ctx, err = app.StartChild(task.Task{
 		Info: task.Info{
 			Label:     label,
 			IdleClose: time.Microsecond,
 		},
 		OnRun: func(pinContext task.Context) {
-			err := pin.App.MakeReady(op)
+			err := pin.App.MakeReady(req)
 			if err == nil {
 				err = cell.PinInto(pin)
 			}
 			if err == nil {
-				err = pin.pushState()
+				switch pin.Request.Current.Mode {
+				case amp.PinMode_Snapshot, amp.PinMode_MaintainSync:
+					err = pin.pushState()
+				}
 			}
 			if err != nil {
+				pin.fatal = err
 				if err != amp.ErrShuttingDown {
 					pinContext.Log().Warnf("op failed: %v", err)
 				}
-			} else if op.Request().StateSync == amp.StateSync_Maintain {
-				<-pinContext.Closing()
 			}
-			op.OnComplete(err)
+			if err == nil && req.Current.Mode != amp.PinMode_Snapshot {
+				// TODO: add tx submitter loop?
+			}
+			pin.Request.RecvEvent(amp.PinEvent{
+				Status: amp.PinStatus_Complete,
+				Error:  err,
+			})
 		},
 		OnClosing: func() {
-			pin.ReleasePin()
+			pin.OnPinClosed()
 		},
 	})
 	if err != nil {
@@ -71,20 +124,20 @@ func PinAndServe[AppT amp.AppInstance](cell Cell[AppT], app AppT, op amp.Request
 	return pin, nil
 }
 
-func (app *App[AppT]) MakeReady(op amp.Requester) error {
+func (app *AppModule[AppT]) MakeReady(req *amp.Request) error {
 	return nil
 }
 
-func (app *App[AppT]) PinAndServe(cell Cell[AppT], op amp.Requester) (amp.Pin, error) {
-	return PinAndServe(cell, app.Instance, op)
+func (app *AppModule[AppT]) PinAndServe(cell Cell[AppT], req *amp.Request) (amp.Pin, error) {
+	return PinAndServe(cell, app.Instance, req)
 }
 
-func (app *App[AppT]) OnClosing() {
+func (app *AppModule[AppT]) OnClosing() {
 }
 
 // Called when this Pin is closed.
 // This allows a Cell to release resources it may locked during PinInto()..
-func (pin *Pin[AppT]) ReleasePin() {
+func (pin *Pin[AppT]) OnPinClosed() {
 	// override for cleanup
 }
 
@@ -92,13 +145,13 @@ func (pin *Pin[AppT]) AddChild(sub Cell[AppT]) {
 	child := sub.Root()
 	childID := child.ID
 	if childID.IsNil() {
-		childID = tag.Now()
+		childID = tag.NowID()
 		child.ID = childID
 	}
 	pin.children[childID] = sub
 }
 
-func (pin *Pin[AppT]) GetCell(target tag.ID) Cell[AppT] {
+func (pin *Pin[AppT]) GetCell(target tag.U3D) Cell[AppT] {
 	if target == pin.Cell.Root().ID {
 		return pin.Cell
 	}
@@ -112,35 +165,46 @@ func (pin *Pin[AppT]) Context() task.Context {
 	return pin.ctx
 }
 
-func (pin *Pin[AppT]) ServeRequest(op amp.Requester) (amp.Pin, error) {
-	req := op.Request()
-	cell := pin.GetCell(req.Select.CompositeID())
+func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
+	invokeTag := req.Current.Invoke
+	targetID := invokeTag.U3D()
+
+	cell := pin.GetCell(targetID)
 	if cell == nil {
-		return nil, amp.ErrCellNotFound
+		return nil, amp.ErrChannelNotFound
 	}
-	return PinAndServe(cell, pin.App, op)
+	return PinAndServe(cell, pin.App, req)
 }
 
+func (pin *Pin[AppT]) CommitTx(tx *amp.TxMsg) error {
+	// tx.AddRef()
+	return amp.ErrUnimplemented
+}
+
+func (pin *Pin[AppT]) ReviseRequest(latest *amp.PinRequest) error {
+	return amp.ErrUnimplemented // TODO
+}
+
+// Pushes a TxMsg to the client of this Pin, pushing the state of each cell and its children.
 func (pin *Pin[AppT]) pushState() error {
-	tx := amp.NewTxMsg(true)
+	tx := amp.TxGenesis()
 
-	if pin.Op.Request().StateSync > amp.StateSync_None {
+	{
 		pinnedID := pin.Cell.Root().ID
-
 		w := cellWriter{
 			tx:     tx,
-			cellID: pinnedID,
+			chanID: pinnedID,
 		}
 
-		tx.Upsert(amp.HeadCellID, CellChild.ID, pinnedID, nil) // publish root cell ID using the meta node
+		tx.Upsert(amp.HeadChannelID, ItemIndex, pinnedID, nil) // publish root cell ID using the meta node
 		pin.Cell.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
 		}
 
 		for childID, child := range pin.children {
-			w.cellID = childID
-			tx.Upsert(pinnedID, CellChild.ID, childID, nil) // link child to pinned cell
+			w.chanID = childID
+			tx.Upsert(pinnedID, ItemIndex, childID, nil) // link child to pinned cell
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err
@@ -148,25 +212,25 @@ func (pin *Pin[AppT]) pushState() error {
 		}
 	}
 
-	tx.Status = amp.OpStatus_Synced
-	return pin.Op.PushTx(tx)
+	tx.Status = amp.PinStatus_Synced
+	return pin.Request.PushTx(tx, pin.ctx)
 }
 
 type cellWriter struct {
-	cellID tag.ID     // cache for Cell.Root().ID
+	chanID tag.U3D    // cache for Cell.Root().ID
 	tx     *amp.TxMsg // in-progress transaction
 	err    error
 }
 
-func (w *cellWriter) PushTextWithID(attrID, itemID tag.ID, value string) {
+func (w *cellWriter) PushTextWithID(attrID tag.UID, itemID tag.U3D, value string) {
 	if w.err != nil {
 		return
 	}
 	op := amp.TxOp{}
-	op.OpCode = amp.TxOpCode_UpsertElement
-	op.CellID = w.cellID
-	op.AttrID = attrID
-	op.ItemID = itemID
+	op.OpCode = amp.TxOpCode_Upsert
+	op.Addr.ChanID = w.chanID
+	op.Addr.AttrID = attrID
+	op.Addr.ItemID = itemID
 	err := w.tx.MarshalOp(&op, &amp.Tag{
 		Text: value,
 	})
@@ -175,35 +239,35 @@ func (w *cellWriter) PushTextWithID(attrID, itemID tag.ID, value string) {
 	}
 }
 
-func (w *cellWriter) PushItemWithID(attrID, itemID tag.ID, value tag.Value) {
+func (w *cellWriter) PushItemWithID(attrID tag.UID, itemID tag.U3D, value amp.Value) {
 	if w.err != nil {
 		return
 	}
 	op := amp.TxOp{}
-	op.OpCode = amp.TxOpCode_UpsertElement
-	op.CellID = w.cellID
-	op.AttrID = attrID
-	op.ItemID = itemID
+	op.OpCode = amp.TxOpCode_Upsert
+	op.Addr.ChanID = w.chanID
+	op.Addr.AttrID = attrID
+	op.Addr.ItemID = itemID
 	if err := w.tx.MarshalOp(&op, value); err != nil {
 		w.err = err
 	}
 }
 
-func (w *cellWriter) PushText(attrID tag.ID, value string) {
+func (w *cellWriter) PushText(attrID tag.UID, value string) {
 	if value == "" {
 		return
 	}
-	w.PushTextWithID(attrID, tag.ID{}, value)
+	w.PushTextWithID(attrID, tag.U3D{}, value)
 }
 
-func (w *cellWriter) PushItem(attrID tag.ID, value tag.Value) {
+func (w *cellWriter) PushItem(attrID tag.UID, value amp.Value) {
 	if value == nil {
 		return
 	}
-	w.PushItemWithID(attrID, tag.ID{}, value)
+	w.PushItemWithID(attrID, tag.U3D{}, value)
 }
 
-func (w *cellWriter) Push(op *amp.TxOp, val tag.Value) {
+func (w *cellWriter) Push(op *amp.TxOp, val amp.Value) {
 	if w.err != nil {
 		return
 	}
@@ -211,62 +275,3 @@ func (w *cellWriter) Push(op *amp.TxOp, val tag.Value) {
 		w.err = err
 	}
 }
-
-/*
-func (tx *TxMsg) PutMultiple(propertyIDs []tag.ID, serialize tag.Value) error {
-	op := PropertyOp{}
-
-	// serialize the value
-	if serialize != nil {
-		var err error
-		op.DataOfs = uint64(len(tx.DataStore))
-		tx.DataStore, err = serialize.MarshalToStore(tx.DataStore)
-		if err != nil {
-			tx.Error = err
-			return err
-		}
-		op.DataLen = uint64(len(tx.DataStore)) - op.DataOfs
-	}
-
-	// add the op to the set
-	for _, propID := range propertyIDs {
-		op.PropertyID = propID
-		tx.Ops = append(tx.Ops, op)
-	}
-	tx.OpsSorted = false
-	return nil
-}
-
-func (tx *TxMsg) Upsert(literal any, keys ...tag.ID) {
-	var tag *amp.Tag
-
-	switch v := literal.(type) {
-	case string:
-		tag = &amp.Tag{
-			InlineText: v,
-			Use:        TagUse_Text,
-		}
-		break
-	case *string:
-		tag.InlineText = *v
-		tag.Use = TagUse_Text
-		break
-	case *amp.Tag:
-		tag = v
-		break
-	caseTag:
-		tag = &v
-		break
-	// case *tag.ID:
-	// 	tag = &amp.Tag{}
-	// 	tag.SetTagUID(v)
-	default:
-		panic("unsupported type")
-		return
-	}
-
-	for _, key := range keys {
-		tx.Put(tag, key)
-	}
-}
-*/

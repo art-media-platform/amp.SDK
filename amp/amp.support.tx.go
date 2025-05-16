@@ -26,12 +26,15 @@ func (preamble TxPreamble) TxDataLen() int {
 	return int(binary.BigEndian.Uint32(preamble[8:12]))
 }
 
-func NewTxMsg(genesis bool) *TxMsg {
+func TxNew() *TxMsg {
 	tx := gTxMsgPool.Get().(*TxMsg)
 	tx.refCount = 1
-	if genesis {
-		tx.SetID(tag.Now())
-	}
+	return tx
+}
+
+func TxGenesis() *TxMsg {
+	tx := TxNew()
+	tx.SetID(tag.Now())
 	return tx
 }
 
@@ -41,145 +44,119 @@ var gTxMsgPool = sync.Pool{
 	},
 }
 
-func (tx *TxHeader) SetContextID(ID tag.ID) {
-	tx.ContextID_0 = int64(ID[0])
-	tx.ContextID_1 = ID[1]
-	tx.ContextID_2 = ID[2]
+func (tx *TxHeader) SetContextID(ID tag.UID) {
+	tx.ContextID_0 = 0
+	tx.ContextID_1 = ID[0]
+	tx.ContextID_2 = ID[1]
 }
 
-func (tx *TxHeader) ContextID() tag.ID {
-	return tag.ID{uint64(tx.ContextID_0), tx.ContextID_1, tx.ContextID_2}
+func (tx *TxHeader) ContextID() tag.UID {
+	return tag.UID{tx.ContextID_1, tx.ContextID_2}
 }
 
-func (tx *TxHeader) SetID(ID tag.ID) {
-	tx.TxID_0 = int64(ID[0])
-	tx.TxID_1 = ID[1]
-	tx.TxID_2 = ID[2]
+func (tx *TxHeader) SetID(ID tag.UID) {
+	tx.TxID_0 = 0
+	tx.TxID_1 = ID[0]
+	tx.TxID_2 = ID[1]
 }
 
-func (tx *TxHeader) ID() tag.ID {
-	return tag.ID{uint64(tx.TxID_0), tx.TxID_1, tx.TxID_2}
+func (tx *TxHeader) ID() tag.UID {
+	return tag.UID{tx.TxID_1, tx.TxID_2}
 }
 
 func (tx *TxMsg) AddRef() {
 	atomic.AddInt32(&tx.refCount, 1)
 }
 
-func (tx *TxMsg) ReleaseRef() {
-	if atomic.AddInt32(&tx.refCount, -1) > 0 {
+func (tx *TxMsg) AddRefs(delta int) {
+	if delta == 0 {
 		return
 	}
-
-	*tx = TxMsg{
-		Ops:       tx.Ops[:0],
-		DataStore: tx.DataStore[:0],
+	if delta < 0 || delta > 0x7FFFFFFF {
+		panic("AddRefs: invalid delta")
 	}
-	gTxMsgPool.Put(tx)
+	atomic.AddInt32(&tx.refCount, int32(delta))
 }
 
-func MarshalAttr(cellID, attrID tag.ID, attrVal tag.Value) (*TxMsg, error) {
-	tx := NewTxMsg(true)
-	if attrID.IsNil() && attrVal != nil {
-		return nil, ErrCode_AssertFailed.Error("MarshalAttr: missing attrID")
-	}
-	op := TxOp{}
-	op.CellID = cellID
-	op.AttrID = attrID
-	op.EditID = tag.Genesis(tx.ID())
+func (tx *TxMsg) ReleaseRef() {
+	// TODO systematic ReleaseRef() makeover in amp.planet
 
-	op.OpCode = TxOpCode_UpsertElement
-	if err := tx.MarshalOp(&op, attrVal); err != nil {
-		return nil, err
-	}
-	return tx, nil
+	// newCount := atomic.AddInt32(&tx.refCount, -1)
+	// if newCount != 0 {
+	// 	return
+	// }
+
+	// *tx = TxMsg{
+	// 	Ops:       tx.Ops[:0],
+	// 	DataStore: tx.DataStore[:0],
+	// }
+	// gTxMsgPool.Put(tx)
 }
 
-func (tx *TxMsg) UnmarshalOpValue(idx int, out tag.Value) error {
-	if idx < 0 || idx >= len(tx.Ops) {
-		return ErrCode_MalformedTx.Error("UnmarshalOpValue: index out of range")
+func (tx *TxMsg) UnmarshalOpValue(opIndex int, out Value) error {
+	if opIndex < 0 || opIndex >= len(tx.Ops) {
+		return ErrMalformedTx
 	}
-	op := tx.Ops[idx]
+	op := tx.Ops[opIndex]
 	ofs := op.DataOfs
-	span := tx.DataStore[ofs : ofs+op.DataLen]
+	end := ofs + op.DataLen
+	if ofs > end || end > uint64(len(tx.DataStore)) {
+		return ErrBadTxOp
+	}
+	span := tx.DataStore[ofs:end]
 	return out.Unmarshal(span)
 }
 
-func (tx *TxMsg) LoadItem(attrID, itemID tag.ID, dst tag.Value) error {
+func (tx *TxMsg) ExtractValue(attrID tag.UID, itemID tag.U3D, dst Value) error {
 	for i, op := range tx.Ops {
-		if op.AttrID == attrID && op.ItemID == itemID {
+		if op.Addr.AttrID == attrID && op.Addr.ItemID == itemID {
 			return tx.UnmarshalOpValue(i, dst)
 		}
 	}
 	return ErrAttrNotFound
 }
 
-func (tx *TxMsg) Load(cellID, attrID, itemID tag.ID, dst tag.Value) error {
+func (tx *TxMsg) LoadValue(findID *tag.Address, dst Value) error {
 	tx.sortOps()
 
-	find := &TxOpID{
-		CellID: cellID,
-		AttrID: attrID,
-		ItemID: itemID,
+	if findID.ItemID.Wildcard() != 0 {
+		panic("TODO") // add ItemID wildcard support
 	}
-	idx, found := sort.Find(len(tx.Ops), func(i int) int {
-		return tx.Ops[i].CompareTo(find)
+
+	N := len(tx.Ops)
+	idx, _ := sort.Find(N, func(i int) int {
+		return tx.Ops[i].Addr.CompareTo(findID, false)
 	})
-	if !found {
+	if idx >= N {
+		return ErrAttrNotFound
+	}
+
+	// check we have a match but ignore EditID
+	itemID := tx.Ops[idx].Addr.AsID()
+	wantID := findID.AsID()
+	if itemID != wantID {
 		return ErrAttrNotFound
 	}
 
 	return tx.UnmarshalOpValue(idx, dst)
 }
 
-var (
-	ErrAttrNotFound = ErrCode_BadRequest.Error("attribute not found")
-)
-
 func (tx *TxMsg) sortOps() {
 	if !tx.OpsSorted {
 		tx.OpsSorted = true
 		sort.Slice(tx.Ops, func(i, j int) bool {
-			return tx.Ops[i].TxOpID.CompareTo(&tx.Ops[j].TxOpID) < 0
+			return tx.Ops[i].Addr.CompareTo(&tx.Ops[j].Addr, true) < 0
 		})
 	}
 }
 
-func SendMonoAttr(sess Session, attrID tag.ID, value tag.Value, contextID tag.ID, status OpStatus) error {
-	tx, err := MarshalAttr(HeadCellID, attrID, value)
-	if err != nil {
-		return err
+func (tx *TxMsg) Upsert(chanID tag.U3D, attrID tag.UID, itemID tag.U3D, val Value) error {
+	op := TxOp{
+		OpCode: TxOpCode_Upsert,
 	}
-	tx.SetContextID(contextID)
-	tx.Status = status
-	return sess.SendTx(tx)
-}
-
-// Unmarshals the single value contained in a TxMsg.
-func (tx *TxMsg) UnmarshalMonoAttr(reg Registry) (tag.Value, error) {
-	txID := tx.ID()
-	if txID.IsNil() {
-		return nil, ErrCode_MalformedTx.Error("missing tx ID")
-	}
-	if len(tx.Ops) != 1 || tx.Ops[0].CellID != HeadCellID {
-		return nil, nil
-	}
-	val, err := reg.MakeValue(tx.Ops[0].AttrID)
-	if err != nil {
-		return nil, err
-	}
-	if err = tx.UnmarshalOpValue(0, val); err != nil {
-		return nil, err
-	}
-	return val, nil
-}
-
-func (tx *TxMsg) Upsert(cellID, attrID, itemID tag.ID, val tag.Value) error {
-	op := TxOp{}
-	op.OpCode = TxOpCode_UpsertElement
-	op.CellID = cellID
-	op.AttrID = attrID
-	op.ItemID = itemID
-	op.EditID = tag.Genesis(tx.ID())
+	op.Addr.ChanID = chanID
+	op.Addr.AttrID = attrID
+	op.Addr.ItemID = itemID
 
 	return tx.MarshalOp(&op, val)
 }
@@ -190,7 +167,7 @@ func (tx *TxMsg) Upsert(cellID, attrID, itemID tag.ID, val tag.Value) error {
 //   - TxOp.DataOfs and TxOp.DataLen are overwritten,
 //   - TxMsg.DataStore is appended with the serialization of val, and
 //   - the TxOp is appended to TxMsg.Ops.
-func (tx *TxMsg) MarshalOp(op *TxOp, val tag.Value) error {
+func (tx *TxMsg) MarshalOp(op *TxOp, val Value) error {
 	if val == nil {
 		op.DataOfs = 0
 		op.DataLen = 0
@@ -204,8 +181,13 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val tag.Value) error {
 		op.DataLen = uint64(len(tx.DataStore)) - op.DataOfs
 	}
 
+	if op.Addr.EditID.IsNil() {
+		op.Addr.EditID = tag.GenesisEditID()
+	}
+
 	tx.OpCount += 1
 	tx.Ops = append(tx.Ops, *op)
+	tx.OpsSorted = false
 	return nil
 }
 
@@ -215,6 +197,7 @@ func (tx *TxMsg) MarshalOpWithBuf(op *TxOp, valBuf []byte) {
 	tx.DataStore = append(tx.DataStore, valBuf...)
 	tx.OpCount += 1
 	tx.Ops = append(tx.Ops, *op)
+	tx.OpsSorted = false
 }
 
 func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
@@ -242,7 +225,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 		return nil, ErrMalformedTx
 	}
 
-	tx := NewTxMsg(false)
+	tx := TxNew()
 	headLen := preamble.TxHeadLen()
 	dataLen := preamble.TxDataLen()
 
@@ -257,12 +240,12 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 		if err := readBytes(buf); err != nil {
 			return nil, err
 		}
-		if err := tx.UnmarshalHead(buf); err != nil {
+		if err := tx.UnmarshalHeader(buf); err != nil {
 			return nil, err
 		}
 	}
 
-	// Read tx data store -- used for on-demand tag.Value unmarshalling
+	// Read tx data store -- used for on-demand Value unmarshalling
 	tx.DataStore = tx.DataStore[:dataLen]
 	if err := readBytes(tx.DataStore); err != nil {
 		return nil, err
@@ -299,7 +282,7 @@ func (tx *TxMsg) MarshalToBuffer(dst *[]byte) {
 }
 
 func (tx *TxMsg) MarshalHeaderAndOps(dst *[]byte) {
-	buf := (*dst)[:0]
+	buf := *dst
 	if cap(buf) < 300 {
 		buf = make([]byte, 2048)
 	}
@@ -344,21 +327,19 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 
 		// detect repeated fields and write only what changes (with corresponding flags)
 		{
-			op_cur[TxField_CellID_0] = op.CellID[0]
-			op_cur[TxField_CellID_1] = op.CellID[1]
-			op_cur[TxField_CellID_2] = op.CellID[2]
+			op_cur[TxField_ChanID_0] = op.Addr.ChanID[0]
+			op_cur[TxField_ChanID_1] = op.Addr.ChanID[1]
+			op_cur[TxField_ChanID_2] = op.Addr.ChanID[2]
 
-			op_cur[TxField_AttrID_0] = op.AttrID[0]
-			op_cur[TxField_AttrID_1] = op.AttrID[1]
-			op_cur[TxField_AttrID_2] = op.AttrID[2]
+			op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
+			op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
 
-			op_cur[TxField_ItemID_0] = op.ItemID[0]
-			op_cur[TxField_ItemID_1] = op.ItemID[1]
-			op_cur[TxField_ItemID_2] = op.ItemID[2]
+			op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
+			op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
+			op_cur[TxField_ItemID_2] = op.Addr.ItemID[2]
 
-			op_cur[TxField_EditID_0] = op.EditID[0]
-			op_cur[TxField_EditID_1] = op.EditID[1]
-			op_cur[TxField_EditID_2] = op.EditID[2]
+			op_cur[TxField_EditID_0] = op.Addr.EditID[0]
+			op_cur[TxField_EditID_1] = op.Addr.EditID[1]
 
 			hasFields := uint64(0)
 			for i, fi := range op_cur {
@@ -374,14 +355,14 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 				}
 			}
 
-			op_prv = op_cur
+			op_prv = op_cur // current becomes previous
 		}
 	}
 
 	return dst
 }
 
-func (tx *TxMsg) UnmarshalHead(src []byte) error {
+func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 	p := 0
 
 	// TxHeader
@@ -442,50 +423,33 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 		}
 		p += n
 
-		for i := 0; i < int(TxField_MaxFields); i++ {
-			if hasFields&(1<<i) != 0 {
+		for j := range int(TxField_MaxFields) {
+			if hasFields&(1<<j) != 0 {
 				if p+8 > len(src) {
 					return ErrMalformedTx
 				}
-				op_cur[i] = binary.LittleEndian.Uint64(src[p:])
+				op_cur[j] = binary.LittleEndian.Uint64(src[p:])
 				p += 8
 			}
 		}
 
-		op.CellID[0] = op_cur[TxField_CellID_0]
-		op.CellID[1] = op_cur[TxField_CellID_1]
-		op.CellID[2] = op_cur[TxField_CellID_2]
+		op.Addr.ChanID[0] = op_cur[TxField_ChanID_0]
+		op.Addr.ChanID[1] = op_cur[TxField_ChanID_1]
+		op.Addr.ChanID[2] = op_cur[TxField_ChanID_2]
 
-		op.AttrID[0] = op_cur[TxField_AttrID_0]
-		op.AttrID[1] = op_cur[TxField_AttrID_1]
-		op.AttrID[2] = op_cur[TxField_AttrID_2]
+		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
+		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]
 
-		op.ItemID[0] = op_cur[TxField_ItemID_0]
-		op.ItemID[1] = op_cur[TxField_ItemID_1]
-		op.ItemID[2] = op_cur[TxField_ItemID_2]
+		op.Addr.ItemID[0] = op_cur[TxField_ItemID_0]
+		op.Addr.ItemID[1] = op_cur[TxField_ItemID_1]
+		op.Addr.ItemID[2] = op_cur[TxField_ItemID_2]
 
-		op.EditID[0] = op_cur[TxField_EditID_0]
-		op.EditID[1] = op_cur[TxField_EditID_1]
-		op.EditID[2] = op_cur[TxField_EditID_2]
+		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
+		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
 
 		tx.Ops = append(tx.Ops, op)
 	}
+	tx.OpsSorted = false
 
 	return nil
-}
-
-func (op *TxOpID) CompareTo(oth *TxOpID) int {
-	if diff := op.CellID.CompareTo(oth.CellID); diff != 0 {
-		return int(diff)
-	}
-	if diff := op.AttrID.CompareTo(oth.AttrID); diff != 0 {
-		return int(diff)
-	}
-	if diff := op.ItemID.CompareTo(oth.ItemID); diff != 0 {
-		return int(diff)
-	}
-	if diff := op.EditID.CompareTo(oth.EditID); diff != 0 {
-		return int(diff)
-	}
-	return 0
 }

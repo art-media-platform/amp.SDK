@@ -4,12 +4,12 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/generics"
+	"github.com/art-media-platform/amp.SDK/stdlib/closer"
 )
 
 // Table abstracts value-ID storage and two-way lookup.
 type Table interface {
-	generics.RefCloser
+	closer.Wrapper
 
 	// Returns the Issuer being used by this Table (passed via TableOpts.Issuer or auto-created if no TableOpts.Issuer was given)
 	// Note that retained references should make use of generics.RefCloser to ensure proper closure.
@@ -32,7 +32,7 @@ type Table interface {
 
 // Issuer atomically issues unique IDs.
 type Issuer interface {
-	generics.RefCloser
+	closer.Wrapper
 
 	// Issues the next sequentual unique ID, however that may be defined in the context.
 	// 4 x (2^192) bits should be enough address space for anyone.

@@ -1,0 +1,32 @@
+                               amp.spec.tag.v0.702  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+  5ZMY2J3PRH5V4HK2RMR3REVBSE   amp.spec.tag.v0.702.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+
+                               amp.university.open.courses
+  3QMKEG8SQ3V53F4ZZCYHVQU7GB   amp.university.open.courses
+
+                               amp.dev.archive.us-en
+  47U93VNMZNM1CMD30UJ8Q877JS   amp.dev.archive.us-en
+
+
+                               amp.university.courses.open.arts.science.history.101.Once.upon.a.Time {
+  62N32EMBBRWBJM9J0ZHZ8997S0   amp.university.courses.open.arts.science.history.101.once.upon.a.time.{
+                               	L01.Rise of Physical Sciences, Engineering, Steampower, and Mechanical Engineering, feat. Peter Wang
+  7CQ313683B0D5H0ZV1Y062VHZY   L01.rise.of.physical.sciences.engineering.steampower.and.mechanical.engineering.feat.peter.wang
+                               	L02.Planetary Motion and Numerical Computation & Modeling
+  5NMEFZ8MGK5N5C01CCBS2X5T1K   L02.planetary.motion.and.numerical.computation.&.modeling
+                               	L03.A New Science 1: Introduction to cryptography, code breaking, and war fighting
+  3MT87JBZ0UPBRY8FSUGFHQ5RJD   L03.a.new.science.1-introduction.to.cryptography.code.breaking.and.war.fighting
+                               	L04.A New Science 2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
+  3E4RP3TPBJQW89YTREMQZTU18K   L04.a.new.science.2-the.microcomputer.revolution.arpanet.interpreters.numerical.methods.and.rise.of.computer.science
+                               	L05.A New Science 3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
+  6EH18BSPETH4T9WY28GKNHN9S5   L05.a.new.science.3-miniaturization.of.PC.&.mobile.hardware.computerization.of.securities.markets.and.exchanges.video.games
+                               	L06.A New Science 4: Community-Centric systems
+  69BY82YTV95RH14UFRJVZ5VX46   L06.a.new.science.4-community-centric.systems
+                               	L07.Physics Unbound 1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
+  6RKU5NN4R6FTK0UMRRDTFEV2VT   L07.physics.unbound.1-rise.of.general.relativity.quantum.theory.in.a.newtonian.world.hungry.for.answers.feat.sean.carroll.phd.theoretical.physicist.caltech
+                               	L08.Physics Unbound 2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
+  28JNSGFE4SRQVSER2KFNQ2RR09   L08.physics.unbound.2-black.holes.origins.of.life.&.the.physical.universe.(big.bang).quantum.theory.and.open.mysteries.in.modern.physics
+                               }
+  1QUGYH2SQZQZ10UP9918GHM693   }
+
+

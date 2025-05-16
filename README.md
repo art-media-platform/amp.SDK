@@ -9,7 +9,7 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
   - __3D spaces and linking__: Spatially place media and files and link them to real or virtual space, transforming user accessibility.
   - __Payment processing__: Built-in payment suite **amp.nile** offers easy integration with [Stripe](https://stripe.com/) and [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/).
   - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _VisionPro_, _Horizon_, and other OEM ecosystems (e.g., HoloLens, Magic Leap).
-  - __Continuous deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
+  - __Content deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
   - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [Yubikey](https://yubico.com)).
 
 - Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
@@ -49,7 +49,7 @@ Geographic and spatial-centric applications such as GIS, CAD, and BIM are everyw
 
 ### Extensibility
 
-The less obvious value of Amp is its _extensibility_. The [`amp.App`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go) interface is flexible and unrestricted, allowing you to expose anything compatible with Go. This means any Go, C, C++, or any native static or dynamic module can be wrapped and push a 3D-native UX (with stock or custom assets).
+The less obvious value of Amp is its _extensibility_. The interface [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go) allows you to expose anything: any Go, C, C++, or any native static or dynamic module can be wrapped and push a 3D-native UX (with stock or custom assets).
 
 ### Human Accessibility
 
@@ -65,11 +65,11 @@ This repo is lightweight and dependency-free, so it can be added to your project
 
 At a high level:
 
-1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project. If you want to expose additional functionality, implement your own [`amp.App`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go).
-2. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) (not public) and include your `amp.App`, similar to how a library in a C project registers a static or dynamic dependency.
+1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project. If you want to expose additional functionality, implement your own [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go).
+2. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) (not public) and include your `amp.AppModule`, similar to how a library in a C project registers a static or dynamic dependency.
 3. Build `amp.planet` with your additions embedded within it.
 4. In your Unity or Unreal app, link in `amp.planet.lib` and add the Amp UX runtime support glue.
-5. On startup, [`amp.planet`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.App` instances as needed. During runtime, `amp.planet.lib` dispatches URL requests addressed to your app and are "pinned".
+5. On startup, [`amp.planet`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.AppModule` instances as needed. During runtime, `amp.planet.lib` dispatches URL requests addressed to your app and are "pinned".
 6. The Amp UX runtime manages the user's experience of currently pinned URLs while providing a toolbox of extendable "stock" and "skinnable" components. Pinned requests receive state updates until they are canceled.
 
 ### Points of Interest

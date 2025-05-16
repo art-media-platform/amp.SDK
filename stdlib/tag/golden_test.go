@@ -19,7 +19,7 @@ func TestGold(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	scriptDir := "gold/"
+	scriptDir := "golden/"
 	files, err := os.ReadDir(scriptDir)
 	if err != nil {
 		log.Fatal(err)
@@ -46,13 +46,13 @@ func TestGold(t *testing.T) {
 	}
 }
 
-func echoLine(out *strings.Builder, line string) tag.ID {
+func echoLine(out *strings.Builder, line string) tag.UID {
 	billet := tag.Expr{}.With(line)
 	if billet.ID.IsSet() {
-		fmt.Fprintf(out, "%33s   ", "")
+		fmt.Fprintf(out, "%28s   ", "")
 		out.WriteString(line)
 		out.WriteByte('\n')
-		fmt.Fprintf(out, "%33v   %s", billet.ID.Base32(), billet.Canonic)
+		fmt.Fprintf(out, "%28s   %s", billet.ID.Base32(), billet.Canonic)
 	}
 	out.WriteByte('\n')
 	return billet.ID
