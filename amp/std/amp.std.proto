@@ -6,19 +6,11 @@ option csharp_namespace = "art.media.platform.std";
 
 import "amp/amp.core.proto";
 
-// FSInfo a general-purpose file system meta info block.
-message FSInfo {
-    string Mode        = 1;
-    bool   IsDir       = 2;
-
-    string FileName    = 3;
-    string ContentType = 5;
-
-    int64  CreatedAt   = 7; // UTC << 16
-    int64  ModifiedAt  = 8; // UTC << 16
-    int64  ByteSize    = 9; // data fork byte length
+// Specifies how scale dynamically changes based on observer position.
+enum VisualScale{
+    VisualScale_Auto  = 0;
+    VisualScale_Fixed = 1;
 }
-
 
 // TRS (translate rotate scale) INA IEEE 1207
 // A general-purpose placement spec in time, space, geo-position, and orientation.
@@ -29,37 +21,110 @@ message TRS {
     amp.Tag             Anchor = 1;
 
     // Specifies how scale dynamically changes based on observer position.
-    enum VisualScaleMode {
-        AutoScale  = 0;
-        FixedScale = 1;
-    }
-
-    // Specifies how scale dynamically changes based on observer position.
-    VisualScaleMode     ScaleMode = 2;
+    VisualScale         VisualScale = 2;
 
     // a relative position in space
-    float               X1 = 6;
-    float               X2 = 7;
-    float               X3 = 8;
+    double              Px = 6;
+    double              Py = 7;
+    double              Pz = 8;
 
     // Scale1..3 express the scale of this placement.
     // If all three values are 0, they are all implicitly 1.
     // If Scale2 or Scale3 == 0, then it is implicitly Scale1.
-    float               Scale1 = 11;
-    float               Scale2 = 12;
-    float               Scale3 = 13;
+    float               Sx = 11;
+    float               Sy = 12;
+    float               Sz = 13;
 
-    // a Quaternion rotation in space.
-    float               Qi = 16;
-    float               Qj = 17;
-    float               Qn = 18;
-    float               Qm = 19;
+    // a Quaternion rotation in space -- if all values are 0, there is no rotation.
+    float               Qx = 16;
+    float               Qy = 17;
+    float               Qz = 18;
+    float               Qw = 19;
+}
 
-    // Rotate1 - Rotate3 the orientation of this placement using Euler angles.
-    float               EulerX = 61;
-    float               EulerY = 62;
-    float               EulerZ = 63;
+
+// FileInfo a general-purpose file system meta info block.
+message FileInfo {
+    string Mode        = 1; // unix file mode label
+    bool   IsDir       = 2; // true if item is a directory
+
+    string DirName     = 4; // prepended to FileName forms full path
+    string ItemName    = 5; // file/dir item name
+    int32  ExtLen      = 6; // length of the file extension (0 if none)
+    string ContentType = 8; // MIME type of the file (e.g. "image/png", "text/html", etc.);
+
+    int64  CreatedAt   = 10; // UTC << 16
+    int64  ModifiedAt  = 11; // UTC << 16
+    int64  ByteSize    = 14; // data fork byte length
+}
+
+
+message GeoPath {
+    enum RenderType {
+        Point = 0;
+        Path = 1;
+        Ring = 2;
+    }
+    enum Format {
+        LatLng    = 0; // each coord is lat lng (two values per coordinate)
+        LatLngAlt = 1; // each coord is a lat lng alt tuple
+    }
+
+
+    RenderType Type = 1;
+    float      ExtrudeLo = 4;  // If non-zero, extrude the path to this height
+    float      ExtrudeHi = 5;  // If non-zero, extrude the path to this height
+
+    repeated double Coords = 15;
 }
 
 
 
+
+/*
+
+message TileRingSection {
+
+    // public ProfilePoint R0;
+    // public ProfilePoint R1;
+    // public ProfilePoint R2;
+    // public ProfilePoint R3;
+    // public ProfilePoint R4;
+    // public int         BevelArc; // how many angular degrees a bevel segment covers
+    // public int         Sections; // how many sections each edge is divided into
+    // public Vector2     TextureScale;
+    // public Vector2     TextureOffset;
+
+
+
+    int64    Radius_0 = 1;   // normalized radius (Math_UTC16_TicksPerDay)
+    int64    Radius_D = 2;   // R1 - R0
+
+    float    Altitude_0 = 3; // extrusion altitude (t = 0)
+    float    Altitude_D = 4; // A1 - A0
+
+    TRS      Tex_0 = 8;      // tex TRS (t = 0)
+    TRS      Tex_1 = 9;      // tex TRS (t = 1)
+
+    int64    ArcBegin = 5;  // UTC16 time (0x0 coresponds to 12:00p and corresponds to (12 * 60 * 60 << 16) "UTC16 ticks"
+    int64    ArcLength = 6; // 0 is none, 1.0 is 360 degrees, positive corresponds to clockwise rotation
+
+
+    amp.Tag  VisInvocation = 10;  // identifies a vis to invoke (and related resources and materials at a given securuty level) and can often an onbording or setup step.
+    amp.Tag  VisArgs       = 11;  // instance (content) parameters for the vis
+    //amp.Tag  VisLayer      = 12;  //
+
+    int64    DefaultBevelSteps  = 22;  // section degrees of arc per 180 degrees of bevel (outard) angular span.  larger means better quality, but more vertices.
+    int32    DefaultSubSections = 23;
+
+    int64          VertexCount  = 32;
+    repeated float VertexCoords = 33; // optional 2D or 3D verticies forming a polygon ring where Vector3.up is the "upward" axis.
+}
+
+
+message TileBatch {
+
+    // TODO: ??
+}
+
+*/

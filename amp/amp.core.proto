@@ -3,7 +3,7 @@ syntax = "proto3";
 // package amp is an implementation-independent API for a pluggable client-server UI/UX system,
 // featuring support and integration for files, media, and communication.
 //
-// Welcome to art.media.platform (c) 2023 ("amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
+// Welcome to art.media.platform (c) 2024 ("amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
 //   something we can all agree on.
 package amp;
 
@@ -18,8 +18,8 @@ option csharp_namespace = "art.media.platform";
 enum Const {
     Const_Defs = 0;
 
-    // By convention, the bootstrap ("head") cell ID for a TxMsg.
-    Const_HeadCellSeed = 0x37;
+    // The bootstrapping ("head") channel ID
+    Const_HeadChannelID = 0x37;
 
     // DefaultServicePort  is the default TCP port used to expose amp.Host service.
     Const_DefaultServicePort = 5192;
@@ -45,30 +45,25 @@ enum Const {
     Const_Invocation = 3773;
 }
 
-
-
-// TxOpCode specifies a particular cell transaction operation.
+// TxOpCode specifies a particular TxOp transaction operation.
 enum TxOpCode {
-    TxOpCode_Nil = 0;
-
-    TxOpCode_UpsertElement = 2; // insert / update single attribute element
-    TxOpCode_DeleteElement = 4; // delete single attribute element
+    TxOpCode_MetaOp = 0; // meta operation or request
+    TxOpCode_Upsert = 2; // upsert amp.Value[Address]
+    TxOpCode_Delete = 4; // delete single attribute element
 }
 
-
-// TxField maps a fixed count of int64 payload fields.enum
+// TxField maps a fixed count of int64 payload fields.
 //
-// Why not as a proto message?  Because compression is much better since values mostly repeat.
+// Why not a proto message?  Compression is much better since values usually repeat.
 enum TxField {
     TxField_Nil = 0;
 
-    TxField_CellID_0 = 1;
-    TxField_CellID_1 = 2;
-    TxField_CellID_2 = 3;
+    TxField_ChanID_0 = 1;
+    TxField_ChanID_1 = 2;
+    TxField_ChanID_2 = 3;
 
     TxField_AttrID_0 = 4;
     TxField_AttrID_1 = 5;
-    TxField_AttrID_2 = 6;
 
     TxField_ItemID_0 = 7;
     TxField_ItemID_1 = 8;
@@ -76,7 +71,6 @@ enum TxField {
 
     TxField_EditID_0 = 10;
     TxField_EditID_1 = 11;
-    TxField_EditID_2 = 12;
 
     TxField_NumFields = 13;
     TxField_MaxFields = 24;
@@ -85,73 +79,72 @@ enum TxField {
 // TxHeader contains information for a TxMsg
 message TxHeader {
 
-    // communicates request status / completion.
-    OpStatus            Status = 1;
 
-    // The number of TxOps in this TxHeader
-    uint64              OpCount = 2;
+    // Universally unique tag.U3D assigned when a tx originates.
+    // IN THE CLEAR
+    fixed64             TxID_0 = 1;
+    fixed64             TxID_1 = 2;
+    fixed64             TxID_2 = 3;
 
-    // Epoch that this Tx was created within.
-    Tag                 Epoch = 3;
+    // The planet epoch this tx is associated with.
+    // IN THE CLEAR
+    Tag                 Recipient = 5;
 
-    // A universally unique, securely generated tag.ID assigned when is Tx originates.
-    // Also serves as context ID for subsequent requests and responses.
-    int64               TxID_0 = 5;
-    fixed64             TxID_1 = 6;
-    fixed64             TxID_2 = 7;
+    // Author alias claiming the right to publish this tx in given planet epoch.
+    // IN THE CLEAR
+    Tag                 Author = 8;
 
-    // If set, this references a previously witnessed tx -- typically used to respond to a request.
+    // When set, this tx is sealed (signed) by Author.
+    // IN THE CLEAR
+    Tag                 Signature = 9;
+
+
+
+    ////////////////////
+    // PLANET PRIVATE
+
+    // If set, updates the active PinRequest state.
+    PinRequest          Request = 16;
+
+    // Status of the most recent PinRequest revision.
+    PinStatus           Status = 17;
+
+    // Number of TxOps in this TxHeader
+    uint64              OpCount = 19;
+
+    // Refers to a tag ID (usually a TxID) for subsequent requests and responses.
+    // Used to reference a tx thread to a request.
     // If nil or equal to TxID, then this tx is context-free and TxID is implied context ID.
-    int64               ContextID_0 = 10;
-    fixed64             ContextID_1 = 11;
-    fixed64             ContextID_2 = 12;
-
-    // recipient of this TxHeader
-    Tag                 RouteTo = 15;
-
-    // headers / metadata / context
-    Tags                Attachments = 32;
+    fixed64             ContextID_0 = 24;
+    fixed64             ContextID_1 = 25;
+    fixed64             ContextID_2 = 26;
 
 }
 
-enum SelectOp {
-    SelectOp_Neutral = 0;
-    SelectOp_Include = 1;
-    SelectOp_Exclude = 2;
+
+// Expresses the status of a amp.Pin.
+enum PinStatus {
+    PinStatus_Inactive = 0;  // no op
+    PinStatus_Started  = 2;  // pin now on service
+    PinStatus_TxCommit = 6;  // tx commit complete / failed
+    PinStatus_Syncing  = 8;  // state sync in progress
+    PinStatus_Synced   = 9;  // state is synchronized; drives UI updates requiring a stable state.
+    PinStatus_Complete = 16; // pin complete / closed / failed
 }
 
-// OpStatus allows a sender to express the status of a request.
-enum OpStatus {
-
-    // op or request has not yet initiated
-    OpStatus_NotStarted = 0;
-
-    // op or request is in progress
-    OpStatus_Syncing    = 1;
-
-    // updating, processing, or suspended -- signifies opaque working state
-    OpStatus_Busy       = 2;
-
-    // Sent by the host to signal that the op up to date and the client state is stable / synchronized.
-    // This typically drives UI updates or other dependencies requiring a stable state.
-    OpStatus_Synced     = 3;
-
-    // From the client to host, this signals to close / cancel the op associated with ReqID.
-    // From the host to client, this signals that the given request ID has been closed / discarded.
-    OpStatus_Closed     = 7;
-}
 
 // Login -- STEP 1: client -> host
 message Login {
 
-    Tag                UserID   = 1;
-    Tag                DeviceID = 5;
+    Tag                User   = 1;
+    Tag                Planet = 2;
+    Tag                Device = 5;
 
-    // HostAddress is network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
-    // amp.Host uses this to as the host name when serving URLs for the client to consume.
+    // HostAddress is the network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
+    // amp.Host uses this as the host name when serving URLs for the client to consume.
     string             HostAddress = 8;
 
-    // Tags is an unordered list of string literals tokens with predefined meanings, separated by spaces, periods, or commas.
+    // Tags is an unordered list of string literal tokens with predefined meanings, separated by spaces, periods, or commas.
     string             Tags = 9;
 
     // Checkpoint allows the client to resume an auth session.
@@ -174,112 +167,198 @@ message LoginCheckpoint {
     string              TokenType    = 1;
     string              AccessToken  = 2;
     string              RefreshToken = 3;
-    int64               Expiry       = 4; // Unix UTC
+    int64               Expiry       = 4; // unix UTC seconds
 
-    string              UserID       = 11;
-    string              URI          = 12;
+    string              UserID = 11;
+    string              URI    = 12;
 }
 
-
-
-enum StateSync {
-
-    // If set, a pin request will not send any state responses to the client.
-    // This is useful when only writing to a cell and no state updates are needed.
-    StateSync_None = 0;
-
-	// If set, a pin request will be automatically closed once state is pushed / synchronized.
-    // This is useful when only a snapshot of the cell is needed.
-    StateSync_CloseOnSync = 1;
-
-    // If set, a pin request will remain open even after state is synced.
-    // In this mode, he client will receive any state updates until the request is explicitly closed.
-    StateSync_Maintain = 2;
-}
-
-
-
-// PinRequest is a client request to "pin" a cell, meaning selected attrs and child cells will be pushed to the client.
+// PinRequest is a peer request to "pin" a set of element IDs, where selected attrs and items will be pushed to the peer.
 message PinRequest {
 
-    // Expresses a planet and/or cell subset to pin
-    Tags           Select = 1;
+    // Used for easy sorting and ordering of requests
+    //    0: initial request
+    //    1: 1st revision
+    //    2: 2nd revision ...
+    int64               Revision = 1;
 
-    // Options for this request.
-    StateSync      StateSync = 6;
+    // Operation mode for this pin request.
+    PinMode             Mode = 2;
+
+    // Permissions and access controls.
+    AccessControl       Access = 3;
+
+    // Explicit URL or ID invocation associated with this request.
+    Tag                 Invoke = 4;
+
+    // Selects which values to synchronize and which NOT to synchronize.
+    PinSelector         Select = 6;
+
+    // If set, this is a genesis request to create a new channel with the given typeID (
+    ChannelEpoch        Epoch = 16;
 
 }
 
+enum CabinetOpCode {
+    CabinetOpCode_Nil    = 0;
+    CabinetOpCode_Get    = 1;
+    CabinetOpCode_Put    = 2;
+    CabinetOpCode_Delete = 3;
+}
+
+
+message PinSelector {
+    repeated AddrRange Ranges = 3;
+}
+
+
+message AddrRange {
+
+    float    Weight = 1; // "the include magnitude", < 0 repels, == 0 ignored , > 0 attract
+
+    fixed64  Chan_Lo_0 = 4;
+    fixed64  Chan_Hi_0 = 5;
+    uint64   Chan_Lo_1 = 6;
+    uint64   Chan_Hi_1 = 7;
+    fixed64  Chan_Lo_2 = 8;
+    fixed64  Chan_Hi_2 = 9;
+
+    fixed64  Attr_Lo_0 = 10;
+    fixed64  Attr_Hi_0 = 11;
+    fixed64  Attr_Lo_1 = 12;
+    fixed64  Attr_Hi_1 = 13;
+
+    uint64   Item_Lo_0 = 14;
+    uint64   Item_Hi_0 = 15;
+    uint64   Item_Lo_1 = 16;
+    uint64   Item_Hi_1 = 17;
+    uint64   Item_Lo_2 = 18;
+    uint64   Item_Hi_2 = 19;
+
+    fixed64  Edit_Lo_0 = 20;
+    fixed64  Edit_Hi_0 = 21;
+    fixed64  Edit_Lo_1 = 22;
+    fixed64  Edit_Hi_1 = 23;
+
+}
+
+
+// Determines how much a Pin emits to its client Requester.
+enum PinMode {
+
+    // If set, no state is emitted to the client.
+    // Used when only writing via CommitTx()
+    PinMode_Commit = 0;
+
+    // Send requested attrs, then auto-close this request
+    // Used when instantaneous state is sufficient (e.g. applying a setting)
+    PinMode_Snapshot = 1;
+
+    // If set, the request will remain open after the initial state snapshot is sent.
+    // Requester will receive state updates until this request is closed.
+    PinMode_MaintainSync = 2;
+}
+
+
+message AccessControl {
+    Tags                Credentials = 2;
+}
+
+
+message ChannelEpoch {
+    Tag                 Channel       = 1;
+    Tag                 ParentChannel = 2;
+
+    string              Comment       = 10;
+}
+
+
+
 enum Enable {
-    Enable_LatentOff  = 0x0;
-    Enable_LatentOn   = 0x1;
-    Enable_ActiveOn   = 0x2;
-    Enable_ActiveOff  = 0x3;
+    Enable_LatentOff = 0x0;
+    Enable_LatentOn  = 0x1;
+    Enable_ActiveOn  = 0x2;
+    Enable_ActiveOff = 0x3;
 }
 
 
 enum UriScheme {
-    UriScheme_Nil             = 0;
+    UriScheme_Nil      = 0;
+    UriScheme_Reserved = 1;  // reserved for future use
 
-    UriScheme_Path            = 2;  // "any/posix/pathname"
-    UriScheme_Http            = 4;  // "[http[s]://]{hostname}[:{port}]/{query}"
-    UriScheme_Data            = 5;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
-    UriScheme_File            = 6;  // "[file://]{hfs-pathname}"
-    UriScheme_Amp             = 9;  // "[amp:[//app-alias/]]{cmd}[/{uri}]?{query}"
+    UriScheme_Path     = 2;  // "any/posix/pathname"
+    UriScheme_Http     = 4;  // "[http[s]://]{hostname}[:{port}]/{query}"
+    UriScheme_Data     = 5;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
+    UriScheme_File     = 6;  // "[file://]{hfs-pathname}"
+    UriScheme_Amp      = 16; // "[amp:[//app-identifier/]]{cmd}[/{uri}]?{query}"
 }
 
-// Tag is a versitile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
+// Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
 //
-// All fields are optional and whose meaning is contextual.
-//
-// Also see tag.ID.
+// All fields are optional and their meaning is contextual.
 message Tag {
 
     /// inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes ///
 
-    int64    ID_0    = 1;  // tag.ID[0] -- typically a UTC16 timestamp
-    fixed64  ID_1    = 2;  // tag.ID[1] -- typically a H3 index; 'geo tile'
-    fixed64  ID_2    = 3;  // tag.ID[2] -- typically a H3 index; "local tile"`
-    Swizzle  Swizzle = 5;  // Swizzle(ID[0..2])
+    fixed64   ID_0    = 1;  // tag.U3D[0]
+    fixed64   ID_1    = 2;  // tag.U3D[1]
+    fixed64   ID_2    = 3;  // tag.U3D[2]
+    U3DFormat Format  = 5;  // describes ID[0..2]
 
-    Grid     Grid    = 7;  // grid convention for T/I/J
-    Units    Units   = 8;  // unit convention for T/I/J
-    int64    R       = 12; // as ticks on Grid on an expanding sphere, or a UTC16 timestamp
-    int64    I       = 13; // as Units on Grid horizontally
-    int64    J       = 14; // as Units on Grid vertically
+    Grid      Grid    = 7;  // grid convention for R/I/J
+    Units     Units   = 8;  // unit convention for R/I/J
+    int64     R       = 12; // as ticks on Grid on an expanding sphere, or a UTC16 timestamp
+    int64     I       = 13; // as Units on Grid horizontally
+    int64     J       = 14; // as Units on Grid vertically
 
-
-    /// trusted agent assistant fields ///
+    /// non-inline fields; limit total to 4k as a general rule ///
 
     string  ContentType = 17; // IANA RFC 2045 media type; e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
-    string  URI         = 18; // Unix style pathname *or* IANA RFC 1738 URL (schema://hostname.com/path/query)
-    string  Text        = 19; // UTF8 text: plain-text, XML, RTF
+    string  URI         = 18; // Unix pathname *or* IANA RFC 1738 URL (schema://hostname.com/path/query)
+    string  Text        = 19; // UTF8 text; plain-text, XML, RTF
 }
 
-// Tags is a multi-purpose, automatically serializable and customizable tree of tags.
+
+// Tags is a multi-purpose, serializable, and customizable tree of tags.
 //
-// All fields are optional and whose meaning is contextual.
+// All fields are optional and their meaning is contextual.
 message Tags {
-    Tag           Head     = 1; // indentifies this branch
-    bytes         Store    = 2; // optional binary store
-    repeated Tag  SubTags  = 4; // seqential sub tags
-    repeated Tags SubTrees = 6; // seqential sub trees
+    Tag           Head     = 1; // identifies this branch
+    repeated Tag  SubTags  = 4; // amplifying attributes or values
+    repeated Tags Children = 6; // sequential sub trees
 }
+
+
 
 // Grid specifies a standard lattice or coordinate convention.
 enum Grid {
-    Grid_Ortho                 = 0;  // X, Y, Z are a linear othonormal basis
-    Grid_Cylinder              = 5;  // X: longitude,    Y: vertical,      Z: radius
-    Grid_Sphere                = 6;  // X: longitude,    Y: latitude,      Z: radius
-    Grid_Tile                  = 7;  // X: H3 geo-tile,  Y: H3 sub-tile,   Z: altitude
-    Grid_EquallaterialRhomboid = 16; // TODO
-    Grid_TrapezoDodecahedron   = 17; // TODO
+    Grid_Ortho               = 0;  // X, Y, Z are a linear orthonormal basis
+    Grid_Cylinder            = 5;  // X: longitude,    Y: vertical,      Z: radius
+    Grid_Sphere              = 6;  // X: longitude,    Y: latitude,      Z: radius
+    Grid_Tile                = 7;  // X: H3 geo-tile,  Y: H3 sub-tile,   Z: altitude
+    Grid_EquilateralRhomboid = 16; // TODO
+    Grid_TrapezoDodecahedron = 17; // TODO
 }
 
-enum Swizzle {
-    Swizzle_UTC16_Geo_Local = 0;
-    Swizzle_Geo_Local_UTC16 = 1;
+enum TagTypes {
+    TagTypes_Nil  = 0;    // unspecified tag type
+    TagTypes_Chan = 0x01; // channel tag
+    TagTypes_Attr = 0x02; // attr tag
+    TagTypes_Item = 0x04; // item tag
+    TagTypes_Edit = 0x08; // edit tag
 }
+
+enum U3DFormat {
+    U3DFormat_Unspecified = 0;
+    U3DFormat_H3_TimeUID  = 1; // channel / cell ID (geo-sorted)
+    U3DFormat_TimeUID_H3  = 2; // time-based geo
+    U3DFormat_H3_UTC_H3   = 4; // geo, time, geo
+    U3DFormat_UTC_H3_UTC  = 6; // time, geo, time
+    U3DFormat_IJK         = 7; // 3D discrete grid
+    U3DFormat_UTC_H3_H3   = 8; // RadialH3: res=0 => r=1mm .. res=15 => r=1m
+    U3DFormat_H3_H3_H3    = 9; // "sphere-bottle" ID
+}
+
 
 // Units specifies a standard units convention.
 enum Units {
@@ -289,7 +368,7 @@ enum Units {
     Units_Pixels      = 3;  // texels or device pixels; not for typographic sizes
     Units_Plank       = 5;  // TOE length
     Units_Nanometers  = 7;  // 10^9 nm == 1 m
-    Units_Millimeters = 10;  // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
+    Units_Millimeters = 10; // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
     Units_Meters      = 11; // IEEE 3773 length for humans
     Units_LightYears  = 16; // 1 light year == 9460730472580800. meters
 }
@@ -303,7 +382,6 @@ enum CryptoKitID {
     CryptoKit_AsymMsg_NaCl    = 101;
     CryptoKit_Signing_NaCl    = 102;
     CryptoKit_Signing_ED25519 = 202;
-
 }
 
 
@@ -322,10 +400,9 @@ message EditableTextAttr {
     string              Label           = 1;
     string              About           = 2;
     string              Content         = 3;
-    int                 Flags           = 4;
+    int32               Flags           = 4;
 }
-
-    */
+*/
 
 
 
@@ -344,28 +421,27 @@ enum ErrCode {
     ErrCode_NotConnected                = -23007;
     ErrCode_AuthFailed                  = -23008;
     ErrCode_LoginFailed                 = -23009;
-    ErrCode_SessionExpired              = -23010;
+    ErrCode_Expired                     = -23010;
     ErrCode_NotReady                    = -23011;
+    ErrCode_Cancelled                   = -23012;
+    ErrCode_ItemNotFound                = -23013;
 
-    ErrCode_RequestNotFound             = -23020;
+    ErrCode_ContextNotReady             = -23020;
     ErrCode_RequestClosed               = -23021;
     ErrCode_BadRequest                  = -23022;
-    ErrCode_InvalidURI                  = -23023;
+    ErrCode_BadTag                      = -23023;
     ErrCode_BadValue                    = -23024;
-    ErrCode_InvalidTag                  = -23025;
+    ErrCode_AlreadyExists               = -23025;
     ErrCode_AttrNotFound                = -23026;
     ErrCode_NothingToCommit             = -23027;
     ErrCode_CommitFailed                = -23028;
-    ErrCode_StoreNotFound               = -23029;
     ErrCode_StorageFailure              = -23030;
-    ErrCode_AppNotFound                 = -23031;
     ErrCode_MalformedTx                 = -23032;
 
     ErrCode_BadSchema                   = -23040;
     ErrCode_DataFailure                 = -23041;
     ErrCode_ExportErr                   = -23042;
     ErrCode_PinFailed                   = -23043;
-    ErrCode_CellNotFound                = -23044;
     ErrCode_ProviderErr                 = -23045;
 
     ErrCode_ViolatesAppendOnly          = -23050;
@@ -380,7 +456,6 @@ enum ErrCode {
     ErrCode_KeyringNotFound             = -23106;
     ErrCode_KeyEntryNotFound            = -23107;
     ErrCode_HashKitNotFound             = -23108;
-    ErrCode_SessionNotReady             = -23109;
     ErrCode_UnrecognizedCryptOp         = -23110;
     ErrCode_MarshalFailed               = -23111;
     ErrCode_UnmarshalFailed             = -23112;

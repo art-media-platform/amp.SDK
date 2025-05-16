@@ -4,7 +4,6 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"encoding/json"
-	"math/rand"
 
 	//"github.com/mmcloughlin/geohash"
 
@@ -12,23 +11,21 @@ import (
 )
 
 const (
-	// GeohashBase32Alphabet is the standard geo-hash alphabet used for Base32Encoding.
-	// It chooses particular characters that are not visually similar to each other.
-	//
-	// Although a geohash is case insensitive, common convention is UPPER CASE
-	//    since they are read aloud as if an acronym (versus spoken as a word or syllable).
+	// Base32Alphabet is a base32 (5-bit) based symbol set also used by geohash.
+	// It chooses ascii chatacters that are visually distinct and easy to read.
 	//
 	// https://en.wikipedia.org/wiki/Geohash
-	GeohashBase32Alphabet       = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
-	GeohashBase32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
+	//
+	Base32Alphabet_Upper = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
+	Base32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
+
+	// IDEA: GeoH3Alphabet = "0123456_"  just use hex except _ also maps to ffffff..
+	// TODO: 7 sub hexes correspond to outward, larger hexes (1-2 resloutions higher)
 )
 
 var (
 	// Base32Encoding is used to encode/decode binary buffer to/from base 32
-	Base32Encoding = base32.NewEncoding(GeohashBase32Alphabet).WithPadding(base32.NoPadding)
-
-	// GenesisMemberID is the genesis member ID
-	GenesisMemberID = uint32(1)
+	Base32Encoding = base32.NewEncoding(Base32Alphabet_Upper).WithPadding(base32.NoPadding)
 )
 
 // Zero zeros out a given slice
@@ -68,6 +65,8 @@ func SmartMarshal(item Marshaler, tryDst []byte) []byte {
 
 	return tryDst[:encSz]
 }
+
+/*
 
 // SmartMarshalToBase32 marshals the given item and then encodes it into a base32 (ASCII) byte string.
 //
@@ -115,6 +114,7 @@ func SmartDecodeFromBase32(srcBase32 []byte, tryDst []byte) ([]byte, error) {
 	binSz, err = Base32Encoding.Decode(tryDst[:binSz], srcBase32)
 	return tryDst[:binSz], err
 }
+*/
 
 // Buf is a flexible buffer designed for reuse.
 type Buf struct {
@@ -255,27 +255,6 @@ func BufDesc(inBuf []byte) string {
 	}
 
 	return outStr + suffix
-}
-
-// Generates a random string of the given length using GeohashBase32Alphabet
-func RandomString(length int) string {
-	if length <= 0 {
-		return ""
-	}
-	s := make([]byte, length)
-	bitsRemain := 0
-	bits := uint64(0)
-	for i := range s {
-		if bitsRemain < 5 {
-			bits = rand.Uint64()
-			bitsRemain = 64
-		}
-		idx := bits & 0x1F
-		bits >>= 5
-		bitsRemain -= 5
-		s[i] = GeohashBase32Alphabet[idx]
-	}
-	return string(s)
 }
 
 // Encodes a int64 to a zig-zag uint64

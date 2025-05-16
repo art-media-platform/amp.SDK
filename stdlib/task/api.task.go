@@ -10,7 +10,7 @@ import (
 )
 
 // Starts a new Context with no parent Context.
-func Start(task *Task) (Context, error) {
+func Start(task Task) (Context, error) {
 	return Context((*ctx)(nil)).StartChild(task)
 }
 
@@ -18,7 +18,7 @@ func Start(task *Task) (Context, error) {
 //
 // If parent == null, then the new Context will have no parent.
 func Go(parent Context, label string, fn func(ctx Context)) (Context, error) {
-	return parent.StartChild(&Task{
+	return parent.StartChild(Task{
 		Info: Info{
 			Label: label,
 		},
@@ -27,12 +27,11 @@ func Go(parent Context, label string, fn func(ctx Context)) (Context, error) {
 }
 
 type Info struct {
-	TID       int64    // globally unique atomically incremented instance ID -- assigned OnStart()
-	TagID     tag.ID   // optional user-defined tag.ID
-	Other     any      // optional user-defined value
-	Headers   []string // cookies, auth, or task references
-	Label     string   // logging and debugging label
-	DebugMode bool     // when set, a context logs more verbosely and can perform (or log) expensive diagnostics
+	TaskID     tag.UID  // universally unique instance ID -- assigned if not set during OnStart()
+	Headers    []string // cookies, auth, or task references
+	Label      string   // logging and debugging label
+	Attachment any      // optional user-defined value
+	DebugMode  bool     // when set, a context logs more verbosely and can perform (or log) expensive diagnostics
 
 	// If > 0, Context.CloseWhenIdle() will automatically called when the last remaining child is closed or when OnRun() completes, whichever occurs later.
 	//
@@ -42,11 +41,11 @@ type Info struct {
 
 // Task is a parameter block used to start a new Context and contains hooks for each stage of the Context's lifecycle.
 type Task struct {
-	Info Info
+	Info
 
 	OnStart        func(ctx Context) error // Blocking fn called in StartChild(). If err, ctx.Close() is called and Go() returns the err and OnRun is never called.
 	OnRun          func(ctx Context)       // Async work body. If non-nil, ctx.Close() will be automatically called after OnRun() completes
-	OnClosing      func()                  // Called immediately after Close() is first called while self & children are still closing
+	OnClosing      func()                  // Called immediately after Close() is first called while self & children are closing
 	OnChildClosing func(child Context)     // Called immediately after the child's OnClosing() is called
 	OnClosed       func()                  // Called after Close() and all children have completed Close() (but immediately before Done() is released)
 }
@@ -68,7 +67,7 @@ type Context interface {
 
 	// Creates a new child Context with for given Task.
 	// If OnStart() returns an error error is encountered, then child.Close() is immediately called and the error is returned.
-	StartChild(task *Task) (Context, error)
+	StartChild(task Task) (Context, error)
 
 	// Convenience function for StartChild() and is equivalent to:
 	//

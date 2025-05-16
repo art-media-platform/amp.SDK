@@ -25,9 +25,9 @@ func (iss *atomicIssuer) MintNext() (ID, error) {
 	return ID(nextID), nil
 }
 
-func (iss *atomicIssuer) AddRef() {
+func (iss *atomicIssuer) PushOpen() {
 	if iss.refCount.Add(1) <= 1 {
-		panic("AddRef() called on closed issuer")
+		panic("PushOpen() called on closed issuer")
 	}
 }
 

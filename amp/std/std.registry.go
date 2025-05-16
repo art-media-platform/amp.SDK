@@ -1,51 +1,73 @@
-package amp
+package std
 
 import (
+	"net/url"
 	"reflect"
 	"sync"
 
+	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-func NewRegistry() Registry {
+// see type Registry interface
+var gRegistry = NewRegistry()
+
+func Registry() amp.Registry {
+	return gRegistry
+}
+
+func NewRegistry() amp.Registry {
 	reg := &registry{
-		appsByInvoke: make(map[string]*App),
-		appsByTag:    make(map[tag.ID]*App),
-		elemDefs:     make(map[tag.ID]AttrDef),
-		attrDefs:     make(map[tag.ID]AttrDef),
+		modsByAlias: make(map[string]*amp.AppModule),
+		modsByID:    make(map[tag.UID]*amp.AppModule),
+		attrDefs:    make(map[tag.UID]amp.AttrDef),
 	}
 	return reg
 }
 
+func RegisterAttr(attr tag.Expr, prototype amp.Value, subTags string) tag.Expr {
+	typeOf := reflect.TypeOf(prototype)
+	if typeOf.Kind() == reflect.Ptr {
+		typeOf = typeOf.Elem()
+	}
+	name := typeOf.Name()
+	attrID := attr.With(name)
+	if subTags != "" {
+		attrID = attrID.With(subTags)
+	}
+
+	err := gRegistry.RegisterAttr(amp.AttrDef{
+		Expr:      attrID,
+		Prototype: prototype,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return attrID
+}
+
 // Implements Registry
 type registry struct {
-	mu           sync.RWMutex
-	appsByInvoke map[string]*App
-	appsByTag    map[tag.ID]*App
-	elemDefs     map[tag.ID]AttrDef
-	attrDefs     map[tag.ID]AttrDef
+	mu          sync.RWMutex
+	modsByAlias map[string]*amp.AppModule
+	modsByID    map[tag.UID]*amp.AppModule
+	attrDefs    map[tag.UID]amp.AttrDef
 }
 
-func (reg *registry) RegisterPrototype(context tag.Expr, prototype tag.Value, subTags string) tag.Expr {
-	if subTags == "" {
-		typeOf := reflect.TypeOf(prototype)
-		if typeOf.Kind() == reflect.Ptr {
-			typeOf = typeOf.Elem()
-		}
-		subTags = typeOf.Name()
+func (reg *registry) RegisterAttr(def amp.AttrDef) error {
+	attrID := def.Expr.ID
+	if attrID.IsNil() {
+		return amp.ErrCode_BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
 
-	attrExpr := context.With(subTags)
 	reg.mu.Lock()
 	defer reg.mu.Unlock()
-	reg.attrDefs[attrExpr.ID] = AttrDef{
-		Expr:      attrExpr,
-		Prototype: prototype,
-	}
-	return attrExpr
+	reg.attrDefs[attrID] = def
+	return nil
 }
 
-func (reg *registry) Import(other Registry) error {
+func (reg *registry) Import(other amp.Registry) error {
 	src := other.(*registry)
 
 	src.mu.Lock()
@@ -53,17 +75,14 @@ func (reg *registry) Import(other Registry) error {
 
 	{
 		reg.mu.Lock()
-		for _, def := range src.elemDefs {
-			reg.elemDefs[def.ID] = def
-		}
 		for _, def := range src.attrDefs {
-			reg.attrDefs[def.ID] = def
+			reg.attrDefs[def.Expr.ID] = def
 		}
 		reg.mu.Unlock()
 	}
 
-	for _, app := range src.appsByTag {
-		if err := reg.RegisterApp(app); err != nil { //fix me
+	for _, mod := range src.modsByID {
+		if err := reg.RegisterModule(mod); err != nil {
 			return err
 		}
 	}
@@ -71,69 +90,67 @@ func (reg *registry) Import(other Registry) error {
 }
 
 // Implements Registry
-func (reg *registry) RegisterApp(app *App) error {
-	appTag := app.AppSpec.ID
+func (reg *registry) RegisterModule(mod *amp.AppModule) error {
+	modID := mod.Info.Tag.ID
 
 	reg.mu.Lock()
 	defer reg.mu.Unlock()
 
-	reg.appsByTag[appTag] = app
+	reg.modsByID[modID] = mod
 
-	for _, invok := range app.Invocations {
-		if invok != "" {
-			reg.appsByInvoke[invok] = app
+	for _, alias := range mod.Info.Aliases {
+		if alias != "" {
+			reg.modsByAlias[alias] = mod
 		}
 	}
+	reg.modsByAlias[mod.Info.Tag.Canonic] = mod
 
-	// invoke by full app ID
-	reg.appsByInvoke[app.AppSpec.Canonic] = app
-
-	// invoke by first component of app ID
-	_, leafName := app.AppSpec.LeafTags(1)
-	reg.appsByInvoke[leafName] = app
+	// invoke by first component of mod ID
+	_, leafName := mod.Info.Tag.LeafTags(1)
+	reg.modsByAlias[leafName] = mod
 
 	return nil
 }
 
-// Implements Registry
-func (reg *registry) GetAppByTag(appTag tag.ID) (*App, error) {
-	reg.mu.RLock()
-	defer reg.mu.RUnlock()
+func (reg *registry) GetAppModule(invoke amp.Tag) (*amp.AppModule, error) {
+	var moduleAlias string
+	modID := invoke.UID()
 
-	app := reg.appsByTag[appTag]
-	if app == nil {
-		return nil, ErrCode_AppNotFound.Errorf("app not found: %s", appTag)
-	} else {
-		return app, nil
+	if invoke.URI != "" {
+		invokedURL, err := url.Parse(invoke.URI)
+		if err != nil {
+			return nil, amp.ErrCode_BadRequest.Errorf("error parsing module URI: %v", err)
+		}
+		moduleAlias = invokedURL.Host
 	}
-}
 
-// Implements Registry
-func (reg *registry) GetAppForInvocation(invocation string) (*App, error) {
-	if invocation == "" {
-		return nil, ErrCode_AppNotFound.Errorf("missing app invocation")
-	}
+	var mod *amp.AppModule
 
 	reg.mu.RLock()
-	defer reg.mu.RUnlock()
-
-	app := reg.appsByInvoke[invocation]
-	if app == nil {
-		return nil, ErrCode_AppNotFound.Errorf("app not found for %q", invocation)
+	{
+		if modID.IsSet() {
+			mod = reg.modsByID[modID]
+		}
+		if mod == nil && moduleAlias != "" {
+			mod = reg.modsByAlias[moduleAlias]
+		}
 	}
-	return app, nil
+	reg.mu.RUnlock()
+
+	if mod == nil {
+		return nil, amp.ErrCode_ItemNotFound.Errorf("module not found: %q (%v)", moduleAlias, modID)
+	}
+	return mod, nil
 }
 
-func (reg *registry) MakeValue(attrSpec tag.ID) (tag.Value, error) {
+// Makes an instance of the given attribute "spec"" tag.UID
+func (reg *registry) MakeValue(attrID tag.UID) (amp.Value, error) {
 
 	// Often, an attrID will be a unnamed scalar attr (which means we can get the elemDef directly.
 	// This is also essential during bootstrapping when the client sends a RegisterDefs is not registered yet.
-	def, exists := reg.elemDefs[attrSpec]
+	def, exists := reg.attrDefs[attrID]
 	if !exists {
-		def, exists = reg.attrDefs[attrSpec]
-		if !exists {
-			return nil, ErrCode_AttrNotFound.Errorf("MakeValue: attr %s not found", attrSpec.String())
-		}
+		return nil, amp.ErrCode_AttrNotFound.Errorf("attr %q not found", attrID.String())
 	}
 	return def.Prototype.New(), nil
 }
@@ -141,7 +158,7 @@ func (reg *registry) MakeValue(attrSpec tag.ID) (tag.Value, error) {
 /*
 
 
-func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
+TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 	numFields := valTyp.NumField()
 
 	schema := &AttrSchema{

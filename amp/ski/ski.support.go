@@ -645,13 +645,13 @@ func (entry *KeyEntry) ZeroOut() {
 	}
 }
 
-// DescStr returns a human readable desc string for this KeyRef
-func (kref *KeyRef) DescStr() string {
+// Label returns a human readable label string for this KeyRef
+func (kref *KeyRef) Label() string {
 	return fmt.Sprintf("pubkey %s on keyring %s", bufs.BufDesc(kref.PubKey), bufs.BufDesc(kref.KeyringName))
 }
 
-// DescStr returns a human readable desc string for this KeyInfo
-func (ki *KeyInfo) DescStr(verbose bool) string {
+// Label returns a human readable label string for this KeyInfo
+func (ki *KeyInfo) Label(verbose bool) string {
 	if verbose {
 		return fmt.Sprint("pubkey ", bufs.Base32Encoding.EncodeToString(ki.PubKey), " using ", ki.CryptoKitID.String())
 	}
@@ -861,7 +861,7 @@ func (P *PayloadPacker) ResetSession(
 		return err
 	}
 	if keyEntry.KeyForm != KeyForm_SigningKey {
-		return amp.ErrCode_SessionNotReady.Error("not a signing key")
+		return amp.ErrCode_BadRequest.Error("not a signing key")
 	}
 
 	P.hashKit, err = NewHashKit(inHashKit)
@@ -988,19 +988,19 @@ func (P *PayloadPacker) PackAndSign(
 func (P *PayloadPacker) checkReady() error {
 
 	if P.hashKit.Hasher == nil {
-		return amp.ErrCode_SessionNotReady.Error("payload hasher not set")
+		return amp.ErrCode_NotReady.Error("payload hasher not set")
 	}
 
 	if P.signSession == nil {
-		return amp.ErrCode_SessionNotReady.Error("SKI signing session missing")
+		return amp.ErrCode_NotReady.Error("SKI signing session missing")
 	}
 
 	if len(P.signingKeyRef.KeyringName) == 0 {
-		return amp.ErrCode_SessionNotReady.Error("signer keyring name missing")
+		return amp.ErrCode_NotReady.Error("signer keyring name missing")
 	}
 
 	if P.signingKey.CryptoKitID == 0 {
-		return amp.ErrCode_SessionNotReady.Error("signing key CryptoKit not set")
+		return amp.ErrCode_NotReady.Error("signing key CryptoKit not set")
 	}
 
 	return nil

@@ -1,0 +1,17 @@
+
+amp.university.open.courses
+
+amp.dev.archive.us-en
+
+
+amp.university.courses.open.arts.science.history.101.Once.upon.a.Time {
+	L01.Rise of Physical Sciences, Engineering, Steampower, and Mechanical Engineering, feat. Peter Wang
+	L02.Planetary Motion and Numerical Computation & Modeling
+	L03.A New Science 1: Introduction to cryptography, code breaking, and war fighting
+	L04.A New Science 2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
+	L05.A New Science 3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
+	L06.A New Science 4: Community-Centric systems
+	L07.Physics Unbound 1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
+	L08.Physics Unbound 2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
+}
+

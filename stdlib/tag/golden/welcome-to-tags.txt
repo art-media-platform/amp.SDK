@@ -12,7 +12,7 @@ hello, and..welcome to... tags.
 hello+and+welcome+to+tags
 
 
-UTF8 whitespace, commas, +, and . and : denote the "with" operator.   This operator adds the hash of each operand and is also therefore commutative.
+UTF8 whitespace, commas, +, and . denote the "with" operator.   This operator adds the hash of each operand and is also therefore commutative.
 
 Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
 
@@ -22,15 +22,11 @@ The words Centre, centre, center, and Center are homophonic.
 
 This has very helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
 
-However: dashes and slashes are order dependent!?  Yes, order-dependent!
-However, dashes and slashes are order dependent?!  yes, order-dependent
-However, Slashes and dashes are order dependent?  Yes, order-dependent
-However: Order-dependent?  Yes, slashes, and dashes are order dependent.
-however: dashes and slashes are order-dependent! yES! Order dependent!
-
-However: dependent-order?  Yes, slashes and dashes are order dependent.
-However: Slashes and dashes are order dependent. Yes, dependent-order?
--order dependent, yes. Slashes and dashes are order dependent.  However.
+However, colons, dashes and slashes are order dependent!?  Yes, order-dependent!
+However, colons, dashes and slashes are order dependent?!  yes, order-dependent
+However, Slashes, colons and dashes are order dependent?  Yes, order-dependent
+However, Order-dependent?  Yes, colons, slashes, and dashes are order dependent.
+however, dashes, colons and slashes are order-dependent! yES! Order dependent!
 
 Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
 
@@ -58,8 +54,6 @@ Yoda said, a drill this is not!
 a drill this is not, Yoda said!
 said a drill, this is not Yoda.
 said a drill, is this not Yoda?
-said a drill: Is this not Yoda?
-Said a drill,: Is this not Yoda??
 
 12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
 

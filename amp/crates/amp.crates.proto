@@ -11,41 +11,41 @@ message AssetEntry {
     // AssetFlags specifies properties about this AssetEntry.
     AssetFlags              Flags = 1;
 
-    // EntryURI is a unix-style pathname that identifies an asset within a crate.
-    // By convention this URI does *not* start or end with '/'
+    // EntryURI is a Unix-style pathname that identifies an asset within a crate.
+    // By convention, this URI does *not* start or end with '/'
     // An asset URI has the form "{CrateURI}/{EntryURI}"
-    // If two or more assets have same EntryURI then only one is accessible.
+    // If two or more assets have the same EntryURI, then only one is accessible.
     string                  EntryURI = 2;
 
-    // Name is the human-readable label for this asset.
+    // Label is the human-readable label for this asset.
     string                  Label = 3;
 
-    // NameID is an alternative name for this asset that is used to identify the asset in code.
-    // DEPRECATED -- EntryURI should be used instead of NameID (or use [2]uint64 that Unity returns)
+    // AssetID is an alternative name for this asset that is used to identify the asset in code.
+    // DEPRECATED -- EntryURI should be used instead of AssetID (or use [2]uint64 that Unity returns)
     string                  AssetID = 4;
 
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
     // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
-    // Y is considered to be the *vertical* (up) direction and by convention rest on the plane y=0.
+    // Y is considered to be the *vertical* (up) direction and by convention rests on the plane y=0.
     float                   CenterX = 5;
     float                   CenterY = 6;
     float                   CenterZ = 7;
 
-    // Extents specify the extents as distance from the center to the extent of the asset on each axis.
+    // Extents specify the distance from the center to the extent of the asset on each axis.
     float                   ExtentsX = 10;
     float                   ExtentsY = 11;
     float                   ExtentsZ = 12;
 
-    // Reserved for runtime use -- defaults to empty
+    // Reserved for runtime use -- defaults to empty.
     string                  LocalURI = 30;
 
-    // Comma delimited and whitespace-trimmed list of of tags
+    // Comma-delimited and whitespace-trimmed list of tags.
     string                  Tags = 31;
 
     // A short phrase or fragment describing this asset, starting with an article where appropriate. e.g.:
     //      "A typical 6 crew member fire truck"
     //      "A leading U.S. naval ship-based helicopter"
-    //      "The Texas capital building located in Austin"
+    //      "The Texas capitol building located in Austin"
     //      "An animated scared-geometry inspired flat seal"
     string                  ShortDesc = 32;
 }
@@ -56,7 +56,7 @@ message BundleManifest {
     // This means it can change from build to build and contain any Unicode characters.
     string                  BundleTitle = 2;
 
-    // BundleNameID is how this bundle is internally identified and expressed the filename of this bundle
+    // BundleNameID is how this bundle is internally identified and expressed as the filename of this bundle.
     // This is case sensitive, contains only path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or whitespace.
     string                  BundleNameID = 3;
 
@@ -69,7 +69,7 @@ message BundleManifest {
 // CrateInfo represents a Crate, the fundamental unit of amp's asset/package manager.
 message CrateInfo {
 
-    // CrateSchema communicates which build and packaging schema was used for this crate build .
+    // CrateSchema communicates which build and packaging schema was used for this crate build.
     // This value should be the integer value of a valid CrateSchema.vNNN enum.
     int32                   CrateSchema = 1;
 
@@ -77,8 +77,8 @@ message CrateInfo {
     // If non-zero, it will not change and no other instance will have the same value.
     uint32                  InstID = 2;
 
-    // CrateURI takes the form "{PublisherID}/{CrateID}" is used to globally reference assets in this crate.
-    // This URI string can only contains chars in [A-Za-z0-9_.-] (other than the separating '/' char).
+    // CrateURI takes the form "{PublisherID}/{CrateID}" and is used to globally reference assets in this crate.
+    // This URI string can only contain chars in [A-Za-z0-9_.-] (other than the separating '/' char).
     // PublisherID uniquely identifies the author/owner/publisher of this crate (and potentially other crates).
     // CrateID uniquely identifies this crate for the given publisher and all subsequent revisions.
     //    "plan-systems.org/plan.app.ui"
@@ -88,22 +88,22 @@ message CrateInfo {
     //    "the-smiths.family/123-Maple"
     string                  CrateURI = 4;
 
-    // PublisherName is a human-readable of the author/owner/publisher of this crate and can change without repercussions (i.e. is purely optical).
+    // PublisherName is a human-readable name of the author/owner/publisher of this crate and can change without repercussions (i.e. is purely optical).
     string                  PublisherName = 6;
 
     // CrateName is a human-readable title for this crate and can change without repercussions.
     string                  CrateName = 10;
 
-    // ShortDesc describes this crate in a brief phrase
+    // ShortDesc describes this crate in a brief phrase.
     string                  ShortDesc = 11;
 
-    // Comma delimited and whitespace-trimmed list of of tags
+    // Comma-delimited and whitespace-trimmed list of tags.
     string                  Tags = 15;
 
-    // TimeCreated is UTC value (in seconds) when this crate first created (and does not change)
+    // TimeCreated is the UTC value (in seconds) when this crate was first created (and does not change).
     int64                   TimeCreated  = 30;
 
-    // TimeBuilt is UTC value (in seconds) when this crate was built.
+    // TimeBuilt is the UTC value (in seconds) when this crate was built.
     int64                   TimeBuilt    = 31;
 
     // VersionID uniquely identifies this build and has the form "v{MajorNum}.{MinorNum}.{BuildNum}"
@@ -113,7 +113,7 @@ message CrateInfo {
     int32                   BuildNumber  = 42;
 
     // BuildID uniquely identifies a particular crate build/version.
-    // This value should have no spaces and only have '.', '_', or '-' (and starts and ends with an alpha-numeric)
+    // This value should have no spaces and only have '.', '_', or '-' (and starts and ends with an alphanumeric character).
     // By convention, the format is "yyMMdd-{VersionID}" (so that sorting by BuildID string yields the most recent release).
     // e.g. "210320-v0.1.11"
     string                  BuildID = 45;
@@ -121,10 +121,10 @@ message CrateInfo {
     // HomeURL is an optional link that allows a human to learn more about this crate.
     string                  HomeURL = 50;
 
-    // URL is an optional string available to specifying URL to download this crate.
+    // URL is an optional string available to specify a URL to download this crate.
     string                  URL = 55;
 
-    // Approximate size of this crate in bytes (or 0 if unknown)
+    // Approximate size of this crate in bytes (or 0 if unknown).
     int64                   ApproxSize = 60;
 }
 
@@ -159,7 +159,8 @@ message CrateSnapshot {
     repeated CrateInfo      Crates = 10;
 }
 
-// App vars needed for an art-media-platform app to function.
+// AppVars help the amp runtime manage dynamic Go or Clib module loading
+// This can be thought of a data record for a registered app in the art-media-platform ecosystem.
 message AppVars {
 
     // AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
@@ -221,7 +222,7 @@ enum AssetFlags {
     IsSurface               = 0x1000;
 }
 
-// Enum values should be three base10 digits corresponding to the major, minor, and revision number.
+// Enum values should be three base-10 digits corresponding to the major, minor, and revision number.
 enum CrateSchema {
     UndefinedSchema         = 0;
 

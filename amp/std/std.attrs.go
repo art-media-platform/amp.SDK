@@ -1,6 +1,7 @@
 package std
 
 import (
+	"path"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/amp"
@@ -8,44 +9,60 @@ import (
 )
 
 var (
-
-	// TODO: https://github.com/art-media-platform/amp.planet/issues/15
-	AppSpec     = tag.Expr{}.With("app")
-	CellAttr    = tag.Expr{}.With("cell")
+	AppTag      = tag.Expr{}.With("app")
 	SessionAttr = tag.Expr{}.With("session")
-	//Channel     = tag.Expr{}.With("channel")
+	ItemAttr    = tag.Expr{}.With("item")
+	ChanAttr    = tag.Expr{}.With("channel")
 
-	AppState = AppSpec.With("state")
+	AppState = AppTag.With("state")
 
 	LoginID           = SessionAttr.With("Login").ID
 	LoginChallengeID  = SessionAttr.With("LoginChallenge").ID
 	LoginResponseID   = SessionAttr.With("LoginResponse").ID
 	LoginCheckpointID = SessionAttr.With("LoginCheckpoint").ID
-	SessionErr        = SessionAttr.With("Err").ID
-	ClientAgent       = SessionAttr.With("ClientAgent").ID
+	SessionErrID      = SessionAttr.With("Err").ID
+	SessionTag        = SessionAttr.With("Tag")
+	LaunchWeb         = SessionTag.With("www").ID
+	LaunchOAuth       = SessionTag.With("oauth").ID
 
-	LaunchTag   = SessionAttr.With("launch.Tag")
-	LaunchOAuth = LaunchTag.With("oauth").ID
+	ItemIndex = ItemAttr.With("index.ID").ID // each TxOp.ItemID expresses a child ID
 
-	CellChild = CellAttr.With("child.Tag.ID") // each TxOp.ItemID expresses a child cell ID
+	ItemTextTag    = ItemAttr.With("text.Tag")
+	ItemLabel      = ItemTextTag.With("label").ID
+	ItemCaption    = ItemTextTag.With("caption").ID
+	ItemCollection = ItemTextTag.With("collection").ID
+	ItemSynopsis   = ItemTextTag.With("synopsis").ID
 
-	CellTextTag    = CellAttr.With("text.Tag")
-	CellLabel      = CellTextTag.With("label").ID
-	CellCaption    = CellTextTag.With("caption").ID
-	CellCollection = CellTextTag.With("collection").ID
-	CellSynopsis   = CellTextTag.With("synopsis").ID
+	ItemContent  = ItemAttr.With("content")
+	ItemFileInfo = ItemContent.With("FileInfo").ID
+	ItemGlyphs   = ItemContent.With("Tags.glyphs").ID
+	MainLink     = ItemContent.With("Tag.link.main").ID
+	ItemLinks    = ItemContent.With("Tags.links").ID
+	ItemMedia    = ItemContent.With("Tag.media").ID
+	ItemVis      = ItemContent.With("Tag.vis").ID
 
-	CellContent = CellAttr.With("content")
-	CellFSInfo  = CellContent.With("FSInfo").ID
-	CellGlyphs  = CellContent.With("Tags.glyphs").ID
-	CellLinks   = CellContent.With("Tags.links").ID
-	CellMedia   = CellContent.With("Tag.media").ID
-	CellVis     = CellContent.With("Tag.vis").ID
-
-	// TileAttr denotes attributes of a cell's background tile, framing, and appearance (in contrast to the "content" of the cell)
-	TileAttr   = CellAttr.With("tile")
+	// TileAttr denotes attributes of a item's background tile, framing, and appearance (in contrast to the "content" of the item)
+	TileAttr   = ItemAttr.With("tile")
 	TileLayout = TileAttr.With("Tag.layout").ID
 )
+
+const (
+	DDC_MaxFraction        = uint64(999999999 + 1) // 9 digits (000.123456789)
+	DDC_Max                = float64(1000)
+	DDC_to_Fixed           = float64(uint64(1)<<31) / DDC_Max
+	PublicTag_Category     = uint64(2541) << 32        // uint64(25.41 * DDC_to_Fixed) TODO
+	PublicTag_Category_DDC = PublicTag_Category + 1851 // Dewey Decimal Classification
+)
+
+// Constructs a standard tag.U3D expressing "{DDC_Whole}.{DDC_Decimal}"
+func PublicTag_DDC(geoTile uint64, DDC_Whole, DDC_Decimal uint32) tag.U3D {
+	fract := (uint64(DDC_Decimal) << 32) / DDC_MaxFraction
+	return tag.U3D{
+		PublicTag_Category,
+		geoTile,
+		(uint64(DDC_Whole) << 32) | fract,
+	}
+}
 
 const (
 	// URL prefix for a glyph and is typically followed by a media (mime) type.
@@ -78,20 +95,32 @@ func TagsForImageURL(imageURL string) *amp.Tags {
 	}
 }
 
-func (v *FSInfo) MarshalToStore(in []byte) (out []byte, err error) {
+func (v *FileInfo) MarshalToStore(in []byte) (out []byte, err error) {
 	return amp.MarshalPbToStore(v, in)
 }
 
-func (v *FSInfo) New() tag.Value {
-	return &FSInfo{}
+func (v *FileInfo) New() amp.Value {
+	return &FileInfo{}
 }
 
-func (v *FSInfo) SetModifiedAt(t time.Time) {
-	tag := tag.FromTime(t, false)
-	v.ModifiedAt = int64(tag[0])
+func (v *FileInfo) Pathname() string {
+	return path.Join(v.DirName, v.ItemName)
 }
 
-func (v *FSInfo) SetCreatedAt(t time.Time) {
-	tag := tag.FromTime(t, false)
-	v.CreatedAt = int64(tag[0])
+func (v *FileInfo) SetModifiedAt(t time.Time) {
+	uid := tag.UID_FromTime(t)
+	v.ModifiedAt = int64(uid[0])
+}
+
+func (v *FileInfo) SetCreatedAt(t time.Time) {
+	uid := tag.UID_FromTime(t)
+	v.CreatedAt = int64(uid[0])
+}
+
+func (v *GeoPath) MarshalToStore(dst []byte) ([]byte, error) {
+	return amp.MarshalPbToStore(v, dst)
+}
+
+func (v *GeoPath) New() amp.Value {
+	return &GeoPath{}
 }

@@ -13,7 +13,7 @@ func createTable(opts TableOpts) (symbol.Table, error) {
 	if opts.Issuer == nil {
 		opts.Issuer = symbol.NewVolatileIssuer(opts.IssuerInitsAt)
 	} else {
-		opts.Issuer.AddRef()
+		opts.Issuer.PushOpen()
 	}
 
 	st := &symbolTable{
@@ -31,7 +31,7 @@ func (st *symbolTable) Issuer() symbol.Issuer {
 	return st.opts.Issuer
 }
 
-func (st *symbolTable) AddRef() {
+func (st *symbolTable) PushOpen() {
 	st.refCount.Add(1)
 }
 

@@ -3,13 +3,13 @@ package task
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/log"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 // ctx implements Context
@@ -35,8 +35,6 @@ var (
 	ErrNotStarted     = errors.New("not started")
 	ErrClosed         = errors.New("closed")
 )
-
-var gInstanceCount = int64(0)
 
 func (p *ctx) Close() error {
 	first := atomic.CompareAndSwapInt32(&p.state, Running, Closing)
@@ -149,7 +147,7 @@ func (p *ctx) Err() error {
 	}
 }
 
-func (p *ctx) Value(key interface{}) interface{} {
+func (p *ctx) Value(key any) any {
 	return nil
 }
 
@@ -162,6 +160,7 @@ func (p *ctx) Log() log.Logger {
 }
 
 func printContextTree(ctx Context, out *strings.Builder, depth int, prefix []rune, lastChild bool) {
+	// First character for this node
 	icon := ' '
 	if depth > 0 {
 		icon = '┣'
@@ -169,15 +168,26 @@ func printContextTree(ctx Context, out *strings.Builder, depth int, prefix []run
 			icon = '┗'
 		}
 	}
-	taskInfo := ctx.Info()
-	prefix = append(prefix, icon, ' ')
-	out.WriteString(fmt.Sprintf("%04d%s%s\n", taskInfo.TID, string(prefix), ctx.Log().GetLogLabel()))
-	icon = '┃'
-	if lastChild {
-		icon = ' '
-	}
-	prefix = append(prefix[:len(prefix)-2], icon, ' ', ' ', ' ', ' ')
 
+	// Print this node
+	info := ctx.Info()
+	prefix = append(prefix, icon, ' ')
+	out.WriteString(info.TaskID.AsLabel())
+	out.WriteString(string(prefix))
+	out.WriteString(ctx.Log().GetLogLabel())
+	out.WriteByte('\n')
+
+	// Set up prefix for children
+	// Remove the current node's icon and space
+	prefix = prefix[:len(prefix)-2]
+	// Add vertical line (or space if last child) plus padding
+	if depth > 0 && !lastChild {
+		prefix = append(prefix, '┃', ' ', ' ')
+	} else {
+		prefix = append(prefix, ' ', ' ', ' ')
+	}
+
+	// Print children
 	var subBuf [20]Context
 	children := ctx.GetChildren(subBuf[:0])
 	for i, ci := range children {
@@ -200,16 +210,17 @@ func (p *ctx) ForEachChild(fn func(child Context)) {
 }
 
 // StartChild starts the given child Context as a "sub" task.
-func (p *ctx) StartChild(task *Task) (Context, error) {
-	info := task.Info
-	task.Info.TID = atomic.AddInt64(&gInstanceCount, 1)
-	if info.Label == "" {
-		info.Label = fmt.Sprintf("ctx_%d", task.Info.TID)
+func (p *ctx) StartChild(task Task) (Context, error) {
+	if task.TaskID.IsNil() {
+		task.TaskID = tag.Now()
+	}
+	if task.Label == "" {
+		task.Label = task.Info.TaskID.AsLabel()
 	}
 	child := &ctx{
-		log:       log.NewLogger(info.Label),
+		log:       log.NewLogger(task.Label),
 		state:     Running,
-		task:      *task,
+		task:      task,
 		chClosing: make(chan struct{}),
 		chClosed:  make(chan struct{}),
 	}
@@ -329,7 +340,7 @@ func (p *ctx) StartChild(task *Task) (Context, error) {
 }
 
 func (p *ctx) Go(label string, fn func(ctx Context)) (Context, error) {
-	return p.StartChild(&Task{
+	return p.StartChild(Task{
 		Info: Info{
 			Label:     label,
 			IdleClose: time.Nanosecond,

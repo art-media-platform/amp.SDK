@@ -15,7 +15,7 @@ func Test_memory_table(t *testing.T) {
 		if gMemTable == nil {
 			opts := memory_table.DefaultOpts()
 			gMemTable, _ = opts.CreateTable()
-			gMemTable.AddRef() // add ref to get past first close in DoTableTest
+			gMemTable.PushOpen() // add ref to get past first close in DoTableTest
 		}
 		return gMemTable, nil
 	}
