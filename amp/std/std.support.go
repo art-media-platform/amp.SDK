@@ -67,14 +67,14 @@ func (root *CellNode[AppT]) Root() *CellNode[AppT] {
 func PinAndServe[AppT amp.AppInstance](cell Cell[AppT], app AppT, req *amp.Request) (amp.Pin, error) {
 	root := cell.Root()
 	if root.ID.IsNil() {
-		root.ID = tag.NowID()
+		root.ID = tag.UID_Now()
 	}
 
 	pin := &Pin[AppT]{
 		Request:  req,
 		App:      app,
 		Cell:     cell,
-		children: make(map[tag.U3D]Cell[AppT]),
+		children: make(map[tag.UID]Cell[AppT]),
 	}
 
 	label := "pin: " + root.ID.AsLabel()
@@ -145,13 +145,13 @@ func (pin *Pin[AppT]) AddChild(sub Cell[AppT]) {
 	child := sub.Root()
 	childID := child.ID
 	if childID.IsNil() {
-		childID = tag.NowID()
+		childID = tag.UID_Now()
 		child.ID = childID
 	}
 	pin.children[childID] = sub
 }
 
-func (pin *Pin[AppT]) GetCell(target tag.U3D) Cell[AppT] {
+func (pin *Pin[AppT]) GetCell(target tag.UID) Cell[AppT] {
 	if target == pin.Cell.Root().ID {
 		return pin.Cell
 	}
@@ -167,7 +167,7 @@ func (pin *Pin[AppT]) Context() task.Context {
 
 func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
 	invokeTag := req.Current.Invoke
-	targetID := invokeTag.U3D()
+	targetID := invokeTag.UID()
 
 	cell := pin.GetCell(targetID)
 	if cell == nil {
@@ -216,13 +216,15 @@ func (pin *Pin[AppT]) pushState() error {
 	return pin.Request.PushTx(tx, pin.ctx)
 }
 
+var _ CellWriter = (*cellWriter)(nil)
+
 type cellWriter struct {
-	chanID tag.U3D    // cache for Cell.Root().ID
+	chanID tag.UID    // cache for Cell.Root().ID
 	tx     *amp.TxMsg // in-progress transaction
 	err    error
 }
 
-func (w *cellWriter) PushTextWithID(attrID tag.UID, itemID tag.U3D, value string) {
+func (w *cellWriter) PushTextWithID(attrID, itemID tag.UID, value string) {
 	if w.err != nil {
 		return
 	}
@@ -239,7 +241,7 @@ func (w *cellWriter) PushTextWithID(attrID tag.UID, itemID tag.U3D, value string
 	}
 }
 
-func (w *cellWriter) PushItemWithID(attrID tag.UID, itemID tag.U3D, value amp.Value) {
+func (w *cellWriter) PushItemWithID(attrID, itemID tag.UID, value amp.Value) {
 	if w.err != nil {
 		return
 	}
@@ -257,14 +259,14 @@ func (w *cellWriter) PushText(attrID tag.UID, value string) {
 	if value == "" {
 		return
 	}
-	w.PushTextWithID(attrID, tag.U3D{}, value)
+	w.PushTextWithID(attrID, tag.UID{}, value)
 }
 
 func (w *cellWriter) PushItem(attrID tag.UID, value amp.Value) {
 	if value == nil {
 		return
 	}
-	w.PushItemWithID(attrID, tag.U3D{}, value)
+	w.PushItemWithID(attrID, tag.UID{}, value)
 }
 
 func (w *cellWriter) Push(op *amp.TxOp, val amp.Value) {

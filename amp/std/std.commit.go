@@ -37,7 +37,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst amp.Value) error {
 	select {
 	case err = <-req.outErr:
 	case txOut := <-req.outTx:
-		err = txOut.ExtractValue(attrID, tag.U3D{}, dst)
+		err = txOut.ExtractValue(attrID, tag.UID{}, dst)
 		txOut.ReleaseRef()
 	case <-appCtx.Closing():
 		err = ctx.Err()
@@ -161,36 +161,9 @@ func (req *localCommit) RecvEvent(evt amp.PinEvent) { // TODO delete this or mov
 	}
 }
 
-// func (req *localLoad) RecvEvent(evt amp.PinEvent) {
-// 	// not used
-// }
-
 /*
-func (tx *TxMsg) PutMultiple(propertyIDs []tag.U3D, serialize Value) error {
-	op := PropertyOp{}
 
-	// serialize the value
-	if serialize != nil {
-		var err error
-		op.DataOfs = uint64(len(tx.DataStore))
-		tx.DataStore, err = serialize.MarshalToStore(tx.DataStore)
-		if err != nil {
-			tx.Error = err
-			return err
-		}
-		op.DataLen = uint64(len(tx.DataStore)) - op.DataOfs
-	}
-
-	// add the op to the set
-	for _, propID := range propertyIDs {
-		op.PropertyID = propID
-		tx.Ops = append(tx.Ops, op)
-	}
-	tx.OpsSorted = false
-	return nil
-}
-
-func (tx *TxMsg) Upsert(literal any, keys ...tag.U3D) {
+func (tx *TxMsg) Upsert(literal any, keys ...tag.UID) {
 	var tag *amp.Tag
 
 	switch v := literal.(type) {
@@ -210,7 +183,7 @@ func (tx *TxMsg) Upsert(literal any, keys ...tag.U3D) {
 	caseTag:
 		tag = &v
 		break
-	// case *tag.U3D:
+	// case *tag.UID:
 	// 	tag = &amp.Tag{}
 	// 	tag.SetTagUID(v)
 	default:

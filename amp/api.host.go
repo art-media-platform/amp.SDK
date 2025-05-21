@@ -22,7 +22,7 @@ type Host interface {
 }
 
 // Transport wraps a TxMsg transport abstraction, allowing a Host to connect over any data transport layer.
-// For example, a tcp_service and lib_service are implemented within amp.planet.
+// For example, tcp_service and lib_service each implement amp.Transport.
 type Transport interface {
 
 	// Describes this transport for logging and debugging.

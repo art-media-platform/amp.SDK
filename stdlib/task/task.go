@@ -212,7 +212,7 @@ func (p *ctx) ForEachChild(fn func(child Context)) {
 // StartChild starts the given child Context as a "sub" task.
 func (p *ctx) StartChild(task Task) (Context, error) {
 	if task.TaskID.IsNil() {
-		task.TaskID = tag.Now()
+		task.TaskID = tag.UID_Now()
 	}
 	if task.Label == "" {
 		task.Label = task.Info.TaskID.AsLabel()

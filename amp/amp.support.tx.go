@@ -34,7 +34,7 @@ func TxNew() *TxMsg {
 
 func TxGenesis() *TxMsg {
 	tx := TxNew()
-	tx.SetID(tag.Now())
+	tx.SetID(tag.UID_Now())
 	return tx
 }
 
@@ -45,23 +45,21 @@ var gTxMsgPool = sync.Pool{
 }
 
 func (tx *TxHeader) SetContextID(ID tag.UID) {
-	tx.ContextID_0 = 0
-	tx.ContextID_1 = ID[0]
-	tx.ContextID_2 = ID[1]
+	tx.ContextID_0 = ID[0]
+	tx.ContextID_1 = ID[1]
 }
 
 func (tx *TxHeader) ContextID() tag.UID {
-	return tag.UID{tx.ContextID_1, tx.ContextID_2}
+	return tag.UID{tx.ContextID_0, tx.ContextID_1}
 }
 
 func (tx *TxHeader) SetID(ID tag.UID) {
-	tx.TxID_0 = 0
-	tx.TxID_1 = ID[0]
-	tx.TxID_2 = ID[1]
+	tx.TxID_0 = ID[0]
+	tx.TxID_1 = ID[1]
 }
 
 func (tx *TxHeader) ID() tag.UID {
-	return tag.UID{tx.TxID_1, tx.TxID_2}
+	return tag.UID{tx.TxID_0, tx.TxID_1}
 }
 
 func (tx *TxMsg) AddRef() {
@@ -107,7 +105,7 @@ func (tx *TxMsg) UnmarshalOpValue(opIndex int, out Value) error {
 	return out.Unmarshal(span)
 }
 
-func (tx *TxMsg) ExtractValue(attrID tag.UID, itemID tag.U3D, dst Value) error {
+func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst Value) error {
 	for i, op := range tx.Ops {
 		if op.Addr.AttrID == attrID && op.Addr.ItemID == itemID {
 			return tx.UnmarshalOpValue(i, dst)
@@ -150,7 +148,7 @@ func (tx *TxMsg) sortOps() {
 	}
 }
 
-func (tx *TxMsg) Upsert(chanID tag.U3D, attrID tag.UID, itemID tag.U3D, val Value) error {
+func (tx *TxMsg) Upsert(chanID, attrID, itemID tag.UID, val Value) error {
 	op := TxOp{
 		OpCode: TxOpCode_Upsert,
 	}
@@ -329,14 +327,12 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 		{
 			op_cur[TxField_ChanID_0] = op.Addr.ChanID[0]
 			op_cur[TxField_ChanID_1] = op.Addr.ChanID[1]
-			op_cur[TxField_ChanID_2] = op.Addr.ChanID[2]
 
 			op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
 			op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
 
 			op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
 			op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
-			op_cur[TxField_ItemID_2] = op.Addr.ItemID[2]
 
 			op_cur[TxField_EditID_0] = op.Addr.EditID[0]
 			op_cur[TxField_EditID_1] = op.Addr.EditID[1]
@@ -435,14 +431,12 @@ func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 
 		op.Addr.ChanID[0] = op_cur[TxField_ChanID_0]
 		op.Addr.ChanID[1] = op_cur[TxField_ChanID_1]
-		op.Addr.ChanID[2] = op_cur[TxField_ChanID_2]
 
 		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
 		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]
 
 		op.Addr.ItemID[0] = op_cur[TxField_ItemID_0]
 		op.Addr.ItemID[1] = op_cur[TxField_ItemID_1]
-		op.Addr.ItemID[2] = op_cur[TxField_ItemID_2]
 
 		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
 		op.Addr.EditID[1] = op_cur[TxField_EditID_1]

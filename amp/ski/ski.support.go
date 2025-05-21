@@ -521,7 +521,7 @@ func (tome *KeyTome) MergeTome(
 		krDst := tome.FetchKeyring(krSrc.Name)
 		if krDst == nil {
 
-			// For each new Keyring that we're about to add, make sure it's prim and proper (don't trust the outside world)
+			// For each new Keyring that we're about to add, ensure valid and well-formed (do not trust external input)
 			krSrc.Optimize()
 			continue
 		}

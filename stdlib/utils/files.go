@@ -176,8 +176,8 @@ func (s FileSize) String() string {
 	return string(str)
 }
 
-// ExpandAndCheckPath parses/expands the given path and then verifies it's existence or non-existence,
-// depending on autoCreate and returning the the expanded path.
+// ExpandAndCheckPath parses/expands the given path and then verifies its existence or non-existence,
+// depending on autoCreate and returning the expanded path.
 //
 // If autoCreate == true, an error is returned if the dir didn't exist and failed to be created.
 //

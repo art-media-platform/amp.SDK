@@ -28,7 +28,7 @@ type Cell[AppT amp.AppInstance] interface {
 
 // CellNode is a helper for implementing the Cell interface.
 type CellNode[AppT amp.AppInstance] struct {
-	ID tag.U3D
+	ID tag.UID
 }
 
 // Wraps the pinned state of a cell -- implements amp.Pin
@@ -39,7 +39,7 @@ type Pin[AppT amp.AppInstance] struct {
 	Sync    amp.PinMode  // Op.Request().PinMode
 
 	fatal    error                  // fatal error, if any
-	children map[tag.U3D]Cell[AppT] // child cells
+	children map[tag.UID]Cell[AppT] // child items
 	ctx      task.Context           // task context for this pin
 }
 
@@ -49,8 +49,8 @@ type CellWriter interface {
 	Push(op *amp.TxOp, value amp.Value)
 
 	// Convenience methods for pushing string and generic attributes bound to an item ID.
-	PushTextWithID(attrID tag.UID, itemID tag.U3D, value string)
-	PushItemWithID(attrID tag.UID, itemID tag.U3D, value amp.Value)
+	PushTextWithID(attrID, itemID tag.UID, value string)
+	PushItemWithID(attrID, itemID tag.UID, value amp.Value)
 
 	// Convenience methods for pushing an attribute value at item 0,0,0.
 	// Push*WithID(), if the value is nil, the attribute item is skipped.

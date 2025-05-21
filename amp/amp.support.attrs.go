@@ -13,14 +13,13 @@ import (
 
 var (
 	// Bootstrapping aka "head" channel ID where to start.
-	HeadChannelID = tag.U3D{0, 0, uint64(Const_HeadChannelID)}
+	HeadChannelID = tag.UID{0, uint64(Const_HeadChannelID)}
 )
 
 func TagFromUID(id tag.UID) *Tag {
 	return &Tag{
-		ID_0: 0,
-		ID_1: id[0],
-		ID_2: id[1],
+		ID_0: id[0],
+		ID_1: id[1],
 	}
 }
 
@@ -58,20 +57,18 @@ func (v *Tag) New() Value {
 }
 
 func (v *Tag) SetFromTime(t time.Time) {
-	id := tag.UID_FromTime(t).U3D()
+	id := tag.UID_FromTime(t)
 	v.ID_0 = id[0]
 	v.ID_1 = id[1]
-	v.ID_2 = id[2]
 }
 
-func (v *Tag) SetID(tagID tag.U3D) {
-	v.ID_0 = tagID[0]
-	v.ID_1 = tagID[1]
-	v.ID_2 = tagID[2]
+func (v *Tag) SetID(uid tag.UID) {
+	v.ID_0 = uid[0]
+	v.ID_1 = uid[1]
 }
 
 func (v *Tag) IsNil() bool {
-	return v != nil && v.URI == "" && v.ID_0 == 0 && v.ID_1 == 0 && v.ID_2 == 0
+	return v != nil && v.URI == "" && v.ID_0 == 0 && v.ID_1 == 0
 }
 
 /*
@@ -90,22 +87,14 @@ func (v *Tag) IsNil() bool {
 		}
 		return sum
 	}
+
 */
-func (v *Tag) U3D() tag.U3D {
-	if v != nil {
-		return tag.U3D{
-			v.ID_0, v.ID_1, v.ID_2,
-		}
-	}
-	return tag.U3D{}
-}
 
 func (v *Tag) UID() tag.UID {
 	uid := tag.UID{}
 	if v != nil {
-		// v.ID_0 hard-wired to 0
-		uid[0] = v.ID_1
-		uid[1] = v.ID_2
+		uid[0] = v.ID_0
+		uid[1] = v.ID_1
 	}
 	return uid
 }
@@ -113,7 +102,7 @@ func (v *Tag) UID() tag.UID {
 func (v *Tag) AsLabel() string {
 	str := make([]byte, 0, 128)
 
-	id := v.U3D()
+	id := v.UID()
 	if id.IsSet() {
 		str = append(str, id.AsLabel()...)
 	}
@@ -321,14 +310,12 @@ func (sel *PinSelector) ExportRanges(dst *[]tag.AddressRange) {
 		// Lo
 		r.Lo.ChanID[0] = ri.Chan_Lo_0
 		r.Lo.ChanID[1] = ri.Chan_Lo_1
-		r.Lo.ChanID[2] = ri.Chan_Lo_2
 
 		r.Lo.AttrID[0] = ri.Attr_Lo_0
 		r.Lo.AttrID[1] = ri.Attr_Lo_1
 
 		r.Lo.ItemID[0] = ri.Item_Lo_0
 		r.Lo.ItemID[1] = ri.Item_Lo_1
-		r.Lo.ItemID[2] = ri.Item_Lo_2
 
 		r.Lo.EditID[0] = ri.Edit_Lo_0
 		r.Lo.EditID[1] = ri.Edit_Lo_1
@@ -336,14 +323,12 @@ func (sel *PinSelector) ExportRanges(dst *[]tag.AddressRange) {
 		// Hi
 		r.Hi.ChanID[0] = ri.Chan_Hi_0
 		r.Hi.ChanID[1] = ri.Chan_Hi_1
-		r.Hi.ChanID[2] = ri.Chan_Hi_2
 
 		r.Hi.AttrID[0] = ri.Attr_Hi_0
 		r.Hi.AttrID[1] = ri.Attr_Hi_1
 
 		r.Hi.ItemID[0] = ri.Item_Hi_0
 		r.Hi.ItemID[1] = ri.Item_Hi_1
-		r.Hi.ItemID[2] = ri.Item_Hi_2
 
 		r.Hi.EditID[0] = ri.Edit_Hi_0
 		r.Hi.EditID[1] = ri.Edit_Hi_1
@@ -447,8 +432,6 @@ func (sel *PinSelector) AddRange(lo, hi tag.Address) {
 		Chan_Hi_0: hi.ChanID[0],
 		Chan_Lo_1: lo.ChanID[1],
 		Chan_Hi_1: hi.ChanID[1],
-		Chan_Lo_2: lo.ChanID[2],
-		Chan_Hi_2: hi.ChanID[2],
 
 		Attr_Lo_0: lo.AttrID[0],
 		Attr_Hi_0: hi.AttrID[0],
@@ -459,8 +442,6 @@ func (sel *PinSelector) AddRange(lo, hi tag.Address) {
 		Item_Hi_0: hi.ItemID[0],
 		Item_Lo_1: lo.ItemID[1],
 		Item_Hi_1: hi.ItemID[1],
-		Item_Lo_2: lo.ItemID[2],
-		Item_Hi_2: hi.ItemID[2],
 
 		Edit_Lo_0: lo.EditID[0],
 		Edit_Lo_1: lo.EditID[1],

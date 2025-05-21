@@ -13,7 +13,7 @@ import (
 
 var gTest *testing.T
 
-func TestGold(t *testing.T) {
+func TestGolden(t *testing.T) {
 	err := os.Chdir("./")
 	if err != nil {
 		log.Fatal(err)

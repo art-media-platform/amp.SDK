@@ -47,18 +47,17 @@ var (
 )
 
 const (
-	DDC_MaxFraction        = uint64(999999999 + 1) // 9 digits (000.123456789)
-	DDC_Max                = float64(1000)
-	DDC_to_Fixed           = float64(uint64(1)<<31) / DDC_Max
-	PublicTag_Category     = uint64(2541) << 32        // uint64(25.41 * DDC_to_Fixed) TODO
-	PublicTag_Category_DDC = PublicTag_Category + 1851 // Dewey Decimal Classification
+	DDC_MaxFraction = uint64(999999999 + 1) // 9 digits (000.123456789)
+	DDC_Max         = float64(1000)
+	DDC_to_Fixed    = float64(uint64(1)<<31) / DDC_Max
+	// PublicTag_Category     = uint64(2541) << 32        // uint64(25.41 * DDC_to_Fixed) TODO
+	// PublicTag_Category_DDC = PublicTag_Category + 1851 // Dewey Decimal Classification
 )
 
-// Constructs a standard tag.U3D expressing "{DDC_Whole}.{DDC_Decimal}"
-func PublicTag_DDC(geoTile uint64, DDC_Whole, DDC_Decimal uint32) tag.U3D {
+// Constructs a standard tag.UID expressing "{DDC_Whole}.{DDC_Decimal}"
+func PublicTag_DDC(geoTile uint64, DDC_Whole, DDC_Decimal uint32) tag.UID {
 	fract := (uint64(DDC_Decimal) << 32) / DDC_MaxFraction
-	return tag.U3D{
-		PublicTag_Category,
+	return tag.UID{
 		geoTile,
 		(uint64(DDC_Whole) << 32) | fract,
 	}

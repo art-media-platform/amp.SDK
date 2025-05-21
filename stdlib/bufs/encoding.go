@@ -4,6 +4,7 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 
 	//"github.com/mmcloughlin/geohash"
 
@@ -27,6 +28,19 @@ var (
 	// Base32Encoding is used to encode/decode binary buffer to/from base 32
 	Base32Encoding = base32.NewEncoding(Base32Alphabet_Upper).WithPadding(base32.NoPadding)
 )
+
+// EncodeToBase32 encodes raw bytes to a base32 string.
+func EncodeToBase32(in []byte) string {
+	if len(in) == 0 {
+		return "0"
+	}
+	str := Base32Encoding.EncodeToString(in)
+	str = strings.TrimLeft(str, "0") // remove leading zeros
+	if str != "" {
+		return str
+	}
+	return "0"
+}
 
 // Zero zeros out a given slice
 func Zero(buf []byte) {

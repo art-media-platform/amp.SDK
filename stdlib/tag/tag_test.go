@@ -64,15 +64,15 @@ func TestTag(t *testing.T) {
 		}
 	}
 
-	tid := tag.U3D{0x3, 0x7777777777777777, 0x123456789abcdef0}
+	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
 	if tid.AsLabel() != "ECTRRH" {
-		t.Errorf("tag.U3D.AsLabel() failed: got %q", tid.AsLabel())
+		t.Errorf("tag.UID.AsLabel() failed: got %q", tid.AsLabel())
 	}
-	if tid.Base32() != "VRFXVRFXVRFXVJ4E2QG2ECTRRH" {
-		t.Errorf("tag.U3D.Base32() failed: got %v", tid.Base32())
+	if tid.Base32() != "7RFXVRFXVRFXVJ4E2QG2ECTRRH" {
+		t.Errorf("tag.UID.Base32() failed: got %v", tid.Base32())
 	}
-	if b16 := tid.Base16(); b16 != "0x37777777777777777123456789ABCDEF0" {
-		t.Errorf("tag.U3D.Base16() failed: got %v", b16)
+	if b16 := tid.Base16(); b16 != "0xF777777777777777123456789ABCDEF0" {
+		t.Errorf("tag.UID.Base16() failed: got %v", b16)
 	}
 }
 
@@ -100,12 +100,12 @@ func TestNow(t *testing.T) {
 
 	// Fill prevIDs with new NowID values
 	for i := range prevIDs {
-		prevIDs[i] = tag.Now()
+		prevIDs[i] = tag.UID_Now()
 	}
 
 	// Test for uniqueness and ordering of NowID
 	for i := range 10000000 {
-		now := tag.Now()
+		now := tag.UID_Now()
 		upperLimit := now.Add(epsilon)
 
 		for _, prev := range prevIDs {
@@ -124,16 +124,16 @@ func TestNow(t *testing.T) {
 
 func TestIDOps(t *testing.T) {
 
-	id1 := tag.U3D{0x123456789abcdef0, 0x123456789abcdef0, 0x123456789abcdef0}
-	id2 := tag.U3D{0xC876543210fedcba, 0x9876543210fedcba, 0x9876543210fedcba}
+	id1 := tag.UID{0x123456789abcdef0, 0x123456789abcdef0}
+	id2 := tag.UID{0xC876543210fedcba, 0x9876543210fedcba}
 
 	if id1.CompareTo(&id1) != 0 || id1.CompareTo(&id2) >= 0 || id2.CompareTo(&id1) <= 0 {
-		t.Errorf("tag.U3D.CompareTo() failed: %v >= %v", id1, id2)
+		t.Errorf("tag.UID.CompareTo() failed: %v >= %v", id1, id2)
 	}
 
 	s1 := id1.Add(id2)
 	if s1.Subtract(id1) != id2 || s1.Subtract(id2) != id1 {
-		t.Errorf("tag.U3D.Add() failed: got %v", id1.Add(id2))
+		t.Errorf("tag.UID.Add() failed: got %v", id1.Add(id2))
 	}
 	// Test UID Midpoint
 	uid1 := tag.UID{0x5000000000000000, 0x0000000000200100}

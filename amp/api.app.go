@@ -18,8 +18,8 @@ type AppModuleInfo struct {
 type AppEnvironment struct {
 	Session     Session       // session this app is running in
 	Creator     AppModuleInfo // AppModule info that spawned this instance
-	HomeID      tag.U3D       // home ID for this app instance
-	IID         tag.U3D       // instance ID for this app instance spawned by AboutModule
+	HomeID      tag.UID       // home ID for this app instance
+	IID         tag.UID       // instance ID for this app instance spawned by AboutModule
 	HomePath    string        // safe persistent read-write file system access
 	CachePath   string        // safe persistent read-write file system access (low-priority)
 	FactoryPath string        // safe read-only file system access "from factory"

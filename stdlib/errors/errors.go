@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	Err403           = errors.New("403: nope")
+	Err403           = errors.New("403 forbidden")
 	Err404           = errors.New("not found")
 	ErrUnimplemented = errors.New("unimplemented")
 	ErrConnection    = errors.New("connection failed")

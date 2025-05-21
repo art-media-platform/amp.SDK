@@ -58,21 +58,19 @@ enum TxOpCode {
 enum TxField {
     TxField_Nil = 0;
 
-    TxField_ChanID_0 = 1;
-    TxField_ChanID_1 = 2;
-    TxField_ChanID_2 = 3;
+    TxField_ChanID_0 = 2;
+    TxField_ChanID_1 = 3;
 
     TxField_AttrID_0 = 4;
     TxField_AttrID_1 = 5;
 
     TxField_ItemID_0 = 7;
     TxField_ItemID_1 = 8;
-    TxField_ItemID_2 = 9;
 
     TxField_EditID_0 = 10;
     TxField_EditID_1 = 11;
 
-    TxField_NumFields = 13;
+    TxField_NumFields = 12;
     TxField_MaxFields = 24;
 }
 
@@ -80,11 +78,10 @@ enum TxField {
 message TxHeader {
 
 
-    // Universally unique tag.U3D assigned when a tx originates.
+    // Universally unique tag.UID assigned when a tx originates.
     // IN THE CLEAR
     fixed64             TxID_0 = 1;
     fixed64             TxID_1 = 2;
-    fixed64             TxID_2 = 3;
 
     // The planet epoch this tx is associated with.
     // IN THE CLEAR
@@ -117,7 +114,6 @@ message TxHeader {
     // If nil or equal to TxID, then this tx is context-free and TxID is implied context ID.
     fixed64             ContextID_0 = 24;
     fixed64             ContextID_1 = 25;
-    fixed64             ContextID_2 = 26;
 
 }
 
@@ -208,6 +204,7 @@ enum CabinetOpCode {
 
 
 message PinSelector {
+    Tag      Anchor           = 2;
     repeated AddrRange Ranges = 3;
 }
 
@@ -218,22 +215,18 @@ message AddrRange {
 
     fixed64  Chan_Lo_0 = 4;
     fixed64  Chan_Hi_0 = 5;
-    uint64   Chan_Lo_1 = 6;
-    uint64   Chan_Hi_1 = 7;
-    fixed64  Chan_Lo_2 = 8;
-    fixed64  Chan_Hi_2 = 9;
+    fixed64  Chan_Lo_1 = 6;
+    fixed64  Chan_Hi_1 = 7;
 
     fixed64  Attr_Lo_0 = 10;
     fixed64  Attr_Hi_0 = 11;
     fixed64  Attr_Lo_1 = 12;
     fixed64  Attr_Hi_1 = 13;
 
-    uint64   Item_Lo_0 = 14;
-    uint64   Item_Hi_0 = 15;
-    uint64   Item_Lo_1 = 16;
-    uint64   Item_Hi_1 = 17;
-    uint64   Item_Lo_2 = 18;
-    uint64   Item_Hi_2 = 19;
+    fixed64  Item_Lo_0 = 14;
+    fixed64  Item_Hi_0 = 15;
+    fixed64  Item_Lo_1 = 16;
+    fixed64  Item_Hi_1 = 17;
 
     fixed64  Edit_Lo_0 = 20;
     fixed64  Edit_Hi_0 = 21;
@@ -268,7 +261,7 @@ message AccessControl {
 message ChannelEpoch {
     Tag                 Channel       = 1;
     Tag                 ParentChannel = 2;
-
+    fixed64             TypeID        = 3;
     string              Comment       = 10;
 }
 
@@ -300,22 +293,29 @@ message Tag {
 
     /// inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes ///
 
-    fixed64   ID_0    = 1;  // tag.U3D[0]
-    fixed64   ID_1    = 2;  // tag.U3D[1]
-    fixed64   ID_2    = 3;  // tag.U3D[2]
-    U3DFormat Format  = 5;  // describes ID[0..2]
+    fixed64  ID_0 = 3;
+    fixed64  ID_1 = 4;
 
-    Grid      Grid    = 7;  // grid convention for R/I/J
-    Units     Units   = 8;  // unit convention for R/I/J
-    int64     R       = 12; // as ticks on Grid on an expanding sphere, or a UTC16 timestamp
-    int64     I       = 13; // as Units on Grid horizontally
-    int64     J       = 14; // as Units on Grid vertically
+    // fixed64  Addr_Chan_1 = 4;
+    // fixed64  Addr_Attr_0 = 5;
+    // fixed64  Addr_Attr_1 = 6;
+    // fixed64  Addr_Item_0 = 8;
+    // fixed64  Addr_Item_1 = 9;
+    // fixed64  Addr_Edit_0 = 11;
+    // fixed64  Addr_Edit_1 = 12;
+
+    int64     R     = 16; // as ticks on Grid on an expanding sphere
+    int64     I     = 17; // as Units on Grid horizontally
+    int64     J     = 18; // as Units on Grid vertically
+    Grid      Grid  = 20; // grid convention for R/I/J
+    Units     Units = 21; // unit convention for R/I/J
+
 
     /// non-inline fields; limit total to 4k as a general rule ///
 
-    string  ContentType = 17; // IANA RFC 2045 media type; e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
-    string  URI         = 18; // Unix pathname *or* IANA RFC 1738 URL (schema://hostname.com/path/query)
-    string  Text        = 19; // UTF8 text; plain-text, XML, RTF
+    string  ContentType = 24; // IANA RFC 2045 media type; e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
+    string  URI         = 26; // Unix pathname *or* IANA RFC 1738 URL (schema://hostname.com/path/query)
+    string  Text        = 28; // UTF8 text; plain-text, XML, RTF
 }
 
 
@@ -346,17 +346,6 @@ enum TagTypes {
     TagTypes_Attr = 0x02; // attr tag
     TagTypes_Item = 0x04; // item tag
     TagTypes_Edit = 0x08; // edit tag
-}
-
-enum U3DFormat {
-    U3DFormat_Unspecified = 0;
-    U3DFormat_H3_TimeUID  = 1; // channel / cell ID (geo-sorted)
-    U3DFormat_TimeUID_H3  = 2; // time-based geo
-    U3DFormat_H3_UTC_H3   = 4; // geo, time, geo
-    U3DFormat_UTC_H3_UTC  = 6; // time, geo, time
-    U3DFormat_IJK         = 7; // 3D discrete grid
-    U3DFormat_UTC_H3_H3   = 8; // RadialH3: res=0 => r=1mm .. res=15 => r=1m
-    U3DFormat_H3_H3_H3    = 9; // "sphere-bottle" ID
 }
 
 
@@ -402,6 +391,19 @@ message EditableTextAttr {
     string              Content         = 3;
     int32               Flags           = 4;
 }
+
+
+enum  UIDFormat {
+    UIDFormat_Unspecified = 0;
+    UIDFormat_TimeUID  = 1;     // channel / cell ID (time-sorted)
+    UIDFormat_H3_Time  = 2; // time-based geo
+    UIDFormat_H3_UTC_H3   = 4; // geo, time, geo
+    UIDFormat_UTC_H3_UTC  = 6; // time, geo, time
+    UIDFormat_IJK         = 7; // 3D discrete grid
+    UIDFormat_UTC_H3_H3   = 8; // RadialH3: res=0 => r=1mm .. res=15 => r=1m
+    UIDFormat_H3_H3_H3    = 9; // "sphere-bottle" ID
+}
+
 */
 
 

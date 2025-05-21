@@ -44,15 +44,15 @@ func TestRegistry(t *testing.T) {
 	if str := spec.ID.AsLabel(); str != "227W6E" {
 		t.Fatalf("unexpected spec.ID: %v", str)
 	}
-	if (tag.U3D{}).Base32() != "0" {
+	if (tag.UID{}).Base32() != "0" {
 		t.Fatalf("tag.Expr{}.Base32() failed")
 	}
 	base32 := spec.ID.Base32()
 	if base32 != "5UZ9YW2T5KF8YJYV4C2Y227W6E" {
-		t.Errorf("tag.U3D.Base32() failed: %v", base32)
+		t.Errorf("tag.UID.Base32() failed: %v", base32)
 	}
 	if str := spec.ID.Base16(); str != "0xBAFA7DC164B2723D1F6C8B178423F0CD" {
-		t.Errorf("tag.U3D.Base16() failed: %v", str)
+		t.Errorf("tag.UID.Base16() failed: %v", str)
 	}
 
 }

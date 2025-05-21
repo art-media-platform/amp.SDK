@@ -8,13 +8,13 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
 - Secure, "turn-key" support for:
   - __3D spaces and linking__: Spatially place media and files and link them to real or virtual space, transforming user accessibility.
   - __Payment processing__: Built-in payment suite **amp.nile** offers easy integration with [Stripe](https://stripe.com/) and [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/).
-  - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _VisionPro_, _Horizon_, and other OEM ecosystems (e.g., HoloLens, Magic Leap).
+  - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _Vision Pro_, _Horizon_, and other OEM ecosystems (e.g., HoloLens, Magic Leap).
   - __Content deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
-  - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [Yubikey](https://yubico.com)).
+  - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [YubiKey](https://yubico.com)).
 
 - Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
 
-- A lightweight, stand-alone native shared library **amp.planet.lib** that encapsulates federated and decentralized services and storage.
+- A lightweight, stand-alone native shared library **amp.lib** that encapsulates federated and decentralized services and storage.
 
 ## What Does This Solve?
 
@@ -28,10 +28,10 @@ Meanwhile, _web-based_ 3D frameworks like [Three.js](https://threejs.org/) do no
 
 ### Benefits
   - __Content distribution__: Choose how to deploy your projects in a way that makes the most sense for your team and budget.
-  - __Flexibility__: Enjoy strategic flexibility on how you publish apps and distribute content.
+  - __Flexibility__: Enjoy strategic flexibility in how you publish apps and distribute content.
   - __Asset management__: Leverage Amp's content deployment system that allows you to deploy content updates without having to deploy new app builds.
   - __Savings__: Save resources by not maintaining UIs and custom behavior for each OS, web browser, and form factor.
-  - __Cash flow__: Use Amp's payment processing module to monetize your work and receive payments through your Stripe or PayFlow account.
+  - __Cash flow__: Use Amp's payment processing module to monetize your work and receive payments through your Stripe or Payflow account.
 
 ## A Next Generation
 
@@ -41,7 +41,7 @@ In a world where AI-assisted exploits will only worsen, our [security model](htt
 
 ### Spatial Web
 
-This framework offers in-app web browsing that pairs powerfully with spatial linking. Frameworks such as [Webview](https://developer.vuplex.com/webview/overview) are just another component in the Amp client, allowing your app to have an embedded web browser out of the box. This allows URLs and web experiences to be linked spatially or from multiple map locations.
+This framework offers in-app web browsing that pairs powerfully with spatial linking. Frameworks such as [WebView](https://developer.vuplex.com/webview/overview) are just another component in the Amp client, allowing your app to have an embedded web browser out of the box. This allows URLs and web experiences to be linked spatially or from multiple map locations.
 
 ### Geo-Spatial Linking
 
@@ -53,11 +53,11 @@ The less obvious value of Amp is its _extensibility_. The interface [`amp.AppMod
 
 ### Human Accessibility
 
-People with loss of sight, hearing, or motor skills rely on third-party peripherals and software to interact with the world. Amp integrates with most third-party input devices, such as bearing and range sensors for the visually impaired or control sticks for physical limitations.
+People with loss of sight, hearing, or motor skills rely on third-party peripherals and software to interact with the world. Amp integrates with most third-party input devices, such as bearing and range sensors for the visually impaired or control sticks for those with physical limitations.
 
 ### Tagging
 
-Amp's [tag system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/gold/welcome-to-tags.out.txt) is phonetic, AI-friendly, search-friendly, and privacy-friendly. It offers powerful and flexible linking similar to how #hashtags and [wikis](https://www.wikipedia.org/) add value. We see this system as an excellent candidate to become an [IEEE](https://www.ieee.org/) standard for markup and hashing.
+Amp's [tag system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/golden/welcome-to-tags.out.txt) is phonetic, AI-friendly, search-friendly, and privacy-friendly. It offers powerful and flexible linking similar to how #hashtags and [wikis](https://www.wikipedia.org/) add value. We see this system as an excellent candidate to become an [IEEE](https://www.ieee.org/) standard for markup and hashing.
 
 ## Integration Overview
 
@@ -67,16 +67,16 @@ At a high level:
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project. If you want to expose additional functionality, implement your own [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go).
 2. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) (not public) and include your `amp.AppModule`, similar to how a library in a C project registers a static or dynamic dependency.
-3. Build `amp.planet` with your additions embedded within it.
-4. In your Unity or Unreal app, link in `amp.planet.lib` and add the Amp UX runtime support glue.
-5. On startup, [`amp.planet`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.AppModule` instances as needed. During runtime, `amp.planet.lib` dispatches URL requests addressed to your app and are "pinned".
+3. `make build` builds `amp[.exe]` and `amp.lib` with your additions embedded within them.
+4. In your Unity or Unreal app, link in `amp.lib` and add the Amp UX runtime support glue.
+5. On startup, [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) instantiates registered `amp.AppModule` instances as needed. During runtime, `amp.lib` dispatches URL requests addressed to your app and are "pinned".
 6. The Amp UX runtime manages the user's experience of currently pinned URLs while providing a toolbox of extendable "stock" and "skinnable" components. Pinned requests receive state updates until they are canceled.
 
 ### Points of Interest
 
 |                                                                                                |                                                                                                                             |
 | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| [api.tag.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go)    | Versatile tagging and hash scheme that is AI and search friendly                                                            |
+| [api.tag.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go)    | Versatile tagging and hash scheme that is AI- and search-friendly                                                           |
 | [api.task.go](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go) | Goroutine wrapper inspired by a conventional parent-child process model                                                     |
 | [api.app.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go)           | Defines how state is requested, pushed, and merged                                                                          |
 | [api.host.go](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go)         | Types and interfaces that [`amp.Host`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go) implements  |

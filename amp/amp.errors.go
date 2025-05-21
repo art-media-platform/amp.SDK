@@ -56,7 +56,7 @@ func (code ErrCode) Error(msg string) error {
 }
 
 // Errorf returns an *Err with the given error code and msg.
-// If one or more args are given, msg is used as a format string
+// If one or more args are given, msg is used as a format string.
 func (code ErrCode) Errorf(format string, msgArgs ...interface{}) error {
 	if code == ErrCode_Nil {
 		return nil

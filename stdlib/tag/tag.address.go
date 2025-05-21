@@ -8,12 +8,10 @@ import (
 func (addr *Address) AsID() (lsm AddressID) {
 	binary.BigEndian.PutUint64(lsm[0:8], addr.ChanID[0])   // ChanID
 	binary.BigEndian.PutUint64(lsm[8:16], addr.ChanID[1])  //
-	binary.BigEndian.PutUint64(lsm[16:24], addr.ChanID[2]) //
-	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[0]) // AttrID
-	binary.BigEndian.PutUint64(lsm[32:40], addr.AttrID[1]) //
-	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[0]) // ItemID
-	binary.BigEndian.PutUint64(lsm[48:56], addr.ItemID[1]) //
-	binary.BigEndian.PutUint64(lsm[56:64], addr.ItemID[2]) //
+	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
+	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[1]) //
+	binary.BigEndian.PutUint64(lsm[32:40], addr.ItemID[0]) // ItemID
+	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[1]) //
 	return
 }
 
@@ -21,28 +19,24 @@ func (addr *Address) AsID() (lsm AddressID) {
 func (addr *Address) AsLSM() (lsm AddressLSM) {
 	binary.BigEndian.PutUint64(lsm[0:8], addr.ChanID[0])   // ChanID
 	binary.BigEndian.PutUint64(lsm[8:16], addr.ChanID[1])  //
-	binary.BigEndian.PutUint64(lsm[16:24], addr.ChanID[2]) //
-	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[0]) // AttrID
-	binary.BigEndian.PutUint64(lsm[32:40], addr.AttrID[1]) //
-	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[0]) // ItemID
-	binary.BigEndian.PutUint64(lsm[48:56], addr.ItemID[1]) //
-	binary.BigEndian.PutUint64(lsm[56:64], addr.ItemID[2]) //
-	binary.BigEndian.PutUint64(lsm[64:72], addr.EditID[0]) // EditID
-	binary.BigEndian.PutUint64(lsm[72:80], addr.EditID[1]) //
+	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
+	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[1]) //
+	binary.BigEndian.PutUint64(lsm[32:40], addr.ItemID[0]) // ItemID
+	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[1]) //
+	binary.BigEndian.PutUint64(lsm[48:56], addr.EditID[0]) // EditID
+	binary.BigEndian.PutUint64(lsm[56:64], addr.EditID[1]) //
 	return
 }
 
 func (addr *Address) FromLSM(lsm []byte) {
 	addr.ChanID[0] = binary.BigEndian.Uint64(lsm[0:8])   // ChanID
 	addr.ChanID[1] = binary.BigEndian.Uint64(lsm[8:16])  //
-	addr.ChanID[2] = binary.BigEndian.Uint64(lsm[16:24]) //
-	addr.AttrID[0] = binary.BigEndian.Uint64(lsm[24:32]) // AttrID
-	addr.AttrID[1] = binary.BigEndian.Uint64(lsm[32:40]) //
-	addr.ItemID[0] = binary.BigEndian.Uint64(lsm[40:48]) // ItemID
-	addr.ItemID[1] = binary.BigEndian.Uint64(lsm[48:56]) //
-	addr.ItemID[2] = binary.BigEndian.Uint64(lsm[56:64]) //
-	addr.EditID[0] = binary.BigEndian.Uint64(lsm[64:72]) // EditID
-	addr.EditID[1] = binary.BigEndian.Uint64(lsm[72:80]) //
+	addr.AttrID[0] = binary.BigEndian.Uint64(lsm[16:24]) // AttrID
+	addr.AttrID[1] = binary.BigEndian.Uint64(lsm[24:32]) //
+	addr.ItemID[0] = binary.BigEndian.Uint64(lsm[32:40]) // ItemID
+	addr.ItemID[1] = binary.BigEndian.Uint64(lsm[40:48]) //
+	addr.EditID[0] = binary.BigEndian.Uint64(lsm[48:56]) // EditID
+	addr.EditID[1] = binary.BigEndian.Uint64(lsm[56:64]) //
 }
 
 func (addr *Address) CompareTo(oth *Address, includeEditID bool) int {
@@ -54,11 +48,6 @@ func (addr *Address) CompareTo(oth *Address, includeEditID bool) int {
 	if addr.ChanID[1] < oth.ChanID[1] {
 		return -1
 	} else if addr.ChanID[1] > oth.ChanID[1] {
-		return 1
-	}
-	if addr.ChanID[2] < oth.ChanID[2] {
-		return -1
-	} else if addr.ChanID[2] > oth.ChanID[2] {
 		return 1
 	}
 
@@ -81,11 +70,6 @@ func (addr *Address) CompareTo(oth *Address, includeEditID bool) int {
 	if addr.ItemID[1] < oth.ItemID[1] {
 		return -1
 	} else if addr.ItemID[1] > oth.ItemID[1] {
-		return 1
-	}
-	if addr.ItemID[2] < oth.ItemID[2] {
-		return -1
-	} else if addr.ItemID[2] > oth.ItemID[2] {
 		return 1
 	}
 
@@ -167,7 +151,7 @@ func (a *AddressRange) CompareTo(b *AddressRange) int {
 	return d
 }
 
-func ChannelRange(chanID U3D) AddressRange {
+func ChannelRange(chanID UID) AddressRange {
 	return AddressRange{
 		Lo: Address{
 			ChanID: chanID,
@@ -175,12 +159,12 @@ func ChannelRange(chanID U3D) AddressRange {
 		Hi: Address{
 			ChanID: chanID,
 			AttrID: UID_Max(),
-			ItemID: U3D_Max(),
+			ItemID: UID_Max(),
 		},
 	}
 }
 
-func AttrRange(chanID U3D, attrID UID) AddressRange {
+func AttrRange(chanID UID, attrID UID) AddressRange {
 	return AddressRange{
 		Lo: Address{
 			ChanID: chanID,
@@ -189,7 +173,7 @@ func AttrRange(chanID U3D, attrID UID) AddressRange {
 		Hi: Address{
 			ChanID: chanID,
 			AttrID: attrID,
-			ItemID: U3D_Max(),
+			ItemID: UID_Max(),
 		},
 	}
 }
