@@ -2,7 +2,6 @@ package log
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -10,7 +9,27 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/brynbellomy/klog"
+	"github.com/art-media-platform/amp.SDK/stdlib/klog"
+)
+
+type Severity byte
+
+const (
+	Severity_Debug   Severity = 0
+	Severity_Info    Severity = 1
+	Severity_Warning Severity = 2
+	Severity_Error   Severity = 3
+	Severity_Fatal   Severity = 4
+)
+
+var (
+	SeverityNames = []string{
+		"DEBUG",
+		"INFO",
+		"WARNING",
+		"ERROR",
+		"FATAL",
+	}
 )
 
 // Formatter specifies how each log entry header should be formatted.=
@@ -24,42 +43,22 @@ type Logger interface {
 	GetLogLabel() string
 	GetLogPrefix() string
 	Debug(args ...interface{})
-	Debugf(inFormat string, args ...interface{})
-	Debugw(inFormat string, fields Fields)
+	Debugf(format string, args ...interface{})
+	Debugw(format string, fields Fields)
 	Success(args ...interface{})
-	Successf(inFormat string, args ...interface{})
-	Successw(inFormat string, fields Fields)
-	LogV(inVerboseLevel int32) bool
-	Info(inVerboseLevel int32, args ...interface{})
-	Infof(inVerboseLevel int32, inFormat string, args ...interface{})
-	Infow(inFormat string, fields Fields)
+	Successf(format string, args ...interface{})
+	Successw(format string, fields Fields)
+	LogV(logLevel int32) bool
+	Info(logLevel int32, args ...interface{})
+	Infof(logLevel int32, inFormat string, args ...interface{})
+	Infow(format string, fields Fields)
 	Warn(args ...interface{})
-	Warnf(inFormat string, args ...interface{})
-	Warnw(inFormat string, fields Fields)
+	Warnf(format string, args ...interface{})
+	Warnw(format string, fields Fields)
 	Error(args ...interface{})
-	Errorf(inFormat string, args ...interface{})
-	Errorw(inFormat string, fields Fields)
-	Fatalf(inFormat string, args ...interface{})
-}
-
-func InitFlags(flagset *flag.FlagSet, verboseLevel int32) {
-	klog.InitFlags(flagset)
-	flagset.Set("logtostderr", "true")
-	if verboseLevel >= 0 {
-		flagset.Set("v", fmt.Sprint(verboseLevel))
-	}
-}
-
-// Uses the stock log formatter with the given settings
-func UseStockFormatter(fileNameCharWidth int, useColor bool) {
-	UseFormatter(&klog.FmtConstWidth{
-		FileNameCharWidth: fileNameCharWidth,
-		UseColor:          useColor,
-	})
-}
-
-func UseFormatter(inFormatter Formatter) {
-	klog.SetFormatter(inFormatter)
+	Errorf(format string, args ...interface{})
+	Errorw(format string, fields Fields)
+	Fatalf(format string, args ...interface{})
 }
 
 func Flush() {
@@ -301,9 +300,49 @@ func AwaitInterrupt() (
 	return onFirst, onRepeated
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+/*
+
+// Target of written (pushed) log entries.
+// It is used to redirect log entries to a different destination, such as a file or a network socket.
+type Target interface {
+	Write(severity Severity, level int, buf []byte) error
 }
+
+func SetOutputBySeverity(target Target, severity ...Severity) {
+	for _, si := range severity {
+		redirect := &redirect{
+			sev: si,
+			dst: target,
+		}
+		klog.SetOutputBySeverity(SeverityNames[si], redirect)
+	}
+}
+
+
+func RedirectTo(severity ...string) {
+	for _, sev := range severity {
+		if sev == "" {
+			continue
+		}
+		si := klog.SeverityByName(sev)
+		if si < 0 {
+			klog.Fatalf("unknown severity %q", sev)
+		}
+		redirect := &redirect{
+			sev: Severity(si),
+			dst: klog.Stdout,
+		}
+		klog.SetOutputBySeverity(sev, redirect)
+	}
+}
+
+type redirect struct {
+	sev Severity
+	dst Target
+}
+
+func (r *redirect) Write(p []byte) (n int, err error) {
+	n = len(p)
+	return n, r.dst.Write(r.sev, 0, p)
+}
+*/

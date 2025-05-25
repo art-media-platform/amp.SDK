@@ -8,7 +8,7 @@ import (
 )
 
 // Periodically calls PrintContextTree() to the context's logger.
-func PrintTreePeriodically(ctx Context, period time.Duration, verboseLevel int32) {
+func PrintTreePeriodically(ctx Context, period time.Duration, logLevel int32) {
 	block := [32]byte{}
 	var text []byte
 	buf := bytes.Buffer{}
@@ -19,7 +19,7 @@ func PrintTreePeriodically(ctx Context, period time.Duration, verboseLevel int32
 		select {
 		case <-ticker.C:
 			{
-				PrintContextTree(ctx, &buf, verboseLevel)
+				PrintContextTree(ctx, &buf, logLevel)
 				changed := false
 				R := buf.Len()
 				if R != len(text) {
@@ -44,7 +44,7 @@ func PrintTreePeriodically(ctx Context, period time.Duration, verboseLevel int32
 					pos += n
 				}
 				if changed {
-					ctx.Log().Info(verboseLevel, string(text))
+					ctx.Log().Info(logLevel, string(text))
 				}
 				buf.Reset()
 			}
@@ -57,7 +57,7 @@ func PrintTreePeriodically(ctx Context, period time.Duration, verboseLevel int32
 
 // Writes pretty and indented debug state info of a given verbosity level.
 // If out == nil, the text output is instead directed to this context's logger.Info()
-func PrintContextTree(ctx Context, out io.Writer, verboseLevel int32) {
+func PrintContextTree(ctx Context, out io.Writer, logLevel int32) {
 	buf := new(strings.Builder)
 	buf.WriteString("task.Context tree:\n")
 
@@ -67,6 +67,6 @@ func PrintContextTree(ctx Context, out io.Writer, verboseLevel int32) {
 	if out != nil {
 		out.Write([]byte(outStr))
 	} else {
-		ctx.Log().Info(verboseLevel, outStr)
+		ctx.Log().Info(logLevel, outStr)
 	}
 }

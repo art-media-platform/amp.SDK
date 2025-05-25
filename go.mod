@@ -3,7 +3,6 @@ module github.com/art-media-platform/amp.SDK
 go 1.23.6
 
 require (
-	github.com/brynbellomy/klog v0.0.0-20200414031930-87fbf2e555ae
 	github.com/gofrs/uuid/v5 v5.3.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c

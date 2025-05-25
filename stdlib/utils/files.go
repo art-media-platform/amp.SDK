@@ -16,7 +16,7 @@ import (
 
 var (
 	// DefaultDirPerms expresses the default mode of dir creation.
-	DefaultDirPerms = os.FileMode(0755)
+	DefaultDirPerms = os.FileMode(0754)
 )
 
 // EnsureDirAndMaxPerms ensures that the given path exists, that it's a directory,
@@ -187,6 +187,7 @@ func ExpandAndCheckPath(
 	autoCreate bool,
 ) (string, error) {
 
+	pathname = strings.TrimSpace(os.ExpandEnv(pathname))
 	var err error
 	if pathname == "" {
 		err = errors.Errorf("empty path")
