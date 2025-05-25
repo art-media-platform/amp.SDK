@@ -7,7 +7,6 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
-	github.com/rs/cors v1.11.1
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/crypto v0.38.0
 )

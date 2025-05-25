@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rs/cors"
-
 	"github.com/art-media-platform/amp.SDK/stdlib/errors"
 )
 
@@ -136,15 +134,15 @@ func RespondJSON(resp http.ResponseWriter, data interface{}) {
 	}
 }
 
-func UnrestrictedCors(handler http.Handler) http.Handler {
-	return cors.New(cors.Options{
-		AllowOriginFunc:  func(string) bool { return true },
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "AUTHORIZE", "SUBSCRIBE", "ACK", "OPTIONS", "HEAD"},
-		AllowedHeaders:   []string{"*"},
-		ExposedHeaders:   []string{"*"},
-		AllowCredentials: true,
-	}).Handler(handler)
-}
+// func UnrestrictedCors(handler http.Handler) http.Handler {
+// 	return cors.New(cors.Options{
+// 		AllowOriginFunc:  func(string) bool { return true },
+// 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "AUTHORIZE", "SUBSCRIBE", "ACK", "OPTIONS", "HEAD"},
+// 		AllowedHeaders:   []string{"*"},
+// 		ExposedHeaders:   []string{"*"},
+// 		AllowCredentials: true,
+// 	}).Handler(handler)
+// }
 
 func SniffContentType(filename string, data io.Reader) (string, error) {
 	// Only the first 512 bytes are used to sniff the content type.

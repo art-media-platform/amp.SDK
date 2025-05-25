@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	//"github.com/mmcloughlin/geohash"
-
 	"reflect"
 )
 
