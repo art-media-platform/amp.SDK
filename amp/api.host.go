@@ -32,11 +32,11 @@ type Transport interface {
 	Close() error
 
 	// SendTx sends a Msg to the remote client.
-	// ErrStreamClosed is used to denote normal stream close.
+	// ErrNotConnected is used to denote normal stream close.
 	SendTx(tx *TxMsg) error
 
 	// RecvTx blocks until it receives a Msg or the stream is done.
-	// ErrStreamClosed is used to denote normal stream close.
+	// ErrNotConnected is used to denote normal stream close.
 	RecvTx() (*TxMsg, error)
 }
 
@@ -48,12 +48,12 @@ type HostService interface {
 	// This service may retain the amp.Host instance so that it can make calls to StartNewSession().
 	StartService(on Host) error
 
-	// GracefulStop initiates a polite stop of this extension and blocks until it's in a "soft" closed state,
+	// StopService initiates a polite stop of this extension and blocks until it's in a "soft" closed state,
 	//    meaning that its service has effectively stopped but its Context is still open.
 	// Note this could take any amount of time (e.g. until all open requests are closed)
-	// Typically, GracefulStop() is called (blocking) and then Context.Close().
+	// Typically, StopService() is called (blocking) and then Context.Close().
 	// To stop immediately, Context.Close() is always available.
-	GracefulStop()
+	StopService()
 }
 
 // TxCommit submits tx to be committed, a submission context, and where to send state.

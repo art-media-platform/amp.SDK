@@ -427,6 +427,8 @@ enum ErrCode {
     ErrCode_NotReady                    = -23011;
     ErrCode_Cancelled                   = -23012;
     ErrCode_ItemNotFound                = -23013;
+    ErrCode_ParseFailed                 = -23014;
+    ErrCode_StartupFailed               = -23015;
 
     ErrCode_ContextNotReady             = -23020;
     ErrCode_RequestClosed               = -23021;
