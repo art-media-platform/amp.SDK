@@ -150,3 +150,9 @@ type ValueEntry struct {
 	Addr  tag.Address // CRDT value element address
 	Value Value       // initialized with default value of expected type
 }
+
+// Endpoint expresses a network protocol and address to bind / list / send to.
+type Endpoint struct {
+	Network string
+	Address string
+}
