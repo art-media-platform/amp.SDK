@@ -102,10 +102,6 @@ func (v *Tag) UID() tag.UID {
 func (v *Tag) AsLabel() string {
 	str := make([]byte, 0, 128)
 
-	id := v.UID()
-	if id.IsSet() {
-		str = append(str, id.AsLabel()...)
-	}
 	if v.URI != "" {
 		if len(str) > 0 {
 			str = append(str, ',')
@@ -115,11 +111,19 @@ func (v *Tag) AsLabel() string {
 	}
 	if v.Text != "" {
 		if len(str) > 0 {
-			str = append(str, ',')
+			str = append(str, '.')
 		}
 		R := min(80, len(v.Text))
 		str = append(str, v.Text[:R]...)
 	}
+	id := v.UID()
+	if id.IsSet() {
+		if len(str) > 0 {
+			str = append(str, '.')
+		}
+		str = append(str, id.AsLabel()...)
+	}
+
 	return string(str)
 }
 
