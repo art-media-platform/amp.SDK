@@ -326,6 +326,12 @@ func (id UID) UUID() uuid.UUID {
 	return alt
 }
 
+// Converts this tag.UID to a 63-bit composite integer (i.e. always positive).
+func (id UID) Int63() int64 {
+	u64 := id[0] + id[1]
+	return int64(u64 >> 1)
+}
+
 // Base16 smartly encodes the given byte slice to a hex string prefixed with "0x" if appropriate.
 func (id UID) Base16() string {
 	const HexChars = "0123456789ABCDEF"
