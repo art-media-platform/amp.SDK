@@ -15,37 +15,37 @@ type AppModule[AppT amp.AppInstance] struct {
 	Instance AppT
 }
 
-// Cell is how std makes calls against a cell
-type Cell[AppT amp.AppInstance] interface {
-	Root() *CellNode[AppT]
+// Item is how std makes calls against a item
+type Item[AppT amp.AppInstance] interface {
+	Root() *ItemNode[AppT]
 
-	// Tells this cell it has been pinned and should synchronously update itself accordingly.
+	// Tells this item it has been pinned and should synchronously update itself accordingly.
 	PinInto(dst *Pin[AppT]) error
 
-	// MarshalAttrs is called after PinInto to serialize the cell's pinned attributes.
-	MarshalAttrs(w CellWriter)
+	// MarshalAttrs is called after PinInto to serialize the item's pinned attributes.
+	MarshalAttrs(w ItemWriter)
 }
 
-// CellNode is a helper for implementing the Cell interface.
-type CellNode[AppT amp.AppInstance] struct {
+// ItemNode is a helper for implementing the Item interface.
+type ItemNode[AppT amp.AppInstance] struct {
 	ID tag.UID
 }
 
-// Wraps the pinned state of a cell -- implements amp.Pin
+// Wraps the pinned state of a item -- implements amp.Pin
 type Pin[AppT amp.AppInstance] struct {
 	Request *amp.Request // originating request
-	Cell    Cell[AppT]   // pinned cell
+	Item    Item[AppT]   // pinned item
 	App     AppT         // parent app instance
 	Sync    amp.PinMode  // Op.Request().PinMode
 
 	fatal    error                  // fatal error, if any
-	children map[tag.UID]Cell[AppT] // child items
+	children map[tag.UID]Item[AppT] // child items
 	ctx      task.Context           // task context for this pin
 }
 
-type CellWriter interface {
+type ItemWriter interface {
 
-	// Pushes a tx operation attribute to the cell's pinned state.
+	// Pushes a tx operation attribute to the item's pinned state.
 	Push(op *amp.TxOp, value amp.Value)
 
 	// Convenience methods for pushing string and generic attributes bound to an item ID.

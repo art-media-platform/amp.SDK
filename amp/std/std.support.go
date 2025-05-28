@@ -60,12 +60,12 @@ func ParseParamAsPath(req *amp.Request, paramKey string) (dirpath string, finfo 
 	return
 }
 
-func (root *CellNode[AppT]) Root() *CellNode[AppT] {
+func (root *ItemNode[AppT]) Root() *ItemNode[AppT] {
 	return root
 }
 
-func PinAndServe[AppT amp.AppInstance](cell Cell[AppT], app AppT, req *amp.Request) (amp.Pin, error) {
-	root := cell.Root()
+func PinAndServe[AppT amp.AppInstance](item Item[AppT], app AppT, req *amp.Request) (amp.Pin, error) {
+	root := item.Root()
 	if root.ID.IsNil() {
 		root.ID = tag.UID_Now()
 	}
@@ -73,13 +73,13 @@ func PinAndServe[AppT amp.AppInstance](cell Cell[AppT], app AppT, req *amp.Reque
 	pin := &Pin[AppT]{
 		Request:  req,
 		App:      app,
-		Cell:     cell,
-		children: make(map[tag.UID]Cell[AppT]),
+		Item:     item,
+		children: make(map[tag.UID]Item[AppT]),
 	}
 
 	label := "pin: " + root.ID.AsLabel()
 	if app.Info().DebugMode {
-		label += fmt.Sprintf(", Cell.(*%v)", reflect.TypeOf(cell).Elem().Name())
+		label += fmt.Sprintf(", Item.(*%v)", reflect.TypeOf(item).Elem().Name())
 	}
 
 	var err error
@@ -91,7 +91,7 @@ func PinAndServe[AppT amp.AppInstance](cell Cell[AppT], app AppT, req *amp.Reque
 		OnRun: func(pinContext task.Context) {
 			err := pin.App.MakeReady(req)
 			if err == nil {
-				err = cell.PinInto(pin)
+				err = item.PinInto(pin)
 			}
 			if err == nil {
 				switch pin.Request.Current.Mode {
@@ -128,20 +128,20 @@ func (app *AppModule[AppT]) MakeReady(req *amp.Request) error {
 	return nil
 }
 
-func (app *AppModule[AppT]) PinAndServe(cell Cell[AppT], req *amp.Request) (amp.Pin, error) {
-	return PinAndServe(cell, app.Instance, req)
+func (app *AppModule[AppT]) PinAndServe(item Item[AppT], req *amp.Request) (amp.Pin, error) {
+	return PinAndServe(item, app.Instance, req)
 }
 
 func (app *AppModule[AppT]) OnClosing() {
 }
 
 // Called when this Pin is closed.
-// This allows a Cell to release resources it may locked during PinInto()..
+// This allows a Item to release resources it may locked during PinInto()..
 func (pin *Pin[AppT]) OnPinClosed() {
 	// override for cleanup
 }
 
-func (pin *Pin[AppT]) AddChild(sub Cell[AppT]) {
+func (pin *Pin[AppT]) AddChild(sub Item[AppT]) {
 	child := sub.Root()
 	childID := child.ID
 	if childID.IsNil() {
@@ -151,12 +151,12 @@ func (pin *Pin[AppT]) AddChild(sub Cell[AppT]) {
 	pin.children[childID] = sub
 }
 
-func (pin *Pin[AppT]) GetCell(target tag.UID) Cell[AppT] {
-	if target == pin.Cell.Root().ID {
-		return pin.Cell
+func (pin *Pin[AppT]) GetItem(target tag.UID) Item[AppT] {
+	if target == pin.Item.Root().ID {
+		return pin.Item
 	}
-	if cell, exists := pin.children[target]; exists {
-		return cell
+	if item, exists := pin.children[target]; exists {
+		return item
 	}
 	return nil
 }
@@ -169,11 +169,11 @@ func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
 	invokeTag := req.Current.Invoke
 	targetID := invokeTag.UID()
 
-	cell := pin.GetCell(targetID)
-	if cell == nil {
+	item := pin.GetItem(targetID)
+	if item == nil {
 		return nil, amp.ErrChannelNotFound
 	}
-	return PinAndServe(cell, pin.App, req)
+	return PinAndServe(item, pin.App, req)
 }
 
 func (pin *Pin[AppT]) CommitTx(tx *amp.TxMsg) error {
@@ -185,26 +185,26 @@ func (pin *Pin[AppT]) ReviseRequest(latest *amp.PinRequest) error {
 	return amp.ErrUnimplemented // TODO
 }
 
-// Pushes a TxMsg to the client of this Pin, pushing the state of each cell and its children.
+// Pushes a TxMsg to the client of this Pin, pushing the state of each item and its children.
 func (pin *Pin[AppT]) pushState() error {
 	tx := amp.TxGenesis()
 
 	{
-		pinnedID := pin.Cell.Root().ID
-		w := cellWriter{
+		pinnedID := pin.Item.Root().ID
+		w := itemWriter{
 			tx:     tx,
 			chanID: pinnedID,
 		}
 
-		tx.Upsert(amp.HeadChannelID, ItemIndex, pinnedID, nil) // publish root cell ID using the meta node
-		pin.Cell.MarshalAttrs(&w)
+		tx.Upsert(amp.HeadChannelID, ItemIndex, pinnedID, nil) // publish root item ID using the meta node
+		pin.Item.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
 		}
 
 		for childID, child := range pin.children {
 			w.chanID = childID
-			tx.Upsert(pinnedID, ItemIndex, childID, nil) // link child to pinned cell
+			tx.Upsert(pinnedID, ItemIndex, childID, nil) // link child to pinned item
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err
@@ -216,15 +216,15 @@ func (pin *Pin[AppT]) pushState() error {
 	return pin.Request.PushTx(tx, pin.ctx)
 }
 
-var _ CellWriter = (*cellWriter)(nil)
+var _ ItemWriter = (*itemWriter)(nil)
 
-type cellWriter struct {
-	chanID tag.UID    // cache for Cell.Root().ID
+type itemWriter struct {
+	chanID tag.UID    // cache for Item.Root().ID
 	tx     *amp.TxMsg // in-progress transaction
 	err    error
 }
 
-func (w *cellWriter) PushTextWithID(attrID, itemID tag.UID, value string) {
+func (w *itemWriter) PushTextWithID(attrID, itemID tag.UID, value string) {
 	if w.err != nil {
 		return
 	}
@@ -241,7 +241,7 @@ func (w *cellWriter) PushTextWithID(attrID, itemID tag.UID, value string) {
 	}
 }
 
-func (w *cellWriter) PushItemWithID(attrID, itemID tag.UID, value amp.Value) {
+func (w *itemWriter) PushItemWithID(attrID, itemID tag.UID, value amp.Value) {
 	if w.err != nil {
 		return
 	}
@@ -255,21 +255,21 @@ func (w *cellWriter) PushItemWithID(attrID, itemID tag.UID, value amp.Value) {
 	}
 }
 
-func (w *cellWriter) PushText(attrID tag.UID, value string) {
+func (w *itemWriter) PushText(attrID tag.UID, value string) {
 	if value == "" {
 		return
 	}
 	w.PushTextWithID(attrID, tag.UID{}, value)
 }
 
-func (w *cellWriter) PushItem(attrID tag.UID, value amp.Value) {
+func (w *itemWriter) PushItem(attrID tag.UID, value amp.Value) {
 	if value == nil {
 		return
 	}
 	w.PushItemWithID(attrID, tag.UID{}, value)
 }
 
-func (w *cellWriter) Push(op *amp.TxOp, val amp.Value) {
+func (w *itemWriter) Push(op *amp.TxOp, val amp.Value) {
 	if w.err != nil {
 		return
 	}

@@ -162,7 +162,7 @@ TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 	numFields := valTyp.NumField()
 
 	schema := &AttrSchema{
-		CellDataModel: valTyp.Name(),
+		ItemDataModel: valTyp.Name(),
 		SchemaName:    "on-demand-reflect",
 		Attrs:         make([]*tag.Expr, 0, numFields),
 	}
@@ -196,7 +196,7 @@ TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 		}
 
 		if attr.ValTypeID == 0 {
-			return nil, ErrCode_ExportErr.Errorf("unsupported type '%s.%s (%v)", schema.CellDataModel, attr.TypedName, attrKind)
+			return nil, ErrCode_ExportErr.Errorf("unsupported type '%s.%s (%v)", schema.ItemDataModel, attr.TypedName, attrKind)
 		}
 
 		schema.Attrs = append(schema.Attrs, attr)
@@ -204,9 +204,9 @@ TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 	return schema, nil
 }
 
-// ReadCell loads a cell with the given URI having the inferred schema (built from its fields using reflection).
+// ReadItem loads a item with the given URI having the inferred schema (built from its fields using reflection).
 // The URI is scoped into the user's home space and AppID.
-func ReadCell(ctx AppContext, subKey string, schema *AttrSchema, dstStruct any) error {
+func ReadItem(ctx AppContext, subKey string, schema *AttrSchema, dstStruct any) error {
 
 	dst := reflect.Indirect(reflect.ValueOf(dstStruct))
 	switch dst.Kind() {
@@ -218,10 +218,10 @@ func ReadCell(ctx AppContext, subKey string, schema *AttrSchema, dstStruct any) 
 	}
 
 	var keyBuf [128]byte
-	cellKey := append(append(keyBuf[:0], []byte(ctx.StateScope())...), []byte(subKey)...)
+	itemKey := append(append(keyBuf[:0], []byte(ctx.StateScope())...), []byte(subKey)...)
 
 	msgs := make([]*Msg, 0, len(schema.Attrs))
-	err := ctx.LoginInfo().HomePlanet().ReadCell(cellKey, schema, func(msg *Msg) {
+	err := ctx.LoginInfo().HomePlanet().ReadItem(itemKey, schema, func(msg *Msg) {
 		switch msg.Op {
 		case MsgOp_PushAttr:
 			msgs = append(msgs, msg)
@@ -251,8 +251,8 @@ func ReadCell(ctx AppContext, subKey string, schema *AttrSchema, dstStruct any) 
 	return err
 }
 
-// WriteCell is the write analog of ReadCell.
-func WriteCell(ctx AppContext, subKey string, schema *AttrSchema, srcStruct any) error {
+// WriteItem is the write analog of ReadItem.
+func WriteItem(ctx AppContext, subKey string, schema *AttrSchema, srcStruct any) error {
 
 	src := reflect.Indirect(reflect.ValueOf(srcStruct))
 	switch src.Kind() {
@@ -266,7 +266,7 @@ func WriteCell(ctx AppContext, subKey string, schema *AttrSchema, srcStruct any)
 	{
 		tx := NewMsgBatch()
 		msg := tx.AddMsg()
-		msg.Op = MsgOp_UpsertCell
+		msg.Op = MsgOp_UpsertItem
 		msg.ValType = ValType_SchemaID.Ord()
 		msg.ValInt = int64(schema.SchemaID)
 		msg.ValBuf = append(append(msg.ValBuf[:0], []byte(ctx.StateScope())...), []byte(subKey)...)

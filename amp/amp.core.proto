@@ -395,7 +395,7 @@ message EditableTextAttr {
 
 enum  UIDFormat {
     UIDFormat_Unspecified = 0;
-    UIDFormat_TimeUID  = 1;     // channel / cell ID (time-sorted)
+    UIDFormat_TimeUID  = 1;     // channel / item ID (time-sorted)
     UIDFormat_H3_Time  = 2; // time-based geo
     UIDFormat_H3_UTC_H3   = 4; // geo, time, geo
     UIDFormat_UTC_H3_UTC  = 6; // time, geo, time
