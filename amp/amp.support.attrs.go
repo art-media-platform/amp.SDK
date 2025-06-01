@@ -295,7 +295,7 @@ func (filter *PinFilter) AsLabel() string {
 }
 
 // Exports this AddressRanges to a native and more accessible structure
-func (sel *PinSelector) ExportRanges(dst *[]tag.AddressRange) {
+func (sel *ItemSelector) ExportRanges(dst *[]tag.AddressRange) {
 	if sel == nil || len(sel.Ranges) == 0 {
 		return
 	}
@@ -312,8 +312,8 @@ func (sel *PinSelector) ExportRanges(dst *[]tag.AddressRange) {
 		}
 
 		// Lo
-		r.Lo.NodeID[0] = ri.Chan_Lo_0
-		r.Lo.NodeID[1] = ri.Chan_Lo_1
+		r.Lo.NodeID[0] = ri.Node_Lo_0
+		r.Lo.NodeID[1] = ri.Node_Lo_1
 
 		r.Lo.AttrID[0] = ri.Attr_Lo_0
 		r.Lo.AttrID[1] = ri.Attr_Lo_1
@@ -325,8 +325,8 @@ func (sel *PinSelector) ExportRanges(dst *[]tag.AddressRange) {
 		r.Lo.EditID[1] = ri.Edit_Lo_1
 
 		// Hi
-		r.Hi.NodeID[0] = ri.Chan_Hi_0
-		r.Hi.NodeID[1] = ri.Chan_Hi_1
+		r.Hi.NodeID[0] = ri.Node_Hi_0
+		r.Hi.NodeID[1] = ri.Node_Hi_1
 
 		r.Hi.AttrID[0] = ri.Attr_Hi_0
 		r.Hi.AttrID[1] = ri.Attr_Hi_1
@@ -406,12 +406,12 @@ func (v *PinRequest) AsLabel() string {
 	return string(label)
 }
 
-func (sel *PinSelector) AsLabel() string {
+func (sel *ItemSelector) AsLabel() string {
 	if sel == nil {
 		return ""
 	}
 
-	return "{TODO PinSelector AsLabel}"
+	return "{TODO ItemSelector AsLabel}"
 	// label := make([]byte, 0, 255)
 	// for _, r := range sel.Ranges {
 	// 	if len(label) > 0 {
@@ -422,20 +422,20 @@ func (sel *PinSelector) AsLabel() string {
 	// return string(label)
 }
 
-func (sel *PinSelector) AddSingle(addr tag.Address) {
+func (sel *ItemSelector) AddSingle(addr tag.Address) {
 	sel.AddRange(addr, addr)
 }
 
-func (sel *PinSelector) AddRange(lo, hi tag.Address) {
+func (sel *ItemSelector) AddRange(lo, hi tag.Address) {
 	if lo.CompareTo(&hi, true) > 0 {
 		return
 	}
 
 	single := &AddrRange{
-		Chan_Lo_0: lo.NodeID[0],
-		Chan_Hi_0: hi.NodeID[0],
-		Chan_Lo_1: lo.NodeID[1],
-		Chan_Hi_1: hi.NodeID[1],
+		Node_Lo_0: lo.NodeID[0],
+		Node_Hi_0: hi.NodeID[0],
+		Node_Lo_1: lo.NodeID[1],
+		Node_Hi_1: hi.NodeID[1],
 
 		Attr_Lo_0: lo.AttrID[0],
 		Attr_Hi_0: hi.AttrID[0],

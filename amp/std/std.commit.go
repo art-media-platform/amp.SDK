@@ -73,7 +73,7 @@ func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src amp.Value) error {
 func SetupSnapshot(target tag.Address) *amp.PinRequest {
 	req := &amp.PinRequest{
 		Mode:   amp.PinMode_Snapshot,
-		Select: &amp.PinSelector{},
+		Select: &amp.ItemSelector{},
 		Invoke: &amp.Tag{
 			URI: "amp://cabinets/~",
 		},

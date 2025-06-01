@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	amp "github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/amp/std"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )

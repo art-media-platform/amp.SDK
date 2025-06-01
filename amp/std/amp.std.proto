@@ -12,6 +12,21 @@ enum VisualScale{
     VisualScale_Fixed = 1;
 }
 
+// Text rect bounds and alignment
+message TextRect {
+
+    int64               X0 = 4;
+    int64               Y0 = 5;
+
+    int64               X1 = 6;
+    int64               Y1 = 7;
+
+    int32               TextAlign = 10;
+    fixed32             TextColor = 11;
+    fixed32             BackColor = 12;
+}
+
+
 // TRS (translate rotate scale) INA IEEE 1207
 // A general-purpose placement spec in time, space, geo-position, and orientation.
 message TRS {

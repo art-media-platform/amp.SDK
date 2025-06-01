@@ -188,35 +188,37 @@ message PinRequest {
     Tag                 Invoke = 4;
 
     // Selects which values to synchronize and which NOT to synchronize.
-    PinSelector         Select = 6;
+    ItemSelector        Select = 6;
 
     // If set, this is a genesis request to create a new channel with the given typeID (
     ChannelEpoch        Epoch = 16;
 
 }
 
-enum CabinetOpCode {
-    CabinetOpCode_Nil    = 0;
-    CabinetOpCode_Get    = 1;
-    CabinetOpCode_Put    = 2;
-    CabinetOpCode_Delete = 3;
-}
+// enum CabinetOpCode {
+//     CabinetOpCode_Nil    = 0;
+//     CabinetOpCode_Get    = 1;
+//     CabinetOpCode_Put    = 2;
+//     CabinetOpCode_Delete = 3;
+// }
 
 
-message PinSelector {
-    Tag      Anchor           = 2;
+
+message ItemSelector {
+    Tag                Anchor = 2;
     repeated AddrRange Ranges = 3;
 }
 
 
 message AddrRange {
 
-    float    Weight = 1; // "the include magnitude", < 0 repels, == 0 ignored , > 0 attract
+    float        Weight       = 1; // "the include magnitude", < 0 repels, == 0 ignored , > 0 attract
+    RevisionMode RevisionMode = 2; // which revisions to select on a Node + Attr + Item match
 
-    fixed64  Chan_Lo_0 = 4;
-    fixed64  Chan_Hi_0 = 5;
-    fixed64  Chan_Lo_1 = 6;
-    fixed64  Chan_Hi_1 = 7;
+    fixed64  Node_Lo_0 = 4;
+    fixed64  Node_Hi_0 = 5;
+    fixed64  Node_Lo_1 = 6;
+    fixed64  Node_Hi_1 = 7;
 
     fixed64  Attr_Lo_0 = 10;
     fixed64  Attr_Hi_0 = 11;
@@ -233,6 +235,13 @@ message AddrRange {
     fixed64  Edit_Lo_1 = 22;
     fixed64  Edit_Hi_1 = 23;
 
+}
+
+// RevisionMode specifies which revisions to select for a given Node/Attr/Item match
+enum RevisionMode {
+    RevisionMode_Head   = 0; // head revision only (default)
+    RevisionMode_Smart  = 3; // head and recent host-chosen history
+    RevisionMode_All    = 6; // all revisions
 }
 
 
@@ -296,7 +305,7 @@ message Tag {
     fixed64  ID_0 = 3;
     fixed64  ID_1 = 4;
 
-    // fixed64  Addr_Chan_1 = 4;
+    // fixed64  Addr_Node_1 = 4;
     // fixed64  Addr_Attr_0 = 5;
     // fixed64  Addr_Attr_1 = 6;
     // fixed64  Addr_Item_0 = 8;

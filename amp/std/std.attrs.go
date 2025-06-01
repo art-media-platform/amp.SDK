@@ -33,17 +33,14 @@ var (
 	ItemCollection = ItemTextTag.With("collection").ID
 	ItemSynopsis   = ItemTextTag.With("synopsis").ID
 
-	ItemContent  = ItemAttr.With("content")
-	ItemFileInfo = ItemContent.With("FileInfo").ID
-	ItemGlyphs   = ItemContent.With("Tags.glyphs").ID
-	MainLink     = ItemContent.With("Tag.link.main").ID
-	ItemLinks    = ItemContent.With("Tags.links").ID
-	ItemMedia    = ItemContent.With("Tag.media").ID
-	ItemVis      = ItemContent.With("Tag.vis").ID
-
-	// TileAttr denotes attributes of a item's background tile, framing, and appearance (in contrast to the "content" of the item)
-	TileAttr   = ItemAttr.With("tile")
-	TileLayout = TileAttr.With("Tag.layout").ID
+	ItemContent   = ItemAttr.With("content")
+	ItemFileInfo  = ItemContent.With("FileInfo").ID
+	MainLink      = ItemContent.With("Tag.link.main").ID
+	ItemMedia     = ItemContent.With("Tag.media").ID
+	ItemVis       = ItemContent.With("Tag.vis").ID
+	ItemBehaviors = ItemContent.With("Tags.behaviors").ID
+	ItemGlyphs    = ItemContent.With("Tags.glyphs").ID
+	ItemLinks     = ItemContent.With("Tags.links").ID
 )
 
 const (
