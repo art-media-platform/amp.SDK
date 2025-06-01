@@ -12,7 +12,7 @@ var (
 	AppTag      = tag.Expr{}.With("app")
 	SessionAttr = tag.Expr{}.With("session")
 	ItemAttr    = tag.Expr{}.With("item")
-	ChanAttr    = tag.Expr{}.With("channel")
+	NodeAttr    = tag.Expr{}.With("node")
 
 	AppState = AppTag.With("state")
 

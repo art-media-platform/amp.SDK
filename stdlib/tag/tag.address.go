@@ -6,8 +6,8 @@ import (
 )
 
 func (addr *Address) AsID() (lsm AddressID) {
-	binary.BigEndian.PutUint64(lsm[0:8], addr.ChanID[0])   // ChanID
-	binary.BigEndian.PutUint64(lsm[8:16], addr.ChanID[1])  //
+	binary.BigEndian.PutUint64(lsm[0:8], addr.NodeID[0])   // NodeID
+	binary.BigEndian.PutUint64(lsm[8:16], addr.NodeID[1])  //
 	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
 	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[1]) //
 	binary.BigEndian.PutUint64(lsm[32:40], addr.ItemID[0]) // ItemID
@@ -17,8 +17,8 @@ func (addr *Address) AsID() (lsm AddressID) {
 
 // Converts this Address to an AddressLSM.
 func (addr *Address) AsLSM() (lsm AddressLSM) {
-	binary.BigEndian.PutUint64(lsm[0:8], addr.ChanID[0])   // ChanID
-	binary.BigEndian.PutUint64(lsm[8:16], addr.ChanID[1])  //
+	binary.BigEndian.PutUint64(lsm[0:8], addr.NodeID[0])   // NodeID
+	binary.BigEndian.PutUint64(lsm[8:16], addr.NodeID[1])  //
 	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
 	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[1]) //
 	binary.BigEndian.PutUint64(lsm[32:40], addr.ItemID[0]) // ItemID
@@ -29,8 +29,8 @@ func (addr *Address) AsLSM() (lsm AddressLSM) {
 }
 
 func (addr *Address) FromLSM(lsm []byte) {
-	addr.ChanID[0] = binary.BigEndian.Uint64(lsm[0:8])   // ChanID
-	addr.ChanID[1] = binary.BigEndian.Uint64(lsm[8:16])  //
+	addr.NodeID[0] = binary.BigEndian.Uint64(lsm[0:8])   // NodeID
+	addr.NodeID[1] = binary.BigEndian.Uint64(lsm[8:16])  //
 	addr.AttrID[0] = binary.BigEndian.Uint64(lsm[16:24]) // AttrID
 	addr.AttrID[1] = binary.BigEndian.Uint64(lsm[24:32]) //
 	addr.ItemID[0] = binary.BigEndian.Uint64(lsm[32:40]) // ItemID
@@ -40,14 +40,14 @@ func (addr *Address) FromLSM(lsm []byte) {
 }
 
 func (addr *Address) CompareTo(oth *Address, includeEditID bool) int {
-	if addr.ChanID[0] < oth.ChanID[0] {
+	if addr.NodeID[0] < oth.NodeID[0] {
 		return -1
-	} else if addr.ChanID[0] > oth.ChanID[0] {
+	} else if addr.NodeID[0] > oth.NodeID[0] {
 		return 1
 	}
-	if addr.ChanID[1] < oth.ChanID[1] {
+	if addr.NodeID[1] < oth.NodeID[1] {
 		return -1
-	} else if addr.ChanID[1] > oth.ChanID[1] {
+	} else if addr.NodeID[1] > oth.NodeID[1] {
 		return 1
 	}
 
@@ -151,27 +151,27 @@ func (rge *AddressRange) CompareTo(oth *AddressRange) int {
 	return d
 }
 
-func ChannelRange(chanID UID) AddressRange {
+func NodeRange(nodeID UID) AddressRange {
 	return AddressRange{
 		Lo: Address{
-			ChanID: chanID,
+			NodeID: nodeID,
 		},
 		Hi: Address{
-			ChanID: chanID,
+			NodeID: nodeID,
 			AttrID: UID_Max(),
 			ItemID: UID_Max(),
 		},
 	}
 }
 
-func AttrRange(chanID UID, attrID UID) AddressRange {
+func AttrRange(nodeID UID, attrID UID) AddressRange {
 	return AddressRange{
 		Lo: Address{
-			ChanID: chanID,
+			NodeID: nodeID,
 			AttrID: attrID,
 		},
 		Hi: Address{
-			ChanID: chanID,
+			NodeID: nodeID,
 			AttrID: attrID,
 			ItemID: UID_Max(),
 		},

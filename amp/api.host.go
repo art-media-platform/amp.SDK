@@ -10,7 +10,7 @@ import (
 )
 
 // Host allows app and transport services to be attached.
-// Child processes attach as it responds to client requests to "pin" channels via URLs.
+// Child processes attach as it responds to client requests to "pin" nodes via URLs.
 type Host interface {
 	task.Context
 
@@ -129,10 +129,10 @@ type PinEvent struct {
 	Error  error     // error if any for this event
 }
 
-// Request is a client request to pin a channel or URL, offering many degrees of flexibility.
+// Request is a client request to pin a node or URL, offering many degrees of flexibility.
 type Request struct {
 	Requester            // origin of this request
-	PinFilter            // selects which channels / attrs / items / edits to sync
+	PinFilter            // selects which nodes / attrs / items / edits to sync
 	Tx        *TxMsg     // initial tx to process for this request
 	ID        tag.UID    // universally unique ID for this request (inherited from tx invoking this request)
 	InvokeURL *url.URL   // initialized from PinRequest.Invoke.URI

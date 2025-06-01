@@ -18,8 +18,8 @@ option csharp_namespace = "art.media.platform";
 enum Const {
     Const_Defs = 0;
 
-    // The bootstrapping ("head") channel ID
-    Const_HeadChannelID = 0x37;
+    // The bootstrapping ("head") node ID
+    Const_HeadNodeID = 0x37;
 
     // DefaultServicePort  is the default TCP port used to expose amp.Host service.
     Const_DefaultServicePort = 5192;
@@ -58,8 +58,8 @@ enum TxOpCode {
 enum TxField {
     TxField_Nil = 0;
 
-    TxField_ChanID_0 = 2;
-    TxField_ChanID_1 = 3;
+    TxField_NodeID_0 = 2;
+    TxField_NodeID_1 = 3;
 
     TxField_AttrID_0 = 4;
     TxField_AttrID_1 = 5;
@@ -342,7 +342,7 @@ enum Grid {
 
 enum TagTypes {
     TagTypes_Nil  = 0;    // unspecified tag type
-    TagTypes_Chan = 0x01; // channel tag
+    TagTypes_Node = 0x01; // node tag
     TagTypes_Attr = 0x02; // attr tag
     TagTypes_Item = 0x04; // item tag
     TagTypes_Edit = 0x08; // edit tag
@@ -395,7 +395,7 @@ message EditableTextAttr {
 
 enum  UIDFormat {
     UIDFormat_Unspecified = 0;
-    UIDFormat_TimeUID  = 1;     // channel / item ID (time-sorted)
+    UIDFormat_TimeUID  = 1;     // node / item ID (time-sorted)
     UIDFormat_H3_Time  = 2; // time-based geo
     UIDFormat_H3_UTC_H3   = 4; // geo, time, geo
     UIDFormat_UTC_H3_UTC  = 6; // time, geo, time

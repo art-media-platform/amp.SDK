@@ -20,7 +20,7 @@ func TestTxSerialize(t *testing.T) {
 		op := TxOp{
 			OpCode: TxOpCode_Upsert,
 			Addr: tag.Address{
-				ChanID: tag.UID{99923456789, 987621},
+				NodeID: tag.UID{99923456789, 987621},
 				AttrID: tag.UID{111312232, 22232334444},
 				ItemID: tag.UID{73833773, 76549},
 				EditID: tag.UID{4435435, 83849854543},
@@ -35,8 +35,8 @@ func TestTxSerialize(t *testing.T) {
 		})
 		tx.DataStore = append(tx.DataStore, []byte("bytes not used but stored -- not normal!")...)
 
-		op.Addr.ChanID[0] -= 4321
-		op.Addr.ChanID[1] += 37733773
+		op.Addr.NodeID[0] -= 4321
+		op.Addr.NodeID[1] += 37733773
 		op.Addr.AttrID[0] -= 50454123
 		op.Addr.ItemID[1] *= 745983
 		data := []byte("hello-world")

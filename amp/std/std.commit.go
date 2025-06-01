@@ -12,7 +12,7 @@ import (
 func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst amp.Value) error {
 	appEnv := appCtx.AppEnvironment()
 	addr := tag.Address{}
-	addr.ChanID = appEnv.HomeID
+	addr.NodeID = appEnv.HomeID
 	addr.AttrID = attrID
 
 	tx := amp.TxGenesis()
@@ -58,7 +58,7 @@ func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src amp.Value) error {
 	op := amp.TxOp{
 		OpCode: amp.TxOpCode_Upsert,
 	}
-	op.Addr.ChanID = appEnv.HomeID
+	op.Addr.NodeID = appEnv.HomeID
 	op.Addr.AttrID = attrID
 
 	tx := amp.TxGenesis()

@@ -20,7 +20,7 @@ func PushSessionOp(sess amp.Session, attrID tag.UID, value amp.Value) error {
 	kv := amp.ValueEntry{
 		Value: value,
 	}
-	kv.Addr.ChanID = amp.HeadChannelID
+	kv.Addr.NodeID = amp.HeadNodeID
 	kv.Addr.AttrID = attrID
 	return PushMetaOp(sess, sess, kv, SessionContextID, amp.PinStatus_Synced)
 }
@@ -171,7 +171,7 @@ func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
 
 	item := pin.GetItem(targetID)
 	if item == nil {
-		return nil, amp.ErrChannelNotFound
+		return nil, amp.ErrItemNotFound
 	}
 	return PinAndServe(item, pin.App, req)
 }
@@ -193,17 +193,17 @@ func (pin *Pin[AppT]) pushState() error {
 		pinnedID := pin.Item.Root().ID
 		w := itemWriter{
 			tx:     tx,
-			chanID: pinnedID,
+			nodeID: pinnedID,
 		}
 
-		tx.Upsert(amp.HeadChannelID, ItemIndex, pinnedID, nil) // publish root item ID using the meta node
+		tx.Upsert(amp.HeadNodeID, ItemIndex, pinnedID, nil) // publish root item ID using the meta node
 		pin.Item.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
 		}
 
 		for childID, child := range pin.children {
-			w.chanID = childID
+			w.nodeID = childID
 			tx.Upsert(pinnedID, ItemIndex, childID, nil) // link child to pinned item
 			child.MarshalAttrs(&w)
 			if w.err != nil {
@@ -219,7 +219,7 @@ func (pin *Pin[AppT]) pushState() error {
 var _ ItemWriter = (*itemWriter)(nil)
 
 type itemWriter struct {
-	chanID tag.UID    // cache for Item.Root().ID
+	nodeID tag.UID    // cache for Item.Root().ID
 	tx     *amp.TxMsg // in-progress transaction
 	err    error
 }
@@ -230,7 +230,7 @@ func (w *itemWriter) PushTextWithID(attrID, itemID tag.UID, value string) {
 	}
 	op := amp.TxOp{}
 	op.OpCode = amp.TxOpCode_Upsert
-	op.Addr.ChanID = w.chanID
+	op.Addr.NodeID = w.nodeID
 	op.Addr.AttrID = attrID
 	op.Addr.ItemID = itemID
 	err := w.tx.MarshalOp(&op, &amp.Tag{
@@ -247,7 +247,7 @@ func (w *itemWriter) PushItemWithID(attrID, itemID tag.UID, value amp.Value) {
 	}
 	op := amp.TxOp{}
 	op.OpCode = amp.TxOpCode_Upsert
-	op.Addr.ChanID = w.chanID
+	op.Addr.NodeID = w.nodeID
 	op.Addr.AttrID = attrID
 	op.Addr.ItemID = itemID
 	if err := w.tx.MarshalOp(&op, value); err != nil {

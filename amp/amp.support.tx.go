@@ -148,11 +148,11 @@ func (tx *TxMsg) sortOps() {
 	}
 }
 
-func (tx *TxMsg) Upsert(chanID, attrID, itemID tag.UID, val Value) error {
+func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val Value) error {
 	op := TxOp{
 		OpCode: TxOpCode_Upsert,
 	}
-	op.Addr.ChanID = chanID
+	op.Addr.NodeID = nodeID
 	op.Addr.AttrID = attrID
 	op.Addr.ItemID = itemID
 
@@ -325,8 +325,8 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 
 		// detect repeated fields and write only what changes (with corresponding flags)
 		{
-			op_cur[TxField_ChanID_0] = op.Addr.ChanID[0]
-			op_cur[TxField_ChanID_1] = op.Addr.ChanID[1]
+			op_cur[TxField_NodeID_0] = op.Addr.NodeID[0]
+			op_cur[TxField_NodeID_1] = op.Addr.NodeID[1]
 
 			op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
 			op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
@@ -429,8 +429,8 @@ func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 			}
 		}
 
-		op.Addr.ChanID[0] = op_cur[TxField_ChanID_0]
-		op.Addr.ChanID[1] = op_cur[TxField_ChanID_1]
+		op.Addr.NodeID[0] = op_cur[TxField_NodeID_0]
+		op.Addr.NodeID[1] = op_cur[TxField_NodeID_1]
 
 		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
 		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]

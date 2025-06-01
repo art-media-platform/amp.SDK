@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	// Bootstrapping aka "head" channel ID where to start.
-	HeadChannelID = tag.UID{0, uint64(Const_HeadChannelID)}
+	// Bootstrapping aka "head" node ID where to start.
+	HeadNodeID = tag.UID{0, uint64(Const_HeadNodeID)}
 )
 
 func TagFromUID(id tag.UID) *Tag {
@@ -143,7 +143,7 @@ func (v *Tags) New() Value {
 		}
 		for i, subTag := range v.SubTags {
 			subID := subTag.CompositeID()
-			subID[2] ^= uint64(i+1) * uint64(Const_HeadChannelID)
+			subID[2] ^= uint64(i+1) * uint64(Const_HeadNodeID)
 			composite = composite.With(subID)
 		}
 		return composite
@@ -312,8 +312,8 @@ func (sel *PinSelector) ExportRanges(dst *[]tag.AddressRange) {
 		}
 
 		// Lo
-		r.Lo.ChanID[0] = ri.Chan_Lo_0
-		r.Lo.ChanID[1] = ri.Chan_Lo_1
+		r.Lo.NodeID[0] = ri.Chan_Lo_0
+		r.Lo.NodeID[1] = ri.Chan_Lo_1
 
 		r.Lo.AttrID[0] = ri.Attr_Lo_0
 		r.Lo.AttrID[1] = ri.Attr_Lo_1
@@ -325,8 +325,8 @@ func (sel *PinSelector) ExportRanges(dst *[]tag.AddressRange) {
 		r.Lo.EditID[1] = ri.Edit_Lo_1
 
 		// Hi
-		r.Hi.ChanID[0] = ri.Chan_Hi_0
-		r.Hi.ChanID[1] = ri.Chan_Hi_1
+		r.Hi.NodeID[0] = ri.Chan_Hi_0
+		r.Hi.NodeID[1] = ri.Chan_Hi_1
 
 		r.Hi.AttrID[0] = ri.Attr_Hi_0
 		r.Hi.AttrID[1] = ri.Attr_Hi_1
@@ -432,10 +432,10 @@ func (sel *PinSelector) AddRange(lo, hi tag.Address) {
 	}
 
 	single := &AddrRange{
-		Chan_Lo_0: lo.ChanID[0],
-		Chan_Hi_0: hi.ChanID[0],
-		Chan_Lo_1: lo.ChanID[1],
-		Chan_Hi_1: hi.ChanID[1],
+		Chan_Lo_0: lo.NodeID[0],
+		Chan_Hi_0: hi.NodeID[0],
+		Chan_Lo_1: lo.NodeID[1],
+		Chan_Hi_1: hi.NodeID[1],
 
 		Attr_Lo_0: lo.AttrID[0],
 		Attr_Hi_0: hi.AttrID[0],

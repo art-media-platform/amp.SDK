@@ -19,10 +19,10 @@ type (
 	//
 	// When EditID is zero, this signals to get/set the most appropriate EditID.
 	Address struct {
-		ChanID UID //   00:16   Channel ID
-		AttrID UID //   16:32   Any attribute schema UID or hash; specifies how ItemID is interpreted.
-		ItemID UID //   32:48   Any client-defined UID or inline value (e.g. a hash, coordinates, etc)
-		EditID UID //   48:64   (edit.TimeID + replacing.TimeID) / 2
+		NodeID UID //   00:16   aka channel aka cell ID
+		AttrID UID //   16:32   any attribute schema UID or hash; specifies how ItemID is interpreted
+		ItemID UID //   32:48   any client-defined UID or inline 16-byte value (e.g. a hash, coordinates, etc)
+		EditID UID //   48:64   (edit_Time.UID + replace_time.TimeUID) / 2
 	}
 
 	// AddressLSM is an Address serialized into its corresponding LSM key format.
