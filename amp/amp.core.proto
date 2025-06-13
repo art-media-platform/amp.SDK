@@ -195,53 +195,56 @@ message PinRequest {
 
 }
 
-// enum CabinetOpCode {
-//     CabinetOpCode_Nil    = 0;
-//     CabinetOpCode_Get    = 1;
-//     CabinetOpCode_Put    = 2;
-//     CabinetOpCode_Delete = 3;
-// }
 
 
-
+// Expresses an easy to use set of address ranges.
 message ItemSelector {
-    Tag                Anchor = 2;
-    repeated AddrRange Ranges = 3;
+    repeated AddrRange Ranges = 8;
+    Tag                Anchor = 10;
 }
 
 
 message AddrRange {
+    float        Weight       = 1; // "gravity or magnitude", < 0 repels, == 0 ignored , > 0 attract
+    RevisionMode RevisionMode = 2; // which edit ID(s) to select
+    // ScanMode     ScanMode     = 3;
+    // uint64       NodeLimit    = 6; // if > 0, limits how many unique nodes selected
+    // uint64       ItemLimit    = 7; // if > 0, limits how many unique items selected
 
-    float        Weight       = 1; // "the include magnitude", < 0 repels, == 0 ignored , > 0 attract
-    RevisionMode RevisionMode = 2; // which revisions to select on a Node + Attr + Item match
+    fixed64  Node_Min_0 = 10;
+    fixed64  Node_Max_0 = 11;
+    fixed64  Node_Min_1 = 12;
+    fixed64  Node_Max_1 = 13;
 
-    fixed64  Node_Lo_0 = 4;
-    fixed64  Node_Hi_0 = 5;
-    fixed64  Node_Lo_1 = 6;
-    fixed64  Node_Hi_1 = 7;
+    fixed64  Attr_Min_0 = 14;
+    fixed64  Attr_Max_0 = 15;
+    fixed64  Attr_Min_1 = 16;
+    fixed64  Attr_Max_1 = 17;
 
-    fixed64  Attr_Lo_0 = 10;
-    fixed64  Attr_Hi_0 = 11;
-    fixed64  Attr_Lo_1 = 12;
-    fixed64  Attr_Hi_1 = 13;
+    fixed64  Item_Min_0 = 19;
+    fixed64  Item_Max_0 = 20;
+    fixed64  Item_Min_1 = 21;
+    fixed64  Item_Max_1 = 22;
 
-    fixed64  Item_Lo_0 = 14;
-    fixed64  Item_Hi_0 = 15;
-    fixed64  Item_Lo_1 = 16;
-    fixed64  Item_Hi_1 = 17;
-
-    fixed64  Edit_Lo_0 = 20;
-    fixed64  Edit_Hi_0 = 21;
-    fixed64  Edit_Lo_1 = 22;
-    fixed64  Edit_Hi_1 = 23;
+    fixed64  Edit_Min_0 = 23;
+    fixed64  Edit_Max_0 = 24;
+    fixed64  Edit_Min_1 = 25;
+    fixed64  Edit_Max_1 = 26;
 
 }
 
-// RevisionMode specifies which revisions to select for a given Node/Attr/Item match
+// Specifies which EditID(s) to select for a (Node,Attr,Item) match
 enum RevisionMode {
     RevisionMode_Head   = 0; // head revision only (default)
     RevisionMode_Smart  = 3; // head and recent host-chosen history
     RevisionMode_All    = 6; // all revisions
+}
+
+// Specifies the direction of a scan operation.
+enum ScanMode {
+    ScanMode_Unspecified = 0;
+    ScanMode_Forward     = 1;
+    ScanMode_Reverse     = 2;
 }
 
 
@@ -300,28 +303,20 @@ enum UriScheme {
 // All fields are optional and their meaning is contextual.
 message Tag {
 
-    /// inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes ///
-
+    /// open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
+    ///
     fixed64  ID_0 = 3;
     fixed64  ID_1 = 4;
 
-    // fixed64  Addr_Node_1 = 4;
-    // fixed64  Addr_Attr_0 = 5;
-    // fixed64  Addr_Attr_1 = 6;
-    // fixed64  Addr_Item_0 = 8;
-    // fixed64  Addr_Item_1 = 9;
-    // fixed64  Addr_Edit_0 = 11;
-    // fixed64  Addr_Edit_1 = 12;
-
-    int64     R     = 16; // as ticks on Grid on an expanding sphere
-    int64     I     = 17; // as Units on Grid horizontally
-    int64     J     = 18; // as Units on Grid vertically
-    Grid      Grid  = 20; // grid convention for R/I/J
-    Units     Units = 21; // unit convention for R/I/J
+    int64     I     = 16; // as ticks on Grid on an expanding sphere
+    int64     J     = 17; // as Units on Grid horizontally
+    int64     K     = 18; // as Units on Grid vertically
+    Grid      Grid  = 20; // grid convention for IJK
+    Units     Units = 21; // unit convention for IJK
 
 
-    /// non-inline fields; limit total to 4k as a general rule ///
-
+    /// open-use non-inline fields
+    ///
     string  ContentType = 24; // IANA RFC 2045 media type; e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
     string  URI         = 26; // Unix pathname *or* IANA RFC 1738 URL (schema://hostname.com/path/query)
     string  Text        = 28; // UTF8 text; plain-text, XML, RTF

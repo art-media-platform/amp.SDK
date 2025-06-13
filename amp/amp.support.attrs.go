@@ -1,10 +1,10 @@
 package amp
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
 	"net/url"
-	"sort"
 	"strconv"
 	"time"
 
@@ -256,9 +256,8 @@ func (request *Request) Revise(pinReq *PinRequest) error {
 		return nil
 	}
 
-	// Merge incoming PinRequest state changes
-	// TODO: simple overwrite-style merge too basic?
-	current := &request.PinFilter.Current
+	// Merge incoming PinRequest
+	current := &request.ItemFilter.Current
 	*current = *pinReq
 
 	invokeTag := current.Invoke
@@ -275,11 +274,13 @@ func (request *Request) Revise(pinReq *PinRequest) error {
 		}
 	}
 
-	err := request.PinFilter.Revise(pinReq)
-	return err
+	if pinReq.Select != nil {
+		request.ItemFilter.Selector = *pinReq.Select
+	}
+	return nil
 }
 
-func (filter *PinFilter) AsLabel() string {
+func (filter *ItemFilter) AsLabel() string {
 	pinReq := &filter.Current
 
 	label := make([]byte, 0, 255)
@@ -294,6 +295,7 @@ func (filter *PinFilter) AsLabel() string {
 	return string(label)
 }
 
+/*
 // Exports this AddressRanges to a native and more accessible structure
 func (sel *ItemSelector) ExportRanges(dst *[]tag.AddressRange) {
 	if sel == nil || len(sel.Ranges) == 0 {
@@ -312,30 +314,30 @@ func (sel *ItemSelector) ExportRanges(dst *[]tag.AddressRange) {
 		}
 
 		// Lo
-		r.Lo.NodeID[0] = ri.Node_Lo_0
-		r.Lo.NodeID[1] = ri.Node_Lo_1
+		r.Lo.NodeID[0] = ri.Node_Min_0
+		r.Lo.NodeID[1] = ri.Node_Min_1
 
-		r.Lo.AttrID[0] = ri.Attr_Lo_0
-		r.Lo.AttrID[1] = ri.Attr_Lo_1
+		r.Lo.AttrID[0] = ri.Attr_Min_0
+		r.Lo.AttrID[1] = ri.Attr_Min_1
 
-		r.Lo.ItemID[0] = ri.Item_Lo_0
-		r.Lo.ItemID[1] = ri.Item_Lo_1
+		r.Lo.ItemID[0] = ri.Item_Min_0
+		r.Lo.ItemID[1] = ri.Item_Min_1
 
-		r.Lo.EditID[0] = ri.Edit_Lo_0
-		r.Lo.EditID[1] = ri.Edit_Lo_1
+		r.Lo.EditID[0] = ri.Edit_Min_0
+		r.Lo.EditID[1] = ri.Edit_Min_1
 
 		// Hi
-		r.Hi.NodeID[0] = ri.Node_Hi_0
-		r.Hi.NodeID[1] = ri.Node_Hi_1
+		r.Hi.NodeID[0] = ri.Node_Max_0
+		r.Hi.NodeID[1] = ri.Node_Max_1
 
-		r.Hi.AttrID[0] = ri.Attr_Hi_0
-		r.Hi.AttrID[1] = ri.Attr_Hi_1
+		r.Hi.AttrID[0] = ri.Attr_Max_0
+		r.Hi.AttrID[1] = ri.Attr_Max_1
 
-		r.Hi.ItemID[0] = ri.Item_Hi_0
-		r.Hi.ItemID[1] = ri.Item_Hi_1
+		r.Hi.ItemID[0] = ri.Item_Max_0
+		r.Hi.ItemID[1] = ri.Item_Max_1
 
-		r.Hi.EditID[0] = ri.Edit_Hi_0
-		r.Hi.EditID[1] = ri.Edit_Hi_1
+		r.Hi.EditID[0] = ri.Edit_Max_0
+		r.Hi.EditID[1] = ri.Edit_Max_1
 
 		ranges = append(ranges, r)
 	}
@@ -351,38 +353,103 @@ func (sel *ItemSelector) ExportRanges(dst *[]tag.AddressRange) {
 	}
 }
 
-func (filter *PinFilter) AddRange(rge tag.AddressRange) {
+func (filter *ItemFilter) AddRange(rge tag.AddresRange) {
 	filter.Select = append(filter.Select, rge)
 }
 
-func (filter *PinFilter) Revise(req *PinRequest) error {
+func (filter *ItemFilter) Revise(req *PinRequest) error {
 	if filter == nil || req == nil {
 		return nil
 	}
-	filter.Select = filter.Select[:0]
+	filter.Selector.Ranges = append(filter.Selector.Ranges, req.Select.Ranges...)
 	req.Select.ExportRanges(&filter.Select)
 
 	return nil
 }
+*/
 
-func (filter *PinFilter) NextRange(scan *tag.AddressRange) bool {
+// Returns the next range to scan, starting from the given scan position.
+// TODO: make iterator to iterate over ranges more efficiently.
+func (filter *ItemFilter) NextRange(scan *AddrRange) bool {
 
 	// resume where the previous scan ended
-	pos := scan.Hi
-	for _, ri := range filter.Select {
-		if ri.Hi.CompareTo(&pos, true) > 0 {
-			scan.Lo = ri.Lo
-			scan.Hi = ri.Hi
+	pos := scan.Max()
+	for _, ri := range filter.Selector.Ranges {
+		ri_max := ri.Max()
+		if ri_max.CompareTo(&pos) > 0 {
+			scan.SetMin(ri.Min())
+			scan.SetMax(ri_max)
 			return true
 		}
 	}
 	return false
 }
 
-func (v *PinFilter) Admits(addr *tag.Address) bool {
+func (r *AddrRange) Min() (lsm tag.AddressLSM) {
+	binary.BigEndian.PutUint64(lsm[0:8], r.Node_Min_0)
+	binary.BigEndian.PutUint64(lsm[8:16], r.Node_Min_1)
+	binary.BigEndian.PutUint64(lsm[16:24], r.Attr_Min_0)
+	binary.BigEndian.PutUint64(lsm[24:32], r.Attr_Min_1)
+	binary.BigEndian.PutUint64(lsm[32:40], r.Item_Min_0)
+	binary.BigEndian.PutUint64(lsm[40:48], r.Item_Min_1)
+	binary.BigEndian.PutUint64(lsm[48:56], r.Edit_Min_0)
+	return
+}
+
+func (r *AddrRange) Max() (lsm tag.AddressLSM) {
+	binary.BigEndian.PutUint64(lsm[0:8], r.Node_Max_0)
+	binary.BigEndian.PutUint64(lsm[8:16], r.Node_Max_1)
+	binary.BigEndian.PutUint64(lsm[16:24], r.Attr_Max_0)
+	binary.BigEndian.PutUint64(lsm[24:32], r.Attr_Max_1)
+	binary.BigEndian.PutUint64(lsm[32:40], r.Item_Max_0)
+	binary.BigEndian.PutUint64(lsm[40:48], r.Item_Max_1)
+	binary.BigEndian.PutUint64(lsm[48:56], r.Edit_Max_0)
+	return
+}
+
+func (r *AddrRange) SetMin(addr tag.AddressLSM) {
+	r.Node_Min_0 = binary.BigEndian.Uint64(addr[0:8])
+	r.Node_Min_1 = binary.BigEndian.Uint64(addr[8:16])
+	r.Attr_Min_0 = binary.BigEndian.Uint64(addr[16:24])
+	r.Attr_Min_1 = binary.BigEndian.Uint64(addr[24:32])
+	r.Item_Min_0 = binary.BigEndian.Uint64(addr[32:40])
+	r.Item_Min_1 = binary.BigEndian.Uint64(addr[40:48])
+	r.Edit_Min_0 = binary.BigEndian.Uint64(addr[48:56])
+}
+
+func (r *AddrRange) SetMax(addr tag.AddressLSM) {
+	r.Node_Max_0 = binary.BigEndian.Uint64(addr[0:8])
+	r.Node_Max_1 = binary.BigEndian.Uint64(addr[8:16])
+	r.Attr_Max_0 = binary.BigEndian.Uint64(addr[16:24])
+	r.Attr_Max_1 = binary.BigEndian.Uint64(addr[24:32])
+	r.Item_Max_0 = binary.BigEndian.Uint64(addr[32:40])
+	r.Item_Max_1 = binary.BigEndian.Uint64(addr[40:48])
+	r.Edit_Max_0 = binary.BigEndian.Uint64(addr[48:56])
+}
+
+// Returns selection weight of the given Address in the range:
+// weight: < 0 excludes, > 0 includes, 0 ignored
+func (rge *AddrRange) WeightAt(addr *tag.AddressLSM) float32 {
+
+	min := rge.Min()
+	cmp := min.CompareTo(addr)
+	if cmp > 0 {
+		return 0
+	}
+
+	max := rge.Max()
+	cmp = max.CompareTo(addr)
+	if cmp < 0 {
+		return 0
+	}
+
+	return rge.Weight
+}
+
+func (v *ItemFilter) Admits(addr tag.AddressLSM) bool {
 	netWeight := float32(0)
-	for _, ri := range v.Select {
-		netWeight += ri.WeightAt(addr)
+	for _, ri := range v.Selector.Ranges {
+		netWeight += ri.WeightAt(&addr)
 	}
 	admits := netWeight > 0
 	return admits
@@ -422,41 +489,68 @@ func (sel *ItemSelector) AsLabel() string {
 	// return string(label)
 }
 
+// Adds a selection range for all items having the given nodeID and addrID.
+func (sel *ItemSelector) AddNodeWithAddr(nodeID, addrID tag.UID) {
+	lo := tag.Address{
+		NodeID: nodeID,
+		AttrID: addrID,
+	}
+	hi := tag.Address{
+		NodeID: nodeID,
+		AttrID: addrID,
+		ItemID: tag.UID_Max(),
+	}
+	sel.AddRange(lo, hi)
+}
+
+// Adds a selection range for all items on the given nodeID.
+func (sel *ItemSelector) AddNode(nodeID tag.UID) {
+	lo := tag.Address{
+		NodeID: nodeID,
+	}
+	hi := tag.Address{
+		NodeID: nodeID,
+		AttrID: tag.UID_Max(),
+		ItemID: tag.UID_Max(),
+	}
+	sel.AddRange(lo, hi)
+}
+
 func (sel *ItemSelector) AddSingle(addr tag.Address) {
 	sel.AddRange(addr, addr)
 }
 
-func (sel *ItemSelector) AddRange(lo, hi tag.Address) {
-	if lo.CompareTo(&hi, true) > 0 {
+func (sel *ItemSelector) AddRange(min, max tag.Address) {
+	if min.CompareTo(&max, true) > 0 {
 		return
 	}
 
 	single := &AddrRange{
-		Node_Lo_0: lo.NodeID[0],
-		Node_Hi_0: hi.NodeID[0],
-		Node_Lo_1: lo.NodeID[1],
-		Node_Hi_1: hi.NodeID[1],
+		Node_Min_0: min.NodeID[0],
+		Node_Max_0: max.NodeID[0],
+		Node_Min_1: min.NodeID[1],
+		Node_Max_1: max.NodeID[1],
 
-		Attr_Lo_0: lo.AttrID[0],
-		Attr_Hi_0: hi.AttrID[0],
-		Attr_Lo_1: lo.AttrID[1],
-		Attr_Hi_1: hi.AttrID[1],
+		Attr_Min_0: min.AttrID[0],
+		Attr_Max_0: max.AttrID[0],
+		Attr_Min_1: min.AttrID[1],
+		Attr_Max_1: max.AttrID[1],
 
-		Item_Lo_0: lo.ItemID[0],
-		Item_Hi_0: hi.ItemID[0],
-		Item_Lo_1: lo.ItemID[1],
-		Item_Hi_1: hi.ItemID[1],
+		Item_Min_0: min.ItemID[0],
+		Item_Max_0: max.ItemID[0],
+		Item_Min_1: min.ItemID[1],
+		Item_Max_1: max.ItemID[1],
 
-		Edit_Lo_0: lo.EditID[0],
-		Edit_Lo_1: lo.EditID[1],
+		Edit_Min_0: min.EditID[0],
+		Edit_Min_1: min.EditID[1],
 	}
 
-	if hi.EditID.IsSet() {
-		single.Edit_Hi_0 = hi.EditID[0]
-		single.Edit_Hi_1 = hi.EditID[1]
+	if max.EditID.IsSet() {
+		single.Edit_Max_0 = max.EditID[0]
+		single.Edit_Max_1 = max.EditID[1]
 	} else {
-		single.Edit_Hi_0 = math.MaxUint64
-		single.Edit_Hi_1 = math.MaxUint64
+		single.Edit_Max_0 = math.MaxUint64
+		single.Edit_Max_1 = math.MaxUint64
 	}
 
 	sel.Ranges = append(sel.Ranges, single)

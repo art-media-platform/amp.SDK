@@ -34,13 +34,6 @@ type (
 	// EditTable tracks the most recent EditID for a given AddressID.
 	EditTable map[AddressID]UID
 
-	// AddressRange expresses an ordered range of Addresses.
-	AddressRange struct {
-		Lo     Address // inclusive lower bound
-		Hi     Address // inclusive upper bound
-		Weight float32 // > 0 includes, < 0 excludes, 0 no-op
-	}
-
 	OctalDigit    byte           // base 8 (3 least significant bits)
 	OctalEncoding [64]OctalDigit // octal encoding of a UID
 )

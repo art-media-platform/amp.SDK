@@ -131,18 +131,18 @@ type PinEvent struct {
 
 // Request is a client request to pin a node or URL, offering many degrees of flexibility.
 type Request struct {
-	Requester            // origin of this request
-	PinFilter            // selects which nodes / attrs / items / edits to sync
-	Tx        *TxMsg     // initial tx to process for this request
-	ID        tag.UID    // universally unique ID for this request (inherited from tx invoking this request)
-	InvokeURL *url.URL   // initialized from PinRequest.Invoke.URI
-	Params    url.Values // initialized from PinRequest.Invoke.URI
+	Requester             // origin of this request
+	ItemFilter            // selects which nodes / attrs / items / edits to sync
+	Tx         *TxMsg     // initial tx to process for this request
+	ID         tag.UID    // universally unique ID for this request (inherited from tx invoking this request)
+	InvokeURL  *url.URL   // initialized from PinRequest.Invoke.URI
+	Params     url.Values // initialized from PinRequest.Invoke.URI
 }
 
-// PinFilter is the accumulated state of all PinRequests made by the client.
-type PinFilter struct {
-	Current PinRequest         // current request state
-	Select  []tag.AddressRange // value ID range to synchronize
+// ItemFilter is the accumulated state of all PinRequests made by the client.
+type ItemFilter struct {
+	Current  PinRequest   // current request state
+	Selector ItemSelector // selects which items to emit / select
 }
 
 // CRDT kv entry pair

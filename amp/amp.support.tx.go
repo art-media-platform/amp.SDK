@@ -130,9 +130,9 @@ func (tx *TxMsg) LoadValue(findID *tag.Address, dst Value) error {
 	}
 
 	// check we have a match but ignore EditID
-	itemID := tx.Ops[idx].Addr.AsID()
-	wantID := findID.AsID()
-	if itemID != wantID {
+	elemID := tx.Ops[idx].Addr.ElemID()
+	wantID := findID.ElemID()
+	if elemID != wantID {
 		return ErrAttrNotFound
 	}
 

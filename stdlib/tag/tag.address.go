@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 )
 
-func (addr *Address) AsID() (lsm AddressID) {
+func (addr *Address) ElemID() (lsm AddressID) {
 	binary.BigEndian.PutUint64(lsm[0:8], addr.NodeID[0])   // NodeID
 	binary.BigEndian.PutUint64(lsm[8:16], addr.NodeID[1])  //
 	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
@@ -117,63 +117,4 @@ func (addr *AddressLSM) AsID() AddressID {
 
 func (addr *AddressLSM) CompareTo(oth *AddressLSM) int {
 	return bytes.Compare(addr[:], oth[:])
-}
-
-// Returns selection weight of the given Address in the range:
-// weight: < 0 excludes, > 0 includes, 0 ignored
-func (rge *AddressRange) WeightAt(addr *Address) float32 {
-
-	d_lo := rge.Lo.CompareTo(addr, true)
-	if d_lo > 0 {
-		return 0
-	}
-
-	d_hi := rge.Hi.CompareTo(addr, true)
-	if d_hi < 0 {
-		return 0
-	}
-
-	return rge.Weight
-}
-
-func (rge *AddressRange) CompareTo(oth *AddressRange) int {
-	dw := rge.Weight - oth.Weight
-	if dw != 0 {
-		return int(dw)
-	}
-
-	d := rge.Lo.CompareTo(&oth.Lo, true)
-	if d != 0 {
-		return d
-	}
-
-	d = rge.Hi.CompareTo(&oth.Hi, true)
-	return d
-}
-
-func NodeRange(nodeID UID) AddressRange {
-	return AddressRange{
-		Lo: Address{
-			NodeID: nodeID,
-		},
-		Hi: Address{
-			NodeID: nodeID,
-			AttrID: UID_Max(),
-			ItemID: UID_Max(),
-		},
-	}
-}
-
-func AttrRange(nodeID UID, attrID UID) AddressRange {
-	return AddressRange{
-		Lo: Address{
-			NodeID: nodeID,
-			AttrID: attrID,
-		},
-		Hi: Address{
-			NodeID: nodeID,
-			AttrID: attrID,
-			ItemID: UID_Max(),
-		},
-	}
 }

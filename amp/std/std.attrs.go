@@ -12,7 +12,6 @@ var (
 	AppTag      = tag.Expr{}.With("app")
 	SessionAttr = tag.Expr{}.With("session")
 	ItemAttr    = tag.Expr{}.With("item")
-	NodeAttr    = tag.Expr{}.With("node")
 
 	AppState = AppTag.With("state")
 
@@ -25,7 +24,7 @@ var (
 	LaunchWeb         = SessionTag.With("www").ID
 	LaunchOAuth       = SessionTag.With("oauth").ID
 
-	ItemIndex = ItemAttr.With("index.ID").ID // each TxOp.ItemID expresses a child ID
+	ItemLink = ItemAttr.With("link.ID").ID // each TxOp.ItemID is an inline child item ID
 
 	ItemTextTag    = ItemAttr.With("text.Tag")
 	ItemLabel      = ItemTextTag.With("label").ID

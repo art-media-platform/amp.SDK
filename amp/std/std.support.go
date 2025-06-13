@@ -196,7 +196,7 @@ func (pin *Pin[AppT]) pushState() error {
 			nodeID: pinnedID,
 		}
 
-		tx.Upsert(amp.HeadNodeID, ItemIndex, pinnedID, nil) // publish root item ID using the meta node
+		tx.Upsert(amp.HeadNodeID, ItemLink, pinnedID, nil) // publish root item ID using the meta node
 		pin.Item.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
@@ -204,7 +204,7 @@ func (pin *Pin[AppT]) pushState() error {
 
 		for childID, child := range pin.children {
 			w.nodeID = childID
-			tx.Upsert(pinnedID, ItemIndex, childID, nil) // link child to pinned item
+			tx.Upsert(pinnedID, ItemLink, childID, nil) // link child to pinned item
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err
