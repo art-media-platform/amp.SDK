@@ -24,7 +24,7 @@ var (
 	LaunchWeb         = SessionTag.With("www").ID
 	LaunchOAuth       = SessionTag.With("oauth").ID
 
-	ItemLink = ItemAttr.With("link.ID").ID // each TxOp.ItemID is an inline child item ID
+	ChildLink = ItemAttr.With("child.link.ID").ID // each TxOp.ItemID is an inline child item ID
 
 	ItemTextTag    = ItemAttr.With("text.Tag")
 	ItemLabel      = ItemTextTag.With("label").ID

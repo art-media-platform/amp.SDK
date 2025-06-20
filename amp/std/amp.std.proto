@@ -7,9 +7,9 @@ option csharp_namespace = "art.media.platform.std";
 import "amp/amp.core.proto";
 
 // Specifies how scale dynamically changes based on observer position.
-enum VisualScale{
-    VisualScale_Auto  = 0;
-    VisualScale_Fixed = 1;
+enum VisualScale {
+    VisualScale_Fixed = 0;
+    VisualScale_Auto  = 1;
 }
 
 // Text rect bounds and alignment
@@ -28,7 +28,7 @@ message TextRect {
 
 
 // TRS (translate rotate scale) INA IEEE 1207
-// A general-purpose placement spec in time, space, geo-position, and orientation.
+// General purpose placement time, space, orientation, and/or geo-position.
 message TRS {
 
     // Anchor in time, space, and/or geo-position.
@@ -43,12 +43,9 @@ message TRS {
     double              Py = 7;
     double              Pz = 8;
 
-    // Scale1..3 express the scale of this placement.
-    // If all three values are 0, they are all implicitly 1.
-    // If Scale2 or Scale3 == 0, then it is implicitly Scale1.
-    float               Sx = 11;
-    float               Sy = 12;
-    float               Sz = 13;
+    // Scale express the scale of this placement.
+    // A value of 0, denotes the default scale of 1.0
+    float               Scale = 10;
 
     // a Quaternion rotation in space -- if all values are 0, there is no rotation.
     float               Qx = 16;
@@ -57,6 +54,17 @@ message TRS {
     float               Qw = 19;
 }
 
+// General purpose Camera state
+message CameraState {
+    TRS        Placement = 1;
+
+    float      Fov       = 3; // field of view in degrees; 0 denotes orthographic camera
+    float      NearPlane = 4; // near plane distance
+    float      FarPlane  = 5; // far plane distance
+    float      Distance  = 7; // distance from the camera to the target; optional
+    float      Altitude  = 8; // altitude above the surface; optional
+    string     Mode      = 9; // camera mode descriptor; optional
+}
 
 // FileInfo a general-purpose file system meta info block.
 message FileInfo {
@@ -71,6 +79,13 @@ message FileInfo {
     int64  CreatedAt   = 10; // UTC << 16
     int64  ModifiedAt  = 11; // UTC << 16
     int64  ByteSize    = 14; // data fork byte length
+}
+
+
+// Multi-purpose, future-proof message element or sheet cell.
+message ItemCell {
+    string   Body      = 1; // plain-text body as applicable
+    amp.Tags Tags      = 4;
 }
 
 

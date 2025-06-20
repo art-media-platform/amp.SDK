@@ -195,21 +195,20 @@ message PinRequest {
 
 }
 
-
-
 // Expresses an easy to use set of address ranges.
 message ItemSelector {
-    repeated AddrRange Ranges = 8;
-    Tag                Anchor = 10;
-}
+    RevisionMode       RevisionMode = 1; // which EditID(s) to select
+    repeated AddrRange Ranges       = 9;
 
-
-message AddrRange {
-    float        Weight       = 1; // "gravity or magnitude", < 0 repels, == 0 ignored , > 0 attract
-    RevisionMode RevisionMode = 2; // which edit ID(s) to select
     // ScanMode     ScanMode     = 3;
-    // uint64       NodeLimit    = 6; // if > 0, limits how many unique nodes selected
-    // uint64       ItemLimit    = 7; // if > 0, limits how many unique items selected
+    // uint64       ItemTakeLimit  = 7; // if > 0, limits how many unique items selected
+ }
+
+
+
+// Expresses an address range
+message AddrRange {
+    float    Weight     = 1; // "gravity or magnitude", < 0 repels, == 0 ignored , > 0 attract
 
     fixed64  Node_Min_0 = 10;
     fixed64  Node_Max_0 = 11;
@@ -230,7 +229,6 @@ message AddrRange {
     fixed64  Edit_Max_0 = 24;
     fixed64  Edit_Min_1 = 25;
     fixed64  Edit_Max_1 = 26;
-
 }
 
 // Specifies which EditID(s) to select for a (Node,Attr,Item) match
@@ -278,7 +276,6 @@ message ChannelEpoch {
 }
 
 
-
 enum Enable {
     Enable_LatentOff = 0x0;
     Enable_LatentOn  = 0x1;
@@ -311,9 +308,7 @@ message Tag {
     int64     I     = 16; // as ticks on Grid on an expanding sphere
     int64     J     = 17; // as Units on Grid horizontally
     int64     K     = 18; // as Units on Grid vertically
-    Grid      Grid  = 20; // grid convention for IJK
-    Units     Units = 21; // unit convention for IJK
-
+    Units     Units = 21; // unit convention for (i,j,k)
 
     /// open-use non-inline fields
     ///
@@ -330,26 +325,6 @@ message Tags {
     Tag           Head     = 1; // identifies this branch
     repeated Tag  SubTags  = 4; // amplifying attributes or values
     repeated Tags Children = 6; // sequential sub trees
-}
-
-
-
-// Grid specifies a standard lattice or coordinate convention.
-enum Grid {
-    Grid_Ortho               = 0;  // X, Y, Z are a linear orthonormal basis
-    Grid_Cylinder            = 5;  // X: longitude,    Y: vertical,      Z: radius
-    Grid_Sphere              = 6;  // X: longitude,    Y: latitude,      Z: radius
-    Grid_Tile                = 7;  // X: H3 geo-tile,  Y: H3 sub-tile,   Z: altitude
-    Grid_EquilateralRhomboid = 16; // TODO
-    Grid_TrapezoDodecahedron = 17; // TODO
-}
-
-enum TagTypes {
-    TagTypes_Nil  = 0;    // unspecified tag type
-    TagTypes_Node = 0x01; // node tag
-    TagTypes_Attr = 0x02; // attr tag
-    TagTypes_Item = 0x04; // item tag
-    TagTypes_Edit = 0x08; // edit tag
 }
 
 
@@ -408,6 +383,16 @@ enum  UIDFormat {
     UIDFormat_H3_H3_H3    = 9; // "sphere-bottle" ID
 }
 
+
+// Grid specifies a standard lattice or coordinate convention.
+enum Grid {
+    Grid_Ortho               = 0;  // X, Y, Z are a linear orthonormal basis
+    Grid_Cylinder            = 5;  // X: longitude,    Y: vertical,      Z: radius
+    Grid_Sphere              = 6;  // X: longitude,    Y: latitude,      Z: radius
+    Grid_Tile                = 7;  // X: H3 geo-tile,  Y: H3 sub-tile,   Z: altitude
+    Grid_EquilateralRhomboid = 16; // TODO
+    Grid_TrapezoDodecahedron = 17; // TODO
+}
 */
 
 

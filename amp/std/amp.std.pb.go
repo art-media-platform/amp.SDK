@@ -31,18 +31,18 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type VisualScale int32
 
 const (
-	VisualScale_Auto  VisualScale = 0
-	VisualScale_Fixed VisualScale = 1
+	VisualScale_Fixed VisualScale = 0
+	VisualScale_Auto  VisualScale = 1
 )
 
 var VisualScale_name = map[int32]string{
-	0: "VisualScale_Auto",
-	1: "VisualScale_Fixed",
+	0: "VisualScale_Fixed",
+	1: "VisualScale_Auto",
 }
 
 var VisualScale_value = map[string]int32{
-	"VisualScale_Auto":  0,
-	"VisualScale_Fixed": 1,
+	"VisualScale_Fixed": 0,
+	"VisualScale_Auto":  1,
 }
 
 func (VisualScale) EnumDescriptor() ([]byte, []int) {
@@ -70,7 +70,7 @@ var GeoPath_RenderType_value = map[string]int32{
 }
 
 func (GeoPath_RenderType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{3, 0}
+	return fileDescriptor_f19235ecf4b48ee7, []int{5, 0}
 }
 
 type GeoPath_Format int32
@@ -91,7 +91,7 @@ var GeoPath_Format_value = map[string]int32{
 }
 
 func (GeoPath_Format) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{3, 1}
+	return fileDescriptor_f19235ecf4b48ee7, []int{5, 1}
 }
 
 // Text rect bounds and alignment
@@ -187,7 +187,7 @@ func (m *TextRect) GetBackColor() uint32 {
 }
 
 // TRS (translate rotate scale) INA IEEE 1207
-// A general-purpose placement spec in time, space, geo-position, and orientation.
+// General purpose placement time, space, orientation, and/or geo-position.
 type TRS struct {
 	// Anchor in time, space, and/or geo-position.
 	// May also specify a grid system or unit convention.
@@ -198,12 +198,9 @@ type TRS struct {
 	Px float64 `protobuf:"fixed64,6,opt,name=Px,proto3" json:"Px,omitempty"`
 	Py float64 `protobuf:"fixed64,7,opt,name=Py,proto3" json:"Py,omitempty"`
 	Pz float64 `protobuf:"fixed64,8,opt,name=Pz,proto3" json:"Pz,omitempty"`
-	// Scale1..3 express the scale of this placement.
-	// If all three values are 0, they are all implicitly 1.
-	// If Scale2 or Scale3 == 0, then it is implicitly Scale1.
-	Sx float32 `protobuf:"fixed32,11,opt,name=Sx,proto3" json:"Sx,omitempty"`
-	Sy float32 `protobuf:"fixed32,12,opt,name=Sy,proto3" json:"Sy,omitempty"`
-	Sz float32 `protobuf:"fixed32,13,opt,name=Sz,proto3" json:"Sz,omitempty"`
+	// Scale express the scale of this placement.
+	// A value of 0, denotes the default scale of 1.0
+	Scale float32 `protobuf:"fixed32,10,opt,name=Scale,proto3" json:"Scale,omitempty"`
 	// a Quaternion rotation in space -- if all values are 0, there is no rotation.
 	Qx float32 `protobuf:"fixed32,16,opt,name=Qx,proto3" json:"Qx,omitempty"`
 	Qy float32 `protobuf:"fixed32,17,opt,name=Qy,proto3" json:"Qy,omitempty"`
@@ -254,7 +251,7 @@ func (m *TRS) GetVisualScale() VisualScale {
 	if m != nil {
 		return m.VisualScale
 	}
-	return VisualScale_Auto
+	return VisualScale_Fixed
 }
 
 func (m *TRS) GetPx() float64 {
@@ -278,23 +275,9 @@ func (m *TRS) GetPz() float64 {
 	return 0
 }
 
-func (m *TRS) GetSx() float32 {
+func (m *TRS) GetScale() float32 {
 	if m != nil {
-		return m.Sx
-	}
-	return 0
-}
-
-func (m *TRS) GetSy() float32 {
-	if m != nil {
-		return m.Sy
-	}
-	return 0
-}
-
-func (m *TRS) GetSz() float32 {
-	if m != nil {
-		return m.Sz
+		return m.Scale
 	}
 	return 0
 }
@@ -327,6 +310,98 @@ func (m *TRS) GetQw() float32 {
 	return 0
 }
 
+// General purpose Camera state
+type CameraState struct {
+	Placement *TRS    `protobuf:"bytes,1,opt,name=Placement,proto3" json:"Placement,omitempty"`
+	Fov       float32 `protobuf:"fixed32,3,opt,name=Fov,proto3" json:"Fov,omitempty"`
+	NearPlane float32 `protobuf:"fixed32,4,opt,name=NearPlane,proto3" json:"NearPlane,omitempty"`
+	FarPlane  float32 `protobuf:"fixed32,5,opt,name=FarPlane,proto3" json:"FarPlane,omitempty"`
+	Distance  float32 `protobuf:"fixed32,7,opt,name=Distance,proto3" json:"Distance,omitempty"`
+	Altitude  float32 `protobuf:"fixed32,8,opt,name=Altitude,proto3" json:"Altitude,omitempty"`
+	Mode      string  `protobuf:"bytes,9,opt,name=Mode,proto3" json:"Mode,omitempty"`
+}
+
+func (m *CameraState) Reset()      { *m = CameraState{} }
+func (*CameraState) ProtoMessage() {}
+func (*CameraState) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f19235ecf4b48ee7, []int{2}
+}
+func (m *CameraState) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *CameraState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_CameraState.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *CameraState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CameraState.Merge(m, src)
+}
+func (m *CameraState) XXX_Size() int {
+	return m.Size()
+}
+func (m *CameraState) XXX_DiscardUnknown() {
+	xxx_messageInfo_CameraState.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CameraState proto.InternalMessageInfo
+
+func (m *CameraState) GetPlacement() *TRS {
+	if m != nil {
+		return m.Placement
+	}
+	return nil
+}
+
+func (m *CameraState) GetFov() float32 {
+	if m != nil {
+		return m.Fov
+	}
+	return 0
+}
+
+func (m *CameraState) GetNearPlane() float32 {
+	if m != nil {
+		return m.NearPlane
+	}
+	return 0
+}
+
+func (m *CameraState) GetFarPlane() float32 {
+	if m != nil {
+		return m.FarPlane
+	}
+	return 0
+}
+
+func (m *CameraState) GetDistance() float32 {
+	if m != nil {
+		return m.Distance
+	}
+	return 0
+}
+
+func (m *CameraState) GetAltitude() float32 {
+	if m != nil {
+		return m.Altitude
+	}
+	return 0
+}
+
+func (m *CameraState) GetMode() string {
+	if m != nil {
+		return m.Mode
+	}
+	return ""
+}
+
 // FileInfo a general-purpose file system meta info block.
 type FileInfo struct {
 	Mode        string `protobuf:"bytes,1,opt,name=Mode,proto3" json:"Mode,omitempty"`
@@ -343,7 +418,7 @@ type FileInfo struct {
 func (m *FileInfo) Reset()      { *m = FileInfo{} }
 func (*FileInfo) ProtoMessage() {}
 func (*FileInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{2}
+	return fileDescriptor_f19235ecf4b48ee7, []int{3}
 }
 func (m *FileInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -435,6 +510,58 @@ func (m *FileInfo) GetByteSize() int64 {
 	return 0
 }
 
+// Multi-purpose, future-proof message element or sheet cell.
+type ItemCell struct {
+	Body string    `protobuf:"bytes,1,opt,name=Body,proto3" json:"Body,omitempty"`
+	Tags *amp.Tags `protobuf:"bytes,4,opt,name=Tags,proto3" json:"Tags,omitempty"`
+}
+
+func (m *ItemCell) Reset()      { *m = ItemCell{} }
+func (*ItemCell) ProtoMessage() {}
+func (*ItemCell) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f19235ecf4b48ee7, []int{4}
+}
+func (m *ItemCell) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ItemCell) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ItemCell.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ItemCell) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ItemCell.Merge(m, src)
+}
+func (m *ItemCell) XXX_Size() int {
+	return m.Size()
+}
+func (m *ItemCell) XXX_DiscardUnknown() {
+	xxx_messageInfo_ItemCell.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ItemCell proto.InternalMessageInfo
+
+func (m *ItemCell) GetBody() string {
+	if m != nil {
+		return m.Body
+	}
+	return ""
+}
+
+func (m *ItemCell) GetTags() *amp.Tags {
+	if m != nil {
+		return m.Tags
+	}
+	return nil
+}
+
 type GeoPath struct {
 	Type      GeoPath_RenderType `protobuf:"varint,1,opt,name=Type,proto3,enum=std.GeoPath_RenderType" json:"Type,omitempty"`
 	ExtrudeLo float32            `protobuf:"fixed32,4,opt,name=ExtrudeLo,proto3" json:"ExtrudeLo,omitempty"`
@@ -445,7 +572,7 @@ type GeoPath struct {
 func (m *GeoPath) Reset()      { *m = GeoPath{} }
 func (*GeoPath) ProtoMessage() {}
 func (*GeoPath) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{3}
+	return fileDescriptor_f19235ecf4b48ee7, []int{5}
 }
 func (m *GeoPath) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -508,56 +635,65 @@ func init() {
 	proto.RegisterEnum("std.GeoPath_Format", GeoPath_Format_name, GeoPath_Format_value)
 	proto.RegisterType((*TextRect)(nil), "std.TextRect")
 	proto.RegisterType((*TRS)(nil), "std.TRS")
+	proto.RegisterType((*CameraState)(nil), "std.CameraState")
 	proto.RegisterType((*FileInfo)(nil), "std.FileInfo")
+	proto.RegisterType((*ItemCell)(nil), "std.ItemCell")
 	proto.RegisterType((*GeoPath)(nil), "std.GeoPath")
 }
 
 func init() { proto.RegisterFile("amp.std.proto", fileDescriptor_f19235ecf4b48ee7) }
 
 var fileDescriptor_f19235ecf4b48ee7 = []byte{
-	// 660 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x94, 0x4d, 0x4f, 0x13, 0x41,
-	0x18, 0xc7, 0x77, 0xb6, 0xef, 0x4f, 0x05, 0x97, 0x11, 0x71, 0x42, 0xcc, 0x66, 0x53, 0x2f, 0x8d,
-	0x24, 0x95, 0xe2, 0xcd, 0x5b, 0x29, 0x20, 0x24, 0xc5, 0xb4, 0xd3, 0xc6, 0xc0, 0xc9, 0xac, 0xdd,
-	0xa1, 0x4c, 0x6c, 0x77, 0x9a, 0xed, 0x10, 0xb6, 0x3d, 0xf9, 0x11, 0xfc, 0x10, 0x1e, 0x8c, 0x9f,
-	0xc4, 0x23, 0x47, 0x0e, 0x1e, 0xa4, 0x5c, 0x3c, 0x72, 0x37, 0x31, 0x66, 0x9e, 0x5d, 0x68, 0xbd,
-	0xcd, 0xef, 0xff, 0x7b, 0xd2, 0x3e, 0x2f, 0x4d, 0x61, 0xc5, 0x1f, 0x8d, 0x6b, 0x13, 0x1d, 0xd4,
-	0xc6, 0x91, 0xd2, 0x8a, 0x66, 0x26, 0x3a, 0xd8, 0xa4, 0xfe, 0x68, 0xfc, 0xca, 0xe4, 0x7d, 0x15,
-	0x89, 0x44, 0x54, 0xbe, 0x12, 0x28, 0xf6, 0x44, 0xac, 0xb9, 0xe8, 0x6b, 0xba, 0x0a, 0xf6, 0xc9,
-	0x36, 0xcb, 0x7a, 0xa4, 0x9a, 0xe1, 0xf6, 0xc9, 0xb6, 0xe1, 0xd3, 0x6d, 0x96, 0x4b, 0xf8, 0x14,
-	0xf9, 0xa4, 0xce, 0xf2, 0xa9, 0xaf, 0xa3, 0xaf, 0xb3, 0x42, 0xea, 0xeb, 0xf4, 0x39, 0x94, 0xcc,
-	0x67, 0x35, 0x86, 0x72, 0x10, 0x32, 0xf0, 0x48, 0x35, 0xc7, 0x17, 0xc1, 0xbd, 0x6d, 0xaa, 0xa1,
-	0x8a, 0x58, 0xd9, 0x23, 0xd5, 0x02, 0x5f, 0x04, 0xc6, 0xee, 0xfa, 0xfd, 0x4f, 0x89, 0x7d, 0x94,
-	0xd8, 0x87, 0xa0, 0xf2, 0x87, 0x40, 0xa6, 0xc7, 0xbb, 0xd4, 0x83, 0x7c, 0x23, 0xec, 0x9f, 0xab,
-	0x88, 0x11, 0x8f, 0x54, 0xcb, 0x3b, 0xc5, 0x9a, 0x99, 0xa7, 0xe7, 0x0f, 0x78, 0x9a, 0xd3, 0x1d,
-	0x28, 0xbf, 0x97, 0x93, 0x0b, 0x7f, 0xd8, 0xed, 0xfb, 0x43, 0xc1, 0x6c, 0x8f, 0x54, 0x57, 0x77,
-	0x1c, 0x5c, 0xc5, 0x52, 0xce, 0x97, 0x8b, 0xcc, 0x1c, 0xed, 0x18, 0xe7, 0x22, 0xdc, 0x6e, 0xc7,
-	0xc8, 0x53, 0x9c, 0xcb, 0xf0, 0x14, 0x79, 0xc6, 0x8a, 0x29, 0xcf, 0x0c, 0x77, 0x63, 0x1c, 0xc1,
-	0xe6, 0x76, 0x17, 0xeb, 0xbb, 0x53, 0x6c, 0xda, 0x30, 0xd6, 0x77, 0x67, 0x6c, 0x25, 0x65, 0xac,
-	0xef, 0xc4, 0xcc, 0x49, 0xb8, 0x83, 0xf5, 0x9d, 0x29, 0x5b, 0x4b, 0x19, 0xeb, 0x3b, 0x33, 0x46,
-	0x53, 0x4e, 0xea, 0x2f, 0xd9, 0x93, 0x94, 0x2f, 0x2b, 0x7f, 0x09, 0x14, 0x0f, 0xe4, 0x50, 0x1c,
-	0x85, 0x67, 0x8a, 0x52, 0xc8, 0x1e, 0xab, 0x40, 0xe0, 0x02, 0x4a, 0x1c, 0xdf, 0x74, 0x1d, 0x72,
-	0x47, 0x93, 0x3d, 0x19, 0xe1, 0xb8, 0x45, 0x9e, 0x00, 0x65, 0x50, 0xd8, 0x93, 0xd1, 0x3b, 0x7f,
-	0x24, 0xf0, 0xa6, 0x25, 0x7e, 0x8f, 0x74, 0x13, 0x8a, 0x47, 0x5a, 0x8c, 0x50, 0xe5, 0x50, 0x3d,
-	0x30, 0xdd, 0x80, 0xfc, 0x7e, 0xac, 0x5b, 0x22, 0xc4, 0x85, 0xe4, 0x78, 0x4a, 0xd4, 0x83, 0x72,
-	0x53, 0x85, 0x5a, 0x84, 0xba, 0x37, 0x1d, 0x0b, 0xdc, 0x46, 0x89, 0x2f, 0x47, 0xe6, 0x84, 0xcd,
-	0x48, 0xf8, 0x5a, 0x04, 0x0d, 0x8d, 0xe7, 0xcf, 0xf0, 0x45, 0x40, 0x5d, 0x80, 0x63, 0x15, 0xc8,
-	0x33, 0x89, 0xba, 0x8c, 0x7a, 0x29, 0x31, 0x3d, 0xed, 0x4e, 0xb5, 0xe8, 0xca, 0x99, 0x60, 0xab,
-	0x68, 0x1f, 0xb8, 0xf2, 0x93, 0x40, 0xe1, 0xad, 0x50, 0x6d, 0x5f, 0x9f, 0xd3, 0x2d, 0xc8, 0x62,
-	0x03, 0x04, 0x2f, 0xfb, 0x0c, 0x2f, 0x9b, 0xba, 0x1a, 0x17, 0x61, 0x20, 0x22, 0xa3, 0x79, 0xf6,
-	0xbe, 0xa5, 0xfd, 0x58, 0x47, 0x17, 0x81, 0x68, 0x29, 0x5c, 0x82, 0xcd, 0x17, 0xc1, 0x92, 0x3d,
-	0x94, 0xb8, 0x87, 0x85, 0x3d, 0x94, 0x66, 0x11, 0x4d, 0xa5, 0xa2, 0x60, 0xc2, 0x1e, 0x7b, 0x99,
-	0x2a, 0xe1, 0x29, 0x55, 0xb6, 0x00, 0x16, 0xdf, 0x43, 0x4b, 0x90, 0x6b, 0x2b, 0x19, 0x6a, 0xc7,
-	0xa2, 0x45, 0xc8, 0x9a, 0x2e, 0x1c, 0x62, 0x5e, 0x5c, 0x86, 0x03, 0xc7, 0xae, 0xbc, 0x80, 0xfc,
-	0x81, 0x8a, 0x46, 0xbe, 0xa6, 0x00, 0xf9, 0x96, 0xaf, 0x5b, 0xe1, 0xc0, 0xb1, 0xe8, 0x0a, 0x94,
-	0x92, 0x77, 0x63, 0xa8, 0x1d, 0xf2, 0xf2, 0xcd, 0x7f, 0xbf, 0x59, 0xba, 0x0e, 0xce, 0x12, 0x7e,
-	0x68, 0x5c, 0x68, 0xe5, 0x58, 0xf4, 0x29, 0xac, 0x2d, 0xa7, 0x07, 0x32, 0x16, 0x81, 0x43, 0x76,
-	0x8f, 0xaf, 0x6e, 0x5c, 0xeb, 0xfa, 0xc6, 0xb5, 0xee, 0x6e, 0x5c, 0xf2, 0x79, 0xee, 0x92, 0x6f,
-	0x73, 0x97, 0xfc, 0x98, 0xbb, 0xe4, 0x6a, 0xee, 0x92, 0x5f, 0x73, 0x97, 0xfc, 0x9e, 0xbb, 0xd6,
-	0xdd, 0xdc, 0x25, 0x5f, 0x6e, 0x5d, 0xeb, 0xea, 0xd6, 0xb5, 0xae, 0x6f, 0x5d, 0xeb, 0xbb, 0xbd,
-	0xe1, 0x47, 0xba, 0x36, 0x12, 0x81, 0xf4, 0x6b, 0xe3, 0xa1, 0xaf, 0xcf, 0x54, 0x34, 0x32, 0x9b,
-	0xfc, 0x98, 0xc7, 0xbf, 0x85, 0xd7, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x96, 0x26, 0xdf, 0x77,
-	0x40, 0x04, 0x00, 0x00,
+	// 779 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x94, 0x41, 0x8f, 0xdb, 0x44,
+	0x14, 0xc7, 0x3d, 0x4e, 0x9c, 0xc4, 0x2f, 0x74, 0x71, 0x87, 0x52, 0x46, 0x15, 0x58, 0x96, 0x91,
+	0x50, 0x44, 0xa5, 0xb0, 0x09, 0x37, 0x24, 0x0e, 0x49, 0xb6, 0x81, 0x95, 0xb2, 0x55, 0x32, 0x89,
+	0xd0, 0xf6, 0x84, 0x86, 0x78, 0x36, 0xb5, 0xb0, 0x3d, 0x91, 0x3d, 0xa1, 0x49, 0x4e, 0x7c, 0x04,
+	0x3e, 0x04, 0x07, 0xc4, 0x27, 0xe1, 0x82, 0xb4, 0xc7, 0x1e, 0x38, 0x90, 0xec, 0x85, 0x63, 0x3f,
+	0x01, 0x42, 0x33, 0x76, 0xec, 0x70, 0x9b, 0xff, 0xff, 0x37, 0x7a, 0x79, 0xff, 0xf7, 0x26, 0x86,
+	0x47, 0x2c, 0x5e, 0x77, 0x33, 0x19, 0x74, 0xd7, 0xa9, 0x90, 0x02, 0xd7, 0x32, 0x19, 0x3c, 0xc3,
+	0x2c, 0x5e, 0x7f, 0xa1, 0xfc, 0xa5, 0x48, 0x79, 0x0e, 0xfc, 0x5f, 0x11, 0xb4, 0x16, 0x7c, 0x2b,
+	0x29, 0x5f, 0x4a, 0x7c, 0x01, 0xe6, 0xed, 0x25, 0xa9, 0x7b, 0xa8, 0x53, 0xa3, 0xe6, 0xed, 0xa5,
+	0xd2, 0xaf, 0x2e, 0x89, 0x95, 0xeb, 0x57, 0x5a, 0xdf, 0xf6, 0x48, 0xa3, 0xe0, 0x3d, 0xcd, 0x7b,
+	0xa4, 0x59, 0xf0, 0x1e, 0xfe, 0x18, 0x6c, 0x55, 0x6b, 0x10, 0x85, 0xab, 0x84, 0x80, 0x87, 0x3a,
+	0x16, 0xad, 0x8c, 0x13, 0x1d, 0x89, 0x48, 0xa4, 0xa4, 0xed, 0xa1, 0x4e, 0x93, 0x56, 0x86, 0xa2,
+	0x43, 0xb6, 0xfc, 0x31, 0xa7, 0xef, 0xe5, 0xb4, 0x34, 0xfc, 0x03, 0x82, 0xda, 0x82, 0xce, 0xb1,
+	0x07, 0x8d, 0x41, 0xb2, 0x7c, 0x2d, 0x52, 0x82, 0x3c, 0xd4, 0x69, 0xf7, 0x5b, 0x5d, 0x95, 0x67,
+	0xc1, 0x56, 0xb4, 0xf0, 0x71, 0x1f, 0xda, 0xdf, 0x85, 0xd9, 0x86, 0x45, 0xf3, 0x25, 0x8b, 0x38,
+	0x31, 0x3d, 0xd4, 0xb9, 0xe8, 0x3b, 0x7a, 0x14, 0x67, 0x3e, 0x3d, 0xbf, 0xa4, 0x72, 0x4c, 0xb7,
+	0x3a, 0x17, 0xa2, 0xe6, 0x74, 0xab, 0xf5, 0x4e, 0xe7, 0x52, 0x7a, 0xa7, 0xf5, 0x9e, 0xb4, 0x0a,
+	0xbd, 0xc7, 0x4f, 0xc0, 0xca, 0xab, 0xab, 0x8c, 0x26, 0xb5, 0xca, 0x2a, 0xb3, 0x2d, 0x71, 0xb4,
+	0x65, 0xce, 0x74, 0x95, 0xd9, 0x8e, 0x3c, 0x2e, 0xb4, 0xae, 0x32, 0xdb, 0x13, 0x5c, 0xe8, 0xbd,
+	0xd6, 0x6f, 0xc8, 0x07, 0x85, 0x7e, 0xe3, 0xff, 0x89, 0xa0, 0x3d, 0x62, 0x31, 0x4f, 0xd9, 0x5c,
+	0x32, 0xc9, 0xf1, 0x67, 0x60, 0x4f, 0x23, 0xb6, 0xe4, 0x31, 0x4f, 0x64, 0x19, 0x57, 0xe5, 0x58,
+	0xd0, 0x39, 0xad, 0x10, 0x76, 0xa0, 0x36, 0x16, 0x3f, 0x91, 0x9a, 0x2e, 0xa4, 0x8e, 0x6a, 0x96,
+	0x2f, 0x39, 0x4b, 0xa7, 0x11, 0x4b, 0xb8, 0x5e, 0xa7, 0x49, 0x2b, 0x03, 0x3f, 0x83, 0xd6, 0xf8,
+	0x04, 0x2d, 0x0d, 0x4b, 0xad, 0xd8, 0x55, 0x98, 0x49, 0x96, 0x2c, 0xb9, 0xce, 0x6f, 0xd2, 0x52,
+	0x2b, 0x36, 0x88, 0x64, 0x28, 0x37, 0x01, 0xd7, 0xb3, 0x30, 0x69, 0xa9, 0x31, 0x86, 0xfa, 0x8d,
+	0x08, 0x38, 0xb1, 0x3d, 0xd4, 0xb1, 0xa9, 0x3e, 0xfb, 0xff, 0x22, 0x68, 0x8d, 0xc3, 0x88, 0x5f,
+	0x27, 0x77, 0xa2, 0xbc, 0x80, 0xaa, 0x0b, 0x6a, 0x8c, 0xd7, 0xd9, 0x55, 0x98, 0xea, 0x25, 0xb5,
+	0x68, 0x2e, 0x30, 0x81, 0xe6, 0x55, 0x98, 0xbe, 0x64, 0x71, 0xde, 0xba, 0x4d, 0x4f, 0x52, 0x35,
+	0x70, 0x2d, 0x79, 0xac, 0x91, 0xa5, 0x51, 0xa9, 0xf1, 0x53, 0x68, 0xbc, 0xd8, 0xca, 0x09, 0x4f,
+	0xf4, 0x1a, 0x2d, 0x5a, 0x28, 0xec, 0x41, 0x7b, 0x24, 0x12, 0xc9, 0x13, 0xb9, 0xd8, 0xad, 0xf3,
+	0xbe, 0x6d, 0x7a, 0x6e, 0xa9, 0x61, 0x8d, 0x52, 0xce, 0x24, 0x0f, 0x06, 0x52, 0x2f, 0xb4, 0x46,
+	0x2b, 0x03, 0xbb, 0x00, 0x37, 0x22, 0x08, 0xef, 0x42, 0x8d, 0xdb, 0x1a, 0x9f, 0x39, 0xaa, 0xa7,
+	0xe1, 0x4e, 0xf2, 0x79, 0xb8, 0xe7, 0xe4, 0x42, 0xd3, 0x52, 0xfb, 0x5f, 0xe7, 0xfd, 0x8e, 0x78,
+	0x14, 0xa9, 0xfc, 0x43, 0x11, 0xec, 0x4e, 0xf9, 0xd5, 0x19, 0x7f, 0x02, 0xf5, 0x05, 0x5b, 0x65,
+	0x3a, 0x66, 0xbb, 0x6f, 0x9f, 0x9e, 0x72, 0x46, 0xb5, 0xed, 0xff, 0x85, 0xa0, 0xf9, 0x0d, 0x17,
+	0x53, 0x26, 0x5f, 0xe3, 0xe7, 0x50, 0xd7, 0xfd, 0x23, 0xfd, 0x9c, 0x3f, 0xd2, 0xcf, 0xa0, 0x60,
+	0x5d, 0xca, 0x93, 0x80, 0xa7, 0x0a, 0xd3, 0xfa, 0x29, 0xd1, 0x8b, 0xad, 0x4c, 0x37, 0x01, 0x9f,
+	0x88, 0xd3, 0xfa, 0x4b, 0xe3, 0x8c, 0x7e, 0x1b, 0x16, 0xfb, 0xaf, 0x0c, 0x35, 0xc7, 0x91, 0x10,
+	0x69, 0x90, 0x91, 0xf7, 0xbd, 0x5a, 0x07, 0xd1, 0x42, 0xf9, 0xcf, 0x01, 0xaa, 0xdf, 0xc1, 0x36,
+	0x58, 0x53, 0x11, 0x26, 0xd2, 0x31, 0x70, 0x0b, 0xea, 0xaa, 0x0b, 0x07, 0xa9, 0x13, 0x0d, 0x93,
+	0x95, 0x63, 0xfa, 0x9f, 0x42, 0x63, 0x2c, 0xd2, 0x98, 0x49, 0x0c, 0xd0, 0x98, 0x30, 0x39, 0x49,
+	0x56, 0x8e, 0x81, 0x1f, 0x81, 0x9d, 0x9f, 0x07, 0x91, 0x74, 0xd0, 0xe7, 0x5f, 0xfd, 0xef, 0x8f,
+	0x8a, 0x3f, 0x84, 0xc7, 0x67, 0xf2, 0xfb, 0x71, 0xb8, 0xe5, 0x81, 0x63, 0xe0, 0x27, 0xe0, 0x9c,
+	0xdb, 0x83, 0x8d, 0x14, 0x0e, 0x1a, 0xde, 0xdc, 0x1f, 0x5c, 0xe3, 0xed, 0xc1, 0x35, 0xde, 0x1d,
+	0x5c, 0xf4, 0xf3, 0xd1, 0x45, 0xbf, 0x1d, 0x5d, 0xf4, 0xc7, 0xd1, 0x45, 0xf7, 0x47, 0x17, 0xfd,
+	0x7d, 0x74, 0xd1, 0x3f, 0x47, 0xd7, 0x78, 0x77, 0x74, 0xd1, 0x2f, 0x0f, 0xae, 0x71, 0xff, 0xe0,
+	0x1a, 0x6f, 0x1f, 0x5c, 0xe3, 0x77, 0xf3, 0x29, 0x4b, 0x65, 0x37, 0xe6, 0x41, 0xc8, 0xba, 0xeb,
+	0x88, 0xc9, 0x3b, 0x91, 0xc6, 0x6a, 0x92, 0x3f, 0x34, 0xf4, 0xb7, 0xf0, 0xcb, 0xff, 0x02, 0x00,
+	0x00, 0xff, 0xff, 0xcb, 0x35, 0x8c, 0xef, 0x35, 0x05, 0x00, 0x00,
 }
 
 func (x VisualScale) String() string {
@@ -657,13 +793,7 @@ func (this *TRS) Equal(that interface{}) bool {
 	if this.Pz != that1.Pz {
 		return false
 	}
-	if this.Sx != that1.Sx {
-		return false
-	}
-	if this.Sy != that1.Sy {
-		return false
-	}
-	if this.Sz != that1.Sz {
+	if this.Scale != that1.Scale {
 		return false
 	}
 	if this.Qx != that1.Qx {
@@ -676,6 +806,48 @@ func (this *TRS) Equal(that interface{}) bool {
 		return false
 	}
 	if this.Qw != that1.Qw {
+		return false
+	}
+	return true
+}
+func (this *CameraState) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*CameraState)
+	if !ok {
+		that2, ok := that.(CameraState)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Placement.Equal(that1.Placement) {
+		return false
+	}
+	if this.Fov != that1.Fov {
+		return false
+	}
+	if this.NearPlane != that1.NearPlane {
+		return false
+	}
+	if this.FarPlane != that1.FarPlane {
+		return false
+	}
+	if this.Distance != that1.Distance {
+		return false
+	}
+	if this.Altitude != that1.Altitude {
+		return false
+	}
+	if this.Mode != that1.Mode {
 		return false
 	}
 	return true
@@ -724,6 +896,33 @@ func (this *FileInfo) Equal(that interface{}) bool {
 		return false
 	}
 	if this.ByteSize != that1.ByteSize {
+		return false
+	}
+	return true
+}
+func (this *ItemCell) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ItemCell)
+	if !ok {
+		that2, ok := that.(ItemCell)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Body != that1.Body {
+		return false
+	}
+	if !this.Tags.Equal(that1.Tags) {
 		return false
 	}
 	return true
@@ -786,7 +985,7 @@ func (this *TRS) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 14)
 	s = append(s, "&std.TRS{")
 	if this.Anchor != nil {
 		s = append(s, "Anchor: "+fmt.Sprintf("%#v", this.Anchor)+",\n")
@@ -795,13 +994,29 @@ func (this *TRS) GoString() string {
 	s = append(s, "Px: "+fmt.Sprintf("%#v", this.Px)+",\n")
 	s = append(s, "Py: "+fmt.Sprintf("%#v", this.Py)+",\n")
 	s = append(s, "Pz: "+fmt.Sprintf("%#v", this.Pz)+",\n")
-	s = append(s, "Sx: "+fmt.Sprintf("%#v", this.Sx)+",\n")
-	s = append(s, "Sy: "+fmt.Sprintf("%#v", this.Sy)+",\n")
-	s = append(s, "Sz: "+fmt.Sprintf("%#v", this.Sz)+",\n")
+	s = append(s, "Scale: "+fmt.Sprintf("%#v", this.Scale)+",\n")
 	s = append(s, "Qx: "+fmt.Sprintf("%#v", this.Qx)+",\n")
 	s = append(s, "Qy: "+fmt.Sprintf("%#v", this.Qy)+",\n")
 	s = append(s, "Qz: "+fmt.Sprintf("%#v", this.Qz)+",\n")
 	s = append(s, "Qw: "+fmt.Sprintf("%#v", this.Qw)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *CameraState) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 11)
+	s = append(s, "&std.CameraState{")
+	if this.Placement != nil {
+		s = append(s, "Placement: "+fmt.Sprintf("%#v", this.Placement)+",\n")
+	}
+	s = append(s, "Fov: "+fmt.Sprintf("%#v", this.Fov)+",\n")
+	s = append(s, "NearPlane: "+fmt.Sprintf("%#v", this.NearPlane)+",\n")
+	s = append(s, "FarPlane: "+fmt.Sprintf("%#v", this.FarPlane)+",\n")
+	s = append(s, "Distance: "+fmt.Sprintf("%#v", this.Distance)+",\n")
+	s = append(s, "Altitude: "+fmt.Sprintf("%#v", this.Altitude)+",\n")
+	s = append(s, "Mode: "+fmt.Sprintf("%#v", this.Mode)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -820,6 +1035,19 @@ func (this *FileInfo) GoString() string {
 	s = append(s, "CreatedAt: "+fmt.Sprintf("%#v", this.CreatedAt)+",\n")
 	s = append(s, "ModifiedAt: "+fmt.Sprintf("%#v", this.ModifiedAt)+",\n")
 	s = append(s, "ByteSize: "+fmt.Sprintf("%#v", this.ByteSize)+",\n")
+	s = append(s, "}")
+	return strings.Join(s, "")
+}
+func (this *ItemCell) GoString() string {
+	if this == nil {
+		return "nil"
+	}
+	s := make([]string, 0, 6)
+	s = append(s, "&std.ItemCell{")
+	s = append(s, "Body: "+fmt.Sprintf("%#v", this.Body)+",\n")
+	if this.Tags != nil {
+		s = append(s, "Tags: "+fmt.Sprintf("%#v", this.Tags)+",\n")
+	}
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -956,23 +1184,11 @@ func (m *TRS) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x85
 	}
-	if m.Sz != 0 {
+	if m.Scale != 0 {
 		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Sz))))
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Scale))))
 		i--
-		dAtA[i] = 0x6d
-	}
-	if m.Sy != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Sy))))
-		i--
-		dAtA[i] = 0x65
-	}
-	if m.Sx != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Sx))))
-		i--
-		dAtA[i] = 0x5d
+		dAtA[i] = 0x55
 	}
 	if m.Pz != 0 {
 		i -= 8
@@ -1000,6 +1216,78 @@ func (m *TRS) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.Anchor != nil {
 		{
 			size, err := m.Anchor.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAmpStd(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *CameraState) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CameraState) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *CameraState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Mode) > 0 {
+		i -= len(m.Mode)
+		copy(dAtA[i:], m.Mode)
+		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.Mode)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if m.Altitude != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Altitude))))
+		i--
+		dAtA[i] = 0x45
+	}
+	if m.Distance != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Distance))))
+		i--
+		dAtA[i] = 0x3d
+	}
+	if m.FarPlane != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.FarPlane))))
+		i--
+		dAtA[i] = 0x2d
+	}
+	if m.NearPlane != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.NearPlane))))
+		i--
+		dAtA[i] = 0x25
+	}
+	if m.Fov != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Fov))))
+		i--
+		dAtA[i] = 0x1d
+	}
+	if m.Placement != nil {
+		{
+			size, err := m.Placement.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1093,6 +1381,48 @@ func (m *FileInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *ItemCell) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ItemCell) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ItemCell) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Tags != nil {
+		{
+			size, err := m.Tags.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintAmpStd(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Body) > 0 {
+		i -= len(m.Body)
+		copy(dAtA[i:], m.Body)
+		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.Body)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *GeoPath) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1115,9 +1445,9 @@ func (m *GeoPath) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = l
 	if len(m.Coords) > 0 {
 		for iNdEx := len(m.Coords) - 1; iNdEx >= 0; iNdEx-- {
-			f2 := math.Float64bits(float64(m.Coords[iNdEx]))
+			f4 := math.Float64bits(float64(m.Coords[iNdEx]))
 			i -= 8
-			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(f2))
+			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(f4))
 		}
 		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.Coords)*8))
 		i--
@@ -1206,13 +1536,7 @@ func (m *TRS) Size() (n int) {
 	if m.Pz != 0 {
 		n += 9
 	}
-	if m.Sx != 0 {
-		n += 5
-	}
-	if m.Sy != 0 {
-		n += 5
-	}
-	if m.Sz != 0 {
+	if m.Scale != 0 {
 		n += 5
 	}
 	if m.Qx != 0 {
@@ -1226,6 +1550,38 @@ func (m *TRS) Size() (n int) {
 	}
 	if m.Qw != 0 {
 		n += 6
+	}
+	return n
+}
+
+func (m *CameraState) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Placement != nil {
+		l = m.Placement.Size()
+		n += 1 + l + sovAmpStd(uint64(l))
+	}
+	if m.Fov != 0 {
+		n += 5
+	}
+	if m.NearPlane != 0 {
+		n += 5
+	}
+	if m.FarPlane != 0 {
+		n += 5
+	}
+	if m.Distance != 0 {
+		n += 5
+	}
+	if m.Altitude != 0 {
+		n += 5
+	}
+	l = len(m.Mode)
+	if l > 0 {
+		n += 1 + l + sovAmpStd(uint64(l))
 	}
 	return n
 }
@@ -1266,6 +1622,23 @@ func (m *FileInfo) Size() (n int) {
 	}
 	if m.ByteSize != 0 {
 		n += 1 + sovAmpStd(uint64(m.ByteSize))
+	}
+	return n
+}
+
+func (m *ItemCell) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Body)
+	if l > 0 {
+		n += 1 + l + sovAmpStd(uint64(l))
+	}
+	if m.Tags != nil {
+		l = m.Tags.Size()
+		n += 1 + l + sovAmpStd(uint64(l))
 	}
 	return n
 }
@@ -1323,13 +1696,27 @@ func (this *TRS) String() string {
 		`Px:` + fmt.Sprintf("%v", this.Px) + `,`,
 		`Py:` + fmt.Sprintf("%v", this.Py) + `,`,
 		`Pz:` + fmt.Sprintf("%v", this.Pz) + `,`,
-		`Sx:` + fmt.Sprintf("%v", this.Sx) + `,`,
-		`Sy:` + fmt.Sprintf("%v", this.Sy) + `,`,
-		`Sz:` + fmt.Sprintf("%v", this.Sz) + `,`,
+		`Scale:` + fmt.Sprintf("%v", this.Scale) + `,`,
 		`Qx:` + fmt.Sprintf("%v", this.Qx) + `,`,
 		`Qy:` + fmt.Sprintf("%v", this.Qy) + `,`,
 		`Qz:` + fmt.Sprintf("%v", this.Qz) + `,`,
 		`Qw:` + fmt.Sprintf("%v", this.Qw) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *CameraState) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&CameraState{`,
+		`Placement:` + strings.Replace(this.Placement.String(), "TRS", "TRS", 1) + `,`,
+		`Fov:` + fmt.Sprintf("%v", this.Fov) + `,`,
+		`NearPlane:` + fmt.Sprintf("%v", this.NearPlane) + `,`,
+		`FarPlane:` + fmt.Sprintf("%v", this.FarPlane) + `,`,
+		`Distance:` + fmt.Sprintf("%v", this.Distance) + `,`,
+		`Altitude:` + fmt.Sprintf("%v", this.Altitude) + `,`,
+		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1348,6 +1735,17 @@ func (this *FileInfo) String() string {
 		`CreatedAt:` + fmt.Sprintf("%v", this.CreatedAt) + `,`,
 		`ModifiedAt:` + fmt.Sprintf("%v", this.ModifiedAt) + `,`,
 		`ByteSize:` + fmt.Sprintf("%v", this.ByteSize) + `,`,
+		`}`,
+	}, "")
+	return s
+}
+func (this *ItemCell) String() string {
+	if this == nil {
+		return "nil"
+	}
+	s := strings.Join([]string{`&ItemCell{`,
+		`Body:` + fmt.Sprintf("%v", this.Body) + `,`,
+		`Tags:` + strings.Replace(fmt.Sprintf("%v", this.Tags), "Tags", "amp.Tags", 1) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -1655,9 +2053,9 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
 			m.Pz = float64(math.Float64frombits(v))
-		case 11:
+		case 10:
 			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sx", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Scale", wireType)
 			}
 			var v uint32
 			if (iNdEx + 4) > l {
@@ -1665,29 +2063,7 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			}
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Sx = float32(math.Float32frombits(v))
-		case 12:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sy", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-			m.Sy = float32(math.Float32frombits(v))
-		case 13:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Sz", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-			m.Sz = float32(math.Float32frombits(v))
+			m.Scale = float32(math.Float32frombits(v))
 		case 16:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Qx", wireType)
@@ -1732,6 +2108,179 @@ func (m *TRS) Unmarshal(dAtA []byte) error {
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
 			m.Qw = float32(math.Float32frombits(v))
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAmpStd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CameraState) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAmpStd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CameraState: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CameraState: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Placement", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Placement == nil {
+				m.Placement = &TRS{}
+			}
+			if err := m.Placement.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fov", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Fov = float32(math.Float32frombits(v))
+		case 4:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NearPlane", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.NearPlane = float32(math.Float32frombits(v))
+		case 5:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarPlane", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.FarPlane = float32(math.Float32frombits(v))
+		case 7:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Distance", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Distance = float32(math.Float32frombits(v))
+		case 8:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Altitude", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Altitude = float32(math.Float32frombits(v))
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Mode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAmpStd(dAtA[iNdEx:])
@@ -2006,6 +2555,124 @@ func (m *FileInfo) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAmpStd(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ItemCell) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAmpStd
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ItemCell: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ItemCell: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Body", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Body = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tags == nil {
+				m.Tags = &amp.Tags{}
+			}
+			if err := m.Tags.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAmpStd(dAtA[iNdEx:])

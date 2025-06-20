@@ -491,36 +491,36 @@ func (sel *ItemSelector) AsLabel() string {
 
 // Adds a selection range for all items having the given nodeID and addrID.
 func (sel *ItemSelector) AddNodeWithAddr(nodeID, addrID tag.UID) {
-	lo := tag.Address{
+	min := tag.Address{
 		NodeID: nodeID,
 		AttrID: addrID,
 	}
-	hi := tag.Address{
+	max := tag.Address{
 		NodeID: nodeID,
 		AttrID: addrID,
 		ItemID: tag.UID_Max(),
 	}
-	sel.AddRange(lo, hi)
+	sel.AddRange(min, max, 1)
 }
 
 // Adds a selection range for all items on the given nodeID.
 func (sel *ItemSelector) AddNode(nodeID tag.UID) {
-	lo := tag.Address{
+	min := tag.Address{
 		NodeID: nodeID,
 	}
-	hi := tag.Address{
+	max := tag.Address{
 		NodeID: nodeID,
 		AttrID: tag.UID_Max(),
 		ItemID: tag.UID_Max(),
 	}
-	sel.AddRange(lo, hi)
+	sel.AddRange(min, max, 1)
 }
 
 func (sel *ItemSelector) AddSingle(addr tag.Address) {
-	sel.AddRange(addr, addr)
+	sel.AddRange(addr, addr, 1)
 }
 
-func (sel *ItemSelector) AddRange(min, max tag.Address) {
+func (sel *ItemSelector) AddRange(min, max tag.Address, weight float32) {
 	if min.CompareTo(&max, true) > 0 {
 		return
 	}
@@ -543,6 +543,7 @@ func (sel *ItemSelector) AddRange(min, max tag.Address) {
 
 		Edit_Min_0: min.EditID[0],
 		Edit_Min_1: min.EditID[1],
+		Weight:     weight,
 	}
 
 	if max.EditID.IsSet() {
