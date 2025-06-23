@@ -1,9 +1,9 @@
 package amp
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math"
 	"net/url"
 	"strconv"
 	"time"
@@ -369,14 +369,14 @@ func (filter *ItemFilter) Revise(req *PinRequest) error {
 */
 
 // Returns the next range to scan, starting from the given scan position.
-// TODO: make iterator to iterate over ranges more efficiently.
-func (filter *ItemFilter) NextRange(scan *AddrRange) bool {
+func (filter *ItemFilter) NextRange(scan *ItemRange) bool {
 
 	// resume where the previous scan ended
+	// TODO: make iterator to iterate over ranges more efficiently.
 	pos := scan.Max()
 	for _, ri := range filter.Selector.Ranges {
 		ri_max := ri.Max()
-		if ri_max.CompareTo(&pos) > 0 {
+		if bytes.Compare(ri_max[:], pos[:]) > 0 {
 			scan.SetMin(ri.Min())
 			scan.SetMax(ri_max)
 			return true
@@ -385,60 +385,56 @@ func (filter *ItemFilter) NextRange(scan *AddrRange) bool {
 	return false
 }
 
-func (r *AddrRange) Min() (lsm tag.AddressLSM) {
+func (r *ItemRange) Min() (lsm tag.ElementLSM) {
 	binary.BigEndian.PutUint64(lsm[0:8], r.Node_Min_0)
 	binary.BigEndian.PutUint64(lsm[8:16], r.Node_Min_1)
 	binary.BigEndian.PutUint64(lsm[16:24], r.Attr_Min_0)
 	binary.BigEndian.PutUint64(lsm[24:32], r.Attr_Min_1)
 	binary.BigEndian.PutUint64(lsm[32:40], r.Item_Min_0)
 	binary.BigEndian.PutUint64(lsm[40:48], r.Item_Min_1)
-	binary.BigEndian.PutUint64(lsm[48:56], r.Edit_Min_0)
 	return
 }
 
-func (r *AddrRange) Max() (lsm tag.AddressLSM) {
+func (r *ItemRange) Max() (lsm tag.ElementLSM) {
 	binary.BigEndian.PutUint64(lsm[0:8], r.Node_Max_0)
 	binary.BigEndian.PutUint64(lsm[8:16], r.Node_Max_1)
 	binary.BigEndian.PutUint64(lsm[16:24], r.Attr_Max_0)
 	binary.BigEndian.PutUint64(lsm[24:32], r.Attr_Max_1)
 	binary.BigEndian.PutUint64(lsm[32:40], r.Item_Max_0)
 	binary.BigEndian.PutUint64(lsm[40:48], r.Item_Max_1)
-	binary.BigEndian.PutUint64(lsm[48:56], r.Edit_Max_0)
 	return
 }
 
-func (r *AddrRange) SetMin(addr tag.AddressLSM) {
+func (r *ItemRange) SetMin(addr tag.ElementLSM) {
 	r.Node_Min_0 = binary.BigEndian.Uint64(addr[0:8])
 	r.Node_Min_1 = binary.BigEndian.Uint64(addr[8:16])
 	r.Attr_Min_0 = binary.BigEndian.Uint64(addr[16:24])
 	r.Attr_Min_1 = binary.BigEndian.Uint64(addr[24:32])
 	r.Item_Min_0 = binary.BigEndian.Uint64(addr[32:40])
 	r.Item_Min_1 = binary.BigEndian.Uint64(addr[40:48])
-	r.Edit_Min_0 = binary.BigEndian.Uint64(addr[48:56])
 }
 
-func (r *AddrRange) SetMax(addr tag.AddressLSM) {
+func (r *ItemRange) SetMax(addr tag.ElementLSM) {
 	r.Node_Max_0 = binary.BigEndian.Uint64(addr[0:8])
 	r.Node_Max_1 = binary.BigEndian.Uint64(addr[8:16])
 	r.Attr_Max_0 = binary.BigEndian.Uint64(addr[16:24])
 	r.Attr_Max_1 = binary.BigEndian.Uint64(addr[24:32])
 	r.Item_Max_0 = binary.BigEndian.Uint64(addr[32:40])
 	r.Item_Max_1 = binary.BigEndian.Uint64(addr[40:48])
-	r.Edit_Max_0 = binary.BigEndian.Uint64(addr[48:56])
 }
 
 // Returns selection weight of the given Address in the range:
 // weight: < 0 excludes, > 0 includes, 0 ignored
-func (rge *AddrRange) WeightAt(addr *tag.AddressLSM) float32 {
+func (rge *ItemRange) WeightAt(addr *tag.AddressLSM) int64 {
 
 	min := rge.Min()
-	cmp := min.CompareTo(addr)
+	cmp := bytes.Compare(min[:], addr[:])
 	if cmp > 0 {
 		return 0
 	}
 
 	max := rge.Max()
-	cmp = max.CompareTo(addr)
+	cmp = bytes.Compare(max[:], addr[:])
 	if cmp < 0 {
 		return 0
 	}
@@ -447,7 +443,7 @@ func (rge *AddrRange) WeightAt(addr *tag.AddressLSM) float32 {
 }
 
 func (v *ItemFilter) Admits(addr tag.AddressLSM) bool {
-	netWeight := float32(0)
+	netWeight := int64(0)
 	for _, ri := range v.Selector.Ranges {
 		netWeight += ri.WeightAt(&addr)
 	}
@@ -520,12 +516,12 @@ func (sel *ItemSelector) AddSingle(addr tag.Address) {
 	sel.AddRange(addr, addr, 1)
 }
 
-func (sel *ItemSelector) AddRange(min, max tag.Address, weight float32) {
+func (sel *ItemSelector) AddRange(min, max tag.Address, weight int64) {
 	if min.CompareTo(&max, true) > 0 {
 		return
 	}
 
-	single := &AddrRange{
+	single := &ItemRange{
 		Node_Min_0: min.NodeID[0],
 		Node_Max_0: max.NodeID[0],
 		Node_Min_1: min.NodeID[1],
@@ -541,17 +537,10 @@ func (sel *ItemSelector) AddRange(min, max tag.Address, weight float32) {
 		Item_Min_1: min.ItemID[1],
 		Item_Max_1: max.ItemID[1],
 
-		Edit_Min_0: min.EditID[0],
-		Edit_Min_1: min.EditID[1],
-		Weight:     weight,
-	}
+		Edit_Start: 0,
+		Edit_Count: 1,
 
-	if max.EditID.IsSet() {
-		single.Edit_Max_0 = max.EditID[0]
-		single.Edit_Max_1 = max.EditID[1]
-	} else {
-		single.Edit_Max_0 = math.MaxUint64
-		single.Edit_Max_1 = math.MaxUint64
+		Weight: weight,
 	}
 
 	sel.Ranges = append(sel.Ranges, single)

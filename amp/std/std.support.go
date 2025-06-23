@@ -22,19 +22,22 @@ func PushSessionOp(sess amp.Session, attrID tag.UID, value amp.Value) error {
 	}
 	kv.Addr.NodeID = amp.HeadNodeID
 	kv.Addr.AttrID = attrID
+	kv.Addr.FromID = sess.Login().Member.UID()
 	return PushMetaOp(sess, sess, kv, SessionContextID, amp.PinStatus_Synced)
 }
 
 // PushMetaOp sends a TxOp to the given destination with the given value.
 func PushMetaOp(dst amp.TxReceiver, ctx context.Context, kv amp.ValueEntry, contextID tag.UID, status amp.PinStatus) error {
+	tx := amp.TxNew()
+	tx.SetFromID(kv.Addr.FromID)
+	tx.SetContextID(contextID)
+	tx.Status = status
+
 	op := amp.TxOp{
 		OpCode: amp.TxOpCode_MetaOp,
 		Addr:   kv.Addr,
 	}
-
-	tx := amp.TxGenesis()
-	tx.SetContextID(contextID)
-	tx.Status = status
+	op.Addr.FromID = tx.FromID()
 	if err := tx.MarshalOp(&op, kv.Value); err != nil {
 		return err
 	}
@@ -187,7 +190,7 @@ func (pin *Pin[AppT]) ReviseRequest(latest *amp.PinRequest) error {
 
 // Pushes a TxMsg to the client of this Pin, pushing the state of each item and its children.
 func (pin *Pin[AppT]) pushState() error {
-	tx := amp.TxGenesis()
+	tx := pin.App.NewTx()
 
 	{
 		pinnedID := pin.Item.Root().ID

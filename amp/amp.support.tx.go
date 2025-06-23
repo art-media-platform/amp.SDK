@@ -32,16 +32,15 @@ func TxNew() *TxMsg {
 	return tx
 }
 
-func TxGenesis() *TxMsg {
-	tx := TxNew()
-	tx.SetID(tag.UID_Now())
-	return tx
-}
-
 var gTxMsgPool = sync.Pool{
 	New: func() interface{} {
 		return &TxMsg{}
 	},
+}
+
+func (tx *TxHeader) SetID(ID tag.UID) {
+	tx.TxID_0 = ID[0]
+	tx.TxID_1 = ID[1]
 }
 
 func (tx *TxHeader) SetContextID(ID tag.UID) {
@@ -53,9 +52,13 @@ func (tx *TxHeader) ContextID() tag.UID {
 	return tag.UID{tx.ContextID_0, tx.ContextID_1}
 }
 
-func (tx *TxHeader) SetID(ID tag.UID) {
-	tx.TxID_0 = ID[0]
-	tx.TxID_1 = ID[1]
+func (tx *TxHeader) SetFromID(ID tag.UID) {
+	tx.FromID_0 = ID[0]
+	tx.FromID_1 = ID[1]
+}
+
+func (tx *TxHeader) FromID() tag.UID {
+	return tag.UID{tx.FromID_0, tx.FromID_1}
 }
 
 func (tx *TxHeader) ID() tag.UID {
@@ -114,24 +117,24 @@ func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst Value) error {
 	return ErrAttrNotFound
 }
 
-func (tx *TxMsg) LoadValue(findID *tag.Address, dst Value) error {
+func (tx *TxMsg) LoadValue(want *tag.Address, dst Value) error {
 	tx.sortOps()
 
-	if findID.ItemID.Wildcard() != 0 {
+	if want.ItemID.Wildcard() != 0 {
 		panic("TODO") // add ItemID wildcard support
 	}
 
 	N := len(tx.Ops)
 	idx, _ := sort.Find(N, func(i int) int {
-		return tx.Ops[i].Addr.CompareTo(findID, false)
+		return tx.Ops[i].Addr.CompareTo(want, false)
 	})
 	if idx >= N {
 		return ErrAttrNotFound
 	}
 
 	// check we have a match but ignore EditID
-	elemID := tx.Ops[idx].Addr.ElemID()
-	wantID := findID.ElemID()
+	elemID := tx.Ops[idx].Addr.ElementID()
+	wantID := want.ElementID()
 	if elemID != wantID {
 		return ErrAttrNotFound
 	}
@@ -181,6 +184,9 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val Value) error {
 
 	if op.Addr.EditID.IsNil() {
 		op.Addr.EditID = tag.GenesisEditID()
+	}
+	if op.Addr.FromID.IsNil() {
+		op.Addr.FromID.EnsureSet(tx.FromID())
 	}
 
 	tx.OpCount += 1

@@ -1,11 +1,10 @@
 package tag
 
 import (
-	"bytes"
 	"encoding/binary"
 )
 
-func (addr *Address) ElemID() (lsm AddressID) {
+func (addr *Address) ElementID() (lsm ElementLSM) {
 	binary.BigEndian.PutUint64(lsm[0:8], addr.NodeID[0])   // NodeID
 	binary.BigEndian.PutUint64(lsm[8:16], addr.NodeID[1])  //
 	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
@@ -25,6 +24,8 @@ func (addr *Address) AsLSM() (lsm AddressLSM) {
 	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[1]) //
 	binary.BigEndian.PutUint64(lsm[48:56], addr.EditID[0]) // EditID
 	binary.BigEndian.PutUint64(lsm[56:64], addr.EditID[1]) //
+	binary.BigEndian.PutUint64(lsm[64:72], addr.FromID[0]) // FromID
+	binary.BigEndian.PutUint64(lsm[72:80], addr.FromID[1]) //
 	return
 }
 
@@ -37,6 +38,8 @@ func (addr *Address) FromLSM(lsm []byte) {
 	addr.ItemID[1] = binary.BigEndian.Uint64(lsm[40:48]) //
 	addr.EditID[0] = binary.BigEndian.Uint64(lsm[48:56]) // EditID
 	addr.EditID[1] = binary.BigEndian.Uint64(lsm[56:64]) //
+	addr.FromID[0] = binary.BigEndian.Uint64(lsm[64:72]) // FromID
+	addr.FromID[1] = binary.BigEndian.Uint64(lsm[72:80]) //
 }
 
 func (addr *Address) CompareTo(oth *Address, includeEditID bool) int {
@@ -89,32 +92,30 @@ func (addr *Address) CompareTo(oth *Address, includeEditID bool) int {
 	return 0 // all equal
 }
 
-const (
-	kItemOfs = AddressIDLength - 24
-	kEditOfs = AddressIDLength
-)
+func (addr *ElementLSM) Set(nodeID, attrID, itemID UID) {
+	binary.BigEndian.PutUint64((*addr)[0:8], nodeID[0])
+	binary.BigEndian.PutUint64((*addr)[8:16], nodeID[1])
+	binary.BigEndian.PutUint64((*addr)[16:24], attrID[0])
+	binary.BigEndian.PutUint64((*addr)[24:32], attrID[1])
+	binary.BigEndian.PutUint64((*addr)[32:40], itemID[0])
+	binary.BigEndian.PutUint64((*addr)[40:48], itemID[1])
+}
 
-// Increments Address.ItemID by 1 and zeros out the EditID
-func (addr *AddressLSM) NextItemID() {
+// Increments ItemID by 1, used to go to the next possible ElementLSM
+func (addr *ElementLSM) NextItemID() bool {
 
-	for i := kEditOfs - 1; i >= kItemOfs; i-- {
-		digit := addr[i] + 1
-		addr[i] = digit
+	// From least to most significant byte of ItemID, add 1 until no carry
+	for j := 1; j <= UID_Size; j++ {
+		idx := ElementLSM_Size - j
+		digit := addr[idx] + 1
+		addr[idx] = digit
 		if digit > 0 {
-			break // no carry means add 1 complete
+			return true // no carry, so we're done
 		}
 	}
-
-	// Zero out the EditID
-	for i := kEditOfs; i < AddressLength; i++ {
-		addr[i] = 0
-	}
+	return false
 }
 
-func (addr *AddressLSM) AsID() AddressID {
-	return AddressID(addr[0:AddressIDLength])
-}
-
-func (addr *AddressLSM) CompareTo(oth *AddressLSM) int {
-	return bytes.Compare(addr[:], oth[:])
+func (addr AddressLSM) ElementLSM() ElementLSM {
+	return ElementLSM(addr[0:ElementLSM_Size])
 }

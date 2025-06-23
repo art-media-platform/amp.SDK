@@ -16,9 +16,9 @@ type AppModuleInfo struct {
 }
 
 type AppEnvironment struct {
-	Session     Session       // session this app is running in
 	Creator     AppModuleInfo // AppModule info that spawned this instance
 	HomeID      tag.UID       // home ID for this app instance
+	MemberID    tag.UID       // who is running this app instance
 	IID         tag.UID       // instance ID for this app instance spawned by AboutModule
 	HomePath    string        // safe persistent read-write file system access
 	CachePath   string        // safe persistent read-write file system access (low-priority)
@@ -42,6 +42,7 @@ type AppContext interface {
 	task.Context    // Allows select{} for graceful handling of app shutdown
 	media.Publisher // Allows an app to publish assets for client consumption
 
+	NewTx() *TxMsg                  // Creates a new tx ready for use, with the tx NodeID set to the app's HomeID
 	Session() Session               // Access to underlying Session
 	AppEnvironment() AppEnvironment // Runtime environment for this app instance
 }

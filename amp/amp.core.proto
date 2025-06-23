@@ -58,17 +58,20 @@ enum TxOpCode {
 enum TxField {
     TxField_Nil = 0;
 
-    TxField_NodeID_0 = 2;
-    TxField_NodeID_1 = 3;
+    TxField_NodeID_0 = 1;
+    TxField_NodeID_1 = 2;
 
-    TxField_AttrID_0 = 4;
-    TxField_AttrID_1 = 5;
+    TxField_AttrID_0 = 3;
+    TxField_AttrID_1 = 4;
 
-    TxField_ItemID_0 = 7;
-    TxField_ItemID_1 = 8;
+    TxField_ItemID_0 = 5;
+    TxField_ItemID_1 = 6;
 
-    TxField_EditID_0 = 10;
-    TxField_EditID_1 = 11;
+    TxField_EditID_0 = 7;
+    TxField_EditID_1 = 8;
+
+    TxField_FromID_0 = 9;
+    TxField_FromID_1 = 10;
 
     TxField_NumFields = 12;
     TxField_MaxFields = 24;
@@ -83,15 +86,16 @@ message TxHeader {
     fixed64             TxID_0 = 1;
     fixed64             TxID_1 = 2;
 
-    // The planet epoch this tx is associated with.
+    // The planet epoch this tx was sealed within.
     // IN THE CLEAR
     Tag                 Recipient = 5;
 
-    // Author alias claiming the right to publish this tx in given planet epoch.
+    // Identifies who created and/or will or did sign this tx.
     // IN THE CLEAR
-    Tag                 Author = 8;
+    fixed64             FromID_0 = 6;
+    fixed64             FromID_1 = 7;
 
-    // When set, this tx is sealed (signed) by Author.
+    // When set, this tx is sealed (signed) by FromID.
     // IN THE CLEAR
     Tag                 Signature = 9;
 
@@ -132,7 +136,7 @@ enum PinStatus {
 // Login -- STEP 1: client -> host
 message Login {
 
-    Tag                User   = 1;
+    Tag                Member = 1;
     Tag                Planet = 2;
     Tag                Device = 5;
 
@@ -197,53 +201,37 @@ message PinRequest {
 
 // Expresses an easy to use set of address ranges.
 message ItemSelector {
-    RevisionMode       RevisionMode = 1; // which EditID(s) to select
-    repeated AddrRange Ranges       = 9;
+    repeated ItemRange Ranges = 9;
 
     // ScanMode     ScanMode     = 3;
     // uint64       ItemTakeLimit  = 7; // if > 0, limits how many unique items selected
- }
-
-
-
-// Expresses an address range
-message AddrRange {
-    float    Weight     = 1; // "gravity or magnitude", < 0 repels, == 0 ignored , > 0 attract
-
-    fixed64  Node_Min_0 = 10;
-    fixed64  Node_Max_0 = 11;
-    fixed64  Node_Min_1 = 12;
-    fixed64  Node_Max_1 = 13;
-
-    fixed64  Attr_Min_0 = 14;
-    fixed64  Attr_Max_0 = 15;
-    fixed64  Attr_Min_1 = 16;
-    fixed64  Attr_Max_1 = 17;
-
-    fixed64  Item_Min_0 = 19;
-    fixed64  Item_Max_0 = 20;
-    fixed64  Item_Min_1 = 21;
-    fixed64  Item_Max_1 = 22;
-
-    fixed64  Edit_Min_0 = 23;
-    fixed64  Edit_Max_0 = 24;
-    fixed64  Edit_Min_1 = 25;
-    fixed64  Edit_Max_1 = 26;
 }
 
-// Specifies which EditID(s) to select for a (Node,Attr,Item) match
-enum RevisionMode {
-    RevisionMode_Head   = 0; // head revision only (default)
-    RevisionMode_Smart  = 3; // head and recent host-chosen history
-    RevisionMode_All    = 6; // all revisions
+
+
+// Expresses an Address range to select items from, typically
+message ItemRange {
+    int64    Weight = 1; // "gravity or magnitude", < 0 excludes, == 0 ignored , > 0 includes
+
+    fixed64  Node_Min_0 = 4;
+    fixed64  Node_Min_1 = 5;
+    fixed64  Node_Max_0 = 6;
+    fixed64  Node_Max_1 = 7;
+
+    fixed64  Attr_Min_0 = 8;
+    fixed64  Attr_Min_1 = 9;
+    fixed64  Attr_Max_0 = 10;
+    fixed64  Attr_Max_1 = 11;
+
+    fixed64  Item_Min_0 = 12;
+    fixed64  Item_Min_1 = 13;
+    fixed64  Item_Max_0 = 14;
+    fixed64  Item_Max_1 = 15;
+
+    int64    Edit_Start = 20; // starting edit number (most recent edit is 0)
+    int64    Edit_Count = 21; // max number of edits to return (typically 1)
 }
 
-// Specifies the direction of a scan operation.
-enum ScanMode {
-    ScanMode_Unspecified = 0;
-    ScanMode_Forward     = 1;
-    ScanMode_Reverse     = 2;
-}
 
 
 // Determines how much a Pin emits to its client Requester.
@@ -302,13 +290,13 @@ message Tag {
 
     /// open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
     ///
-    fixed64  ID_0 = 3;
-    fixed64  ID_1 = 4;
+    fixed64 ID_0 = 3;
+    fixed64 ID_1 = 4;
 
-    int64     I     = 16; // as ticks on Grid on an expanding sphere
-    int64     J     = 17; // as Units on Grid horizontally
-    int64     K     = 18; // as Units on Grid vertically
-    Units     Units = 21; // unit convention for (i,j,k)
+    int64   I     = 16; // as ticks on Grid on an expanding sphere
+    int64   J     = 17; // as Units on Grid horizontally
+    int64   K     = 18; // as Units on Grid vertically
+    Units   Units = 21; // unit convention for (i,j,k)
 
     /// open-use non-inline fields
     ///
@@ -371,7 +359,6 @@ message EditableTextAttr {
     int32               Flags           = 4;
 }
 
-
 enum  UIDFormat {
     UIDFormat_Unspecified = 0;
     UIDFormat_TimeUID  = 1;     // node / item ID (time-sorted)
@@ -393,6 +380,21 @@ enum Grid {
     Grid_EquilateralRhomboid = 16; // TODO
     Grid_TrapezoDodecahedron = 17; // TODO
 }
+
+// Specifies which EditID(s) to select for a (Node,Attr,Item) match
+enum RevisionMode {
+    RevisionMode_Head   = 0; // head revision only (default)
+    RevisionMode_Smart  = 3; // head plus host-chosen relevant history
+    RevisionMode_All    = 6; // all revisions
+}
+
+// Specifies the direction of a scan operation.
+enum ScanMode {
+    ScanMode_Unspecified = 0;
+    ScanMode_Forward     = 1;
+    ScanMode_Reverse     = 2;
+}
+
 */
 
 

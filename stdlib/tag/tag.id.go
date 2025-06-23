@@ -212,13 +212,6 @@ const (
 
 var gEntropy = uint64(1<<63) - 301
 
-func (id UID) Wildcard() int {
-	if id[0] == UID_0_Max && id[1] == UID_1_Wildcard {
-		return 1
-	}
-	return 0
-}
-
 // AppendTo appends the UID's 16 bytes to the given byte slice in big-endian order for LSM use.
 func (id UID) AppendTo(dst []byte) []byte {
 	dst = binary.BigEndian.AppendUint64(dst, id[0])
@@ -392,12 +385,28 @@ func (id *UID) CompareTo(oth *UID) int {
 	return 0
 }
 
-func (id *UID) IsSet() bool {
-	return id != nil && (id[0] != 0 || id[1] != 0)
+func (id UID) Wildcard() int {
+	if id[0] == UID_0_Max && id[1] == UID_1_Wildcard {
+		return 1
+	}
+	return 0
+}
+
+// Returns true if this UID is non-nil and valid (as in below UID_0_Max and UID_1_Max).
+func (id UID) IsSet() bool {
+	return id[0] > 0 && id[0] < UID_0_Max &&
+		id[1] > 0 && id[1] < UID_1_Max
 }
 
 func (id *UID) IsNil() bool {
 	return id == nil || (id[0] == 0 && id[1] == 0)
+}
+
+func (id *UID) EnsureSet(src UID) {
+	if id[0] == 0 && id[1] == 0 {
+		id[0] = src[0]
+		id[1] = src[1]
+	}
 }
 
 // UID_Parse parses a UID (typically in base32-encoded ascii) from the given text.

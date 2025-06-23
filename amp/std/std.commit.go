@@ -15,7 +15,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst amp.Value) error {
 	addr.NodeID = appEnv.HomeID
 	addr.AttrID = attrID
 
-	tx := amp.TxGenesis()
+	tx := appCtx.NewTx()
 	tx.Request = SetupSnapshot(addr)
 
 	req := &localLoad{
@@ -24,7 +24,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst amp.Value) error {
 	}
 
 	ctx := closer.WrapContext(appCtx)
-	err := appEnv.Session.SubmitTx(amp.TxCommit{
+	err := appCtx.Session().SubmitTx(amp.TxCommit{
 		Tx:      tx,
 		Origin:  req,
 		Context: ctx,
@@ -61,7 +61,7 @@ func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src amp.Value) error {
 	op.Addr.NodeID = appEnv.HomeID
 	op.Addr.AttrID = attrID
 
-	tx := amp.TxGenesis()
+	tx := appCtx.NewTx()
 	if err := tx.MarshalOp(&op, src); err != nil {
 		return err
 	}
