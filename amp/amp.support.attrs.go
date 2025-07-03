@@ -1,11 +1,11 @@
 package amp
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"net/url"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -40,10 +40,10 @@ func ErrorToValue(v error) Value {
 	if v == nil {
 		return nil
 	}
-	ampErr, _ := v.(*Err)
+	ampErr, _ := v.(*Error)
 	if ampErr == nil {
 		wrapped := ErrCode_Unnamed.Wrap(v)
-		ampErr = wrapped.(*Err)
+		ampErr = wrapped.(*Error)
 	}
 	return ampErr
 }
@@ -70,25 +70,6 @@ func (v *Tag) SetID(uid tag.UID) {
 func (v *Tag) IsNil() bool {
 	return v != nil && v.URI == "" && v.ID_0 == 0 && v.ID_1 == 0
 }
-
-/*
-	func (v *Tag) CompositeID() tag.UID {
-		local := [3]uint64{
-			uint64(v.R),
-			uint64(v.I),
-			uint64(v.J),
-		}
-		sum := tag.FromInts(int64(v.ID_0), v.ID_1, v.ID_2).With(local)
-		if v.URI != "" {
-			sum = sum.WithToken(v.URI)
-		}
-		if v.Text != "" {
-			sum = sum.WithToken(v.Text)
-		}
-		return sum
-	}
-
-*/
 
 func (v *Tag) UID() tag.UID {
 	uid := tag.UID{}
@@ -135,55 +116,41 @@ func (v *Tags) New() Value {
 	return &Tags{}
 }
 
-/*
-	func (v *Tags) CompositeID() tag.UID {
-		var composite tag.UID
-		if v.Head != nil {
-			composite = v.Head.CompositeID()
-		}
-		for i, subTag := range v.SubTags {
-			subID := subTag.CompositeID()
-			subID[2] ^= uint64(i+1) * uint64(Const_HeadNodeID)
-			composite = composite.With(subID)
-		}
-		return composite
-	}
-*/
-func (v *Err) MarshalToStore(in []byte) (out []byte, err error) {
+func (v *Error) MarshalToStore(in []byte) (out []byte, err error) {
 	return MarshalPbToStore(v, in)
 }
 
-func (v *Err) New() Value {
-	return &Err{}
+func (v *Error) New() Value {
+	return &Error{}
 }
 
-// Err returns a Err with the given error code
+// Emits a generic error that wraps this ErrCode
 func (code ErrCode) Err() error {
 	if code == ErrCode_Nil {
 		return nil
 	}
-	return &Err{
+	return &Error{
 		Code: code,
 	}
 }
 
-// FormError returns a Err with the given error code and msg set.
+// FormError returns a Error with the given error code and msg set.
 func (code ErrCode) FormError(msg string) error {
 	if code == ErrCode_Nil {
 		return nil
 	}
-	return &Err{
+	return &Error{
 		Code: code,
 		Msg:  msg,
 	}
 }
 
-// FormErrorf returns a Err with the given error code and formattable msg set.
+// FormErrorf returns a Error with the given error code and formattable msg set.
 func (code ErrCode) FormErrorf(msgFormat string, msgArgs ...interface{}) error {
 	if code == ErrCode_Nil {
 		return nil
 	}
-	return &Err{
+	return &Error{
 		Code: code,
 		Msg:  fmt.Sprintf(msgFormat, msgArgs...),
 	}
@@ -227,6 +194,24 @@ func (v *PinRequest) MarshalToStore(in []byte) (out []byte, err error) {
 
 func (v *PinRequest) New() Value {
 	return &PinRequest{}
+}
+
+func (v *PinRequest) AsLabel() string {
+	if v == nil {
+		return ""
+	}
+
+	label := make([]byte, 0, 255)
+	if v.Invoke != nil {
+		label = append(label, v.Invoke.AsLabel()...)
+		return string(label)
+	}
+
+	if v.Selector != nil {
+		label = append(label, ' ')
+		label = append(label, v.Selector.AsLabel()...)
+	}
+	return string(label)
 }
 
 func (req *Request) ParseParam(paramKey string, dst any) error {
@@ -274,8 +259,12 @@ func (request *Request) Revise(pinReq *PinRequest) error {
 		}
 	}
 
-	if pinReq.Select != nil {
-		request.ItemFilter.Selector = *pinReq.Select
+	if pinReq.Selector != nil {
+		err := pinReq.Selector.Normalize(true)
+		if err != nil {
+			return err
+		}
+		request.ItemFilter.Selector = *pinReq.Selector
 	}
 	return nil
 }
@@ -287,261 +276,235 @@ func (filter *ItemFilter) AsLabel() string {
 	if pinReq.Invoke != nil {
 		label = append(label, pinReq.Invoke.AsLabel()...)
 	}
-	if pinReq.Select != nil {
+	if pinReq.Selector != nil {
 		label = append(label, '[')
-		label = append(label, pinReq.Select.AsLabel()...)
+		label = append(label, pinReq.Selector.AsLabel()...)
 		label = append(label, ']')
 	}
 	return string(label)
 }
 
-/*
-// Exports this AddressRanges to a native and more accessible structure
-func (sel *ItemSelector) ExportRanges(dst *[]tag.AddressRange) {
-	if sel == nil || len(sel.Ranges) == 0 {
-		return
-	}
-
-	ranges := *dst
-
-	for _, ri := range sel.Ranges {
-		if ri == nil {
+// Returns if this range includes the given item's ElementID
+func (filter *ItemFilter) Admits(elem tag.ElementID) bool {
+	for _, scan := range filter.Selector.Scans {
+		nodeID := scan.NodeID()
+		if !nodeID.IsWildcard() && nodeID != elem.NodeID {
+			continue
+		}
+		attrID := scan.AttrID()
+		if !attrID.IsWildcard() && attrID != elem.AttrID {
+			continue
+		}
+		if elem.ItemID[0] < scan.ItemID_Min_0 || elem.ItemID[0] > scan.ItemID_Max_0 {
+			continue
+		}
+		if elem.ItemID[1] < scan.ItemID_Min_1 || elem.ItemID[1] > scan.ItemID_Max_1 {
 			continue
 		}
 
-		r := tag.AddressRange{
-			Weight: 1,
-		}
-
-		// Lo
-		r.Lo.NodeID[0] = ri.Node_Min_0
-		r.Lo.NodeID[1] = ri.Node_Min_1
-
-		r.Lo.AttrID[0] = ri.Attr_Min_0
-		r.Lo.AttrID[1] = ri.Attr_Min_1
-
-		r.Lo.ItemID[0] = ri.Item_Min_0
-		r.Lo.ItemID[1] = ri.Item_Min_1
-
-		r.Lo.EditID[0] = ri.Edit_Min_0
-		r.Lo.EditID[1] = ri.Edit_Min_1
-
-		// Hi
-		r.Hi.NodeID[0] = ri.Node_Max_0
-		r.Hi.NodeID[1] = ri.Node_Max_1
-
-		r.Hi.AttrID[0] = ri.Attr_Max_0
-		r.Hi.AttrID[1] = ri.Attr_Max_1
-
-		r.Hi.ItemID[0] = ri.Item_Max_0
-		r.Hi.ItemID[1] = ri.Item_Max_1
-
-		r.Hi.EditID[0] = ri.Edit_Max_0
-		r.Hi.EditID[1] = ri.Edit_Max_1
-
-		ranges = append(ranges, r)
-	}
-
-	sort.Slice(ranges, func(i, j int) bool {
-		return ranges[i].CompareTo(&ranges[j]) < 0
-	})
-
-	*dst = ranges
-
-	{
-		// TODO: consolidate overlapping or redundant ranges
-	}
-}
-
-func (filter *ItemFilter) AddRange(rge tag.AddresRange) {
-	filter.Select = append(filter.Select, rge)
-}
-
-func (filter *ItemFilter) Revise(req *PinRequest) error {
-	if filter == nil || req == nil {
-		return nil
-	}
-	filter.Selector.Ranges = append(filter.Selector.Ranges, req.Select.Ranges...)
-	req.Select.ExportRanges(&filter.Select)
-
-	return nil
-}
-*/
-
-// Returns the next range to scan, starting from the given scan position.
-func (filter *ItemFilter) NextRange(scan *ItemRange) bool {
-
-	// resume where the previous scan ended
-	// TODO: make iterator to iterate over ranges more efficiently.
-	pos := scan.Max()
-	for _, ri := range filter.Selector.Ranges {
-		ri_max := ri.Max()
-		if bytes.Compare(ri_max[:], pos[:]) > 0 {
-			scan.SetMin(ri.Min())
-			scan.SetMax(ri_max)
-			return true
-		}
+		return true
 	}
 	return false
 }
 
-func (r *ItemRange) Min() (lsm tag.ElementLSM) {
-	binary.BigEndian.PutUint64(lsm[0:8], r.Node_Min_0)
-	binary.BigEndian.PutUint64(lsm[8:16], r.Node_Min_1)
-	binary.BigEndian.PutUint64(lsm[16:24], r.Attr_Min_0)
-	binary.BigEndian.PutUint64(lsm[24:32], r.Attr_Min_1)
-	binary.BigEndian.PutUint64(lsm[32:40], r.Item_Min_0)
-	binary.BigEndian.PutUint64(lsm[40:48], r.Item_Min_1)
+func (scan *NodeScan) NodeID() (nodeID tag.UID) {
+	return tag.UID{
+		scan.NodeID_0,
+		scan.NodeID_1,
+	}
+}
+
+func (scan *NodeScan) AttrID() (attrID tag.UID) {
+	return tag.UID{
+		scan.AttrID_0,
+		scan.AttrID_1,
+	}
+}
+
+func (scan *NodeScan) ItemRange() (min, max tag.UID) {
+	min = tag.UID{
+		scan.ItemID_Min_0,
+		scan.ItemID_Min_1,
+	}
+	max = tag.UID{
+		scan.ItemID_Max_0,
+		scan.ItemID_Max_1,
+	}
 	return
 }
 
-func (r *ItemRange) Max() (lsm tag.ElementLSM) {
-	binary.BigEndian.PutUint64(lsm[0:8], r.Node_Max_0)
-	binary.BigEndian.PutUint64(lsm[8:16], r.Node_Max_1)
-	binary.BigEndian.PutUint64(lsm[16:24], r.Attr_Max_0)
-	binary.BigEndian.PutUint64(lsm[24:32], r.Attr_Max_1)
-	binary.BigEndian.PutUint64(lsm[32:40], r.Item_Max_0)
-	binary.BigEndian.PutUint64(lsm[40:48], r.Item_Max_1)
-	return
-}
-
-func (r *ItemRange) SetMin(addr tag.ElementLSM) {
-	r.Node_Min_0 = binary.BigEndian.Uint64(addr[0:8])
-	r.Node_Min_1 = binary.BigEndian.Uint64(addr[8:16])
-	r.Attr_Min_0 = binary.BigEndian.Uint64(addr[16:24])
-	r.Attr_Min_1 = binary.BigEndian.Uint64(addr[24:32])
-	r.Item_Min_0 = binary.BigEndian.Uint64(addr[32:40])
-	r.Item_Min_1 = binary.BigEndian.Uint64(addr[40:48])
-}
-
-func (r *ItemRange) SetMax(addr tag.ElementLSM) {
-	r.Node_Max_0 = binary.BigEndian.Uint64(addr[0:8])
-	r.Node_Max_1 = binary.BigEndian.Uint64(addr[8:16])
-	r.Attr_Max_0 = binary.BigEndian.Uint64(addr[16:24])
-	r.Attr_Max_1 = binary.BigEndian.Uint64(addr[24:32])
-	r.Item_Max_0 = binary.BigEndian.Uint64(addr[32:40])
-	r.Item_Max_1 = binary.BigEndian.Uint64(addr[40:48])
-}
-
-// Returns selection weight of the given Address in the range:
-// weight: < 0 excludes, > 0 includes, 0 ignored
-func (rge *ItemRange) WeightAt(addr *tag.AddressLSM) int64 {
-
-	min := rge.Min()
-	cmp := bytes.Compare(min[:], addr[:])
-	if cmp > 0 {
-		return 0
+func (scan *NodeScan) CompareTo(j *NodeScan) int {
+	if scan.NodeID_0 < j.NodeID_0 { // NodeID
+		return -1
+	}
+	if scan.NodeID_0 > j.NodeID_0 {
+		return 1
+	}
+	if scan.NodeID_1 < j.NodeID_1 {
+		return -1
+	}
+	if scan.NodeID_1 > j.NodeID_1 {
+		return 1
 	}
 
-	max := rge.Max()
-	cmp = bytes.Compare(max[:], addr[:])
-	if cmp < 0 {
-		return 0
+	if scan.AttrID_0 < j.AttrID_0 { // AttrID
+		return -1
+	}
+	if scan.AttrID_0 > j.AttrID_0 {
+		return 1
+	}
+	if scan.AttrID_1 < j.AttrID_1 {
+		return -1
+	}
+	if scan.AttrID_1 > j.AttrID_1 {
+		return 1
 	}
 
-	return rge.Weight
-}
-
-func (v *ItemFilter) Admits(addr tag.AddressLSM) bool {
-	netWeight := int64(0)
-	for _, ri := range v.Selector.Ranges {
-		netWeight += ri.WeightAt(&addr)
+	if scan.ItemID_Min_0 < j.ItemID_Min_0 { // ItemID Min
+		return -1
 	}
-	admits := netWeight > 0
-	return admits
+	if scan.ItemID_Min_0 > j.ItemID_Min_0 {
+		return 1
+	}
+	if scan.ItemID_Min_1 < j.ItemID_Min_1 {
+		return -1
+	}
+	if scan.ItemID_Min_1 > j.ItemID_Min_1 {
+		return 1
+	}
+
+	if scan.ItemID_Max_0 < j.ItemID_Max_0 { // ItemID Max
+		return -1
+	}
+	if scan.ItemID_Max_0 > j.ItemID_Max_0 {
+		return 1
+	}
+	if scan.ItemID_Max_1 < j.ItemID_Max_1 {
+		return -1
+	}
+	if scan.ItemID_Max_1 > j.ItemID_Max_1 {
+		return 1
+	}
+
+	return 0 // equal
 }
 
-func (v *PinRequest) AsLabel() string {
-	if v == nil {
+func (scan *NodeScan) AsLabel() string {
+	if scan == nil {
 		return ""
 	}
+	min, max := scan.ItemRange()
+	return fmt.Sprintf("%s/%s/%s..%s", scan.NodeID().AsLabel(), scan.AttrID().AsLabel(), min.AsLabel(), max.AsLabel())
+}
 
-	label := make([]byte, 0, 255)
-	if v.Invoke != nil {
-		label = append(label, v.Invoke.AsLabel()...)
-		return string(label)
+func (sel *ItemSelector) Select(elem tag.ElementID) {
+	var itemMin, itemMax tag.UID
+	if elem.ItemID.IsWildcard() {
+		itemMax = tag.MaxID()
+	} else {
+		itemMin = elem.ItemID
+		itemMax = elem.ItemID
 	}
 
-	if v.Select != nil {
-		label = append(label, ' ')
-		label = append(label, v.Select.AsLabel()...)
+	sel.AddScan(elem.NodeID, elem.AttrID, itemMin, itemMax)
+}
+
+// Adds a selection range for all items on the given nodeID.
+func (sel *ItemSelector) SelectNode(nodeID tag.UID) {
+	sel.AddScan(nodeID, tag.WildcardID(), tag.UID{}, tag.MaxID())
+}
+
+// Adds a selection range for all items having the given nodeID and addrID.
+func (sel *ItemSelector) SelectNodeAttr(nodeID, attrID tag.UID) {
+	sel.AddScan(nodeID, attrID, tag.UID{}, tag.MaxID())
+}
+
+func (sel *ItemSelector) AddScan(nodeID, attrID, itemID_min, itemID_max tag.UID) {
+	span := &NodeScan{
+		NodeID_0: nodeID[0],
+		NodeID_1: nodeID[1],
+
+		AttrID_0: attrID[0],
+		AttrID_1: attrID[1],
+
+		ItemID_Min_0: itemID_min[0],
+		ItemID_Min_1: itemID_min[1],
+		ItemID_Max_0: itemID_max[0],
+		ItemID_Max_1: itemID_max[1],
+
+		EditsPerItem: 1,
 	}
-	return string(label)
+
+	sel.Scans = append(sel.Scans, span)
+	sel.Normalized = false
+}
+
+func (sel *ItemSelector) Normalize(force bool) error {
+	if !force && sel.Normalized {
+		return nil
+	}
+
+	scans := sel.Scans
+	N := len(scans)
+	for i := 0; i < N; i++ {
+		scan := scans[i]
+
+		nodeID := scan.NodeID()
+		if nodeID.IsNil() {
+			return ErrCode_BadRequest.Error("NodeScan missing NodeID")
+		}
+
+		attrID := scan.AttrID()
+		if attrID.IsNil() {
+			return ErrCode_BadRequest.Error("NodeScan missing AttrID")
+		}
+
+		// enforce tag.UID_1_Max
+		if scan.ItemID_Max_0 == tag.UID_0_Max && scan.ItemID_Max_1 > tag.UID_1_Max {
+			scan.ItemID_Max_1 = tag.UID_1_Max
+		}
+
+		drop := false
+		if scan.ItemID_Min_0 == tag.UID_0_Max && scan.ItemID_Min_1 > tag.UID_1_Max {
+			drop = true
+		} else if scan.EditsPerItem == 0 {
+			drop = true
+		} else if scan.ItemID_Min_0 > scan.ItemID_Max_0 || (scan.ItemID_Min_0 == scan.ItemID_Max_1 && scan.ItemID_Min_1 > scan.ItemID_Max_1) {
+			drop = true
+		}
+
+		if drop {
+			N--
+			scans[i] = scans[N]
+			i--
+		}
+	}
+
+	// Reverse sort so that it plays nice with db reverse scan (to get newest EditID first per item)
+	sort.Slice(scans, func(i, j int) bool {
+		return scans[i].CompareTo(scans[j]) > 0 // REVERSE SORT
+	})
+
+	sel.Scans = scans[:N]
+	sel.Normalized = true
+	return nil
 }
 
 func (sel *ItemSelector) AsLabel() string {
 	if sel == nil {
 		return ""
 	}
-
-	return "{TODO ItemSelector AsLabel}"
-	// label := make([]byte, 0, 255)
-	// for _, r := range sel.Ranges {
-	// 	if len(label) > 0 {
-	// 		label = append(label, ',')
-	// 	}
-	// 	fmt.Appendf(label, run.AsLabel())
-	// }
-	// return string(label)
-}
-
-// Adds a selection range for all items having the given nodeID and addrID.
-func (sel *ItemSelector) AddNodeWithAddr(nodeID, addrID tag.UID) {
-	min := tag.Address{
-		NodeID: nodeID,
-		AttrID: addrID,
+	N := len(sel.Scans)
+	if N == 0 {
+		return "{}"
 	}
-	max := tag.Address{
-		NodeID: nodeID,
-		AttrID: addrID,
-		ItemID: tag.UID_Max(),
+	parts := make([]string, 0, N)
+	for _, scan := range sel.Scans {
+		if scan == nil {
+			continue
+		}
+		parts = append(parts, scan.AsLabel())
 	}
-	sel.AddRange(min, max, 1)
-}
+	return fmt.Sprintf("{%s}", strings.Join(parts, ", "))
 
-// Adds a selection range for all items on the given nodeID.
-func (sel *ItemSelector) AddNode(nodeID tag.UID) {
-	min := tag.Address{
-		NodeID: nodeID,
-	}
-	max := tag.Address{
-		NodeID: nodeID,
-		AttrID: tag.UID_Max(),
-		ItemID: tag.UID_Max(),
-	}
-	sel.AddRange(min, max, 1)
-}
-
-func (sel *ItemSelector) AddSingle(addr tag.Address) {
-	sel.AddRange(addr, addr, 1)
-}
-
-func (sel *ItemSelector) AddRange(min, max tag.Address, weight int64) {
-	if min.CompareTo(&max, true) > 0 {
-		return
-	}
-
-	single := &ItemRange{
-		Node_Min_0: min.NodeID[0],
-		Node_Max_0: max.NodeID[0],
-		Node_Min_1: min.NodeID[1],
-		Node_Max_1: max.NodeID[1],
-
-		Attr_Min_0: min.AttrID[0],
-		Attr_Max_0: max.AttrID[0],
-		Attr_Min_1: min.AttrID[1],
-		Attr_Max_1: max.AttrID[1],
-
-		Item_Min_0: min.ItemID[0],
-		Item_Max_0: max.ItemID[0],
-		Item_Min_1: min.ItemID[1],
-		Item_Max_1: max.ItemID[1],
-
-		Edit_Start: 0,
-		Edit_Count: 1,
-
-		Weight: weight,
-	}
-
-	sel.Ranges = append(sel.Ranges, single)
 }

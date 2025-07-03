@@ -34,10 +34,9 @@ func PushMetaOp(dst amp.TxReceiver, ctx context.Context, kv amp.ValueEntry, cont
 	tx.Status = status
 
 	op := amp.TxOp{
-		OpCode: amp.TxOpCode_MetaOp,
-		Addr:   kv.Addr,
+		Flags: amp.TxOpFlags_Upsert | amp.TxOpFlags_MetaOp,
+		Addr:  kv.Addr,
 	}
-	op.Addr.FromID = tx.FromID()
 	if err := tx.MarshalOp(&op, kv.Value); err != nil {
 		return err
 	}
@@ -70,7 +69,7 @@ func (root *ItemNode[AppT]) Root() *ItemNode[AppT] {
 func PinAndServe[AppT amp.AppInstance](item Item[AppT], app AppT, req *amp.Request) (amp.Pin, error) {
 	root := item.Root()
 	if root.ID.IsNil() {
-		root.ID = tag.UID_Now()
+		root.ID = tag.NowID()
 	}
 
 	pin := &Pin[AppT]{
@@ -148,7 +147,7 @@ func (pin *Pin[AppT]) AddChild(sub Item[AppT]) {
 	child := sub.Root()
 	childID := child.ID
 	if childID.IsNil() {
-		childID = tag.UID_Now()
+		childID = tag.NowID()
 		child.ID = childID
 	}
 	pin.children[childID] = sub
@@ -227,16 +226,11 @@ type itemWriter struct {
 	err    error
 }
 
-func (w *itemWriter) PushTextWithID(attrID, itemID tag.UID, value string) {
+func (w *itemWriter) PutTextWithID(attrID, itemID tag.UID, value string) {
 	if w.err != nil {
 		return
 	}
-	op := amp.TxOp{}
-	op.OpCode = amp.TxOpCode_Upsert
-	op.Addr.NodeID = w.nodeID
-	op.Addr.AttrID = attrID
-	op.Addr.ItemID = itemID
-	err := w.tx.MarshalOp(&op, &amp.Tag{
+	err := w.tx.Upsert(w.nodeID, attrID, itemID, &amp.Tag{
 		Text: value,
 	})
 	if err != nil {
@@ -244,39 +238,25 @@ func (w *itemWriter) PushTextWithID(attrID, itemID tag.UID, value string) {
 	}
 }
 
-func (w *itemWriter) PushItemWithID(attrID, itemID tag.UID, value amp.Value) {
+func (w *itemWriter) PutItemWithID(attrID, itemID tag.UID, value amp.Value) {
 	if w.err != nil {
 		return
 	}
-	op := amp.TxOp{}
-	op.OpCode = amp.TxOpCode_Upsert
-	op.Addr.NodeID = w.nodeID
-	op.Addr.AttrID = attrID
-	op.Addr.ItemID = itemID
-	if err := w.tx.MarshalOp(&op, value); err != nil {
+	if err := w.tx.Upsert(w.nodeID, attrID, itemID, value); err != nil {
 		w.err = err
 	}
 }
 
-func (w *itemWriter) PushText(attrID tag.UID, value string) {
+func (w *itemWriter) PutText(attrID tag.UID, value string) {
 	if value == "" {
 		return
 	}
-	w.PushTextWithID(attrID, tag.UID{}, value)
+	w.PutTextWithID(attrID, tag.UID{}, value)
 }
 
-func (w *itemWriter) PushItem(attrID tag.UID, value amp.Value) {
+func (w *itemWriter) PutItem(attrID tag.UID, value amp.Value) {
 	if value == nil {
 		return
 	}
-	w.PushItemWithID(attrID, tag.UID{}, value)
-}
-
-func (w *itemWriter) Push(op *amp.TxOp, val amp.Value) {
-	if w.err != nil {
-		return
-	}
-	if err := w.tx.MarshalOp(op, val); err != nil {
-		w.err = err
-	}
+	w.PutItemWithID(attrID, tag.UID{}, value)
 }

@@ -6,24 +6,17 @@ option csharp_namespace = "art.media.platform.std";
 
 import "amp/amp.core.proto";
 
-// Specifies how scale dynamically changes based on observer position.
-enum VisualScale {
-    VisualScale_Fixed = 0;
-    VisualScale_Auto  = 1;
-}
 
-// Text rect bounds and alignment
-message TextRect {
-
-    int64               X0 = 4;
-    int64               Y0 = 5;
-
-    int64               X1 = 6;
-    int64               Y1 = 7;
-
-    int32               TextAlign = 10;
+message StyleCSS {
+    int32               TextAlign = 10; // TODO: placeholder for CSS support
     fixed32             TextColor = 11;
     fixed32             BackColor = 12;
+}
+
+// Specifies how scale dynamically changes based on observer position.
+enum ScaleMode {
+    ScaleMode_Fixed = 0;
+    ScaleMode_Auto  = 1;
 }
 
 
@@ -31,39 +24,62 @@ message TextRect {
 // General purpose placement time, space, orientation, and/or geo-position.
 message TRS {
 
-    // Anchor in time, space, and/or geo-position.
-    // May also specify a grid system or unit convention.
-    amp.Tag             Anchor = 1;
+    // spatial scale -- if 0, scale is 1.0
+    double              Scale = 1;
 
     // Specifies how scale dynamically changes based on observer position.
-    VisualScale         VisualScale = 2;
+    // DEPRECATED: HUD dyanmically choose pip size (min and max)
+    ScaleMode           VisualScale = 2;
 
     // a relative position in space
-    double              Px = 6;
-    double              Py = 7;
-    double              Pz = 8;
+    double              Px = 3;
+    double              Py = 4;
+    double              Pz = 5;
 
-    // Scale express the scale of this placement.
-    // A value of 0, denotes the default scale of 1.0
-    float               Scale = 10;
+    // rotation in space -- if all values are 0, Quaternion is unit identity
+    double              Qx = 10;
+    double              Qy = 11;
+    double              Qz = 12;
+    double              Qw = 13;
 
-    // a Quaternion rotation in space -- if all values are 0, there is no rotation.
-    float               Qx = 16;
-    float               Qy = 17;
-    float               Qz = 18;
-    float               Qw = 19;
 }
+
+message Matrix4x4 {
+
+    // 16 doubles in row-major order
+    double M00 = 1;
+    double M01 = 2;
+    double M02 = 3;
+    double M03 = 4;
+
+    double M10 = 5;
+    double M11 = 6;
+    double M12 = 7;
+    double M13 = 8;
+
+    double M20 = 9;
+    double M21 = 10;
+    double M22 = 11;
+    double M23 = 12;
+
+    double M30 = 13;
+    double M31 = 14;
+    double M32 = 15;
+    double M33 = 16;
+
+}
+
 
 // General purpose Camera state
 message CameraState {
-    TRS        Placement = 1;
+    TRS    Placement = 1;
 
-    float      Fov       = 3; // field of view in degrees; 0 denotes orthographic camera
-    float      NearPlane = 4; // near plane distance
-    float      FarPlane  = 5; // far plane distance
-    float      Distance  = 7; // distance from the camera to the target; optional
-    float      Altitude  = 8; // altitude above the surface; optional
-    string     Mode      = 9; // camera mode descriptor; optional
+    float  Fov       = 3; // field of view in degrees; 0 denotes orthographic camera
+    float  NearPlane = 4; // near plane distance
+    float  FarPlane  = 5; // far plane distance
+    float  Distance  = 7; // distance from the camera to the target; optional
+    float  Altitude  = 8; // altitude above the surface; optional
+    string Mode      = 9; // camera mode descriptor; optional
 }
 
 // FileInfo a general-purpose file system meta info block.
@@ -82,14 +98,42 @@ message FileInfo {
 }
 
 
-// Multi-purpose, future-proof message element or sheet cell.
-message ItemCell {
-    string   Body      = 1; // plain-text body as applicable
+// Multi-purpose, future-proof text element / label / item
+message TextItem {
+    string   TextBody  = 1; // plain-text body as applicable
     amp.Tags Tags      = 4;
 }
 
 
+message Labels {
+    string   Headline  = 1;
+    string   Subtitle  = 2;
+    string   About     = 3;
+}
+
+
+// General purpose lightweight set of geo tiles in the shape of a rectangle -composed rectangle given a center and width/height.
+// The units are typically mid H3 resolution with rectangualar dimensions in units of font glyph size.
+message GeoRect {
+
+    // Discrete radial altitude; typically either mm radius from globe center or timestamp
+    fixed64 R = 1;
+
+    // Globe tile epicenter; tile size sets character cell height
+    fixed64 S2 = 2;
+    fixed64 H3 = 3;
+
+    int64   Center_I = 4; // center offset
+    int64   Center_J = 5; // center offset
+
+    int64   Width    = 8; // character width
+    int64   Height   = 9; // character height, mapped to tile height
+}
+
+
+// General purpose polygonal path of geo tiles.
 message GeoPath {
+
     enum RenderType {
         Point = 0;
         Path = 1;
@@ -100,61 +144,10 @@ message GeoPath {
         LatLngAlt = 1; // each coord is a lat lng alt tuple
     }
 
-
     RenderType Type = 1;
     float      ExtrudeLo = 4;  // If non-zero, extrude the path to this height
     float      ExtrudeHi = 5;  // If non-zero, extrude the path to this height
 
-    repeated double Coords = 15;
+    repeated double  LatLngs = 15;
+    repeated fixed64 H3s     = 16; // H3 tile indices, as applicable
 }
-
-
-
-
-/*
-
-message TileRingSection {
-
-    // public ProfilePoint R0;
-    // public ProfilePoint R1;
-    // public ProfilePoint R2;
-    // public ProfilePoint R3;
-    // public ProfilePoint R4;
-    // public int         BevelArc; // how many angular degrees a bevel segment covers
-    // public int         Sections; // how many sections each edge is divided into
-    // public Vector2     TextureScale;
-    // public Vector2     TextureOffset;
-
-
-
-    int64    Radius_0 = 1;   // normalized radius (Math_UTC16_TicksPerDay)
-    int64    Radius_D = 2;   // R1 - R0
-
-    float    Altitude_0 = 3; // extrusion altitude (t = 0)
-    float    Altitude_D = 4; // A1 - A0
-
-    TRS      Tex_0 = 8;      // tex TRS (t = 0)
-    TRS      Tex_1 = 9;      // tex TRS (t = 1)
-
-    int64    ArcBegin = 5;  // UTC16 time (0x0 coresponds to 12:00p and corresponds to (12 * 60 * 60 << 16) "UTC16 ticks"
-    int64    ArcLength = 6; // 0 is none, 1.0 is 360 degrees, positive corresponds to clockwise rotation
-
-
-    amp.Tag  VisInvocation = 10;  // identifies a vis to invoke (and related resources and materials at a given securuty level) and can often an onbording or setup step.
-    amp.Tag  VisArgs       = 11;  // instance (content) parameters for the vis
-    //amp.Tag  VisLayer      = 12;  //
-
-    int64    DefaultBevelSteps  = 22;  // section degrees of arc per 180 degrees of bevel (outard) angular span.  larger means better quality, but more vertices.
-    int32    DefaultSubSections = 23;
-
-    int64          VertexCount  = 32;
-    repeated float VertexCoords = 33; // optional 2D or 3D verticies forming a polygon ring where Vector3.up is the "upward" axis.
-}
-
-
-message TileBatch {
-
-    // TODO: ??
-}
-
-*/

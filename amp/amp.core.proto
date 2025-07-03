@@ -45,11 +45,12 @@ enum Const {
     Const_Invocation = 3773;
 }
 
-// TxOpCode specifies a particular TxOp transaction operation.
-enum TxOpCode {
-    TxOpCode_MetaOp = 0; // meta operation or request
-    TxOpCode_Upsert = 2; // upsert amp.Value[Address]
-    TxOpCode_Delete = 4; // delete single attribute element
+// TxOpFlags are 8 available bit flags that describe a TxOp.
+enum TxOpFlags {
+    TxOpFlags_Unassigned = 0;    // invalid state
+    TxOpFlags_MetaOp     = 0x01; // op is out of band and/or should not persist
+    TxOpFlags_Upsert     = 0x04; // write value to [Address]
+    TxOpFlags_Delete     = 0x80; // delete entry at [Address]
 }
 
 // TxField maps a fixed count of int64 payload fields.
@@ -61,20 +62,19 @@ enum TxField {
     TxField_NodeID_0 = 1;
     TxField_NodeID_1 = 2;
 
-    TxField_AttrID_0 = 3;
-    TxField_AttrID_1 = 4;
+    TxField_AttrID_0 = 4;
+    TxField_AttrID_1 = 5;
 
-    TxField_ItemID_0 = 5;
-    TxField_ItemID_1 = 6;
+    TxField_ItemID_0 = 6;
+    TxField_ItemID_1 = 7;
 
-    TxField_EditID_0 = 7;
-    TxField_EditID_1 = 8;
+    TxField_EditID_0 = 10;
+    TxField_EditID_1 = 11;
 
-    TxField_FromID_0 = 9;
-    TxField_FromID_1 = 10;
+    TxField_FromID_0 = 13;
+    TxField_FromID_1 = 14;
 
-    TxField_NumFields = 12;
-    TxField_MaxFields = 24;
+    TxField_MaxFields = 18;
 }
 
 // TxHeader contains information for a TxMsg
@@ -192,44 +192,38 @@ message PinRequest {
     Tag                 Invoke = 4;
 
     // Selects which values to synchronize and which NOT to synchronize.
-    ItemSelector        Select = 6;
+    ItemSelector        Selector = 6;
+
+    // If set, requests a preferrred tx byte size limit.
+    int64               PreferredTxSize = 7;
 
     // If set, this is a genesis request to create a new channel with the given typeID (
     ChannelEpoch        Epoch = 16;
-
 }
+
 
 // Expresses an easy to use set of address ranges.
 message ItemSelector {
-    repeated ItemRange Ranges = 9;
-
-    // ScanMode     ScanMode     = 3;
-    // uint64       ItemTakeLimit  = 7; // if > 0, limits how many unique items selected
+    repeated NodeScan Scans      = 1;
+    bool              Normalized = 2;
 }
 
+// Expresses an ItemID range for a given NodeID.
+message NodeScan {
 
+    fixed64  NodeID_0 = 1; // node channel ID[0]
+    fixed64  NodeID_1 = 2; // node channel ID[1]
 
-// Expresses an Address range to select items from, typically
-message ItemRange {
-    int64    Weight = 1; // "gravity or magnitude", < 0 excludes, == 0 ignored , > 0 includes
+    fixed64  AttrID_0 = 4; // attr ID (or wildcard)
+    fixed64  AttrID_1 = 5; //
 
-    fixed64  Node_Min_0 = 4;
-    fixed64  Node_Min_1 = 5;
-    fixed64  Node_Max_0 = 6;
-    fixed64  Node_Max_1 = 7;
+    fixed64  ItemID_Min_0 = 10; // min ItemID (inclusive)
+    fixed64  ItemID_Min_1 = 11; //
+    fixed64  ItemID_Max_0 = 12; // max ItemID (inclusive)
+    fixed64  ItemID_Max_1 = 13; //
 
-    fixed64  Attr_Min_0 = 8;
-    fixed64  Attr_Min_1 = 9;
-    fixed64  Attr_Max_0 = 10;
-    fixed64  Attr_Max_1 = 11;
-
-    fixed64  Item_Min_0 = 12;
-    fixed64  Item_Min_1 = 13;
-    fixed64  Item_Max_0 = 14;
-    fixed64  Item_Max_1 = 15;
-
-    int64    Edit_Start = 20; // starting edit number (most recent edit is 0)
-    int64    Edit_Count = 21; // max number of edits to return (typically 1)
+    int64    ItemsPerAttr = 14; // max items returned per unique attr ID (0 denotes no limit)
+    int64    EditsPerItem = 15; // max edits returned per unique item ID
 }
 
 
@@ -463,8 +457,8 @@ enum LogLevel {
 }
 
 
-// Err is a general purpose error / warning / log message.
-message Err {
+// Error is a general purpose error / warning / log message.
+message Error {
 
     // Identifies the type of error.
     ErrCode             Code  = 1;

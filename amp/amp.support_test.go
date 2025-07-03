@@ -18,11 +18,13 @@ func TestTxSerialize(t *testing.T) {
 
 	{
 		op := TxOp{
-			OpCode: TxOpCode_Upsert,
+			Flags: TxOpFlags_Upsert,
 			Addr: tag.Address{
-				NodeID: tag.UID{99923456789, 987621},
-				AttrID: tag.UID{111312232, 22232334444},
-				ItemID: tag.UID{73833773, 76549},
+				ElementID: tag.ElementID{
+					NodeID: tag.UID{99923456789, 987621},
+					AttrID: tag.UID{111312232, 22232334444},
+					ItemID: tag.UID{73833773, 76549},
+				},
 				EditID: tag.UID{4435435, 83849854543},
 				FromID: tag.UID{0x1234567890abcdef, 0xabcdef1234567890},
 			},
@@ -69,8 +71,7 @@ func TestTxSerialize(t *testing.T) {
 		op.Addr.ItemID[0] = 111111
 		op.Addr.EditID[1] = 55445544
 		op.Addr.FromID[1] = 0x515151
-		op.OpCode = TxOpCode_Delete
-		tx.MarshalOpWithBuf(&op, nil)
+		tx.MarshalOpAndData(&op, nil)
 	}
 
 	var txBuf []byte
@@ -97,7 +98,7 @@ func TestTxSerialize(t *testing.T) {
 	for i, op1 := range tx.Ops {
 		op2 := t2.Ops[i]
 
-		if op1.OpCode != op2.OpCode || op1 != op2 || op1.DataOfs != op2.DataOfs || op1.DataLen != op2.DataLen {
+		if op1.Flags != op2.Flags || op1 != op2 || op1.DataOfs != op2.DataOfs || op1.DataLen != op2.DataLen {
 			t.Errorf("ReadTxMsg failed: TxOp mismatch")
 		}
 	}

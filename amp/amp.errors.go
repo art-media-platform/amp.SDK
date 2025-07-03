@@ -9,8 +9,9 @@ var (
 	ErrInternal        = ErrCode_AssertFailed.Error("internal error")
 	ErrNotConnected    = ErrCode_NotConnected.Error("not connected")
 	ErrMalformedTx     = ErrCode_MalformedTx.Error("malformed tx")
+	ErrBadTxEdit       = ErrCode_MalformedTx.Error("tx missing edit ID(s)")
 	ErrBadTxOp         = ErrCode_MalformedTx.Error("bad value byte range")
-	ErrInvalidUser     = ErrCode_LoginFailed.Error("invalid user")
+	ErrInvalidLogin    = ErrCode_LoginFailed.Error("invalid login")
 	ErrRequestExists   = ErrCode_BadRequest.Error("request already exists")
 	ErrNoContext       = ErrCode_BadRequest.Error("context missing")
 	ErrContextNotFound = ErrCode_ContextNotReady.Error("context not found")
@@ -28,7 +29,7 @@ var (
 )
 
 // Error makes our custom error type conform to a standard Go error
-func (err *Err) Error() string {
+func (err *Error) Error() string {
 	codeStr, exists := ErrCode_name[int32(err.Code)]
 	if !exists {
 		codeStr = ErrCode_name[int32(ErrCode_Unnamed)]
@@ -41,25 +42,25 @@ func (err *Err) Error() string {
 	return err.Msg
 }
 
-// Error returns an *Err with the given error code
+// Error returns an *Error with the given error code
 func (code ErrCode) Error(msg string) error {
 	if code == ErrCode_Nil {
 		return nil
 	}
-	return &Err{
+	return &Error{
 		Code: code,
 		Msg:  msg,
 	}
 }
 
-// Errorf returns an *Err with the given error code and msg.
+// Errorf returns an *Error with the given error code and msg.
 // If one or more args are given, msg is used as a format string.
 func (code ErrCode) Errorf(format string, msgArgs ...interface{}) error {
 	if code == ErrCode_Nil {
 		return nil
 	}
 
-	err := &Err{
+	err := &Error{
 		Code: code,
 	}
 	if len(msgArgs) == 0 {
@@ -71,13 +72,13 @@ func (code ErrCode) Errorf(format string, msgArgs ...interface{}) error {
 	return err
 }
 
-// IsError tests if the given error is a Err error code (below).
+// IsError tests if the given error is a Error error code (below).
 // If err == nil, this returns false.
 func IsError(err error, errCodes ...ErrCode) bool {
 	if err == nil {
 		return false
 	}
-	if perr, ok := err.(*Err); ok && perr != nil {
+	if perr, ok := err.(*Error); ok && perr != nil {
 		for _, errCode := range errCodes {
 			if perr.Code == errCode {
 				return true
@@ -93,7 +94,7 @@ func (code ErrCode) Wrap(cause error) error {
 	if cause == nil {
 		return nil
 	}
-	return &Err{
+	return &Error{
 		Code: code,
 		Msg:  cause.Error(),
 	}
@@ -104,7 +105,7 @@ func GetErrCode(err error) ErrCode {
 		return ErrCode_Nil
 	}
 
-	if artErr, ok := err.(*Err); ok {
+	if artErr, ok := err.(*Error); ok {
 		return artErr.Code
 	}
 

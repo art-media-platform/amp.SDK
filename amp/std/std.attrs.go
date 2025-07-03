@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	AppTag      = tag.Expr{}.With("app")
-	SessionAttr = tag.Expr{}.With("session")
-	ItemAttr    = tag.Expr{}.With("item")
+	AppTag      = tag.Name{}.With("app")
+	SessionAttr = tag.Name{}.With("session")
+	ItemAttr    = tag.Name{}.With("item")
 
 	AppState = AppTag.With("state")
 
@@ -19,7 +19,7 @@ var (
 	LoginChallengeID  = SessionAttr.With("LoginChallenge").ID
 	LoginResponseID   = SessionAttr.With("LoginResponse").ID
 	LoginCheckpointID = SessionAttr.With("LoginCheckpoint").ID
-	SessionErrID      = SessionAttr.With("Err").ID
+	SessionErrorID    = SessionAttr.With("Error").ID
 	SessionTag        = SessionAttr.With("Tag")
 	LaunchWeb         = SessionTag.With("www").ID
 	LaunchOAuth       = SessionTag.With("oauth").ID
@@ -32,14 +32,13 @@ var (
 	ItemCollection = ItemTextTag.With("collection").ID
 	ItemSynopsis   = ItemTextTag.With("synopsis").ID
 
-	ItemContent   = ItemAttr.With("content")
-	ItemFileInfo  = ItemContent.With("FileInfo").ID
-	MainLink      = ItemContent.With("Tag.link.main").ID
-	ItemMedia     = ItemContent.With("Tag.media").ID
-	ItemVis       = ItemContent.With("Tag.vis").ID
-	ItemBehaviors = ItemContent.With("Tags.behaviors").ID
-	ItemGlyphs    = ItemContent.With("Tags.glyphs").ID
-	ItemLinks     = ItemContent.With("Tags.links").ID
+	ItemFileInfo  = ItemAttr.With("FileInfo").ID
+	MainLink      = ItemAttr.With("Tag.link.main").ID
+	ItemMedia     = ItemAttr.With("Tag.media").ID
+	ItemVis       = ItemAttr.With("Tag.vis").ID
+	ItemBehaviors = ItemAttr.With("Tags.behaviors").ID
+	ItemGlyphs    = ItemAttr.With("Tags.glyphs").ID
+	ItemLinks     = ItemAttr.With("Tags.links").ID
 )
 
 const (

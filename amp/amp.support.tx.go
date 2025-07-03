@@ -6,6 +6,7 @@ import (
 	"sort"
 	"sync"
 	"sync/atomic"
+	"unsafe"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
@@ -28,12 +29,13 @@ func (preamble TxPreamble) TxDataLen() int {
 
 func TxNew() *TxMsg {
 	tx := gTxMsgPool.Get().(*TxMsg)
+	tx.Normalized = false
 	tx.refCount = 1
 	return tx
 }
 
 var gTxMsgPool = sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &TxMsg{}
 	},
 }
@@ -118,23 +120,23 @@ func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst Value) error {
 }
 
 func (tx *TxMsg) LoadValue(want *tag.Address, dst Value) error {
-	tx.sortOps()
+	tx.Normalize(false)
 
-	if want.ItemID.Wildcard() != 0 {
-		panic("TODO") // add ItemID wildcard support
+	if want.ItemID.IsWildcard() {
+		panic("TODO") // add ItemID wildcard support; replicate code in amp.3D.client
 	}
 
 	N := len(tx.Ops)
 	idx, _ := sort.Find(N, func(i int) int {
-		return tx.Ops[i].Addr.CompareTo(want, false)
+		return tx.Ops[i].Addr.CompareElementID(want)
 	})
 	if idx >= N {
 		return ErrAttrNotFound
 	}
 
 	// check we have a match but ignore EditID
-	elemID := tx.Ops[idx].Addr.ElementID()
-	wantID := want.ElementID()
+	elemID := tx.Ops[idx].Addr.ElementLSM()
+	wantID := want.ElementLSM()
 	if elemID != wantID {
 		return ErrAttrNotFound
 	}
@@ -142,23 +144,41 @@ func (tx *TxMsg) LoadValue(want *tag.Address, dst Value) error {
 	return tx.UnmarshalOpValue(idx, dst)
 }
 
-func (tx *TxMsg) sortOps() {
-	if !tx.OpsSorted {
-		tx.OpsSorted = true
-		sort.Slice(tx.Ops, func(i, j int) bool {
-			return tx.Ops[i].Addr.CompareTo(&tx.Ops[j].Addr, true) < 0
-		})
+// Normalizes and validates a TxMsg prior to handling.
+func (tx *TxMsg) Normalize(force bool) error {
+	if !force && tx.Normalized {
+		return nil
 	}
+	for _, op := range tx.Ops {
+		if op.Addr.EditID.IsNil() {
+			return ErrBadTxEdit
+		}
+	}
+	sort.Slice(tx.Ops, func(i, j int) bool {
+		return tx.Ops[i].Addr.Compare(&tx.Ops[j].Addr) < 0
+	})
+	tx.Normalized = true
+	return nil
 }
 
 func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val Value) error {
 	op := TxOp{
-		OpCode: TxOpCode_Upsert,
+		Flags: TxOpFlags_Upsert,
 	}
 	op.Addr.NodeID = nodeID
 	op.Addr.AttrID = attrID
 	op.Addr.ItemID = itemID
 
+	return tx.MarshalOp(&op, val)
+}
+
+func (tx *TxMsg) Delete(elemID tag.ElementID, val Value) error {
+	op := TxOp{
+		Flags: TxOpFlags_Delete,
+		Addr: tag.Address{
+			ElementID: elemID,
+		},
+	}
 	return tx.MarshalOp(&op, val)
 }
 
@@ -182,26 +202,34 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val Value) error {
 		op.DataLen = uint64(len(tx.DataStore)) - op.DataOfs
 	}
 
-	if op.Addr.EditID.IsNil() {
-		op.Addr.EditID = tag.GenesisEditID()
-	}
-	if op.Addr.FromID.IsNil() {
-		op.Addr.FromID.EnsureSet(tx.FromID())
-	}
+	op.Addr.EditID = tx.ID().DeriveID(op.Addr.EditID)
+	op.Addr.FromID = tx.FromID()
 
 	tx.OpCount += 1
 	tx.Ops = append(tx.Ops, *op)
-	tx.OpsSorted = false
+	tx.Normalized = false
 	return nil
 }
 
-func (tx *TxMsg) MarshalOpWithBuf(op *TxOp, valBuf []byte) {
+func (tx *TxMsg) MarshalOpAndData(op *TxOp, valBuf []byte) {
 	op.DataOfs = uint64(len(tx.DataStore))
 	op.DataLen = uint64(len(valBuf))
 	tx.DataStore = append(tx.DataStore, valBuf...)
 	tx.OpCount += 1
 	tx.Ops = append(tx.Ops, *op)
-	tx.OpsSorted = false
+	tx.Normalized = false
+}
+
+const (
+	txBaseSize = int(Const_TxPreamble_Size) + int(unsafe.Sizeof(TxHeader{}))
+	txOpSize   = int(unsafe.Sizeof(TxOp{}))
+)
+
+// Returns the ceiling byte size of this TxMsg as a serialized buffer.
+func (tx *TxMsg) CeilingSize() int64 {
+	sz := txBaseSize + len(tx.DataStore)
+	sz += len(tx.Ops) * txOpSize
+	return int64(sz)
 }
 
 func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
@@ -324,8 +352,8 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 	)
 
 	for _, op := range tx.Ops {
+		dst = append(dst, byte(op.Flags))
 		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
-		dst = binary.AppendUvarint(dst, uint64(op.OpCode))
 		dst = binary.AppendUvarint(dst, op.DataLen)
 		dst = binary.AppendUvarint(dst, op.DataOfs)
 
@@ -342,6 +370,9 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 
 			op_cur[TxField_EditID_0] = op.Addr.EditID[0]
 			op_cur[TxField_EditID_1] = op.Addr.EditID[1]
+
+			op_cur[TxField_FromID_0] = op.Addr.FromID[0]
+			op_cur[TxField_FromID_1] = op.Addr.FromID[1]
 
 			hasFields := uint64(0)
 			for i, fi := range op_cur {
@@ -391,20 +422,16 @@ func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 		var op TxOp
 		var n int
 
-		// skip (future use)
+		// OpFlags
+		op.Flags = TxOpFlags(src[p])
+		p += 1
+
+		// reserved / future use
 		var skip uint64
 		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
 			return ErrMalformedTx
 		}
 		p += n + int(skip)
-
-		// OpCode
-		var opCode uint64
-		if opCode, n = binary.Uvarint(src[p:]); n <= 0 {
-			return ErrMalformedTx
-		}
-		p += n
-		op.OpCode = TxOpCode(opCode)
 
 		// DataLen
 		if op.DataLen, n = binary.Uvarint(src[p:]); n <= 0 {
@@ -447,9 +474,14 @@ func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
 		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
 
+		op.Addr.FromID[0] = op_cur[TxField_FromID_0]
+		op.Addr.FromID[1] = op_cur[TxField_FromID_1]
+
 		tx.Ops = append(tx.Ops, op)
 	}
-	tx.OpsSorted = false
+
+	// ensure we renormalize later
+	tx.Normalized = false
 
 	return nil
 }

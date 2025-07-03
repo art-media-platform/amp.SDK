@@ -25,7 +25,7 @@ func NewRegistry() amp.Registry {
 	return reg
 }
 
-func RegisterAttr(attr tag.Expr, prototype amp.Value, subTags string) tag.Expr {
+func RegisterAttr(attr tag.Name, prototype amp.Value, subTags string) tag.Name {
 	typeOf := reflect.TypeOf(prototype)
 	if typeOf.Kind() == reflect.Ptr {
 		typeOf = typeOf.Elem()
@@ -37,7 +37,7 @@ func RegisterAttr(attr tag.Expr, prototype amp.Value, subTags string) tag.Expr {
 	}
 
 	err := gRegistry.RegisterAttr(amp.AttrDef{
-		Expr:      attrID,
+		Name:      attrID,
 		Prototype: prototype,
 	})
 	if err != nil {
@@ -56,7 +56,7 @@ type registry struct {
 }
 
 func (reg *registry) RegisterAttr(def amp.AttrDef) error {
-	attrID := def.Expr.ID
+	attrID := def.Name.ID
 	if attrID.IsNil() {
 		return amp.ErrCode_BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
@@ -76,7 +76,7 @@ func (reg *registry) Import(other amp.Registry) error {
 	{
 		reg.mu.Lock()
 		for _, def := range src.attrDefs {
-			reg.attrDefs[def.Expr.ID] = def
+			reg.attrDefs[def.Name.ID] = def
 		}
 		reg.mu.Unlock()
 	}
@@ -119,7 +119,9 @@ func (reg *registry) GetAppModule(invoke amp.Tag) (*amp.AppModule, error) {
 	if invoke.URI != "" {
 		invokedURL, err := url.Parse(invoke.URI)
 		if err != nil {
-			return nil, amp.ErrCode_BadRequest.Errorf("error parsing module URI: %v", err)
+			return nil, amp.ErrCode_BadRequest.Errorf("invalid URI: %v", err)
+		} else if invokedURL.Host == "" {
+			return nil, amp.ErrCode_BadRequest.Errorf("invalid URI: %q", invoke.URI)
 		}
 		moduleAlias = invokedURL.Host
 	}
@@ -164,7 +166,7 @@ TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 	schema := &AttrSchema{
 		ItemDataModel: valTyp.Name(),
 		SchemaName:    "on-demand-reflect",
-		Attrs:         make([]*tag.Expr, 0, numFields),
+		Attrs:         make([]*tag.Name, 0, numFields),
 	}
 
 	for i := 0; i < numFields; i++ {
@@ -175,7 +177,7 @@ TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 			continue
 		}
 
-		attr := &tag.Expr{
+		attr := &tag.Name{
 			TypedName: field.Name,
 			TagExprID:  int32(i + 1),
 		}

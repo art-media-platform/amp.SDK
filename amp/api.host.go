@@ -91,6 +91,9 @@ type Session interface {
 	// Returns info about this user and session -- READ ONLY
 	Login() Login
 
+	// Creates a new tx ready for use
+	NewTx() *TxMsg
+
 	// Submits a tx to this Session for processing, including who will receive replies and status updates.
 	SubmitTx(commit TxCommit) error
 

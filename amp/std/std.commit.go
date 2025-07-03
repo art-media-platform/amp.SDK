@@ -3,7 +3,7 @@ package std
 import (
 	"context"
 
-	amp "github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/closer"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
@@ -11,12 +11,12 @@ import (
 // Loads the latest element from the app instance associated with the current user; useful for storing high-level app state such as auth tokens.
 func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst amp.Value) error {
 	appEnv := appCtx.AppEnvironment()
-	addr := tag.Address{}
-	addr.NodeID = appEnv.HomeID
-	addr.AttrID = attrID
 
 	tx := appCtx.NewTx()
-	tx.Request = SetupSnapshot(addr)
+	tx.Request = SetupSnapshot(tag.ElementID{
+		NodeID: appEnv.HomeID,
+		AttrID: attrID,
+	})
 
 	req := &localLoad{
 		outTx:  make(chan *amp.TxMsg),
@@ -54,15 +54,10 @@ func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src amp.Value) error {
 	}
 
 	appEnv := appCtx.AppEnvironment()
-
-	op := amp.TxOp{
-		OpCode: amp.TxOpCode_Upsert,
-	}
-	op.Addr.NodeID = appEnv.HomeID
-	op.Addr.AttrID = attrID
+	itemID := tag.UID{}
 
 	tx := appCtx.NewTx()
-	if err := tx.MarshalOp(&op, src); err != nil {
+	if err := tx.Upsert(appEnv.HomeID, attrID, itemID, src); err != nil {
 		return err
 	}
 
@@ -70,15 +65,15 @@ func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src amp.Value) error {
 	return err
 }
 
-func SetupSnapshot(target tag.Address) *amp.PinRequest {
+func SetupSnapshot(target tag.ElementID) *amp.PinRequest {
 	req := &amp.PinRequest{
-		Mode:   amp.PinMode_Snapshot,
-		Select: &amp.ItemSelector{},
+		Mode:     amp.PinMode_Snapshot,
+		Selector: &amp.ItemSelector{},
 		Invoke: &amp.Tag{
 			URI: "amp://cabinets/~",
 		},
 	}
-	req.Select.AddSingle(target)
+	req.Selector.Select(target)
 	return req
 }
 

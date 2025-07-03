@@ -8,11 +8,10 @@ import (
 )
 
 type AppModuleInfo struct {
-	Tag          tag.Expr // what invokes this module
-	Label        string   // human-readable description of this app
-	Version      string   // "v{TRL}.{major}.{minor}"
-	Dependencies tag.Expr // module Tags this app may access
-	Aliases      []string // invocation aliases for an AppModule
+	Tag     tag.Name // what invokes this module
+	Label   string   // human-readable description of this app
+	Version string   // "v{TRL}.{major}.{minor}"
+	Aliases []string // invocation aliases for an AppModule
 }
 
 type AppEnvironment struct {
@@ -42,7 +41,7 @@ type AppContext interface {
 	task.Context    // Allows select{} for graceful handling of app shutdown
 	media.Publisher // Allows an app to publish assets for client consumption
 
-	NewTx() *TxMsg                  // Creates a new tx ready for use, with the tx NodeID set to the app's HomeID
+	NewTx() *TxMsg                  // Creates a new tx ready for use
 	Session() Session               // Access to underlying Session
 	AppEnvironment() AppEnvironment // Runtime environment for this app instance
 }
@@ -87,25 +86,25 @@ type Pin interface {
 
 // TxMsg is the serialized transport container sent between client and host.
 type TxMsg struct {
-	TxHeader         // public fields and routing tags
-	Ops       []TxOp // tx operations to perform
-	OpsSorted bool   // order state of []Ops
-	DataStore []byte // TxOp serialzed data storage
-	refCount  int32  // see AddRef() / ReleaseRef()
+	TxHeader          // public fields and routing tags
+	Ops        []TxOp // tx operations to perform
+	DataStore  []byte // TxOp serialzed data storage
+	Normalized bool   // normalization state of Ops
+	refCount   int32  // see AddRef() / ReleaseRef()
 }
 
 // TxOp is a transaction op and the most granular unit of change.
 // A TxOp's serialized data is located in a TxMsg.DataStore or some other data segment.
 type TxOp struct {
 	Addr    tag.Address // element to operate on
-	OpCode  TxOpCode    // operation to perform
+	Flags   TxOpFlags   // operation to perform
 	DataLen uint64      // byte length of associated serialized data
 	DataOfs uint64      // byte offset to where serialized data is stored
 }
 
 // Binds an amp.Value prototype to its associated attribute tag.
 type AttrDef struct {
-	tag.Expr        // maps the value Prototype to an explicit attr ID
+	tag.Name        // maps the value Prototype to an explicit attr ID
 	Prototype Value // cloned when this attribute is instantiated
 }
 

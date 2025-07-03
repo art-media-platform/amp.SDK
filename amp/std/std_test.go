@@ -11,9 +11,9 @@ import (
 
 func TestRegistry(t *testing.T) {
 	reg := std.NewRegistry()
-	someAttr := tag.Expr{}.With("hello sailor")
+	someAttr := tag.Name{}.With("hello sailor")
 	spec := amp.AttrDef{
-		Expr:      someAttr.With("av.Hello.World.Tag"),
+		Name:      someAttr.With("av.Hello.World.Tag"),
 		Prototype: &amp.Tag{},
 	}
 
@@ -34,7 +34,7 @@ func TestRegistry(t *testing.T) {
 		}
 	}
 
-	if spec.ID != (tag.Expr{}.With("hello.sailor.World.Tag.Hello.av")).ID {
+	if spec.ID != (tag.Name{}.With("hello.sailor.World.Tag.Hello.av")).ID {
 		t.Fatalf("tag.With failed")
 	}
 	alias := someAttr.With("av").With("World.Hello.Tag")
@@ -45,7 +45,7 @@ func TestRegistry(t *testing.T) {
 		t.Fatalf("unexpected spec.ID: %v", str)
 	}
 	if (tag.UID{}).Base32() != "0" {
-		t.Fatalf("tag.Expr{}.Base32() failed")
+		t.Fatalf("tag.Name{}.Base32() failed")
 	}
 	base32 := spec.ID.Base32()
 	if base32 != "5UZ9YW2T5KF8YJYV4C2Y227W6E" {

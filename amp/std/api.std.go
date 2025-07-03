@@ -45,17 +45,14 @@ type Pin[AppT amp.AppInstance] struct {
 
 type ItemWriter interface {
 
-	// Pushes a tx operation attribute to the item's pinned state.
-	Push(op *amp.TxOp, value amp.Value)
-
 	// Convenience methods for pushing string and generic attributes bound to an item ID.
-	PushTextWithID(attrID, itemID tag.UID, value string)
-	PushItemWithID(attrID, itemID tag.UID, value amp.Value)
+	PutTextWithID(attrID, itemID tag.UID, value string)
+	PutItemWithID(attrID, itemID tag.UID, value amp.Value)
 
 	// Convenience methods for pushing an attribute value at item 0,0,0.
 	// Push*WithID(), if the value is nil, the attribute item is skipped.
-	PushText(attrID tag.UID, value string)
-	PushItem(attrID tag.UID, value amp.Value)
+	PutText(attrID tag.UID, value string)
+	PutItem(attrID tag.UID, value amp.Value)
 }
 
 const (
