@@ -21,18 +21,18 @@ var (
 	ErrUnrecognizedFormat = errors.New("unrecognized ID format")
 )
 
-func ParseExpr(tagExpr string) (Expr, error) {
-	return Expr{}.With(tagExpr), nil
+func ParseName(tagExpr string) (Name, error) {
+	return Name{}.With(tagExpr), nil
 }
 
 // LeafTags splits the tag spec the given number of tags for the right.
 // E.g. LeafTags(2) on "a.b.c.d.ee" yields ("a.b.c", "d.ee")
-func (expr Expr) LeafTags(n int) (string, string) {
+func (name Name) LeafTags(n int) (string, string) {
 	if n <= 0 {
-		return expr.Canonic, ""
+		return name.Canonic, ""
 	}
 
-	canonic := expr.Canonic
+	canonic := name.Canonic
 	R := len(canonic)
 	for p := R - 1; p >= 0; p-- {
 		switch c := canonic[p]; c {
@@ -52,8 +52,8 @@ func (expr Expr) LeafTags(n int) (string, string) {
 
 // With() is a communative tag.UID operator that combines two tag.IDs into a new tag.UID.
 //
-// a tag.Expr converts to a "blind" tag.UID as well as a canonic string representation.
-func (expr Expr) With(tagExpr string) Expr {
+// a tag.Name converts to a "blind" tag.UID as well as a canonic string representation.
+func (name Name) With(tagExpr string) Name {
 
 	// Cleanup into two operators: With and Then (commutative and non-commutative summation)
 	tagExpr = sWithOperators.ReplaceAllString(tagExpr, CanonicWith)
@@ -62,10 +62,10 @@ func (expr Expr) With(tagExpr string) Expr {
 	termsLower := bytes.ToLower(terms)
 	termsUpper := bytes.ToUpper(terms)
 
-	body := make([]byte, 0, len(expr.Canonic)+len(terms))
-	body = append(body, []byte(expr.Canonic)...)
+	body := make([]byte, 0, len(name.Canonic)+len(terms))
+	body = append(body, []byte(name.Canonic)...)
 
-	exprID := expr.ID
+	exprID := name.ID
 
 	N := len(terms)
 	for i := 0; i < N; {
@@ -121,14 +121,18 @@ func (expr Expr) With(tagExpr string) Expr {
 		body = append(body, term...)
 	}
 
-	return Expr{
+	return Name{
 		ID:      exprID,
 		Canonic: string(body),
 	}
 }
 
-func UID_Max() UID {
+func MaxID() UID {
 	return UID{UID_0_Max, UID_1_Max}
+}
+
+func WildcardID() UID {
+	return UID{UID_0_Max, UID_1_Wildcard}
 }
 
 func UID_FromUUID(uuid uuid.UUID) UID {
@@ -161,13 +165,13 @@ func UID_HashLiteral(literal []byte) UID {
 	}
 }
 
-func UID_FromExpr(tagsExpr string) UID {
-	spec := Expr{}.With(tagsExpr)
+func UID_FromName(tagsExpr string) UID {
+	spec := Name{}.With(tagsExpr)
 	return spec.ID
 }
 
 // Now returns the current local time that is statiscially universally unique.
-func UID_Now() UID {
+func NowID() UID {
 	now := UID_FromTime(time.Now())
 
 	entropy := (p1*now[1] + 0xCCCCAAAACCCCAAAA) ^ (p2 * gEntropy)
@@ -189,15 +193,6 @@ func UID_FromTime(t time.Time) UID {
 		t_00_06 | t_06_08,
 		t_08_15,
 	}
-}
-
-// GenesisEditID returns the initial EditID for a tag.UID.
-//
-//	בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
-func GenesisEditID() UID {
-	id := UID_Now()
-	id[1] &^= GenesisEditClearBits // signals this UID as a genesis edit ID
-	return id
 }
 
 const (
@@ -226,7 +221,6 @@ func (id UID) Octal(enc []OctalDigit) []OctalDigit {
 	for bitsRemain := 192; bitsRemain > 0; bitsRemain -= 3 {
 		digit := OctalDigit(remain[1] & 0x7)
 		enc = append(enc, digit)
-		enc[digits] = digit
 		remain[1] = (remain[1] >> 3) | (remain[0] << 61)
 		remain[0] = (remain[0] >> 3)
 		digits++
@@ -234,7 +228,20 @@ func (id UID) Octal(enc []OctalDigit) []OctalDigit {
 	return enc
 }
 
-// Midpoint symmetrically averages two IDs, yielding a determintic, pseudo-unique UID that "encodes a past".
+// DeriveID returns the a deterministic ID derived from an existing previous ID (or nil if no previous edit).
+func (id UID) DeriveID(oth UID) UID {
+	var newID UID
+
+	if oth.IsNil() {
+		newID[0] = id[0]
+		newID[1] = id[1] &^ GenesisHintMask
+	} else {
+		newID = id.Midpoint(oth)
+	}
+	return newID
+}
+
+// Midpoint symmetrically averages two IDs, yielding a deterministic, pseudo-unique UID that "encodes a past".
 // Given a collection of these "edit" IDs, we can later reconstruct a complete ReplyTo lineage (aka merkle tree) in O(n x n).
 func (id UID) Midpoint(oth UID) UID {
 	carry := uint64(0)
@@ -276,8 +283,42 @@ func (id UID) Subtract(oth UID) (out UID) {
 	return out
 }
 
-func (id UID) WithExpr(expr string) UID {
-	return id.With(UID_FromExpr(expr))
+// Increments this UID by 1.
+// Returns false if the UID is already at its maximum value.
+func (id *UID) Increment() bool {
+	if id[1] < UID_1_Max {
+		id[1]++
+		return true
+	}
+	if id[0] == UID_0_Max {
+		return false // already at max value
+	}
+	if id[1] < 0xFFFFFFFFFFFFFFFF {
+		id[1]++
+	} else {
+		id[0]++
+		id[1] = 0
+	}
+	return true
+}
+
+// Decrements this UID by 1.
+// Returns false if the UID is already zero.
+func (id *UID) Decrement() bool {
+	if id[1] > 0 {
+		id[1]--
+		return true
+	}
+	if id[0] > 0 {
+		id[0]--
+		id[1] = 0xFFFFFFFFFFFFFFFF
+		return true
+	}
+	return false
+}
+
+func (id UID) WithName(name string) UID {
+	return id.With(UID_FromName(name))
 }
 
 func (id UID) WithString(tagToken string) UID {
@@ -303,7 +344,7 @@ func (id UID) AsLabel() string {
 	)
 
 	var suffix [suffixBytes]byte
-	for i := uint(0); i < suffixBytes; i++ {
+	for i := range uint(suffixBytes) {
 		shift := uint(8 * (suffixBytes - 1 - i))
 		suffix[i] = byte(id[1] >> shift)
 	}
@@ -329,7 +370,7 @@ func (id UID) Int63() int64 {
 func (id UID) Base16() string {
 	const HexChars = "0123456789ABCDEF"
 
-	var hexStr [2 * 16]byte // Each uint64 needs at least 16 hex digits
+	var hexStr [48]byte
 	L := -1
 	R := 0
 	for i := range 2 {
@@ -358,18 +399,18 @@ func (id UID) String() string {
 	return id.Base32()
 }
 
-func (id *UID) Unix() int64 {
+func (id UID) Unix() int64 {
 	return int64(id[0] >> 16) // drop 16 bits of fixed precision
 }
 
-func (id *UID) AsTime() time.Time {
+func (id UID) AsTime() time.Time {
 	unix := id.Unix()
 	ns_f64 := ((id[0] & 0xFFFF) << 48) | (id[1] >> 16)
 	ns_b10 := 1 + ns_f64/(1+NanosecStep)
 	return time.Unix(unix, int64(ns_b10))
 }
 
-func (id *UID) CompareTo(oth *UID) int {
+func (id UID) CompareTo(oth UID) int {
 	if id[0] < oth[0] {
 		return -1
 	}
@@ -385,21 +426,21 @@ func (id *UID) CompareTo(oth *UID) int {
 	return 0
 }
 
-func (id UID) Wildcard() int {
+func (id UID) IsWildcard() bool {
 	if id[0] == UID_0_Max && id[1] == UID_1_Wildcard {
-		return 1
+		return true
 	}
-	return 0
+	return false
 }
 
-// Returns true if this UID is non-nil and valid (as in below UID_0_Max and UID_1_Max).
+// Returns true if this UID is non-nil and valid and less than UID.MaxID()
 func (id UID) IsSet() bool {
-	return id[0] > 0 && id[0] < UID_0_Max &&
-		id[1] > 0 && id[1] < UID_1_Max
+	return (id[0] != 0 || id[1] != 0) &&
+		(id[0] < UID_0_Max || id[1] <= UID_1_Max)
 }
 
 func (id *UID) IsNil() bool {
-	return id == nil || (id[0] == 0 && id[1] == 0)
+	return id[0] == 0 && id[1] == 0
 }
 
 func (id *UID) EnsureSet(src UID) {

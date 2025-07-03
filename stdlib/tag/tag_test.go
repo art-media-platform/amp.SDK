@@ -10,34 +10,34 @@ import (
 )
 
 func TestTag(t *testing.T) {
-	ampTags := tag.Expr{}.With("..amp+.app.")
-	if ampTags.ID != tag.UID_FromExpr(".amp...").WithString("app") {
-		t.Fatalf("tag.Expr{}.With().ID failed: %v", ampTags.ID)
+	ampTags := tag.Name{}.With("..amp+.app.")
+	if ampTags.ID != tag.UID_FromName(".amp...").WithString("app") {
+		t.Fatalf("tag.Name{}.With().ID failed: %v", ampTags.ID)
 	}
-	expr := ampTags.With("some-tag+thing")
-	if expr.Canonic != "amp.app.some-tag.thing" {
-		t.Errorf("With() failed: got %q", expr.Canonic)
+	name := ampTags.With("some-tag+thing")
+	if name.Canonic != "amp.app.some-tag.thing" {
+		t.Errorf("With() failed: got %q", name.Canonic)
 	}
-	if expr.ID != ampTags.ID.WithExpr("some-tag").WithString("thing") {
-		t.Fatalf("WithExpr/WithToken failed: %v", expr.ID)
+	if name.ID != ampTags.ID.WithName("some-tag").WithString("thing") {
+		t.Fatalf("WithExpr/WithToken failed: %v", name.ID)
 	}
-	base32 := expr.ID.Base32()
+	base32 := name.ID.Base32()
 	if base32 != "2EDE3DJ7NX5VVY0NXJJRJ161SW" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	exprID, err := tag.UID_Parse(base32)
-	if err != nil || exprID != expr.ID {
+	if err != nil || exprID != name.ID {
 		t.Fatalf("UID_Parse(Base32) failed: got %v, err=%v", exprID, err)
 	}
-	if base16 := expr.ID.Base16(); base16 != "0x4D6346C89E9D2EF7E053B18DE213071C" {
+	if base16 := name.ID.Base16(); base16 != "0x4D6346C89E9D2EF7E053B18DE213071C" {
 		t.Fatalf("tag.UID.Base16() failed: got %v", base16)
 	}
-	if prefix, suffix := expr.LeafTags(2); prefix != "amp.app.some" || suffix != "-tag.thing" {
+	if prefix, suffix := name.LeafTags(2); prefix != "amp.app.some" || suffix != "-tag.thing" {
 		t.Errorf("LeafTags(2) failed: got prefix=%q, suffix=%q", prefix, suffix)
 	}
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
-		holyExpr, err := tag.ParseExpr(Genesis)
+		holyExpr, err := tag.ParseName(Genesis)
 		if err != nil {
 			t.Fatalf("tag.UID_Parse() failed: %v", err)
 		}
@@ -48,7 +48,7 @@ func TestTag(t *testing.T) {
 				parts[i], parts[j] = parts[j], parts[i]
 			})
 			tryExpr := strings.Join(parts, ".")
-			try, _ := tag.ParseExpr(tryExpr)
+			try, _ := tag.ParseName(tryExpr)
 			if try.ID[0] != 0x89605f6cf4aa1bc3 || try.ID[1] != 0x39b7d3fda743a238 {
 				t.Fatalf("tag literals commutation test failed: got %v", try)
 			}
@@ -88,7 +88,7 @@ func TestNow(t *testing.T) {
 	for i := 1; i < 64; i++ {
 		prev := prevIDs[i-1]
 		curr := prevIDs[i]
-		if prev.CompareTo(&curr) >= 0 {
+		if prev.CompareTo(curr) >= 0 {
 			t.Errorf("Add() returned a non-increasing value: %v >= %v", prev, curr)
 		}
 		if curr.Subtract(prev) != delta {
@@ -100,19 +100,19 @@ func TestNow(t *testing.T) {
 
 	// Fill prevIDs with new NowID values
 	for i := range prevIDs {
-		prevIDs[i] = tag.UID_Now()
+		prevIDs[i] = tag.NowID()
 	}
 
 	// Test for uniqueness and ordering of NowID
 	for i := range 10000000 {
-		now := tag.UID_Now()
+		now := tag.NowID()
 		upperLimit := now.Add(epsilon)
 
 		for _, prev := range prevIDs {
-			if prev.CompareTo(&now) == 0 {
+			if prev.CompareTo(now) == 0 {
 				t.Errorf("got duplicate time value")
 			}
-			comp := prev.CompareTo(&upperLimit)
+			comp := prev.CompareTo(upperLimit)
 			if comp >= 0 {
 				t.Errorf("got time value outside of epsilon (%v >= %v)", prev, upperLimit)
 			}
@@ -127,7 +127,7 @@ func TestIDOps(t *testing.T) {
 	id1 := tag.UID{0x123456789abcdef0, 0x123456789abcdef0}
 	id2 := tag.UID{0xC876543210fedcba, 0x9876543210fedcba}
 
-	if id1.CompareTo(&id1) != 0 || id1.CompareTo(&id2) >= 0 || id2.CompareTo(&id1) <= 0 {
+	if id1.CompareTo(id1) != 0 || id1.CompareTo(id2) >= 0 || id2.CompareTo(id1) <= 0 {
 		t.Errorf("tag.UID.CompareTo() failed: %v >= %v", id1, id2)
 	}
 

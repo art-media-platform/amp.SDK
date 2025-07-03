@@ -47,7 +47,7 @@ func TestGolden(t *testing.T) {
 }
 
 func echoLine(out *strings.Builder, line string) tag.UID {
-	billet := tag.Expr{}.With(line)
+	billet := tag.Name{}.With(line)
 	if billet.ID.IsSet() {
 		fmt.Fprintf(out, "%28s   ", "")
 		out.WriteString(line)

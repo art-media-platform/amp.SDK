@@ -32,7 +32,7 @@ type ctx struct {
 // Errors
 var (
 	ErrAlreadyStarted = errors.New("already started")
-	ErrNotStarted     = errors.New("not started")
+	ErrNotRunning     = errors.New("not running")
 	ErrClosed         = errors.New("closed")
 )
 
@@ -128,6 +128,10 @@ func (p *ctx) CloseWhenIdle(delay time.Duration) {
 				p.subsMu.Unlock()
 			}
 		}
+
+		if timer != nil {
+			timer.Stop()
+		}
 	}()
 }
 
@@ -212,7 +216,7 @@ func (p *ctx) ForEachChild(fn func(child Context)) {
 // StartChild starts the given child Context as a "sub" task.
 func (p *ctx) StartChild(task Task) (Context, error) {
 	if task.TaskID.IsNil() {
-		task.TaskID = tag.UID_Now()
+		task.TaskID = tag.NowID()
 	}
 	if task.Label == "" {
 		task.Label = task.Info.TaskID.AsLabel()
@@ -234,7 +238,7 @@ func (p *ctx) StartChild(task Task) (Context, error) {
 			p.idle = false
 			p.subs = append(p.subs, child)
 		} else {
-			err = ErrNotStarted
+			err = ErrNotRunning
 		}
 		p.subsMu.Unlock()
 
