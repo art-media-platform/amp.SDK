@@ -24,13 +24,13 @@ enum Const {
     // DefaultServicePort  is the default TCP port used to expose amp.Host service.
     Const_DefaultServicePort = 5192;
 
-	// Byte size and version of a TxMsg encoding -- values are little endian
-	// A TxPreamble has the following layout:
-    //   Bytes  00:03 -- TxPreamble marker ('amp')
-	//          03:04 -- Const_TxPreamble_Version
-    //          04:08 -- sizeof(TxPreamble, TxHeader, serialized []TxOp)
-    //          08:12 -- TxMsg.DataStore size
-    //          12:16 -- Reserved
+	// TxPreamble (values are big endian):
+	//
+    //    00:03  TxPreamble marker ("amp")
+	//    03:04  TxPreamble_Version
+    //    04:08  TxPreamble_Size + serialized(TxHeader) + serialized([]TxOp)
+    //    08:12  len(TxMsg.DataStore)
+    //    12:16  Reserved
 	Const_TxPreamble_Size = 16;
 
 	// Version of the TxPreamble -- first byte
@@ -40,8 +40,12 @@ enum Const {
 	// the following 3 bytes of a serialized TxMsg ("amp")
     Const_TxPreamble_Marker = 0x616D70;
 
+    // ValueHeader is a variable length premble to db value entries, see ValueHeaderFlags.
+    Const_ValueHeaderMaxSize = 37; // flags + 4 possible UIDs * 16 bytes per UID
+
     // בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
-    // Oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar.
+    // oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
+    // now let us get to work!
     Const_Invocation = 3773;
 }
 
@@ -49,8 +53,8 @@ enum Const {
 enum TxOpFlags {
     TxOpFlags_Unassigned = 0;    // invalid state
     TxOpFlags_MetaOp     = 0x01; // op is out of band and/or should not persist
-    TxOpFlags_Upsert     = 0x04; // write value to [Address]
-    TxOpFlags_Delete     = 0x80; // delete entry at [Address]
+    TxOpFlags_Upsert     = 0x04; // write value at [Address]
+    TxOpFlags_Delete     = 0x80; // drop value at [Address]
 }
 
 // TxField maps a fixed count of int64 payload fields.
@@ -71,38 +75,49 @@ enum TxField {
     TxField_EditID_0 = 10;
     TxField_EditID_1 = 11;
 
-    TxField_FromID_0 = 13;
-    TxField_FromID_1 = 14;
+    TxField_MaxFields = 16;
+}
 
-    TxField_MaxFields = 18;
+// The first byte of a serialzied amp.Value for future-proofing:
+//
+//    0x0F   which inline 16 byte (4 UID literals) that immediately follow
+//    0xF0   flags that do not affect value header size.
+//
+enum ValueHeaderFlags {
+    ValueHeaderFlags_None = 0;
+
+    ValueHeaderFlags_FromID = 0x01; // author or other orginator
+    ValueHeaderFlags_TxID   = 0x02; // tx that publishes this entry
+    ValueHeaderFlags_UID_C  = 0x04; // AuthID?
+    ValueHeaderFlags_UID_D  = 0x08; // reserved
 }
 
 // TxHeader contains information for a TxMsg
 message TxHeader {
 
+    /////////////////////
+    //   IN THE CLEAR
+    /////////////////////
 
-    // Universally unique tag.UID assigned when a tx originates.
-    // IN THE CLEAR
+    // Universally unique ID assigned when a tx is created
     fixed64             TxID_0 = 1;
     fixed64             TxID_1 = 2;
 
+    // Author of this tx and whose signature seals it.
+    fixed64             FromID_0 = 3;
+    fixed64             FromID_1 = 4;
+
     // The planet epoch this tx was sealed within.
-    // IN THE CLEAR
     Tag                 Recipient = 5;
 
-    // Identifies who created and/or will or did sign this tx.
-    // IN THE CLEAR
-    fixed64             FromID_0 = 6;
-    fixed64             FromID_1 = 7;
-
     // When set, this tx is sealed (signed) by FromID.
-    // IN THE CLEAR
     Tag                 Signature = 9;
 
 
 
-    ////////////////////
-    // PLANET PRIVATE
+    /////////////////////
+    //  PLANET PRIVATE
+    /////////////////////
 
     // If set, updates the active PinRequest state.
     PinRequest          Request = 16;

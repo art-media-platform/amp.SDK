@@ -1,7 +1,6 @@
 package std
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path"

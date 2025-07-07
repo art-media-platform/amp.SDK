@@ -103,7 +103,19 @@ func (tx *TxMsg) UnmarshalOpValue(opIndex int, out Value) error {
 	op := tx.Ops[opIndex]
 	ofs := op.DataOfs
 	end := ofs + op.DataLen
-	if ofs > end || end > uint64(len(tx.DataStore)) {
+	if op.DataLen < 1 || ofs > end || end > uint64(len(tx.DataStore)) {
+		return ErrBadTxOp
+	}
+
+	// skip value header and inline UIDs
+	UIDs := tx.DataStore[ofs]
+	ofs += 1
+	for i := range 4 { // lower nibble specifies inline UIDs
+		if (UIDs & (1 << i)) != 0 {
+			ofs += tag.UID_Size
+		}
+	}
+	if ofs > end {
 		return ErrBadTxOp
 	}
 	span := tx.DataStore[ofs:end]
@@ -157,6 +169,9 @@ func (tx *TxMsg) Normalize(force bool) error {
 	sort.Slice(tx.Ops, func(i, j int) bool {
 		return tx.Ops[i].Addr.Compare(&tx.Ops[j].Addr) < 0
 	})
+
+	// TODO: validate other parts of TxMsg?
+
 	tx.Normalized = true
 	return nil
 }
@@ -182,40 +197,51 @@ func (tx *TxMsg) Delete(elemID tag.ElementID, val Value) error {
 	return tx.MarshalOp(&op, val)
 }
 
-// Marshals a TxOp and optional value to the given Tx's data store.
+// Marshals and appends a TxOp and optional value to the given Tx's data store.
 //
 // On success:
-//   - TxOp.DataOfs and TxOp.DataLen are overwritten,
-//   - TxMsg.DataStore is appended with the serialization of val, and
-//   - the TxOp is appended to TxMsg.Ops.
+//   - TxMsg.DataStore is appended with the marshaled value
+//   - TxOp.DataOfs and TxOp.DataLen updated
+//   - TxOp is appended to TxMsg.Ops
 func (tx *TxMsg) MarshalOp(op *TxOp, val Value) error {
-	if val == nil {
-		op.DataOfs = 0
-		op.DataLen = 0
-	} else {
+
+	// START
+	ds := tx.DataStore
+	startOfs := len(ds)
+
+	// VALUE HEADER
+	headerFlags := ValueHeaderFlags_FromID
+	ds = append(ds, byte(headerFlags))
+	ds = binary.BigEndian.AppendUint64(ds, tx.FromID_0)
+	ds = binary.BigEndian.AppendUint64(ds, tx.FromID_1)
+
+	// VALUE CONTENT
+	if val != nil {
 		var err error
-		op.DataOfs = uint64(len(tx.DataStore))
-		tx.DataStore, err = val.MarshalToStore(tx.DataStore)
+		ds, err = val.MarshalToStore(ds)
 		if err != nil {
 			return err
 		}
-		op.DataLen = uint64(len(tx.DataStore)) - op.DataOfs
 	}
 
-	op.Addr.EditID = tx.ID().DeriveID(op.Addr.EditID)
-	op.Addr.FromID = tx.FromID()
-
-	tx.OpCount += 1
+	// END
+	op.DataLen = uint64(len(ds) - startOfs)
+	op.DataOfs = uint64(startOfs)
+	tx.DataStore = ds
+	tx.OpCount++
 	tx.Ops = append(tx.Ops, *op)
 	tx.Normalized = false
+
 	return nil
 }
 
-func (tx *TxMsg) MarshalOpAndData(op *TxOp, valBuf []byte) {
+// Marshals a TxOp and it's raw value (value header then value content)
+// Used for low-level handling and should be used with care.
+func (tx *TxMsg) MarshalOpAndData(op *TxOp, opValue []byte) {
 	op.DataOfs = uint64(len(tx.DataStore))
-	op.DataLen = uint64(len(valBuf))
-	tx.DataStore = append(tx.DataStore, valBuf...)
-	tx.OpCount += 1
+	op.DataLen = uint64(len(opValue))
+	tx.DataStore = append(tx.DataStore, opValue...)
+	tx.OpCount++
 	tx.Ops = append(tx.Ops, *op)
 	tx.Normalized = false
 }
@@ -261,7 +287,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 	headLen := preamble.TxHeadLen()
 	dataLen := preamble.TxDataLen()
 
-	// Use tx.DataStore to hold 'head" for unmarshalling, containing TxMsg fields and TxOps
+	// Use tx.DataStore as a temp store the tx header for unmarshalling, containing TxHeader and TxOps.
 	{
 		needSz := max(headLen, dataLen)
 		if cap(tx.DataStore) < needSz {
@@ -371,9 +397,6 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 			op_cur[TxField_EditID_0] = op.Addr.EditID[0]
 			op_cur[TxField_EditID_1] = op.Addr.EditID[1]
 
-			op_cur[TxField_FromID_0] = op.Addr.FromID[0]
-			op_cur[TxField_FromID_1] = op.Addr.FromID[1]
-
 			hasFields := uint64(0)
 			for i, fi := range op_cur {
 				if fi != op_prv[i] {
@@ -384,7 +407,7 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 			dst = binary.AppendUvarint(dst, hasFields)
 			for i, fi := range op_cur {
 				if hasFields&(1<<i) != 0 {
-					dst = binary.LittleEndian.AppendUint64(dst, fi)
+					dst = binary.BigEndian.AppendUint64(dst, fi)
 				}
 			}
 
@@ -457,7 +480,7 @@ func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 				if p+8 > len(src) {
 					return ErrMalformedTx
 				}
-				op_cur[j] = binary.LittleEndian.Uint64(src[p:])
+				op_cur[j] = binary.BigEndian.Uint64(src[p:])
 				p += 8
 			}
 		}
@@ -473,9 +496,6 @@ func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 
 		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
 		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
-
-		op.Addr.FromID[0] = op_cur[TxField_FromID_0]
-		op.Addr.FromID[1] = op_cur[TxField_FromID_1]
 
 		tx.Ops = append(tx.Ops, op)
 	}
