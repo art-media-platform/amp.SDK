@@ -160,8 +160,8 @@ func UID_HashLiteral(literal []byte) UID {
 	hash := hasher.Sum(hashBuf[:0])
 
 	return UID{
-		binary.LittleEndian.Uint64(hash[0:8]),
-		binary.LittleEndian.Uint64(hash[8:16]),
+		binary.BigEndian.Uint64(hash[0:8]),
+		binary.BigEndian.Uint64(hash[8:16]),
 	}
 }
 
@@ -230,15 +230,11 @@ func (id UID) Octal(enc []OctalDigit) []OctalDigit {
 
 // DeriveID returns the a deterministic ID derived from an existing previous ID (or nil if no previous edit).
 func (id UID) DeriveID(oth UID) UID {
-	var newID UID
-
 	if oth.IsNil() {
-		newID[0] = id[0]
-		newID[1] = id[1] &^ GenesisHintMask
+		return id
 	} else {
-		newID = id.Midpoint(oth)
+		return id.Midpoint(oth)
 	}
-	return newID
 }
 
 // Midpoint symmetrically averages two IDs, yielding a deterministic, pseudo-unique UID that "encodes a past".
