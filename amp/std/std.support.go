@@ -12,35 +12,32 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
-var SessionContextID = tag.UID{0, 8675309}
+// Pushes a new tx to the receiver for the client's session agent for handling (e.g. LaunchOAuth)
+// If value == nil, no op is marshalled and  the tx is sent without ops.
+func PushMetaOp(attrID tag.UID, value amp.Value, dst amp.TxReceiver, sess amp.Session, contextID tag.UID) error {
+	tx := sess.NewTx()
+	tx.SetContextID(contextID)
+	tx.Status = amp.PinStatus_Synced
 
-// Sends the given attr-value pair to the client's session agent for handling (e.g. LaunchOAuth)
-func PushSessionOp(sess amp.Session, attrID tag.UID, value amp.Value) error {
-	kv := amp.ValueEntry{
-		Value: value,
+	if value != nil {
+		op := amp.TxOp{
+			Flags: amp.TxOpFlags_Upsert | amp.TxOpFlags_MetaOp,
+		}
+		op.Addr.NodeID = amp.HeadNodeID
+		op.Addr.AttrID = attrID
+		if err := tx.MarshalOp(&op, value); err != nil {
+			return err
+		}
 	}
-	kv.Addr.NodeID = amp.HeadNodeID
-	kv.Addr.AttrID = attrID
-	kv.Addr.FromID = sess.Login().Member.UID()
-	return PushMetaOp(sess, sess, kv, SessionContextID, amp.PinStatus_Synced)
+
+	return dst.PushTx(tx, sess)
 }
 
-// PushMetaOp sends a TxOp to the given destination with the given value.
-func PushMetaOp(dst amp.TxReceiver, ctx context.Context, kv amp.ValueEntry, contextID tag.UID, status amp.PinStatus) error {
-	tx := amp.TxNew()
-	tx.SetFromID(kv.Addr.FromID)
-	tx.SetContextID(contextID)
-	tx.Status = status
+var SessionContextID = tag.UID{0, 8675309} // symbolizes the client's session controller / agent.
 
-	op := amp.TxOp{
-		Flags: amp.TxOpFlags_Upsert | amp.TxOpFlags_MetaOp,
-		Addr:  kv.Addr,
-	}
-	if err := tx.MarshalOp(&op, kv.Value); err != nil {
-		return err
-	}
-
-	return dst.PushTx(tx, ctx)
+// Convenience function for PushMetaOp()
+func PushSessionOp(sess amp.Session, attrID tag.UID, value amp.Value) error {
+	return PushMetaOp(attrID, value, sess, sess, SessionContextID)
 }
 
 // Convenience function to parse the named URL value into the destinaation type
