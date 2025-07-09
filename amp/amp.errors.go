@@ -15,6 +15,7 @@ var (
 	ErrRequestExists   = ErrCode_BadRequest.Error("request already exists")
 	ErrNoContext       = ErrCode_BadRequest.Error("context missing")
 	ErrContextNotFound = ErrCode_ContextNotReady.Error("context not found")
+	ErrValueDamaged    = ErrCode_StorageFailure.Error("value damaged")
 	ErrNothingToCommit = ErrCode_CommitFailed.Error("nothing to commit")
 	ErrAppNotFound     = ErrCode_ItemNotFound.Error("app module not found")
 	ErrPathNotfound    = ErrCode_ItemNotFound.Error("path not found")

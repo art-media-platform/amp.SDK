@@ -25,8 +25,6 @@ func (addr *Address) AsLSM(lsm []byte) {
 	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[1]) //
 	binary.BigEndian.PutUint64(lsm[48:56], addr.EditID[0]) // EditID
 	binary.BigEndian.PutUint64(lsm[56:64], addr.EditID[1]) //
-	binary.BigEndian.PutUint64(lsm[64:72], addr.FromID[0]) // FromID
-	binary.BigEndian.PutUint64(lsm[72:80], addr.FromID[1]) //
 }
 
 func (addr *Address) FromLSM(lsm []byte) {
@@ -38,8 +36,6 @@ func (addr *Address) FromLSM(lsm []byte) {
 	addr.ItemID[1] = binary.BigEndian.Uint64(lsm[40:48]) //
 	addr.EditID[0] = binary.BigEndian.Uint64(lsm[48:56]) // EditID
 	addr.EditID[1] = binary.BigEndian.Uint64(lsm[56:64]) //
-	addr.FromID[0] = binary.BigEndian.Uint64(lsm[64:72]) // FromID
-	addr.FromID[1] = binary.BigEndian.Uint64(lsm[72:80]) //
 }
 
 // CompareElementID compares the NodeID, AttrID, and ItemID
@@ -106,24 +102,11 @@ func (addr *Address) Compare(oth *Address) int {
 		return 1
 	}
 
-	if addr.FromID[0] < oth.FromID[0] { // FromID
-		return -1
-	}
-	if addr.FromID[0] > oth.FromID[0] {
-		return 1
-	}
-	if addr.FromID[1] < oth.FromID[1] {
-		return -1
-	}
-	if addr.FromID[1] > oth.FromID[1] {
-		return 1
-	}
-
 	return 0 // all equal
 }
 
 func (addr *Address) String() string {
-	return fmt.Sprint(addr.ElementID.String(), ",", addr.EditID.String(), ",", addr.FromID.String())
+	return fmt.Sprint(addr.ElementID.String(), ",", addr.EditID.String())
 }
 
 func (lsm *ElementLSM) ElementID() ElementID {

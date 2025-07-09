@@ -26,7 +26,6 @@ func TestTxSerialize(t *testing.T) {
 					ItemID: tag.UID{73833773, 76549},
 				},
 				EditID: tag.UID{4435435, 83849854543},
-				FromID: tag.UID{0x1234567890abcdef, 0xabcdef1234567890},
 			},
 		}
 
@@ -44,8 +43,6 @@ func TestTxSerialize(t *testing.T) {
 		op.Addr.ItemID[1] *= 745983
 		op.Addr.EditID[0] += 123456789
 		op.Addr.EditID[1] *= 0xbeef
-		op.Addr.FromID[0] += 0xdeadbeef
-		op.Addr.FromID[1] -= 0xfeedface
 
 		data := []byte("hello-world")
 		for i := 0; i < 7; i++ {
@@ -70,7 +67,6 @@ func TestTxSerialize(t *testing.T) {
 
 		op.Addr.ItemID[0] = 111111
 		op.Addr.EditID[1] = 55445544
-		op.Addr.FromID[1] = 0x515151
 		tx.MarshalOpAndData(&op, nil)
 	}
 

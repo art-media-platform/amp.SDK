@@ -29,7 +29,6 @@ type (
 	Address struct {
 		ElementID
 		EditID UID //   48:64   ^Midpoint(edit_time, replace_time); ordered from newest to oldest
-		FromID UID //   64:80   entry author ID; source tx loaded via (Node, FromID, EditID)
 	}
 
 	// AddressLSM is an Address serialized into its corresponding LSM key format.
@@ -46,8 +45,8 @@ type (
 )
 
 const (
-	ElementLSM_Size = 3 * UID_Size // sizeof(NodeID + AttrID + ItemID)
-	AddressLSM_Size = 5 * UID_Size // sizeof(NodeID + AttrID + ItemID + EditID + FromID)
+	ElementLSM_Size = 3 * UID_Size // NodeID, AttrID, ItemID
+	AddressLSM_Size = 4 * UID_Size // NodeID, AttrID, ItemID, EditID
 
 	PackageTags      = "amp.spec.tag.v0.703"
 	UID_Size         = 16                   // UID octet size
@@ -68,6 +67,4 @@ const (
 
 	CanonicThen     = "-"
 	CanonicThenChar = byte('-')
-
-	GenesisHintMask = uint64(0xFFFFFF)
 )
