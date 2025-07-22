@@ -22,14 +22,14 @@ func TestTag(t *testing.T) {
 		t.Fatalf("WithExpr/WithToken failed: %v", name.ID)
 	}
 	base32 := name.ID.Base32()
-	if base32 != "7Q5UF9XKK6D961W20KW66C6PFY" {
+	if base32 != "53MGURHPJK745FTVUTENJ3M5VZ" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	exprID, err := tag.UID_Parse(base32)
 	if err != nil || exprID != name.ID {
 		t.Fatalf("UID_Parse(Base32) failed: got %v, err=%v", exprID, err)
 	}
-	if base16 := name.ID.Base16(); base16 != "0xF62E9C9ECA46624C1E0812E18CB355DE" {
+	if base16 := name.ID.Base16(); base16 != "0xA39BF5785632390AECEF596D2239977F" {
 		t.Fatalf("tag.UID.Base16() failed: got %v", base16)
 	}
 	if prefix, suffix := name.LeafTags(2); prefix != "amp.app.some" || suffix != "-tag.thing" {
@@ -49,7 +49,7 @@ func TestTag(t *testing.T) {
 			})
 			tryExpr := strings.Join(parts, ".")
 			try, _ := tag.ParseName(tryExpr)
-			if try.ID[0] != 0xc31aa9f56d605f88 || try.ID[1] != 0x39a245a6fcd2b838 {
+			if try.ID[0] != 0x8a1d359d982ec64b || try.ID[1] != 0x79e2d9284a9ff80e {
 				t.Fatalf("tag literals commutation test failed: got %v", try)
 			}
 		}

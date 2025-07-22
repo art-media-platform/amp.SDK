@@ -1,110 +1,110 @@
                                amp.spec.tag.v0.703  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  5UEB5DMHWE0FUK5SXW85BRD05F   amp.spec.tag.v0.703.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+  3DR9245NB4F62T0ZJ8VN08UGYU   amp.spec.tag.v0.703.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                Hello World!
-  172RE53M76C7Y540651UBXEN10   hello.world
+  7K4XGBQ7879D4F228U0CU1N627   hello.world
                                Hello, World!
-  172RE53M76C7Y540651UBXEN10   hello.world
+  7K4XGBQ7879D4F228U0CU1N627   hello.world
                                hello  world
-  172RE53M76C7Y540651UBXEN10   hello.world
+  7K4XGBQ7879D4F228U0CU1N627   hello.world
                                world  hello
-  172RE53M76C7Y540651UBXEN10   world.hello
+  7K4XGBQ7879D4F228U0CU1N627   world.hello
                                World, hello.
-  172RE53M76C7Y540651UBXEN10   world.hello
+  7K4XGBQ7879D4F228U0CU1N627   world.hello
 
                                Hello and welcome to tags!
-   UHGRNY009JFCP1N70DEWZ4Z14   hello.and.welcome.to.tags
+   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
                                hello, and welcome to tags!
-   UHGRNY009JFCP1N70DEWZ4Z14   hello.and.welcome.to.tags
+   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
                                hello, and Welcome to tags!!
-   UHGRNY009JFCP1N70DEWZ4Z14   hello.and.welcome.to.tags
+   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
                                hello, and..welcome to... tags.
-   UHGRNY009JFCP1N70DEWZ4Z14   hello.and.welcome.to.tags
+   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
                                hello+and+welcome+to+tags
-   UHGRNY009JFCP1N70DEWZ4Z14   hello.and.welcome.to.tags
+   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
 
 
                                UTF8 whitespace, commas, +, and . denote the "with" operator.   This operator adds the hash of each operand and is also therefore commutative.
-  7ZZWEFBYWDUDQQ9F9B94GK3WEJ   UTF8.whitespace.commas.and.denote.the."with".operator.this.operator.adds.the.hash.of.each.operand.and.is.also.therefore.commutative
+  7YUZXWWQU01YFZJ854ZUQZ24FT   UTF8.whitespace.commas.and.denote.the."with".operator.this.operator.adds.the.hash.of.each.operand.and.is.also.therefore.commutative
 
                                Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
-  5C43BBNPBMETTZHMXU85V0YN8U   text.having."homophone.case".or."homophonic.case".means.its.component.words.are.considered.interchangeable.with.words.that.sound.the.same.but.have.different.spelling
+  1UZHHM1C379XRUVNPBPDGNDH09   text.having."homophone.case".or."homophonic.case".means.its.component.words.are.considered.interchangeable.with.words.that.sound.the.same.but.have.different.spelling
 
                                The words Center, center, centre, and Centre are homophonic.
-  3N6KTUQV5KSDGTMUEY3J1ZTSVJ   the.words.center.center.centre.and.centre.are.homophonic
+  32ZY9SY9H8B37QJ3VYDVS0CRHV   the.words.center.center.centre.and.centre.are.homophonic
                                The words center, Center, Centre, and centre are homophonic.
-  3N6KTUQV5KSDGTMUEY3J1ZTSVJ   the.words.center.center.centre.and.centre.are.homophonic
+  32ZY9SY9H8B37QJ3VYDVS0CRHV   the.words.center.center.centre.and.centre.are.homophonic
                                The words Centre, centre, center, and Center are homophonic.
-  3N6KTUQV5KSDGTMUEY3J1ZTSVJ   the.words.centre.centre.center.and.center.are.homophonic
+  32ZY9SY9H8B37QJ3VYDVS0CRHV   the.words.centre.centre.center.and.center.are.homophonic
 
                                This has very helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
-  20FGJB8NSMWDMFHXZBT6H4HCPK   this.has.very.helpful.implications.for.those.with.sight.or.hearing.impairments.or.in.search.result.ranking.since.the.query.word.order.is.usually.less.important.the.presence.of.particular.words.especially.once.there.are.dozen.words.or.more
+  6R3YVG7G6DTH5SUNGJCVDF3K2J   this.has.very.helpful.implications.for.those.with.sight.or.hearing.impairments.or.in.search.result.ranking.since.the.query.word.order.is.usually.less.important.the.presence.of.particular.words.especially.once.there.are.dozen.words.or.more
 
                                However, colons, dashes and slashes are order dependent!?  Yes, order-dependent!
-  4QHWPP5B42Y8M5SRUB8G60S6NW   however.colons.dashes.and.slashes.are.order.dependent.yes.order-dependent
+  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.colons.dashes.and.slashes.are.order.dependent.yes.order-dependent
                                However, colons, dashes and slashes are order dependent?!  yes, order-dependent
-  4QHWPP5B42Y8M5SRUB8G60S6NW   however.colons.dashes.and.slashes.are.order.dependent.yes.order-dependent
+  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.colons.dashes.and.slashes.are.order.dependent.yes.order-dependent
                                However, Slashes, colons and dashes are order dependent?  Yes, order-dependent
-  4QHWPP5B42Y8M5SRUB8G60S6NW   however.slashes.colons.and.dashes.are.order.dependent.yes.order-dependent
+  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.slashes.colons.and.dashes.are.order.dependent.yes.order-dependent
                                However, Order-dependent?  Yes, colons, slashes, and dashes are order dependent.
-  4QHWPP5B42Y8M5SRUB8G60S6NW   however.order-dependent.yes.colons.slashes.and.dashes.are.order.dependent
+  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.order-dependent.yes.colons.slashes.and.dashes.are.order.dependent
                                however, dashes, colons and slashes are order-dependent! yES! Order dependent!
-  4QHWPP5B42Y8M5SRUB8G60S6NW   however.dashes.colons.and.slashes.are.order-dependent.yes.order.dependent
+  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.dashes.colons.and.slashes.are.order-dependent.yes.order.dependent
 
                                Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
-  43JCT0KD0KTMEVU8YS86EP59T5   acronyms.like.NBA.NFL.USA.CIA.PRC.and.EU.are.capitalized.since.they.are.spoken.letter.by.letter
+  27UU90JTPPFQF6NR9P9KXSGQW3   acronyms.like.NBA.NFL.USA.CIA.PRC.and.EU.are.capitalized.since.they.are.spoken.letter.by.letter
 
                                Words that are not upper case, are considered spoken / phonetic.
-  23KVJG22MV6H7NX36FVUV4VMVC   words.that.are.not.upper.case.are.considered.spoken-phonetic
+  7H6U8BFCPPVV5JHZ65YHQ15EQG   words.that.are.not.upper.case.are.considered.spoken-phonetic
 
                                This also means we can communicate proper nouns and titles easily, such as A Game Of Thrones
-  1ZY1RYHN444MC34WK32YNS0JR3   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
+  7156SS66FVU6BMDZ985V32K06B   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
                                This also means we can communicate proper nouns and titles easily, such as Game of Thrones, A.
-  1ZY1RYHN444MC34WK32YNS0JR3   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.game.of.thrones.a
+  7156SS66FVU6BMDZ985V32K06B   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.game.of.thrones.a
                                This also means we can communicate proper nouns and titles easily, such as a game of thrones.
-  1ZY1RYHN444MC34WK32YNS0JR3   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
+  7156SS66FVU6BMDZ985V32K06B   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
 
                                Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL-CAPS should be used intentionally.
-   858TBGKRB9TYQVCN4UKF6G63N   notice.how.acronyms.are.spoken.differently.and.have.their.own.unique.meanings.so.that.means.ALL-CAPS.should.be.used.intentionally
+  61C11BTJ56VNEZN5JYEMFCMW9H   notice.how.acronyms.are.spoken.differently.and.have.their.own.unique.meanings.so.that.means.ALL-CAPS.should.be.used.intentionally
 
                                ADA is an acronym for the Americans with Disabilities Act, Ms. Ada is a computer programmer.
-  51UFVVK57XUY8X7UG43DV7JVZ5   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ms.ada.is.a.computer.programmer
+  3571VFBQ69UFMEDDVWBZR35T29   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ms.ada.is.a.computer.programmer
                                ADA is an acronym for the Americans with Disabilities Act. ms ada is a computer programmer!
-  51UFVVK57XUY8X7UG43DV7JVZ5   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ms.ada.is.a.computer.programmer
+  3571VFBQ69UFMEDDVWBZR35T29   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ms.ada.is.a.computer.programmer
                                ADA is an acronym for the Americans with Disabilities Act. Ada is a computer programmer, Ms!
-  51UFVVK57XUY8X7UG43DV7JVZ5   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ada.is.a.computer.programmer.ms
+  3571VFBQ69UFMEDDVWBZR35T29   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ada.is.a.computer.programmer.ms
                                ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
-  51UFVVK57XUY8X7UG43DV7JVZ5   ADA.is.an.acronym.for.the.americans.with.disabilities.act.a.computer.programmer.ms.ada.is
+  3571VFBQ69UFMEDDVWBZR35T29   ADA.is.an.acronym.for.the.americans.with.disabilities.act.a.computer.programmer.ms.ada.is
 
                                Get into the amp SDK today!
-  4R9R1VY0Z1VQSB8SD7GGBW4EKZ   get.into.the.amp.SDK.today
+  1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
                                Get into the amp.SDK today!
-  4R9R1VY0Z1VQSB8SD7GGBW4EKZ   get.into.the.amp.SDK.today
+  1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
                                Get into the Amp SDK today!
-  4R9R1VY0Z1VQSB8SD7GGBW4EKZ   get.into.the.amp.SDK.today
+  1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
 
 
                                Yoda said this is not a drill.
-   DK2K88Q4VVU60ZCW8BN9Q23R8   yoda.said.this.is.not.a.drill
+  5E34N75EQ85VNX35UJEGHMWQ3P   yoda.said.this.is.not.a.drill
                                Yoda said, a drill this is not.
-   DK2K88Q4VVU60ZCW8BN9Q23R8   yoda.said.a.drill.this.is.not
+  5E34N75EQ85VNX35UJEGHMWQ3P   yoda.said.a.drill.this.is.not
                                Yoda said, a drill this is not!
-   DK2K88Q4VVU60ZCW8BN9Q23R8   yoda.said.a.drill.this.is.not
+  5E34N75EQ85VNX35UJEGHMWQ3P   yoda.said.a.drill.this.is.not
                                a drill this is not, Yoda said!
-   DK2K88Q4VVU60ZCW8BN9Q23R8   a.drill.this.is.not.yoda.said
+  5E34N75EQ85VNX35UJEGHMWQ3P   a.drill.this.is.not.yoda.said
                                said a drill, this is not Yoda.
-   DK2K88Q4VVU60ZCW8BN9Q23R8   said.a.drill.this.is.not.yoda
+  5E34N75EQ85VNX35UJEGHMWQ3P   said.a.drill.this.is.not.yoda
                                said a drill, is this not Yoda?
-   DK2K88Q4VVU60ZCW8BN9Q23R8   said.a.drill.is.this.not.yoda
+  5E34N75EQ85VNX35UJEGHMWQ3P   said.a.drill.is.this.not.yoda
 
                                12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
-   CPDS2JN244BEZCS8SRFWM71FC   12.words.randomly.chosen.from.but.not.limited.to.the.english.dictionary.exceeds.10-56.possible.combinations.for.reference.that's.over.10.million.times.the.number.of.possible.bitcoin.public.addresses.(2-160)
+  46YBFW120F9CZF1WFQQZV510GE   12.words.randomly.chosen.from.but.not.limited.to.the.english.dictionary.exceeds.10-56.possible.combinations.for.reference.that's.over.10.million.times.the.number.of.possible.bitcoin.public.addresses.(2-160)
 
                                The above hash ID G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB demonstrates a standardized way to precisely witness a set of unordered literals. In creating a subsequent hash ID, we are cryptographically chaining tag sets together.
-   Q0P2W7N84KX4H0S7BBET5HXSW   the.above.hash.ID.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.demonstrates.a.standardized.way.to.precisely.witness.a.set.of.unordered.literals.in.creating.a.subsequent.hash.ID.we.are.cryptographically.chaining.tag.sets.together
+  2407J7NDSJFXPYSDPVKNQFSSM9   the.above.hash.ID.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.demonstrates.a.standardized.way.to.precisely.witness.a.set.of.unordered.literals.in.creating.a.subsequent.hash.ID.we.are.cryptographically.chaining.tag.sets.together
 
                                And so by citing both G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB and BSJ6041BGWJM08K4S0M05995JZSQRHPV2 as literals, we can conveniently validate tag relationships and groups.
-  6Z536YQ9MJ6EG9JU8NSRQH4GY3   and.so.by.citing.both.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.and.BSJ6041BGWJM08K4S0M05995JZSQRHPV2.as.literals.we.can.conveniently.validate.tag.relationships.and.groups
+   C0KENW46KTG6Z7Z0C2V4TPXQ9   and.so.by.citing.both.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.and.BSJ6041BGWJM08K4S0M05995JZSQRHPV2.as.literals.we.can.conveniently.validate.tag.relationships.and.groups
 
                                Hashing 9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3 with H3 geo-tiles 8D489E34600637F and 872AA845AFFFFFF demonstrates how locations can be cryptographically bound together in this system.  This offers easy "DIY" layering of security and permissions.
-   N5BBQ9P2SS0VJEBJ0B6Z942FH   hashing.9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3.with.H3.geo-tiles.8D489E34600637F.and.872AA845AFFFFFF.demonstrates.how.locations.can.be.cryptographically.bound.together.in.this.system.this.offers.easy."DIY".layering.of.security.and.permissions
+  3XGY5RTN12DEU4V4XJ89KUESRG   hashing.9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3.with.H3.geo-tiles.8D489E34600637F.and.872AA845AFFFFFF.demonstrates.how.locations.can.be.cryptographically.bound.together.in.this.system.this.offers.easy."DIY".layering.of.security.and.permissions

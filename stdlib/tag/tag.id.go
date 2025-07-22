@@ -2,7 +2,6 @@ package tag
 
 import (
 	"bytes"
-	"crypto/sha1"
 	"encoding/binary"
 	"errors"
 	"math/bits"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/stdlib/bufs"
 	"github.com/gofrs/uuid/v5"
+	"golang.org/x/crypto/blake2s"
 )
 
 var (
@@ -154,14 +154,14 @@ func UID_HashLiteral(literal []byte) UID {
 	if len(literal) == 0 {
 		return UID{}
 	}
-	hasher := sha1.New()
-	hasher.Write(literal)
-	var hashBuf [24]byte
-	hash := hasher.Sum(hashBuf[:0])
-
+	hash := blake2s.Sum256(literal)
+	h0 := binary.LittleEndian.Uint64(hash[0:8])
+	h1 := binary.LittleEndian.Uint64(hash[8:16])
+	h2 := binary.LittleEndian.Uint64(hash[16:24])
+	h3 := binary.LittleEndian.Uint64(hash[24:32])
 	return UID{
-		binary.BigEndian.Uint64(hash[0:8]),
-		binary.BigEndian.Uint64(hash[8:16]),
+		h0 ^ h2,
+		h1 ^ h3,
 	}
 }
 

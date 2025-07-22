@@ -1,32 +1,32 @@
                                amp.spec.tag.v0.703  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  5UEB5DMHWE0FUK5SXW85BRD05F   amp.spec.tag.v0.703.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+  3DR9245NB4F62T0ZJ8VN08UGYU   amp.spec.tag.v0.703.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                amp.university.open.courses
-  26V3165XDUMEVFS7MD6RUFV070   amp.university.open.courses
+  2PSQUSVECVUMHCJSFMS43TQYTX   amp.university.open.courses
 
                                amp.dev.archive.us-en
-  2RKZU4XFK8U233P7W25K5JQ31N   amp.dev.archive.us-en
+  4TM6DCU43WR93W5Y7066GUEBRQ   amp.dev.archive.us-en
 
 
                                amp.university.courses.open.arts.science.history.101.Once.upon.a.Time {
-  53WEBBJQY4MZ1HJ7WJTQ4K1J1G   amp.university.courses.open.arts.science.history.101.once.upon.a.time.{
+  1DW5RC2RCKBH640W5EJT2090JG   amp.university.courses.open.arts.science.history.101.once.upon.a.time.{
                                	L01.Rise of Physical Sciences, Engineering, Steampower, and Mechanical Engineering, feat. Peter Wang
-   C0EP1YE62PVQ09HTD1CRQ70GU   L01.rise.of.physical.sciences.engineering.steampower.and.mechanical.engineering.feat.peter.wang
+  3KHSQRN0Z7Q716VG4U8YRBMH2K   L01.rise.of.physical.sciences.engineering.steampower.and.mechanical.engineering.feat.peter.wang
                                	L02.Planetary Motion and Numerical Computation & Modeling
-   D5MSNVWUYMBUMCSYM0XCQK0XE   L02.planetary.motion.and.numerical.computation.&.modeling
+  5X16VFX8KRJ75XR04CKM5THSYJ   L02.planetary.motion.and.numerical.computation.&.modeling
                                	L03.A New Science 1: Introduction to cryptography, code breaking, and war fighting
-  5GP0E7U58HT5TM3R31NJYJHFQZ   L03.a.new.science.1-introduction.to.cryptography.code.breaking.and.war.fighting
+  1GV53GKH5D6DX4YTY2TX8CH8QU   L03.a.new.science.1-introduction.to.cryptography.code.breaking.and.war.fighting
                                	L04.A New Science 2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
-   HQP8E8GRD4JPJN14URYFYWU4S   L04.a.new.science.2-the.microcomputer.revolution.arpanet.interpreters.numerical.methods.and.rise.of.computer.science
+  55J4T89BHNDSVKJ09X17P9WRMD   L04.a.new.science.2-the.microcomputer.revolution.arpanet.interpreters.numerical.methods.and.rise.of.computer.science
                                	L05.A New Science 3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
-  1JH2V57D2JGR60UB09PEZ4FYDP   L05.a.new.science.3-miniaturization.of.PC.&.mobile.hardware.computerization.of.securities.markets.and.exchanges.video.games
+  1FHT04HS7FB45C76WQ11N4PKM5   L05.a.new.science.3-miniaturization.of.PC.&.mobile.hardware.computerization.of.securities.markets.and.exchanges.video.games
                                	L06.A New Science 4: Community-Centric systems
-  715XN6FD4HBV48GWUYZY7EFU0H   L06.a.new.science.4-community-centric.systems
+  2C8YWHV03RBWG2EZZQ90Q2SMZE   L06.a.new.science.4-community-centric.systems
                                	L07.Physics Unbound 1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
-  35FVJJ6M47KGD872YZCPJZFN02   L07.physics.unbound.1-rise.of.general.relativity.quantum.theory.in.a.newtonian.world.hungry.for.answers.feat.sean.carroll.phd.theoretical.physicist.caltech
+  5CH83KJ125Z0KGZY32U5SGF8RG   L07.physics.unbound.1-rise.of.general.relativity.quantum.theory.in.a.newtonian.world.hungry.for.answers.feat.sean.carroll.phd.theoretical.physicist.caltech
                                	L08.Physics Unbound 2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
-  5PRYD31YJHJE415R1D5JUP9R3V   L08.physics.unbound.2-black.holes.origins.of.life.&.the.physical.universe.(big.bang).quantum.theory.and.open.mysteries.in.modern.physics
+  15C1H6RSF8R1897U4EZZVWCB17   L08.physics.unbound.2-black.holes.origins.of.life.&.the.physical.universe.(big.bang).quantum.theory.and.open.mysteries.in.modern.physics
                                }
-  62QZGQ40GXUDV276893W52KP8E   }
+  4UVGE6U09VDVZK5CVP8VM762JW   }
 
 
