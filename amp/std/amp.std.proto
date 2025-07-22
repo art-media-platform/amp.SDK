@@ -100,35 +100,42 @@ message FileInfo {
 
 // Multi-purpose, future-proof text element / label / item
 message TextItem {
-    string   TextBody  = 1; // plain-text body as applicable
-    amp.Tags Tags      = 4;
+    string   Body  = 1; // plain-text body as applicable
+    amp.Tags Tags  = 4;
 }
 
+
+
+enum CoordFormat {
+    CoordFormat_S2  = 0; // (S2)      (1) uint64: lat,lng, size, UTC64
+    CoordFormat_H3  = 1; // (H3)      (1) uint64: lat,lng, size
+    CoordFormat_S2T = 2; // (S2, T)   (2) uint64: lat,lng, size, UTC64
+    CoordFormat_H3T = 3; // (H3, T)   (2) uint64: lat,lng, size, UTC64
+}
 
 message Labels {
-    string   Headline  = 1;
+    string   Title     = 1;
     string   Subtitle  = 2;
-    string   About     = 3;
+    string   Help      = 3;
 }
-
 
 // General purpose lightweight set of geo tiles in the shape of a rectangle -composed rectangle given a center and width/height.
 // The units are typically mid H3 resolution with rectangualar dimensions in units of font glyph size.
-message GeoRect {
+message Rect {
 
-    // Discrete radial altitude; typically either mm radius from globe center or timestamp
-    fixed64 R = 1;
+    CoordFormat Format = 1; // specifies the type and format of Coords
+    fixed64     Anchor = 2; // H3 or S2 tile index; resolution
+    fixed64     R      = 3; // mm altitude from globe center or UTC64
 
-    // Globe tile epicenter; tile size sets character cell height
-    fixed64 S2 = 2;
-    fixed64 H3 = 3;
+    int32       Width  = 8; // mm
+    int32       Height = 9; // mm
 
-    int64   Center_I = 4; // center offset
-    int64   Center_J = 5; // center offset
-
-    int64   Width    = 8; // character width
-    int64   Height   = 9; // character height, mapped to tile height
+    int32       I = 10; // center offset
+    int32       J = 11; // center offset
+    int32       K = 12; // center offset
 }
+
+
 
 
 // General purpose polygonal path of geo tiles.
@@ -139,15 +146,14 @@ message GeoPath {
         Path = 1;
         Ring = 2;
     }
-    enum Format {
-        LatLng    = 0; // each coord is lat lng (two values per coordinate)
-        LatLngAlt = 1; // each coord is a lat lng alt tuple
-    }
+
 
     RenderType Type = 1;
     float      ExtrudeLo = 4;  // If non-zero, extrude the path to this height
     float      ExtrudeHi = 5;  // If non-zero, extrude the path to this height
 
-    repeated double  LatLngs = 15;
-    repeated fixed64 H3s     = 16; // H3 tile indices, as applicable
+    CoordFormat      Format  = 14; // specifies the type and format of Coords
+    repeated fixed64 Coords  = 15; // tile indices interleaved with associated UTC64 or Rmm based on Format.
+    repeated double  LatLngs = 16; // lat, lng pairs (degrees)
+
 }

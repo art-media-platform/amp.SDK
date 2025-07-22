@@ -54,7 +54,7 @@ enum TxOpFlags {
     TxOpFlags_Unassigned = 0;    // invalid state
     TxOpFlags_MetaOp     = 0x01; // op is out of band and/or should not persist
     TxOpFlags_Upsert     = 0x04; // write value at [Address]
-    TxOpFlags_Delete     = 0x80; // drop value at [Address]
+    TxOpFlags_Delete     = 0x08; // drop value at [Address]
 }
 
 // TxField maps a fixed count of int64 payload fields.
@@ -86,10 +86,22 @@ enum TxField {
 enum ValueHeaderFlags {
     ValueHeaderFlags_None = 0;
 
-    ValueHeaderFlags_FromID = 0x01; // author or other orginator
-    ValueHeaderFlags_TxID   = 0x02; // tx that publishes this entry
-    ValueHeaderFlags_UID_C  = 0x04; // AuthID?
-    ValueHeaderFlags_UID_D  = 0x08; // reserved
+    ValueHeaderFlags_FromID   = 0x01; // author or other orginator
+    ValueHeaderFlags_TxID     = 0x02; // tx that publishes this entry
+    ValueHeaderFlags_UID_C    = 0x04; // reserved / AuthID?
+    ValueHeaderFlags_UID_D    = 0x08; // reserved
+
+    // ValueHeaderFlags_FromSelf = 0x10; // equivalent to FromID of owner (saves 16 bytes)
+}
+
+enum TxStatus {
+    TxStatus_Nil          = 0; // not set / invalid
+    TxStatus_Received     = 1; // tx received, pending processing
+    TxStatus_Validated    = 2; // tx verified, pending commit
+    TxStatus_Committed    = 3; // tx committed to local storage
+    TxStatus_Propagated   = 4; // tx propagated to peers
+    TxStatus_Acknowledged = 5; // tx acknowledged by peers
+    TxStatus_Rejected     = 6; // tx rejected (invalid, malformed, etc)
 }
 
 // TxHeader contains information for a TxMsg
@@ -107,12 +119,16 @@ message TxHeader {
     fixed64             FromID_0 = 3;
     fixed64             FromID_1 = 4;
 
+    // Identifies the Epoch this tx was created within.
+    // Used to validate that {FromID} is authorized to apply this tx to the planet's CRDT
+    fixed64             EpochID_0 = 5;
+    fixed64             EpochID_1 = 6;
+
     // The planet epoch this tx was sealed within.
-    Tag                 Recipient = 5;
+    Tag                 Recipient = 10;
 
     // When set, this tx is sealed (signed) by FromID.
-    Tag                 Signature = 9;
-
+    Tag                 Signature = 11;
 
 
     /////////////////////
@@ -269,7 +285,7 @@ message ChannelEpoch {
     Tag                 Channel       = 1;
     Tag                 ParentChannel = 2;
     fixed64             TypeID        = 3;
-    string              Comment       = 10;
+    string              Label         = 10;
 }
 
 
@@ -351,17 +367,21 @@ enum CryptoKitID {
 
 
 /*
-message LabelAttr {
+
+
+
+message UILabel {
     string              Main            = 1;
     string              Subtext         = 2;
 }
-message SwitchAttr {
+message UISwitch {
     string              Label           = 1;
     string              About           = 2;
     bool                Enabled         = 2;
 }
 
-message EditableTextAttr {
+message UIEditField {
+
     string              Label           = 1;
     string              About           = 2;
     string              Content         = 3;
