@@ -21,33 +21,9 @@ var (
 	ErrUnrecognizedFormat = errors.New("unrecognized ID format")
 )
 
-func ParseName(tagExpr string) (Name, error) {
-	return Name{}.With(tagExpr), nil
-}
-
-// LeafTags splits the tag spec the given number of tags for the right.
-// E.g. LeafTags(2) on "a.b.c.d.ee" yields ("a.b.c", "d.ee")
-func (name Name) LeafTags(n int) (string, string) {
-	if n <= 0 {
-		return name.Canonic, ""
-	}
-
-	canonic := name.Canonic
-	R := len(canonic)
-	for p := R - 1; p >= 0; p-- {
-		switch c := canonic[p]; c {
-		case CanonicThenChar, CanonicWithChar:
-			n--
-			if n <= 0 {
-				prefix := canonic[:p]
-				if c == CanonicWithChar {
-					p++ // omit canonic with operator
-				}
-				return prefix, canonic[p:]
-			}
-		}
-	}
-	return "", canonic
+// Convenience function to parse a tag expression into a tag.Name struct.
+func NameFrom(tagExpr string) Name {
+	return Name{}.With(tagExpr)
 }
 
 // With() is a communative tag.UID operator that combines two tag.IDs into a new tag.UID.
@@ -125,6 +101,31 @@ func (name Name) With(tagExpr string) Name {
 		ID:      exprID,
 		Canonic: string(body),
 	}
+}
+
+// LeafTags splits the tag spec the given number of tags for the right.
+// E.g. LeafTags(2) on "a.b.c.d.ee" yields ("a.b.c", "d.ee")
+func (name Name) LeafTags(n int) (string, string) {
+	if n <= 0 {
+		return name.Canonic, ""
+	}
+
+	canonic := name.Canonic
+	R := len(canonic)
+	for p := R - 1; p >= 0; p-- {
+		switch c := canonic[p]; c {
+		case CanonicThenChar, CanonicWithChar:
+			n--
+			if n <= 0 {
+				prefix := canonic[:p]
+				if c == CanonicWithChar {
+					p++ // omit canonic with operator
+				}
+				return prefix, canonic[p:]
+			}
+		}
+	}
+	return "", canonic
 }
 
 func MaxID() UID {
