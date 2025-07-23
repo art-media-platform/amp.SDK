@@ -37,10 +37,7 @@ func TestTag(t *testing.T) {
 	}
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
-		holyExpr, err := tag.ParseName(Genesis)
-		if err != nil {
-			t.Fatalf("tag.UID_Parse() failed: %v", err)
-		}
+		holyExpr := tag.NameFrom(Genesis)
 
 		parts := strings.Split(holyExpr.Canonic, ".")
 		for range 3773 {
@@ -48,7 +45,7 @@ func TestTag(t *testing.T) {
 				parts[i], parts[j] = parts[j], parts[i]
 			})
 			tryExpr := strings.Join(parts, ".")
-			try, _ := tag.ParseName(tryExpr)
+			try := tag.NameFrom(tryExpr)
 			if try.ID[0] != 0x8a1d359d982ec64b || try.ID[1] != 0x79e2d9284a9ff80e {
 				t.Fatalf("tag literals commutation test failed: got %v", try)
 			}
