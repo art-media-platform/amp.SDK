@@ -175,10 +175,7 @@ func UID_FromName(tagsExpr string) UID {
 func NowID() UID {
 	now := UID_FromTime(time.Now())
 
-	entropy := (p1*now[1] + 0xCCCCAAAACCCCAAAA) ^ (p2 * gEntropy)
-	now[1] ^= entropy & EntropyMask
-	gEntropy = entropy
-
+	now[1] = mixEntropy(now[1])
 	return now
 }
 
