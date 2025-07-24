@@ -14,10 +14,10 @@ import (
 
 // Pushes a new tx to the receiver for the client's session agent for handling (e.g. LaunchOAuth)
 // If value == nil, no op is marshalled and  the tx is sent without ops.
-func PushMetaOp(attrID tag.UID, value amp.Value, dst amp.TxReceiver, sess amp.Session, contextID tag.UID) error {
+func PushMetaOp(attrID tag.UID, value amp.Value, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
 	tx := sess.NewTx()
 	tx.SetContextID(contextID)
-	tx.Status = amp.PinStatus_Synced
+	tx.Status = status
 
 	if value != nil {
 		op := amp.TxOp{
@@ -37,7 +37,7 @@ var SessionContextID = tag.UID{0, 8675309} // symbolizes the client's session co
 
 // Convenience function for PushMetaOp()
 func PushSessionOp(sess amp.Session, attrID tag.UID, value amp.Value) error {
-	return PushMetaOp(attrID, value, sess, sess, SessionContextID)
+	return PushMetaOp(attrID, value, sess, sess, SessionContextID, amp.PinStatus_Synced)
 }
 
 // Convenience function to parse the named URL value into the destinaation type
