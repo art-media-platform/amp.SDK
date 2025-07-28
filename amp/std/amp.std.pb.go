@@ -49,30 +49,30 @@ func (ScaleMode) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_f19235ecf4b48ee7, []int{0}
 }
 
-type CoordFormat int32
+type PointFormat int32
 
 const (
-	CoordFormat_S2  CoordFormat = 0
-	CoordFormat_H3  CoordFormat = 1
-	CoordFormat_S2T CoordFormat = 2
-	CoordFormat_H3T CoordFormat = 3
+	PointFormat_S2  PointFormat = 0
+	PointFormat_H3  PointFormat = 1
+	PointFormat_S2T PointFormat = 2
+	PointFormat_H3T PointFormat = 3
 )
 
-var CoordFormat_name = map[int32]string{
-	0: "CoordFormat_S2",
-	1: "CoordFormat_H3",
-	2: "CoordFormat_S2T",
-	3: "CoordFormat_H3T",
+var PointFormat_name = map[int32]string{
+	0: "PointFormat_S2",
+	1: "PointFormat_H3",
+	2: "PointFormat_S2T",
+	3: "PointFormat_H3T",
 }
 
-var CoordFormat_value = map[string]int32{
-	"CoordFormat_S2":  0,
-	"CoordFormat_H3":  1,
-	"CoordFormat_S2T": 2,
-	"CoordFormat_H3T": 3,
+var PointFormat_value = map[string]int32{
+	"PointFormat_S2":  0,
+	"PointFormat_H3":  1,
+	"PointFormat_S2T": 2,
+	"PointFormat_H3T": 3,
 }
 
-func (CoordFormat) EnumDescriptor() ([]byte, []int) {
+func (PointFormat) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_f19235ecf4b48ee7, []int{1}
 }
 
@@ -97,81 +97,22 @@ var GeoPath_RenderType_value = map[string]int32{
 }
 
 func (GeoPath_RenderType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{10, 0}
+	return fileDescriptor_f19235ecf4b48ee7, []int{9, 0}
 }
 
-type StyleCSS struct {
-	TextAlign int32  `protobuf:"varint,10,opt,name=TextAlign,proto3" json:"TextAlign,omitempty"`
-	TextColor uint32 `protobuf:"fixed32,11,opt,name=TextColor,proto3" json:"TextColor,omitempty"`
-	BackColor uint32 `protobuf:"fixed32,12,opt,name=BackColor,proto3" json:"BackColor,omitempty"`
-}
-
-func (m *StyleCSS) Reset()      { *m = StyleCSS{} }
-func (*StyleCSS) ProtoMessage() {}
-func (*StyleCSS) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{0}
-}
-func (m *StyleCSS) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *StyleCSS) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_StyleCSS.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *StyleCSS) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StyleCSS.Merge(m, src)
-}
-func (m *StyleCSS) XXX_Size() int {
-	return m.Size()
-}
-func (m *StyleCSS) XXX_DiscardUnknown() {
-	xxx_messageInfo_StyleCSS.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_StyleCSS proto.InternalMessageInfo
-
-func (m *StyleCSS) GetTextAlign() int32 {
-	if m != nil {
-		return m.TextAlign
-	}
-	return 0
-}
-
-func (m *StyleCSS) GetTextColor() uint32 {
-	if m != nil {
-		return m.TextColor
-	}
-	return 0
-}
-
-func (m *StyleCSS) GetBackColor() uint32 {
-	if m != nil {
-		return m.BackColor
-	}
-	return 0
-}
-
-// TRS (translate rotate scale) INA IEEE 1207
+// TRS (translate rotate scale) IEEE 1207
 // General purpose placement time, space, orientation, and/or geo-position.
 type TRS struct {
-	// spatial scale -- if 0, scale is 1.0
+	// spatial scale; if 0, scale is 1.0
 	Scale float64 `protobuf:"fixed64,1,opt,name=Scale,proto3" json:"Scale,omitempty"`
 	// Specifies how scale dynamically changes based on observer position.
-	// DEPRECATED: HUD dyanmically choose pip size (min and max)
+	// DEPRECATED: HUD dynamically chooses pip size (min and max)
 	VisualScale ScaleMode `protobuf:"varint,2,opt,name=VisualScale,proto3,enum=std.ScaleMode" json:"VisualScale,omitempty"`
-	// a relative position in space
+	// spatial position
 	Px float64 `protobuf:"fixed64,3,opt,name=Px,proto3" json:"Px,omitempty"`
 	Py float64 `protobuf:"fixed64,4,opt,name=Py,proto3" json:"Py,omitempty"`
 	Pz float64 `protobuf:"fixed64,5,opt,name=Pz,proto3" json:"Pz,omitempty"`
-	// rotation in space -- if all values are 0, Quaternion is unit identity
+	// spatial rotation; if all values 0, Quaternion is unit identity
 	Qx float64 `protobuf:"fixed64,10,opt,name=Qx,proto3" json:"Qx,omitempty"`
 	Qy float64 `protobuf:"fixed64,11,opt,name=Qy,proto3" json:"Qy,omitempty"`
 	Qz float64 `protobuf:"fixed64,12,opt,name=Qz,proto3" json:"Qz,omitempty"`
@@ -181,7 +122,7 @@ type TRS struct {
 func (m *TRS) Reset()      { *m = TRS{} }
 func (*TRS) ProtoMessage() {}
 func (*TRS) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{1}
+	return fileDescriptor_f19235ecf4b48ee7, []int{0}
 }
 func (m *TRS) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -296,7 +237,7 @@ type Matrix4X4 struct {
 func (m *Matrix4X4) Reset()      { *m = Matrix4X4{} }
 func (*Matrix4X4) ProtoMessage() {}
 func (*Matrix4X4) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{2}
+	return fileDescriptor_f19235ecf4b48ee7, []int{1}
 }
 func (m *Matrix4X4) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -440,18 +381,23 @@ func (m *Matrix4X4) GetM33() float64 {
 // General purpose Camera state
 type CameraState struct {
 	Placement *TRS    `protobuf:"bytes,1,opt,name=Placement,proto3" json:"Placement,omitempty"`
-	Fov       float32 `protobuf:"fixed32,3,opt,name=Fov,proto3" json:"Fov,omitempty"`
-	NearPlane float32 `protobuf:"fixed32,4,opt,name=NearPlane,proto3" json:"NearPlane,omitempty"`
-	FarPlane  float32 `protobuf:"fixed32,5,opt,name=FarPlane,proto3" json:"FarPlane,omitempty"`
-	Distance  float32 `protobuf:"fixed32,7,opt,name=Distance,proto3" json:"Distance,omitempty"`
-	Altitude  float32 `protobuf:"fixed32,8,opt,name=Altitude,proto3" json:"Altitude,omitempty"`
-	Mode      string  `protobuf:"bytes,9,opt,name=Mode,proto3" json:"Mode,omitempty"`
+	Pitch     float32 `protobuf:"fixed32,2,opt,name=Pitch,proto3" json:"Pitch,omitempty"`
+	Yaw       float32 `protobuf:"fixed32,3,opt,name=Yaw,proto3" json:"Yaw,omitempty"`
+	Distance  float32 `protobuf:"fixed32,5,opt,name=Distance,proto3" json:"Distance,omitempty"`
+	Altitude  float32 `protobuf:"fixed32,6,opt,name=Altitude,proto3" json:"Altitude,omitempty"`
+	Mass      float32 `protobuf:"fixed32,9,opt,name=Mass,proto3" json:"Mass,omitempty"`
+	NearPlane float32 `protobuf:"fixed32,10,opt,name=NearPlane,proto3" json:"NearPlane,omitempty"`
+	FarPlane  float32 `protobuf:"fixed32,11,opt,name=FarPlane,proto3" json:"FarPlane,omitempty"`
+	Fov       float32 `protobuf:"fixed32,13,opt,name=Fov,proto3" json:"Fov,omitempty"`
+	PixelsX   int32   `protobuf:"varint,16,opt,name=PixelsX,proto3" json:"PixelsX,omitempty"`
+	PixelsY   int32   `protobuf:"varint,17,opt,name=PixelsY,proto3" json:"PixelsY,omitempty"`
+	Mode      string  `protobuf:"bytes,20,opt,name=Mode,proto3" json:"Mode,omitempty"`
 }
 
 func (m *CameraState) Reset()      { *m = CameraState{} }
 func (*CameraState) ProtoMessage() {}
 func (*CameraState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{3}
+	return fileDescriptor_f19235ecf4b48ee7, []int{2}
 }
 func (m *CameraState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -487,23 +433,16 @@ func (m *CameraState) GetPlacement() *TRS {
 	return nil
 }
 
-func (m *CameraState) GetFov() float32 {
+func (m *CameraState) GetPitch() float32 {
 	if m != nil {
-		return m.Fov
+		return m.Pitch
 	}
 	return 0
 }
 
-func (m *CameraState) GetNearPlane() float32 {
+func (m *CameraState) GetYaw() float32 {
 	if m != nil {
-		return m.NearPlane
-	}
-	return 0
-}
-
-func (m *CameraState) GetFarPlane() float32 {
-	if m != nil {
-		return m.FarPlane
+		return m.Yaw
 	}
 	return 0
 }
@@ -522,6 +461,48 @@ func (m *CameraState) GetAltitude() float32 {
 	return 0
 }
 
+func (m *CameraState) GetMass() float32 {
+	if m != nil {
+		return m.Mass
+	}
+	return 0
+}
+
+func (m *CameraState) GetNearPlane() float32 {
+	if m != nil {
+		return m.NearPlane
+	}
+	return 0
+}
+
+func (m *CameraState) GetFarPlane() float32 {
+	if m != nil {
+		return m.FarPlane
+	}
+	return 0
+}
+
+func (m *CameraState) GetFov() float32 {
+	if m != nil {
+		return m.Fov
+	}
+	return 0
+}
+
+func (m *CameraState) GetPixelsX() int32 {
+	if m != nil {
+		return m.PixelsX
+	}
+	return 0
+}
+
+func (m *CameraState) GetPixelsY() int32 {
+	if m != nil {
+		return m.PixelsY
+	}
+	return 0
+}
+
 func (m *CameraState) GetMode() string {
 	if m != nil {
 		return m.Mode
@@ -531,12 +512,13 @@ func (m *CameraState) GetMode() string {
 
 type CameraOptions struct {
 	MoveSpeed float32 `protobuf:"fixed32,1,opt,name=MoveSpeed,proto3" json:"MoveSpeed,omitempty"`
+	Mode      string  `protobuf:"bytes,2,opt,name=Mode,proto3" json:"Mode,omitempty"`
 }
 
 func (m *CameraOptions) Reset()      { *m = CameraOptions{} }
 func (*CameraOptions) ProtoMessage() {}
 func (*CameraOptions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{4}
+	return fileDescriptor_f19235ecf4b48ee7, []int{3}
 }
 func (m *CameraOptions) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -572,6 +554,13 @@ func (m *CameraOptions) GetMoveSpeed() float32 {
 	return 0
 }
 
+func (m *CameraOptions) GetMode() string {
+	if m != nil {
+		return m.Mode
+	}
+	return ""
+}
+
 type VisPreset struct {
 	AssetTag *amp.Tag `protobuf:"bytes,1,opt,name=AssetTag,proto3" json:"AssetTag,omitempty"`
 	Args     string   `protobuf:"bytes,2,opt,name=Args,proto3" json:"Args,omitempty"`
@@ -580,7 +569,7 @@ type VisPreset struct {
 func (m *VisPreset) Reset()      { *m = VisPreset{} }
 func (*VisPreset) ProtoMessage() {}
 func (*VisPreset) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{5}
+	return fileDescriptor_f19235ecf4b48ee7, []int{4}
 }
 func (m *VisPreset) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -639,7 +628,7 @@ type FileInfo struct {
 func (m *FileInfo) Reset()      { *m = FileInfo{} }
 func (*FileInfo) ProtoMessage() {}
 func (*FileInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{6}
+	return fileDescriptor_f19235ecf4b48ee7, []int{5}
 }
 func (m *FileInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -740,7 +729,7 @@ type TextItem struct {
 func (m *TextItem) Reset()      { *m = TextItem{} }
 func (*TextItem) ProtoMessage() {}
 func (*TextItem) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{7}
+	return fileDescriptor_f19235ecf4b48ee7, []int{6}
 }
 func (m *TextItem) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -792,7 +781,7 @@ type Labels struct {
 func (m *Labels) Reset()      { *m = Labels{} }
 func (*Labels) ProtoMessage() {}
 func (*Labels) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{8}
+	return fileDescriptor_f19235ecf4b48ee7, []int{7}
 }
 func (m *Labels) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -842,10 +831,10 @@ func (m *Labels) GetHelp() string {
 	return ""
 }
 
-// General purpose lightweight set of geo tiles in the shape of a rectangle -composed rectangle given a center and width/height.
-// The units are typically mid H3 resolution with rectangualar dimensions in units of font glyph size.
+// General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
+// The units are typically mid H3 resolution with rectangular dimensions in units of font glyph size.
 type Rect struct {
-	Format CoordFormat `protobuf:"varint,1,opt,name=Format,proto3,enum=std.CoordFormat" json:"Format,omitempty"`
+	Format PointFormat `protobuf:"varint,1,opt,name=Format,proto3,enum=std.PointFormat" json:"Format,omitempty"`
 	Anchor uint64      `protobuf:"fixed64,2,opt,name=Anchor,proto3" json:"Anchor,omitempty"`
 	R      uint64      `protobuf:"fixed64,3,opt,name=R,proto3" json:"R,omitempty"`
 	Width  int32       `protobuf:"varint,8,opt,name=Width,proto3" json:"Width,omitempty"`
@@ -858,7 +847,7 @@ type Rect struct {
 func (m *Rect) Reset()      { *m = Rect{} }
 func (*Rect) ProtoMessage() {}
 func (*Rect) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{9}
+	return fileDescriptor_f19235ecf4b48ee7, []int{8}
 }
 func (m *Rect) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -887,11 +876,11 @@ func (m *Rect) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Rect proto.InternalMessageInfo
 
-func (m *Rect) GetFormat() CoordFormat {
+func (m *Rect) GetFormat() PointFormat {
 	if m != nil {
 		return m.Format
 	}
-	return CoordFormat_S2
+	return PointFormat_S2
 }
 
 func (m *Rect) GetAnchor() uint64 {
@@ -948,15 +937,14 @@ type GeoPath struct {
 	Type      GeoPath_RenderType `protobuf:"varint,1,opt,name=Type,proto3,enum=std.GeoPath_RenderType" json:"Type,omitempty"`
 	ExtrudeLo float32            `protobuf:"fixed32,4,opt,name=ExtrudeLo,proto3" json:"ExtrudeLo,omitempty"`
 	ExtrudeHi float32            `protobuf:"fixed32,5,opt,name=ExtrudeHi,proto3" json:"ExtrudeHi,omitempty"`
-	Format    CoordFormat        `protobuf:"varint,14,opt,name=Format,proto3,enum=std.CoordFormat" json:"Format,omitempty"`
-	Coords    []uint64           `protobuf:"fixed64,15,rep,packed,name=Coords,proto3" json:"Coords,omitempty"`
-	LatLngs   []float64          `protobuf:"fixed64,16,rep,packed,name=LatLngs,proto3" json:"LatLngs,omitempty"`
+	Format    PointFormat        `protobuf:"varint,14,opt,name=Format,proto3,enum=std.PointFormat" json:"Format,omitempty"`
+	Points    []uint64           `protobuf:"fixed64,15,rep,packed,name=Points,proto3" json:"Points,omitempty"`
 }
 
 func (m *GeoPath) Reset()      { *m = GeoPath{} }
 func (*GeoPath) ProtoMessage() {}
 func (*GeoPath) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f19235ecf4b48ee7, []int{10}
+	return fileDescriptor_f19235ecf4b48ee7, []int{9}
 }
 func (m *GeoPath) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1006,32 +994,24 @@ func (m *GeoPath) GetExtrudeHi() float32 {
 	return 0
 }
 
-func (m *GeoPath) GetFormat() CoordFormat {
+func (m *GeoPath) GetFormat() PointFormat {
 	if m != nil {
 		return m.Format
 	}
-	return CoordFormat_S2
+	return PointFormat_S2
 }
 
-func (m *GeoPath) GetCoords() []uint64 {
+func (m *GeoPath) GetPoints() []uint64 {
 	if m != nil {
-		return m.Coords
-	}
-	return nil
-}
-
-func (m *GeoPath) GetLatLngs() []float64 {
-	if m != nil {
-		return m.LatLngs
+		return m.Points
 	}
 	return nil
 }
 
 func init() {
 	proto.RegisterEnum("std.ScaleMode", ScaleMode_name, ScaleMode_value)
-	proto.RegisterEnum("std.CoordFormat", CoordFormat_name, CoordFormat_value)
+	proto.RegisterEnum("std.PointFormat", PointFormat_name, PointFormat_value)
 	proto.RegisterEnum("std.GeoPath_RenderType", GeoPath_RenderType_name, GeoPath_RenderType_value)
-	proto.RegisterType((*StyleCSS)(nil), "std.StyleCSS")
 	proto.RegisterType((*TRS)(nil), "std.TRS")
 	proto.RegisterType((*Matrix4X4)(nil), "std.Matrix4x4")
 	proto.RegisterType((*CameraState)(nil), "std.CameraState")
@@ -1047,74 +1027,73 @@ func init() {
 func init() { proto.RegisterFile("amp.std.proto", fileDescriptor_f19235ecf4b48ee7) }
 
 var fileDescriptor_f19235ecf4b48ee7 = []byte{
-	// 1063 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x55, 0x4f, 0x6f, 0xe3, 0xd4,
-	0x17, 0xcd, 0x73, 0xfe, 0x34, 0x7e, 0x99, 0x49, 0xad, 0xf7, 0xfb, 0x69, 0xb0, 0x46, 0x60, 0x45,
-	0x16, 0x42, 0xd1, 0x8c, 0x28, 0x89, 0xd3, 0x2d, 0x8b, 0x34, 0x6d, 0x69, 0x67, 0x9a, 0x92, 0xbe,
-	0x44, 0xc3, 0xb2, 0x7a, 0x8d, 0x5f, 0x53, 0x0b, 0xc7, 0x8e, 0xec, 0xd7, 0x99, 0xa4, 0x2b, 0x3e,
-	0x02, 0x1f, 0x03, 0x81, 0xc4, 0x37, 0x60, 0xcf, 0x06, 0xa9, 0xcb, 0x59, 0xd2, 0x74, 0xc3, 0x72,
-	0xf6, 0x48, 0x08, 0xdd, 0xfb, 0x6c, 0x27, 0xb0, 0x61, 0x77, 0xcf, 0x39, 0xcf, 0xd7, 0xe7, 0x1e,
-	0xdf, 0x97, 0xd0, 0xa7, 0x62, 0xbe, 0xd8, 0x4b, 0x95, 0xbf, 0xb7, 0x48, 0x62, 0x15, 0xb3, 0x72,
-	0xaa, 0xfc, 0xe7, 0x4c, 0xcc, 0x17, 0x5f, 0x00, 0x3f, 0x8d, 0x13, 0xa9, 0x05, 0xd7, 0xa7, 0xf5,
-	0xb1, 0x5a, 0x85, 0x72, 0x30, 0x1e, 0xb3, 0x8f, 0xa9, 0x39, 0x91, 0x4b, 0xd5, 0x0f, 0x83, 0x59,
-	0x64, 0xd3, 0x16, 0x69, 0x57, 0xf9, 0x86, 0xc8, 0xd5, 0x41, 0x1c, 0xc6, 0x89, 0xdd, 0x68, 0x91,
-	0xf6, 0x0e, 0xdf, 0x10, 0xa0, 0x1e, 0x88, 0xe9, 0xb7, 0x5a, 0x7d, 0xa2, 0xd5, 0x82, 0x70, 0x7f,
-	0x21, 0xb4, 0x3c, 0xe1, 0x63, 0xf6, 0x7f, 0x5a, 0x1d, 0x4f, 0x45, 0x28, 0x6d, 0xd2, 0x22, 0x6d,
-	0xc2, 0x35, 0x60, 0x1d, 0xda, 0x78, 0x13, 0xa4, 0xb7, 0x22, 0xd4, 0x9a, 0xd1, 0x22, 0xed, 0xa6,
-	0xd7, 0x44, 0xf7, 0xc8, 0x0c, 0x63, 0x5f, 0xf2, 0xed, 0x23, 0xac, 0x49, 0x8d, 0xd1, 0xd2, 0x2e,
-	0x63, 0x13, 0x63, 0xb4, 0x44, 0xbc, 0xb2, 0x2b, 0x19, 0x5e, 0x21, 0xbe, 0xb3, 0xab, 0x19, 0xbe,
-	0x03, 0x7c, 0xb1, 0xc4, 0x91, 0x08, 0x37, 0x2e, 0xf0, 0xfc, 0xc5, 0x0a, 0x87, 0x00, 0x8c, 0xe7,
-	0x2f, 0xee, 0xd0, 0x36, 0x60, 0x7d, 0xfe, 0x9d, 0xfd, 0x34, 0xc3, 0xef, 0xdc, 0x9f, 0x0c, 0x6a,
-	0x0e, 0x85, 0x4a, 0x82, 0xe5, 0xfe, 0x72, 0x9f, 0x59, 0xb4, 0x3c, 0xec, 0x74, 0xb2, 0x19, 0xa0,
-	0xd4, 0x4c, 0x17, 0x9d, 0x23, 0xd3, 0xd5, 0x8c, 0x97, 0x59, 0x84, 0x52, 0x33, 0xbd, 0xcc, 0x24,
-	0x94, 0xc8, 0x74, 0x3b, 0x99, 0x4d, 0x28, 0x35, 0xd3, 0xb5, 0x6b, 0x39, 0xa3, 0xfb, 0x74, 0x3d,
-	0x7b, 0x27, 0x67, 0x74, 0x9f, 0x6e, 0xcf, 0xae, 0xe7, 0x8c, 0xee, 0xe3, 0x75, 0x6c, 0x33, 0x63,
-	0x3c, 0xdd, 0xc7, 0xeb, 0x66, 0x03, 0x43, 0xa9, 0x19, 0x2f, 0x1b, 0x19, 0x4a, 0xcd, 0xf4, 0xb2,
-	0xa1, 0xa1, 0x44, 0xa6, 0xd7, 0xc9, 0xc6, 0x86, 0x52, 0x33, 0x5d, 0xbb, 0x99, 0x33, 0xba, 0x4f,
-	0xcf, 0xb3, 0x77, 0x73, 0x46, 0xf7, 0xe9, 0xf5, 0x6c, 0x2b, 0x67, 0x7a, 0xee, 0x6f, 0x84, 0x36,
-	0x06, 0x62, 0x2e, 0x13, 0x31, 0x56, 0x42, 0x49, 0xf6, 0x19, 0x35, 0x47, 0xa1, 0x98, 0xca, 0xb9,
-	0x8c, 0x14, 0xa6, 0xd6, 0xf0, 0xea, 0xf8, 0x75, 0x27, 0x7c, 0xcc, 0x37, 0x12, 0x74, 0x3a, 0x8e,
-	0xdf, 0x62, 0x66, 0x06, 0x87, 0x12, 0xb6, 0xea, 0x5c, 0x8a, 0x64, 0x14, 0x8a, 0x48, 0x62, 0x72,
-	0x06, 0xdf, 0x10, 0xec, 0x39, 0xad, 0x1f, 0xe7, 0x62, 0x15, 0xc5, 0x02, 0x83, 0x76, 0x18, 0xa4,
-	0x4a, 0x44, 0x53, 0x89, 0xe1, 0x19, 0xbc, 0xc0, 0xa0, 0xf5, 0x43, 0x15, 0xa8, 0x5b, 0x5f, 0x62,
-	0x8c, 0x06, 0x2f, 0x30, 0x63, 0xb4, 0x02, 0xeb, 0x86, 0x61, 0x9a, 0x1c, 0x6b, 0xf7, 0x73, 0xfa,
-	0x54, 0x8f, 0xf3, 0xf5, 0x42, 0x05, 0x71, 0x94, 0x82, 0xad, 0x61, 0xfc, 0x56, 0x8e, 0x17, 0x52,
-	0xfa, 0x38, 0x90, 0xc1, 0x37, 0x84, 0x7b, 0x44, 0xcd, 0x37, 0x41, 0x3a, 0x4a, 0x64, 0x2a, 0x15,
-	0xfb, 0x94, 0xd6, 0xfb, 0x69, 0x2a, 0xd5, 0x44, 0xcc, 0x8a, 0xd1, 0xe1, 0x0a, 0x4e, 0xc4, 0x8c,
-	0x17, 0x0a, 0xbc, 0xb5, 0x9f, 0xcc, 0x52, 0x5c, 0x20, 0x93, 0x63, 0xed, 0xfe, 0x45, 0x68, 0xfd,
-	0x38, 0x08, 0xe5, 0x69, 0x74, 0x1d, 0x17, 0xb6, 0xc8, 0xc6, 0x16, 0x5c, 0xa6, 0xd3, 0xf4, 0x30,
-	0x48, 0xf0, 0xa9, 0x3a, 0xd7, 0x80, 0xd9, 0x74, 0xe7, 0x30, 0x48, 0xce, 0xc5, 0x5c, 0x07, 0x66,
-	0xf2, 0x1c, 0xc2, 0xd8, 0xa7, 0x4a, 0xce, 0x51, 0xaa, 0xa2, 0x54, 0x60, 0xf6, 0x8c, 0xd6, 0x8e,
-	0x96, 0xea, 0x4c, 0x46, 0xb8, 0x7b, 0x55, 0x9e, 0x21, 0xd6, 0xa2, 0x8d, 0x41, 0x1c, 0x29, 0x19,
-	0xa9, 0xc9, 0x6a, 0xa1, 0xd3, 0x32, 0xf9, 0x36, 0x05, 0x59, 0x0c, 0x12, 0x29, 0x94, 0xf4, 0xfb,
-	0x0a, 0x17, 0xae, 0xcc, 0x37, 0x04, 0x73, 0x28, 0x1d, 0xc6, 0x7e, 0x70, 0x1d, 0xa0, 0xdc, 0x40,
-	0x79, 0x8b, 0x01, 0x4f, 0x07, 0x2b, 0x25, 0xc7, 0xc1, 0x9d, 0xc4, 0x2d, 0x2b, 0xf3, 0x02, 0xbb,
-	0x5f, 0xd2, 0x3a, 0xfc, 0xbe, 0x80, 0x47, 0x98, 0xff, 0x20, 0xf6, 0x57, 0xf9, 0xfc, 0x50, 0xb3,
-	0x4f, 0x68, 0x65, 0x22, 0x66, 0x29, 0x8e, 0xd9, 0xf0, 0xcc, 0x3c, 0xd6, 0x94, 0x23, 0xed, 0x9e,
-	0xd3, 0xda, 0x99, 0xb8, 0x92, 0x61, 0x0a, 0x41, 0x4d, 0x02, 0x15, 0xe6, 0xe9, 0x69, 0x00, 0xaf,
-	0x1e, 0xdf, 0x5e, 0x29, 0x14, 0x74, 0xee, 0x05, 0x86, 0xd7, 0x9d, 0xc8, 0x70, 0x81, 0xab, 0x68,
-	0x72, 0xac, 0xdd, 0x9f, 0x09, 0xad, 0x70, 0x39, 0x55, 0xac, 0x4d, 0x6b, 0xc7, 0x71, 0x32, 0x17,
-	0x7a, 0x97, 0x9b, 0x9e, 0x85, 0xbb, 0x3c, 0x88, 0xe3, 0xc4, 0xd7, 0x3c, 0xcf, 0x74, 0x48, 0xb5,
-	0x1f, 0x4d, 0x6f, 0x62, 0xfd, 0x89, 0x6a, 0x3c, 0x43, 0xec, 0x09, 0x25, 0x1c, 0x7b, 0xd7, 0x38,
-	0xe1, 0x60, 0xef, 0x9b, 0xc0, 0x57, 0x37, 0x98, 0x6e, 0x95, 0x6b, 0x00, 0xcf, 0x9e, 0xc8, 0x60,
-	0x76, 0xa3, 0x70, 0x15, 0xab, 0x3c, 0x43, 0xf0, 0xec, 0x69, 0xf6, 0xe3, 0x4c, 0x4e, 0x01, 0xbd,
-	0xc2, 0x58, 0xab, 0x9c, 0xbc, 0x02, 0xf4, 0x1a, 0x2f, 0x74, 0x95, 0x93, 0xd7, 0xee, 0x9f, 0x84,
-	0xee, 0x7c, 0x25, 0xe3, 0x91, 0x50, 0x37, 0xec, 0x25, 0xad, 0xe0, 0x07, 0xd4, 0x8e, 0x3f, 0x42,
-	0xc7, 0x99, 0xb6, 0xc7, 0x65, 0xe4, 0xcb, 0x04, 0x64, 0x5e, 0xc9, 0x3f, 0xe9, 0xd1, 0x52, 0x25,
-	0xb7, 0xbe, 0x3c, 0x8b, 0xf3, 0x5b, 0x57, 0x10, 0x5b, 0xea, 0x49, 0x90, 0x5d, 0xbb, 0x0d, 0xb1,
-	0x15, 0x4e, 0xf3, 0xbf, 0xc3, 0x41, 0x3a, 0xb5, 0x77, 0x5b, 0x65, 0x08, 0x47, 0x23, 0x58, 0xe0,
-	0x33, 0xa1, 0xce, 0xa2, 0x59, 0x6a, 0x5b, 0xad, 0x72, 0x9b, 0xf0, 0x1c, 0xba, 0x2f, 0x29, 0xdd,
-	0x78, 0x65, 0x26, 0xad, 0x8e, 0xe2, 0x20, 0x52, 0x56, 0x89, 0xd5, 0x69, 0x05, 0x26, 0xb1, 0x08,
-	0x54, 0x3c, 0x88, 0x66, 0x96, 0xf1, 0x62, 0x9f, 0x9a, 0xc5, 0x9f, 0x07, 0xfb, 0x1f, 0xdd, 0x2d,
-	0xc0, 0xe5, 0x71, 0xb0, 0x94, 0xbe, 0x55, 0x62, 0x8c, 0x36, 0x37, 0x64, 0xff, 0x56, 0xc5, 0x16,
-	0x79, 0x71, 0x09, 0xfb, 0x5e, 0x78, 0x85, 0x23, 0x5b, 0xf0, 0x72, 0xec, 0xe9, 0xc7, 0xb6, 0xb9,
-	0x93, 0x9e, 0x45, 0xa0, 0xff, 0x3f, 0xcf, 0x4d, 0x2c, 0xe3, 0xdf, 0xe4, 0x49, 0x6f, 0x62, 0x95,
-	0x0f, 0x86, 0xf7, 0x0f, 0x4e, 0xe9, 0xfd, 0x83, 0x53, 0xfa, 0xf0, 0xe0, 0x90, 0xef, 0xd6, 0x0e,
-	0xf9, 0x61, 0xed, 0x90, 0x5f, 0xd7, 0x0e, 0xb9, 0x5f, 0x3b, 0xe4, 0xf7, 0xb5, 0x43, 0xfe, 0x58,
-	0x3b, 0xa5, 0x0f, 0x6b, 0x87, 0x7c, 0xff, 0xe8, 0x94, 0xee, 0x1f, 0x9d, 0xd2, 0xfb, 0x47, 0xa7,
-	0xf4, 0xa3, 0xf1, 0x4c, 0x24, 0x6a, 0x6f, 0x2e, 0xfd, 0x40, 0xec, 0x2d, 0x42, 0xa1, 0xae, 0xe3,
-	0x64, 0x0e, 0xc1, 0x5e, 0xd5, 0xf0, 0x5f, 0xbc, 0xf7, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4e,
-	0xe5, 0x5b, 0xe3, 0xef, 0x07, 0x00, 0x00,
+	// 1052 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x55, 0xcd, 0x6e, 0xdb, 0x46,
+	0x17, 0xd5, 0x50, 0x3f, 0x11, 0x47, 0x89, 0xac, 0x6f, 0xbe, 0x20, 0x25, 0x82, 0x96, 0x30, 0x84,
+	0xa2, 0x30, 0x12, 0xc0, 0x95, 0x48, 0x6f, 0xbb, 0x90, 0xff, 0x6a, 0x27, 0x96, 0x2b, 0x8f, 0x84,
+	0xb4, 0x5e, 0x19, 0x63, 0x71, 0x2c, 0x0f, 0x40, 0x91, 0x02, 0x39, 0x8e, 0x25, 0xaf, 0xfa, 0x08,
+	0x7d, 0x8c, 0xa2, 0x05, 0xfa, 0x06, 0xd9, 0x77, 0xe9, 0x65, 0x96, 0xb5, 0xbc, 0xe9, 0x32, 0x4f,
+	0x50, 0x14, 0xf7, 0x0e, 0x49, 0xa9, 0xdd, 0x74, 0x77, 0xcf, 0x39, 0xc3, 0x33, 0xf7, 0x9e, 0x99,
+	0x91, 0xe8, 0x33, 0x31, 0x9d, 0x6d, 0xa7, 0x3a, 0xd8, 0x9e, 0x25, 0xb1, 0x8e, 0x59, 0x39, 0xd5,
+	0xc1, 0x4b, 0x26, 0xa6, 0xb3, 0xaf, 0x81, 0x1f, 0xc7, 0x89, 0x34, 0x42, 0xfb, 0x03, 0xa1, 0xe5,
+	0x11, 0x1f, 0xb2, 0xe7, 0xb4, 0x3a, 0x1c, 0x8b, 0x50, 0x3a, 0x64, 0x93, 0x6c, 0x11, 0x6e, 0x00,
+	0xeb, 0xd0, 0xc6, 0x3b, 0x95, 0xde, 0x88, 0xd0, 0x68, 0xd6, 0x26, 0xd9, 0x6a, 0x7a, 0x4d, 0xf4,
+	0x45, 0xa6, 0x1f, 0x07, 0x92, 0xaf, 0x2f, 0x61, 0x4d, 0x6a, 0x0d, 0xe6, 0x4e, 0x19, 0x4d, 0xac,
+	0xc1, 0x1c, 0xf1, 0xc2, 0xa9, 0x64, 0x78, 0x81, 0xf8, 0xce, 0xa9, 0x66, 0xf8, 0x0e, 0xf0, 0xd9,
+	0xdc, 0xa1, 0x06, 0x9f, 0xe1, 0xfa, 0xb3, 0x85, 0xd3, 0xc8, 0x30, 0xae, 0x3f, 0xbb, 0x73, 0x9e,
+	0x66, 0xd8, 0xac, 0xbf, 0x75, 0x9e, 0x65, 0xf8, 0xb6, 0xfd, 0xab, 0x45, 0xed, 0xbe, 0xd0, 0x89,
+	0x9a, 0xef, 0xcc, 0x77, 0x58, 0x8b, 0x96, 0xfb, 0x9d, 0x4e, 0x36, 0x03, 0x94, 0x86, 0xe9, 0x62,
+	0xe7, 0xc8, 0x74, 0x0d, 0xe3, 0x65, 0x2d, 0x42, 0x69, 0x18, 0x3f, 0x6b, 0x12, 0x4a, 0x64, 0xba,
+	0x9d, 0xac, 0x4d, 0x28, 0x0d, 0xd3, 0x75, 0x6a, 0x39, 0x63, 0x7c, 0xba, 0x9e, 0xf3, 0x24, 0x67,
+	0x8c, 0x4f, 0xd7, 0x77, 0xea, 0x39, 0x63, 0x7c, 0xbc, 0x8e, 0x63, 0x67, 0x8c, 0x67, 0x7c, 0xbc,
+	0x6e, 0x36, 0x30, 0x94, 0x86, 0xf1, 0xb2, 0x91, 0xa1, 0x34, 0x8c, 0x9f, 0x0d, 0x0d, 0x25, 0x32,
+	0x7e, 0x27, 0x1b, 0x1b, 0x4a, 0xc3, 0x74, 0x9d, 0x66, 0xce, 0x18, 0x1f, 0xdf, 0x73, 0x36, 0x72,
+	0xc6, 0xf8, 0xf8, 0xbe, 0xd3, 0xca, 0x19, 0xbf, 0xfd, 0xc1, 0xa2, 0x8d, 0x3d, 0x31, 0x95, 0x89,
+	0x18, 0x6a, 0xa1, 0x25, 0xfb, 0x8a, 0xda, 0x83, 0x50, 0x8c, 0xe5, 0x54, 0x46, 0x1a, 0x53, 0x6b,
+	0x78, 0x75, 0x3c, 0xdd, 0x11, 0x1f, 0xf2, 0x95, 0x04, 0xb7, 0x63, 0xa0, 0xf4, 0xf8, 0x1a, 0x73,
+	0xb4, 0xb8, 0x01, 0xe0, 0x7f, 0x2e, 0x6e, 0x31, 0x49, 0x8b, 0x43, 0xc9, 0x5e, 0xd2, 0xfa, 0xbe,
+	0x4a, 0xb5, 0x88, 0xc6, 0x12, 0xc3, 0xb3, 0x78, 0x81, 0x41, 0xeb, 0x85, 0x5a, 0xe9, 0x9b, 0x40,
+	0x62, 0x8c, 0x16, 0x2f, 0x30, 0x63, 0xb4, 0xd2, 0x17, 0x69, 0x8a, 0x41, 0x59, 0x1c, 0x6b, 0xf6,
+	0x39, 0xb5, 0x4f, 0xa5, 0x48, 0x06, 0xa1, 0x88, 0x24, 0xe6, 0x65, 0xf1, 0x15, 0x01, 0x6e, 0x87,
+	0xb9, 0xd8, 0x30, 0x6e, 0x39, 0x86, 0xbe, 0x0e, 0xe3, 0xf7, 0x98, 0x96, 0xc5, 0xa1, 0x64, 0x0e,
+	0x7d, 0x32, 0x50, 0x73, 0x19, 0xa6, 0x3f, 0x60, 0x1a, 0x55, 0x9e, 0xc3, 0x95, 0x72, 0xee, 0xfc,
+	0x6f, 0x5d, 0x39, 0xc7, 0x9e, 0xe2, 0x40, 0x3a, 0xcf, 0x37, 0xc9, 0x96, 0xcd, 0xb1, 0x6e, 0xf7,
+	0xe8, 0x33, 0x13, 0xdf, 0x77, 0x33, 0xad, 0xe2, 0x08, 0x9b, 0xec, 0xc7, 0xef, 0xe5, 0x70, 0x26,
+	0x65, 0x80, 0x01, 0x5a, 0x7c, 0x45, 0x14, 0x16, 0xd6, 0x9a, 0xc5, 0x01, 0xb5, 0xdf, 0xa9, 0x74,
+	0x90, 0xc8, 0x54, 0x6a, 0xf6, 0x25, 0xad, 0xf7, 0xd2, 0x54, 0xea, 0x91, 0x98, 0x14, 0xf1, 0xc3,
+	0x03, 0x1d, 0x89, 0x09, 0x2f, 0x14, 0xb0, 0xe9, 0x25, 0x93, 0x34, 0xb7, 0x81, 0xba, 0xfd, 0x17,
+	0xa1, 0xf5, 0x43, 0x15, 0xca, 0xe3, 0xe8, 0x2a, 0x2e, 0xf6, 0x21, 0xab, 0x7d, 0xe0, 0xc8, 0x8e,
+	0xd3, 0x7d, 0x95, 0xe0, 0x57, 0x75, 0x6e, 0x00, 0x8c, 0xbb, 0xaf, 0x92, 0x53, 0x31, 0x95, 0x78,
+	0xdd, 0x6d, 0x9e, 0x43, 0x08, 0xf4, 0x58, 0xcb, 0x29, 0x4a, 0x55, 0x94, 0x0a, 0xcc, 0x5e, 0xd0,
+	0xda, 0xc1, 0x5c, 0x9f, 0xc8, 0x08, 0x0f, 0xae, 0xca, 0x33, 0xc4, 0x36, 0x69, 0x63, 0x2f, 0x8e,
+	0xb4, 0x8c, 0xf4, 0x68, 0x31, 0x93, 0x78, 0xf1, 0x6d, 0xbe, 0x4e, 0x41, 0x3e, 0x7b, 0x89, 0x14,
+	0x5a, 0x06, 0x3d, 0x8d, 0x87, 0x58, 0xe6, 0x2b, 0x82, 0xb9, 0x94, 0xf6, 0xe3, 0x40, 0x5d, 0x29,
+	0x94, 0x1b, 0x28, 0xaf, 0x31, 0xd0, 0xd3, 0xee, 0x42, 0xcb, 0xa1, 0xba, 0x93, 0x78, 0xd3, 0xcb,
+	0xbc, 0xc0, 0xed, 0x6f, 0x68, 0x7d, 0x24, 0xe7, 0x1a, 0x7a, 0x84, 0xf9, 0x77, 0xe3, 0x60, 0x91,
+	0xcf, 0x0f, 0x35, 0xfb, 0x82, 0x56, 0x46, 0x62, 0x92, 0xe2, 0x98, 0x0d, 0xcf, 0xce, 0x63, 0x4d,
+	0x39, 0xd2, 0xed, 0x53, 0x5a, 0x3b, 0x11, 0x97, 0x32, 0x4c, 0x21, 0xa8, 0x91, 0xd2, 0x61, 0x9e,
+	0x9e, 0x01, 0xb0, 0xf5, 0xf0, 0xe6, 0x52, 0xa3, 0x60, 0x72, 0x2f, 0x30, 0x6c, 0x77, 0x24, 0xc3,
+	0x19, 0x5e, 0x7c, 0x9b, 0x63, 0xdd, 0xfe, 0x8d, 0xd0, 0x0a, 0x97, 0x63, 0xcd, 0xb6, 0x68, 0xed,
+	0x30, 0x4e, 0xa6, 0xc2, 0xbc, 0xa7, 0xa6, 0xd7, 0xc2, 0xf7, 0x34, 0x88, 0x55, 0xa4, 0x0d, 0xcf,
+	0x33, 0x1d, 0x52, 0xed, 0x45, 0xe3, 0xeb, 0xd8, 0x1c, 0x51, 0x8d, 0x67, 0x88, 0x3d, 0xa5, 0x84,
+	0xa3, 0x77, 0x8d, 0x13, 0x0e, 0xed, 0x7d, 0xaf, 0x02, 0x7d, 0x8d, 0xe9, 0x56, 0xb9, 0x01, 0xf0,
+	0xed, 0x91, 0x54, 0x93, 0x6b, 0x8d, 0x4f, 0xa6, 0xca, 0x33, 0x04, 0xdf, 0x1e, 0x63, 0xce, 0x55,
+	0x4e, 0x8e, 0x01, 0xbd, 0xc1, 0x58, 0xab, 0x9c, 0xbc, 0x01, 0xf4, 0x16, 0x7f, 0x54, 0xaa, 0x9c,
+	0xbc, 0x6d, 0x3f, 0x10, 0xfa, 0xe4, 0x5b, 0x19, 0x0f, 0x84, 0xbe, 0x66, 0xaf, 0x69, 0x05, 0x0f,
+	0xd0, 0x74, 0xfc, 0x19, 0x76, 0x9c, 0x69, 0xdb, 0x5c, 0x46, 0x81, 0x4c, 0x40, 0xe6, 0x95, 0xfc,
+	0x48, 0x0f, 0xe6, 0x3a, 0xb9, 0x09, 0xe4, 0x49, 0x8c, 0xe9, 0x5a, 0x7c, 0x45, 0xac, 0xa9, 0x47,
+	0x2a, 0xfb, 0x09, 0x58, 0x11, 0x6b, 0xe1, 0x34, 0xff, 0x3b, 0x1c, 0xa4, 0x53, 0x67, 0x63, 0xb3,
+	0x0c, 0xe1, 0x18, 0xd4, 0x7e, 0x4d, 0xe9, 0xaa, 0x23, 0x66, 0xd3, 0x2a, 0xf2, 0xad, 0x12, 0xab,
+	0xd3, 0x0a, 0xf4, 0xdb, 0x22, 0x50, 0x71, 0x15, 0x4d, 0x5a, 0xd6, 0xab, 0x1d, 0x6a, 0x17, 0x7f,
+	0x53, 0xec, 0xff, 0x74, 0xa3, 0x00, 0x17, 0x87, 0x6a, 0x2e, 0x83, 0x56, 0x89, 0x31, 0xda, 0x5c,
+	0x91, 0xbd, 0x1b, 0x1d, 0xb7, 0xc8, 0xab, 0x0b, 0xda, 0x58, 0xeb, 0x08, 0x96, 0xac, 0xc1, 0x8b,
+	0xa1, 0x67, 0x3e, 0x5b, 0xe7, 0x8e, 0xfc, 0x16, 0x01, 0xff, 0x7f, 0xae, 0x1b, 0xb5, 0xac, 0x7f,
+	0x93, 0x47, 0xfe, 0xa8, 0x55, 0xde, 0xed, 0xdf, 0x3f, 0xb8, 0xa5, 0x8f, 0x0f, 0x6e, 0xe9, 0xd3,
+	0x83, 0x4b, 0x7e, 0x5c, 0xba, 0xe4, 0xe7, 0xa5, 0x4b, 0x7e, 0x5f, 0xba, 0xe4, 0x7e, 0xe9, 0x92,
+	0x3f, 0x96, 0x2e, 0xf9, 0x73, 0xe9, 0x96, 0x3e, 0x2d, 0x5d, 0xf2, 0xd3, 0xa3, 0x5b, 0xba, 0x7f,
+	0x74, 0x4b, 0x1f, 0x1f, 0xdd, 0xd2, 0x2f, 0xd6, 0x0b, 0x91, 0xe8, 0xed, 0xa9, 0x0c, 0x94, 0xd8,
+	0x9e, 0x85, 0x42, 0x5f, 0xc5, 0xc9, 0x14, 0xe2, 0xbb, 0xac, 0xe1, 0x3f, 0xb9, 0xff, 0x77, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x6b, 0x9d, 0x80, 0xa4, 0xf3, 0x07, 0x00, 0x00,
 }
 
 func (x ScaleMode) String() string {
@@ -1124,8 +1103,8 @@ func (x ScaleMode) String() string {
 	}
 	return strconv.Itoa(int(x))
 }
-func (x CoordFormat) String() string {
-	s, ok := CoordFormat_name[int32(x)]
+func (x PointFormat) String() string {
+	s, ok := PointFormat_name[int32(x)]
 	if ok {
 		return s
 	}
@@ -1137,36 +1116,6 @@ func (x GeoPath_RenderType) String() string {
 		return s
 	}
 	return strconv.Itoa(int(x))
-}
-func (this *StyleCSS) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*StyleCSS)
-	if !ok {
-		that2, ok := that.(StyleCSS)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.TextAlign != that1.TextAlign {
-		return false
-	}
-	if this.TextColor != that1.TextColor {
-		return false
-	}
-	if this.BackColor != that1.BackColor {
-		return false
-	}
-	return true
 }
 func (this *TRS) Equal(that interface{}) bool {
 	if that == nil {
@@ -1307,7 +1256,19 @@ func (this *CameraState) Equal(that interface{}) bool {
 	if !this.Placement.Equal(that1.Placement) {
 		return false
 	}
-	if this.Fov != that1.Fov {
+	if this.Pitch != that1.Pitch {
+		return false
+	}
+	if this.Yaw != that1.Yaw {
+		return false
+	}
+	if this.Distance != that1.Distance {
+		return false
+	}
+	if this.Altitude != that1.Altitude {
+		return false
+	}
+	if this.Mass != that1.Mass {
 		return false
 	}
 	if this.NearPlane != that1.NearPlane {
@@ -1316,10 +1277,13 @@ func (this *CameraState) Equal(that interface{}) bool {
 	if this.FarPlane != that1.FarPlane {
 		return false
 	}
-	if this.Distance != that1.Distance {
+	if this.Fov != that1.Fov {
 		return false
 	}
-	if this.Altitude != that1.Altitude {
+	if this.PixelsX != that1.PixelsX {
+		return false
+	}
+	if this.PixelsY != that1.PixelsY {
 		return false
 	}
 	if this.Mode != that1.Mode {
@@ -1347,6 +1311,9 @@ func (this *CameraOptions) Equal(that interface{}) bool {
 		return false
 	}
 	if this.MoveSpeed != that1.MoveSpeed {
+		return false
+	}
+	if this.Mode != that1.Mode {
 		return false
 	}
 	return true
@@ -1559,35 +1526,15 @@ func (this *GeoPath) Equal(that interface{}) bool {
 	if this.Format != that1.Format {
 		return false
 	}
-	if len(this.Coords) != len(that1.Coords) {
+	if len(this.Points) != len(that1.Points) {
 		return false
 	}
-	for i := range this.Coords {
-		if this.Coords[i] != that1.Coords[i] {
-			return false
-		}
-	}
-	if len(this.LatLngs) != len(that1.LatLngs) {
-		return false
-	}
-	for i := range this.LatLngs {
-		if this.LatLngs[i] != that1.LatLngs[i] {
+	for i := range this.Points {
+		if this.Points[i] != that1.Points[i] {
 			return false
 		}
 	}
 	return true
-}
-func (this *StyleCSS) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 7)
-	s = append(s, "&std.StyleCSS{")
-	s = append(s, "TextAlign: "+fmt.Sprintf("%#v", this.TextAlign)+",\n")
-	s = append(s, "TextColor: "+fmt.Sprintf("%#v", this.TextColor)+",\n")
-	s = append(s, "BackColor: "+fmt.Sprintf("%#v", this.BackColor)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
 }
 func (this *TRS) GoString() string {
 	if this == nil {
@@ -1636,16 +1583,21 @@ func (this *CameraState) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 16)
 	s = append(s, "&std.CameraState{")
 	if this.Placement != nil {
 		s = append(s, "Placement: "+fmt.Sprintf("%#v", this.Placement)+",\n")
 	}
-	s = append(s, "Fov: "+fmt.Sprintf("%#v", this.Fov)+",\n")
-	s = append(s, "NearPlane: "+fmt.Sprintf("%#v", this.NearPlane)+",\n")
-	s = append(s, "FarPlane: "+fmt.Sprintf("%#v", this.FarPlane)+",\n")
+	s = append(s, "Pitch: "+fmt.Sprintf("%#v", this.Pitch)+",\n")
+	s = append(s, "Yaw: "+fmt.Sprintf("%#v", this.Yaw)+",\n")
 	s = append(s, "Distance: "+fmt.Sprintf("%#v", this.Distance)+",\n")
 	s = append(s, "Altitude: "+fmt.Sprintf("%#v", this.Altitude)+",\n")
+	s = append(s, "Mass: "+fmt.Sprintf("%#v", this.Mass)+",\n")
+	s = append(s, "NearPlane: "+fmt.Sprintf("%#v", this.NearPlane)+",\n")
+	s = append(s, "FarPlane: "+fmt.Sprintf("%#v", this.FarPlane)+",\n")
+	s = append(s, "Fov: "+fmt.Sprintf("%#v", this.Fov)+",\n")
+	s = append(s, "PixelsX: "+fmt.Sprintf("%#v", this.PixelsX)+",\n")
+	s = append(s, "PixelsY: "+fmt.Sprintf("%#v", this.PixelsY)+",\n")
 	s = append(s, "Mode: "+fmt.Sprintf("%#v", this.Mode)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
@@ -1654,9 +1606,10 @@ func (this *CameraOptions) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "&std.CameraOptions{")
 	s = append(s, "MoveSpeed: "+fmt.Sprintf("%#v", this.MoveSpeed)+",\n")
+	s = append(s, "Mode: "+fmt.Sprintf("%#v", this.Mode)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1737,14 +1690,13 @@ func (this *GeoPath) GoString() string {
 	if this == nil {
 		return "nil"
 	}
-	s := make([]string, 0, 10)
+	s := make([]string, 0, 9)
 	s = append(s, "&std.GeoPath{")
 	s = append(s, "Type: "+fmt.Sprintf("%#v", this.Type)+",\n")
 	s = append(s, "ExtrudeLo: "+fmt.Sprintf("%#v", this.ExtrudeLo)+",\n")
 	s = append(s, "ExtrudeHi: "+fmt.Sprintf("%#v", this.ExtrudeHi)+",\n")
 	s = append(s, "Format: "+fmt.Sprintf("%#v", this.Format)+",\n")
-	s = append(s, "Coords: "+fmt.Sprintf("%#v", this.Coords)+",\n")
-	s = append(s, "LatLngs: "+fmt.Sprintf("%#v", this.LatLngs)+",\n")
+	s = append(s, "Points: "+fmt.Sprintf("%#v", this.Points)+",\n")
 	s = append(s, "}")
 	return strings.Join(s, "")
 }
@@ -1756,46 +1708,6 @@ func valueToGoStringAmpStd(v interface{}, typ string) string {
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
 }
-func (m *StyleCSS) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *StyleCSS) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *StyleCSS) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.BackColor != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.BackColor))
-		i--
-		dAtA[i] = 0x65
-	}
-	if m.TextColor != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(m.TextColor))
-		i--
-		dAtA[i] = 0x5d
-	}
-	if m.TextAlign != 0 {
-		i = encodeVarintAmpStd(dAtA, i, uint64(m.TextAlign))
-		i--
-		dAtA[i] = 0x50
-	}
-	return len(dAtA) - i, nil
-}
-
 func (m *TRS) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2018,37 +1930,71 @@ func (m *CameraState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		copy(dAtA[i:], m.Mode)
 		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.Mode)))
 		i--
-		dAtA[i] = 0x4a
-	}
-	if m.Altitude != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Altitude))))
+		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x45
+		dAtA[i] = 0xa2
 	}
-	if m.Distance != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Distance))))
+	if m.PixelsY != 0 {
+		i = encodeVarintAmpStd(dAtA, i, uint64(m.PixelsY))
 		i--
-		dAtA[i] = 0x3d
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x88
 	}
-	if m.FarPlane != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.FarPlane))))
+	if m.PixelsX != 0 {
+		i = encodeVarintAmpStd(dAtA, i, uint64(m.PixelsX))
 		i--
-		dAtA[i] = 0x2d
-	}
-	if m.NearPlane != 0 {
-		i -= 4
-		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.NearPlane))))
+		dAtA[i] = 0x1
 		i--
-		dAtA[i] = 0x25
+		dAtA[i] = 0x80
 	}
 	if m.Fov != 0 {
 		i -= 4
 		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Fov))))
 		i--
+		dAtA[i] = 0x6d
+	}
+	if m.FarPlane != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.FarPlane))))
+		i--
+		dAtA[i] = 0x5d
+	}
+	if m.NearPlane != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.NearPlane))))
+		i--
+		dAtA[i] = 0x55
+	}
+	if m.Mass != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Mass))))
+		i--
+		dAtA[i] = 0x4d
+	}
+	if m.Altitude != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Altitude))))
+		i--
+		dAtA[i] = 0x35
+	}
+	if m.Distance != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Distance))))
+		i--
+		dAtA[i] = 0x2d
+	}
+	if m.Yaw != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Yaw))))
+		i--
 		dAtA[i] = 0x1d
+	}
+	if m.Pitch != 0 {
+		i -= 4
+		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.Pitch))))
+		i--
+		dAtA[i] = 0x15
 	}
 	if m.Placement != nil {
 		{
@@ -2085,6 +2031,13 @@ func (m *CameraOptions) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Mode) > 0 {
+		i -= len(m.Mode)
+		copy(dAtA[i:], m.Mode)
+		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.Mode)))
+		i--
+		dAtA[i] = 0x12
+	}
 	if m.MoveSpeed != 0 {
 		i -= 4
 		encoding_binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(m.MoveSpeed))))
@@ -2388,24 +2341,12 @@ func (m *GeoPath) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.LatLngs) > 0 {
-		for iNdEx := len(m.LatLngs) - 1; iNdEx >= 0; iNdEx-- {
-			f4 := math.Float64bits(float64(m.LatLngs[iNdEx]))
+	if len(m.Points) > 0 {
+		for iNdEx := len(m.Points) - 1; iNdEx >= 0; iNdEx-- {
 			i -= 8
-			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(f4))
+			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Points[iNdEx]))
 		}
-		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.LatLngs)*8))
-		i--
-		dAtA[i] = 0x1
-		i--
-		dAtA[i] = 0x82
-	}
-	if len(m.Coords) > 0 {
-		for iNdEx := len(m.Coords) - 1; iNdEx >= 0; iNdEx-- {
-			i -= 8
-			encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Coords[iNdEx]))
-		}
-		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.Coords)*8))
+		i = encodeVarintAmpStd(dAtA, i, uint64(len(m.Points)*8))
 		i--
 		dAtA[i] = 0x7a
 	}
@@ -2445,24 +2386,6 @@ func encodeVarintAmpStd(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *StyleCSS) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.TextAlign != 0 {
-		n += 1 + sovAmpStd(uint64(m.TextAlign))
-	}
-	if m.TextColor != 0 {
-		n += 5
-	}
-	if m.BackColor != 0 {
-		n += 5
-	}
-	return n
-}
-
 func (m *TRS) Size() (n int) {
 	if m == nil {
 		return 0
@@ -2566,13 +2489,10 @@ func (m *CameraState) Size() (n int) {
 		l = m.Placement.Size()
 		n += 1 + l + sovAmpStd(uint64(l))
 	}
-	if m.Fov != 0 {
+	if m.Pitch != 0 {
 		n += 5
 	}
-	if m.NearPlane != 0 {
-		n += 5
-	}
-	if m.FarPlane != 0 {
+	if m.Yaw != 0 {
 		n += 5
 	}
 	if m.Distance != 0 {
@@ -2581,9 +2501,27 @@ func (m *CameraState) Size() (n int) {
 	if m.Altitude != 0 {
 		n += 5
 	}
+	if m.Mass != 0 {
+		n += 5
+	}
+	if m.NearPlane != 0 {
+		n += 5
+	}
+	if m.FarPlane != 0 {
+		n += 5
+	}
+	if m.Fov != 0 {
+		n += 5
+	}
+	if m.PixelsX != 0 {
+		n += 2 + sovAmpStd(uint64(m.PixelsX))
+	}
+	if m.PixelsY != 0 {
+		n += 2 + sovAmpStd(uint64(m.PixelsY))
+	}
 	l = len(m.Mode)
 	if l > 0 {
-		n += 1 + l + sovAmpStd(uint64(l))
+		n += 2 + l + sovAmpStd(uint64(l))
 	}
 	return n
 }
@@ -2596,6 +2534,10 @@ func (m *CameraOptions) Size() (n int) {
 	_ = l
 	if m.MoveSpeed != 0 {
 		n += 5
+	}
+	l = len(m.Mode)
+	if l > 0 {
+		n += 1 + l + sovAmpStd(uint64(l))
 	}
 	return n
 }
@@ -2746,11 +2688,8 @@ func (m *GeoPath) Size() (n int) {
 	if m.Format != 0 {
 		n += 1 + sovAmpStd(uint64(m.Format))
 	}
-	if len(m.Coords) > 0 {
-		n += 1 + sovAmpStd(uint64(len(m.Coords)*8)) + len(m.Coords)*8
-	}
-	if len(m.LatLngs) > 0 {
-		n += 2 + sovAmpStd(uint64(len(m.LatLngs)*8)) + len(m.LatLngs)*8
+	if len(m.Points) > 0 {
+		n += 1 + sovAmpStd(uint64(len(m.Points)*8)) + len(m.Points)*8
 	}
 	return n
 }
@@ -2760,18 +2699,6 @@ func sovAmpStd(x uint64) (n int) {
 }
 func sozAmpStd(x uint64) (n int) {
 	return sovAmpStd(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *StyleCSS) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&StyleCSS{`,
-		`TextAlign:` + fmt.Sprintf("%v", this.TextAlign) + `,`,
-		`TextColor:` + fmt.Sprintf("%v", this.TextColor) + `,`,
-		`BackColor:` + fmt.Sprintf("%v", this.BackColor) + `,`,
-		`}`,
-	}, "")
-	return s
 }
 func (this *TRS) String() string {
 	if this == nil {
@@ -2822,11 +2749,16 @@ func (this *CameraState) String() string {
 	}
 	s := strings.Join([]string{`&CameraState{`,
 		`Placement:` + strings.Replace(this.Placement.String(), "TRS", "TRS", 1) + `,`,
-		`Fov:` + fmt.Sprintf("%v", this.Fov) + `,`,
-		`NearPlane:` + fmt.Sprintf("%v", this.NearPlane) + `,`,
-		`FarPlane:` + fmt.Sprintf("%v", this.FarPlane) + `,`,
+		`Pitch:` + fmt.Sprintf("%v", this.Pitch) + `,`,
+		`Yaw:` + fmt.Sprintf("%v", this.Yaw) + `,`,
 		`Distance:` + fmt.Sprintf("%v", this.Distance) + `,`,
 		`Altitude:` + fmt.Sprintf("%v", this.Altitude) + `,`,
+		`Mass:` + fmt.Sprintf("%v", this.Mass) + `,`,
+		`NearPlane:` + fmt.Sprintf("%v", this.NearPlane) + `,`,
+		`FarPlane:` + fmt.Sprintf("%v", this.FarPlane) + `,`,
+		`Fov:` + fmt.Sprintf("%v", this.Fov) + `,`,
+		`PixelsX:` + fmt.Sprintf("%v", this.PixelsX) + `,`,
+		`PixelsY:` + fmt.Sprintf("%v", this.PixelsY) + `,`,
 		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
 		`}`,
 	}, "")
@@ -2838,6 +2770,7 @@ func (this *CameraOptions) String() string {
 	}
 	s := strings.Join([]string{`&CameraOptions{`,
 		`MoveSpeed:` + fmt.Sprintf("%v", this.MoveSpeed) + `,`,
+		`Mode:` + fmt.Sprintf("%v", this.Mode) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2920,8 +2853,7 @@ func (this *GeoPath) String() string {
 		`ExtrudeLo:` + fmt.Sprintf("%v", this.ExtrudeLo) + `,`,
 		`ExtrudeHi:` + fmt.Sprintf("%v", this.ExtrudeHi) + `,`,
 		`Format:` + fmt.Sprintf("%v", this.Format) + `,`,
-		`Coords:` + fmt.Sprintf("%v", this.Coords) + `,`,
-		`LatLngs:` + fmt.Sprintf("%v", this.LatLngs) + `,`,
+		`Points:` + fmt.Sprintf("%v", this.Points) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -2933,95 +2865,6 @@ func valueToStringAmpStd(v interface{}) string {
 	}
 	pv := reflect.Indirect(rv).Interface()
 	return fmt.Sprintf("*%v", pv)
-}
-func (m *StyleCSS) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAmpStd
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: StyleCSS: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: StyleCSS: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 10:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TextAlign", wireType)
-			}
-			m.TextAlign = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAmpStd
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.TextAlign |= int32(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 11:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TextColor", wireType)
-			}
-			m.TextColor = 0
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TextColor = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-		case 12:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BackColor", wireType)
-			}
-			m.BackColor = 0
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BackColor = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAmpStd(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthAmpStd
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *TRS) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -3471,9 +3314,20 @@ func (m *CameraState) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 2:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pitch", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Pitch = float32(math.Float32frombits(v))
 		case 3:
 			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Fov", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Yaw", wireType)
 			}
 			var v uint32
 			if (iNdEx + 4) > l {
@@ -3481,30 +3335,8 @@ func (m *CameraState) Unmarshal(dAtA []byte) error {
 			}
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
-			m.Fov = float32(math.Float32frombits(v))
-		case 4:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NearPlane", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-			m.NearPlane = float32(math.Float32frombits(v))
+			m.Yaw = float32(math.Float32frombits(v))
 		case 5:
-			if wireType != 5 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FarPlane", wireType)
-			}
-			var v uint32
-			if (iNdEx + 4) > l {
-				return io.ErrUnexpectedEOF
-			}
-			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
-			iNdEx += 4
-			m.FarPlane = float32(math.Float32frombits(v))
-		case 7:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Distance", wireType)
 			}
@@ -3515,7 +3347,7 @@ func (m *CameraState) Unmarshal(dAtA []byte) error {
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
 			m.Distance = float32(math.Float32frombits(v))
-		case 8:
+		case 6:
 			if wireType != 5 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Altitude", wireType)
 			}
@@ -3527,6 +3359,88 @@ func (m *CameraState) Unmarshal(dAtA []byte) error {
 			iNdEx += 4
 			m.Altitude = float32(math.Float32frombits(v))
 		case 9:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mass", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Mass = float32(math.Float32frombits(v))
+		case 10:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NearPlane", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.NearPlane = float32(math.Float32frombits(v))
+		case 11:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FarPlane", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.FarPlane = float32(math.Float32frombits(v))
+		case 13:
+			if wireType != 5 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fov", wireType)
+			}
+			var v uint32
+			if (iNdEx + 4) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+			iNdEx += 4
+			m.Fov = float32(math.Float32frombits(v))
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PixelsX", wireType)
+			}
+			m.PixelsX = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PixelsX |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PixelsY", wireType)
+			}
+			m.PixelsY = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PixelsY |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 20:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
 			}
@@ -3619,6 +3533,38 @@ func (m *CameraOptions) Unmarshal(dAtA []byte) error {
 			v = uint32(encoding_binary.LittleEndian.Uint32(dAtA[iNdEx:]))
 			iNdEx += 4
 			m.MoveSpeed = float32(math.Float32frombits(v))
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Mode", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAmpStd
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAmpStd
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Mode = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAmpStd(dAtA[iNdEx:])
@@ -4339,7 +4285,7 @@ func (m *Rect) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Format |= CoordFormat(b&0x7F) << shift
+				m.Format |= PointFormat(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4564,7 +4510,7 @@ func (m *GeoPath) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Format |= CoordFormat(b&0x7F) << shift
+				m.Format |= PointFormat(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4577,7 +4523,7 @@ func (m *GeoPath) Unmarshal(dAtA []byte) error {
 				}
 				v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 				iNdEx += 8
-				m.Coords = append(m.Coords, v)
+				m.Points = append(m.Points, v)
 			} else if wireType == 2 {
 				var packedLen int
 				for shift := uint(0); ; shift += 7 {
@@ -4606,8 +4552,8 @@ func (m *GeoPath) Unmarshal(dAtA []byte) error {
 				}
 				var elementCount int
 				elementCount = packedLen / 8
-				if elementCount != 0 && len(m.Coords) == 0 {
-					m.Coords = make([]uint64, 0, elementCount)
+				if elementCount != 0 && len(m.Points) == 0 {
+					m.Points = make([]uint64, 0, elementCount)
 				}
 				for iNdEx < postIndex {
 					var v uint64
@@ -4616,64 +4562,10 @@ func (m *GeoPath) Unmarshal(dAtA []byte) error {
 					}
 					v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 					iNdEx += 8
-					m.Coords = append(m.Coords, v)
+					m.Points = append(m.Points, v)
 				}
 			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field Coords", wireType)
-			}
-		case 16:
-			if wireType == 1 {
-				var v uint64
-				if (iNdEx + 8) > l {
-					return io.ErrUnexpectedEOF
-				}
-				v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-				iNdEx += 8
-				v2 := float64(math.Float64frombits(v))
-				m.LatLngs = append(m.LatLngs, v2)
-			} else if wireType == 2 {
-				var packedLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowAmpStd
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					packedLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if packedLen < 0 {
-					return ErrInvalidLengthAmpStd
-				}
-				postIndex := iNdEx + packedLen
-				if postIndex < 0 {
-					return ErrInvalidLengthAmpStd
-				}
-				if postIndex > l {
-					return io.ErrUnexpectedEOF
-				}
-				var elementCount int
-				elementCount = packedLen / 8
-				if elementCount != 0 && len(m.LatLngs) == 0 {
-					m.LatLngs = make([]float64, 0, elementCount)
-				}
-				for iNdEx < postIndex {
-					var v uint64
-					if (iNdEx + 8) > l {
-						return io.ErrUnexpectedEOF
-					}
-					v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-					iNdEx += 8
-					v2 := float64(math.Float64frombits(v))
-					m.LatLngs = append(m.LatLngs, v2)
-				}
-			} else {
-				return fmt.Errorf("proto: wrong wireType = %d for field LatLngs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Points", wireType)
 			}
 		default:
 			iNdEx = preIndex

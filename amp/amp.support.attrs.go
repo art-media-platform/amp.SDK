@@ -307,94 +307,94 @@ func (filter *ItemFilter) Admits(elem tag.ElementID) bool {
 	return false
 }
 
-func (scan *NodeScan) NodeID() (nodeID tag.UID) {
+func (span *ItemSpan) NodeID() (nodeID tag.UID) {
 	return tag.UID{
-		scan.NodeID_0,
-		scan.NodeID_1,
+		span.NodeID_0,
+		span.NodeID_1,
 	}
 }
 
-func (scan *NodeScan) AttrID() (attrID tag.UID) {
+func (span *ItemSpan) AttrID() (attrID tag.UID) {
 	return tag.UID{
-		scan.AttrID_0,
-		scan.AttrID_1,
+		span.AttrID_0,
+		span.AttrID_1,
 	}
 }
 
-func (scan *NodeScan) ItemRange() (min, max tag.UID) {
+func (span *ItemSpan) ItemRange() (min, max tag.UID) {
 	min = tag.UID{
-		scan.ItemID_Min_0,
-		scan.ItemID_Min_1,
+		span.ItemID_Min_0,
+		span.ItemID_Min_1,
 	}
 	max = tag.UID{
-		scan.ItemID_Max_0,
-		scan.ItemID_Max_1,
+		span.ItemID_Max_0,
+		span.ItemID_Max_1,
 	}
 	return
 }
 
-func (scan *NodeScan) CompareTo(j *NodeScan) int {
-	if scan.NodeID_0 < j.NodeID_0 { // NodeID
+func (span *ItemSpan) CompareTo(j *ItemSpan) int {
+	if span.NodeID_0 < j.NodeID_0 { // NodeID
 		return -1
 	}
-	if scan.NodeID_0 > j.NodeID_0 {
+	if span.NodeID_0 > j.NodeID_0 {
 		return 1
 	}
-	if scan.NodeID_1 < j.NodeID_1 {
+	if span.NodeID_1 < j.NodeID_1 {
 		return -1
 	}
-	if scan.NodeID_1 > j.NodeID_1 {
-		return 1
-	}
-
-	if scan.AttrID_0 < j.AttrID_0 { // AttrID
-		return -1
-	}
-	if scan.AttrID_0 > j.AttrID_0 {
-		return 1
-	}
-	if scan.AttrID_1 < j.AttrID_1 {
-		return -1
-	}
-	if scan.AttrID_1 > j.AttrID_1 {
+	if span.NodeID_1 > j.NodeID_1 {
 		return 1
 	}
 
-	if scan.ItemID_Min_0 < j.ItemID_Min_0 { // ItemID Min
+	if span.AttrID_0 < j.AttrID_0 { // AttrID
 		return -1
 	}
-	if scan.ItemID_Min_0 > j.ItemID_Min_0 {
+	if span.AttrID_0 > j.AttrID_0 {
 		return 1
 	}
-	if scan.ItemID_Min_1 < j.ItemID_Min_1 {
+	if span.AttrID_1 < j.AttrID_1 {
 		return -1
 	}
-	if scan.ItemID_Min_1 > j.ItemID_Min_1 {
+	if span.AttrID_1 > j.AttrID_1 {
 		return 1
 	}
 
-	if scan.ItemID_Max_0 < j.ItemID_Max_0 { // ItemID Max
+	if span.ItemID_Min_0 < j.ItemID_Min_0 { // ItemID Min
 		return -1
 	}
-	if scan.ItemID_Max_0 > j.ItemID_Max_0 {
+	if span.ItemID_Min_0 > j.ItemID_Min_0 {
 		return 1
 	}
-	if scan.ItemID_Max_1 < j.ItemID_Max_1 {
+	if span.ItemID_Min_1 < j.ItemID_Min_1 {
 		return -1
 	}
-	if scan.ItemID_Max_1 > j.ItemID_Max_1 {
+	if span.ItemID_Min_1 > j.ItemID_Min_1 {
+		return 1
+	}
+
+	if span.ItemID_Max_0 < j.ItemID_Max_0 { // ItemID Max
+		return -1
+	}
+	if span.ItemID_Max_0 > j.ItemID_Max_0 {
+		return 1
+	}
+	if span.ItemID_Max_1 < j.ItemID_Max_1 {
+		return -1
+	}
+	if span.ItemID_Max_1 > j.ItemID_Max_1 {
 		return 1
 	}
 
 	return 0 // equal
 }
 
-func (scan *NodeScan) AsLabel() string {
-	if scan == nil {
+func (span *ItemSpan) AsLabel() string {
+	if span == nil {
 		return ""
 	}
-	min, max := scan.ItemRange()
-	return fmt.Sprintf("%s/%s/%s..%s", scan.NodeID().AsLabel(), scan.AttrID().AsLabel(), min.AsLabel(), max.AsLabel())
+	min, max := span.ItemRange()
+	return fmt.Sprintf("%s/%s/%s..%s", span.NodeID().AsLabel(), span.AttrID().AsLabel(), min.AsLabel(), max.AsLabel())
 }
 
 func (sel *ItemSelector) Select(elem tag.ElementID) {
@@ -406,21 +406,21 @@ func (sel *ItemSelector) Select(elem tag.ElementID) {
 		itemMax = elem.ItemID
 	}
 
-	sel.AddScan(elem.NodeID, elem.AttrID, itemMin, itemMax)
+	sel.AddSpan(elem.NodeID, elem.AttrID, itemMin, itemMax)
 }
 
 // Adds a selection range for all items on the given nodeID.
 func (sel *ItemSelector) SelectNode(nodeID tag.UID) {
-	sel.AddScan(nodeID, tag.WildcardID(), tag.UID{}, tag.MaxID())
+	sel.AddSpan(nodeID, tag.WildcardID(), tag.UID{}, tag.MaxID())
 }
 
 // Adds a selection range for all items having the given nodeID and addrID.
 func (sel *ItemSelector) SelectNodeAttr(nodeID, attrID tag.UID) {
-	sel.AddScan(nodeID, attrID, tag.UID{}, tag.MaxID())
+	sel.AddSpan(nodeID, attrID, tag.UID{}, tag.MaxID())
 }
 
-func (sel *ItemSelector) AddScan(nodeID, attrID, itemID_min, itemID_max tag.UID) {
-	span := &NodeScan{
+func (sel *ItemSelector) AddSpan(nodeID, attrID, itemID_min, itemID_max tag.UID) {
+	span := &ItemSpan{
 		NodeID_0: nodeID[0],
 		NodeID_1: nodeID[1],
 
@@ -435,7 +435,7 @@ func (sel *ItemSelector) AddScan(nodeID, attrID, itemID_min, itemID_max tag.UID)
 		EditsPerItem: 1,
 	}
 
-	sel.Scans = append(sel.Scans, span)
+	sel.Spans = append(sel.Spans, span)
 	sel.Normalized = false
 }
 
@@ -444,48 +444,48 @@ func (sel *ItemSelector) Normalize(force bool) error {
 		return nil
 	}
 
-	scans := sel.Scans
-	N := len(scans)
+	spans := sel.Spans
+	N := len(spans)
 	for i := 0; i < N; i++ {
-		scan := scans[i]
+		span := spans[i]
 
-		nodeID := scan.NodeID()
+		nodeID := span.NodeID()
 		if nodeID.IsNil() {
-			return ErrCode_BadRequest.Error("NodeScan missing NodeID")
+			return ErrCode_BadRequest.Error("ItemSpan missing NodeID")
 		}
 
-		attrID := scan.AttrID()
+		attrID := span.AttrID()
 		if attrID.IsNil() {
-			return ErrCode_BadRequest.Error("NodeScan missing AttrID")
+			return ErrCode_BadRequest.Error("ItemSpan missing AttrID")
 		}
 
 		// enforce tag.UID_1_Max
-		if scan.ItemID_Max_0 == tag.UID_0_Max && scan.ItemID_Max_1 > tag.UID_1_Max {
-			scan.ItemID_Max_1 = tag.UID_1_Max
+		if span.ItemID_Max_0 == tag.UID_0_Max && span.ItemID_Max_1 > tag.UID_1_Max {
+			span.ItemID_Max_1 = tag.UID_1_Max
 		}
 
 		drop := false
-		if scan.ItemID_Min_0 == tag.UID_0_Max && scan.ItemID_Min_1 > tag.UID_1_Max {
+		if span.ItemID_Min_0 == tag.UID_0_Max && span.ItemID_Min_1 > tag.UID_1_Max {
 			drop = true
-		} else if scan.EditsPerItem == 0 {
+		} else if span.EditsPerItem == 0 {
 			drop = true
-		} else if scan.ItemID_Min_0 > scan.ItemID_Max_0 || (scan.ItemID_Min_0 == scan.ItemID_Max_1 && scan.ItemID_Min_1 > scan.ItemID_Max_1) {
+		} else if span.ItemID_Min_0 > span.ItemID_Max_0 || (span.ItemID_Min_0 == span.ItemID_Max_1 && span.ItemID_Min_1 > span.ItemID_Max_1) {
 			drop = true
 		}
 
 		if drop {
 			N--
-			scans[i] = scans[N]
+			spans[i] = spans[N]
 			i--
 		}
 	}
 
-	// Reverse sort so that it plays nice with db reverse scan (to get newest EditID first per item)
-	sort.Slice(scans, func(i, j int) bool {
-		return scans[i].CompareTo(scans[j]) > 0 // REVERSE SORT
+	// Reverse sort so that it plays nice with db reverse span (to get newest EditID first per item)
+	sort.Slice(spans, func(i, j int) bool {
+		return spans[i].CompareTo(spans[j]) > 0 // REVERSE SORT
 	})
 
-	sel.Scans = scans[:N]
+	sel.Spans = spans[:N]
 	sel.Normalized = true
 	return nil
 }
@@ -494,16 +494,16 @@ func (sel *ItemSelector) AsLabel() string {
 	if sel == nil {
 		return ""
 	}
-	N := len(sel.Scans)
+	N := len(sel.Spans)
 	if N == 0 {
 		return "{}"
 	}
 	parts := make([]string, 0, N)
-	for _, scan := range sel.Scans {
-		if scan == nil {
+	for _, span := range sel.Spans {
+		if span == nil {
 			continue
 		}
-		parts = append(parts, scan.AsLabel())
+		parts = append(parts, span.AsLabel())
 	}
 	return fmt.Sprintf("{%s}", strings.Join(parts, ", "))
 

@@ -7,12 +7,6 @@ option csharp_namespace = "art.media.platform.std";
 import "amp/amp.core.proto";
 
 
-message StyleCSS {
-    int32               TextAlign = 10; // TODO: placeholder for CSS support
-    fixed32             TextColor = 11;
-    fixed32             BackColor = 12;
-}
-
 // Specifies how scale dynamically changes based on observer position.
 enum ScaleMode {
     ScaleMode_Fixed = 0;
@@ -20,23 +14,23 @@ enum ScaleMode {
 }
 
 
-// TRS (translate rotate scale) INA IEEE 1207
+// TRS (translate rotate scale) IEEE 1207
 // General purpose placement time, space, orientation, and/or geo-position.
 message TRS {
 
-    // spatial scale -- if 0, scale is 1.0
+    // spatial scale; if 0, scale is 1.0
     double              Scale = 1;
 
     // Specifies how scale dynamically changes based on observer position.
-    // DEPRECATED: HUD dyanmically choose pip size (min and max)
+    // DEPRECATED: HUD dynamically chooses pip size (min and max)
     ScaleMode           VisualScale = 2;
 
-    // a relative position in space
+    // spatial position
     double              Px = 3;
     double              Py = 4;
     double              Pz = 5;
 
-    // rotation in space -- if all values are 0, Quaternion is unit identity
+    // spatial rotation; if all values 0, Quaternion is unit identity
     double              Qx = 10;
     double              Qy = 11;
     double              Qz = 12;
@@ -69,17 +63,33 @@ message Matrix4x4 {
 
 }
 
-
 // General purpose Camera state
 message CameraState {
     TRS    Placement = 1;
+    float  Pitch     = 2; // degrees
+    float  Yaw       = 3; // degrees
+    float  Distance  = 5; // optional distance to anchor
+    float  Altitude  = 6; // optional altitude above the surface
+    float  Mass      = 9; // optional mass (inertia) of camera body
 
-    float  Fov       = 3; // field of view in degrees; 0 denotes orthographic camera
-    float  NearPlane = 4; // near plane distance
-    float  FarPlane  = 5; // far plane distance
-    float  Distance  = 7; // distance from the camera to the target; optional
-    float  Altitude  = 8; // altitude above the surface; optional
-    string Mode      = 9; // camera mode descriptor; optional
+
+    float  NearPlane = 10; // optional near plane distance
+    float  FarPlane  = 11; // optional far plane distance
+    float  Fov       = 13; // field of view in degrees; 0 denotes orthographic camera
+    int32  PixelsX   = 16; // viewport width in pixels
+    int32  PixelsY   = 17; // viewport height in pixels
+
+    string Mode      = 20; // optional camera mode description
+}
+
+message CameraOptions {
+    float  MoveSpeed = 1; // movement speed multiplier
+    string Mode      = 2; // camera mode description
+}
+
+message VisPreset {
+    amp.Tag AssetTag = 1; // asset tag to apply the preset to
+    string  Args     = 2;
 }
 
 // FileInfo a general-purpose file system meta info block.
@@ -106,25 +116,18 @@ message TextItem {
 
 
 
-enum CoordFormat {
-    CoordFormat_S2  = 0; // (S2)      (1) uint64: lat,lng, size, UTC64
-    CoordFormat_H3  = 1; // (H3)      (1) uint64: lat,lng, size
-    CoordFormat_S2T = 2; // (S2, T)   (2) uint64: lat,lng, size, UTC64
-    CoordFormat_H3T = 3; // (H3, T)   (2) uint64: lat,lng, size, UTC64
-}
-
 message Labels {
     string   Title     = 1;
     string   Subtitle  = 2;
     string   Help      = 3;
 }
 
-// General purpose lightweight set of geo tiles in the shape of a rectangle -composed rectangle given a center and width/height.
-// The units are typically mid H3 resolution with rectangualar dimensions in units of font glyph size.
+// General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
+// The units are typically mid H3 resolution with rectangular dimensions in units of font glyph size.
 message Rect {
 
-    CoordFormat Format = 1; // specifies the type and format of Coords
-    fixed64     Anchor = 2; // H3 or S2 tile index; resolution
+    PointFormat Format = 1; // specifies the type and format of Coords
+    fixed64     Anchor = 2; // S2 or H3 tile index; also implies visual
     fixed64     R      = 3; // mm altitude from globe center or UTC64
 
     int32       Width  = 8; // mm
@@ -143,17 +146,23 @@ message GeoPath {
 
     enum RenderType {
         Point = 0;
-        Path = 1;
-        Ring = 2;
+        Path  = 1;
+        Ring  = 2;
     }
 
-
-    RenderType Type = 1;
+    RenderType Type      = 1;
     float      ExtrudeLo = 4;  // If non-zero, extrude the path to this height
     float      ExtrudeHi = 5;  // If non-zero, extrude the path to this height
 
-    CoordFormat      Format  = 14; // specifies the type and format of Coords
-    repeated fixed64 Coords  = 15; // tile indices interleaved with associated UTC64 or Rmm based on Format.
-    repeated double  LatLngs = 16; // lat, lng pairs (degrees)
+    PointFormat      Format = 14; // specifies the type and format of Coords
+    repeated fixed64 Points = 15; // tile indices interleaved with associated UTC64 or Rmm based on Format.
 
+}
+
+
+enum PointFormat {
+    PointFormat_S2  = 0; // (S2)      (1) uint64: lat,lng, (res)
+    PointFormat_H3  = 1; // (H3)      (1) uint64: lat,lng, (res)
+    PointFormat_S2T = 2; // (S2, T)   (2) uint64: lat,lng, (res), UTC64
+    PointFormat_H3T = 3; // (H3, T)   (2) uint64: lat,lng, (res), UTC64
 }
