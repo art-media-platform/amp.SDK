@@ -13,6 +13,9 @@ func TestTxSerialize(t *testing.T) {
 	// Test serialization of a simple TxMsg
 
 	tx := TxNew()
+	tx.SetTxID(tag.UID{0x123456bcdef, 0xabdef127890})
+	tx.SetFromID(tag.UID{0x11111, 0x22222})
+
 	tx.Status = PinStatus_Syncing
 	tx.SetContextID(tag.UID{0x1234567890abcdef, 0xabcdef1234567890})
 
@@ -80,6 +83,12 @@ func TestTxSerialize(t *testing.T) {
 	if err != nil {
 		t.Errorf("ReadTxMsg failed: %v", err)
 	}
+	e1, _ := tx.TxEnvelope.Marshal()
+	e2, _ := t2.TxEnvelope.Marshal()
+	if !bytes.Equal(e1, e2) {
+		t.Errorf("ReadTxMsg failed: TxEnvelope mismatch")
+	}
+
 	h1, _ := tx.TxHeader.Marshal()
 	h2, _ := t2.TxHeader.Marshal()
 	if !bytes.Equal(h1, h2) {
@@ -88,6 +97,11 @@ func TestTxSerialize(t *testing.T) {
 	if len(tx.Ops) != len(t2.Ops) {
 		t.Errorf("ReadTxMsg failed: TxHeader mismatch")
 	}
+
+	if len(tx.Ops) != len(t2.Ops) {
+		t.Errorf("ReadTxMsg failed: TxEnvelope mismatch")
+	}
+
 	if !bytes.Equal(tx.DataStore, t2.DataStore) {
 		t.Errorf("ReadTxMsg failed: DataStore mismatch")
 	}

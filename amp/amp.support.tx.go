@@ -40,9 +40,22 @@ var gTxMsgPool = sync.Pool{
 	},
 }
 
-func (tx *TxHeader) SetID(ID tag.UID) {
+func (tx *TxEnvelope) TxID() tag.UID {
+	return tag.UID{tx.TxID_0, tx.TxID_1}
+}
+
+func (tx *TxEnvelope) FromID() tag.UID {
+	return tag.UID{tx.FromID_0, tx.FromID_1}
+}
+
+func (tx *TxEnvelope) SetTxID(ID tag.UID) {
 	tx.TxID_0 = ID[0]
 	tx.TxID_1 = ID[1]
+}
+
+func (tx *TxEnvelope) SetFromID(ID tag.UID) {
+	tx.FromID_0 = ID[0]
+	tx.FromID_1 = ID[1]
 }
 
 func (tx *TxHeader) SetContextID(ID tag.UID) {
@@ -52,19 +65,6 @@ func (tx *TxHeader) SetContextID(ID tag.UID) {
 
 func (tx *TxHeader) ContextID() tag.UID {
 	return tag.UID{tx.ContextID_0, tx.ContextID_1}
-}
-
-func (tx *TxHeader) SetFromID(ID tag.UID) {
-	tx.FromID_0 = ID[0]
-	tx.FromID_1 = ID[1]
-}
-
-func (tx *TxHeader) FromID() tag.UID {
-	return tag.UID{tx.FromID_0, tx.FromID_1}
-}
-
-func (tx *TxHeader) ID() tag.UID {
-	return tag.UID{tx.TxID_0, tx.TxID_1}
 }
 
 func (tx *TxMsg) AddRef() {
@@ -246,18 +246,6 @@ func (tx *TxMsg) MarshalOpAndData(op *TxOp, opValue []byte) {
 	tx.Normalized = false
 }
 
-const (
-	txBaseSize = int(Const_TxPreamble_Size) + int(unsafe.Sizeof(TxHeader{}))
-	txOpSize   = int(unsafe.Sizeof(TxOp{}))
-)
-
-// Returns the ceiling byte size of this TxMsg as a serialized buffer.
-func (tx *TxMsg) CeilingSize() int64 {
-	sz := txBaseSize + len(tx.DataStore)
-	sz += len(tx.Ops) * txOpSize
-	return int64(sz)
-}
-
 func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 	readBytes := func(dst []byte) error {
 		for L := 0; L < len(dst); {
@@ -287,7 +275,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 	headLen := preamble.TxHeadLen()
 	dataLen := preamble.TxDataLen()
 
-	// Use tx.DataStore as a temp store the tx header for unmarshalling, containing TxHeader and TxOps.
+	// Use tx.DataStore as a temp store the tx header for unmarshalling, containing TxEnvelope and TxOps.
 	{
 		needSz := max(headLen, dataLen)
 		if cap(tx.DataStore) < needSz {
@@ -298,7 +286,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 		if err := readBytes(buf); err != nil {
 			return nil, err
 		}
-		if err := tx.UnmarshalHeader(buf); err != nil {
+		if err := tx.UnmarshalHead(buf); err != nil {
 			return nil, err
 		}
 	}
@@ -310,6 +298,19 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 	}
 
 	return tx, nil
+}
+
+// Returns the ceiling byte size of this TxMsg as a serialized buffer.
+func (tx *TxMsg) CeilingSize() int64 {
+	const (
+		txBaseSize = int(Const_TxPreamble_Size) +
+			int(unsafe.Sizeof(TxEnvelope{})) +
+			int(unsafe.Sizeof(TxHeader{}))
+		txOpSize = int(unsafe.Sizeof(TxOp{}))
+	)
+	sz := txBaseSize + len(tx.DataStore)
+	sz += len(tx.Ops) * txOpSize
+	return int64(sz)
 }
 
 func (tx *TxMsg) MarshalToWriter(scrap *[]byte, w io.Writer) (err error) {
@@ -324,7 +325,7 @@ func (tx *TxMsg) MarshalToWriter(scrap *[]byte, w io.Writer) (err error) {
 		return nil
 	}
 
-	tx.MarshalHeaderAndOps(scrap)
+	tx.MarshalHeadAndOps(scrap)
 	if err = writeBytes(*scrap); err != nil {
 		return
 	}
@@ -335,42 +336,43 @@ func (tx *TxMsg) MarshalToWriter(scrap *[]byte, w io.Writer) (err error) {
 }
 
 func (tx *TxMsg) MarshalToBuffer(dst *[]byte) {
-	tx.MarshalHeaderAndOps(dst)
+	tx.MarshalHeadAndOps(dst)
 	*dst = append(*dst, tx.DataStore...)
 }
 
-func (tx *TxMsg) MarshalHeaderAndOps(dst *[]byte) {
+func (tx *TxMsg) MarshalHeadAndOps(dst *[]byte) {
 	buf := *dst
 	if cap(buf) < 300 {
 		buf = make([]byte, 2048)
 	}
 
-	headerAndOps := tx.MarshalOps(buf[:Const_TxPreamble_Size])
+	headAndOps := tx.MarshalHead(buf[:Const_TxPreamble_Size])
 
-	header := headerAndOps[:Const_TxPreamble_Size]
-	header[0] = byte((Const_TxPreamble_Marker >> 16) & 0xFF)
-	header[1] = byte((Const_TxPreamble_Marker >> 8) & 0xFF)
-	header[2] = byte((Const_TxPreamble_Marker >> 0) & 0xFF)
-	header[3] = byte(Const_TxPreamble_Version)
+	head := headAndOps[:Const_TxPreamble_Size]
+	head[0] = byte((Const_TxPreamble_Marker >> 16) & 0xFF)
+	head[1] = byte((Const_TxPreamble_Marker >> 8) & 0xFF)
+	head[2] = byte((Const_TxPreamble_Marker >> 0) & 0xFF)
+	head[3] = byte(Const_TxPreamble_Version)
 
-	binary.BigEndian.PutUint32(header[4:8], uint32(len(headerAndOps)))
-	binary.BigEndian.PutUint32(header[8:12], uint32(len(tx.DataStore)))
+	binary.BigEndian.PutUint32(head[4:8], uint32(len(headAndOps)))
+	binary.BigEndian.PutUint32(head[8:12], uint32(len(tx.DataStore)))
 
-	*dst = headerAndOps
+	// TODO (ENCRYPT)
+	//
+	// 1) generate and sign hash with planet keyring implied by TxEnvelope
+	// 2) append tx suffix at end of Tx.  (TxFooter?)
+	// 3) encrypt tx starting from cryptOfs.. to end.
+
+	*dst = headAndOps
 }
 
-func (tx *TxMsg) MarshalOps(dst []byte) []byte {
+func (tx *TxMsg) MarshalHead(dst []byte) []byte {
 
-	// TxHeader
-	{
-		tx.OpCount = uint64(len(tx.Ops))
-		infoLen := tx.TxHeader.Size()
-		dst = binary.AppendUvarint(dst, uint64(infoLen))
-
-		p := len(dst)
-		dst = append(dst, make([]byte, infoLen)...)
-		tx.TxHeader.MarshalToSizedBuffer(dst[p : p+infoLen])
-	}
+	tx.OpCount = uint64(len(tx.Ops))
+	tx.TxEnvelope.HeaderOffset = 0     // byte skip before TxHeader
+	dst = writePb(dst, &tx.TxEnvelope) // write TxEnvelope uvarint & data
+	tx.cryptOfs = uint64(len(dst))     // store TxHeader start (encrypt begins here)
+	dst = writePb(dst, &tx.TxHeader)   // write TxHeader uvarint & data
 
 	var (
 		op_prv [TxField_MaxFields]uint64
@@ -418,23 +420,23 @@ func (tx *TxMsg) MarshalOps(dst []byte) []byte {
 	return dst
 }
 
-func (tx *TxMsg) UnmarshalHeader(src []byte) error {
+func (tx *TxMsg) UnmarshalHead(src []byte) error {
 	p := 0
 
-	// TxHeader
-	{
-		infoLen, n := binary.Uvarint(src[0:])
-		if n <= 0 {
-			return ErrMalformedTx
-		}
-		p += n
+	// TxEnvelope
+	tx.TxEnvelope = TxEnvelope{}
+	if err := readPb(src, &p, &tx.TxEnvelope); err != nil {
+		return err
+	}
 
-		tx.TxHeader = TxHeader{}
-		err := tx.TxHeader.Unmarshal(src[p : p+int(infoLen)])
-		if err != nil {
-			return ErrMalformedTx
-		}
-		p += int(infoLen)
+	p += int(tx.TxEnvelope.HeaderOffset)
+
+	// TODO (DECRYPT)
+	// lookup keys for TxEnvelope to decrypt remainder of tx, THEN proceed to unmarshal remainder of tx.
+
+	tx.TxHeader = TxHeader{}
+	if err := readPb(src, &p, &tx.TxHeader); err != nil {
+		return err
 	}
 
 	var (
@@ -503,5 +505,40 @@ func (tx *TxMsg) UnmarshalHeader(src []byte) error {
 	// ensure we renormalize later
 	tx.Normalized = false
 
+	return nil
+}
+
+func writePb[T ValuePb](dst []byte, pb T) []byte {
+	byteLen := pb.Size()
+	dst = binary.AppendUvarint(dst, uint64(byteLen)) // add encoded length
+	p := len(dst)                                    // value start
+	dst = append(dst, make([]byte, byteLen)...)      // add needed space
+	pb.MarshalToSizedBuffer(dst[p : p+byteLen])      // add encoded data
+	return dst
+}
+
+// Unmarshals a pb with Uvarint length prefix
+func readPb[T ValuePb](src []byte, pos *int, field T) error {
+	p := *pos
+	if p < 0 || p >= len(src) {
+		return ErrMalformedTx
+	}
+
+	byteLen, n := binary.Uvarint(src[p:])
+	if n <= 0 {
+		return ErrMalformedTx
+	}
+	p += n
+
+	if p+int(byteLen) > len(src) {
+		return ErrMalformedTx
+	}
+
+	err := field.Unmarshal(src[p : p+int(byteLen)])
+	if err != nil {
+		return ErrMalformedTx
+	}
+	p += int(byteLen)
+	*pos = p
 	return nil
 }

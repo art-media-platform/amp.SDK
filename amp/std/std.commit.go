@@ -77,16 +77,6 @@ func SetupSnapshot(target tag.ElementID) *amp.PinRequest {
 	return req
 }
 
-func SetupCommit(appCtx amp.AppContext, tx *amp.TxMsg) {
-	tx.TxHeader.Recipient = appCtx.Session().Login().Planet
-	tx.TxHeader.Request = &amp.PinRequest{
-		Mode: amp.PinMode_Commit,
-		Invoke: &amp.Tag{
-			URI: "amp://cabinets/~",
-		},
-	}
-}
-
 type localLoad struct {
 	outTx  chan *amp.TxMsg
 	outErr chan error
@@ -109,12 +99,14 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 	return err
 }
 
-// func (req *localLoad) RecvEvent(evt amp.PinEvent) {
-// 	// not used
-// }
-
 func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
-	SetupCommit(appCtx, tx)
+	tx.Planet = appCtx.Session().Login().Planet
+	tx.Request = &amp.PinRequest{
+		Mode: amp.PinMode_Commit,
+		Invoke: &amp.Tag{
+			URI: "amp://cabinets/~",
+		},
+	}
 
 	req := &localCommit{
 		Context:  appCtx,

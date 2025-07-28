@@ -21,26 +21,26 @@ enum Const {
     // The bootstrapping ("head") node ID
     Const_HeadNodeID = 0x37;
 
-    // DefaultServicePort  is the default TCP port used to expose amp.Host service.
+    // DefaultServicePort is the default TCP port used to expose amp.Host service.
     Const_DefaultServicePort = 5192;
 
-	// TxPreamble (values are big endian):
-	//
+    // TxPreamble (values are big endian):
+    //
     //    00:03  TxPreamble marker ("amp")
-	//    03:04  TxPreamble_Version
+    //    03:04  TxPreamble_Version
     //    04:08  TxPreamble_Size + serialized(TxHeader) + serialized([]TxOp)
     //    08:12  len(TxMsg.DataStore)
     //    12:16  Reserved
-	Const_TxPreamble_Size = 16;
+    Const_TxPreamble_Size = 16;
 
-	// Version of the TxPreamble -- first byte
+    // Version of the TxPreamble -- first byte
     Const_TxPreamble_Version = 0x33;
 
-	// The first byte of the TxPreamble is the header size and version and
-	// the following 3 bytes of a serialized TxMsg ("amp")
+    // The first byte of the TxPreamble is the header size and version and
+    // the following 3 bytes of a serialized TxMsg ("amp")
     Const_TxPreamble_Marker = 0x616D70;
 
-    // ValueHeader is a variable length premble to db value entries, see ValueHeaderFlags.
+    // ValueHeader is a variable length preamble to db value entries, see ValueHeaderFlags.
     Const_ValueHeaderMaxSize = 37; // flags + 4 possible UIDs * 16 bytes per UID
 
     // בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
@@ -59,7 +59,7 @@ enum TxOpFlags {
 
 // TxField maps a fixed count of int64 payload fields.
 //
-// Why not a proto message?  Compression is much better since values usually repeat.
+// Why not a proto message? Compression is much better since values usually repeat.
 enum TxField {
     TxField_Nil = 0;
 
@@ -78,7 +78,7 @@ enum TxField {
     TxField_MaxFields = 16;
 }
 
-// The first byte of a serialzied amp.Value for future-proofing:
+// The first byte of a serialized amp.Value for future-proofing:
 //
 //    0x0F   which inline 16 byte (4 UID literals) that immediately follow
 //    0xF0   flags that do not affect value header size.
@@ -86,7 +86,7 @@ enum TxField {
 enum ValueHeaderFlags {
     ValueHeaderFlags_None = 0;
 
-    ValueHeaderFlags_FromID   = 0x01; // author or other orginator
+    ValueHeaderFlags_FromID   = 0x01; // author or other originator
     ValueHeaderFlags_TxID     = 0x02; // tx that publishes this entry
     ValueHeaderFlags_UID_C    = 0x04; // reserved / AuthID?
     ValueHeaderFlags_UID_D    = 0x08; // reserved
@@ -104,12 +104,12 @@ enum TxStatus {
     TxStatus_Rejected     = 6; // tx rejected (invalid, malformed, etc)
 }
 
-// TxHeader contains information for a TxMsg
-message TxHeader {
-
-    /////////////////////
-    //   IN THE CLEAR
-    /////////////////////
+// TxEnvelope contains tx fields that are used for routing and decryption of tx content.
+//
+// TxEnvelope is IN THE CLEAR, all other tx components are encrypted based on the TxEnvelope fields.
+//
+// TxHeader, TxOps, and the tx datastore are therefore said to be securely "within" a tx.
+message TxEnvelope {
 
     // Universally unique ID assigned when a tx is created
     fixed64             TxID_0 = 1;
@@ -119,41 +119,98 @@ message TxHeader {
     fixed64             FromID_0 = 3;
     fixed64             FromID_1 = 4;
 
-    // Identifies the Epoch this tx was created within.
-    // Used to validate that {FromID} is authorized to apply this tx to the planet's CRDT
-    fixed64             EpochID_0 = 5;
-    fixed64             EpochID_1 = 6;
+    // Which planet this tx should be applied to.
+    Tag                 Planet = 6;
 
-    // The planet epoch this tx was sealed within.
-    Tag                 Recipient = 10;
+    // Which planet epoch this tx was created within.
+    // Implies which planet keyring to use for this tx's encryption and decryption.
+    Tag                 PlanetEpoch = 7;
 
-    // When set, this tx is sealed (signed) by FromID.
-    Tag                 Signature = 11;
+    // Byte offset from the end of the marshalled TxEnvelope to the start of the TxHeader.
+    uint64              HeaderOffset = 10;
 
+}
 
-    /////////////////////
-    //  PLANET PRIVATE
-    /////////////////////
-
-    // If set, updates the active PinRequest state.
-    PinRequest          Request = 16;
-
-    // Status of the most recent PinRequest revision.
-    PinStatus           Status = 17;
-
-    // Number of TxOps in this TxHeader
-    uint64              OpCount = 19;
+// TxHeader contains primary information about a tx and is encrypted based on TxEnvelope fields.
+message TxHeader {
 
     // Refers to a tag ID (usually a TxID) for subsequent requests and responses.
     // Used to reference a tx thread to a request.
     // If nil or equal to TxID, then this tx is context-free and TxID is implied context ID.
-    fixed64             ContextID_0 = 24;
-    fixed64             ContextID_1 = 25;
+    fixed64             ContextID_0 = 1;
+    fixed64             ContextID_1 = 2;
+
+    // Status of the most recent PinRequest revision.
+    PinStatus           Status = 7;
+
+    // Number of TxOps in this tx.
+    uint64              OpCount = 10;
+
+    // If set, updates the active PinRequest state.
+    PinRequest          Request = 12;
+
+    // Referenced by a TxOp; a Citation references necessary context that authorizes the TxOp to be applied.
+    repeated Citation   Citations = 14;
 
 }
 
 
-// Expresses the status of a amp.Pin.
+/*
+message TxFooter {
+
+    // Signed hash of final tx (sans signature) that validates its integrity.
+    // Unlike the other fields, this is assigned post-deserialization.
+    bytes               Signature = 3;
+}
+*/
+
+
+// Referenced by a TxOp, allowing the operation to be validated so it can be applied.
+//
+// Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
+//
+//   ChannelID    AttrID                    ItemID                     EditID
+//   ---------    ------                    ------                     ------
+//   {ACC_ChID}  / "series.Keyring.ACC"    / {KeyringName}.{GroupID} / {ACC_Epoch}    // where an ACC publishes keys for an explicit member or child ACC IDs
+//   {GroupID}   / "series.Keyring.public" / {KeyringName}           / {Group_Epoch}  // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
+//
+// To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
+//
+// When an ACC removes or alters a member's access, it must issue a new keyring epoch. This means for each channel member, the channel's private key
+//   is encrypted using each member's latest public key, so that only the member can decrypt them.
+message Citation {
+
+    // Address match filter for (NodeID, AttrID, ItemID, EditID) items this Citation applies to
+    ItemSpan            Span = 1;
+
+    // Access Control Channel (ACC) IDs
+    fixed64             ACC_0 = 2;
+    fixed64             ACC_1 = 3;
+
+    // Access Control Channel (ACC) IDs
+    fixed64             ACC_Epoch_0 = 4;
+    fixed64             ACC_Epoch_1 = 5;
+
+    // Author UID aka From
+    fixed64             AuthorID_0 = 6;
+    fixed64             AuthorID_1 = 7;
+
+    // Author epoch that authorizes this action.
+    fixed64             AuthorEpochID_0 = 8;
+    fixed64             AuthorEpochID_1 = 9;
+
+    // Keyring ID match
+    fixed64             KeyringID_0 = 10;
+    fixed64             KeyringID_1 = 11;
+
+    // // The channel epoch that authorizes the referencing TxOp.
+    // // If nil, then the TxOp is not bound to any channel epoch.
+    // fixed64             ChannelEpochID_0 = 8;
+    // fixed64             ChannelEpochID_1 = 9;
+}
+
+
+// Expresses the status of an amp.Pin.
 enum PinStatus {
     PinStatus_Inactive = 0;  // no op
     PinStatus_Started  = 2;  // pin now on service
@@ -225,7 +282,7 @@ message PinRequest {
     // Selects which values to synchronize and which NOT to synchronize.
     ItemSelector        Selector = 6;
 
-    // If set, requests a preferrred tx byte size limit.
+    // If set, requests a preferred tx byte size limit.
     int64               PreferredTxSize = 7;
 
     // If set, this is a genesis request to create a new channel with the given typeID (
@@ -235,23 +292,23 @@ message PinRequest {
 
 // Expresses an easy to use set of address ranges.
 message ItemSelector {
-    repeated NodeScan Scans      = 1;
+    repeated ItemSpan Spans      = 1;
     bool              Normalized = 2;
 }
 
 // Expresses an ItemID range for a given NodeID.
-message NodeScan {
+message ItemSpan {
 
-    fixed64  NodeID_0 = 1; // node channel ID[0]
-    fixed64  NodeID_1 = 2; // node channel ID[1]
+    fixed64  NodeID_0 = 1; // channel node or wildcard
+    fixed64  NodeID_1 = 2; // "
 
-    fixed64  AttrID_0 = 4; // attr ID (or wildcard)
-    fixed64  AttrID_1 = 5; //
+    fixed64  AttrID_0 = 4; // attr ID or wildcard
+    fixed64  AttrID_1 = 5; // "
 
     fixed64  ItemID_Min_0 = 10; // min ItemID (inclusive)
-    fixed64  ItemID_Min_1 = 11; //
+    fixed64  ItemID_Min_1 = 11; // "
     fixed64  ItemID_Max_0 = 12; // max ItemID (inclusive)
-    fixed64  ItemID_Max_1 = 13; //
+    fixed64  ItemID_Max_1 = 13; // "
 
     int64    ItemsPerAttr = 14; // max items returned per unique attr ID (0 denotes no limit)
     int64    EditsPerItem = 15; // max edits returned per unique item ID

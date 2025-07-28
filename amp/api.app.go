@@ -86,17 +86,19 @@ type Pin interface {
 
 // TxMsg is the serialized transport container sent between client and host.
 type TxMsg struct {
-	TxHeader          // public fields and routing tags
+	TxEnvelope        // tx fields for tx routing and decryption
+	TxHeader          // tx fields not in the clear
 	Ops        []TxOp // tx operations to perform
-	DataStore  []byte // TxOp serialzed data storage
+	DataStore  []byte // opaque data storage; typically serialzed TxOp values
 	Normalized bool   // normalization state of Ops
 	refCount   int32  // see AddRef() / ReleaseRef()
+	cryptOfs   uint64 // byte offset from preamble start to start of TxHeader
 }
 
 // TxOp is a transaction op and the most granular unit of change.
 // A TxOp's serialized data is located in a TxMsg.DataStore or some other data segment.
 type TxOp struct {
-	Addr    tag.Address // element to operate on
+	Addr    tag.Address // CRDT item address
 	Flags   TxOpFlags   // operation to perform
 	DataLen uint64      // byte length of associated serialized data
 	DataOfs uint64      // byte offset to where serialized data is stored

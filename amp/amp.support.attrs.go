@@ -286,19 +286,19 @@ func (filter *ItemFilter) AsLabel() string {
 
 // Returns if this range includes the given item's ElementID
 func (filter *ItemFilter) Admits(elem tag.ElementID) bool {
-	for _, scan := range filter.Selector.Scans {
-		nodeID := scan.NodeID()
+	for _, span := range filter.Selector.Spans {
+		nodeID := span.NodeID()
 		if !nodeID.IsWildcard() && nodeID != elem.NodeID {
 			continue
 		}
-		attrID := scan.AttrID()
+		attrID := span.AttrID()
 		if !attrID.IsWildcard() && attrID != elem.AttrID {
 			continue
 		}
-		if elem.ItemID[0] < scan.ItemID_Min_0 || elem.ItemID[0] > scan.ItemID_Max_0 {
+		if elem.ItemID[0] < span.ItemID_Min_0 || elem.ItemID[0] > span.ItemID_Max_0 {
 			continue
 		}
-		if elem.ItemID[1] < scan.ItemID_Min_1 || elem.ItemID[1] > scan.ItemID_Max_1 {
+		if elem.ItemID[1] < span.ItemID_Min_1 || elem.ItemID[1] > span.ItemID_Max_1 {
 			continue
 		}
 
