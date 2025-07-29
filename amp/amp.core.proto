@@ -165,50 +165,6 @@ message TxFooter {
 */
 
 
-// Referenced by a TxOp, allowing the operation to be validated so it can be applied.
-//
-// Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
-//
-//   ChannelID    AttrID                    ItemID                     EditID
-//   ---------    ------                    ------                     ------
-//   {ACC_ChID}  / "series.Keyring.ACC"    / {KeyringName}.{GroupID} / {ACC_Epoch}    // where an ACC publishes keys for an explicit member or child ACC IDs
-//   {GroupID}   / "series.Keyring.public" / {KeyringName}           / {Group_Epoch}  // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
-//
-// To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
-//
-// When an ACC removes or alters a member's access, it must issue a new keyring epoch. This means for each channel member, the channel's private key
-//   is encrypted using each member's latest public key, so that only the member can decrypt them.
-message Citation {
-
-    // Address match filter for (NodeID, AttrID, ItemID, EditID) items this Citation applies to
-    ItemSpan            Span = 1;
-
-    // Access Control Channel (ACC) IDs
-    fixed64             ACC_0 = 2;
-    fixed64             ACC_1 = 3;
-
-    // Access Control Channel (ACC) IDs
-    fixed64             ACC_Epoch_0 = 4;
-    fixed64             ACC_Epoch_1 = 5;
-
-    // Author UID aka From
-    fixed64             AuthorID_0 = 6;
-    fixed64             AuthorID_1 = 7;
-
-    // Author epoch that authorizes this action.
-    fixed64             AuthorEpochID_0 = 8;
-    fixed64             AuthorEpochID_1 = 9;
-
-    // Keyring ID match
-    fixed64             KeyringID_0 = 10;
-    fixed64             KeyringID_1 = 11;
-
-    // // The channel epoch that authorizes the referencing TxOp.
-    // // If nil, then the TxOp is not bound to any channel epoch.
-    // fixed64             ChannelEpochID_0 = 8;
-    // fixed64             ChannelEpochID_1 = 9;
-}
-
 
 // Expresses the status of an amp.Pin.
 enum PinStatus {
@@ -273,9 +229,6 @@ message PinRequest {
     // Operation mode for this pin request.
     PinMode             Mode = 2;
 
-    // Permissions and access controls.
-    AccessControl       Access = 3;
-
     // Explicit URL or ID invocation associated with this request.
     Tag                 Invoke = 4;
 
@@ -284,9 +237,6 @@ message PinRequest {
 
     // If set, requests a preferred tx byte size limit.
     int64               PreferredTxSize = 7;
-
-    // If set, this is a genesis request to create a new channel with the given typeID (
-    ChannelEpoch        Epoch = 16;
 }
 
 
@@ -333,17 +283,6 @@ enum PinMode {
 }
 
 
-message AccessControl {
-    Tags                Credentials = 2;
-}
-
-
-message ChannelEpoch {
-    Tag                 Channel       = 1;
-    Tag                 ParentChannel = 2;
-    fixed64             TypeID        = 3;
-    string              Label         = 10;
-}
 
 
 enum Enable {
@@ -423,9 +362,69 @@ enum CryptoKitID {
 }
 
 
+
+
+// A Citation is referenced by a tx operation (TxOp), pointing to values that are expected to validate the operation to be performed.
+//
+// Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
+//
+//   ChannelID      AttrID                    ItemID                     EditID
+//   ---------      ------                    ------                     ------
+//   {ACC_ChID}  / "series.Keyring.ACC"    / {KeyringName}.{GroupID} / {ACC_Epoch}    // where an ACC publishes keys for an explicit member or child ACC IDs
+//   {GroupID}   / "series.Keyring.public" / {KeyringName}           / {Group_Epoch}  // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
+//
+// To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
+//
+// When an ACC removes or alters a member's access, it must issue a new keyring epoch. This means for each channel member, the channel's private key
+//   is encrypted using each member's latest public key, so that only the member can decrypt them.
+message Citation {
+
+    // If set, selects which items this Citation applies to.
+    // ItemSpan            Span = 1;
+
+    // The channel epoch that contains the authorizing ACC reference
+    fixed64             ChannelEpochID_0 = 2;
+    fixed64             ChannelEpochID_1 = 3;
+
+    // Access Control Channel (ACC)
+    // fixed64             ACC_0 = 2;
+    // fixed64             ACC_1 = 3;
+
+    // ACC epoch that authorizes the requested operation.
+    fixed64             ACC_Epoch_0 = 4;
+    fixed64             ACC_Epoch_1 = 5;
+
+    // // Which member authored this operation
+    // fixed64             AuthorID_0 = 6;
+    // fixed64             AuthorID_1 = 7;
+
+    // // Author epoch containing their latest public keys
+    // fixed64             AuthorEpochID_0 = 8;
+    // fixed64             AuthorEpochID_1 = 9;
+
+    // Keyring ID match
+    fixed64             KeyringID_0 = 10;
+    fixed64             KeyringID_1 = 11;
+
+
+}
+
+
+// Governing unit of amp channel permissions and security.
+message ChannelEpoch {
+    Tag                 Channel = 1; // channel this record applies to
+    Tag                 ACC     = 2; // channel with access authority.  if nil, Channel is its own ACC.
+    fixed64             ChType  = 6; // channel type and category
+
+    string              Label   = 10; // debugging
+}
+
+
+
+
+
+
 /*
-
-
 
 message UILabel {
     string              Main            = 1;
@@ -467,19 +466,7 @@ enum Grid {
     Grid_TrapezoDodecahedron = 17; // TODO
 }
 
-// Specifies which EditID(s) to select for a (Node,Attr,Item) match
-enum RevisionMode {
-    RevisionMode_Head   = 0; // head revision only (default)
-    RevisionMode_Smart  = 3; // head plus host-chosen relevant history
-    RevisionMode_All    = 6; // all revisions
-}
 
-// Specifies the direction of a scan operation.
-enum ScanMode {
-    ScanMode_Unspecified = 0;
-    ScanMode_Forward     = 1;
-    ScanMode_Reverse     = 2;
-}
 
 */
 

@@ -381,9 +381,10 @@ func (tx *TxMsg) MarshalHead(dst []byte) []byte {
 
 	for _, op := range tx.Ops {
 		dst = append(dst, byte(op.Flags))
-		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
-		dst = binary.AppendUvarint(dst, op.DataLen)
+		dst = binary.AppendUvarint(dst, op.Citation)
 		dst = binary.AppendUvarint(dst, op.DataOfs)
+		dst = binary.AppendUvarint(dst, op.DataLen)
+		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
 
 		// detect repeated fields and write only what changes (with corresponding flags)
 		{
@@ -451,15 +452,8 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 		op.Flags = TxOpFlags(src[p])
 		p += 1
 
-		// reserved / future use
-		var skip uint64
-		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
-			return ErrMalformedTx
-		}
-		p += n + int(skip)
-
-		// DataLen
-		if op.DataLen, n = binary.Uvarint(src[p:]); n <= 0 {
+		// Citation
+		if op.Citation, n = binary.Uvarint(src[p:]); n <= 0 {
 			return ErrMalformedTx
 		}
 		p += n
@@ -469,6 +463,22 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 			return ErrMalformedTx
 		}
 		p += n
+
+		// DataLen
+		if op.DataLen, n = binary.Uvarint(src[p:]); n <= 0 {
+			return ErrMalformedTx
+		}
+		p += n
+
+		// reserved / future use
+		var skip uint64
+		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
+			return ErrMalformedTx
+		}
+		p += n + int(skip)
+		if p > len(src) {
+			return ErrMalformedTx
+		}
 
 		// hasFields
 		var hasFields uint64
