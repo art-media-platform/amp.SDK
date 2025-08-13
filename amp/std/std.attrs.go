@@ -32,9 +32,10 @@ var (
 	ItemCollection = ItemTextTag.With("collection").ID
 	ItemSynopsis   = ItemTextTag.With("synopsis").ID
 
-	ItemFileInfo  = ItemAttr.With("FileInfo").ID
-	MainLink      = ItemAttr.With("Tag.link.main").ID
-	ItemMedia     = ItemAttr.With("Tag.media").ID
+	ItemFileInfo = ItemAttr.With("FileInfo").ID
+	MainLink     = ItemAttr.With("Tag.link.main").ID
+	MediaLink    = ItemAttr.With("Tag.link.media")
+
 	ItemVis       = ItemAttr.With("Tag.vis").ID
 	ItemBehaviors = ItemAttr.With("Tags.behaviors").ID
 	ItemGlyphs    = ItemAttr.With("Tags.glyphs").ID

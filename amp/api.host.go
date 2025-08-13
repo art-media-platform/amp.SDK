@@ -99,7 +99,7 @@ type Session interface {
 
 	// Gets the requested currently running app instance.
 	// If not running and autoCreate is set, a new instance is created and started.
-	GetAppInstance(moduleID tag.UID, autoCreate bool) (AppInstance, error)
+	AppInstance(moduleID tag.UID, autoCreate bool) (AppInstance, error)
 }
 
 // Registry is where apps and types are registered -- concurrency safe.
@@ -119,7 +119,7 @@ type Registry interface {
 
 	// Selects an AppModule that best matches the given invocation.
 	// Note that an *AppModule is READ ONLY since they are static and shared.
-	GetAppModule(invoke Tag) (*AppModule, error)
+	FindModule(uid tag.UID, name string) *AppModule
 
 	// Instantiates an attr element value for a given attr spec -- typically followed by Value.Unmarshal()
 	MakeValue(attrID tag.UID) (Value, error)
@@ -136,7 +136,7 @@ type PinEvent struct {
 type Request struct {
 	Requester             // origin of this request
 	ItemFilter            // selects which nodes / attrs / items / edits to sync
-	Tx         *TxMsg     // initial tx to process for this request
+	Tx         *TxMsg     // tx to process for this request
 	ID         tag.UID    // universally unique ID for this request (inherited from tx invoking this request)
 	InvokeURL  *url.URL   // initialized from PinRequest.Invoke.URI
 	Params     url.Values // initialized from PinRequest.Invoke.URI

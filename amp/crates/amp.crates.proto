@@ -169,7 +169,7 @@ message AppVars {
     // AppDesc succinctly describes this org and is for humans.
     string                  AppDesc = 4;
 
-    // OrgHomeURL is the home link for this org (e.g. "https://blockcities.com")
+    // OrgHomeURL is the home link for this org (e.g. "https://plan-systems.org")
     string                  OrgHomeURL = 6;
 
     // AppHomeURL points to the home URL for the app
@@ -182,9 +182,10 @@ message AppVars {
     // A key of "" denotes an unknown platform
     map<string, string>     AppDownloadURLs = 16;
 
-    // URLSchemes declare URL schemes for this app's custom URL scheme (e.g. "any-scheme://")
+    // URLSchemes declare URL prefixes used to check if in incoming URL from the OS should be handled.
     // The first entry is the primary scheme and the rest are alternately recognized schemes.
-    // URL schemas should always end with "://"
+    //
+    // If an URL is matched, it is replaced by "amp://" and then passed to the amp runtime.
     repeated string         URLSchemes = 18;
 
     // Overrides default settings

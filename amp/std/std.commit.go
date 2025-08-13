@@ -69,9 +69,7 @@ func SetupSnapshot(target tag.ElementID) *amp.PinRequest {
 	req := &amp.PinRequest{
 		Mode:     amp.PinMode_Snapshot,
 		Selector: &amp.ItemSelector{},
-		Invoke: &amp.Tag{
-			URI: "amp://cabinets/~",
-		},
+		URL:      "amp://~/cabinets",
 	}
 	req.Selector.Select(target)
 	return req
@@ -103,9 +101,7 @@ func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
 	tx.Planet = appCtx.Session().Login().Planet
 	tx.Request = &amp.PinRequest{
 		Mode: amp.PinMode_Commit,
-		Invoke: &amp.Tag{
-			URI: "amp://cabinets/~",
-		},
+		URL:  "amp://~/cabinets",
 	}
 
 	req := &localCommit{

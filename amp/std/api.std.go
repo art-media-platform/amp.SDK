@@ -46,8 +46,8 @@ type Pin[AppT amp.AppInstance] struct {
 type ItemWriter interface {
 
 	// Convenience methods for pushing string and generic attributes bound to an item ID.
-	PutTextWithID(attrID, itemID tag.UID, value string)
-	PutItemWithID(attrID, itemID tag.UID, value amp.Value)
+	PutTextAt(attrID, itemID tag.UID, value string)
+	PutItemAt(attrID, itemID tag.UID, value amp.Value)
 
 	// Convenience methods for pushing an attribute value at item 0,0,0.
 	// Push*WithID(), if the value is nil, the attribute item is skipped.

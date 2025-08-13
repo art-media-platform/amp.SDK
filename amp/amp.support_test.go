@@ -34,7 +34,8 @@ func TestTxSerialize(t *testing.T) {
 
 		tx.MarshalOp(&op, &Login{
 			Member: &Tag{
-				Text: "astar",
+				Text: "astar incoming",
+				URI:  "drewz://soon.com/hawt#incoming",
 			},
 			HostAddress: "batwing ave",
 		})
@@ -53,7 +54,8 @@ func TestTxSerialize(t *testing.T) {
 		}
 		tx.MarshalOp(&op, &Login{
 			Member: &Tag{
-				Text: "anonymous",
+				URI:  "http://localhost:8080",
+				Text: "what are we even doing here",
 			},
 			HostAddress: "http://localhost:8080",
 		})

@@ -1,5 +1,5 @@
-                               amp.spec.tag.v0.703  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  3DR9245NB4F62T0ZJ8VN08UGYU   amp.spec.tag.v0.703.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                               amp.spec.tag.v705  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+  5MUHRRC000DHZWZ746N7GB4DT2   amp.spec.tag.v705.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                Hello World!
   7K4XGBQ7879D4F228U0CU1N627   hello.world
@@ -76,11 +76,11 @@
                                ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
   3571VFBQ69UFMEDDVWBZR35T29   ADA.is.an.acronym.for.the.americans.with.disabilities.act.a.computer.programmer.ms.ada.is
 
-                               Get into the amp SDK today!
+                               Get into the amp SDK today
   1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
-                               Get into the amp.SDK today!
+                               Get into the amp.SDK today
   1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
-                               Get into the Amp SDK today!
+                               Get into the Amp SDK today
   1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
 
 
@@ -97,14 +97,19 @@
                                said a drill, is this not Yoda?
   5E34N75EQ85VNX35UJEGHMWQ3P   said.a.drill.is.this.not.yoda
 
+                               spaces.plan.tools
+  6489TXSFTM8BVH9ZRXS81D9URV   spaces.plan.tools
+                               plan.tools.spaces
+  6489TXSFTM8BVH9ZRXS81D9URV   plan.tools.spaces
+
                                12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
   46YBFW120F9CZF1WFQQZV510GE   12.words.randomly.chosen.from.but.not.limited.to.the.english.dictionary.exceeds.10-56.possible.combinations.for.reference.that's.over.10.million.times.the.number.of.possible.bitcoin.public.addresses.(2-160)
 
-                               The above hash ID G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB demonstrates a standardized way to precisely witness a set of unordered literals. In creating a subsequent hash ID, we are cryptographically chaining tag sets together.
-  2407J7NDSJFXPYSDPVKNQFSSM9   the.above.hash.ID.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.demonstrates.a.standardized.way.to.precisely.witness.a.set.of.unordered.literals.in.creating.a.subsequent.hash.ID.we.are.cryptographically.chaining.tag.sets.together
+                               The above hash ID 46YBFW120F9CZF1WFQQZV510GE demonstrates a standardized way to precisely witness a set of unordered literals. In creating a subsequent hash ID, we are cryptographically chaining tag sets together.
+  33J23T8JJKXDQX0CKN7K0EWUHB   the.above.hash.ID.46YBFW120F9CZF1WFQQZV510GE.demonstrates.a.standardized.way.to.precisely.witness.a.set.of.unordered.literals.in.creating.a.subsequent.hash.ID.we.are.cryptographically.chaining.tag.sets.together
 
-                               And so by citing both G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB and BSJ6041BGWJM08K4S0M05995JZSQRHPV2 as literals, we can conveniently validate tag relationships and groups.
-   C0KENW46KTG6Z7Z0C2V4TPXQ9   and.so.by.citing.both.G5NRUJZEX37FZE7J38C0PRSQNCGF8DCXB.and.BSJ6041BGWJM08K4S0M05995JZSQRHPV2.as.literals.we.can.conveniently.validate.tag.relationships.and.groups
+                               And so by citing both 46YBFW120F9CZF1WFQQZV510GE and 33J23T8JJKXDQX0CKN7K0EWUHB as literals, we can conveniently validate tag relationships and groups.
+   J404QB3QZV2DQTX8NG58D5GGQ   and.so.by.citing.both.46YBFW120F9CZF1WFQQZV510GE.and.33J23T8JJKXDQX0CKN7K0EWUHB.as.literals.we.can.conveniently.validate.tag.relationships.and.groups
 
-                               Hashing 9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3 with H3 geo-tiles 8D489E34600637F and 872AA845AFFFFFF demonstrates how locations can be cryptographically bound together in this system.  This offers easy "DIY" layering of security and permissions.
-  3XGY5RTN12DEU4V4XJ89KUESRG   hashing.9X75KTQ662RMTKRTNF0FY2PSWUC4N21G3.with.H3.geo-tiles.8D489E34600637F.and.872AA845AFFFFFF.demonstrates.how.locations.can.be.cryptographically.bound.together.in.this.system.this.offers.easy."DIY".layering.of.security.and.permissions
+                               Hashing J404QB3QZV2DQTX8NG58D5GGQ with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be cryptographically bound together in this system.  This offers easy "DIY" layering of security and permissions.
+  5SQ1CXUYKNV28S3U2D0W2EWZS3   hashing.J404QB3QZV2DQTX8NG58D5GGQ.with.S2.geo-tiles.8D489E34600637F.and.872AA845ADF325.demonstrates.how.locations.can.be.cryptographically.bound.together.in.this.system.this.offers.easy."DIY".layering.of.security.and.permissions

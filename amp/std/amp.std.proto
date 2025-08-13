@@ -110,16 +110,26 @@ message FileInfo {
 
 // Multi-purpose, future-proof text element / label / item
 message TextItem {
-    string   Body  = 1; // plain-text body as applicable
-    amp.Tags Tags  = 4;
+    string   Body  = 2; // atomic plain-text body
+    amp.Tags Tags  = 4; // free use attachments or metadata
 }
 
+// Generic report summary
+message Report {
+    TextItem Title   = 1;
+    TextItem Caption = 2;
 
+    repeated TextItem Errors   = 3;
+    repeated TextItem Warnings = 4;
+    repeated TextItem Messages = 5;
+    repeated TextItem Debug    = 15;
+}
 
 message Labels {
     string   Title     = 1;
     string   Subtitle  = 2;
     string   Help      = 3;
+    string   About     = 4;
 }
 
 // General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.

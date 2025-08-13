@@ -46,13 +46,6 @@ type AppContext interface {
 	AppEnvironment() AppEnvironment // Runtime environment for this app instance
 }
 
-// Pinners process and "pin" requests, pushing responses to the client.
-type Pinner interface {
-
-	// Creates and serves the given request, providing a wrapper for the request.
-	StartPin(req *Request) (Pin, error)
-}
-
 // AppInstance is returned by an AppModule when it's invoked from a PinRequest.
 type AppInstance interface {
 	AppContext
@@ -64,6 +57,13 @@ type AppInstance interface {
 
 	// Called exactly once when this AppInstance has been closed.
 	OnClosing()
+}
+
+// Pinners process and "pin" requests, pushing responses to the client.
+type Pinner interface {
+
+	// Creates and serves the given request, providing a wrapper for the request.
+	StartPin(req *Request) (Pin, error)
 }
 
 // Pin is an attribute state connection to an app.

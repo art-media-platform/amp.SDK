@@ -1,7 +1,6 @@
 package std
 
 import (
-	"net/url"
 	"reflect"
 	"sync"
 
@@ -112,26 +111,13 @@ func (reg *registry) RegisterModule(mod *amp.AppModule) error {
 	return nil
 }
 
-func (reg *registry) GetAppModule(invoke amp.Tag) (*amp.AppModule, error) {
-	var moduleAlias string
-	modID := invoke.UID()
-
-	if invoke.URI != "" {
-		invokedURL, err := url.Parse(invoke.URI)
-		if err != nil {
-			return nil, amp.ErrCode_BadRequest.Errorf("invalid URI: %v", err)
-		} else if invokedURL.Host == "" {
-			return nil, amp.ErrCode_BadRequest.Errorf("invalid URI: %q", invoke.URI)
-		}
-		moduleAlias = invokedURL.Host
-	}
-
+func (reg *registry) FindModule(moduleID tag.UID, moduleAlias string) *amp.AppModule {
 	var mod *amp.AppModule
 
 	reg.mu.RLock()
 	{
-		if modID.IsSet() {
-			mod = reg.modsByID[modID]
+		if moduleID.IsSet() {
+			mod = reg.modsByID[moduleID]
 		}
 		if mod == nil && moduleAlias != "" {
 			mod = reg.modsByAlias[moduleAlias]
@@ -139,10 +125,7 @@ func (reg *registry) GetAppModule(invoke amp.Tag) (*amp.AppModule, error) {
 	}
 	reg.mu.RUnlock()
 
-	if mod == nil {
-		return nil, amp.ErrCode_ItemNotFound.Errorf("module not found: %q (%v)", moduleAlias, modID)
-	}
-	return mod, nil
+	return mod
 }
 
 // Makes an instance of the given attribute "spec"" tag.UID

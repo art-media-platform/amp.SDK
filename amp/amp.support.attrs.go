@@ -14,12 +14,14 @@ import (
 var (
 	// Bootstrapping aka "head" node ID where to start.
 	HeadNodeID = tag.UID{0, uint64(Const_HeadNodeID)}
+
+	ErrInvalidURL = ErrCode_BadRequest.Errorf("invalid cabinet URL")
 )
 
 func TagFromUID(id tag.UID) *Tag {
 	return &Tag{
-		ID_0: id[0],
-		ID_1: id[1],
+		UID_0: id[0],
+		UID_1: id[1],
 	}
 }
 
@@ -58,26 +60,31 @@ func (v *Tag) New() Value {
 
 func (v *Tag) SetFromTime(t time.Time) {
 	id := tag.UID_FromTime(t)
-	v.ID_0 = id[0]
-	v.ID_1 = id[1]
+	v.UID_0 = id[0]
+	v.UID_1 = id[1]
 }
 
 func (v *Tag) SetID(uid tag.UID) {
-	v.ID_0 = uid[0]
-	v.ID_1 = uid[1]
+	v.UID_0 = uid[0]
+	v.UID_1 = uid[1]
 }
 
 func (v *Tag) IsNil() bool {
-	return v != nil && v.URI == "" && v.ID_0 == 0 && v.ID_1 == 0
+	return v != nil && v.URI == "" && v.UID_0 == 0 && v.UID_1 == 0
 }
 
 func (v *Tag) UID() tag.UID {
 	uid := tag.UID{}
 	if v != nil {
-		uid[0] = v.ID_0
-		uid[1] = v.ID_1
+		uid[0] = v.UID_0
+		uid[1] = v.UID_1
 	}
 	return uid
+}
+
+func (v *Tag) Name() tag.Name {
+	name := tag.NameFrom(v.URI)
+	return name
 }
 
 func (v *Tag) AsLabel() string {
@@ -202,8 +209,8 @@ func (v *PinRequest) AsLabel() string {
 	}
 
 	label := make([]byte, 0, 255)
-	if v.Invoke != nil {
-		label = append(label, v.Invoke.AsLabel()...)
+	if v.URL != "" {
+		label = append(label, v.URL...)
 		return string(label)
 	}
 
@@ -236,24 +243,22 @@ func (req *Request) ParseParam(paramKey string, dst any) error {
 	return nil
 }
 
-func (request *Request) Revise(pinReq *PinRequest) error {
+func (req *Request) Revise(pinReq *PinRequest) error {
 	if pinReq == nil {
 		return nil
 	}
 
 	// Merge incoming PinRequest
-	current := &request.ItemFilter.Current
+	current := &req.ItemFilter.Current
 	*current = *pinReq
 
-	invokeTag := current.Invoke
-
-	if invokeTag != nil && invokeTag.URI != "" {
+	if current.URL != "" {
 		var err error
-		if request.InvokeURL, err = url.Parse(invokeTag.URI); err != nil {
+		if req.InvokeURL, err = url.Parse(current.URL); err != nil {
 			err = ErrCode_BadRequest.Errorf("error parsing URL: %v", err)
 			return err
 		}
-		if request.Params, err = url.ParseQuery(request.InvokeURL.RawQuery); err != nil {
+		if req.Params, err = url.ParseQuery(req.InvokeURL.RawQuery); err != nil {
 			err = ErrCode_BadRequest.Errorf("error parsing URL query: %v", err)
 			return err
 		}
@@ -264,8 +269,48 @@ func (request *Request) Revise(pinReq *PinRequest) error {
 		if err != nil {
 			return err
 		}
-		request.ItemFilter.Selector = *pinReq.Selector
+		req.ItemFilter.Selector = *pinReq.Selector
 	}
+	return nil
+}
+
+// Interprets the request's URL as an ItemSpan and from the form:
+//
+//	"[scheme://]{Domain}/[{verb}/[{NodeID}/[{AttrID}/[{ItemID}]]]]"
+func (req *Request) ParseAsAddressURL() error {
+	if req.InvokeURL == nil {
+		return ErrCode_BadRequest.Errorf("missing InvokeURL")
+	}
+
+	path := req.InvokeURL.Path
+	if path != "" && path[0] == '/' {
+		path = path[1:]
+	}
+
+	parts := strings.SplitN(path, "/", 4)
+	IDs := make([]tag.UID, 0, 4)
+	for i := 1; i < len(parts); i++ { // skip verb
+		part := parts[i]
+		name, err := tag.NameParse(part)
+		if err != nil {
+			return err
+		}
+		IDs = append(IDs, name.ID)
+	}
+
+	if len(IDs) == 0 {
+		return nil
+	}
+
+	switch len(IDs) {
+	case 1:
+		req.Selector.AddSpan(IDs[0], tag.WildcardID(), tag.UID{}, tag.MaxID())
+	case 2:
+		req.Selector.AddSpan(IDs[0], IDs[1], tag.UID{}, tag.MaxID())
+	case 3:
+		req.Selector.AddSpan(IDs[0], IDs[1], IDs[2], IDs[2])
+	}
+
 	return nil
 }
 
@@ -273,9 +318,8 @@ func (filter *ItemFilter) AsLabel() string {
 	pinReq := &filter.Current
 
 	label := make([]byte, 0, 255)
-	if pinReq.Invoke != nil {
-		label = append(label, pinReq.Invoke.AsLabel()...)
-	}
+	label = append(label, pinReq.URL...)
+
 	if pinReq.Selector != nil {
 		label = append(label, '[')
 		label = append(label, pinReq.Selector.AsLabel()...)
@@ -407,16 +451,6 @@ func (sel *ItemSelector) Select(elem tag.ElementID) {
 	}
 
 	sel.AddSpan(elem.NodeID, elem.AttrID, itemMin, itemMax)
-}
-
-// Adds a selection range for all items on the given nodeID.
-func (sel *ItemSelector) SelectNode(nodeID tag.UID) {
-	sel.AddSpan(nodeID, tag.WildcardID(), tag.UID{}, tag.MaxID())
-}
-
-// Adds a selection range for all items having the given nodeID and addrID.
-func (sel *ItemSelector) SelectNodeAttr(nodeID, attrID tag.UID) {
-	sel.AddSpan(nodeID, attrID, tag.UID{}, tag.MaxID())
 }
 
 func (sel *ItemSelector) AddSpan(nodeID, attrID, itemID_min, itemID_max tag.UID) {

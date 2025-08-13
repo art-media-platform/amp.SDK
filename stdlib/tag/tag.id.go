@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"math/bits"
 	"regexp"
+	"strings"
 	"time"
 	"unicode"
 
@@ -21,9 +23,38 @@ var (
 	ErrUnrecognizedFormat = errors.New("unrecognized ID format")
 )
 
-// Convenience function to parse a tag expression into a tag.Name struct.
-func NameFrom(tagExpr string) Name {
-	return Name{}.With(tagExpr)
+// Parses the given tag name or expression into its canonic form. canonic
+func NameFrom(tagName string) Name {
+	return Name{}.With(tagName)
+}
+
+// Parses the given string the best possible.
+func NameParse(tagName string) (name Name, err error) { // TODO: make more robust
+	if strings.IndexByte(tagName, '.') >= 0 {
+		name = Name{}.With(tagName)
+		return
+	}
+
+	name.ID, err = UID_ParseBase32(tagName)
+	if err != nil {
+		return
+	}
+	return name, nil
+}
+
+// Returns the filename representation of the tag.
+func (name Name) Filename() string {
+	if name.Canonic != "" {
+		return name.Canonic
+	}
+	return name.ID.String()
+}
+
+func (name *Name) GoString() string {
+	if name.Canonic != "" {
+		return fmt.Sprintf("%s | %s", name.Canonic, name.ID.String())
+	}
+	return name.ID.String()
 }
 
 // With() is a communative tag.UID operator that combines two tag.IDs into a new tag.UID.
@@ -128,6 +159,17 @@ func (name Name) LeafTags(n int) (string, string) {
 	return "", canonic
 }
 
+// Returns the index of the first path separator in the given text (':', '/', or '\\').
+// Onward from that index, the text is considered a case sensitive path or URL.
+func PathStart(text string) int {
+	for i, c := range []byte(text) {
+		if c == ':' || c == '/' || c == '\\' {
+			return i
+		}
+	}
+	return -1
+}
+
 func MaxID() UID {
 	return UID{UID_0_Max, UID_1_Max}
 }
@@ -180,8 +222,8 @@ func NowID() UID {
 }
 
 func UID_FromTime(t time.Time) UID {
-	ns_b10 := uint64(t.Nanosecond()) // 0..999999999
-	ns_f64 := ns_b10 * NanosecStep   // map to 0..(2^64-1)
+	ns_b10 := uint64(t.Nanosecond()) // 0..999,999,999
+	ns_f64 := ns_b10 * TickStep64    // map to 0..(2^64-1)
 
 	t_00_06 := uint64(t.Unix()) << 16
 	t_06_08 := ns_f64 >> 48
@@ -194,9 +236,9 @@ func UID_FromTime(t time.Time) UID {
 }
 
 const (
-	NanosecStep = uint64(0x44B82FA1C)            // 1<<64 / 1e9 (nanosecond resolution spread over a 64 bits)
-	EntropyBits = 64 - 30 + 16                   // bits beyond 1 ns resolution (30 bits for 1e9 nanoseconds plus 16 fixed shift left)
-	EntropyMask = (uint64(1) << EntropyBits) - 1 // bits randomized by Now()
+	TickStep64  = uint64(0x44B82FA1C)            // (2^64-1) / 1e9 (1ns tick resolution spread over 64 bits)
+	EntropyBits = 34 + 16                        // TickStep64 bits plus needed bits
+	EntropyMask = (uint64(1) << EntropyBits) - 1 // LSB bits to randomize
 
 	p1 = (uint64(1) << 63) - 471
 	p2 = (uint64(1) << 62) - 143
@@ -393,6 +435,10 @@ func (id UID) String() string {
 	return id.Base32()
 }
 
+func (id UID) GoString() string {
+	return id.Base32()
+}
+
 func (id UID) Unix() int64 {
 	return int64(id[0] >> 16) // drop 16 bits of fixed precision
 }
@@ -400,7 +446,7 @@ func (id UID) Unix() int64 {
 func (id UID) AsTime() time.Time {
 	unix := id.Unix()
 	ns_f64 := ((id[0] & 0xFFFF) << 48) | (id[1] >> 16)
-	ns_b10 := 1 + ns_f64/(1+NanosecStep)
+	ns_b10 := 1 + ns_f64/(1+TickStep64)
 	return time.Unix(unix, int64(ns_b10))
 }
 
@@ -433,7 +479,7 @@ func (id UID) IsSet() bool {
 		(id[0] < UID_0_Max || id[1] <= UID_1_Max)
 }
 
-func (id *UID) IsNil() bool {
+func (id UID) IsNil() bool {
 	return id[0] == 0 && id[1] == 0
 }
 
@@ -446,7 +492,7 @@ func (id *UID) EnsureSet(src UID) {
 
 // UID_Parse parses a UID (typically in base32-encoded ascii) from the given text.
 // It ignores whitespace and returns an error for invalid formats.
-func UID_Parse(text string) (UID, error) {
+func UID_ParseBase32(text string) (UID, error) {
 	digits := make([]byte, 0, UID_Base32Length)
 
 	for _, c := range []byte(text) {

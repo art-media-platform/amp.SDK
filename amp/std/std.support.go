@@ -164,8 +164,11 @@ func (pin *Pin[AppT]) Context() task.Context {
 }
 
 func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
-	invokeTag := req.Current.Invoke
-	targetID := invokeTag.UID()
+	if err := req.ParseAsAddressURL(); err == nil {
+		return nil, err
+	}
+
+	targetID := req.Selector.Spans[0].NodeID() // TODO: is this the best?
 
 	item := pin.GetItem(targetID)
 	if item == nil {
@@ -180,7 +183,7 @@ func (pin *Pin[AppT]) CommitTx(tx *amp.TxMsg) error {
 }
 
 func (pin *Pin[AppT]) ReviseRequest(latest *amp.PinRequest) error {
-	return amp.ErrUnimplemented // TODO
+	return nil
 }
 
 // Pushes a TxMsg to the client of this Pin, pushing the state of each item and its children.
@@ -222,19 +225,19 @@ type itemWriter struct {
 	err    error
 }
 
-func (w *itemWriter) PutTextWithID(attrID, itemID tag.UID, value string) {
+func (w *itemWriter) PutTextAt(attrID, itemID tag.UID, value string) {
 	if w.err != nil {
 		return
 	}
-	err := w.tx.Upsert(w.nodeID, attrID, itemID, &amp.Tag{
-		Text: value,
+	err := w.tx.Upsert(w.nodeID, attrID, itemID, &TextItem{
+		Body: value,
 	})
 	if err != nil {
 		w.err = err
 	}
 }
 
-func (w *itemWriter) PutItemWithID(attrID, itemID tag.UID, value amp.Value) {
+func (w *itemWriter) PutItemAt(attrID, itemID tag.UID, value amp.Value) {
 	if w.err != nil {
 		return
 	}
@@ -247,12 +250,28 @@ func (w *itemWriter) PutText(attrID tag.UID, value string) {
 	if value == "" {
 		return
 	}
-	w.PutTextWithID(attrID, tag.UID{}, value)
+	w.PutTextAt(attrID, tag.UID{}, value)
 }
 
 func (w *itemWriter) PutItem(attrID tag.UID, value amp.Value) {
 	if value == nil {
 		return
 	}
-	w.PutItemWithID(attrID, tag.UID{}, value)
+	w.PutItemAt(attrID, tag.UID{}, value)
+}
+
+func (v *TextItem) New() amp.Value {
+	return &TextItem{}
+}
+
+func (v *TextItem) MarshalToStore(in []byte) (out []byte, err error) {
+	return amp.MarshalPbToStore(v, in)
+}
+
+func (v *Report) New() amp.Value {
+	return &Report{}
+}
+
+func (v *Report) MarshalToStore(in []byte) (out []byte, err error) {
+	return amp.MarshalPbToStore(v, in)
 }

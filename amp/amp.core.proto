@@ -188,9 +188,6 @@ message Login {
     // amp.Host uses this as the host name when serving URLs for the client to consume.
     string             HostAddress = 8;
 
-    // Tags is an unordered list of string literal tokens with predefined meanings, separated by spaces, periods, or commas.
-    string             Tags = 9;
-
     // Checkpoint allows the client to resume an auth session.
     LoginCheckpoint    Checkpoint = 12;
 
@@ -230,7 +227,7 @@ message PinRequest {
     PinMode             Mode = 2;
 
     // Explicit URL or ID invocation associated with this request.
-    Tag                 Invoke = 4;
+    string              URL = 4;
 
     // Selects which values to synchronize and which NOT to synchronize.
     ItemSelector        Selector = 6;
@@ -249,11 +246,13 @@ message ItemSelector {
 // Expresses an ItemID range for a given NodeID.
 message ItemSpan {
 
-    fixed64  NodeID_0 = 1; // channel node or wildcard
-    fixed64  NodeID_1 = 2; // "
+    //SpanMode Op       = 1; // TODO: how are spans updated or removed?
 
-    fixed64  AttrID_0 = 4; // attr ID or wildcard
-    fixed64  AttrID_1 = 5; // "
+    fixed64  NodeID_0 = 3; // channel node or wildcard
+    fixed64  NodeID_1 = 4; // "
+
+    fixed64  AttrID_0 = 6; // attr ID or wildcard
+    fixed64  AttrID_1 = 7; // "
 
     fixed64  ItemID_Min_0 = 10; // min ItemID (inclusive)
     fixed64  ItemID_Min_1 = 11; // "
@@ -295,13 +294,15 @@ enum Enable {
 
 enum UriScheme {
     UriScheme_Nil      = 0;
-    UriScheme_Reserved = 1;  // reserved for future use
+    UriScheme_Reserved = 1;  // reserved
 
-    UriScheme_Path     = 2;  // "any/posix/pathname"
-    UriScheme_Http     = 4;  // "[http[s]://]{hostname}[:{port}]/{query}"
-    UriScheme_Data     = 5;  // "[data:]{mime-type}[[;base64],{data-encoding}]"
-    UriScheme_File     = 6;  // "[file://]{hfs-pathname}"
-    UriScheme_Amp      = 16; // "[amp:[//app-identifier/]]{cmd}[/{uri}]?{query}"
+    UriScheme_Path     = 2;  // "[/]any/posix/pathname"
+    UriScheme_Http     = 4;  // "http[s]://{hostname}[:{port}]/{query}"
+    UriScheme_Data     = 5;  // "data:{mime-type}[[;base64],{data-encoding}]"
+    UriScheme_File     = 6;  // "file://{hfs-pathname}"
+
+    UriScheme_Asset    = 15; // "asset:({tag.name} | //{domain_name}/{crate.name}/{asset.name})
+    UriScheme_Amp      = 16; // "[[amp://planet.or.domain_name/]{verb}/]{query}"
 }
 
 // Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
@@ -311,19 +312,19 @@ message Tag {
 
     /// open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
     ///
-    fixed64 ID_0 = 3;
-    fixed64 ID_1 = 4;
+    fixed64 UID_0 = 3;
+    fixed64 UID_1 = 4;
 
-    int64   I     = 16; // as ticks on Grid on an expanding sphere
-    int64   J     = 17; // as Units on Grid horizontally
-    int64   K     = 18; // as Units on Grid vertically
-    Units   Units = 21; // unit convention for (i,j,k)
+    int64   I     = 16;
+    int64   J     = 17;
+    int64   K     = 18;
+    Units   Units = 21; // units for (i,j,k)
 
     /// open-use non-inline fields
     ///
     string  ContentType = 24; // IANA RFC 2045 media type; e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
-    string  URI         = 26; // Unix pathname *or* IANA RFC 1738 URL (schema://hostname.com/path/query)
-    string  Text        = 28; // UTF8 text; plain-text, XML, RTF
+    string  URI         = 26; // IANA RFC 1738 URL or unix pathname
+    string  Text        = 28; // UTF8 plain-text, XML, RTF
 }
 
 
@@ -414,9 +415,10 @@ message Citation {
 message ChannelEpoch {
     Tag                 Channel = 1; // channel this record applies to
     Tag                 ACC     = 2; // channel with access authority.  if nil, Channel is its own ACC.
-    fixed64             ChType  = 6; // channel type and category
+    Tag                 ChType  = 6; // channel type name and/or ID
 
-    string              Label   = 10; // debugging
+    string              Label     = 10; // debugging
+    string              LegacyURI = 11;
 }
 
 

@@ -1,5 +1,5 @@
-                               amp.spec.tag.v0.703  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  3DR9245NB4F62T0ZJ8VN08UGYU   amp.spec.tag.v0.703.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                               amp.spec.tag.v705  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+  5MUHRRC000DHZWZ746N7GB4DT2   amp.spec.tag.v705.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                amp.university.open.courses
   2PSQUSVECVUMHCJSFMS43TQYTX   amp.university.open.courses
