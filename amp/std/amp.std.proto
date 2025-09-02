@@ -6,36 +6,35 @@ option csharp_namespace = "art.media.platform.std";
 
 import "amp/amp.core.proto";
 
-
-// Specifies how scale dynamically changes based on observer position.
-enum ScaleMode {
-    ScaleMode_Fixed = 0;
-    ScaleMode_Auto  = 1;
+enum TRS_Flags {
+    TRS_Flags_None      = 0;
+    TRS_Flags_AutoScale = 1;  // Dynamically adjust scale based on observer position.
 }
 
 
-// TRS (translate rotate scale) IEEE 1207
+// TRS (Translate Rotate Scale) IEEE 1207
 // General purpose placement time, space, orientation, and/or geo-position.
 message TRS {
 
-    // spatial scale; if 0, scale is 1.0
-    double              Scale = 1;
+    // Uniform spatial scale; if 0, scale is implicitly 1.0
+    double              Sx = 1;
 
-    // Specifies how scale dynamically changes based on observer position.
-    // DEPRECATED: HUD dynamically chooses pip size (min and max)
-    ScaleMode           VisualScale = 2;
+    // Special TRS behavior
+    TRS_Flags           Flags = 2;
 
-    // spatial position
+    // Spatial position
     double              Px = 3;
     double              Py = 4;
     double              Pz = 5;
 
-    // spatial rotation; if all values 0, Quaternion is unit identity
+    // Spatial rotation; if all values 0, Quaternion is unit identity
     double              Qx = 10;
     double              Qy = 11;
     double              Qz = 12;
     double              Qw = 13;
 
+    // If non-zero and a globe surface is defined, this TRS is applied from the spherical position, normal, and scale associated with the given S2 tile cell.
+    fixed64             TileS2 = 16;
 }
 
 message Matrix4x4 {
@@ -83,8 +82,10 @@ message CameraState {
 }
 
 message CameraOptions {
-    float  MoveSpeed = 1; // movement speed multiplier
-    string Mode      = 2; // camera mode description
+    float  MoveSpeed   = 1; // movement speed multiplier
+    string Mode        = 2; // e.g. "orbit", "first-person", "flight", etc.
+    string ModeTags    = 3; // e.g. "hide-altitude.present-fullscreen"
+    int32  ShowUnits   = 4; // level of detail
 }
 
 message VisPreset {
@@ -127,7 +128,7 @@ message Report {
 
 message Labels {
     string   Title     = 1;
-    string   Subtitle  = 2;
+    string   Caption   = 2;
     string   Help      = 3;
     string   About     = 4;
 }

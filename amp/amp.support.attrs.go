@@ -14,8 +14,6 @@ import (
 var (
 	// Bootstrapping aka "head" node ID where to start.
 	HeadNodeID = tag.UID{0, uint64(Const_HeadNodeID)}
-
-	ErrInvalidURL = ErrCode_BadRequest.Errorf("invalid cabinet URL")
 )
 
 func TagFromUID(id tag.UID) *Tag {

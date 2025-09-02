@@ -2,9 +2,9 @@ package tag
 
 type (
 
-	// UID is a 16-byte universally unique identifier or a timestamp with discrete fixed precision.
+	// UID is a 16-byte universally unique identifier and/or is a timestamp with discrete fixed precision.
 	//
-	// When used as a timestamp, the first 6 bytes are UTC whole seconds followed by 10 bytes (80 bits) of fractional precision.
+	// As a timestamp, the first 6 bytes are UTC whole seconds followed by 10 bytes (80 bits) of fractional precision.
 	//
 	// UID is a big-endian value, so UID[0] is most significant, etc.
 	UID [2]uint64
@@ -28,7 +28,7 @@ type (
 	// When EditID is zero, this signals to get/set the most appropriate EditID.
 	Address struct {
 		ElementID
-		EditID UID //   48:64   ^Midpoint(edit_time, replace_time); ordered from newest to oldest
+		EditID UID //   48:64   midpoint(edit_time, replace_time)
 	}
 
 	// AddressLSM is an Address serialized into its corresponding LSM key format.

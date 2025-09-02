@@ -205,6 +205,8 @@ enum AssetFlags {
     IsPlaceable             = 0x0008; // asset can be placed in a space
     IsRectTransform         = 0x0010; // has a RectTransform component.
 
+    IsScene                 = 0x0020; // has a Scene component.
+
     // HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
     HasIcon                 = 0x0100;
 

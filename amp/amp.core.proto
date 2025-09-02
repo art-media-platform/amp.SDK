@@ -296,13 +296,14 @@ enum UriScheme {
     UriScheme_Nil      = 0;
     UriScheme_Reserved = 1;  // reserved
 
-    UriScheme_Path     = 2;  // "[/]any/posix/pathname"
-    UriScheme_Http     = 4;  // "http[s]://{hostname}[:{port}]/{query}"
-    UriScheme_Data     = 5;  // "data:{mime-type}[[;base64],{data-encoding}]"
-    UriScheme_File     = 6;  // "file://{hfs-pathname}"
+    UriScheme_Path     = 2;  // "[/]any/posix/pathname" (no scheme)
+    UriScheme_Http     = 5;  // "http:/..."
+    UriScheme_Https    = 6;  // "https:/..."
+    UriScheme_Data     = 7;  // "data:{mime-type}[[;base64],{data-encoding}]"
+    UriScheme_File     = 9;  // "file:/{hfs-pathname}"
 
-    UriScheme_Asset    = 15; // "asset:({tag.name} | //{domain_name}/{crate.name}/{asset.name})
-    UriScheme_Amp      = 16; // "[[amp://planet.or.domain_name/]{verb}/]{query}"
+    UriScheme_Asset     = 15; // "asset:({tag.name} | //{domain_name}/{crate.name}/{asset.name})
+    UriScheme_AppNative = 16; // "[[{app_scheme}://planet.or.domain_name/]{verb}/]{query}"
 }
 
 // Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
