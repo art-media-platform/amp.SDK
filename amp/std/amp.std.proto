@@ -109,10 +109,29 @@ message FileInfo {
 }
 
 
-// Multi-purpose, future-proof text element / label / item
+// Multi-purpose, future-proof text element or label.
 message TextItem {
     string   Body  = 2; // atomic plain-text body
     amp.Tags Tags  = 4; // free use attachments or metadata
+}
+
+// ValueKind specfies the primary type of a JsonValue.
+enum ValueKind {
+    ValueKind_Null   = 0;
+    ValueKind_False  = 1;
+    ValueKind_True   = 2;
+    ValueKind_Number = 3;
+    ValueKind_String = 4;
+}
+
+// JsonValue is a general-purpose JSON value container.
+// Though multiple fields can be set (e.g. a Number also encoded as a string,
+//    the Kind field is which field is considered the primary source of truth.
+message JsonValue {
+    ValueKind          Kind   = 1;
+    string             String = 2;
+    double             Number = 3;
+    repeated JsonValue Array  = 4;
 }
 
 // Generic report summary
