@@ -28,7 +28,7 @@ type (
 	// When EditID is zero, this signals to get/set the most appropriate EditID.
 	Address struct {
 		ElementID
-		EditID UID //   48:64   midpoint(edit_time, replace_time)
+		EditID UID //   48:64   Midpoint(edit_time, replace_time)
 	}
 
 	// AddressLSM is an Address serialized into its corresponding LSM key format.
@@ -59,6 +59,9 @@ const (
 	WithOperators   = `[\.+\s,!?]+`  // commutative (symmetric) binary delimiters
 	ThenOperators   = `[\-/\\~:^@]+` // non-commutative binary or unary delimiters
 	GroupDelimiters = `[]()<>{}¿?¡!` // TODO: group delimiter pairs
+
+	// Reserved tag name that denotes a wildcard match
+	CanonicWildcard = "*"
 
 	// The "with" delimiter can be thought of as ADD or SUM and combines two terms in a commutative way like addition.
 	// A '.' by convention helps visually identify a tag string, it's compatible with domain names, and is already a familiar scoping character.

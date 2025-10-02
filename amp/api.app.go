@@ -10,12 +10,12 @@ import (
 type AppModuleInfo struct {
 	Tag     tag.Name // what invokes this module
 	Label   string   // human-readable description of this app
-	Version string   // "v{TRL}.{major}.{minor}"
+	Version string   // "v{TRL}.{minor}.{revision}"
 	Aliases []string // invocation aliases for an AppModule
 }
 
 type AppEnvironment struct {
-	Creator     AppModuleInfo // AppModule info that spawned this instance
+	ModuleInfo  AppModuleInfo // AppModule info that spawned the AppContext
 	HomeID      tag.UID       // home ID for this app instance
 	MemberID    tag.UID       // who is running this app instance
 	IID         tag.UID       // instance ID for this app instance spawned by AboutModule

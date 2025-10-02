@@ -57,10 +57,37 @@ func (name *Name) GoString() string {
 	return name.ID.String()
 }
 
-// With() is a communative tag.UID operator that combines two tag.IDs into a new tag.UID.
+func (name Name) IsWildcard() bool {
+	return name.ID.IsWildcard() || name.Canonic == CanonicWildcard
+}
+
+// With() is a communative tag.UID operator that combines twåo tag.IDs into a new tag.UID.
 //
 // a tag.Name converts to a "blind" tag.UID as well as a canonic string representation.
 func (name Name) With(tagExpr string) Name {
+
+	if tagExpr == CanonicWildcard {
+		return Wildcard()
+	}
+
+	/*
+		// TODO: enhance grammar: if a '/' or '\' is present, the tag is considered a path or URL.
+		//     - then remove CanonicThen.
+		// Onward from that slash, whitespace and case are preserved and are a SINGLE term.
+		isPath := PathStaråt(name.Canonic) >= 0
+		pathStart := -1
+		if !isPath {
+			pathStart = PathStart(tagExpr)
+			if pathStart >= 0 {
+				// TODO split at hit, and be literal (and only trim whitespace on right)
+
+				// trip space on right:
+				pathPart := tagExpr[pathStart:]
+				pathPart = strings.TrimRight(pathPart, " \t\r\n")
+				tagExpr = tagExpr[:pathStart]
+			}
+		}
+	*/
 
 	// Cleanup into two operators: With and Then (commutative and non-commutative summation)
 	tagExpr = sWithOperators.ReplaceAllString(tagExpr, CanonicWith)
@@ -170,12 +197,22 @@ func PathStart(text string) int {
 	return -1
 }
 
+// Returns highest possible value UID value (constant)
 func MaxID() UID {
 	return UID{UID_0_Max, UID_1_Max}
 }
 
+// Returns reserved UID denoting a match with any UID value
 func WildcardID() UID {
 	return UID{UID_0_Max, UID_1_Wildcard}
+}
+
+// Returns reserved tag.Name denoting a match with any UID value..
+func Wildcard() Name {
+	return Name{
+		ID:      WildcardID(),
+		Canonic: "*",
+	}
 }
 
 func UID_FromUUID(uuid uuid.UUID) UID {
@@ -287,10 +324,10 @@ func (id UID) Midpoint(oth UID) UID {
 
 	// Divide the 128-bit sum by 2 (right shift by 1)
 	// This requires shifting across the 64-bit boundary
-	return UID{
-		(sum[0] >> 1) | (carry << 63),
-		(sum[1] >> 1) | ((sum[0] & 1) << 63),
-	}
+	m0 := (sum[0] >> 1) | (carry << 63)
+	m1 := (sum[1] >> 1) | ((sum[0] & 1) << 63)
+
+	return UID{m0, m1}
 }
 
 // This operator is commutative and associative, and is used to generate a new ID from two existing ones.
