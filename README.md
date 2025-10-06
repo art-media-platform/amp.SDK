@@ -1,14 +1,14 @@
 # art.media.platform.SDK
 _A fully provisioned solution for files, media, and 3D asset sharing and deployment that we can all agree on._
 
-**_art.media.platform_** ("Amp") is a potent 3D client-to-infrastructure suite that provides a secure, scalable, and extensible runtime for 3D applications. Amp builds 3D geo-spatial and media-centric applications, offering pluggable infrastructure and experiences, allowing artists, publishers, creators, and organizations to control asset deployments and experiences within high-fidelity spatial or geographic environments.
+**_art.media.platform_** ("Amp") is a flexible 3D client-to-infrastructure suite that provides a secure, scalable, and extensible runtime for 3D applications. Amp builds 3D geo-spatial and media-centric applications, offering pluggable infrastructure and experiences, allowing artists, publishers, creators, and organizations to control asset deployments and experiences within high-fidelity spatial or geographic environments.
 
 ## Key Features
 
 - Secure, "turn-key" support for:
   - __3D spaces and linking__: Spatially place media and files and link them to real or virtual space, transforming user accessibility.
-  - __Payment processing__: Built-in payment suite **amp.nile** offers easy integration with [Stripe](https://stripe.com/) and [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/).
-  - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") platforms like _Vision Pro_, _Horizon_, and other OEM ecosystems (e.g., HoloLens, Magic Leap).
+  - __Payment processing__: Built-in payment rails offer easy integration with [Stripe](https://stripe.com/) and [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/).
+  - __Platform coverage__: Ship first-class 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") headsets like Occlus and other OEM ecosystems.
   - __Content deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
   - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [YubiKey](https://yubico.com)).
 
@@ -27,11 +27,11 @@ Meanwhile, _web-based_ 3D frameworks like [Three.js](https://threejs.org/) do no
 ***art.media.platform*** is a bridge and toolbox that allows 3D app developers to focus on their core value proposition. It offers rich support for persistent state, user interfaces, and content immersion, allowing apps to break free of web _and_ OS limitations. _Teams, organizers, artists, engineers, scientists, and ultimately consumers need better tools to richly and safely share assets_.
 
 ### Benefits
-  - __Content distribution__: Choose how to deploy your projects in a way that makes the most sense for your team and budget.
-  - __Flexibility__: Enjoy strategic flexibility in how you publish apps and distribute content.
-  - __Asset management__: Leverage Amp's content deployment system that allows you to deploy content updates without having to deploy new app builds.
-  - __Savings__: Save resources by not maintaining UIs and custom behavior for each OS, web browser, and form factor.
-  - __Cash flow__: Use Amp's payment processing module to monetize your work and receive payments through your Stripe or Payflow account.
+  - __Content__: Reliably deploy your information and files on top of a flexible visual channel system.
+  - __Flexibility__: Get strategic flexibility in how you publish apps and distribute content.
+  - __Asset management__: Deploy content updates without having to publsh new app releases
+  - __Customize__: customize or reskin any UIs and  behavior for each OS, web browser, and form factor.
+  - __Payments__: handle payments through your Stripe or Payflow account.
 
 ## A Next Generation
 
