@@ -54,8 +54,8 @@
                                Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
   27UU90JTPPFQF6NR9P9KXSGQW3   acronyms.like.NBA.NFL.USA.CIA.PRC.and.EU.are.capitalized.since.they.are.spoken.letter.by.letter
 
-                               Words that are not upper case, are considered spoken / phonetic.
-  7H6U8BFCPPVV5JHZ65YHQ15EQG   words.that.are.not.upper.case.are.considered.spoken-phonetic
+                               Words that are not upper case, are considered spoken (phonetic).
+  177M6FRR5XF33KVG43B7SYH0VT   words.that.are.not.upper.case.are.considered.spoken.(phonetic)
 
                                This also means we can communicate proper nouns and titles easily, such as A Game Of Thrones
   7156SS66FVU6BMDZ985V32K06B   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones

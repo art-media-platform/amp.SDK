@@ -30,7 +30,7 @@ however, dashes, colons and slashes are order-dependent! yES! Order dependent!
 
 Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
 
-Words that are not upper case, are considered spoken / phonetic.
+Words that are not upper case, are considered spoken (phonetic).
 
 This also means we can communicate proper nouns and titles easily, such as A Game Of Thrones
 This also means we can communicate proper nouns and titles easily, such as Game of Thrones, A.

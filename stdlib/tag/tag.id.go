@@ -1,7 +1,6 @@
 package tag
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/bufs"
 	"github.com/gofrs/uuid/v5"
@@ -64,83 +64,66 @@ func (name Name) IsWildcard() bool {
 // With() is a communative tag.UID operator that combines twåo tag.IDs into a new tag.UID.
 //
 // a tag.Name converts to a "blind" tag.UID as well as a canonic string representation.
-func (name Name) With(tagExpr string) Name {
+func (name Name) With(expr string) Name {
 
-	if tagExpr == CanonicWildcard {
+	if expr == CanonicWildcard {
 		return Wildcard()
 	}
 
-	/*
-		// TODO: enhance grammar: if a '/' or '\' is present, the tag is considered a path or URL.
-		//     - then remove CanonicThen.
-		// Onward from that slash, whitespace and case are preserved and are a SINGLE term.
-		isPath := PathStaråt(name.Canonic) >= 0
-		pathStart := -1
-		if !isPath {
-			pathStart = PathStart(tagExpr)
-			if pathStart >= 0 {
-				// TODO split at hit, and be literal (and only trim whitespace on right)
-
-				// trip space on right:
-				pathPart := tagExpr[pathStart:]
-				pathPart = strings.TrimRight(pathPart, " \t\r\n")
-				tagExpr = tagExpr[:pathStart]
-			}
+	/* TODO: for each URL detected (space delimited), treat each as a literal?
+	var uriSuffix string
+	if PathStart(name.Canonic) < 0 {
+		if idx := PathStart(expr); idx >= 0 {
+			uriSuffix = strings.TrimRight(expr[idx:], " \t\r\n")
+			expr = expr[:idx]
 		}
+	}
 	*/
 
-	// Cleanup into two operators: With and Then (commutative and non-commutative summation)
-	tagExpr = sWithOperators.ReplaceAllString(tagExpr, CanonicWith)
-	tagExpr = sThenOperators.ReplaceAllString(tagExpr, CanonicThen)
-	terms := []byte(tagExpr)
-	termsLower := bytes.ToLower(terms)
-	termsUpper := bytes.ToUpper(terms)
+	expr = sWithOperators.ReplaceAllString(expr, CanonicWith)
+	expr = sThenOperators.ReplaceAllString(expr, CanonicThen)
 
-	body := make([]byte, 0, len(name.Canonic)+len(terms))
-	body = append(body, []byte(name.Canonic)...)
+	exprLen := len(expr)
+	var body strings.Builder
+	body.Grow(len(name.Canonic) + exprLen)
+	body.WriteString(name.Canonic)
 
 	exprID := name.ID
 
-	N := len(terms)
-	for i := 0; i < N; {
+	for i := 0; i < exprLen; {
+
+		// detect operator
 		op := CanonicWithChar
-
-		// extract operator
-		for ; i < N; i++ {
-			c := terms[i]
-			if c == CanonicThenChar {
-				op = c
-			} else if c != CanonicWithChar {
-				break
+		for ; i < exprLen; i++ {
+			switch expr[i] {
+			case CanonicWithChar:
+			case CanonicThenChar:
+				op = CanonicThenChar
+			default:
+				goto literal
 			}
 		}
+		continue
 
-		// find end of tag literal
+	literal:
 		start := i
-		lowerCount := 0
-		for ; i < N; i++ {
-			c := terms[i]
-			if c == CanonicWithChar || c == CanonicThenChar {
-				break
-			}
-			if c == termsLower[i] && c != termsUpper[i] {
-				lowerCount++
-			}
+		runLen := strings.IndexAny(expr[i:], allOperators)
+		if runLen < 0 {
+			runLen = exprLen - i
 		}
-		if i == start {
+		i += runLen
+
+		if start == i {
 			continue // skip empty terms
 		}
 
-		// lower-case is canonic unless literal is a single character or ALL upper-case
-		termLen := i - start
-		var term []byte
-		if termLen == 1 || lowerCount > 0 {
-			term = termsLower[start:i]
-		} else {
-			term = terms[start:i]
+		// fully capitalized literals remain upper case, e.g. NBA, USA, YMCA
+		term := expr[start:i]
+		if utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
+			term = strings.ToLower(term)
 		}
 
-		termID := UID_HashLiteral(term)
+		termID := UID_HashLiteral([]byte(term))
 		switch op {
 		case CanonicWithChar:
 			exprID = exprID.With(termID)
@@ -149,17 +132,19 @@ func (name Name) With(tagExpr string) Name {
 		}
 
 		// ({tag_operator}{tag_literal})...
-		if len(body) > 0 || op != CanonicWithChar {
-			body = append(body, op)
+		if body.Len() > 0 || op != CanonicWithChar {
+			body.WriteByte(op)
 		}
-		body = append(body, term...)
+		body.WriteString(term)
 	}
 
 	return Name{
 		ID:      exprID,
-		Canonic: string(body),
+		Canonic: body.String(),
 	}
 }
+
+const allOperators = CanonicWith + CanonicThen
 
 // LeafTags splits the tag spec the given number of tags for the right.
 // E.g. LeafTags(2) on "a.b.c.d.ee" yields ("a.b.c", "d.ee")
