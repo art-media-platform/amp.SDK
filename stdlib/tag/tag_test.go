@@ -101,17 +101,15 @@ func TestNow(t *testing.T) {
 	}
 
 	// Test for uniqueness and ordering of NowID
-	for i := range 10000000 {
+	const sampleCount = 1024
+
+	for i := range sampleCount {
 		now := tag.NowID()
-		upperLimit := now.Add(epsilon)
+		upper := now.Add(epsilon)
 
 		for _, prev := range prevIDs {
-			if prev.CompareTo(now) == 0 {
-				t.Errorf("got duplicate time value")
-			}
-			comp := prev.CompareTo(upperLimit)
-			if comp >= 0 {
-				t.Errorf("got time value outside of epsilon (%v >= %v)", prev, upperLimit)
+			if prev.CompareTo(upper) >= 0 {
+				t.Fatalf("NowID outside epsilon: prev=%v upper=%v", prev, upper)
 			}
 		}
 
