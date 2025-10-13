@@ -12,7 +12,7 @@ _A fully provisioned solution for files, media, and 3D asset sharing and deploym
   - __Content deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
   - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [YubiKey](https://yubico.com)).
 
-- Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes through convenient bindings — available in the **amp.SDK**.
+- Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes via C bindings or local TCP.
 
 - A lightweight, stand-alone native shared library **amp.lib** that encapsulates federated and decentralized services and storage.
 
