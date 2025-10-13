@@ -275,3 +275,11 @@ func (v *Report) New() amp.Value {
 func (v *Report) MarshalToStore(in []byte) (out []byte, err error) {
 	return amp.MarshalPbToStore(v, in)
 }
+
+func (v *MediaItem) MarshalToStore(dst []byte) ([]byte, error) {
+	return amp.MarshalPbToStore(v, dst)
+}
+
+func (v *MediaItem) New() amp.Value {
+	return &MediaItem{}
+}

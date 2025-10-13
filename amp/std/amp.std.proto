@@ -88,10 +88,6 @@ message CameraOptions {
     int32  ShowUnits   = 4; // level of detail
 }
 
-message VisPreset {
-    amp.Tag AssetTag = 1; // asset tag to apply the preset to
-    string  Args     = 2;
-}
 
 // FileInfo a general-purpose file system meta info block.
 message FileInfo {
@@ -195,4 +191,52 @@ enum PointFormat {
     PointFormat_H3  = 1; // (H3)      (1) uint64: lat,lng, (res)
     PointFormat_S2T = 2; // (S2, T)   (2) uint64: lat,lng, (res), UTC64
     PointFormat_H3T = 3; // (H3, T)   (2) uint64: lat,lng, (res), UTC64
+}
+
+
+// MediaItem wraps a media track, feature, featurette, collection, album, or playlist.
+message MediaItem {
+    MediaFlags Flags      = 1; // describes this item
+    amp.Tag    Tag        = 3; // free use
+    double     StartAt    = 5; // starts playback at the given seconds offset
+    double     Seconds    = 6; // playback duration in seconds
+
+    float      Popularity = 16; // 0.0 to 1.0
+    float      Ordering   = 17; // items are sorted by this value
+
+    // string              CommonName = 1;
+    // string              DebugLabel = 2;
+    // bool                RequiresSubscription = 10;
+    // bool                RequiresInternet     = 11;
+}
+
+
+enum MediaFlags {
+    MediaFlags_None                = 0;
+
+    MediaFlags_IsLive              = 0x0001;
+    MediaFlags_IsSeekable          = 0x0002;
+    MediaFlags_IsUnending          = 0x0004;
+    MediaFlags_NewChapter          = 0x0008;
+    MediaFlags_NewTrack            = 0x0010;
+
+    MediaFlags_HasAudio            = 0x0100;
+    MediaFlags_HasVideo            = 0x0200;
+    MediaFlags_HasSpeech           = 0x0400;
+    MediaFlags_NeedsNetwork        = 0x0800;
+
+    // When set, the user is more likely to skipping short intervals than switch media items.
+    MediaFlags_SkipIsLikely        = 0x01000000;
+
+}
+
+
+message VisPreset {
+    std.TextItem    CommonName = 1; // aka screen name
+    std.TextItem    FamilyName = 2; // aka GroupName
+    std.TextItem    Credits    = 3;
+    string          AssetURI   = 6;
+    repeated string AssetArgs  = 7; // args passed to vis
+
+    //repeated string Tags       = 10; // convention classification tags within amp
 }

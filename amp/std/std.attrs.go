@@ -40,7 +40,12 @@ var (
 	ItemBehaviors = ItemAttr.With("Tags.behaviors").ID
 	ItemGlyphs    = ItemAttr.With("Tags.glyphs").ID
 	ItemLinks     = ItemAttr.With("Tags.links").ID
+
+	MediaItemID    = ItemAttr.With("av.MediaItem").ID
+	MediaReleaseID = ItemAttr.With("av.Tag.MediaRelease").ID
 )
+
+const ()
 
 const (
 	DDC_MaxFraction = uint64(999999999 + 1) // 9 digits (000.123456789)
@@ -48,6 +53,8 @@ const (
 	DDC_to_Fixed    = float64(uint64(1)<<31) / DDC_Max
 	// PublicTag_Category     = uint64(2541) << 32        // uint64(25.41 * DDC_to_Fixed) TODO
 	// PublicTag_Category_DDC = PublicTag_Category + 1851 // Dewey Decimal Classification
+
+	BulletSeparator = " · "
 )
 
 // Constructs a standard tag.UID expressing "{DDC_Whole}.{DDC_Decimal}"
