@@ -2,7 +2,6 @@ package tag
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/bits"
 	"regexp"
@@ -19,8 +18,6 @@ import (
 var (
 	sWithOperators = regexp.MustCompile(WithOperators) // regex for tag processing
 	sThenOperators = regexp.MustCompile(ThenOperators) // regex for tag processing
-
-	ErrUnrecognizedFormat = errors.New("unrecognized ID format")
 )
 
 // Parses the given tag name or expression into its canonic form. canonic
@@ -91,9 +88,8 @@ func (name Name) With(expr string) Name {
 	exprID := name.ID
 
 	for i := 0; i < exprLen; {
-
-		// detect operator
 		op := CanonicWithChar
+
 		for ; i < exprLen; i++ {
 			switch expr[i] {
 			case CanonicWithChar:
@@ -264,7 +260,6 @@ const (
 
 	p1 = (uint64(1) << 63) - 471
 	p2 = (uint64(1) << 62) - 143
-	p3 = (uint64(1) << 55) - 99
 )
 
 var gEntropy = uint64(1<<63) - 301

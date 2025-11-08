@@ -670,7 +670,7 @@ func (m *CrateSnapshot) GetCrates() []*CrateInfo {
 type AppVars struct {
 	// AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
 	AppDomain string `protobuf:"bytes,2,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"`
-	// AppDesc succinctly describes this org and is for humans.
+	// AppDesc is a short human readable description of AppDomain
 	AppDesc string `protobuf:"bytes,4,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
 	// OrgHomeURL is the home link for this org (e.g. "https://plan-systems.org")
 	OrgHomeURL string `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"`

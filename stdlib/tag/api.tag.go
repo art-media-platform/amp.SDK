@@ -1,5 +1,9 @@
 package tag
 
+import (
+	"errors"
+)
+
 type (
 
 	// UID is a 16-byte universally unique identifier and/or is a timestamp with discrete fixed precision.
@@ -11,24 +15,25 @@ type (
 
 	// tag.Name expresses a set UTF-8 literals and its corresponding hash (UID).
 	//
-	//	tag.Name := "[{TagOp}*[{utf8_token}]*"
+	//	tag.Name := "[{TagOp}*[{utf8_literal}]*"
 	Name struct {
 		ID      UID    // hash of any art-media-platform or other tag expression
 		Canonic string // optional UTF-8 canonic tag expression that generates Name.ID
-	}
-
-	ElementID struct {
-		NodeID UID //   00:16   host channel; has associated access control list (ACL)
-		AttrID UID //   16:32   attribute schema; specifies how ItemID is interpreted
-		ItemID UID //   32:48   inline element ID implied by AttrID (e.g. coordinates, timestamp, hash)
 	}
 
 	// Addresses a value element in amp's CRDT schema.
 	//
 	// When EditID is zero, this signals to get/set the most appropriate EditID.
 	Address struct {
-		ElementID
-		EditID UID //   48:64   Midpoint(edit_time, replace_time)
+		ElementID     //   00:48   NodeID, AttrID, ItemID
+		EditID    UID //   48:64   Midpoint(edit_time, replace_time)
+	}
+
+	// ElementID uniquely identifies a value element in amp's CRDT schema.
+	ElementID struct {
+		NodeID UID //   00:16   host channel; has associated access control list (ACL)
+		AttrID UID //   16:32   attribute schema; specifies how ItemID is interpreted
+		ItemID UID //   32:48   inline element ID implied by AttrID (e.g. coordinates, timestamp, hash)
 	}
 
 	// AddressLSM is an Address serialized into its corresponding LSM key format.
@@ -56,9 +61,9 @@ const (
 	UID_1_Wildcard   = 0xFFFFFFFFFFFFFFFA   // match any UID
 	UID_1_Drop       = 0xFFFFFFFFFFFFFFFD   // drop entire attribute (all items) or singular item
 
-	WithOperators   = `[\.+\s,!?]+`  // commutative (symmetric) binary delimiters
-	ThenOperators   = `[\-/\\~:^@]+` // non-commutative binary or unary delimiters
-	GroupDelimiters = `[]()<>{}¿?¡!` // TODO: group delimiter pairs
+	WithOperators   = `[\.+\s,!?]+`  // commutative operators
+	ThenOperators   = `[\-/\\~:^@]+` // non-commutative operators
+	GroupDelimiters = `[]()<>{}`     // TODO: group delimiter pairing?
 
 	// Reserved tag name that denotes a wildcard match
 	CanonicWildcard = "*"
@@ -70,4 +75,8 @@ const (
 
 	CanonicThen     = "-"
 	CanonicThenChar = byte('-')
+)
+
+var (
+	ErrUnrecognizedFormat = errors.New("unrecognized ID format")
 )
