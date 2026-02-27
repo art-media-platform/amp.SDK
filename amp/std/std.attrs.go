@@ -68,7 +68,7 @@ func PublicTag_DDC(geoTile uint64, DDC_Whole, DDC_Decimal uint32) tag.UID {
 
 const (
 	// URL prefix for a glyph and is typically followed by a media (mime) type.
-	ContentGlyphURI = "amp:glyph/"
+	ContentGlyphURI = "asset:glyph/"
 
 	GenericImageType = "image/*"
 	GenericAudioType = "audio/*"
