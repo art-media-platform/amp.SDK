@@ -1,28 +1,29 @@
 # art.media.platform.SDK
-_...a file, media, and 3D asset sharing framework that we can all agree on..._
+_a file, media, and 3D asset sharing framework that we can all agree on..._
 
-**_art.media.platform_** ("amp") is a 3D client-to-infrastructure suite that provides an easy-to-use runtime for client-facing 3D applications that interoperate with your infrastructure. This framework builds geospatial and media-centric applications, offering pluggable infrastructure and experiences, allowing artists, publishers, creators, and organizations to _gate_ and _deliver_ assets within controlled, high-fidelity 3D environments.
+**_art.media.platform_** ("amp") is a 3D client-to-infrastructure suite that provides an easy-to-use runtime for client-facing 3D applications that interoperate with your infrastructure. This framework builds geospatial and media-centric applications, offering pluggable infrastructure and experiences for artists, publishers, creators, and organizations to _gate_ and _deliver_ assets within high-fidelity 3D environments within your complete control.
 
 ## Key Features
 
+- Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your client app invokes.
+
+- Furnishes federated and decentralized services and storage, effectively offering a real-time 3D based UI experience for your infrastructure and each privacy container.
+
 - Turnkey support for:
-  - __3D spaces and linking__: Place links and content in real or virtual space, transforming user accessibility.
-  - __Platform coverage__: Ship native 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") headsets like Oculus and other OEM ecosystems.
-  - __Content deployment__: Amp's "crate" system provides asset and SKU independence from your marketing and engineering release cycles.
-  - __Integrated security__: Full support for third-party providers and hardware-based authentication & signing (e.g., [YubiKey](https://yubico.com)).
-  - __Payment processing__: Built-in payment rails integrate with [Stripe](https://stripe.com/) and [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/).
+  - __3D spaces and linking__: place links and content in real or virtual space, transforming user accessibility.
+  - __Platform coverage__: ship native 3D experiences on _Windows_, _Mac_, _Linux_, _Android_, _iOS_, and AR/VR ("XR") headsets like Oculus and other OEM ecosystems.
+  - __Content deployment__: ship content in "crates" that provide asset and SKU independence from your marketing and engineering release cycles.
+  - __Integrated security__: support for third-party providers and hardware-based authentication & signing (e.g., [YubiKey](https://yubico.com)).
+  - __Payment processing__: integrated payment rails for your [Stripe](https://stripe.com/) or [Payflow](https://developer.paypal.com/api/nvp-soap/payflow/payflow-gateway/) account.
 
-- Integrates with **[Unity](https://unity.com)** and **[Unreal](https://unrealengine.com)** via an embedded **[Go](https://golang.org)** native library that your 3D app invokes via C bindings or TCP.
-
-- A lightweight, stand-alone native shared library **amp.lib** that encapsulates federated and decentralized services and storage.
 
 ## What Does This Solve?
 
 Traditional file and asset management systems are inadequate for hundreds or thousands of items. Teams often resort to makeshift solutions for collaboration and sharing, compromising efficiency and security.
 
-Teams that collaborate over large file sets often deploy using production systems that are entirely different from their development workflows. Many sharing and collaboration solutions exist, but they lack native spatial linking and native 3D content integration while suffering from inflexible, confining web- or OS-based user experiences.
+Teams that collaborate over large file sets often deploy using production systems that are entirely different from their development workflows. Many sharing and collaboration solutions exist, but they lack spatial linking and native 3D content integration while suffering from inflexible, confining web- or OS-based user experiences.
 
-Meanwhile, web-based 3D frameworks like [Three.js](https://threejs.org/) do not match platform-native experiences or offer a path for real-world asset deployments. For example, 3D experiences often require asset deployments exceeding many gigabytes, which are impractical through a web browser. Worse, web stacks pose blockers that publishers have little or no ability to address, such as texturing features, poor performance, or animation issues.
+Generally, web-based 3D frameworks like [Three.js](https://threejs.org/) do not match platform-native experiences or offer a path for real-world asset deployments. For example, 3D experiences often require asset deployments exceeding many gigabytes, which are impractical through a web browser. Worse, web stacks block creators from advanced texturing, high performance, or fine animation.
 
 ***art.media.platform*** is a bridge and toolbox that allows 3D app developers to focus on their core value proposition. It offers support for persistent state, user interfaces, and content immersion, allowing apps to break free of web _and_ OS limitations. _Teams, organizers, artists, engineers, scientists, and consumers need better tools to richly and safely share assets_.
 
@@ -37,7 +38,7 @@ Meanwhile, web-based 3D frameworks like [Three.js](https://threejs.org/) do not 
 
 Previous [generations](https://github.com/plan-systems/plan-go/tags) of this work went into production in 2019 to become [PLAN 3D](https://plan-systems.org/plan-technology-components/). This [architectural](https://github.com/plan-systems/design-docs) trajectory is a step in the evolution of 3D application building.
 
-In a world where AI-assisted exploits will only worsen, our [security model](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md) prioritizes security and privacy. It uses nested containers and offers "state-grade" protection — while the client runtime delivers native 3D experiences for businesses, organizations, and creatives.
+In a world where AI-assisted exploits are intensifying, amp's [security model](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md) prioritizes security and privacy. Nested containers use industry-standard encryption and signing protection while the client runtime delivers native 3D experiences for businesses, organizations, and creatives.
 
 ### Spatial Web
 
@@ -85,40 +86,3 @@ At a high level:
 
 
 
-
-
-
-
-to add:
-- abstract: success through shedding surface area
-    - the amp framework has an interestingly small surface area.
-- tag system good for fuzzy matching
-- UID system good for secure mode
-- UIDs don't have overhead of strings; zero alloc
-- performance advantage with time based UIDs (time locality)
-- Name is contextual (Text
-- built in secutiry
-- use sound spectrum menus ***
-- i would even posit that any system that stores priv keys in a string is insecure by modern security standards:
-     - in amp as of v705, a UID 16 inline bytes.  In cases where wider bytes or more are needed, system is trivially expanded
-    - you can imagine 16 (current), 24 or 32 byte UID builds for the security-philes.
-    - 16 is nice because it allows for this nice bagdes -- (amp.dev.) badge
-    - key point: inline fixed means, struct (stack) alloc for free, GC load reduction,
-    -  high performance security and hash-naming tag secutiry
-    - AI friendly
-    - AI not needed for basic tag matching and ranking (safety and power consumption)
-    -
-
-    - amp aims aspires to protect family and allies with easy to use customozable machinery to families, organizations and allies to protect themsleves and their digital media.   We're doing what minecraft and roblox have done, but solve the child preditor problem by reversing securiting and taking back secure enclaves using the amp.SDK
-
-    - what is the branding for amp.tag.spec?  a browser.  can we get TMP to highlight any.name-tag.gone.with.the.wind?
-    - a simpler markdown / wiki
-
-    - this could be big
-    - the amp tagging convention is just borrowed from the alt.messages.forums.pets (now with a #)
-
-
-  " Pivacy by Default!"  (tagline)
-
-    - free mind
-    - python securiity
