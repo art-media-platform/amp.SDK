@@ -293,7 +293,7 @@ enum Enable {
 
 
 enum UriScheme {
-    UriScheme_Nil      = 0;
+    UriScheme_Unknown  = 0;
     UriScheme_Reserved = 1;  // reserved
 
     UriScheme_Path     = 2;  // "[/]any/posix/pathname" (no scheme)
