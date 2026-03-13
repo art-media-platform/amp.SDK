@@ -4,7 +4,6 @@ import (
 	"encoding/base32"
 	"encoding/hex"
 	"encoding/json"
-	"strings"
 
 	"reflect"
 )
@@ -33,14 +32,21 @@ func EncodeToBase32(in []byte) string {
 		return "0"
 	}
 	str := Base32Encoding.EncodeToString(in)
-	str = strings.TrimLeft(str, "0") // remove leading zeros
-	if str != "" {
-		return str
+	start := -1
+	for i := 0; i < len(str); i++ {
+		if str[i] != '0' {
+			start = i
+			break
+		}
 	}
-	return "0"
+	if start < 0 {
+		return "0"
+	}
+	return str
 }
 
-// Zero zeros out a given slice
+
+// Zeros out a given slice
 func Zero(buf []byte) {
 	N := int32(len(buf))
 	for i := int32(0); i < N; i++ {
