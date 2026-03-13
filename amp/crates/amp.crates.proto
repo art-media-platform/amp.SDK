@@ -222,6 +222,12 @@ enum AssetFlags {
     // These objects should be opaque and have colliders attached to them
     // e.g.  a building, a terrain formation, a wall
     IsSurface               = 0x1000;
+
+    // IsVisualLayer denotes the asset contains a VisualLayer component.
+    IsVisualLayer           = 0x2000;
+
+    // IsVisualScope denotes the asset contains a VisualScope component
+    IsVisualScope           = 0x4000;
 }
 
 // Enum values should be three base-10 digits corresponding to the major, minor, and revision number.
