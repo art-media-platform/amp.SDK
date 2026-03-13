@@ -53,7 +53,7 @@ const (
 	ElementLSM_Size = 3 * UID_Size // NodeID, AttrID, ItemID
 	AddressLSM_Size = 4 * UID_Size // NodeID, AttrID, ItemID, EditID
 
-	PackageTags      = "amp.spec.tag.v705"
+	PackageTags      = "amp.spec.tag.v706"
 	UID_Size         = 16                   // UID octet size
 	UID_Base32Length = (8*UID_Size + 4) / 5 // max base32 encoding length of a UID
 	UID_0_Max        = 0xFFFFFFFFFFFFFFFF   // max allowed value of UID[0] (inclusive)
@@ -61,20 +61,16 @@ const (
 	UID_1_Wildcard   = 0xFFFFFFFFFFFFFFFA   // match any UID
 	UID_1_Drop       = 0xFFFFFFFFFFFFFFFD   // drop entire attribute (all items) or singular item
 
-	WithOperators   = `[\.+\s,!?]+`  // commutative operators
-	ThenOperators   = `[\-/\\~:^@]+` // non-commutative operators
-	GroupDelimiters = `[]()<>{}`     // TODO: group delimiter pairing?
+	// Splits a tag expression into component literals, splitting on common punctuation and whitespace.
+	SeparatorRegex = `[\s\.,!:¿?"&\(\)\[\]\{\}\<\>+-]+`
 
 	// Reserved tag name that denotes a wildcard match
 	CanonicWildcard = "*"
 
-	// The "with" delimiter can be thought of as ADD or SUM and combines two terms in a commutative way like addition.
+	// Separates literals in a canonic tag string.
 	// A '.' by convention helps visually identify a tag string, it's compatible with domain names, and is already a familiar scoping character.
-	CanonicWith     = "."
-	CanonicWithChar = byte('.')
-
-	CanonicThen     = "-"
-	CanonicThenChar = byte('-')
+	CanonicSeparator     = "."
+	CanonicSeparatorChar = byte('.')
 )
 
 var (

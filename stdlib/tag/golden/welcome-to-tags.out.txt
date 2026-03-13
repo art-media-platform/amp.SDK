@@ -1,5 +1,5 @@
-                               amp.spec.tag.v705  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  5MUHRRC000DHZWZ746N7GB4DT2   amp.spec.tag.v705.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                               amp.spec.tag.v706  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+  39GRE8B5PD3KJ5MW2TR3VPD4KZ   amp.spec.tag.v706.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                Hello World!
   7K4XGBQ7879D4F228U0CU1N627   hello.world
@@ -13,22 +13,28 @@
   7K4XGBQ7879D4F228U0CU1N627   world.hello
 
                                Hello and welcome to tags!
-   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
+  0MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
                                hello, and welcome to tags!
-   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
+  0MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
                                hello, and Welcome to tags!!
-   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
+  0MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
                                hello, and..welcome to... tags.
-   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
-                               hello+and+welcome+to+tags
-   MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
+  0MCB6HD2G4SK2MDEYPCCQTS27Y   hello.and.welcome.to.tags
 
+                               UTF8 whitespace, commas, periods, and other common punctuation separate tag literals.   Each literal is hashed and is summed with the other literals.  Because addition is commutative, the final hash is not dependent on the *order* of the literals.
+  4VKB1MHN9J4YTYZPQ7HRZT5TBT   UTF8.whitespace.commas.periods.and.other.common.punctuation.separate.tag.literals.each.literal.is.hashed.and.is.summed.with.the.other.literals.because.addition.is.commutative.the.final.hash.is.not.dependent.on.the.*order*.of.the.literals
 
-                               UTF8 whitespace, commas, +, and . denote the "with" operator.   This operator adds the hash of each operand and is also therefore commutative.
-  7YUZXWWQU01YFZJ854ZUQZ24FT   UTF8.whitespace.commas.and.denote.the."with".operator.this.operator.adds.the.hash.of.each.operand.and.is.also.therefore.commutative
+                               12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
+  12VWSDH3ZB4W0ZY5RHVM9ZZGHP   12.words.randomly.chosen.from.but.not.limited.to.the.english.dictionary.exceeds.10^56.possible.combinations.for.reference.that's.over.10.million.times.the.number.of.possible.bitcoin.public.addresses.2^160
+
+                               We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestors.
+  061HTS096CDKX7F7GWDB9GKJ3K   we.can.cite.12VWSDH3ZB4W0ZY5RHVM9ZZGHP.and.4VKB1MHN9J4YTYZPQ7HRZT5TBT.as.literals.demonstrating.a.convenient.way.to.cryptographically.chain.and.validate.tags.allowing.us.to.validate.ancestors
+
+                               Expressing 061HTS096CDKX7F7GWDB9GKJ3K with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
+  1UZ66RR7CKRNNT0D3DKG8NWHZM   expressing.061HTS096CDKX7F7GWDB9GKJ3K.with.S2.geo.tiles.8D489E34600637F.and.872AA845ADF325.demonstrates.how.locations.can.be.also.be.bound.and.chained.together.in.this.system.this.offers.easy.DIY.layering.of.security.and.permissions
 
                                Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
-  1UZHHM1C379XRUVNPBPDGNDH09   text.having."homophone.case".or."homophonic.case".means.its.component.words.are.considered.interchangeable.with.words.that.sound.the.same.but.have.different.spelling
+  388C8HB1N9H7W7EGC2P2XZ72HH   text.having.homophone.case.or.homophonic.case.means.its.component.words.are.considered.interchangeable.with.words.that.sound.the.same.but.have.different.spelling
 
                                The words Center, center, centre, and Centre are homophonic.
   32ZY9SY9H8B37QJ3VYDVS0CRHV   the.words.center.center.centre.and.centre.are.homophonic
@@ -37,25 +43,17 @@
                                The words Centre, centre, center, and Center are homophonic.
   32ZY9SY9H8B37QJ3VYDVS0CRHV   the.words.centre.centre.center.and.center.are.homophonic
 
-                               This has very helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
-  6R3YVG7G6DTH5SUNGJCVDF3K2J   this.has.very.helpful.implications.for.those.with.sight.or.hearing.impairments.or.in.search.result.ranking.since.the.query.word.order.is.usually.less.important.the.presence.of.particular.words.especially.once.there.are.dozen.words.or.more
+                               This has helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
+  2K1QXQ4R7WM7BH9DF32BQJU2W9   this.has.helpful.implications.for.those.with.sight.or.hearing.impairments.or.in.search.result.ranking.since.the.query.word.order.is.usually.less.important.the.presence.of.particular.words.especially.once.there.are.dozen.words.or.more
 
-                               However, colons, dashes and slashes are order dependent!?  Yes, order-dependent!
-  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.colons.dashes.and.slashes.are.order.dependent.yes.order-dependent
-                               However, colons, dashes and slashes are order dependent?!  yes, order-dependent
-  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.colons.dashes.and.slashes.are.order.dependent.yes.order-dependent
-                               However, Slashes, colons and dashes are order dependent?  Yes, order-dependent
-  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.slashes.colons.and.dashes.are.order.dependent.yes.order-dependent
-                               However, Order-dependent?  Yes, colons, slashes, and dashes are order dependent.
-  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.order-dependent.yes.colons.slashes.and.dashes.are.order.dependent
-                               however, dashes, colons and slashes are order-dependent! yES! Order dependent!
-  1MV9TTCWB1RCEVVRNQ4ZVJ2M3E   however.dashes.colons.and.slashes.are.order-dependent.yes.order.dependent
+                               Most punctuation is dropped since we want searches to degrade with leading or trailing closures or quotes (<>, (), {}, "" [])
+  4ZD6K8WMH680R9XH7G8ZRNEK3M   most.punctuation.is.dropped.since.we.want.searches.to.degrade.with.leading.or.trailing.closures.or.quotes
 
                                Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
   27UU90JTPPFQF6NR9P9KXSGQW3   acronyms.like.NBA.NFL.USA.CIA.PRC.and.EU.are.capitalized.since.they.are.spoken.letter.by.letter
 
                                Words that are not upper case, are considered spoken (phonetic).
-  177M6FRR5XF33KVG43B7SYH0VT   words.that.are.not.upper.case.are.considered.spoken.(phonetic)
+  2HX4SKP7Y9REKD82K2PMT591UX   words.that.are.not.upper.case.are.considered.spoken.phonetic
 
                                This also means we can communicate proper nouns and titles easily, such as A Game Of Thrones
   7156SS66FVU6BMDZ985V32K06B   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
@@ -64,8 +62,8 @@
                                This also means we can communicate proper nouns and titles easily, such as a game of thrones.
   7156SS66FVU6BMDZ985V32K06B   this.also.means.we.can.communicate.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
 
-                               Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL-CAPS should be used intentionally.
-  61C11BTJ56VNEZN5JYEMFCMW9H   notice.how.acronyms.are.spoken.differently.and.have.their.own.unique.meanings.so.that.means.ALL-CAPS.should.be.used.intentionally
+                               Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL CAPS should be used intentionally.
+  30VPD051C9VBGHSB8MUJ97750S   notice.how.acronyms.are.spoken.differently.and.have.their.own.unique.meanings.so.that.means.ALL.CAPS.should.be.used.intentionally
 
                                ADA is an acronym for the Americans with Disabilities Act, Ms. Ada is a computer programmer.
   3571VFBQ69UFMEDDVWBZR35T29   ADA.is.an.acronym.for.the.americans.with.disabilities.act.ms.ada.is.a.computer.programmer
@@ -76,13 +74,12 @@
                                ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
   3571VFBQ69UFMEDDVWBZR35T29   ADA.is.an.acronym.for.the.americans.with.disabilities.act.a.computer.programmer.ms.ada.is
 
-                               Get into the amp SDK today
-  1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
-                               Get into the amp.SDK today
-  1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
-                               Get into the Amp SDK today
-  1U3SSCB2C09Q689SKQCG93KQ11   get.into.the.amp.SDK.today
-
+                               Get the amp SDK today
+  3ZB9DUEM0ZPHBEXX4FGYZGUVMT   get.the.amp.SDK.today
+                               Get the amp.SDK today.
+  3ZB9DUEM0ZPHBEXX4FGYZGUVMT   get.the.amp.SDK.today
+                               Get the Amp SDK today!!
+  3ZB9DUEM0ZPHBEXX4FGYZGUVMT   get.the.amp.SDK.today
 
                                Yoda said this is not a drill.
   5E34N75EQ85VNX35UJEGHMWQ3P   yoda.said.this.is.not.a.drill
@@ -102,14 +99,4 @@
                                plan.tools.spaces
   6489TXSFTM8BVH9ZRXS81D9URV   plan.tools.spaces
 
-                               12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
-  46YBFW120F9CZF1WFQQZV510GE   12.words.randomly.chosen.from.but.not.limited.to.the.english.dictionary.exceeds.10-56.possible.combinations.for.reference.that's.over.10.million.times.the.number.of.possible.bitcoin.public.addresses.(2-160)
 
-                               The above hash ID 46YBFW120F9CZF1WFQQZV510GE demonstrates a standardized way to precisely witness a set of unordered literals. In creating a subsequent hash ID, we are cryptographically chaining tag sets together.
-  33J23T8JJKXDQX0CKN7K0EWUHB   the.above.hash.ID.46YBFW120F9CZF1WFQQZV510GE.demonstrates.a.standardized.way.to.precisely.witness.a.set.of.unordered.literals.in.creating.a.subsequent.hash.ID.we.are.cryptographically.chaining.tag.sets.together
-
-                               And so by citing both 46YBFW120F9CZF1WFQQZV510GE and 33J23T8JJKXDQX0CKN7K0EWUHB as literals, we can conveniently validate tag relationships and groups.
-   J404QB3QZV2DQTX8NG58D5GGQ   and.so.by.citing.both.46YBFW120F9CZF1WFQQZV510GE.and.33J23T8JJKXDQX0CKN7K0EWUHB.as.literals.we.can.conveniently.validate.tag.relationships.and.groups
-
-                               Hashing J404QB3QZV2DQTX8NG58D5GGQ with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be cryptographically bound together in this system.  This offers easy "DIY" layering of security and permissions.
-  5SQ1CXUYKNV28S3U2D0W2EWZS3   hashing.J404QB3QZV2DQTX8NG58D5GGQ.with.S2.geo-tiles.8D489E34600637F.and.872AA845ADF325.demonstrates.how.locations.can.be.cryptographically.bound.together.in.this.system.this.offers.easy."DIY".layering.of.security.and.permissions

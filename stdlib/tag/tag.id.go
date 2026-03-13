@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	sWithOperators = regexp.MustCompile(WithOperators) // regex for tag processing
-	sThenOperators = regexp.MustCompile(ThenOperators) // regex for tag processing
+	sSeparatorRegex = regexp.MustCompile(SeparatorRegex) // regex for tag processing
 )
 
 // Parses the given tag name or expression into its canonic form. canonic
@@ -27,7 +26,7 @@ func NameFrom(tagName string) Name {
 
 // Parses the given string the best possible.
 func NameParse(tagName string) (name Name, err error) { // TODO: make more robust
-	if strings.IndexByte(tagName, '.') >= 0 {
+	if strings.IndexByte(tagName, CanonicSeparatorChar) >= 0 {
 		name = Name{}.With(tagName)
 		return
 	}
@@ -58,80 +57,51 @@ func (name Name) IsWildcard() bool {
 	return name.ID.IsWildcard() || name.Canonic == CanonicWildcard
 }
 
-// With() is a communative tag.UID operator that combines twåo tag.IDs into a new tag.UID.
-//
-// a tag.Name converts to a "blind" tag.UID as well as a canonic string representation.
+// With() is a communative tag.UID operator that combines a tag.Name with a string expression into a new canonic tag.UID.
 func (name Name) With(expr string) Name {
 
 	if expr == CanonicWildcard {
 		return Wildcard()
 	}
 
-	/* TODO: for each URL detected (space delimited), treat each as a literal?
-	var uriSuffix string
-	if PathStart(name.Canonic) < 0 {
-		if idx := PathStart(expr); idx >= 0 {
-			uriSuffix = strings.TrimRight(expr[idx:], " \t\r\n")
-			expr = expr[:idx]
-		}
-	}
-	*/
-
-	expr = sWithOperators.ReplaceAllString(expr, CanonicWith)
-	expr = sThenOperators.ReplaceAllString(expr, CanonicThen)
-
-	exprLen := len(expr)
+	expr = sSeparatorRegex.ReplaceAllString(expr, string(CanonicSeparatorChar))
 	var body strings.Builder
-	body.Grow(len(name.Canonic) + exprLen)
+	body.Grow(len(name.Canonic) + len(expr))
 	body.WriteString(name.Canonic)
-
 	exprID := name.ID
+	exprLen := len(expr)
 
 	for i := 0; i < exprLen; {
-		op := CanonicWithChar
 
-		for ; i < exprLen; i++ {
-			switch expr[i] {
-			case CanonicWithChar:
-			case CanonicThenChar:
-				op = CanonicThenChar
-			default:
-				goto literal
-			}
+		// ignore leading delimiters
+		for ; i < exprLen && expr[i] == CanonicSeparatorChar; i++ {
 		}
-		continue
-
-	literal:
-		start := i
-		runLen := strings.IndexAny(expr[i:], allOperators)
-		if runLen < 0 {
-			runLen = exprLen - i
-		}
-		i += runLen
-
-		if start == i {
-			continue // skip empty terms
+		if i >= exprLen {
+			break
 		}
 
-		// fully capitalized literals remain upper case, e.g. NBA, USA, YMCA
-		term := expr[start:i]
+		end := strings.IndexByte(expr[i:], CanonicSeparatorChar)
+		if end < 0 {
+			end = exprLen
+		} else {
+			end += i
+		}
+
+		// fully capitalized literals remain upper case, e.g. USA, YMCA
+		term := expr[i:end]
 		if utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
 			term = strings.ToLower(term)
 		}
 
 		termID := UID_HashLiteral([]byte(term))
-		switch op {
-		case CanonicWithChar:
-			exprID = exprID.With(termID)
-		case CanonicThenChar:
-			exprID = exprID.Then(termID)
-		}
+		exprID = exprID.With(termID)
 
-		// ({tag_operator}{tag_literal})...
-		if body.Len() > 0 || op != CanonicWithChar {
-			body.WriteByte(op)
+		if body.Len() > 0 {
+			body.WriteByte(CanonicSeparatorChar)
 		}
 		body.WriteString(term)
+
+		i = end + 1
 	}
 
 	return Name{
@@ -139,8 +109,6 @@ func (name Name) With(expr string) Name {
 		Canonic: body.String(),
 	}
 }
-
-const allOperators = CanonicWith + CanonicThen
 
 // LeafTags splits the tag spec the given number of tags for the right.
 // E.g. LeafTags(2) on "a.b.c.d.ee" yields ("a.b.c", "d.ee")
@@ -153,11 +121,11 @@ func (name Name) LeafTags(n int) (string, string) {
 	R := len(canonic)
 	for p := R - 1; p >= 0; p-- {
 		switch c := canonic[p]; c {
-		case CanonicThenChar, CanonicWithChar:
+		case CanonicSeparatorChar:
 			n--
 			if n <= 0 {
 				prefix := canonic[:p]
-				if c == CanonicWithChar {
+				if c == CanonicSeparatorChar {
 					p++ // omit canonic with operator
 				}
 				return prefix, canonic[p:]
@@ -234,8 +202,6 @@ func UID_FromName(tagsExpr string) UID {
 // Now returns the current local time that is statiscially universally unique.
 func NowID() UID {
 	now := UID_FromTime(time.Now())
-
-	now[1] = mixEntropy(now[1])
 	return now
 }
 
@@ -257,12 +223,7 @@ const (
 	TickStep64  = uint64(0x44B82FA1C)            // (2^64-1) / 1e9 (1ns tick resolution spread over 64 bits)
 	EntropyBits = 34 + 16                        // TickStep64 bits plus needed bits
 	EntropyMask = (uint64(1) << EntropyBits) - 1 // LSB bits to randomize
-
-	p1 = (uint64(1) << 63) - 471
-	p2 = (uint64(1) << 62) - 143
 )
-
-var gEntropy = uint64(1<<63) - 301
 
 // AppendTo appends the UID's 16 bytes to the given byte slice in big-endian order for LSM use.
 func (id UID) AppendTo(dst []byte) []byte {
@@ -384,9 +345,27 @@ func (id UID) WithLiteral(tagLiteral []byte) UID {
 
 // Returns this tag.UID in canonic Base32 form
 func (id UID) Base32() string {
-	var buf [20]byte
-	encode := id.AppendTo(buf[:4])
-	return bufs.EncodeToBase32(encode)
+	x0 := id[0] // MSB
+	x1 := id[1] // LSB
+	out := make([]byte, UID_Base32Length)
+
+	isZero := true
+	for i := len(out) - 1; i >= 0; i-- {
+		b32 := byte(x1) & 0x1F // take the least significant 5 bits
+		if b32 != 0 {
+			isZero = false
+		}
+		out[i] = bufs.Base32Alphabet_Upper[b32]
+
+		x1 = (x0&0x1F)<<59 | (x1 >> 5)
+		x0 >>= 5
+	}
+
+	if isZero {
+		return "0"
+	}
+
+	return string(out)
 }
 
 // AsLabel returns the base32 suffix of this ID in string form for debugging / logging.

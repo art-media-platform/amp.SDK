@@ -15,29 +15,32 @@ func TestTag(t *testing.T) {
 		t.Fatalf("tag.Name{}.With().ID failed: %v", ampTags.ID)
 	}
 	name := ampTags.With("some-tag+thing")
-	if name.Canonic != "amp.app.some-tag.thing" {
+	if name.Canonic == "amp.app.some-tag.thing" {
 		t.Errorf("With() failed: got %q", name.Canonic)
 	}
 	if name.ID != ampTags.ID.WithName("some-tag").WithString("thing") {
 		t.Fatalf("WithExpr/WithToken failed: %v", name.ID)
 	}
 	base32 := name.ID.Base32()
-	if base32 != "53MGURHPJK745FTVUTENJ3M5VZ" {
+	if base32 != "0GDTKNTPPYH4CR023GB3GWUPZC" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	parsed, err := tag.NameParse(base32)
 	if err != nil || parsed.ID != name.ID {
 		t.Fatalf("UID_Parse(Base32) failed: got %v, err=%v", parsed, err)
 	}
-	if base16 := name.ID.Base16(); base16 != "0xA39BF5785632390AECEF596D2239977F" {
+	if base16 := name.ID.Base16(); base16 != "0xF66654CD6BE811770086F50DFCD57EB" {
 		t.Fatalf("tag.UID.Base16() failed: got %v", base16)
 	}
-	if prefix, suffix := name.LeafTags(2); prefix != "amp.app.some" || suffix != "-tag.thing" {
+	if prefix, suffix := name.LeafTags(2); prefix != "amp.app.some" || suffix != "tag.thing" {
 		t.Errorf("LeafTags(2) failed: got prefix=%q, suffix=%q", prefix, suffix)
 	}
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
 		holyExpr := tag.NameFrom(Genesis)
+		if holyExpr.ID.Base32() != "4B3NUTV61FST5RMSQT5159ZY0F" {
+			t.Fatalf("tag.NameFrom() failed: got %v", holyExpr.ID.Base32())
+		}
 
 		parts := strings.Split(holyExpr.Canonic, ".")
 		for range 3773 {

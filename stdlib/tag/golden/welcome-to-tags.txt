@@ -9,10 +9,14 @@ Hello and welcome to tags!
 hello, and welcome to tags!
 hello, and Welcome to tags!!
 hello, and..welcome to... tags.
-hello+and+welcome+to+tags
 
+UTF8 whitespace, commas, periods, and other common punctuation separate tag literals.   Each literal is hashed and is summed with the other literals.  Because addition is commutative, the final hash is not dependent on the *order* of the literals.
 
-UTF8 whitespace, commas, +, and . denote the "with" operator.   This operator adds the hash of each operand and is also therefore commutative.
+12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
+
+We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestors.
+
+Expressing 061HTS096CDKX7F7GWDB9GKJ3K with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
 
 Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
 
@@ -20,13 +24,9 @@ The words Center, center, centre, and Centre are homophonic.
 The words center, Center, Centre, and centre are homophonic.
 The words Centre, centre, center, and Center are homophonic.
 
-This has very helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
+This has helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
 
-However, colons, dashes and slashes are order dependent!?  Yes, order-dependent!
-However, colons, dashes and slashes are order dependent?!  yes, order-dependent
-However, Slashes, colons and dashes are order dependent?  Yes, order-dependent
-However, Order-dependent?  Yes, colons, slashes, and dashes are order dependent.
-however, dashes, colons and slashes are order-dependent! yES! Order dependent!
+Most punctuation is dropped since we want searches to degrade with leading or trailing closures or quotes (<>, (), {}, "" [])
 
 Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
 
@@ -36,17 +36,16 @@ This also means we can communicate proper nouns and titles easily, such as A Gam
 This also means we can communicate proper nouns and titles easily, such as Game of Thrones, A.
 This also means we can communicate proper nouns and titles easily, such as a game of thrones.
 
-Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL-CAPS should be used intentionally.
+Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL CAPS should be used intentionally.
 
 ADA is an acronym for the Americans with Disabilities Act, Ms. Ada is a computer programmer.
 ADA is an acronym for the Americans with Disabilities Act. ms ada is a computer programmer!
 ADA is an acronym for the Americans with Disabilities Act. Ada is a computer programmer, Ms!
 ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
 
-Get into the amp SDK today
-Get into the amp.SDK today
-Get into the Amp SDK today
-
+Get the amp SDK today
+Get the amp.SDK today.
+Get the Amp SDK today!!
 
 Yoda said this is not a drill.
 Yoda said, a drill this is not.
@@ -58,10 +57,3 @@ said a drill, is this not Yoda?
 spaces.plan.tools
 plan.tools.spaces
 
-12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
-
-The above hash ID 46YBFW120F9CZF1WFQQZV510GE demonstrates a standardized way to precisely witness a set of unordered literals. In creating a subsequent hash ID, we are cryptographically chaining tag sets together.
-
-And so by citing both 46YBFW120F9CZF1WFQQZV510GE and 33J23T8JJKXDQX0CKN7K0EWUHB as literals, we can conveniently validate tag relationships and groups.
-
-Hashing J404QB3QZV2DQTX8NG58D5GGQ with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be cryptographically bound together in this system.  This offers easy "DIY" layering of security and permissions.
