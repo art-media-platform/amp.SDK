@@ -142,10 +142,8 @@ message Report {
 }
 
 message Labels {
-    string   Title     = 1;
-    string   Caption   = 2;
-    string   Help      = 3;
-    string   About     = 4;
+    string        Title       = 1;
+    string        About       = 4;
 }
 
 // General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
@@ -230,13 +228,42 @@ enum MediaFlags {
 
 }
 
+// Arg is a any-purpose key/value pair
+message Arg {
+    string Key   = 1;
+    string Value = 2;
+}
+
+enum ColormapFlags {
+    ColormapFlags_None = 0;
+    ColormapFlags_Full = 0x01;
+    ColormapFlags_Back = 0x02;
+    ColormapFlags_Fore = 0x04;
+}
+
+enum SensorFlags {
+    SensorFlags_None    = 0;
+    SensorFlags_GyroUp  = 0x01;
+}
+
+enum AudioFlags {
+    AudioFlags_None     = 0;
+    AudioFlags_FFT      = 0x01;
+}
 
 message VisPreset {
-    std.TextItem    CommonName = 1; // aka screen name
-    std.TextItem    FamilyName = 2; // aka GroupName
-    std.TextItem    Credits    = 3;
-    string          AssetURI   = 6;
-    repeated string AssetArgs  = 7; // args passed to vis
+    std.TextItem    Title       = 1;
+    std.TextItem    Collection  = 2;
+    std.TextItem    Credits     = 3;
 
-    //repeated string Tags       = 10; // convention classification tags within amp
+    ColormapFlags   ColormapFlags = 6;
+    SensorFlags     SensorFlags   = 7;
+    AudioFlags      AudioFlags    = 8;
+
+    float           AspectMin = 10; // y/x lower peg; 0 denotes no min
+    float           AspectMax = 11; // y/x upper peg; 0 denotes no max
+
+    string          AssetURI = 20; // VisShader asset URI
+    repeated Arg    Args     = 21; // free use arguments passed to the asset
 }
+
