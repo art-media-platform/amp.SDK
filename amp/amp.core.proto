@@ -293,10 +293,8 @@ enum Enable {
 
 
 enum UriScheme {
-    UriScheme_Unknown  = 0;
-    UriScheme_Reserved = 1;  // reserved
+    UriScheme_Unspecified = 0;
 
-    UriScheme_Path     = 2;  // "[/]any/posix/pathname" (no scheme)
     UriScheme_Http     = 5;  // "http:/..."
     UriScheme_Https    = 6;  // "https:/..."
     UriScheme_Data     = 7;  // "data:{mime-type}[[;base64],{data-encoding}]"

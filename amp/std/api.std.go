@@ -56,5 +56,5 @@ type ItemWriter interface {
 }
 
 const (
-	FactoryURL = "file://_resources_/"
+	ResourcesURL = "file://_resources_/"
 )
