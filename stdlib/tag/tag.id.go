@@ -1,6 +1,7 @@
 package tag
 
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"fmt"
 	"math/bits"
@@ -201,8 +202,25 @@ func UID_FromName(tagsExpr string) UID {
 
 // Now returns the current local time that is statiscially universally unique.
 func NowID() UID {
-	now := UID_FromTime(time.Now())
-	return now
+	uid := UID_FromTime(time.Now())
+
+	entropy := rot1*uid[1] ^ gEntropy
+	uid[1] ^= entropy & EntropyMask
+	gEntropy = rot2 * entropy
+
+	return uid
+}
+
+var gEntropy = uint64(37730003773)
+
+func NewID() UID {
+	var seed [16]byte
+	rand.Read(seed[:])
+	uid := UID{
+		binary.LittleEndian.Uint64(seed[:8]),
+		binary.LittleEndian.Uint64(seed[8:]),
+	}
+	return uid
 }
 
 func UID_FromTime(t time.Time) UID {
@@ -223,6 +241,9 @@ const (
 	TickStep64  = uint64(0x44B82FA1C)            // (2^64-1) / 1e9 (1ns tick resolution spread over 64 bits)
 	EntropyBits = 34 + 16                        // TickStep64 bits plus needed bits
 	EntropyMask = (uint64(1) << EntropyBits) - 1 // LSB bits to randomize
+
+	rot1 = (1 << 63) - 471
+	rot2 = (1 << 62) - 143
 )
 
 // AppendTo appends the UID's 16 bytes to the given byte slice in big-endian order for LSM use.
