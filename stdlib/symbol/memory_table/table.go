@@ -5,7 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/bufs"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/symbol"
 )
 
@@ -89,7 +89,7 @@ type symbolTable struct {
 }
 
 func (st *symbolTable) getIDFromCache(buf []byte) symbol.ID {
-	hash := bufs.HashBuf(buf)
+	hash := data.HashBuf(buf)
 
 	st.valueCacheMu.RLock()
 	defer st.valueCacheMu.RUnlock()
@@ -107,7 +107,7 @@ func (st *symbolTable) getIDFromCache(buf []byte) symbol.ID {
 }
 
 func (st *symbolTable) allocAndBindToID(buf []byte, bindID symbol.ID) kvEntry {
-	hash := bufs.HashBuf(buf)
+	hash := data.HashBuf(buf)
 
 	st.valueCacheMu.Lock()
 	defer st.valueCacheMu.Unlock()

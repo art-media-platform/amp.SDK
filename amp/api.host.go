@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/media"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
@@ -122,7 +123,7 @@ type Registry interface {
 	FindModule(uid tag.UID, name string) *AppModule
 
 	// Instantiates an attr element value for a given attr spec -- typically followed by Value.Unmarshal()
-	MakeValue(attrID tag.UID) (Value, error)
+	MakeValue(attrID tag.UID) (data.Value, error)
 }
 
 // Parameter block for notifying a Requester
@@ -151,7 +152,7 @@ type ItemFilter struct {
 // CRDT kv entry pair
 type ValueEntry struct {
 	Addr  tag.Address // CRDT value element address
-	Value Value       // initialized with default value of expected type
+	Value data.Value  // initialized with default value of expected type
 }
 
 // Endpoint expresses a network protocol and address to bind / list / send to.

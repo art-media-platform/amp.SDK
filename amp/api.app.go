@@ -2,6 +2,7 @@
 package amp
 
 import (
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/media"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
@@ -19,9 +20,9 @@ type AppEnvironment struct {
 	HomeID      tag.UID       // home ID for this app instance
 	MemberID    tag.UID       // who is running this app instance
 	IID         tag.UID       // instance ID for this app instance spawned by AboutModule
-	HomePath    string        // safe persistent read-write file system access
-	CachePath   string        // safe persistent read-write file system access (low-priority)
-	FactoryPath string        // safe read-only file system access "from factory"
+	HomePath    string        // local persistent read-write file system access
+	CachePath   string        // local persistent read-write file system access (low-priority)
+	FactoryPath string        // local read-only file system access "from factory"
 }
 
 // AppModule is how an app module registers with amp.Host and is used for internal components as well as for third parties. During runtime, amp.Host instantiates an amp.AppModule when a client request invokes one of the app's registered tags.
@@ -105,29 +106,8 @@ type TxOp struct {
 	DataLen  uint64      // byte length of associated serialized data
 }
 
-// Binds an amp.Value prototype to its associated attribute tag.
+// Binds an data.Value prototype to its associated attribute tag.
 type AttrDef struct {
-	tag.Name        // maps the value Prototype to an explicit attr ID
-	Prototype Value // cloned when this attribute is instantiated
-}
-
-// Value wraps a data element type, exposing tags, serialization, and instantiation methods.
-type Value interface {
-	ValuePb
-
-	// Marshals this Value to a buffer, reallocating if needed.
-	MarshalToStore(in []byte) (out []byte, err error)
-
-	// Unmarshals and merges value state from a buffer.
-	Unmarshal(src []byte) error
-
-	// Creates a default instance of this same Tag type.
-	New() Value
-}
-
-// Serialization shim for protobufs
-type ValuePb interface {
-	Size() int
-	MarshalToSizedBuffer(dAtA []byte) (int, error)
-	Unmarshal(dAtA []byte) error
+	tag.Name             // maps the value Prototype to an explicit attr ID
+	Prototype data.Value // cloned when this attribute is instantiated
 }

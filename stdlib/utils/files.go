@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/bufs"
-	"github.com/art-media-platform/amp.SDK/stdlib/errors"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -268,7 +268,7 @@ func MakeFSFriendly(name string, suffix []byte) string {
 
 	if len(suffix) > 0 {
 		b.WriteString(" ")
-		b.WriteString(bufs.Base32Encoding.EncodeToString(suffix))
+		b.WriteString(data.Base32Encoding.EncodeToString(suffix))
 	}
 
 	friendlyName := b.String()

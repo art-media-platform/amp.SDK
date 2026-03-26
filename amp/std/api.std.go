@@ -4,6 +4,7 @@ package std
 
 import (
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
@@ -47,12 +48,12 @@ type ItemWriter interface {
 
 	// Convenience methods for pushing string and generic attributes bound to an item ID.
 	PutTextAt(attrID, itemID tag.UID, value string)
-	PutItemAt(attrID, itemID tag.UID, value amp.Value)
+	PutItemAt(attrID, itemID tag.UID, value data.Value)
 
 	// Convenience methods for pushing an attribute value at item 0,0,0.
 	// Push*WithID(), if the value is nil, the attribute item is skipped.
 	PutText(attrID tag.UID, value string)
-	PutItem(attrID tag.UID, value amp.Value)
+	PutItem(attrID tag.UID, value data.Value)
 }
 
 const (

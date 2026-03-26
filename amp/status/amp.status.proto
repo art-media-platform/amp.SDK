@@ -1,0 +1,79 @@
+syntax = "proto3";
+package status;
+
+option csharp_namespace = "art.media.platform";
+
+// Code expresses status and error codes.
+enum StatusCode {
+    Nil                         = 0;
+
+    Unnamed                     = -23001;
+    AssertFailed                = -23002;
+    UnsupportedOp               = -23003;
+    Unimplemented               = -23004;
+    Timeout                     = -23005;
+    ShuttingDown                = -23006;
+    NotConnected                = -23007;
+    AuthFailed                  = -23008;
+    LoginFailed                 = -23009;
+    Expired                     = -23010;
+    NotReady                    = -23011;
+    Cancelled                   = -23012;
+    ItemNotFound                = -23013;
+    ParseFailed                 = -23014;
+    StartupFailed               = -23015;
+
+    ContextNotReady             = -23020;
+    RequestClosed               = -23021;
+    BadRequest                  = -23022;
+    BadTag                      = -23023;
+    BadValue                    = -23024;
+    AlreadyExists               = -23025;
+    AttrNotFound                = -23026;
+    NothingToCommit             = -23027;
+    CommitFailed                = -23028;
+    StorageFailure              = -23030;
+    MalformedTx                 = -23032;
+
+    BadSchema                   = -23040;
+    DataFailure                 = -23041;
+    ExportErr                   = -23042;
+    PinFailed                   = -23043;
+    ProviderErr                 = -23045;
+
+    ViolatesAppendOnly          = -23050;
+    InsufficientPermissions     = -23051;
+
+    CryptoKitAlreadyRegistered  = -23100;
+    UnrecognizedCryptoKit       = -23101;
+    DecryptFailed               = -23102;
+    VerifySignatureFailed       = -23103;
+    BadKeyFormat                = -23104;
+    KeyGenerationFailed         = -23105;
+    KeyringNotFound             = -23106;
+    KeyEntryNotFound            = -23107;
+    HashKitNotFound             = -23108;
+    UnrecognizedCryptOp         = -23110;
+    MarshalFailed               = -23111;
+    UnmarshalFailed             = -23112;
+}
+
+enum LogLevel {
+    LogLevel_Error = 0;
+    LogLevel_Warn  = 2;
+    LogLevel_Info  = 4;
+}
+
+
+// Error is a general purpose error / warning / log message.
+message Error {
+
+    // Identifies the type of error.
+    StatusCode  Code = 1;
+
+    // Severity level
+    LogLevel    Level = 2;
+
+    // human-readable message
+    string      Message = 4;
+}

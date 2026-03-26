@@ -78,7 +78,7 @@ enum TxField {
     TxField_MaxFields = 16;
 }
 
-// The first byte of a serialized amp.Value for future-proofing:
+// The first byte of a serialized data.Value for future-proofing:
 //
 //    0x0F   which inline 16 byte (4 UID literals) that immediately follow
 //    0xF0   flags that do not affect value header size.
@@ -351,18 +351,6 @@ enum Units {
 }
 
 
-// CryptoKitID identifies an encryption suite that implements ski.CryptoKit
-enum CryptoKitID {
-    CryptoKit_Nil = 0;
-
-    CryptoKit_SecretBox_NaCl  = 100;
-    CryptoKit_AsymMsg_NaCl    = 101;
-    CryptoKit_Signing_NaCl    = 102;
-    CryptoKit_Signing_ED25519 = 202;
-}
-
-
-
 
 // A Citation is referenced by a tx operation (TxOp), pointing to values that are expected to validate the operation to be performed.
 //
@@ -370,8 +358,8 @@ enum CryptoKitID {
 //
 //   ChannelID      AttrID                    ItemID                     EditID
 //   ---------      ------                    ------                     ------
-//   {ACC_ChID}  / "series.Keyring.ACC"    / {KeyringName}.{GroupID} / {ACC_Epoch}    // where an ACC publishes keys for an explicit member or child ACC IDs
-//   {GroupID}   / "series.Keyring.public" / {KeyringName}           / {Group_Epoch}  // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
+//   {ACC_ChID}  / "series.Keyring.ACC"    / {KeyringID}.{GroupID} / {ACC_Epoch}    // where an ACC publishes keys for an explicit member or child ACC IDs
+//   {GroupID}   / "series.Keyring.public" / {KeyringID}           / {Group_Epoch}  // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
 //
 // To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
 //
@@ -472,80 +460,3 @@ enum Grid {
 */
 
 
-
-
-
-// ErrCode expresses status and error codes.
-enum ErrCode {
-    ErrCode_Nil                         = 0;
-
-    ErrCode_Unnamed                     = -23001;
-    ErrCode_AssertFailed                = -23002;
-    ErrCode_UnsupportedOp               = -23003;
-    ErrCode_Unimplemented               = -23004;
-    ErrCode_Timeout                     = -23005;
-    ErrCode_ShuttingDown                = -23006;
-    ErrCode_NotConnected                = -23007;
-    ErrCode_AuthFailed                  = -23008;
-    ErrCode_LoginFailed                 = -23009;
-    ErrCode_Expired                     = -23010;
-    ErrCode_NotReady                    = -23011;
-    ErrCode_Cancelled                   = -23012;
-    ErrCode_ItemNotFound                = -23013;
-    ErrCode_ParseFailed                 = -23014;
-    ErrCode_StartupFailed               = -23015;
-
-    ErrCode_ContextNotReady             = -23020;
-    ErrCode_RequestClosed               = -23021;
-    ErrCode_BadRequest                  = -23022;
-    ErrCode_BadTag                      = -23023;
-    ErrCode_BadValue                    = -23024;
-    ErrCode_AlreadyExists               = -23025;
-    ErrCode_AttrNotFound                = -23026;
-    ErrCode_NothingToCommit             = -23027;
-    ErrCode_CommitFailed                = -23028;
-    ErrCode_StorageFailure              = -23030;
-    ErrCode_MalformedTx                 = -23032;
-
-    ErrCode_BadSchema                   = -23040;
-    ErrCode_DataFailure                 = -23041;
-    ErrCode_ExportErr                   = -23042;
-    ErrCode_PinFailed                   = -23043;
-    ErrCode_ProviderErr                 = -23045;
-
-    ErrCode_ViolatesAppendOnly          = -23050;
-    ErrCode_InsufficientPermissions     = -23051;
-
-    ErrCode_CryptoKitAlreadyRegistered  = -23100;
-    ErrCode_UnrecognizedCryptoKit       = -23101;
-    ErrCode_DecryptFailed               = -23102;
-    ErrCode_VerifySignatureFailed       = -23103;
-    ErrCode_BadKeyFormat                = -23104;
-    ErrCode_KeyGenerationFailed         = -23105;
-    ErrCode_KeyringNotFound             = -23106;
-    ErrCode_KeyEntryNotFound            = -23107;
-    ErrCode_HashKitNotFound             = -23108;
-    ErrCode_UnrecognizedCryptOp         = -23110;
-    ErrCode_MarshalFailed               = -23111;
-    ErrCode_UnmarshalFailed             = -23112;
-}
-
-enum LogLevel {
-    LogLevel_Error = 0;
-    LogLevel_Warn  = 2;
-    LogLevel_Info  = 4;
-}
-
-
-// Error is a general purpose error / warning / log message.
-message Error {
-
-    // Identifies the type of error.
-    ErrCode             Code  = 1;
-
-    // Severity level
-    LogLevel            Level = 2;
-
-    // human-readable info
-    string              Msg   = 4;
-}

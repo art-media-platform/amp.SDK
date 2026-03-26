@@ -8,6 +8,8 @@ import (
 	"sync/atomic"
 	"unsafe"
 
+	"github.com/art-media-platform/amp.SDK/amp/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -96,15 +98,15 @@ func (tx *TxMsg) ReleaseRef() {
 	// gTxMsgPool.Put(tx)
 }
 
-func (tx *TxMsg) UnmarshalOpValue(opIndex int, out Value) error {
+func (tx *TxMsg) UnmarshalOpValue(opIndex int, out data.Value) error {
 	if opIndex < 0 || opIndex >= len(tx.Ops) {
-		return ErrMalformedTx
+		return status.ErrMalformedTx
 	}
 	op := tx.Ops[opIndex]
 	ofs := op.DataOfs
 	end := ofs + op.DataLen
 	if op.DataLen < 1 || ofs > end || end > uint64(len(tx.DataStore)) {
-		return ErrBadTxOp
+		return status.ErrBadTxOp
 	}
 
 	// skip value header and inline UIDs
@@ -116,22 +118,22 @@ func (tx *TxMsg) UnmarshalOpValue(opIndex int, out Value) error {
 		}
 	}
 	if ofs > end {
-		return ErrBadTxOp
+		return status.ErrBadTxOp
 	}
 	span := tx.DataStore[ofs:end]
 	return out.Unmarshal(span)
 }
 
-func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst Value) error {
+func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst data.Value) error {
 	for i, op := range tx.Ops {
 		if op.Addr.AttrID == attrID && op.Addr.ItemID == itemID {
 			return tx.UnmarshalOpValue(i, dst)
 		}
 	}
-	return ErrAttrNotFound
+	return status.ErrAttrNotFound
 }
 
-func (tx *TxMsg) LoadValue(want *tag.Address, dst Value) error {
+func (tx *TxMsg) LoadValue(want *tag.Address, dst data.Value) error {
 	tx.Normalize(false)
 
 	if want.ItemID.IsWildcard() {
@@ -143,14 +145,14 @@ func (tx *TxMsg) LoadValue(want *tag.Address, dst Value) error {
 		return tx.Ops[i].Addr.CompareElementID(want)
 	})
 	if idx >= N {
-		return ErrAttrNotFound
+		return status.ErrAttrNotFound
 	}
 
 	// check we have a match but ignore EditID
 	elemID := tx.Ops[idx].Addr.ElementLSM()
 	wantID := want.ElementLSM()
 	if elemID != wantID {
-		return ErrAttrNotFound
+		return status.ErrAttrNotFound
 	}
 
 	return tx.UnmarshalOpValue(idx, dst)
@@ -163,7 +165,7 @@ func (tx *TxMsg) Normalize(force bool) error {
 	}
 	for _, op := range tx.Ops {
 		if op.Addr.EditID.IsNil() {
-			return ErrBadTxEdit
+			return status.ErrBadTxEdit
 		}
 	}
 	sort.Slice(tx.Ops, func(i, j int) bool {
@@ -176,7 +178,7 @@ func (tx *TxMsg) Normalize(force bool) error {
 	return nil
 }
 
-func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val Value) error {
+func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val data.Value) error {
 	op := TxOp{
 		Flags: TxOpFlags_Upsert,
 	}
@@ -187,7 +189,7 @@ func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val Value) error {
 	return tx.MarshalOp(&op, val)
 }
 
-func (tx *TxMsg) Delete(elemID tag.ElementID, val Value) error {
+func (tx *TxMsg) Delete(elemID tag.ElementID, val data.Value) error {
 	op := TxOp{
 		Flags: TxOpFlags_Delete,
 		Addr: tag.Address{
@@ -203,7 +205,7 @@ func (tx *TxMsg) Delete(elemID tag.ElementID, val Value) error {
 //   - TxMsg.DataStore is appended with the marshaled value
 //   - TxOp.DataOfs and TxOp.DataLen updated
 //   - TxOp is appended to TxMsg.Ops
-func (tx *TxMsg) MarshalOp(op *TxOp, val Value) error {
+func (tx *TxMsg) MarshalOp(op *TxOp, val data.Value) error {
 
 	// START
 	ds := tx.DataStore
@@ -265,10 +267,10 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 
 	marker := uint32(preamble[0])<<16 | uint32(preamble[1])<<8 | uint32(preamble[2])
 	if marker != uint32(Const_TxPreamble_Marker) {
-		return nil, ErrMalformedTx
+		return nil, status.ErrMalformedTx
 	}
 	if preamble[3] < byte(Const_TxPreamble_Version) {
-		return nil, ErrMalformedTx
+		return nil, status.ErrMalformedTx
 	}
 
 	tx := TxNew()
@@ -454,43 +456,43 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 
 		// Citation
 		if op.Citation, n = binary.Uvarint(src[p:]); n <= 0 {
-			return ErrMalformedTx
+			return status.ErrMalformedTx
 		}
 		p += n
 
 		// DataOfs
 		if op.DataOfs, n = binary.Uvarint(src[p:]); n <= 0 {
-			return ErrMalformedTx
+			return status.ErrMalformedTx
 		}
 		p += n
 
 		// DataLen
 		if op.DataLen, n = binary.Uvarint(src[p:]); n <= 0 {
-			return ErrMalformedTx
+			return status.ErrMalformedTx
 		}
 		p += n
 
 		// reserved / future use
 		var skip uint64
 		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
-			return ErrMalformedTx
+			return status.ErrMalformedTx
 		}
 		p += n + int(skip)
 		if p > len(src) {
-			return ErrMalformedTx
+			return status.ErrMalformedTx
 		}
 
 		// hasFields
 		var hasFields uint64
 		if hasFields, n = binary.Uvarint(src[p:]); n <= 0 {
-			return ErrMalformedTx
+			return status.ErrMalformedTx
 		}
 		p += n
 
 		for j := range int(TxField_MaxFields) {
 			if hasFields&(1<<j) != 0 {
 				if p+8 > len(src) {
-					return ErrMalformedTx
+					return status.ErrMalformedTx
 				}
 				op_cur[j] = binary.BigEndian.Uint64(src[p:])
 				p += 8
@@ -518,7 +520,7 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 	return nil
 }
 
-func writePb[T ValuePb](dst []byte, pb T) []byte {
+func writePb[T data.ValuePb](dst []byte, pb T) []byte {
 	byteLen := pb.Size()
 	dst = binary.AppendUvarint(dst, uint64(byteLen)) // add encoded length
 	p := len(dst)                                    // value start
@@ -528,25 +530,25 @@ func writePb[T ValuePb](dst []byte, pb T) []byte {
 }
 
 // Unmarshals a pb with Uvarint length prefix
-func readPb[T ValuePb](src []byte, pos *int, field T) error {
+func readPb[T data.ValuePb](src []byte, pos *int, field T) error {
 	p := *pos
 	if p < 0 || p >= len(src) {
-		return ErrMalformedTx
+		return status.ErrMalformedTx
 	}
 
 	byteLen, n := binary.Uvarint(src[p:])
 	if n <= 0 {
-		return ErrMalformedTx
+		return status.ErrMalformedTx
 	}
 	p += n
 
 	if p+int(byteLen) > len(src) {
-		return ErrMalformedTx
+		return status.ErrMalformedTx
 	}
 
 	err := field.Unmarshal(src[p : p+int(byteLen)])
 	if err != nil {
-		return ErrMalformedTx
+		return status.ErrMalformedTx
 	}
 	p += int(byteLen)
 	*pos = p

@@ -8,13 +8,15 @@ import (
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
 // Pushes a new tx to the receiver for the client's session agent for handling (e.g. LaunchOAuth)
 // If value == nil, no op is marshalled and  the tx is sent without ops.
-func PushMetaOp(attrID tag.UID, value amp.Value, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
+func PushMetaOp(attrID tag.UID, value data.Value, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
 	tx := sess.NewTx()
 	tx.SetContextID(contextID)
 	tx.Status = status
@@ -36,7 +38,7 @@ func PushMetaOp(attrID tag.UID, value amp.Value, dst amp.TxReceiver, sess amp.Se
 var SessionContextID = tag.UID{0, 8675309} // symbolizes the client's session controller / agent.
 
 // Convenience function for PushMetaOp()
-func PushSessionOp(sess amp.Session, attrID tag.UID, value amp.Value) error {
+func PushSessionOp(sess amp.Session, attrID tag.UID, value data.Value) error {
 	return PushMetaOp(attrID, value, sess, sess, SessionContextID, amp.PinStatus_Synced)
 }
 
@@ -51,7 +53,7 @@ func ParseParamAsPath(req *amp.Request, paramKey string) (dirpath string, finfo 
 	pathname := path.Clean(paramStr) // TODO: is this sufficent protection?
 	finfo, err = os.Stat(pathname)
 	if err != nil {
-		err = amp.ErrCode_BadRequest.Errorf("param %q path error: %v", paramKey, err)
+		err = status.BadRequest.Errorf("param %q path error: %v", paramKey, err)
 	}
 
 	dirpath, _ = path.Split(pathname)
@@ -99,7 +101,7 @@ func PinAndServe[AppT amp.AppInstance](item Item[AppT], app AppT, req *amp.Reque
 			}
 			if err != nil {
 				pin.fatal = err
-				if err != amp.ErrShuttingDown {
+				if err != status.ErrShuttingDown {
 					pinContext.Log().Warnf("op failed: %v", err)
 				}
 			}
@@ -172,14 +174,14 @@ func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
 
 	item := pin.GetItem(targetID)
 	if item == nil {
-		return nil, amp.ErrItemNotFound
+		return nil, status.ErrItemNotFound
 	}
 	return PinAndServe(item, pin.App, req)
 }
 
 func (pin *Pin[AppT]) CommitTx(tx *amp.TxMsg) error {
 	// tx.AddRef()
-	return amp.ErrUnimplemented
+	return status.ErrUnimplemented
 }
 
 func (pin *Pin[AppT]) ReviseRequest(latest *amp.PinRequest) error {
@@ -237,7 +239,7 @@ func (w *itemWriter) PutTextAt(attrID, itemID tag.UID, value string) {
 	}
 }
 
-func (w *itemWriter) PutItemAt(attrID, itemID tag.UID, value amp.Value) {
+func (w *itemWriter) PutItemAt(attrID, itemID tag.UID, value data.Value) {
 	if w.err != nil {
 		return
 	}
@@ -253,33 +255,33 @@ func (w *itemWriter) PutText(attrID tag.UID, value string) {
 	w.PutTextAt(attrID, tag.UID{}, value)
 }
 
-func (w *itemWriter) PutItem(attrID tag.UID, value amp.Value) {
+func (w *itemWriter) PutItem(attrID tag.UID, value data.Value) {
 	if value == nil {
 		return
 	}
 	w.PutItemAt(attrID, tag.UID{}, value)
 }
 
-func (v *TextItem) New() amp.Value {
+func (v *TextItem) New() data.Value {
 	return &TextItem{}
 }
 
 func (v *TextItem) MarshalToStore(in []byte) (out []byte, err error) {
-	return amp.MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *Report) New() amp.Value {
+func (v *Report) New() data.Value {
 	return &Report{}
 }
 
 func (v *Report) MarshalToStore(in []byte) (out []byte, err error) {
-	return amp.MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
 func (v *MediaItem) MarshalToStore(dst []byte) ([]byte, error) {
-	return amp.MarshalPbToStore(v, dst)
+	return data.MarshalPbToStore(v, dst)
 }
 
-func (v *MediaItem) New() amp.Value {
+func (v *MediaItem) New() data.Value {
 	return &MediaItem{}
 }

@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp/status"
 )
 
 /*****************************************************
@@ -99,7 +99,7 @@ type CryptoKit interface {
 	) error
 }
 
-// RegisterCryptoKit is convenience fuction that registers the given provider so it can be invoked via ski.StartSession()
+// RegisterCryptoKit is convenience function that registers the given provider so it can be invoked via ski.StartSession()
 func RegisterCryptoKit(
 	inKit CryptoKit,
 ) error {
@@ -113,7 +113,7 @@ func RegisterCryptoKit(
 	if existing == nil {
 		gCryptoKitRegistry.Lookup[kitID] = inKit
 	} else if existing != inKit {
-		err = amp.ErrCode_UnrecognizedCryptoKit.Errorf("the CryptoKit %d (%s) is already registered", kitID, kitID.String())
+		err = status.UnrecognizedCryptoKit.Errorf("the CryptoKit %d (%s) is already registered", kitID, kitID.String())
 	}
 	gCryptoKitRegistry.Unlock()
 
@@ -135,7 +135,7 @@ func GetCryptoKit(
 	gCryptoKitRegistry.RUnlock()
 
 	if kit == nil {
-		return nil, amp.ErrCode_CryptoKitAlreadyRegistered.Errorf("CryptoKit %d not found", inCryptoKitID)
+		return nil, status.CryptoKitAlreadyRegistered.Errorf("CryptoKit %d not found", inCryptoKitID)
 	}
 
 	return kit, nil

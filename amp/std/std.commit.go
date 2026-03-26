@@ -4,12 +4,14 @@ import (
 	"context"
 
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/closer"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 // Loads the latest element from the app instance associated with the current user; useful for storing high-level app state such as auth tokens.
-func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst amp.Value) error {
+func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst data.Value) error {
 	appEnv := appCtx.AppEnvironment()
 
 	tx := appCtx.NewTx()
@@ -48,9 +50,9 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst amp.Value) error {
 }
 
 // Write version of BlockingLoad()
-func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src amp.Value) error {
+func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src data.Value) error {
 	if src == nil {
-		return amp.ErrNothingToCommit
+		return status.ErrNothingToCommit
 	}
 
 	appEnv := appCtx.AppEnvironment()
@@ -82,7 +84,7 @@ type localLoad struct {
 
 func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 	if tx == nil {
-		return amp.ErrNothingToCommit
+		return status.ErrNothingToCommit
 	}
 
 	tx.AddRef()
@@ -135,7 +137,7 @@ type localCommit struct {
 }
 
 func (req *localCommit) PushTx(tx *amp.TxMsg, ctx context.Context) error {
-	return amp.ErrInternal // never called
+	return status.ErrInternal // never called
 }
 
 func (req *localCommit) RecvEvent(evt amp.PinEvent) { // TODO delete this or move RecvEvent in TxReceiver

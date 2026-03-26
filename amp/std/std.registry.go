@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -24,9 +26,9 @@ func NewRegistry() amp.Registry {
 	return reg
 }
 
-func RegisterAttr(attr tag.Name, prototype amp.Value, subTags string) tag.Name {
+func RegisterAttr(attr tag.Name, prototype data.Value, subTags string) tag.Name {
 	typeOf := reflect.TypeOf(prototype)
-	if typeOf.Kind() == reflect.Ptr {
+	if typeOf.Kind() == reflect.Pointer {
 		typeOf = typeOf.Elem()
 	}
 	name := typeOf.Name()
@@ -57,7 +59,7 @@ type registry struct {
 func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	attrID := def.Name.ID
 	if attrID.IsNil() {
-		return amp.ErrCode_BadTag.Errorf("RegisterAttr: missing Attr.ID")
+		return status.BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
 
 	reg.mu.Lock()
@@ -129,13 +131,13 @@ func (reg *registry) FindModule(moduleID tag.UID, moduleAlias string) *amp.AppMo
 }
 
 // Makes an instance of the given attribute "spec"" tag.UID
-func (reg *registry) MakeValue(attrID tag.UID) (amp.Value, error) {
+func (reg *registry) MakeValue(attrID tag.UID) (data.Value, error) {
 
 	// Often, an attrID will be a unnamed scalar attr (which means we can get the elemDef directly.
 	// This is also essential during bootstrapping when the client sends a RegisterDefs is not registered yet.
 	def, exists := reg.attrDefs[attrID]
 	if !exists {
-		return nil, amp.ErrCode_AttrNotFound.Errorf("attr %q not found", attrID.String())
+		return nil, status.AttrNotFound.Errorf("attr %q not found", attrID.String())
 	}
 	return def.Prototype.New(), nil
 }
@@ -181,7 +183,7 @@ TODO func MakeSchemaForType(valTyp reflect.Type) (*AttrSchema, error) {
 		}
 
 		if attr.ValTypeID == 0 {
-			return nil, ErrCode_ExportErr.Errorf("unsupported type '%s.%s (%v)", schema.ItemDataModel, attr.TypedName, attrKind)
+			return nil, ExportErr.Errorf("unsupported type '%s.%s (%v)", schema.ItemDataModel, attr.TypedName, attrKind)
 		}
 
 		schema.Attrs = append(schema.Attrs, attr)
@@ -199,7 +201,7 @@ func ReadItem(ctx AppContext, subKey string, schema *AttrSchema, dstStruct any) 
 		dst = dst.Elem()
 	case reflect.Struct:
 	default:
-		return ErrCode_ExportErr.Errorf("expected struct, got %v", dst.Kind())
+		return ExportErr.Errorf("expected struct, got %v", dst.Kind())
 	}
 
 	var keyBuf [128]byte
@@ -245,7 +247,7 @@ func WriteItem(ctx AppContext, subKey string, schema *AttrSchema, srcStruct any)
 		src = src.Elem()
 	case reflect.Struct:
 	default:
-		return ErrCode_ExportErr.Errorf("expected struct, got %v", src.Kind())
+		return ExportErr.Errorf("expected struct, got %v", src.Kind())
 	}
 
 	{

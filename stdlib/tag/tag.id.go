@@ -10,7 +10,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/bufs"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/blake2s"
 )
@@ -355,7 +355,7 @@ func (id UID) Base32() string {
 		if b32 != 0 {
 			isZero = false
 		}
-		out[i] = bufs.Base32Alphabet_Upper[b32]
+		out[i] = data.Base32Alphabet_Upper[b32]
 
 		x1 = (x0&0x1F)<<59 | (x1 >> 5)
 		x0 >>= 5
@@ -380,7 +380,7 @@ func (id UID) AsLabel() string {
 		shift := uint(8 * (suffixBytes - 1 - i))
 		suffix[i] = byte(id[1] >> shift)
 	}
-	label := bufs.Base32Encoding.EncodeToString(suffix[:])
+	label := data.Base32Encoding.EncodeToString(suffix[:])
 	label = label[(len(label) - suffixLen):]
 	return label
 }
@@ -523,10 +523,10 @@ func UID_ParseBase32(text string) (UID, error) {
 var base32Lookup = [127]byte{}
 
 func init() {
-	for i, c := range bufs.Base32Alphabet_Lower {
+	for i, c := range data.Base32Alphabet_Lower {
 		base32Lookup[c] = byte(i + 1)
 	}
-	for i, c := range bufs.Base32Alphabet_Upper {
+	for i, c := range data.Base32Alphabet_Upper {
 		base32Lookup[c] = byte(i + 1)
 	}
 }

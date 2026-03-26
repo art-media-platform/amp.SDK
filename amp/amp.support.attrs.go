@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/art-media-platform/amp.SDK/amp/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -23,36 +25,11 @@ func TagFromUID(id tag.UID) *Tag {
 	}
 }
 
-func MarshalPbToStore(src ValuePb, dst []byte) ([]byte, error) {
-	oldLen := len(dst)
-	newLen := oldLen + src.Size()
-	if cap(dst) < newLen {
-		old := dst
-		dst = make([]byte, (newLen+0x400)&^0x3FF)
-		copy(dst, old)
-	}
-	dst = dst[:newLen]
-	_, err := src.MarshalToSizedBuffer(dst[oldLen:])
-	return dst, err
-}
-
-func ErrorToValue(v error) Value {
-	if v == nil {
-		return nil
-	}
-	ampErr, _ := v.(*Error)
-	if ampErr == nil {
-		wrapped := ErrCode_Unnamed.Wrap(v)
-		ampErr = wrapped.(*Error)
-	}
-	return ampErr
-}
-
 func (v *Tag) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *Tag) New() Value {
+func (v *Tag) New() data.Value {
 	return &Tag{}
 }
 
@@ -72,12 +49,13 @@ func (v *Tag) IsNil() bool {
 }
 
 func (v *Tag) UID() tag.UID {
-	uid := tag.UID{}
-	if v != nil {
-		uid[0] = v.UID_0
-		uid[1] = v.UID_1
+	if v == nil {
+		return tag.UID{}
 	}
-	return uid
+	return tag.UID{
+		v.UID_0,
+		v.UID_1,
+	}
 }
 
 func (v *Tag) Name() tag.Name {
@@ -114,90 +92,50 @@ func (v *Tag) AsLabel() string {
 }
 
 func (v *Tags) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *Tags) New() Value {
+func (v *Tags) New() data.Value {
 	return &Tags{}
 }
 
-func (v *Error) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
-}
-
-func (v *Error) New() Value {
-	return &Error{}
-}
-
-// Emits a generic error that wraps this ErrCode
-func (code ErrCode) Err() error {
-	if code == ErrCode_Nil {
-		return nil
-	}
-	return &Error{
-		Code: code,
-	}
-}
-
-// FormError returns a Error with the given error code and msg set.
-func (code ErrCode) FormError(msg string) error {
-	if code == ErrCode_Nil {
-		return nil
-	}
-	return &Error{
-		Code: code,
-		Msg:  msg,
-	}
-}
-
-// FormErrorf returns a Error with the given error code and formattable msg set.
-func (code ErrCode) FormErrorf(msgFormat string, msgArgs ...interface{}) error {
-	if code == ErrCode_Nil {
-		return nil
-	}
-	return &Error{
-		Code: code,
-		Msg:  fmt.Sprintf(msgFormat, msgArgs...),
-	}
-}
-
 func (v *Login) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *Login) New() Value {
+func (v *Login) New() data.Value {
 	return &Login{}
 }
 
 func (v *LoginChallenge) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *LoginChallenge) New() Value {
+func (v *LoginChallenge) New() data.Value {
 	return &LoginChallenge{}
 }
 
 func (v *LoginResponse) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *LoginResponse) New() Value {
+func (v *LoginResponse) New() data.Value {
 	return &LoginResponse{}
 }
 
 func (v *LoginCheckpoint) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *LoginCheckpoint) New() Value {
+func (v *LoginCheckpoint) New() data.Value {
 	return &LoginCheckpoint{}
 }
 
 func (v *PinRequest) MarshalToStore(in []byte) (out []byte, err error) {
-	return MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *PinRequest) New() Value {
+func (v *PinRequest) New() data.Value {
 	return &PinRequest{}
 }
 
@@ -222,20 +160,20 @@ func (v *PinRequest) AsLabel() string {
 func (req *Request) ParseParam(paramKey string, dst any) error {
 	var paramStr string
 	if paramStr = req.Params.Get(paramKey); paramStr == "" {
-		return ErrCode_BadRequest.Errorf("missing param %q", paramKey)
+		return status.BadRequest.Errorf("missing param %q", paramKey)
 	}
 
 	switch v := dst.(type) {
 	case *int:
 		intVal, err := strconv.Atoi(paramStr)
 		if err != nil {
-			return ErrCode_BadRequest.Errorf("param %q is not an int: %v", paramKey, err)
+			return status.BadRequest.Errorf("param %q is not an int: %v", paramKey, err)
 		}
 		*v = intVal
 	case *string:
 		*v = paramStr
 	default:
-		return ErrCode_BadRequest.Errorf("param %q is not a supported type: %T", paramKey, v)
+		return status.BadRequest.Errorf("param %q is not a supported type: %T", paramKey, v)
 	}
 
 	return nil
@@ -253,11 +191,11 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 	if current.URL != "" {
 		var err error
 		if req.InvokeURL, err = url.Parse(current.URL); err != nil {
-			err = ErrCode_BadRequest.Errorf("error parsing URL: %v", err)
+			err = status.BadRequest.Errorf("error parsing URL: %v", err)
 			return err
 		}
 		if req.Params, err = url.ParseQuery(req.InvokeURL.RawQuery); err != nil {
-			err = ErrCode_BadRequest.Errorf("error parsing URL query: %v", err)
+			err = status.BadRequest.Errorf("error parsing URL query: %v", err)
 			return err
 		}
 	}
@@ -277,7 +215,7 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 //	"[scheme://]{Domain}/[{verb}/[{NodeID}/[{AttrID}/[{ItemID}]]]]"
 func (req *Request) ParseAsAddressURL() error {
 	if req.InvokeURL == nil {
-		return ErrCode_BadRequest.Errorf("missing InvokeURL")
+		return status.BadRequest.Errorf("missing InvokeURL")
 	}
 
 	path := req.InvokeURL.Path
@@ -483,12 +421,12 @@ func (sel *ItemSelector) Normalize(force bool) error {
 
 		nodeID := span.NodeID()
 		if nodeID.IsNil() {
-			return ErrCode_BadRequest.Error("ItemSpan missing NodeID")
+			return status.BadRequest.Error("ItemSpan missing NodeID")
 		}
 
 		attrID := span.AttrID()
 		if attrID.IsNil() {
-			return ErrCode_BadRequest.Error("ItemSpan missing AttrID")
+			return status.BadRequest.Error("ItemSpan missing AttrID")
 		}
 
 		// enforce tag.UID_1_Max

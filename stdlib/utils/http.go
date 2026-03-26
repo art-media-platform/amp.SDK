@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/errors"
+	"github.com/pkg/errors"
 )
 
 type HTTPClient struct {

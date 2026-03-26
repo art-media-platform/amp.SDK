@@ -8,7 +8,7 @@ import (
 
 	"testing"
 
-	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp/status"
 )
 
 var gTesting *testing.T
@@ -63,7 +63,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 		crypto_rand.Read(pass)
 
 		crypt, err := kit.EncryptUsingPassword(reader, msgOrig, pass)
-		if !amp.IsError(err, amp.ErrCode_Unimplemented) {
+		if !status.IsError(err, status.Unimplemented) {
 			if err != nil {
 				gTesting.Fatal(err)
 			}
@@ -94,7 +94,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 	{
 		entry.KeyInfo.KeyForm = KeyForm_SymmetricKey
 		err := kit.GenerateNewKey(inKeyLen, reader, &entry)
-		if !amp.IsError(err, amp.ErrCode_Unimplemented) {
+		if !status.IsError(err, status.Unimplemented) {
 			if err != nil {
 				gTesting.Fatal(err)
 			}
@@ -141,7 +141,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 	{
 		entry.KeyInfo.KeyForm = KeyForm_AsymmetricKey
 		err := kit.GenerateNewKey(inKeyLen, reader, &entry)
-		if !amp.IsError(err, amp.ErrCode_Unimplemented) {
+		if !status.IsError(err, status.Unimplemented) {
 			if err != nil {
 				gTesting.Fatal(err)
 			}
@@ -197,7 +197,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 	{
 		entry.KeyInfo.KeyForm = KeyForm_SigningKey
 		err := kit.GenerateNewKey(inKeyLen, reader, &entry)
-		if !amp.IsError(err, amp.ErrCode_Unimplemented) {
+		if !status.IsError(err, status.Unimplemented) {
 			if err != nil {
 				gTesting.Fatal(err)
 			}
@@ -224,7 +224,7 @@ func testKitWithSizes(kit CryptoKit, inKeyLen, inMsgLen int) {
 				badMsg[rndPos] += rndAdj
 
 				err = kit.VerifySignature(badMsg, msgOrig, entry.KeyInfo.PubKey)
-				if !amp.IsError(err, amp.ErrCode_VerifySignatureFailed) {
+				if !status.IsError(err, status.VerifySignatureFailed) {
 					gTesting.Fatal("there should have been a sig failed error!")
 				}
 			}

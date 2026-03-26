@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -98,10 +99,10 @@ func TagsForImageURL(imageURL string) *amp.Tags {
 }
 
 func (v *FileInfo) MarshalToStore(in []byte) (out []byte, err error) {
-	return amp.MarshalPbToStore(v, in)
+	return data.MarshalPbToStore(v, in)
 }
 
-func (v *FileInfo) New() amp.Value {
+func (v *FileInfo) New() data.Value {
 	return &FileInfo{}
 }
 
@@ -120,9 +121,9 @@ func (v *FileInfo) SetCreatedAt(t time.Time) {
 }
 
 func (v *GeoPath) MarshalToStore(dst []byte) ([]byte, error) {
-	return amp.MarshalPbToStore(v, dst)
+	return data.MarshalPbToStore(v, dst)
 }
 
-func (v *GeoPath) New() amp.Value {
+func (v *GeoPath) New() data.Value {
 	return &GeoPath{}
 }

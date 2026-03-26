@@ -1,4 +1,4 @@
-package bufs
+package data
 
 import (
 	"encoding/base32"
@@ -44,7 +44,6 @@ func EncodeToBase32(in []byte) string {
 	}
 	return str
 }
-
 
 // Zeros out a given slice
 func Zero(buf []byte) {

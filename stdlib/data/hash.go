@@ -1,4 +1,4 @@
-package bufs
+package data
 
 import "unsafe"
 
