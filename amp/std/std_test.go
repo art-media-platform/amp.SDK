@@ -22,15 +22,15 @@ func TestRegistry(t *testing.T) {
 		if err != nil {
 			t.Fatalf("RegisterAttr failed: %v", err)
 		}
-		elem, err := reg.MakeValue(spec.ID)
+		elem, err := reg.NewValue(spec.ID)
 		if err != nil {
-			t.Fatalf("MakeValue failed: %v", err)
+			t.Fatalf("Make failed: %v", err)
 		}
 		if spec.Canonic != someAttr.Canonic+".av.hello.world.tag" {
 			t.Fatal("RegisterAttr failed")
 		}
 		if reflect.TypeOf(elem) != reflect.TypeOf(&amp.Tag{}) {
-			t.Fatalf("MakeValue returned wrong type: %v", reflect.TypeOf(elem))
+			t.Fatalf("Make returned wrong type: %v", reflect.TypeOf(elem))
 		}
 	}
 

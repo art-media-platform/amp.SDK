@@ -8,15 +8,15 @@ import (
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/amp"
-	"github.com/art-media-platform/amp.SDK/amp/status"
-	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
+	"google.golang.org/protobuf/proto"
 )
 
 // Pushes a new tx to the receiver for the client's session agent for handling (e.g. LaunchOAuth)
 // If value == nil, no op is marshalled and  the tx is sent without ops.
-func PushMetaOp(attrID tag.UID, value data.Value, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
+func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
 	tx := sess.NewTx()
 	tx.SetContextID(contextID)
 	tx.Status = status
@@ -38,7 +38,7 @@ func PushMetaOp(attrID tag.UID, value data.Value, dst amp.TxReceiver, sess amp.S
 var SessionContextID = tag.UID{0, 8675309} // symbolizes the client's session controller / agent.
 
 // Convenience function for PushMetaOp()
-func PushSessionOp(sess amp.Session, attrID tag.UID, value data.Value) error {
+func PushSessionOp(sess amp.Session, attrID tag.UID, value proto.Message) error {
 	return PushMetaOp(attrID, value, sess, sess, SessionContextID, amp.PinStatus_Synced)
 }
 
@@ -53,7 +53,7 @@ func ParseParamAsPath(req *amp.Request, paramKey string) (dirpath string, finfo 
 	pathname := path.Clean(paramStr) // TODO: is this sufficent protection?
 	finfo, err = os.Stat(pathname)
 	if err != nil {
-		err = status.BadRequest.Errorf("param %q path error: %v", paramKey, err)
+		err = status.Code_BadRequest.Errorf("param %q path error: %v", paramKey, err)
 	}
 
 	dirpath, _ = path.Split(pathname)
@@ -239,7 +239,7 @@ func (w *itemWriter) PutTextAt(attrID, itemID tag.UID, value string) {
 	}
 }
 
-func (w *itemWriter) PutItemAt(attrID, itemID tag.UID, value data.Value) {
+func (w *itemWriter) PutItemAt(attrID, itemID tag.UID, value proto.Message) {
 	if w.err != nil {
 		return
 	}
@@ -255,33 +255,11 @@ func (w *itemWriter) PutText(attrID tag.UID, value string) {
 	w.PutTextAt(attrID, tag.UID{}, value)
 }
 
-func (w *itemWriter) PutItem(attrID tag.UID, value data.Value) {
+func (w *itemWriter) PutItem(attrID tag.UID, value proto.Message) {
 	if value == nil {
 		return
 	}
 	w.PutItemAt(attrID, tag.UID{}, value)
 }
 
-func (v *TextItem) New() data.Value {
-	return &TextItem{}
-}
 
-func (v *TextItem) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *Report) New() data.Value {
-	return &Report{}
-}
-
-func (v *Report) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *MediaItem) MarshalToStore(dst []byte) ([]byte, error) {
-	return data.MarshalPbToStore(v, dst)
-}
-
-func (v *MediaItem) New() data.Value {
-	return &MediaItem{}
-}

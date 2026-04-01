@@ -2,10 +2,10 @@
 package amp
 
 import (
-	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/media"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
+	"google.golang.org/protobuf/proto"
 )
 
 type AppModuleInfo struct {
@@ -106,8 +106,8 @@ type TxOp struct {
 	DataLen  uint64      // byte length of associated serialized data
 }
 
-// Binds an data.Value prototype to its associated attribute tag.
+// Binds an proto.Message prototype to its associated attribute tag.
 type AttrDef struct {
-	tag.Name             // maps the value Prototype to an explicit attr ID
-	Prototype data.Value // cloned when this attribute is instantiated
+	tag.Name                // maps the value Prototype to an explicit attr ID
+	Prototype proto.Message // cloned when this attribute is instantiated
 }

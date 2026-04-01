@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/art-media-platform/amp.SDK/amp"
-	"github.com/art-media-platform/amp.SDK/amp/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/closer"
-	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+	"google.golang.org/protobuf/proto"
 )
 
 // Loads the latest element from the app instance associated with the current user; useful for storing high-level app state such as auth tokens.
-func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst data.Value) error {
+func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) error {
 	appEnv := appCtx.AppEnvironment()
 
 	tx := appCtx.NewTx()
@@ -50,7 +50,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst data.Value) error {
 }
 
 // Write version of BlockingLoad()
-func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src data.Value) error {
+func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src proto.Message) error {
 	if src == nil {
 		return status.ErrNothingToCommit
 	}

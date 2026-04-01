@@ -5,9 +5,10 @@ import (
 	"sync"
 
 	"github.com/art-media-platform/amp.SDK/amp"
-	"github.com/art-media-platform/amp.SDK/amp/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+	"google.golang.org/protobuf/proto"
 )
 
 // see type Registry interface
@@ -26,7 +27,7 @@ func NewRegistry() amp.Registry {
 	return reg
 }
 
-func RegisterAttr(attr tag.Name, prototype data.Value, subTags string) tag.Name {
+func RegisterAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
 	typeOf := reflect.TypeOf(prototype)
 	if typeOf.Kind() == reflect.Pointer {
 		typeOf = typeOf.Elem()
@@ -59,7 +60,7 @@ type registry struct {
 func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	attrID := def.Name.ID
 	if attrID.IsNil() {
-		return status.BadTag.Errorf("RegisterAttr: missing Attr.ID")
+		return status.Code_BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
 
 	reg.mu.Lock()
@@ -131,15 +132,15 @@ func (reg *registry) FindModule(moduleID tag.UID, moduleAlias string) *amp.AppMo
 }
 
 // Makes an instance of the given attribute "spec"" tag.UID
-func (reg *registry) MakeValue(attrID tag.UID) (data.Value, error) {
+func (reg *registry) NewValue(attrID tag.UID) (proto.Message, error) {
 
 	// Often, an attrID will be a unnamed scalar attr (which means we can get the elemDef directly.
 	// This is also essential during bootstrapping when the client sends a RegisterDefs is not registered yet.
 	def, exists := reg.attrDefs[attrID]
 	if !exists {
-		return nil, status.AttrNotFound.Errorf("attr %q not found", attrID.String())
+		return nil, status.Code_AttrNotFound.Errorf("attr %q not found", attrID.String())
 	}
-	return def.Prototype.New(), nil
+	return data.NewLike(def.Prototype), nil
 }
 
 /*

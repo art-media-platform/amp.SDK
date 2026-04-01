@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/art-media-platform/amp.SDK/amp/status"
-	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -23,14 +23,6 @@ func TagFromUID(id tag.UID) *Tag {
 		UID_0: id[0],
 		UID_1: id[1],
 	}
-}
-
-func (v *Tag) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *Tag) New() data.Value {
-	return &Tag{}
 }
 
 func (v *Tag) SetFromTime(t time.Time) {
@@ -90,55 +82,6 @@ func (v *Tag) AsLabel() string {
 
 	return string(str)
 }
-
-func (v *Tags) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *Tags) New() data.Value {
-	return &Tags{}
-}
-
-func (v *Login) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *Login) New() data.Value {
-	return &Login{}
-}
-
-func (v *LoginChallenge) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *LoginChallenge) New() data.Value {
-	return &LoginChallenge{}
-}
-
-func (v *LoginResponse) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *LoginResponse) New() data.Value {
-	return &LoginResponse{}
-}
-
-func (v *LoginCheckpoint) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *LoginCheckpoint) New() data.Value {
-	return &LoginCheckpoint{}
-}
-
-func (v *PinRequest) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *PinRequest) New() data.Value {
-	return &PinRequest{}
-}
-
 func (v *PinRequest) AsLabel() string {
 	if v == nil {
 		return ""
@@ -160,20 +103,20 @@ func (v *PinRequest) AsLabel() string {
 func (req *Request) ParseParam(paramKey string, dst any) error {
 	var paramStr string
 	if paramStr = req.Params.Get(paramKey); paramStr == "" {
-		return status.BadRequest.Errorf("missing param %q", paramKey)
+		return status.Code_BadRequest.Errorf("missing param %q", paramKey)
 	}
 
 	switch v := dst.(type) {
 	case *int:
 		intVal, err := strconv.Atoi(paramStr)
 		if err != nil {
-			return status.BadRequest.Errorf("param %q is not an int: %v", paramKey, err)
+			return status.Code_BadRequest.Errorf("param %q is not an int: %v", paramKey, err)
 		}
 		*v = intVal
 	case *string:
 		*v = paramStr
 	default:
-		return status.BadRequest.Errorf("param %q is not a supported type: %T", paramKey, v)
+		return status.Code_BadRequest.Errorf("param %q is not a supported type: %T", paramKey, v)
 	}
 
 	return nil
@@ -186,16 +129,17 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 
 	// Merge incoming PinRequest
 	current := &req.ItemFilter.Current
-	*current = *pinReq
+	proto.Reset(current)
+	proto.Merge(current, pinReq)
 
 	if current.URL != "" {
 		var err error
 		if req.InvokeURL, err = url.Parse(current.URL); err != nil {
-			err = status.BadRequest.Errorf("error parsing URL: %v", err)
+			err = status.Code_BadRequest.Errorf("error parsing URL: %v", err)
 			return err
 		}
 		if req.Params, err = url.ParseQuery(req.InvokeURL.RawQuery); err != nil {
-			err = status.BadRequest.Errorf("error parsing URL query: %v", err)
+			err = status.Code_BadRequest.Errorf("error parsing URL query: %v", err)
 			return err
 		}
 	}
@@ -205,7 +149,8 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 		if err != nil {
 			return err
 		}
-		req.ItemFilter.Selector = *pinReq.Selector
+		proto.Reset(&req.ItemFilter.Selector)
+		proto.Merge(&req.ItemFilter.Selector, pinReq.Selector)
 	}
 	return nil
 }
@@ -215,7 +160,7 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 //	"[scheme://]{Domain}/[{verb}/[{NodeID}/[{AttrID}/[{ItemID}]]]]"
 func (req *Request) ParseAsAddressURL() error {
 	if req.InvokeURL == nil {
-		return status.BadRequest.Errorf("missing InvokeURL")
+		return status.Code_BadRequest.Errorf("missing InvokeURL")
 	}
 
 	path := req.InvokeURL.Path
@@ -421,12 +366,12 @@ func (sel *ItemSelector) Normalize(force bool) error {
 
 		nodeID := span.NodeID()
 		if nodeID.IsNil() {
-			return status.BadRequest.Error("ItemSpan missing NodeID")
+			return status.Code_BadRequest.Error("ItemSpan missing NodeID")
 		}
 
 		attrID := span.AttrID()
 		if attrID.IsNil() {
-			return status.BadRequest.Error("ItemSpan missing AttrID")
+			return status.Code_BadRequest.Error("ItemSpan missing AttrID")
 		}
 
 		// enforce tag.UID_1_Max

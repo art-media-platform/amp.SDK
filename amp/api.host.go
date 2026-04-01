@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/media"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
+	"google.golang.org/protobuf/proto"
 )
 
 // Host allows app and transport services to be attached.
@@ -90,7 +90,7 @@ type Session interface {
 	AssetPublisher() media.Publisher
 
 	// Returns info about this user and session -- READ ONLY
-	Login() Login
+	Login() *Login
 
 	// Creates a new tx ready for use
 	NewTx() *TxMsg
@@ -110,7 +110,7 @@ type Registry interface {
 	// When a Session is created, its registry starts by importing the Host's registry.
 	Import(other Registry) error
 
-	// Registers a value as a prototype under its Attr.ID.
+	// Registers a value as a prototype with a UID
 	// This allows the value to be instantiated and unmarshaled when an AttrID is known.
 	RegisterAttr(def AttrDef) error
 
@@ -122,8 +122,8 @@ type Registry interface {
 	// Note that an *AppModule is READ ONLY since they are static and shared.
 	FindModule(uid tag.UID, name string) *AppModule
 
-	// Instantiates an attr element value for a given attr spec -- typically followed by Value.Unmarshal()
-	MakeValue(attrID tag.UID) (data.Value, error)
+	// Instantiates a registered value having a given UID.
+	NewValue(attrID tag.UID) (proto.Message, error)
 }
 
 // Parameter block for notifying a Requester
@@ -151,8 +151,8 @@ type ItemFilter struct {
 
 // CRDT kv entry pair
 type ValueEntry struct {
-	Addr  tag.Address // CRDT value element address
-	Value data.Value  // initialized with default value of expected type
+	Addr  tag.Address   // CRDT value element address
+	Value proto.Message // initialized with default value of expected type
 }
 
 // Endpoint expresses a network protocol and address to bind / list / send to.

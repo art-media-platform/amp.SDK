@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/amp"
-	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -44,6 +43,13 @@ var (
 
 	MediaItemID    = ItemAttr.With("av.MediaItem").ID
 	MediaReleaseID = ItemAttr.With("av.Tag.MediaRelease").ID
+
+	// Planet governance (ACC — Access Control Channel)
+	ACCAttr        = tag.Name{}.With("amp.acc")
+	ACCPlanetEpoch = ACCAttr.With("PlanetEpoch") // planet epoch records
+	ACCMemberEpoch = ACCAttr.With("MemberEpoch") // member add/modify/revoke
+	BlobAttr       = tag.Name{}.With("amp.blob")
+	BlobRefAttrID  = BlobAttr.With("ref").ID // blob channel entries (BlobRef values)
 )
 
 const ()
@@ -98,14 +104,6 @@ func TagsForImageURL(imageURL string) *amp.Tags {
 	}
 }
 
-func (v *FileInfo) MarshalToStore(in []byte) (out []byte, err error) {
-	return data.MarshalPbToStore(v, in)
-}
-
-func (v *FileInfo) New() data.Value {
-	return &FileInfo{}
-}
-
 func (v *FileInfo) Pathname() string {
 	return path.Join(v.DirName, v.ItemName)
 }
@@ -118,12 +116,4 @@ func (v *FileInfo) SetModifiedAt(t time.Time) {
 func (v *FileInfo) SetCreatedAt(t time.Time) {
 	uid := tag.UID_FromTime(t)
 	v.CreatedAt = int64(uid[0])
-}
-
-func (v *GeoPath) MarshalToStore(dst []byte) ([]byte, error) {
-	return data.MarshalPbToStore(v, dst)
-}
-
-func (v *GeoPath) New() data.Value {
-	return &GeoPath{}
 }

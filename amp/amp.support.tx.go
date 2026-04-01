@@ -8,9 +8,10 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"github.com/art-media-platform/amp.SDK/amp/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+	"google.golang.org/protobuf/proto"
 )
 
 // TxDataStore is a message packet sent to / from a client.
@@ -98,7 +99,7 @@ func (tx *TxMsg) ReleaseRef() {
 	// gTxMsgPool.Put(tx)
 }
 
-func (tx *TxMsg) UnmarshalOpValue(opIndex int, out data.Value) error {
+func (tx *TxMsg) UnmarshalOpValue(opIndex int, out proto.Message) error {
 	if opIndex < 0 || opIndex >= len(tx.Ops) {
 		return status.ErrMalformedTx
 	}
@@ -121,10 +122,10 @@ func (tx *TxMsg) UnmarshalOpValue(opIndex int, out data.Value) error {
 		return status.ErrBadTxOp
 	}
 	span := tx.DataStore[ofs:end]
-	return out.Unmarshal(span)
+	return proto.Unmarshal(span, out)
 }
 
-func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst data.Value) error {
+func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst proto.Message) error {
 	for i, op := range tx.Ops {
 		if op.Addr.AttrID == attrID && op.Addr.ItemID == itemID {
 			return tx.UnmarshalOpValue(i, dst)
@@ -133,7 +134,7 @@ func (tx *TxMsg) ExtractValue(attrID, itemID tag.UID, dst data.Value) error {
 	return status.ErrAttrNotFound
 }
 
-func (tx *TxMsg) LoadValue(want *tag.Address, dst data.Value) error {
+func (tx *TxMsg) LoadValue(want *tag.Address, dst proto.Message) error {
 	tx.Normalize(false)
 
 	if want.ItemID.IsWildcard() {
@@ -178,7 +179,7 @@ func (tx *TxMsg) Normalize(force bool) error {
 	return nil
 }
 
-func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val data.Value) error {
+func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val proto.Message) error {
 	op := TxOp{
 		Flags: TxOpFlags_Upsert,
 	}
@@ -189,7 +190,7 @@ func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val data.Value) error {
 	return tx.MarshalOp(&op, val)
 }
 
-func (tx *TxMsg) Delete(elemID tag.ElementID, val data.Value) error {
+func (tx *TxMsg) Delete(elemID tag.ElementID, val proto.Message) error {
 	op := TxOp{
 		Flags: TxOpFlags_Delete,
 		Addr: tag.Address{
@@ -205,7 +206,7 @@ func (tx *TxMsg) Delete(elemID tag.ElementID, val data.Value) error {
 //   - TxMsg.DataStore is appended with the marshaled value
 //   - TxOp.DataOfs and TxOp.DataLen updated
 //   - TxOp is appended to TxMsg.Ops
-func (tx *TxMsg) MarshalOp(op *TxOp, val data.Value) error {
+func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 
 	// START
 	ds := tx.DataStore
@@ -220,7 +221,7 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val data.Value) error {
 	// VALUE CONTENT
 	if val != nil {
 		var err error
-		ds, err = val.MarshalToStore(ds)
+		ds, err = data.MarshalTo(ds, val)
 		if err != nil {
 			return err
 		}
@@ -371,10 +372,10 @@ func (tx *TxMsg) MarshalHeadAndOps(dst *[]byte) {
 func (tx *TxMsg) MarshalHead(dst []byte) []byte {
 
 	tx.OpCount = uint64(len(tx.Ops))
-	tx.TxEnvelope.HeaderOffset = 0     // byte skip before TxHeader
-	dst = writePb(dst, &tx.TxEnvelope) // write TxEnvelope uvarint & data
-	tx.cryptOfs = uint64(len(dst))     // store TxHeader start (encrypt begins here)
-	dst = writePb(dst, &tx.TxHeader)   // write TxHeader uvarint & data
+	tx.TxEnvelope.HeaderOffset = 0        // byte skip before TxHeader
+	dst, _ = writePb(dst, &tx.TxEnvelope) // write TxEnvelope uvarint & data
+	tx.cryptOfs = uint64(len(dst))        // store TxHeader start (encrypt begins here)
+	dst, _ = writePb(dst, &tx.TxHeader)   // write TxHeader uvarint & data
 
 	var (
 		op_prv [TxField_MaxFields]uint64
@@ -520,17 +521,19 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 	return nil
 }
 
-func writePb[T data.ValuePb](dst []byte, pb T) []byte {
-	byteLen := pb.Size()
-	dst = binary.AppendUvarint(dst, uint64(byteLen)) // add encoded length
-	p := len(dst)                                    // value start
-	dst = append(dst, make([]byte, byteLen)...)      // add needed space
-	pb.MarshalToSizedBuffer(dst[p : p+byteLen])      // add encoded data
-	return dst
+// Marshals a proto.Message with a Uvarint length prefix
+func writePb(dst []byte, pb proto.Message) ([]byte, error) {
+	buf, err := data.MarshalTo(nil, pb)
+	if err != nil {
+		return dst, err
+	}
+	dst = binary.AppendUvarint(dst, uint64(len(buf)))
+	dst = append(dst, buf...)
+	return dst, nil
 }
 
-// Unmarshals a pb with Uvarint length prefix
-func readPb[T data.ValuePb](src []byte, pos *int, field T) error {
+// Unmarshals a proto.Message with a Uvarint length prefix
+func readPb(src []byte, pos *int, pb proto.Message) error {
 	p := *pos
 	if p < 0 || p >= len(src) {
 		return status.ErrMalformedTx
@@ -542,15 +545,15 @@ func readPb[T data.ValuePb](src []byte, pos *int, field T) error {
 	}
 	p += n
 
-	if p+int(byteLen) > len(src) {
+	end := p + int(byteLen)
+	if end > len(src) {
 		return status.ErrMalformedTx
 	}
 
-	err := field.Unmarshal(src[p : p+int(byteLen)])
-	if err != nil {
+	if err := proto.Unmarshal(src[p:end], pb); err != nil {
 		return status.ErrMalformedTx
 	}
-	p += int(byteLen)
-	*pos = p
+
+	*pos = end
 	return nil
 }

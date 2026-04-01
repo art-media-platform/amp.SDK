@@ -6,6 +6,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -85,14 +86,14 @@ func TestTxSerialize(t *testing.T) {
 	if err != nil {
 		t.Errorf("ReadTxMsg failed: %v", err)
 	}
-	e1, _ := tx.TxEnvelope.Marshal()
-	e2, _ := t2.TxEnvelope.Marshal()
+	e1, _ := data.MarshalTo(nil, &tx.TxEnvelope)
+	e2, _ := data.MarshalTo(nil, &t2.TxEnvelope)
 	if !bytes.Equal(e1, e2) {
 		t.Errorf("ReadTxMsg failed: TxEnvelope mismatch")
 	}
 
-	h1, _ := tx.TxHeader.Marshal()
-	h2, _ := t2.TxHeader.Marshal()
+	h1, _ := data.MarshalTo(nil, &tx.TxHeader)
+	h2, _ := data.MarshalTo(nil, &t2.TxHeader)
 	if !bytes.Equal(h1, h2) {
 		t.Errorf("ReadTxMsg failed: TxHeader mismatch")
 	}

@@ -2,13 +2,13 @@ syntax = "proto3";
 package std;
 
 option csharp_namespace = "art.media.platform.std";
-//option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
+option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 
 import "amp/amp.core.proto";
 
 enum TRS_Flags {
-    TRS_Flags_None      = 0;
-    TRS_Flags_AutoScale = 1;  // Dynamically adjust scale based on observer position.
+    FixedScale = 0;
+    AutoScale  = 1;  // Dynamically adjust scale based on observer position.
 }
 
 
@@ -113,11 +113,11 @@ message TextItem {
 
 // ValueKind specfies the primary type of a JsonValue.
 enum ValueKind {
-    ValueKind_Null   = 0;
-    ValueKind_False  = 1;
-    ValueKind_True   = 2;
-    ValueKind_Number = 3;
-    ValueKind_String = 4;
+    Null   = 0;
+    False  = 1;
+    True   = 2;
+    Number = 3;
+    String = 4;
 }
 
 // JsonValue is a general-purpose JSON value container.
@@ -185,10 +185,10 @@ message GeoPath {
 
 
 enum PointFormat {
-    PointFormat_S2  = 0; // (S2)      (1) uint64: lat,lng, (res)
-    PointFormat_H3  = 1; // (H3)      (1) uint64: lat,lng, (res)
-    PointFormat_S2T = 2; // (S2, T)   (2) uint64: lat,lng, (res), UTC64
-    PointFormat_H3T = 3; // (H3, T)   (2) uint64: lat,lng, (res), UTC64
+    S2  = 0; // (S2)      (1) uint64: lat,lng, (res)
+    H3  = 1; // (H3)      (1) uint64: lat,lng, (res)
+    S2T = 2; // (S2, T)   (2) uint64: lat,lng, (res), UTC64
+    H3T = 3; // (H3, T)   (2) uint64: lat,lng, (res), UTC64
 }
 
 
@@ -210,21 +210,21 @@ message MediaItem {
 
 
 enum MediaFlags {
-    MediaFlags_None                = 0;
+    NoMedia             = 0;
 
-    MediaFlags_IsLive              = 0x0001;
-    MediaFlags_IsSeekable          = 0x0002;
-    MediaFlags_IsUnending          = 0x0004;
-    MediaFlags_NewChapter          = 0x0008;
-    MediaFlags_NewTrack            = 0x0010;
+    IsLive              = 0x0001;
+    IsSeekable          = 0x0002;
+    IsUnending          = 0x0004;
+    NewChapter          = 0x0008;
+    NewTrack            = 0x0010;
 
-    MediaFlags_HasAudio            = 0x0100;
-    MediaFlags_HasVideo            = 0x0200;
-    MediaFlags_HasSpeech           = 0x0400;
-    MediaFlags_NeedsNetwork        = 0x0800;
+    HasAudio            = 0x0100;
+    HasVideo            = 0x0200;
+    HasSpeech           = 0x0400;
+    NeedsNetwork        = 0x0800;
 
     // When set, the user is more likely to skipping short intervals than switch media items.
-    MediaFlags_SkipIsLikely        = 0x01000000;
+    SkipIsLikely        = 0x01000000;
 
 }
 

@@ -10,19 +10,17 @@ package amp;
 // Tells protoc that a .proto file importing amp.proto what package import to use within Go.
 option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
-// import "github.com/gogo/protobuf/gogoproto/gogo.proto";  // https://stackoverflow.com/questions/43026449/gogo-proto-file-not-found
-
 option csharp_namespace = "art.media.platform";
 
 
 enum Const {
-    Const_Defs = 0;
+    Zero = 0;
 
     // The bootstrapping ("head") node ID
-    Const_HeadNodeID = 0x37;
+    HeadNodeID = 0x37;
 
     // DefaultServicePort is the default TCP port used to expose amp.Host service.
-    Const_DefaultServicePort = 5192;
+    DefaultServicePort = 5192;
 
     // TxPreamble (values are big endian):
     //
@@ -31,77 +29,77 @@ enum Const {
     //    04:08  TxPreamble_Size + serialized(TxHeader) + serialized([]TxOp)
     //    08:12  len(TxMsg.DataStore)
     //    12:16  Reserved
-    Const_TxPreamble_Size = 16;
+    TxPreamble_Size = 16;
 
     // Version of the TxPreamble -- first byte
-    Const_TxPreamble_Version = 0x33;
+    TxPreamble_Version = 0x33;
 
     // The first byte of the TxPreamble is the header size and version and
     // the following 3 bytes of a serialized TxMsg ("amp")
-    Const_TxPreamble_Marker = 0x616D70;
+    TxPreamble_Marker = 0x616D70;
 
     // ValueHeader is a variable length preamble to db value entries, see ValueHeaderFlags.
-    Const_ValueHeaderMaxSize = 37; // flags + 4 possible UIDs * 16 bytes per UID
+    ValueHeaderMaxSize = 37; // flags + 4 possible UIDs * 16 bytes per UID
 
     // בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
     // oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
     // now let us get to work!
-    Const_Invocation = 3773;
+    Invocation = 3773;
 }
 
 // TxOpFlags are 8 available bit flags that describe a TxOp.
 enum TxOpFlags {
-    TxOpFlags_Unassigned = 0;    // invalid state
-    TxOpFlags_MetaOp     = 0x01; // op is out of band and/or should not persist
-    TxOpFlags_Upsert     = 0x04; // write value at [Address]
-    TxOpFlags_Delete     = 0x08; // drop value at [Address]
+    Unassigned = 0;    // invalid state
+    MetaOp     = 0x01; // op is out of band and/or should not persist
+    Upsert     = 0x04; // write value at [Address]
+    Delete     = 0x08; // drop value at [Address]
 }
 
 // TxField maps a fixed count of int64 payload fields.
 //
 // Why not a proto message? Compression is much better since values usually repeat.
 enum TxField {
-    TxField_Nil = 0;
+    Nil = 0;
 
-    TxField_NodeID_0 = 1;
-    TxField_NodeID_1 = 2;
+    NodeID_0 = 1;
+    NodeID_1 = 2;
 
-    TxField_AttrID_0 = 4;
-    TxField_AttrID_1 = 5;
+    AttrID_0 = 4;
+    AttrID_1 = 5;
 
-    TxField_ItemID_0 = 6;
-    TxField_ItemID_1 = 7;
+    ItemID_0 = 6;
+    ItemID_1 = 7;
 
-    TxField_EditID_0 = 10;
-    TxField_EditID_1 = 11;
+    EditID_0 = 10;
+    EditID_1 = 11;
 
-    TxField_MaxFields = 16;
+    MaxFields = 16;
 }
 
-// The first byte of a serialized data.Value for future-proofing:
+// The first byte of a serialized proto.Message for future-proofing:
 //
 //    0x0F   which inline 16 byte (4 UID literals) that immediately follow
 //    0xF0   flags that do not affect value header size.
 //
 enum ValueHeaderFlags {
-    ValueHeaderFlags_None = 0;
+    None = 0;
 
-    ValueHeaderFlags_FromID   = 0x01; // author or other originator
-    ValueHeaderFlags_TxID     = 0x02; // tx that publishes this entry
-    ValueHeaderFlags_UID_C    = 0x04; // reserved / AuthID?
-    ValueHeaderFlags_UID_D    = 0x08; // reserved
+    FromID   = 0x01; // author or other originator
+    TxID     = 0x02; // tx that publishes this entry
+    UID_C    = 0x04; // reserved / AuthID?
+    UID_D    = 0x08; // reserved
 
-    // ValueHeaderFlags_FromSelf = 0x10; // equivalent to FromID of owner (saves 16 bytes)
+    // FromSelf = 0x10; // equivalent to FromID of owner (saves 16 bytes)
 }
 
 enum TxStatus {
-    TxStatus_Nil          = 0; // not set / invalid
-    TxStatus_Received     = 1; // tx received, pending processing
-    TxStatus_Validated    = 2; // tx verified, pending commit
-    TxStatus_Committed    = 3; // tx committed to local storage
-    TxStatus_Propagated   = 4; // tx propagated to peers
-    TxStatus_Acknowledged = 5; // tx acknowledged by peers
-    TxStatus_Rejected     = 6; // tx rejected (invalid, malformed, etc)
+    Ready        = 0; // not set / invalid
+    Received     = 1; // tx received, pending processing
+    Validated    = 2; // tx verified, pending commit
+    Committed    = 3; // tx committed to local storage
+    Propagated   = 4; // tx propagated to peers
+    Acknowledged = 5; // tx acknowledged by peers
+    Rejected     = 6; // tx rejected (invalid, malformed, etc)
 }
 
 // TxEnvelope contains tx fields that are used for routing and decryption of tx content.
@@ -155,25 +153,15 @@ message TxHeader {
 }
 
 
-/*
-message TxFooter {
-
-    // Signed hash of final tx (sans signature) that validates its integrity.
-    // Unlike the other fields, this is assigned post-deserialization.
-    bytes               Signature = 3;
-}
-*/
-
-
 
 // Expresses the status of an amp.Pin.
 enum PinStatus {
-    PinStatus_Inactive = 0;  // no op
-    PinStatus_Started  = 2;  // pin now on service
-    PinStatus_TxCommit = 6;  // tx commit complete / failed
-    PinStatus_Syncing  = 8;  // state sync in progress
-    PinStatus_Synced   = 9;  // state is synchronized; drives UI updates requiring a stable state.
-    PinStatus_Complete = 16; // pin complete / closed / failed
+    Inactive = 0;  // no op
+    Started  = 2;  // pin now on service
+    TxCommit = 6;  // tx commit complete / failed
+    Syncing  = 8;  // state sync in progress
+    Synced   = 9;  // state is synchronized; drives UI updates requiring a stable state.
+    Complete = 16; // pin complete / closed / failed
 }
 
 
@@ -270,38 +258,38 @@ enum PinMode {
 
     // If set, no state is emitted to the client.
     // Used when only writing via CommitTx()
-    PinMode_Commit = 0;
+    Commit = 0;
 
     // Send requested attrs, then auto-close this request
     // Used when instantaneous state is sufficient (e.g. applying a setting)
-    PinMode_Snapshot = 1;
+    Snapshot = 1;
 
     // If set, the request will remain open after the initial state snapshot is sent.
     // Requester will receive state updates until this request is closed.
-    PinMode_MaintainSync = 2;
+    MaintainSync = 2;
 }
 
 
 
 
 enum Enable {
-    Enable_LatentOff = 0x0;
-    Enable_LatentOn  = 0x1;
-    Enable_ActiveOn  = 0x2;
-    Enable_ActiveOff = 0x3;
+    LatentOff = 0x0;
+    LatentOn  = 0x1;
+    ActiveOn  = 0x2;
+    ActiveOff = 0x3;
 }
 
 
 enum UriScheme {
-    UriScheme_Unspecified = 0;
+    Unspecified = 0;
 
-    UriScheme_Http     = 5;  // "http:/..."
-    UriScheme_Https    = 6;  // "https:/..."
-    UriScheme_Data     = 7;  // "data:{mime-type}[[;base64],{data-encoding}]"
-    UriScheme_File     = 9;  // "file:/{hfs-pathname}"
+    Http     = 5;  // "http:/..."
+    Https    = 6;  // "https:/..."
+    Data     = 7;  // "data:{mime-type}[[;base64],{data-encoding}]"
+    File     = 9;  // "file:/{hfs-pathname}"
 
-    UriScheme_Asset     = 15; // "asset:({tag.name} | //{domain_name}/{crate.name}/{asset.name})
-    UriScheme_AppNative = 16; // "[[{app_scheme}://planet.or.domain_name/]{verb}/]{query}"
+    Asset     = 15; // "asset:({tag.name} | //{domain_name}/{crate.name}/{asset.name})
+    AppNative = 16; // "[[{app_scheme}://planet.or.domain_name/]{verb}/]{query}"
 }
 
 // Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
@@ -339,15 +327,15 @@ message Tags {
 
 // Units specifies a standard units convention.
 enum Units {
-    Units_Unspecified = 0;  // units not specified
-    Units_Operations  = 1;  // total operation count
-    Units_Bytes       = 2;  // any byte offset
-    Units_Pixels      = 3;  // texels or device pixels; not for typographic sizes
-    Units_Plank       = 5;  // TOE length
-    Units_Nanometers  = 7;  // 10^9 nm == 1 m
-    Units_Millimeters = 10; // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
-    Units_Meters      = 11; // IEEE 3773 length for humans
-    Units_LightYears  = 16; // 1 light year == 9460730472580800. meters
+    Unitless    = 0;  // units not specified
+    Operations  = 1;  // total operation count
+    Bytes       = 2;  // any byte offset
+    Pixels      = 3;  // texels or device pixels; not for typographic sizes
+    Plank       = 5;  // TOE length
+    Nanometers  = 7;  // 10^9 nm == 1 m
+    Millimeters = 10; // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
+    Meters      = 11; // IEEE 3773 length for humans
+    LightYears  = 16; // 1 light year == 9460730472580800. meters
 }
 
 
@@ -409,6 +397,73 @@ message ChannelEpoch {
 }
 
 
+// BlobRef is a content-addressed reference to an encrypted media blob stored outside a TxMsg.
+// Blobs are encrypted with the planet/channel epoch key before storage and transit.
+// A blob is identified by (PlanetID, BlobTag.UID) where BlobTag.UID is a unique time-based ID.
+message BlobRef {
+
+    // Planet this blob belongs to.
+    fixed64             PlanetID_0 = 1;
+    fixed64             PlanetID_1 = 2;
+
+    // Plaintext size in bytes.
+    int64               ByteSize = 5;
+
+    // SHA-256 of the encrypted blob content (4 x fixed64 = 32 bytes).
+    // Used to validate blob integrity after transfer or retrieval from cache.
+    fixed64             Hash_0 = 10;
+    fixed64             Hash_1 = 11;
+    fixed64             Hash_2 = 12;
+    fixed64             Hash_3 = 13;
+
+    // Blob identity and content type.
+    // BlobTag.UID is the blob's unique time-based ID (the blob's identity within the planet).
+    // BlobTag.ContentType is the MIME type (e.g. "image/jpeg", "audio/mpeg").
+    Tag                 BlobTag = 16;
+}
+
+
+// PlanetEpoch is published in the root ACC channel to establish or rotate a planet epoch key.
+message PlanetEpoch {
+
+    // Identity of this epoch.
+    Tag                 EpochTag = 1;
+
+    // Previous epoch (forms a chain).  Nil for genesis epoch.
+    Tag                 PreviousEpoch = 2;
+
+    // Human-readable label (e.g. "Genesis", "Post-revocation epoch 3").
+    string              Label = 5;
+
+    // Crypto suite for this epoch -- see ski.CryptoKitID.
+    // Determines which CryptoKit is used for signing, symmetric, and asymmetric ops.
+    // 0 = unspecified (default NaCl), 1 = NaCl, 2 = ED25519-only
+    int32               CryptoKitID = 10;
+}
+
+
+// MemberEpoch is published in the ACC channel to add, modify, or revoke a member.
+message MemberEpoch {
+
+    // Member identity.
+    Tag                 MemberTag = 1;
+
+    // This member's current epoch.
+    Tag                 Epoch = 2;
+
+    // Planet epoch key encrypted with this member's public key (via epoch's CryptoKit.EncryptFor).
+    bytes               EncryptedPlanetKey = 5;
+
+    // 0=active, 1=suspended, 2=revoked
+    int32               Status = 8;
+
+    // Member's public key for this epoch (asymmetric, used for EncryptFor/DecryptFrom).
+    bytes               PubKey = 12;
+
+    // Crypto suite for this member's key material (maps to ski.CryptoKitID).
+    // Typically matches the epoch's CryptoKitID but allows per-member override.
+    int32               CryptoKitID = 15;
+}
 
 
 

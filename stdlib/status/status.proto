@@ -1,10 +1,12 @@
 syntax = "proto3";
 package status;
 
-option csharp_namespace = "art.media.platform";
+option csharp_namespace = "art.media.platform.status";
+option go_package = "github.com/art-media-platform/amp.SDK/stdlib/status";
+
 
 // Code expresses status and error codes.
-enum StatusCode {
+enum Code {
     Nil                         = 0;
 
     Unnamed                     = -23001;
@@ -58,22 +60,17 @@ enum StatusCode {
     UnmarshalFailed             = -23112;
 }
 
-enum LogLevel {
-    LogLevel_Error = 0;
-    LogLevel_Warn  = 2;
-    LogLevel_Info  = 4;
+enum Severity {
+    Error   = 0;
+    Warning = 1;
+    Info    = 2;
+    Debug   = 3;
 }
 
-
-// Error is a general purpose error / warning / log message.
-message Error {
-
-    // Identifies the type of error.
-    StatusCode  Code = 1;
-
-    // Severity level
-    LogLevel    Level = 2;
-
-    // human-readable message
-    string      Message = 4;
+// Status is a general purpose status message.
+message Status {
+    Code        Code     = 1; // numberical code
+    Severity    Severity = 2; // which log to larget
+    int32       Level    = 3; // log level, 0 is highest priority
+    string      Message  = 4; // human readable message, may be empty
 }

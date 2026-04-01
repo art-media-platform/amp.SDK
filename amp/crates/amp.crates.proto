@@ -4,6 +4,7 @@ syntax = "proto3";
 package crates;
 
 option csharp_namespace = "art.media.platform";
+option go_package = "github.com/art-media-platform/amp.SDK/amp/crates";
 
 
 message AssetEntry {

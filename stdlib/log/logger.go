@@ -12,26 +12,6 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/klog"
 )
 
-type Severity byte
-
-const (
-	Severity_Debug   Severity = 0
-	Severity_Info    Severity = 1
-	Severity_Warning Severity = 2
-	Severity_Error   Severity = 3
-	Severity_Fatal   Severity = 4
-)
-
-var (
-	SeverityNames = []string{
-		"DEBUG",
-		"INFO",
-		"WARNING",
-		"ERROR",
-		"FATAL",
-	}
-)
-
 // Formatter specifies how each log entry header should be formatted.=
 type Formatter interface {
 	FormatHeader(severity string, filename string, lineNum int, ioBuf *bytes.Buffer)
