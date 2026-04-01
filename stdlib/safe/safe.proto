@@ -1,0 +1,191 @@
+syntax = "proto3";
+package safe;
+
+option go_package = "github.com/art-media-platform/amp.SDK/amp/safe";
+option csharp_namespace = "art.media.platform.safe";
+
+
+enum Const {
+    Nil                             = 0;
+    SealedTomeVersion               = 1;
+}
+
+
+// GuardInfo describes a Guard's capabilities and identity.
+message GuardInfo {
+    string  Provider                = 1;    // e.g. "file", "yubikey", "tpm"
+    string  Label                   = 2;    // Human-readable label
+    bytes   KeyID                   = 3;    // Opaque identifier for the root key material
+
+    bool    HardwareBacked          = 10;   // True if root material resides in tamper-resistant hardware
+    bool    Removable               = 11;   // True if the Guard can be physically detached (e.g. YubiKey)
+    bool    RequiresPIN             = 12;   // True if a PIN is required for each operation
+    bool    RequiresTouch           = 13;   // True if physical touch confirmation is required
+    bool    ExportableRoot          = 14;   // True if the root material can be exported
+}
+
+
+// WrappedDEK holds a protected Data Encryption Key and all parameters needed to recover it.
+message WrappedDEK {
+    uint32  Version                 = 1;
+    string  Provider                = 2;    // Guard provider that created this wrapping
+    bytes   KeyID                   = 3;    // Identifies the root key used to derive the wrapping key
+
+    string  KDF                     = 5;    // KDF used to derive the wrapping key (e.g. "HKDF-SHA256")
+    string  Cipher                  = 6;    // AEAD cipher used to encrypt the DEK (e.g. "XChaCha20-Poly1305")
+
+    bytes   Salt                    = 8;    // KDF salt
+    bytes   Nonce                   = 9;    // AEAD nonce
+
+    bytes   ProviderParams          = 10;   // Provider-specific parameters (if applicable)
+    bytes   EphemeralPubKey         = 13;   // Used by asymmetric protectors (e.g. YubiKey PIV ECDH)
+    bytes   Cipherblob              = 15;   // AEAD ciphertext of the DEK
+}
+
+
+// SealedTome is a serialized and encrypted KeyTome, ready for persistent storage.
+//
+// Lifecycle:
+//   Open:  TomeStore.Load() -> Guard.UnwrapDEK() -> AEAD_Decrypt(DEK, Cipherblob) -> KeyTome
+//   Close: Marshal(KeyTome) -> new DEK -> Guard.WrapDEK(DEK) -> AEAD_Encrypt(DEK, payload) -> TomeStore.Save()
+message SealedTome {
+    uint32      Version             = 1;
+    WrappedDEK  WrappedDEK          = 2;    // Sufficient to identify and recover the DEK
+    string      Purpose             = 3;    // Opaque tag: "backup", "export", "session", etc.
+    string      TomeCipher          = 4;    // AEAD cipher for the encrypted KeyTome payload
+    bytes       TomeNonce           = 6;    // Nonce for encrypting the serialized KeyTome
+    bytes       Cipherblob          = 7;    // AEAD cipherblob of the serialized KeyTome := AEAD_Encrypt(DEK, TomeNonce, Marshal(KeyTome), AAD)
+}
+
+
+// KeyForm identifies how a key operates.
+enum KeyForm {
+    Unspecified         = 0;
+    SymmetricKey        = 1;
+    AsymmetricKey       = 2;
+    SigningKey          = 3;
+}
+
+// CryptoKitID identifies an encryption suite that implements CryptoKit.
+enum CryptoKitID {
+    UnspecifiedKit      = 0;
+    Poly25519           = 1;    //XChaCha20-Poly1305 symmetric, X25519 asymmetric, ED25519 signing
+}
+
+// HashKitID identifies a hash algorithm.
+enum HashKitID {
+    UnspecifiedHashKit = 0;
+    SHA3_256           = 3;
+    SHA3_512           = 4;
+    Blake2s_256        = 5;
+}
+
+
+// CryptOp enumerates cryptographic operations performed by an Enclave.
+enum CryptOp {
+
+    // Sign generates a signature for Input using the referenced signing key.
+    Sign                            = 0;
+
+    // EncryptSym encrypts Input using the symmetric key referenced by OpKey.
+    EncryptSym                      = 1;
+
+    // DecryptSym decrypts Input using the symmetric key referenced by OpKey (inverse of EncryptSym).
+    DecryptSym                      = 2;
+
+    // EncryptToPeer encrypts Input for a recipient identified by PeerKey using the asymmetric key referenced by OpKey.
+    EncryptToPeer                   = 3;
+
+    // DecryptFromPeer decrypts Input from a sender identified by PeerKey using the asymmetric key referenced by OpKey (inverse of EncryptToPeer).
+    DecryptFromPeer                 = 4;
+
+    // Retired compound ops (5-8) — password-based and peer-export ops are now handled by Guard.
+    reserved 5, 6, 7, 8;
+}
+
+
+message CryptOpArgs {
+    CryptOp     Op                  = 1;   // Which operation to invoke
+    CryptoKitID DefaultKit          = 2;   // Fallback CryptoKit when not determined by OpKey
+    bytes       Input               = 3;   // Input buffer (plaintext, ciphertext, or digest)
+    KeyRef      OpKey               = 4;   // References a key used in the enclave for this op
+    bytes       PeerKey             = 5;   // Recipient/sender pub key for asymmetric ops
+}
+
+message CryptOpOut {
+    bytes       Output              = 1;    // Output buffer -- depends on the CryptOpArgs.Op
+    bytes       OpPubKey            = 2;    // Pub key used in the op (useful when OpKey.PubKey was empty)
+}
+
+
+// KeyInfo describes a key's identity and type.
+//
+// Two modes:
+//   1) Describes an existing key  — all fields populated
+//   2) Key generation guide       — only KeyForm and CryptoKitID are used
+message KeyInfo {
+    KeyForm     KeyForm             = 1;
+    CryptoKitID CryptoKitID         = 2;
+    int64       TimeCreated         = 3;    // Unix timestamp << 16 ("UTC16"), or 0 if unset
+    bytes       PubKey              = 4;    // Public part of the key (binary)
+}
+
+
+// KeyRef references a specific key within a KeyTome.
+message KeyRef {
+    fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
+    fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15
+    bytes       PubKey              = 4;    // Pub key prefix (empty => newest key in the keyring)
+}
+
+
+// KeyEntry stores or references a single cryptographic key.
+//
+// Three modes:
+//   1) Storage/Export — all fields populated including PrivKey
+//   2) Reference      — only KeyInfo.PubKey is meaningful, PrivKey is nil
+//   3) KeyGen         — KeyInfo.KeyForm + CryptoKitID drive key generation;
+//                       on completion KeyInfo is populated and PrivKey is set.
+//                       A copy (minus PrivKey) is returned to the caller.
+message KeyEntry {
+    KeyInfo     KeyInfo             = 1;
+    bytes       PrivKey             = 6;    // Private key material (nil in reference mode)
+}
+
+
+// Ordering controls how a collection is sorted for efficient lookup.
+enum Ordering {
+    Disabled    = 0;    // Unsorted — will be sorted on demand before search
+    KeyringID   = 1;    // Sorted by Keyring UID (for KeyTome.Keyrings)
+    PubKey      = 2;    // Sorted by PubKey (for Keyring.Keys)
+    TimeID      = 3;    // Sorted by TimeCreated descending (newest first)
+}
+
+
+// Keyring is an ordered collection of keys sharing a common identity.
+message Keyring {
+    fixed64             UID_0           = 1;
+    fixed64             UID_1           = 2;
+    repeated KeyEntry   Keys            = 5;    // Ordered list of keys (sorted by PubKey)
+    Ordering            Ordering        = 9;    // Current sort order of Keys
+    bytes               NewestPubKey    = 8;    // PubKey with the largest TimeCreated (cache)
+}
+
+
+// KeyTome is the root container for all keyrings and their keys.
+message KeyTome {
+    int64               Revision        = 1;    // Incremented on each mutation
+    repeated Keyring    Keyrings        = 2;    // Keyrings stored in this tome
+    Ordering            Ordering        = 5;    // Current sort order of Keyrings
+}
+
+
+// SigHeader precedes a signed payload, encoding signer identity and payload geometry.
+message SigHeader {
+    CryptoKitID SignerCryptoKit     = 1;    // CryptoKit used to produce the signature
+    bytes       SignerPubKey        = 2;    // Public key of the signer
+    HashKitID   HashKitID           = 6;    // Hash algorithm for the payload digest
+    uint32      HeaderSz            = 7;    // Size of the hashed+signed header payload
+    uint32      HeaderCodec         = 8;    // Client-specified codec for unmarshalling the header
+    uint64      BodySz              = 9;    // Size of the unhashed body payload
+}
