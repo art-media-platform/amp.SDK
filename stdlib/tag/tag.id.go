@@ -257,7 +257,8 @@ func (id UID) Octal(enc []OctalDigit) []OctalDigit {
 	remain := UID{id[0], id[1]}
 	digits := 0
 
-	for bitsRemain := 192; bitsRemain > 0; bitsRemain -= 3 {
+	N := (UID_Bits + 2) / 3 // number of octal digits needed to represent a UID
+	for range N {
 		digit := OctalDigit(remain[1] & 0x7)
 		enc = append(enc, digit)
 		remain[1] = (remain[1] >> 3) | (remain[0] << 61)
