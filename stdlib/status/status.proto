@@ -73,4 +73,6 @@ message Status {
     Severity    Severity = 2; // which log to larget
     int32       Level    = 3; // log level, 0 is highest priority
     string      Message  = 4; // human readable message, may be empty
+    fixed64     TimeID_0 = 8; // time-based ID, for ordering and deduplication use - tag.NowID()
+    fixed64     TimeID_1 = 9; // trailing part of TimeID.
 }

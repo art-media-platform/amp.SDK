@@ -259,6 +259,8 @@ type Status struct {
 	Severity      Severity               `protobuf:"varint,2,opt,name=Severity,proto3,enum=status.Severity" json:"Severity,omitempty"` // which log to larget
 	Level         int32                  `protobuf:"varint,3,opt,name=Level,proto3" json:"Level,omitempty"`                            // log level, 0 is highest priority
 	Message       string                 `protobuf:"bytes,4,opt,name=Message,proto3" json:"Message,omitempty"`                         // human readable message, may be empty
+	TimeID_0      uint64                 `protobuf:"fixed64,8,opt,name=TimeID_0,json=TimeID0,proto3" json:"TimeID_0,omitempty"`        // time-based ID, for ordering and deduplication use - tag.NowID()
+	TimeID_1      uint64                 `protobuf:"fixed64,9,opt,name=TimeID_1,json=TimeID1,proto3" json:"TimeID_1,omitempty"`        // trailing part of TimeID.
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -321,16 +323,32 @@ func (x *Status) GetMessage() string {
 	return ""
 }
 
+func (x *Status) GetTimeID_0() uint64 {
+	if x != nil {
+		return x.TimeID_0
+	}
+	return 0
+}
+
+func (x *Status) GetTimeID_1() uint64 {
+	if x != nil {
+		return x.TimeID_1
+	}
+	return 0
+}
+
 var File_stdlib_status_status_proto protoreflect.FileDescriptor
 
 const file_stdlib_status_status_proto_rawDesc = "" +
 	"\n" +
-	"\x1astdlib/status/status.proto\x12\x06status\"\x88\x01\n" +
+	"\x1astdlib/status/status.proto\x12\x06status\"\xbe\x01\n" +
 	"\x06Status\x12 \n" +
 	"\x04Code\x18\x01 \x01(\x0e2\f.status.CodeR\x04Code\x12,\n" +
 	"\bSeverity\x18\x02 \x01(\x0e2\x10.status.SeverityR\bSeverity\x12\x14\n" +
 	"\x05Level\x18\x03 \x01(\x05R\x05Level\x12\x18\n" +
-	"\aMessage\x18\x04 \x01(\tR\aMessage*\xf7\t\n" +
+	"\aMessage\x18\x04 \x01(\tR\aMessage\x12\x19\n" +
+	"\bTimeID_0\x18\b \x01(\x06R\aTimeID0\x12\x19\n" +
+	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\xf7\t\n" +
 	"\x04Code\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x14\n" +
 	"\aUnnamed\x10\xa7\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +

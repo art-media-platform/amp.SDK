@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 )
@@ -63,6 +64,10 @@ func (v *Status) Error() string {
 	return v.Message
 }
 
+func (v *Status) TimeID() tag.UID {
+	return tag.UID{v.TimeID_0, v.TimeID_1}
+}
+
 func GetCode(err error) Code {
 	if err == nil {
 		return Code_Nil
@@ -107,29 +112,28 @@ func (code Code) Error(msg string) error {
 	if code == Code_Nil {
 		return nil
 	}
+	tid := tag.NowID()
 	return &Status{
-		Code:    code,
-		Message: msg,
+		Code:     code,
+		Message:  msg,
+		TimeID_0: tid[0],
+		TimeID_1: tid[1],
 	}
 }
 
 // Errorf returns an *Error with the given error code and msg.
 // If one or more args are given, msg is used as a format string.
-func (code Code) Errorf(format string, msgArgs ...interface{}) error {
+func (code Code) Errorf(format string, msgArgs ...any) error {
 	if code == Code_Nil {
 		return nil
 	}
-
-	err := &Status{
-		Code: code,
-	}
+	var msg string
 	if len(msgArgs) == 0 {
-		err.Message = format
+		msg = format
 	} else {
-		err.Message = fmt.Sprintf(format, msgArgs...)
+		msg = fmt.Sprintf(format, msgArgs...)
 	}
-
-	return err
+	return code.Error(msg)
 }
 
 // Wrap returns a ReqErr with the given error code and "cause" error
@@ -137,10 +141,7 @@ func (code Code) Wrap(cause error) error {
 	if cause == nil {
 		return nil
 	}
-	return &Status{
-		Code:    code,
-		Message: cause.Error(),
-	}
+	return code.Error(cause.Error())
 }
 
 // Emits a generic error that wraps this std.Code_Code
@@ -148,29 +149,5 @@ func (code Code) Err() error {
 	if code == Code_Nil {
 		return nil
 	}
-	return &Status{
-		Code: code,
-	}
-}
-
-// Formstatus.Error returns a std.Code_Error with the given error code and msg set.
-func (code Code) FormError(msg string) error {
-	if code == Code_Nil {
-		return nil
-	}
-	return &Status{
-		Code:    code,
-		Message: msg,
-	}
-}
-
-// Formstatus.Errorf returns a std.Code_Error with the given error code and formattable msg set.
-func (code Code) FormErrorf(msgFormat string, msgArgs ...interface{}) error {
-	if code == Code_Nil {
-		return nil
-	}
-	return &Status{
-		Code:    code,
-		Message: fmt.Sprintf(msgFormat, msgArgs...),
-	}
+	return code.Error("")
 }
