@@ -102,7 +102,7 @@ func (enc *enclave) ImportKeys(srcTome *KeyTome) error {
 	return nil
 }
 
-// GenerateKeys generates a new KeyEntry for each entry in srcTome based on KeyForm and CryptoKitID.
+// GenerateKeys generates a new KeyEntry for each entry in srcTome based on KeyType and CryptoKitID.
 // The newly generated keys are merged into the host KeyTome.
 // A copy of each generated entry (minus PrivKey) is placed into srcTome for the caller.
 //

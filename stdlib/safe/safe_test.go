@@ -41,7 +41,7 @@ func TestRoundTrip(t *testing.T) {
 	keyRef.SetKeyringID(keyringID)
 
 	keyInfo, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
-		KeyForm:     safe.KeyForm_SymmetricKey,
+		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -146,7 +146,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	aliceRef.SetKeyringID(aliceKeyringID)
 
 	aliceInfo, err := safe.GenerateNewKey(enc, aliceKeyringID, &safe.KeyInfo{
-		KeyForm:     safe.KeyForm_AsymmetricKey,
+		KeyType:     safe.KeyType_AsymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -159,7 +159,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	bobRef.SetKeyringID(bobKeyringID)
 
 	bobInfo, err := safe.GenerateNewKey(enc, bobKeyringID, &safe.KeyInfo{
-		KeyForm:     safe.KeyForm_AsymmetricKey,
+		KeyType:     safe.KeyType_AsymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -218,7 +218,7 @@ func TestImportKeys(t *testing.T) {
 				Keys: []*safe.KeyEntry{
 					{
 						KeyInfo: &safe.KeyInfo{
-							KeyForm:     safe.KeyForm_SymmetricKey,
+							KeyType:     safe.KeyType_SymmetricKey,
 							CryptoKitID: safe.CryptoKitID_Poly25519,
 							TimeCreated: 1000,
 							PubKey:      make([]byte, 32),
@@ -457,7 +457,7 @@ func TestFetchNewestKey(t *testing.T) {
 
 	// Generate two keys on the same keyring
 	info1, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
-		KeyForm:     safe.KeyForm_SymmetricKey,
+		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -465,7 +465,7 @@ func TestFetchNewestKey(t *testing.T) {
 	}
 
 	info2, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
-		KeyForm:     safe.KeyForm_SymmetricKey,
+		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -510,7 +510,7 @@ func TestEncryptDecryptVariousSizes(t *testing.T) {
 	keyRef.SetKeyringID(keyringID)
 
 	keyInfo, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
-		KeyForm:     safe.KeyForm_SymmetricKey,
+		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {

@@ -59,7 +59,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 	** Symmetric test
 	**/
 	if kit.Encrypt != nil && kit.Decrypt != nil && kit.GenerateKey != nil {
-		entry.KeyInfo.KeyForm = KeyForm_SymmetricKey
+		entry.KeyInfo.KeyType = KeyType_SymmetricKey
 		err := kit.GenerateKey(reader, inKeyLen, &entry)
 		if err != nil {
 			gTesting.Fatal(err)
@@ -101,7 +101,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 	** Asymmetric test
 	**/
 	if kit.EncryptFor != nil && kit.DecryptFrom != nil && kit.GenerateKey != nil {
-		entry.KeyInfo.KeyForm = KeyForm_AsymmetricKey
+		entry.KeyInfo.KeyType = KeyType_AsymmetricKey
 		err := kit.GenerateKey(reader, inKeyLen, &entry)
 		if err != nil {
 			gTesting.Fatal(err)
@@ -109,7 +109,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 
 		recipient := KeyEntry{
 			KeyInfo: &KeyInfo{
-				KeyForm:     KeyForm_AsymmetricKey,
+				KeyType:     KeyType_AsymmetricKey,
 				CryptoKitID: kit.ID,
 			},
 		}
@@ -154,7 +154,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 	** Signing test
 	**/
 	if kit.Sign != nil && kit.Verify != nil && kit.GenerateKey != nil {
-		entry.KeyInfo.KeyForm = KeyForm_SigningKey
+		entry.KeyInfo.KeyType = KeyType_SigningKey
 		err := kit.GenerateKey(reader, inKeyLen, &entry)
 		if err != nil {
 			gTesting.Fatal(err)

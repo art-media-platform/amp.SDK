@@ -58,8 +58,8 @@ message SealedTome {
 }
 
 
-// KeyForm identifies how a key operates.
-enum KeyForm {
+// KeyType identifies how a key operates.
+enum KeyType {
     Unspecified         = 0;
     SymmetricKey        = 1;
     AsymmetricKey       = 2;
@@ -122,10 +122,10 @@ message CryptOpOut {
 //
 // Two modes:
 //   1) Describes an existing key  — all fields populated
-//   2) Key generation guide       — only KeyForm and CryptoKitID are used
+//   2) Key generation guide       — only KeyType and CryptoKitID are used
 message KeyInfo {
-    KeyForm     KeyForm             = 1;
-    CryptoKitID CryptoKitID         = 2;
+    CryptoKitID CryptoKitID         = 1;
+    KeyType     KeyType             = 2;
     int64       TimeCreated         = 3;    // Unix timestamp << 16 ("UTC16"), or 0 if unset
     bytes       PubKey              = 4;    // Public part of the key (binary)
 }
@@ -144,7 +144,7 @@ message KeyRef {
 // Three modes:
 //   1) Storage/Export — all fields populated including PrivKey
 //   2) Reference      — only KeyInfo.PubKey is meaningful, PrivKey is nil
-//   3) KeyGen         — KeyInfo.KeyForm + CryptoKitID drive key generation;
+//   3) KeyGen         — KeyInfo.KeyType + CryptoKitID drive key generation;
 //                       on completion KeyInfo is populated and PrivKey is set.
 //                       A copy (minus PrivKey) is returned to the caller.
 message KeyEntry {

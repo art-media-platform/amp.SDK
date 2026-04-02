@@ -71,7 +71,7 @@ type Enclave interface {
 	// Note: incoming duplicate key entries are ignored/dropped.
 	ImportKeys(srcTome *KeyTome) error
 
-	// Generates a new KeyEntry for each entry in srcTome (based on the entry's KeyForm and CryptoKitID, ignoring the rest)
+	// Generates a new KeyEntry for each entry in srcTome (based on the entry's KeyType and CryptoKitID, ignoring the rest)
 	// and merges it with the host KeyTome.  A copy of each newly generated entry (except for PrivKey) is placed into the result KeyTome.
 	// See "KeyGen mode" notes where KeyEntry is declared.
 	GenerateKeys(srcTome *KeyTome) (*KeyTome, error)
@@ -97,8 +97,8 @@ type Enclave interface {
 type CryptoKit struct {
 	ID CryptoKitID
 
-	// GenerateKey populates ioEntry.KeyInfo.PubKey and ioEntry.PrivKey based on ioEntry.KeyInfo.KeyForm.
-	// Pre: ioEntry.KeyInfo.KeyForm and .CryptoKitID are set; .TimeCreated should be set by caller.
+	// GenerateKey populates ioEntry.KeyInfo.PubKey and ioEntry.PrivKey based on ioEntry.KeyInfo.KeyType.
+	// Pre: ioEntry.KeyInfo.KeyType and .CryptoKitID are set; .TimeCreated should be set by caller.
 	// inRequestedKeySz is advisory (ignored by some implementations).
 	GenerateKey func(inRand io.Reader, inRequestedKeySz int, ioEntry *KeyEntry) error
 

@@ -111,12 +111,12 @@ var xcKit = CryptoKit{
 	Verify:      edVerify,
 }
 
-// xcGenerateKey generates a new key pair based on KeyForm.
+// xcGenerateKey generates a new key pair based on KeyType.
 func xcGenerateKey(inRand io.Reader, inRequestedKeySz int, ioEntry *KeyEntry) error {
 	keyInfo := ioEntry.KeyInfo
 
-	switch keyInfo.KeyForm {
-	case KeyForm_SymmetricKey:
+	switch keyInfo.KeyType {
+	case KeyType_SymmetricKey:
 		// PubKey acts as a public identifier; PrivKey is the symmetric secret.
 		pubSz := inRequestedKeySz
 		if pubSz < 16 {
@@ -131,7 +131,7 @@ func xcGenerateKey(inRand io.Reader, inRequestedKeySz int, ioEntry *KeyEntry) er
 			return status.Code_KeyGenerationFailed.Wrap(err)
 		}
 
-	case KeyForm_AsymmetricKey:
+	case KeyType_AsymmetricKey:
 		curve := ecdh.X25519()
 		priv, err := curve.GenerateKey(inRand)
 		if err != nil {
@@ -140,7 +140,7 @@ func xcGenerateKey(inRand io.Reader, inRequestedKeySz int, ioEntry *KeyEntry) er
 		keyInfo.PubKey = priv.PublicKey().Bytes()
 		ioEntry.PrivKey = priv.Bytes()
 
-	case KeyForm_SigningKey:
+	case KeyType_SigningKey:
 		pub, priv, err := ed25519.GenerateKey(inRand)
 		if err != nil {
 			return status.Code_KeyGenerationFailed.Wrap(err)

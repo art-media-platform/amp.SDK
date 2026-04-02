@@ -67,25 +67,25 @@ func (Const) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{0}
 }
 
-// KeyForm identifies how a key operates.
-type KeyForm int32
+// KeyType identifies how a key operates.
+type KeyType int32
 
 const (
-	KeyForm_Unspecified   KeyForm = 0
-	KeyForm_SymmetricKey  KeyForm = 1
-	KeyForm_AsymmetricKey KeyForm = 2
-	KeyForm_SigningKey    KeyForm = 3
+	KeyType_Unspecified   KeyType = 0
+	KeyType_SymmetricKey  KeyType = 1
+	KeyType_AsymmetricKey KeyType = 2
+	KeyType_SigningKey    KeyType = 3
 )
 
-// Enum value maps for KeyForm.
+// Enum value maps for KeyType.
 var (
-	KeyForm_name = map[int32]string{
+	KeyType_name = map[int32]string{
 		0: "Unspecified",
 		1: "SymmetricKey",
 		2: "AsymmetricKey",
 		3: "SigningKey",
 	}
-	KeyForm_value = map[string]int32{
+	KeyType_value = map[string]int32{
 		"Unspecified":   0,
 		"SymmetricKey":  1,
 		"AsymmetricKey": 2,
@@ -93,30 +93,30 @@ var (
 	}
 )
 
-func (x KeyForm) Enum() *KeyForm {
-	p := new(KeyForm)
+func (x KeyType) Enum() *KeyType {
+	p := new(KeyType)
 	*p = x
 	return p
 }
 
-func (x KeyForm) String() string {
+func (x KeyType) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (KeyForm) Descriptor() protoreflect.EnumDescriptor {
+func (KeyType) Descriptor() protoreflect.EnumDescriptor {
 	return file_stdlib_safe_safe_proto_enumTypes[1].Descriptor()
 }
 
-func (KeyForm) Type() protoreflect.EnumType {
+func (KeyType) Type() protoreflect.EnumType {
 	return &file_stdlib_safe_safe_proto_enumTypes[1]
 }
 
-func (x KeyForm) Number() protoreflect.EnumNumber {
+func (x KeyType) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use KeyForm.Descriptor instead.
-func (KeyForm) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use KeyType.Descriptor instead.
+func (KeyType) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{1}
 }
 
@@ -774,11 +774,11 @@ func (x *CryptOpOut) GetOpPubKey() []byte {
 //
 // Two modes:
 //  1. Describes an existing key  — all fields populated
-//  2. Key generation guide       — only KeyForm and CryptoKitID are used
+//  2. Key generation guide       — only KeyType and CryptoKitID are used
 type KeyInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	KeyForm       KeyForm                `protobuf:"varint,1,opt,name=KeyForm,proto3,enum=safe.KeyForm" json:"KeyForm,omitempty"`
-	CryptoKitID   CryptoKitID            `protobuf:"varint,2,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
+	CryptoKitID   CryptoKitID            `protobuf:"varint,1,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
+	KeyType       KeyType                `protobuf:"varint,2,opt,name=KeyType,proto3,enum=safe.KeyType" json:"KeyType,omitempty"`
 	TimeCreated   int64                  `protobuf:"varint,3,opt,name=TimeCreated,proto3" json:"TimeCreated,omitempty"` // Unix timestamp << 16 ("UTC16"), or 0 if unset
 	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`            // Public part of the key (binary)
 	unknownFields protoimpl.UnknownFields
@@ -815,18 +815,18 @@ func (*KeyInfo) Descriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *KeyInfo) GetKeyForm() KeyForm {
-	if x != nil {
-		return x.KeyForm
-	}
-	return KeyForm_Unspecified
-}
-
 func (x *KeyInfo) GetCryptoKitID() CryptoKitID {
 	if x != nil {
 		return x.CryptoKitID
 	}
 	return CryptoKitID_UnspecifiedKit
+}
+
+func (x *KeyInfo) GetKeyType() KeyType {
+	if x != nil {
+		return x.KeyType
+	}
+	return KeyType_Unspecified
 }
 
 func (x *KeyInfo) GetTimeCreated() int64 {
@@ -909,7 +909,7 @@ func (x *KeyRef) GetPubKey() []byte {
 // Three modes:
 //  1. Storage/Export — all fields populated including PrivKey
 //  2. Reference      — only KeyInfo.PubKey is meaningful, PrivKey is nil
-//  3. KeyGen         — KeyInfo.KeyForm + CryptoKitID drive key generation;
+//  3. KeyGen         — KeyInfo.KeyType + CryptoKitID drive key generation;
 //     on completion KeyInfo is populated and PrivKey is set.
 //     A copy (minus PrivKey) is returned to the caller.
 type KeyEntry struct {
@@ -1243,9 +1243,9 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"CryptOpOut\x12\x16\n" +
 	"\x06Output\x18\x01 \x01(\fR\x06Output\x12\x1a\n" +
 	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\xa1\x01\n" +
-	"\aKeyInfo\x12'\n" +
-	"\aKeyForm\x18\x01 \x01(\x0e2\r.safe.KeyFormR\aKeyForm\x123\n" +
-	"\vCryptoKitID\x18\x02 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12 \n" +
+	"\aKeyInfo\x123\n" +
+	"\vCryptoKitID\x18\x01 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12'\n" +
+	"\aKeyType\x18\x02 \x01(\x0e2\r.safe.KeyTypeR\aKeyType\x12 \n" +
 	"\vTimeCreated\x18\x03 \x01(\x03R\vTimeCreated\x12\x16\n" +
 	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"b\n" +
 	"\x06KeyRef\x12\x1f\n" +
@@ -1277,7 +1277,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x05Const\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x15\n" +
 	"\x11SealedTomeVersion\x10\x01*O\n" +
-	"\aKeyForm\x12\x0f\n" +
+	"\aKeyType\x12\x0f\n" +
 	"\vUnspecified\x10\x00\x12\x10\n" +
 	"\fSymmetricKey\x10\x01\x12\x11\n" +
 	"\rAsymmetricKey\x10\x02\x12\x0e\n" +
@@ -1323,7 +1323,7 @@ var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
 var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),          // 0: safe.Const
-	(KeyForm)(0),        // 1: safe.KeyForm
+	(KeyType)(0),        // 1: safe.KeyType
 	(CryptoKitID)(0),    // 2: safe.CryptoKitID
 	(HashKitID)(0),      // 3: safe.HashKitID
 	(CryptOp)(0),        // 4: safe.CryptOp
@@ -1345,8 +1345,8 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	4,  // 1: safe.CryptOpArgs.Op:type_name -> safe.CryptOp
 	2,  // 2: safe.CryptOpArgs.DefaultKit:type_name -> safe.CryptoKitID
 	12, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
-	1,  // 4: safe.KeyInfo.KeyForm:type_name -> safe.KeyForm
-	2,  // 5: safe.KeyInfo.CryptoKitID:type_name -> safe.CryptoKitID
+	2,  // 4: safe.KeyInfo.CryptoKitID:type_name -> safe.CryptoKitID
+	1,  // 5: safe.KeyInfo.KeyType:type_name -> safe.KeyType
 	11, // 6: safe.KeyEntry.KeyInfo:type_name -> safe.KeyInfo
 	13, // 7: safe.Keyring.Keys:type_name -> safe.KeyEntry
 	5,  // 8: safe.Keyring.Ordering:type_name -> safe.Ordering

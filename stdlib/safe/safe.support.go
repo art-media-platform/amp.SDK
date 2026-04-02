@@ -60,7 +60,7 @@ func CompareKeyInfo(a, b *KeyInfo) int {
 	if diff == 0 {
 		diff = int(b.TimeCreated - a.TimeCreated) // Reverse time for newer keys to appear first
 		if diff == 0 {
-			diff = int(a.KeyForm - b.KeyForm)
+			diff = int(a.KeyType - b.KeyType)
 			if diff == 0 {
 				diff = int(a.CryptoKitID - b.CryptoKitID)
 			}
@@ -494,7 +494,7 @@ func (tome *KeyTome) GenerateFork(
 
 			newEntry := &KeyEntry{
 				KeyInfo: &KeyInfo{
-					KeyForm:     srcInfo.KeyForm,
+					KeyType:     srcInfo.KeyType,
 					CryptoKitID: curKitID,
 					TimeCreated: time.Now().Unix(),
 				},
@@ -508,7 +508,7 @@ func (tome *KeyTome) GenerateFork(
 			if err != nil {
 				return nil, err
 			}
-			if srcInfo.KeyForm != newEntry.KeyInfo.KeyForm || curKitID != newEntry.KeyInfo.CryptoKitID {
+			if srcInfo.KeyType != newEntry.KeyInfo.KeyType || curKitID != newEntry.KeyInfo.CryptoKitID {
 				return nil, status.Code_KeyGenerationFailed.Error("generate key altered key type")
 			}
 
@@ -529,7 +529,7 @@ func (entry *KeyEntry) EqualTo(other *KeyEntry) bool {
 	a := entry.KeyInfo
 	b := other.KeyInfo
 
-	return a.KeyForm == b.KeyForm &&
+	return a.KeyType == b.KeyType &&
 		a.CryptoKitID == b.CryptoKitID &&
 		a.TimeCreated == b.TimeCreated &&
 		bytes.Equal(a.PubKey, b.PubKey) &&
@@ -611,7 +611,7 @@ func GenerateNewKey(
 		return nil, status.Code_AssertFailed.Error("no keys returned")
 	}
 
-	if kr.Keys[0].KeyInfo.KeyForm != keyInfo.KeyForm {
+	if kr.Keys[0].KeyInfo.KeyType != keyInfo.KeyType {
 		return nil, status.Code_AssertFailed.Error("unexpected key type")
 	}
 
@@ -712,7 +712,7 @@ func (P *PayloadPacker) ResetSession(
 	if err != nil {
 		return err
 	}
-	if keyEntry.KeyForm != KeyForm_SigningKey {
+	if keyEntry.KeyType != KeyType_SigningKey {
 		return status.Code_BadRequest.Error("not a signing key")
 	}
 
@@ -976,7 +976,7 @@ func (U *PayloadUnpacker) UnpackAndVerify(
 	out.HashSig = inSignedBuf[sigPos:sigEnd]
 	out.Body = inSignedBuf[bodyPos:bodyEnd]
 	out.Signer.PubKey = hdr.SignerPubKey
-	out.Signer.KeyForm = KeyForm_SigningKey
+	out.Signer.KeyType = KeyType_SigningKey
 	out.Signer.CryptoKitID = hdr.SignerCryptoKit
 
 	return err
