@@ -5,8 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
@@ -139,16 +138,16 @@ func Test6(t *testing.T) {
 		canceled1.AwaitOrFail(t)
 		canceled2.AwaitOrFail(t)
 
-		require.Eventually(t, func() bool { return isDone(t, p.Done()) }, 5*time.Second, 100*time.Millisecond)
-		require.Eventually(t, func() bool { return isDone(t, child.Done()) }, 5*time.Second, 100*time.Millisecond)
-		require.Eventually(t, func() bool { return isDone(t, foo1.Done()) }, 5*time.Second, 100*time.Millisecond)
-		require.Eventually(t, func() bool { return isDone(t, foo2.Done()) }, 5*time.Second, 100*time.Millisecond)
+		status.RequireEventually(t, func() bool { return isDone(t, p.Done()) }, 5*time.Second, 100*time.Millisecond)
+		status.RequireEventually(t, func() bool { return isDone(t, child.Done()) }, 5*time.Second, 100*time.Millisecond)
+		status.RequireEventually(t, func() bool { return isDone(t, foo1.Done()) }, 5*time.Second, 100*time.Millisecond)
+		status.RequireEventually(t, func() bool { return isDone(t, foo2.Done()) }, 5*time.Second, 100*time.Millisecond)
 	})
 }
 
 func requireDone(t *testing.T, chDone <-chan struct{}, done bool) {
 	t.Helper()
-	require.Equal(t, done, isDone(t, chDone))
+	status.Require(t, isDone(t, chDone), done)
 }
 
 func isDone(t *testing.T, chDone <-chan struct{}) bool {
