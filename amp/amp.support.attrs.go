@@ -13,10 +13,37 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+const (
+	// DefaultMaxGracePeriod is the default epoch grace period in seconds (90 days).
+	// After an epoch rotation, old-epoch TxMsgs are accepted for this duration.
+	DefaultMaxGracePeriod int64 = 90 * 24 * 60 * 60
+)
+
 var (
 	// Bootstrapping aka "head" node ID where to start.
 	HeadNodeID = tag.UID{0, uint64(Const_HeadNodeID)}
 )
+
+// GracePeriod returns the effective grace period for this epoch.
+// Returns DefaultMaxGracePeriod if MaxGracePeriod is zero (unset).
+func (ep *PlanetEpoch) GracePeriod() int64 {
+	if ep == nil || ep.MaxGracePeriod <= 0 {
+		return DefaultMaxGracePeriod
+	}
+	return ep.MaxGracePeriod
+}
+
+// TxWithinGracePeriod returns true if a TxMsg authored under a previous epoch
+// is still within the acceptance window relative to this (newer) epoch.
+// txTimeID is the TxMsg's TxID; newEpochTimeID is this epoch's creation timestamp.
+func (ep *PlanetEpoch) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) bool {
+	txUnix := txTimeID.Unix()
+	epochUnix := newEpochTimeID.Unix()
+	if txUnix >= epochUnix {
+		return true // TxMsg is newer than or concurrent with the epoch — always accept
+	}
+	return (epochUnix - txUnix) <= ep.GracePeriod()
+}
 
 func TagFromUID(id tag.UID) *Tag {
 	return &Tag{

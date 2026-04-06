@@ -2,9 +2,11 @@ package amp
 
 import (
 	"context"
+	"io"
 	"net/url"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/media"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 	"google.golang.org/protobuf/proto"
@@ -86,8 +88,8 @@ type Session interface {
 	Registry     // How symbols and types registered and resolved
 	TxReceiver   // Routes tx to a Session's Transport.RecvTx()
 
-	// Returns the active media.Publisher instance for this session.
-	AssetPublisher() media.Publisher
+	// Returns the active data.Publisher instance for this session.
+	AssetPublisher() data.Publisher
 
 	// Returns info about this user and session -- READ ONLY
 	Login() *Login
@@ -101,6 +103,70 @@ type Session interface {
 	// Gets the requested currently running app instance.
 	// If not running and autoCreate is set, a new instance is created and started.
 	AppInstance(moduleID tag.UID, autoCreate bool) (AppInstance, error)
+
+	// Returns the session's Enclave (identity key store), or nil if not yet initialized.
+	Enclave() safe.Enclave
+
+	// Sets the session's Enclave. Called by the home app after opening/creating it.
+	SetEnclave(enc safe.Enclave)
+
+	// Returns the session's EpochKeyStore (symmetric epoch keys), or nil if not yet initialized.
+	EpochKeys() safe.EpochKeyStore
+
+	// Sets the session's EpochKeyStore. Called by the home app after opening/creating it.
+	SetEpochKeys(eks safe.EpochKeyStore)
+
+	// Registers a planet as joined by this member's session.
+	RegisterPlanet(planetID tag.UID, label string, currentEpoch tag.UID)
+
+	// Returns the current epoch UID for a planet, or nil UID if not registered.
+	PlanetEpoch(planetID tag.UID) tag.UID
+
+	// Updates the current epoch for a previously registered planet.
+	// Called by app.members after a new epoch key is decrypted and stored.
+	UpdatePlanetEpoch(planetID, epochID tag.UID)
+
+	// Called after a new epoch key has been stored in EpochKeyStore.
+	// Notifies the vault controller to re-verify pending journal entries for this epoch.
+	OnEpochKeyArrived(epochID tag.UID)
+
+	// Processes a verified planet-public governance TxMsg (e.g. MemberEpoch distribution).
+	// Called by the vault controller after signature verification succeeds.
+	// Routes the TxMsg to all registered governance handlers for epoch key extraction.
+	OnGovernanceTx(planetID tag.UID, tx *TxMsg)
+
+	// Registers a handler to receive verified planet-public governance TxMsgs.
+	// Apps call this during MakeReady to subscribe to governance events.
+	RegisterGovernanceHandler(handler func(planetID tag.UID, tx *TxMsg))
+}
+
+// TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
+// This is the primary storage for the vault sync engine — it preserves the original wire-format
+// TxMsg bytes for signature verification and peer-to-peer propagation.
+type TxJournal interface {
+	Close() error
+	Append(planetID tag.UID, txTimeID tag.UID, raw []byte) error
+	ReadSince(planetID tag.UID, after tag.UID, cb func(txTimeID tag.UID, raw []byte) bool) error
+	HighWater(planetID tag.UID) (tag.UID, error)
+	RangeHash(planetID tag.UID, start, end tag.UID) ([32]byte, error)
+}
+
+// TxOutbox queues locally authored TxMsgs and blobs for propagation to vaults.
+// Entries persist across restarts — the outbox is drained when vault connectivity is available.
+type TxOutbox interface {
+	EnqueueTx(planetID tag.UID, txTimeID tag.UID, raw []byte) error
+	EnqueueBlob(ref *BlobRef) error
+	DrainTx(cb func(planetID tag.UID, txTimeID tag.UID, raw []byte) error) error
+	DrainBlobs(cb func(ref *BlobRef) error) error
+	Close() error
+}
+
+// BlobStore manages content-addressed encrypted blob storage.
+// Blobs are identified by (PlanetID, BlobID) and validated by their content hash.
+type BlobStore interface {
+	Store(planetID tag.UID, blobID tag.UID, data io.Reader, byteSize int64) error
+	Retrieve(planetID tag.UID, blobID tag.UID) (io.ReadCloser, error)
+	Has(planetID tag.UID, blobID tag.UID) bool
 }
 
 // Registry is where apps and types are registered -- concurrency safe.

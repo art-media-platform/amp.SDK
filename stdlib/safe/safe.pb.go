@@ -68,13 +68,14 @@ func (Const) EnumDescriptor() ([]byte, []int) {
 }
 
 // KeyType identifies how a key operates.
+// The CryptoKit may derive additional capabilities from a single key entry
+// (e.g. an asymmetric key derived from a signing key).
 type KeyType int32
 
 const (
-	KeyType_Unspecified   KeyType = 0
-	KeyType_SymmetricKey  KeyType = 1
-	KeyType_AsymmetricKey KeyType = 2
-	KeyType_SigningKey    KeyType = 3
+	KeyType_Unspecified  KeyType = 0
+	KeyType_SymmetricKey KeyType = 1
+	KeyType_SigningKey   KeyType = 3
 )
 
 // Enum value maps for KeyType.
@@ -82,14 +83,12 @@ var (
 	KeyType_name = map[int32]string{
 		0: "Unspecified",
 		1: "SymmetricKey",
-		2: "AsymmetricKey",
 		3: "SigningKey",
 	}
 	KeyType_value = map[string]int32{
-		"Unspecified":   0,
-		"SymmetricKey":  1,
-		"AsymmetricKey": 2,
-		"SigningKey":    3,
+		"Unspecified":  0,
+		"SymmetricKey": 1,
+		"SigningKey":   3,
 	}
 )
 
@@ -288,7 +287,7 @@ const (
 	Ordering_Disabled  Ordering = 0 // Unsorted — will be sorted on demand before search
 	Ordering_KeyringID Ordering = 1 // Sorted by Keyring UID (for KeyTome.Keyrings)
 	Ordering_PubKey    Ordering = 2 // Sorted by PubKey (for Keyring.Keys)
-	Ordering_TimeID    Ordering = 3 // Sorted by TimeCreated descending (newest first)
+	Ordering_TimeID    Ordering = 3 // Sorted by TimeID descending (newest first)
 )
 
 // Enum value maps for Ordering.
@@ -779,8 +778,9 @@ type KeyInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CryptoKitID   CryptoKitID            `protobuf:"varint,1,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
 	KeyType       KeyType                `protobuf:"varint,2,opt,name=KeyType,proto3,enum=safe.KeyType" json:"KeyType,omitempty"`
-	TimeCreated   int64                  `protobuf:"varint,3,opt,name=TimeCreated,proto3" json:"TimeCreated,omitempty"` // Unix timestamp << 16 ("UTC16"), or 0 if unset
-	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`            // Public part of the key (binary)
+	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                    // Public part of the key (binary)
+	TimeID_0      uint64                 `protobuf:"fixed64,5,opt,name=TimeID_0,json=TimeID0,proto3" json:"TimeID_0,omitempty"` // Time-based UID, bytes 0..7 (from tag.NowID)
+	TimeID_1      uint64                 `protobuf:"fixed64,6,opt,name=TimeID_1,json=TimeID1,proto3" json:"TimeID_1,omitempty"` // Time-based UID, bytes 8..15
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -829,18 +829,25 @@ func (x *KeyInfo) GetKeyType() KeyType {
 	return KeyType_Unspecified
 }
 
-func (x *KeyInfo) GetTimeCreated() int64 {
-	if x != nil {
-		return x.TimeCreated
-	}
-	return 0
-}
-
 func (x *KeyInfo) GetPubKey() []byte {
 	if x != nil {
 		return x.PubKey
 	}
 	return nil
+}
+
+func (x *KeyInfo) GetTimeID_0() uint64 {
+	if x != nil {
+		return x.TimeID_0
+	}
+	return 0
+}
+
+func (x *KeyInfo) GetTimeID_1() uint64 {
+	if x != nil {
+		return x.TimeID_1
+	}
+	return 0
 }
 
 // KeyRef references a specific key within a KeyTome.
@@ -971,7 +978,7 @@ type Keyring struct {
 	UID_1         uint64                 `protobuf:"fixed64,2,opt,name=UID_1,json=UID1,proto3" json:"UID_1,omitempty"`
 	Keys          []*KeyEntry            `protobuf:"bytes,5,rep,name=Keys,proto3" json:"Keys,omitempty"`                             // Ordered list of keys (sorted by PubKey)
 	Ordering      Ordering               `protobuf:"varint,9,opt,name=Ordering,proto3,enum=safe.Ordering" json:"Ordering,omitempty"` // Current sort order of Keys
-	NewestPubKey  []byte                 `protobuf:"bytes,8,opt,name=NewestPubKey,proto3" json:"NewestPubKey,omitempty"`             // PubKey with the largest TimeCreated (cache)
+	NewestPubKey  []byte                 `protobuf:"bytes,8,opt,name=NewestPubKey,proto3" json:"NewestPubKey,omitempty"`             // PubKey with the largest TimeID (cache)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1102,6 +1109,147 @@ func (x *KeyTome) GetOrdering() Ordering {
 	return Ordering_Disabled
 }
 
+// EpochKeyEntry stores a single symmetric epoch key for a planet or channel.
+// Addressed by (ContainerID, EpochID) — both are tag.UIDs.
+// EpochID is time-based (from tag.NowID), providing natural temporal ordering.
+type EpochKeyEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ContainerID_0 uint64                 `protobuf:"fixed64,1,opt,name=ContainerID_0,json=ContainerID0,proto3" json:"ContainerID_0,omitempty"` // Planet or channel UID, bytes 0..7
+	ContainerID_1 uint64                 `protobuf:"fixed64,2,opt,name=ContainerID_1,json=ContainerID1,proto3" json:"ContainerID_1,omitempty"` // Planet or channel UID, bytes 8..15
+	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`             // Epoch UID, bytes 0..7 (time-based)
+	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Epoch UID, bytes 8..15
+	CryptoKitID   CryptoKitID            `protobuf:"varint,5,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`  // Crypto suite for this epoch key
+	Key           []byte                 `protobuf:"bytes,6,opt,name=Key,proto3" json:"Key,omitempty"`                                         // Symmetric key material (32 bytes)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EpochKeyEntry) Reset() {
+	*x = EpochKeyEntry{}
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EpochKeyEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EpochKeyEntry) ProtoMessage() {}
+
+func (x *EpochKeyEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EpochKeyEntry.ProtoReflect.Descriptor instead.
+func (*EpochKeyEntry) Descriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *EpochKeyEntry) GetContainerID_0() uint64 {
+	if x != nil {
+		return x.ContainerID_0
+	}
+	return 0
+}
+
+func (x *EpochKeyEntry) GetContainerID_1() uint64 {
+	if x != nil {
+		return x.ContainerID_1
+	}
+	return 0
+}
+
+func (x *EpochKeyEntry) GetEpochID_0() uint64 {
+	if x != nil {
+		return x.EpochID_0
+	}
+	return 0
+}
+
+func (x *EpochKeyEntry) GetEpochID_1() uint64 {
+	if x != nil {
+		return x.EpochID_1
+	}
+	return 0
+}
+
+func (x *EpochKeyEntry) GetCryptoKitID() CryptoKitID {
+	if x != nil {
+		return x.CryptoKitID
+	}
+	return CryptoKitID_UnspecifiedKit
+}
+
+func (x *EpochKeyEntry) GetKey() []byte {
+	if x != nil {
+		return x.Key
+	}
+	return nil
+}
+
+// EpochKeyTome is the persistence format for all symmetric epoch keys.
+// Sealed at rest using the same Guard/DEK mechanism as the identity KeyTome.
+type EpochKeyTome struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"` // Incremented on each mutation
+	Keys          []*EpochKeyEntry       `protobuf:"bytes,2,rep,name=Keys,proto3" json:"Keys,omitempty"`          // All epoch keys (sorted by ContainerID, then EpochID)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EpochKeyTome) Reset() {
+	*x = EpochKeyTome{}
+	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EpochKeyTome) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EpochKeyTome) ProtoMessage() {}
+
+func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
+	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EpochKeyTome.ProtoReflect.Descriptor instead.
+func (*EpochKeyTome) Descriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *EpochKeyTome) GetRevision() int64 {
+	if x != nil {
+		return x.Revision
+	}
+	return 0
+}
+
+func (x *EpochKeyTome) GetKeys() []*EpochKeyEntry {
+	if x != nil {
+		return x.Keys
+	}
+	return nil
+}
+
 // SigHeader precedes a signed payload, encoding signer identity and payload geometry.
 type SigHeader struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
@@ -1117,7 +1265,7 @@ type SigHeader struct {
 
 func (x *SigHeader) Reset() {
 	*x = SigHeader{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1129,7 +1277,7 @@ func (x *SigHeader) String() string {
 func (*SigHeader) ProtoMessage() {}
 
 func (x *SigHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1142,7 +1290,7 @@ func (x *SigHeader) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SigHeader.ProtoReflect.Descriptor instead.
 func (*SigHeader) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *SigHeader) GetSignerCryptoKit() CryptoKitID {
@@ -1242,12 +1390,13 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\n" +
 	"CryptOpOut\x12\x16\n" +
 	"\x06Output\x18\x01 \x01(\fR\x06Output\x12\x1a\n" +
-	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\xa1\x01\n" +
+	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\xb5\x01\n" +
 	"\aKeyInfo\x123\n" +
 	"\vCryptoKitID\x18\x01 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12'\n" +
-	"\aKeyType\x18\x02 \x01(\x0e2\r.safe.KeyTypeR\aKeyType\x12 \n" +
-	"\vTimeCreated\x18\x03 \x01(\x03R\vTimeCreated\x12\x16\n" +
-	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"b\n" +
+	"\aKeyType\x18\x02 \x01(\x0e2\r.safe.KeyTypeR\aKeyType\x12\x16\n" +
+	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\x12\x19\n" +
+	"\bTimeID_0\x18\x05 \x01(\x06R\aTimeID0\x12\x19\n" +
+	"\bTimeID_1\x18\x06 \x01(\x06R\aTimeID1\"b\n" +
 	"\x06KeyRef\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
@@ -1266,7 +1415,17 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\aKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12)\n" +
 	"\bKeyrings\x18\x02 \x03(\v2\r.safe.KeyringR\bKeyrings\x12*\n" +
-	"\bOrdering\x18\x05 \x01(\x0e2\x0e.safe.OrderingR\bOrdering\"\xf1\x01\n" +
+	"\bOrdering\x18\x05 \x01(\x0e2\x0e.safe.OrderingR\bOrdering\"\xda\x01\n" +
+	"\rEpochKeyEntry\x12#\n" +
+	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
+	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
+	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
+	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x123\n" +
+	"\vCryptoKitID\x18\x05 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x10\n" +
+	"\x03Key\x18\x06 \x01(\fR\x03Key\"S\n" +
+	"\fEpochKeyTome\x12\x1a\n" +
+	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
+	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xf1\x01\n" +
 	"\tSigHeader\x12;\n" +
 	"\x0fSignerCryptoKit\x18\x01 \x01(\x0e2\x11.safe.CryptoKitIDR\x0fSignerCryptoKit\x12\"\n" +
 	"\fSignerPubKey\x18\x02 \x01(\fR\fSignerPubKey\x12-\n" +
@@ -1276,11 +1435,10 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x06BodySz\x18\t \x01(\x04R\x06BodySz*'\n" +
 	"\x05Const\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x15\n" +
-	"\x11SealedTomeVersion\x10\x01*O\n" +
+	"\x11SealedTomeVersion\x10\x01*<\n" +
 	"\aKeyType\x12\x0f\n" +
 	"\vUnspecified\x10\x00\x12\x10\n" +
-	"\fSymmetricKey\x10\x01\x12\x11\n" +
-	"\rAsymmetricKey\x10\x02\x12\x0e\n" +
+	"\fSymmetricKey\x10\x01\x12\x0e\n" +
 	"\n" +
 	"SigningKey\x10\x03*0\n" +
 	"\vCryptoKitID\x12\x12\n" +
@@ -1290,7 +1448,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x12UnspecifiedHashKit\x10\x00\x12\f\n" +
 	"\bSHA3_256\x10\x03\x12\f\n" +
 	"\bSHA3_512\x10\x04\x12\x0f\n" +
-	"\vBlake2s_256\x10\x05*s\n" +
+	"\vBlake2s_256\x10\x05*[\n" +
 	"\aCryptOp\x12\b\n" +
 	"\x04Sign\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -1298,14 +1456,14 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\n" +
 	"DecryptSym\x10\x02\x12\x11\n" +
 	"\rEncryptToPeer\x10\x03\x12\x13\n" +
-	"\x0fDecryptFromPeer\x10\x04\"\x04\b\x05\x10\x05\"\x04\b\x06\x10\x06\"\x04\b\a\x10\a\"\x04\b\b\x10\b*?\n" +
+	"\x0fDecryptFromPeer\x10\x04*?\n" +
 	"\bOrdering\x12\f\n" +
 	"\bDisabled\x10\x00\x12\r\n" +
 	"\tKeyringID\x10\x01\x12\n" +
 	"\n" +
 	"\x06PubKey\x10\x02\x12\n" +
 	"\n" +
-	"\x06TimeID\x10\x03BJZ.github.com/art-media-platform/amp.SDK/amp/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
+	"\x06TimeID\x10\x03BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
 
 var (
 	file_stdlib_safe_safe_proto_rawDescOnce sync.Once
@@ -1320,25 +1478,27 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 }
 
 var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_stdlib_safe_safe_proto_goTypes = []any{
-	(Const)(0),          // 0: safe.Const
-	(KeyType)(0),        // 1: safe.KeyType
-	(CryptoKitID)(0),    // 2: safe.CryptoKitID
-	(HashKitID)(0),      // 3: safe.HashKitID
-	(CryptOp)(0),        // 4: safe.CryptOp
-	(Ordering)(0),       // 5: safe.Ordering
-	(*GuardInfo)(nil),   // 6: safe.GuardInfo
-	(*WrappedDEK)(nil),  // 7: safe.WrappedDEK
-	(*SealedTome)(nil),  // 8: safe.SealedTome
-	(*CryptOpArgs)(nil), // 9: safe.CryptOpArgs
-	(*CryptOpOut)(nil),  // 10: safe.CryptOpOut
-	(*KeyInfo)(nil),     // 11: safe.KeyInfo
-	(*KeyRef)(nil),      // 12: safe.KeyRef
-	(*KeyEntry)(nil),    // 13: safe.KeyEntry
-	(*Keyring)(nil),     // 14: safe.Keyring
-	(*KeyTome)(nil),     // 15: safe.KeyTome
-	(*SigHeader)(nil),   // 16: safe.SigHeader
+	(Const)(0),            // 0: safe.Const
+	(KeyType)(0),          // 1: safe.KeyType
+	(CryptoKitID)(0),      // 2: safe.CryptoKitID
+	(HashKitID)(0),        // 3: safe.HashKitID
+	(CryptOp)(0),          // 4: safe.CryptOp
+	(Ordering)(0),         // 5: safe.Ordering
+	(*GuardInfo)(nil),     // 6: safe.GuardInfo
+	(*WrappedDEK)(nil),    // 7: safe.WrappedDEK
+	(*SealedTome)(nil),    // 8: safe.SealedTome
+	(*CryptOpArgs)(nil),   // 9: safe.CryptOpArgs
+	(*CryptOpOut)(nil),    // 10: safe.CryptOpOut
+	(*KeyInfo)(nil),       // 11: safe.KeyInfo
+	(*KeyRef)(nil),        // 12: safe.KeyRef
+	(*KeyEntry)(nil),      // 13: safe.KeyEntry
+	(*Keyring)(nil),       // 14: safe.Keyring
+	(*KeyTome)(nil),       // 15: safe.KeyTome
+	(*EpochKeyEntry)(nil), // 16: safe.EpochKeyEntry
+	(*EpochKeyTome)(nil),  // 17: safe.EpochKeyTome
+	(*SigHeader)(nil),     // 18: safe.SigHeader
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	7,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
@@ -1352,13 +1512,15 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	5,  // 8: safe.Keyring.Ordering:type_name -> safe.Ordering
 	14, // 9: safe.KeyTome.Keyrings:type_name -> safe.Keyring
 	5,  // 10: safe.KeyTome.Ordering:type_name -> safe.Ordering
-	2,  // 11: safe.SigHeader.SignerCryptoKit:type_name -> safe.CryptoKitID
-	3,  // 12: safe.SigHeader.HashKitID:type_name -> safe.HashKitID
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	2,  // 11: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
+	16, // 12: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	2,  // 13: safe.SigHeader.SignerCryptoKit:type_name -> safe.CryptoKitID
+	3,  // 14: safe.SigHeader.HashKitID:type_name -> safe.HashKitID
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1372,7 +1534,7 @@ func file_stdlib_safe_safe_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   11,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

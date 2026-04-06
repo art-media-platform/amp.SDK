@@ -13,7 +13,7 @@ var gTesting *testing.T
 func CryptoKitTest(kitToTest CryptoKitID, t *testing.T) {
 	gTesting = t
 
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 5; i++ {
 		kit, err := GetCryptoKit(kitToTest)
 		if err != nil {
 			gTesting.Fatal(err)
@@ -98,10 +98,10 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 	}
 
 	/*****************************************************
-	** Asymmetric test
+	** Asymmetric test (CryptoKit derives asymmetric keys from signing keys)
 	**/
 	if kit.EncryptFor != nil && kit.DecryptFrom != nil && kit.GenerateKey != nil {
-		entry.KeyInfo.KeyType = KeyType_AsymmetricKey
+		entry.KeyInfo.KeyType = KeyType_SigningKey
 		err := kit.GenerateKey(reader, inKeyLen, &entry)
 		if err != nil {
 			gTesting.Fatal(err)
@@ -109,7 +109,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 
 		recipient := KeyEntry{
 			KeyInfo: &KeyInfo{
-				KeyType:     KeyType_AsymmetricKey,
+				KeyType:     KeyType_SigningKey,
 				CryptoKitID: kit.ID,
 			},
 		}

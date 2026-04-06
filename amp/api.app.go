@@ -2,7 +2,7 @@
 package amp
 
 import (
-	"github.com/art-media-platform/amp.SDK/stdlib/media"
+	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 	"google.golang.org/protobuf/proto"
@@ -40,7 +40,7 @@ type AppModule struct {
 // AppContext is provided by the amp runtime to an AppInstance for support and context.
 type AppContext interface {
 	task.Context    // Allows select{} for graceful handling of app shutdown
-	media.Publisher // Allows an app to publish assets for client consumption
+	data.Publisher // Allows an app to publish assets for client consumption
 
 	NewTx() *TxMsg                  // Creates a new tx ready for use
 	Session() Session               // Access to underlying Session
@@ -86,9 +86,14 @@ type Pin interface {
 }
 
 // TxMsg is the serialized transport container sent between client and host.
+//
+// A TxMsg carries one encryption context: TxEnvelope.Epoch selects a single planet or
+// channel epoch key that encrypts the entire payload (TxHeader + TxOps + DataStore).
+// All ops in a TxMsg must belong to the same encryption domain.  To write ops under
+// different keys (e.g. two private channels), author separate TxMsgs.
 type TxMsg struct {
-	TxEnvelope        // tx fields for tx routing and decryption
-	TxHeader          // tx fields not in the clear
+	TxEnvelope        // tx fields for tx routing and decryption (in the clear)
+	TxHeader          // tx fields encrypted by Epoch key
 	Ops        []TxOp // tx operations to perform
 	DataStore  []byte // opaque data storage; typically serialzed TxOp values
 	Normalized bool   // normalization state of Ops

@@ -45,11 +45,25 @@ var (
 	MediaReleaseID = ItemAttr.With("av.Tag.MediaRelease").ID
 
 	// Planet governance (ACC — Access Control Channel)
-	ACCAttr        = tag.Name{}.With("amp.acc")
-	ACCPlanetEpoch = ACCAttr.With("PlanetEpoch") // planet epoch records
-	ACCMemberEpoch = ACCAttr.With("MemberEpoch") // member add/modify/revoke
-	BlobAttr       = tag.Name{}.With("amp.blob")
-	BlobRefAttrID  = BlobAttr.With("ref").ID // blob channel entries (BlobRef values)
+	ACCAttr         = tag.Name{}.With("amp.acc")
+	ACCPlanetEpoch  = ACCAttr.With("PlanetEpoch")  // planet epoch records
+	ACCMemberEpoch  = ACCAttr.With("MemberEpoch")  // member add/modify/revoke
+	ACCChannelEpoch = ACCAttr.With("ChannelEpoch") // channel permission records
+
+	// Member lifecycle
+	MemberAttr         = tag.Name{}.With("amp.member")
+	MemberInviteImport = MemberAttr.With("InviteImport") // well-known attr for invite bytes sent from client
+
+	// Home planet attributes (persisted in the member's home cabinet)
+	HomeAttr         = tag.Name{}.With("amp.home")
+	PlanetConnection = HomeAttr.With("planet.connection.Tag") // per-planet: label, current epoch, join time (value: amp.Tag)
+
+	// Planet status (vault health, sync progress, operational messages)
+	PlanetStatusAttr = tag.Name{}.With("amp.planet.status")
+	PlanetStatusID   = PlanetStatusAttr.With("status").ID // ItemID=vault/daemon UID, value: amp.Tag
+
+	BlobAttr      = tag.Name{}.With("amp.blob")
+	BlobRefAttrID = BlobAttr.With("ref").ID // blob channel entries (BlobRef values)
 )
 
 const ()

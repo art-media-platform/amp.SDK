@@ -72,7 +72,7 @@ func OpenEnclave(
 	defer Zero(dek)
 
 	// Decrypt the KeyTome payload
-	tomeBytes, err := openAEAD(dek, sealed.TomeNonce, sealed.Cipherblob, enc.aad)
+	tomeBytes, err := OpenAEAD(dek, sealed.TomeNonce, sealed.Cipherblob, enc.aad)
 	if err != nil {
 		return nil, fmt.Errorf("safe: failed to decrypt KeyTome: %w", err)
 	}
@@ -225,6 +225,31 @@ func (enc *enclave) DoCryptOp(inArgs *CryptOpArgs) (*CryptOpOut, error) {
 	return out, nil
 }
 
+func (enc *enclave) ExportSymmetricKey(inKeyRef *KeyRef) ([]byte, error) {
+	enc.mu.RLock()
+	defer enc.mu.RUnlock()
+
+	if enc.tome == nil {
+		return nil, fmt.Errorf("safe: enclave is closed")
+	}
+
+	entry, err := enc.fetchKey(inKeyRef)
+	if err != nil {
+		return nil, err
+	}
+	if entry.KeyInfo.KeyType != KeyType_SymmetricKey {
+		return nil, status.Code_BadKeyFormat.Errorf("ExportSymmetricKey: key is %s, not symmetric", entry.KeyInfo.KeyType.String())
+	}
+	if len(entry.PrivKey) == 0 {
+		return nil, status.Code_BadKeyFormat.Error("ExportSymmetricKey: symmetric key has no private material")
+	}
+
+	// Return a copy so the caller can zero it independently.
+	out := make([]byte, len(entry.PrivKey))
+	copy(out, entry.PrivKey)
+	return out, nil
+}
+
 // Close seals the KeyTome and persists it, then zeros sensitive material.
 func (enc *enclave) Close(ctx context.Context) error {
 	enc.mu.Lock()
@@ -233,11 +258,6 @@ func (enc *enclave) Close(ctx context.Context) error {
 	if enc.tome == nil {
 		return nil // already closed
 	}
-	defer func() {
-		// Zero and release the KeyTome regardless of save outcome
-		enc.tome = nil
-		Zero(enc.aad)
-	}()
 
 	// Serialize the KeyTome
 	tomeBytes, err := proto.Marshal(enc.tome)
@@ -247,14 +267,14 @@ func (enc *enclave) Close(ctx context.Context) error {
 	defer Zero(tomeBytes)
 
 	// Generate a fresh DEK for this seal operation
-	dek, err := generateDEK(RandReader)
+	dek, err := GenerateDEK(RandReader)
 	if err != nil {
 		return err
 	}
 	defer Zero(dek)
 
 	// Encrypt the serialized KeyTome
-	tomeNonce, cipherblob, err := sealAEAD(RandReader, dek, tomeBytes, enc.aad)
+	tomeNonce, cipherblob, err := SealAEAD(RandReader, dek, tomeBytes, enc.aad)
 	if err != nil {
 		return fmt.Errorf("safe: failed to encrypt KeyTome: %w", err)
 	}
@@ -277,6 +297,10 @@ func (enc *enclave) Close(ctx context.Context) error {
 	if err := enc.store.Save(ctx, sealed); err != nil {
 		return fmt.Errorf("safe: failed to save SealedTome: %w", err)
 	}
+
+	// Only zero sensitive material after successful save.
+	enc.tome = nil
+	Zero(enc.aad)
 	return nil
 }
 
@@ -291,10 +315,10 @@ func (enc *enclave) fetchKey(ref *KeyRef) (*KeyEntry, error) {
 	}
 
 	var match *KeyEntry
-	if len(ref.PubKey) == 0 {
-		match = kr.FetchNewestKey()
-	} else {
+	if len(ref.PubKey) > 0 {
 		match = kr.FetchKeyWithPrefix(ref.PubKey)
+	} else {
+		match = kr.FetchNewestKey()
 	}
 
 	if match == nil {

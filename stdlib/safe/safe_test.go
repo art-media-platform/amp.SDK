@@ -9,10 +9,141 @@ import (
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
+	_ "github.com/art-media-platform/amp.SDK/stdlib/safe/poly25519" // register Poly25519 CryptoKit
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 
 	"google.golang.org/protobuf/proto"
 )
+
+func TestDeriveSubKey(t *testing.T) {
+	masterKey := make([]byte, 32)
+	rand.Read(masterKey)
+
+	// Same purpose yields same derived key
+	key1, err := safe.DeriveSubKey(masterKey, "content")
+	if err != nil {
+		t.Fatal(err)
+	}
+	key2, err := safe.DeriveSubKey(masterKey, "content")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(key1, key2) {
+		t.Fatal("same purpose should produce same derived key")
+	}
+
+	// Different purpose yields different derived key
+	key3, err := safe.DeriveSubKey(masterKey, "member-proof")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(key1, key3) {
+		t.Fatal("different purposes should produce different derived keys")
+	}
+
+	// Derived key is 32 bytes
+	if len(key1) != 32 {
+		t.Fatalf("expected 32-byte derived key, got %d", len(key1))
+	}
+}
+
+func TestHMAC(t *testing.T) {
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	msg := []byte("test message for HMAC verification")
+
+	mac := safe.ComputeHMAC(key, msg)
+	if len(mac) != 32 {
+		t.Fatalf("expected 32-byte HMAC, got %d", len(mac))
+	}
+
+	// Verify succeeds with correct inputs
+	if !safe.VerifyHMAC(key, msg, mac) {
+		t.Fatal("HMAC verification should succeed")
+	}
+
+	// Verify fails with wrong message
+	if safe.VerifyHMAC(key, []byte("wrong message"), mac) {
+		t.Fatal("HMAC verification should fail with wrong message")
+	}
+
+	// Verify fails with wrong key
+	wrongKey := make([]byte, 32)
+	rand.Read(wrongKey)
+	if safe.VerifyHMAC(wrongKey, msg, mac) {
+		t.Fatal("HMAC verification should fail with wrong key")
+	}
+
+	// Verify fails with tampered tag
+	tamperedMac := make([]byte, len(mac))
+	copy(tamperedMac, mac)
+	tamperedMac[0] ^= 0xFF
+	if safe.VerifyHMAC(key, msg, tamperedMac) {
+		t.Fatal("HMAC verification should fail with tampered tag")
+	}
+}
+
+func TestExportSymmetricKey(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	store := safe.NewLocalTomeStore(filepath.Join(dir, "export.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("id"))
+	defer guard.Close()
+
+	enc, err := safe.OpenEnclave(ctx, store, guard, []byte("export-test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer enc.Close(ctx)
+
+	keyringID := tag.NewID()
+	_, err = safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
+		KeyType:     safe.KeyType_SymmetricKey,
+		CryptoKitID: safe.CryptoKitID_Poly25519,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ref := &safe.KeyRef{}
+	ref.SetKeyringID(keyringID)
+
+	// Export the symmetric key
+	exported, err := enc.ExportSymmetricKey(ref)
+	if err != nil {
+		t.Fatal("ExportSymmetricKey failed:", err)
+	}
+	if len(exported) != 32 {
+		t.Fatalf("expected 32-byte key, got %d", len(exported))
+	}
+
+	// Encrypt with Enclave, decrypt with exported key directly
+	testMsg := []byte("test payload for export verification")
+	encOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
+		Op:    safe.CryptOp_EncryptSym,
+		OpKey: ref,
+		Input: testMsg,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Use the CryptoKit directly with the exported key
+	kit, err := safe.GetCryptoKit(safe.CryptoKitID_Poly25519)
+	if err != nil {
+		t.Fatal(err)
+	}
+	decrypted, err := kit.Decrypt(encOut.Output, exported)
+	if err != nil {
+		t.Fatal("decrypt with exported key failed:", err)
+	}
+	if !bytes.Equal(decrypted, testMsg) {
+		t.Fatal("decrypted message doesn't match original")
+	}
+
+	safe.Zero(exported)
+}
 
 func TestRoundTrip(t *testing.T) {
 	ctx := context.Background()
@@ -146,7 +277,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	aliceRef.SetKeyringID(aliceKeyringID)
 
 	aliceInfo, err := safe.GenerateNewKey(enc, aliceKeyringID, &safe.KeyInfo{
-		KeyType:     safe.KeyType_AsymmetricKey,
+		KeyType:     safe.KeyType_SigningKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -159,7 +290,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	bobRef.SetKeyringID(bobKeyringID)
 
 	bobInfo, err := safe.GenerateNewKey(enc, bobKeyringID, &safe.KeyInfo{
-		KeyType:     safe.KeyType_AsymmetricKey,
+		KeyType:     safe.KeyType_SigningKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -220,7 +351,7 @@ func TestImportKeys(t *testing.T) {
 						KeyInfo: &safe.KeyInfo{
 							KeyType:     safe.KeyType_SymmetricKey,
 							CryptoKitID: safe.CryptoKitID_Poly25519,
-							TimeCreated: 1000,
+							TimeID_0: 1000,
 							PubKey:      make([]byte, 32),
 						},
 						PrivKey: make([]byte, 32),
@@ -481,14 +612,17 @@ func TestFetchNewestKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// The second key should be newer (or equal time)
-	if newest.TimeCreated < info1.TimeCreated {
+	// The second key should be newer (or equal TimeID)
+	newestTID := newest.TimeID()
+	info1TID := info1.TimeID()
+	if newestTID[0] < info1TID[0] || (newestTID[0] == info1TID[0] && newestTID[1] < info1TID[1]) {
 		t.Fatal("newest key should not be older than first key")
 	}
 	_ = info2 // suppress unused warning; info2 was the second key generated
 
-	if !bytes.Equal(newest.PubKey, info2.PubKey) && newest.TimeCreated == info2.TimeCreated {
-		// If same timestamp, either is acceptable
+	info2TID := info2.TimeID()
+	if !bytes.Equal(newest.PubKey, info2.PubKey) && newestTID == info2TID {
+		// If same TimeID, either is acceptable
 	}
 }
 

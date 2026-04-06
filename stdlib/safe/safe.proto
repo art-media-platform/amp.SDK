@@ -1,7 +1,7 @@
 syntax = "proto3";
 package safe;
 
-option go_package = "github.com/art-media-platform/amp.SDK/amp/safe";
+option go_package = "github.com/art-media-platform/amp.SDK/stdlib/safe";
 option csharp_namespace = "art.media.platform.safe";
 
 
@@ -59,10 +59,11 @@ message SealedTome {
 
 
 // KeyType identifies how a key operates.
+// The CryptoKit may derive additional capabilities from a single key entry
+// (e.g. an asymmetric key derived from a signing key).
 enum KeyType {
     Unspecified         = 0;
     SymmetricKey        = 1;
-    AsymmetricKey       = 2;
     SigningKey          = 3;
 }
 
@@ -98,9 +99,6 @@ enum CryptOp {
 
     // DecryptFromPeer decrypts Input from a sender identified by PeerKey using the asymmetric key referenced by OpKey (inverse of EncryptToPeer).
     DecryptFromPeer                 = 4;
-
-    // Retired compound ops (5-8) — password-based and peer-export ops are now handled by Guard.
-    reserved 5, 6, 7, 8;
 }
 
 
@@ -126,8 +124,9 @@ message CryptOpOut {
 message KeyInfo {
     CryptoKitID CryptoKitID         = 1;
     KeyType     KeyType             = 2;
-    int64       TimeCreated         = 3;    // Unix timestamp << 16 ("UTC16"), or 0 if unset
     bytes       PubKey              = 4;    // Public part of the key (binary)
+    fixed64     TimeID_0            = 5;    // Time-based UID, bytes 0..7 (from tag.NowID)
+    fixed64     TimeID_1            = 6;    // Time-based UID, bytes 8..15
 }
 
 
@@ -158,7 +157,7 @@ enum Ordering {
     Disabled    = 0;    // Unsorted — will be sorted on demand before search
     KeyringID   = 1;    // Sorted by Keyring UID (for KeyTome.Keyrings)
     PubKey      = 2;    // Sorted by PubKey (for Keyring.Keys)
-    TimeID      = 3;    // Sorted by TimeCreated descending (newest first)
+    TimeID      = 3;    // Sorted by TimeID descending (newest first)
 }
 
 
@@ -168,7 +167,7 @@ message Keyring {
     fixed64             UID_1           = 2;
     repeated KeyEntry   Keys            = 5;    // Ordered list of keys (sorted by PubKey)
     Ordering            Ordering        = 9;    // Current sort order of Keys
-    bytes               NewestPubKey    = 8;    // PubKey with the largest TimeCreated (cache)
+    bytes               NewestPubKey    = 8;    // PubKey with the largest TimeID (cache)
 }
 
 
@@ -177,6 +176,26 @@ message KeyTome {
     int64               Revision        = 1;    // Incremented on each mutation
     repeated Keyring    Keyrings        = 2;    // Keyrings stored in this tome
     Ordering            Ordering        = 5;    // Current sort order of Keyrings
+}
+
+
+// EpochKeyEntry stores a single symmetric epoch key for a planet or channel.
+// Addressed by (ContainerID, EpochID) — both are tag.UIDs.
+// EpochID is time-based (from tag.NowID), providing natural temporal ordering.
+message EpochKeyEntry {
+    fixed64             ContainerID_0   = 1;    // Planet or channel UID, bytes 0..7
+    fixed64             ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
+    fixed64             EpochID_0       = 3;    // Epoch UID, bytes 0..7 (time-based)
+    fixed64             EpochID_1       = 4;    // Epoch UID, bytes 8..15
+    CryptoKitID         CryptoKitID     = 5;    // Crypto suite for this epoch key
+    bytes               Key             = 6;    // Symmetric key material (32 bytes)
+}
+
+// EpochKeyTome is the persistence format for all symmetric epoch keys.
+// Sealed at rest using the same Guard/DEK mechanism as the identity KeyTome.
+message EpochKeyTome {
+    int64                   Revision    = 1;    // Incremented on each mutation
+    repeated EpochKeyEntry  Keys        = 2;    // All epoch keys (sorted by ContainerID, then EpochID)
 }
 
 

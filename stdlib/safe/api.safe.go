@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 // RandReader is the default cryptographic random source.
@@ -31,7 +32,7 @@ var RandReader io.Reader = rand.Reader
 //
 // Implementations:
 //   - fileGuard  — derives a wrapping key from a passphrase via HKDF
-//   - yubiGuard  — uses YubiKey PIV key agreement (ECDH) to derive a wrapping key
+//   - yubiGuard  — uses YubiKey PIV key agreement to derive a wrapping key
 type Guard interface {
 
 	// Info returns metadata about this Guard's capabilities.
@@ -83,7 +84,45 @@ type Enclave interface {
 	// Performs signing, encryption, and decryption.
 	DoCryptOp(inArgs *CryptOpArgs) (*CryptOpOut, error)
 
+	// ExportSymmetricKey returns a copy of the raw symmetric key bytes for the referenced keyring.
+	// The caller is responsible for zeroing the returned slice after use.
+	//
+	// This is intentionally limited to symmetric keys — signing and asymmetric private keys
+	// MUST NOT leave the Enclave.  Symmetric epoch keys are exported so that CryptoProvider
+	// can derive subkeys (content_key, proof_key) via HKDF for payload encryption and
+	// relay membership proofs.  The trust boundary is the process, not the Enclave API.
+	ExportSymmetricKey(inKeyRef *KeyRef) ([]byte, error)
+
 	// Close re-seals the KeyTome and persists it, then zeros sensitive material.
+	Close(ctx context.Context) error
+}
+
+// EpochKeyStore manages symmetric epoch keys separately from identity keys.
+//
+// Symmetric epoch keys have fundamentally different access patterns from identity keys:
+//   - High volume: up to millions of keys per user across all planets/channels
+//   - Must be exported for HKDF derivation (content_key, proof_key)
+//   - Hot/cold separation: only current epoch keys need to be in memory
+//   - Simple put/get by (containerID, epochID) — no PubKey indexing needed
+//
+// All methods are threadsafe.
+type EpochKeyStore interface {
+
+	// PutKey stores a symmetric epoch key for the given container (planet or channel).
+	PutKey(containerID, epochID tag.UID, cryptoKit CryptoKitID, key []byte) error
+
+	// GetKey retrieves a symmetric epoch key by its container and epoch UIDs.
+	// Returns a copy of the key bytes and its CryptoKitID; the caller must zero the key after use.
+	GetKey(containerID, epochID tag.UID) ([]byte, CryptoKitID, error)
+
+	// GetCurrentKey returns the current (most recent) epoch key for a container.
+	// Returns the epochID and a copy of the key bytes.
+	GetCurrentKey(containerID tag.UID) (epochID tag.UID, key []byte, err error)
+
+	// SetCurrentEpoch marks an epoch as the current one for a container.
+	SetCurrentEpoch(containerID, epochID tag.UID) error
+
+	// Close encrypts and persists all keys, then zeros sensitive material.
 	Close(ctx context.Context) error
 }
 
@@ -98,7 +137,7 @@ type CryptoKit struct {
 	ID CryptoKitID
 
 	// GenerateKey populates ioEntry.KeyInfo.PubKey and ioEntry.PrivKey based on ioEntry.KeyInfo.KeyType.
-	// Pre: ioEntry.KeyInfo.KeyType and .CryptoKitID are set; .TimeCreated should be set by caller.
+	// Pre: ioEntry.KeyInfo.KeyType and .CryptoKitID are set; TimeID is set by GenerateFork/caller.
 	// inRequestedKeySz is advisory (ignored by some implementations).
 	GenerateKey func(inRand io.Reader, inRequestedKeySz int, ioEntry *KeyEntry) error
 
@@ -108,10 +147,12 @@ type CryptoKit struct {
 	// Decrypt decrypts a buffer produced by Encrypt.
 	Decrypt func(inMsg []byte, inKey []byte) ([]byte, error)
 
-	// EncryptFor encrypts inMsg for a peer using asymmetric keys (X25519 + AEAD).
+	// EncryptFor encrypts inMsg for a peer using asymmetric key agreement.
+	// The kit derives asymmetric keys from signing keys if needed (implementation-specific).
 	EncryptFor func(inRand io.Reader, inMsg []byte, inPeerPubKey []byte, inPrivKey []byte) ([]byte, error)
 
 	// DecryptFrom decrypts a buffer produced by EncryptFor.
+	// The kit derives asymmetric keys from signing keys if needed (implementation-specific).
 	DecryptFrom func(inMsg []byte, inPeerPubKey []byte, inPrivKey []byte) ([]byte, error)
 
 	// Sign produces a cryptographic signature of inDigest.

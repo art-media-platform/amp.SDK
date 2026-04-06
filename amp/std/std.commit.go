@@ -140,44 +140,53 @@ func (req *localCommit) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 	return status.ErrInternal // never called
 }
 
-func (req *localCommit) RecvEvent(evt amp.PinEvent) { // TODO delete this or move RecvEvent in TxReceiver
+func (req *localCommit) RecvEvent(evt amp.PinEvent) {
 	if evt.Status == amp.PinStatus_TxCommit {
 		req.onCommit <- evt.Error
 	}
 }
 
-/*
+// LoadItems loads a snapshot from the home cabinet and dispatches the result through a NodeResponder.
+// This replaces manual TxMsg unwrapping patterns — the responder (typically an AttrBinding)
+// receives typed callbacks for each matching item.
+func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.NodeResponder) error {
+	tx := appCtx.NewTx()
+	tx.Request = SetupSnapshot(tag.ElementID{
+		NodeID: nodeID,
+		AttrID: attrID,
+		ItemID: tag.WildcardID(),
+	})
 
-func (tx *TxMsg) Upsert(literal any, keys ...tag.UID) {
-	var tag *amp.Tag
-
-	switch v := literal.(type) {
-	case string:
-		tag = &amp.Tag{
-			InlineText: v,
-			Use:        TagUse_Text,
-		}
-		break
-	case *string:
-		tag.InlineText = *v
-		tag.Use = TagUse_Text
-		break
-	case *amp.Tag:
-		tag = v
-		break
-	caseTag:
-		tag = &v
-		break
-	// case *tag.UID:
-	// 	tag = &amp.Tag{}
-	// 	tag.SetTagUID(v)
-	default:
-		panic("unsupported type")
-		return
+	loader := &localLoad{
+		outTx:  make(chan *amp.TxMsg),
+		outErr: make(chan error),
 	}
 
-	for _, key := range keys {
-		tx.Put(tag, key)
+	ctx := closer.WrapContext(appCtx)
+	err := appCtx.Session().SubmitTx(amp.TxCommit{
+		Tx:      tx,
+		Origin:  loader,
+		Context: ctx,
+	})
+	tx.ReleaseRef()
+	if err != nil {
+		ctx.Close(err)
+		return err
 	}
+
+	select {
+	case err = <-loader.outErr:
+	case txOut := <-loader.outTx:
+		resp.OnNodeUpdate(amp.NodeUpdate{
+			Tx:       txOut,
+			NodeID:   nodeID,
+			Revision: tag.NowID(),
+		})
+		txOut.ReleaseRef()
+	case <-appCtx.Closing():
+		err = appCtx.Err()
+	}
+
+	ctx.Close(err)
+	return err
 }
-*/

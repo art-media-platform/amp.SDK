@@ -7,6 +7,8 @@ syntax = "proto3";
 //   something we can all agree on.
 package amp;
 
+import "stdlib/safe/safe.proto";
+
 // Tells protoc that a .proto file importing amp.proto what package import to use within Go.
 option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
@@ -86,7 +88,7 @@ enum ValueHeaderFlags {
 
     FromID   = 0x01; // author or other originator
     TxID     = 0x02; // tx that publishes this entry
-    UID_C    = 0x04; // reserved / AuthID?
+    UID_C    = 0x04; // reserved
     UID_D    = 0x08; // reserved
 
     // FromSelf = 0x10; // equivalent to FromID of owner (saves 16 bytes)
@@ -107,25 +109,54 @@ enum TxStatus {
 // TxEnvelope is IN THE CLEAR, all other tx components are encrypted based on the TxEnvelope fields.
 //
 // TxHeader, TxOps, and the tx datastore are therefore said to be securely "within" a tx.
+//
+// INVARIANT: One TxMsg = one encryption context.  A single Epoch field determines the
+// encryption key for the entire payload.  All ops in a TxMsg must be readable by anyone
+// holding that epoch key.  To write ops under different encryption domains (e.g. two
+// private channels with different keys), author separate TxMsgs — one per epoch.
+//
+// Epoch modes:
+//   - nil/zero  → planet-public: payload is plaintext, only signed (governance, MemberEpoch, PlanetEpoch).
+//   - planet ID → private planet: all ops encrypted under the planet epoch key.
+//   - channel ID → private channel: all ops encrypted under that channel's epoch key.
+//
+// FromID (author identity) resides inside the encrypted TxHeader so that passive observers
+// and relay vaults cannot correlate sender identity with traffic patterns.
 message TxEnvelope {
 
     // Universally unique ID assigned when a tx is created
     fixed64             TxID_0 = 1;
     fixed64             TxID_1 = 2;
 
-    // Author of this tx and whose signature seals it.
-    fixed64             FromID_0 = 3;
-    fixed64             FromID_1 = 4;
-
     // Which planet this tx should be applied to.
     Tag                 Planet = 6;
 
-    // Which planet epoch this tx was created within.
-    // Implies which planet keyring to use for this tx's encryption and decryption.
-    Tag                 PlanetEpoch = 7;
+    // Which epoch (planet or channel) this tx was created within.
+    // Determines which epoch keyring to use for encryption/decryption.
+    // Works for both planet-level and channel-level encryption.
+    // A single TxMsg is encrypted under exactly one epoch — never mixed.
+    Tag                 Epoch = 7;
 
     // Byte offset from the end of the marshalled TxEnvelope to the start of the TxHeader.
     uint64              HeaderOffset = 10;
+
+    // Byte offset from preamble start to the signature.
+    // Allows signature verification without parsing the payload.
+    uint64              SignatureOffset = 20;
+
+    // Proves sender is a planet/channel member without revealing identity.
+    // HMAC(proof_key, TxID) where proof_key = HKDF(epoch_key, "member-proof").
+    // Allows relay vaults to reject spam without decrypting content.
+    bytes               MemberProof = 25;
+
+    // Planet epoch UID that was active when this TxMsg was sealed.
+    // For channel-encrypted TxMsgs, this enables the derived content key:
+    //   content_key = HKDF(channel_epoch_key || planet_epoch_key, "content")
+    // Rotating the planet epoch automatically invalidates all channel-derived keys,
+    // even if the channel epoch hasn't rotated.
+    // For planet-encrypted TxMsgs (Epoch = planet epoch), this is zero/omitted.
+    fixed64             PlanetEpoch_0 = 30;
+    fixed64             PlanetEpoch_1 = 31;
 
 }
 
@@ -137,6 +168,11 @@ message TxHeader {
     // If nil or equal to TxID, then this tx is context-free and TxID is implied context ID.
     fixed64             ContextID_0 = 1;
     fixed64             ContextID_1 = 2;
+
+    // Author identity — moved from TxEnvelope into encrypted payload
+    // so passive observers cannot correlate sender identity with traffic.
+    fixed64             FromID_0 = 3;
+    fixed64             FromID_1 = 4;
 
     // Status of the most recent PinRequest revision.
     PinStatus           Status = 7;
@@ -386,6 +422,27 @@ message Citation {
 }
 
 
+// Access levels ordered by privilege (higher = more access).
+enum Access {
+    NotAllowed = 0;
+    Invite     = 1;    // Can see the channel exists and invite others
+    Private    = 3;    // Can see metadata but not content
+    ReadOnly   = 4;    // Can read content
+    ReadWrite  = 6;    // Can read and write
+    Admin      = 10;   // Full control: create sub-channels, manage access
+}
+
+// AccessGrant maps a member (or default, if MemberTag is nil) to an Access level.
+message AccessGrant {
+    Tag                 MemberTag = 1; // Member identity (nil = default grant)
+    Access              Access    = 2;
+}
+
+// AccessGrants is a set of per-member access grants.
+message AccessGrants {
+    repeated AccessGrant Grants = 1;
+}
+
 // Governing unit of amp channel permissions and security.
 message ChannelEpoch {
     Tag                 Channel = 1; // channel this record applies to
@@ -394,6 +451,12 @@ message ChannelEpoch {
 
     string              Label     = 10; // debugging
     string              LegacyURI = 11;
+
+    // Per-member permissions for this channel (or ACC).
+    AccessGrants        MemberGrants  = 20;
+
+    // Default permissions for members not listed in MemberGrants.
+    AccessGrants        DefaultGrants = 21;
 }
 
 
@@ -435,10 +498,27 @@ message PlanetEpoch {
     // Human-readable label (e.g. "Genesis", "Post-revocation epoch 3").
     string              Label = 5;
 
-    // Crypto suite for this epoch -- see ski.CryptoKitID.
+    // Crypto suite for this epoch.
     // Determines which CryptoKit is used for signing, symmetric, and asymmetric ops.
-    // 0 = unspecified (default NaCl), 1 = NaCl, 2 = ED25519-only
-    int32               CryptoKitID = 10;
+    safe.CryptoKitID    CryptoKitID = 10;
+
+    // If true, this planet operates in public mode: no payload encryption, signature-only.
+    // Set at genesis and cannot be changed without planet rebase.
+    // Anyone can syndicate and view content; only members can author (signature required).
+    bool                IsPublic = 15;
+
+    // Planet-wide governance settings (enforced by vaults):
+    int64               MaxTxMsgSize = 20;             // Max single TxMsg bytes (default: 1 MB)
+    int64               MaxMemberBytesPerWindow = 21;  // Max bytes per member per window (default: 100 MB)
+    int64               MaxMemberTxPerWindow = 22;     // Max TxMsg count per member per window (default: 10000)
+    int64               RateLimitWindowSecs = 23;      // Sliding window duration in seconds (default: 86400 = 24h)
+
+    // Maximum seconds after an epoch rotation during which old-epoch TxMsgs are still accepted.
+    // Allows offline members (mesh-only, off-grid) to author under the old epoch and have their
+    // TxMsgs accepted when they reconnect.  After this window, old-epoch TxMsgs are rejected.
+    // Enforced at the application layer, not by relay vaults.
+    // If 0, DefaultGracePeriod is used (90 days)
+    int64               MaxGracePeriod = 25;
 }
 
 
@@ -448,24 +528,124 @@ message MemberEpoch {
     // Member identity.
     Tag                 MemberTag = 1;
 
-    // This member's current epoch.
+    // Planet (or channel) epoch this entry belongs to.
+    // Must match the PlanetEpoch.EpochTag so recipients store the key under the correct ID.
     Tag                 Epoch = 2;
 
-    // Planet epoch key encrypted with this member's public key (via epoch's CryptoKit.EncryptFor).
+    // Planet epoch key encrypted with this member's asymmetric public key (via EncryptToPeer).
     bytes               EncryptedPlanetKey = 5;
 
     // 0=active, 1=suspended, 2=revoked
     int32               Status = 8;
 
-    // Member's public key for this epoch (asymmetric, used for EncryptFor/DecryptFrom).
+    // Member's signing public key — used for signature verification and,
+    // via CryptoKit derivation, for asymmetric encryption (EncryptToPeer/DecryptFromPeer).
     bytes               PubKey = 12;
 
-    // Crypto suite for this member's key material (maps to ski.CryptoKitID).
+    // Crypto suite for this member's key material.
     // Typically matches the epoch's CryptoKitID but allows per-member override.
-    int32               CryptoKitID = 15;
+    safe.CryptoKitID    CryptoKitID = 15;
+
+    // Signing public key of the admin who encrypted EncryptedPlanetKey.
+    // The recipient needs this for DecryptFromPeer (CryptoKit derives asymmetric key internally).
+    bytes               EncryptorPubKey = 18;
 }
 
 
+// InviteToken is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
+// It is passphrase-encrypted via safe.Enclave export before leaving the admin's device.
+message InviteToken {
+
+    // Planet being invited to.
+    Tag                 PlanetTag = 1;
+
+    // Current epoch at the time of invite (for initial sync).
+    Tag                 EpochTag = 2;
+
+    // Newly generated member identity assigned by the admin.
+    Tag                 MemberTag = 3;
+
+    // Temporary private key for the invited member (encrypted with invite passphrase).
+    // The member uses this to decrypt their initial EncryptedPlanetKey from the MemberEpoch.
+    // Must be rotated immediately after join.
+    bytes               TempPrivKey = 5;
+
+    // Crypto suite matching the planet epoch.
+    safe.CryptoKitID    CryptoKitID = 10;
+
+    // Known vault addresses for initial peer discovery.
+    repeated string     VaultAddrs = 15;
+
+    // Planet epoch key encrypted for the temp member key (via EncryptToPeer).
+    // ImportInvite decrypts this immediately so the member can participate in the epoch.
+    bytes               EncryptedEpochKey = 20;
+
+    // Signing public key of the admin who encrypted EncryptedEpochKey.
+    // Needed for DecryptFromPeer (CryptoKit derives asymmetric key internally).
+    bytes               EncryptorPubKey = 21;
+}
+
+
+// SyncMsg is the envelope for all delta sync control messages between vault peers.
+// Exactly one of the oneof fields is set per message.
+message SyncMsg {
+    oneof Body {
+        SyncWatchList    WatchList    = 1;
+        SyncRangeOffer   RangeOffer   = 2;
+        SyncRangeRequest RangeRequest = 3;
+    }
+}
+
+// SyncWatchList announces which planets a peer has data for, with high-water marks.
+// Sent on peer connect and whenever the watch list changes.
+message SyncWatchList {
+    repeated SyncPlanetStatus Planets = 1;
+}
+
+// SyncPlanetStatus carries a planet UID and the peer's current high-water mark.
+message SyncPlanetStatus {
+    fixed64             PlanetID_0  = 1;
+    fixed64             PlanetID_1  = 2;
+    fixed64             HighWater_0 = 3;  // most recent TxTimeID
+    fixed64             HighWater_1 = 4;
+}
+
+// SyncRangeOffer carries a hash over a TxTimeID range for a planet.
+// Used in the Merkle bisection protocol to identify divergence between peers.
+message SyncRangeOffer {
+    fixed64             PlanetID_0 = 1;
+    fixed64             PlanetID_1 = 2;
+    fixed64             Start_0 = 3;      // range start (inclusive)
+    fixed64             Start_1 = 4;
+    fixed64             End_0 = 5;        // range end (inclusive)
+    fixed64             End_1 = 6;
+    bytes               RangeHash = 10;   // 32-byte hash over TxTimeIDs in [Start, End]
+}
+
+// SyncRangeRequest asks a peer to stream all TxMsgs in a range for a planet.
+// Sent when a range hash mismatch is detected after bisection converges.
+message SyncRangeRequest {
+    fixed64             PlanetID_0 = 1;
+    fixed64             PlanetID_1 = 2;
+    fixed64             After_0 = 3;      // stream TxMsgs with TxTimeID > After
+    fixed64             After_1 = 4;
+}
+
+
+// TransportType identifies the network transport used by a peer.
+enum TransportType {
+    TransportType_Nil       = 0;
+    TransportType_TCP       = 1;
+    TransportType_UDP       = 2;
+    TransportType_Reticulum = 3;
+}
+
+// PeerAddr describes a reachable address for a vault peer.
+message PeerAddr {
+    TransportType       Transport = 1;    // which transport layer
+    string              Address   = 2;    // transport-specific (e.g. "192.168.1.5:5192", Reticulum hash)
+    float               Score     = 3;    // 0.0–1.0; higher = preferred; updated by connection quality
+}
 
 
 /*

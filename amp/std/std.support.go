@@ -14,8 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Pushes a new tx to the receiver for the client's session agent for handling (e.g. LaunchOAuth)
-// If value == nil, no op is marshalled and  the tx is sent without ops.
+// PushMetaOp sends a meta-op tx to the receiver for the client's session agent.
 func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
 	tx := sess.NewTx()
 	tx.SetContextID(contextID)
@@ -35,14 +34,12 @@ func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess am
 	return dst.PushTx(tx, sess)
 }
 
-var SessionContextID = tag.UID{0, 8675309} // symbolizes the client's session controller / agent.
+var SessionContextID = tag.UID{0, 8675309}
 
-// Convenience function for PushMetaOp()
 func PushSessionOp(sess amp.Session, attrID tag.UID, value proto.Message) error {
 	return PushMetaOp(attrID, value, sess, sess, SessionContextID, amp.PinStatus_Synced)
 }
 
-// Convenience function to parse the named URL value into the destinaation type
 func ParseParamAsPath(req *amp.Request, paramKey string) (dirpath string, finfo os.FileInfo, err error) {
 	var paramStr string
 	err = req.ParseParam(paramKey, &paramStr)
@@ -50,7 +47,7 @@ func ParseParamAsPath(req *amp.Request, paramKey string) (dirpath string, finfo 
 		return
 	}
 
-	pathname := path.Clean(paramStr) // TODO: is this sufficent protection?
+	pathname := path.Clean(paramStr)
 	finfo, err = os.Stat(pathname)
 	if err != nil {
 		err = status.Code_BadRequest.Errorf("param %q path error: %v", paramKey, err)
@@ -64,6 +61,8 @@ func (root *ItemNode[AppT]) Root() *ItemNode[AppT] {
 	return root
 }
 
+// PinAndServe creates a Pin, populates it via PinInto, serializes via MarshalAttrs, and pushes to the client.
+// This is the standard entry point for send-only apps.
 func PinAndServe[AppT amp.AppInstance](item Item[AppT], app AppT, req *amp.Request) (amp.Pin, error) {
 	root := item.Root()
 	if root.ID.IsNil() {
@@ -135,10 +134,8 @@ func (app *AppModule[AppT]) PinAndServe(item Item[AppT], req *amp.Request) (amp.
 func (app *AppModule[AppT]) OnClosing() {
 }
 
-// Called when this Pin is closed.
-// This allows a Item to release resources it may locked during PinInto()..
+// OnPinClosed is called when this Pin's task context is closed.
 func (pin *Pin[AppT]) OnPinClosed() {
-	// override for cleanup
 }
 
 func (pin *Pin[AppT]) AddChild(sub Item[AppT]) {
@@ -152,7 +149,7 @@ func (pin *Pin[AppT]) AddChild(sub Item[AppT]) {
 }
 
 func (pin *Pin[AppT]) GetItem(target tag.UID) Item[AppT] {
-	if target == pin.Item.Root().ID {
+	if pin.Item != nil && target == pin.Item.Root().ID {
 		return pin.Item
 	}
 	if item, exists := pin.children[target]; exists {
@@ -170,7 +167,7 @@ func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
 		return nil, err
 	}
 
-	targetID := req.Selector.Spans[0].NodeID() // TODO: is this the best?
+	targetID := req.Selector.Spans[0].NodeID()
 
 	item := pin.GetItem(targetID)
 	if item == nil {
@@ -180,7 +177,6 @@ func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
 }
 
 func (pin *Pin[AppT]) CommitTx(tx *amp.TxMsg) error {
-	// tx.AddRef()
 	return status.ErrUnimplemented
 }
 
@@ -188,7 +184,7 @@ func (pin *Pin[AppT]) ReviseRequest(latest *amp.PinRequest) error {
 	return nil
 }
 
-// Pushes a TxMsg to the client of this Pin, pushing the state of each item and its children.
+// pushState builds and sends the current state of all items to the client.
 func (pin *Pin[AppT]) pushState() error {
 	tx := pin.App.NewTx()
 
@@ -199,7 +195,7 @@ func (pin *Pin[AppT]) pushState() error {
 			nodeID: pinnedID,
 		}
 
-		tx.Upsert(amp.HeadNodeID, ChildLink, pinnedID, nil) // publish root pinned item
+		tx.Upsert(amp.HeadNodeID, ChildLink, pinnedID, nil)
 		pin.Item.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
@@ -207,7 +203,7 @@ func (pin *Pin[AppT]) pushState() error {
 
 		for childID, child := range pin.children {
 			w.nodeID = childID
-			tx.Upsert(pinnedID, ChildLink, childID, nil) // link child to pinned item
+			tx.Upsert(pinnedID, ChildLink, childID, nil)
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err
@@ -222,8 +218,8 @@ func (pin *Pin[AppT]) pushState() error {
 var _ ItemWriter = (*itemWriter)(nil)
 
 type itemWriter struct {
-	nodeID tag.UID    // cache for Item.Root().ID
-	tx     *amp.TxMsg // in-progress transaction
+	nodeID tag.UID
+	tx     *amp.TxMsg
 	err    error
 }
 
@@ -261,5 +257,3 @@ func (w *itemWriter) PutItem(attrID tag.UID, value proto.Message) {
 	}
 	w.PutItemAt(attrID, tag.UID{}, value)
 }
-
-

@@ -12,8 +12,8 @@ import (
 
 // fileGuard implements Guard using a local passphrase.
 //
-// The passphrase is stretched via HKDF-SHA256 with a random salt to produce a wrapping key,
-// which then encrypts/decrypts the DEK using XChaCha20-Poly1305.
+// The passphrase is stretched via HKDF with a random salt to produce a wrapping key,
+// which then encrypts/decrypts the DEK using an AEAD cipher.
 //
 // This models a mobile device where the root secret is a user-derived passphrase
 // stored in the OS keychain or derived from biometric unlock.
@@ -67,14 +67,14 @@ func (g *fileGuard) WrapDEK(_ context.Context, dek []byte, aad []byte) (*Wrapped
 
 	// Derive wrapping key from passphrase + salt
 	info := []byte("safe.fileGuard.WrapDEK")
-	wrappingKey, err := deriveKey(g.rootKey, salt, info)
+	wrappingKey, err := DeriveKey(g.rootKey, salt, info)
 	if err != nil {
 		return nil, err
 	}
 	defer Zero(wrappingKey)
 
 	// Encrypt the DEK
-	nonce, cipherblob, err := sealAEAD(g.rand, wrappingKey, dek, aad)
+	nonce, cipherblob, err := SealAEAD(g.rand, wrappingKey, dek, aad)
 	if err != nil {
 		return nil, err
 	}
@@ -105,13 +105,13 @@ func (g *fileGuard) UnwrapDEK(_ context.Context, wrapped *WrappedDEK, aad []byte
 
 	// Re-derive the wrapping key using the stored salt
 	info := []byte("safe.fileGuard.WrapDEK")
-	wrappingKey, err := deriveKey(g.rootKey, wrapped.Salt, info)
+	wrappingKey, err := DeriveKey(g.rootKey, wrapped.Salt, info)
 	if err != nil {
 		return nil, err
 	}
 	defer Zero(wrappingKey)
 
-	return openAEAD(wrappingKey, wrapped.Nonce, wrapped.Cipherblob, aad)
+	return OpenAEAD(wrappingKey, wrapped.Nonce, wrapped.Cipherblob, aad)
 }
 
 func (g *fileGuard) Close() error {

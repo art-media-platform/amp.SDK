@@ -9,9 +9,15 @@ import (
 	"unsafe"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/proto"
+)
+
+const (
+	// Signature size appended to sealed TxMsgs (determined by the CryptoKit in use).
+	TxSignatureSize = 64
 )
 
 // TxDataStore is a message packet sent to / from a client.
@@ -47,16 +53,34 @@ func (tx *TxEnvelope) TxID() tag.UID {
 	return tag.UID{tx.TxID_0, tx.TxID_1}
 }
 
-func (tx *TxEnvelope) FromID() tag.UID {
-	return tag.UID{tx.FromID_0, tx.FromID_1}
-}
-
 func (tx *TxEnvelope) SetTxID(ID tag.UID) {
 	tx.TxID_0 = ID[0]
 	tx.TxID_1 = ID[1]
 }
 
-func (tx *TxEnvelope) SetFromID(ID tag.UID) {
+// IsPublic returns true if this Tx is planet-public (unencrypted).
+func (tx *TxEnvelope) IsPublic() bool {
+	return tx.Epoch == nil || tx.Epoch.IsNil()
+}
+
+// PlanetEpochUID returns the planet epoch UID recorded in this envelope.
+// For channel-encrypted TxMsgs, this is the planet epoch active at seal time.
+// For planet-encrypted TxMsgs (or unset), returns zero.
+func (tx *TxEnvelope) PlanetEpochID() tag.UID {
+	return tag.UID{tx.PlanetEpoch_0, tx.PlanetEpoch_1}
+}
+
+// SetPlanetEpoch records the planet epoch UID in the envelope (for channel TxMsgs).
+func (tx *TxEnvelope) SetPlanetEpochID(epochID tag.UID) {
+	tx.PlanetEpoch_0 = epochID[0]
+	tx.PlanetEpoch_1 = epochID[1]
+}
+
+func (tx *TxHeader) FromID() tag.UID {
+	return tag.UID{tx.FromID_0, tx.FromID_1}
+}
+
+func (tx *TxHeader) SetFromID(ID tag.UID) {
 	tx.FromID_0 = ID[0]
 	tx.FromID_1 = ID[1]
 }
@@ -360,12 +384,6 @@ func (tx *TxMsg) MarshalHeadAndOps(dst *[]byte) {
 	binary.BigEndian.PutUint32(head[4:8], uint32(len(headAndOps)))
 	binary.BigEndian.PutUint32(head[8:12], uint32(len(tx.DataStore)))
 
-	// TODO (ENCRYPT)
-	//
-	// 1) generate and sign hash with planet keyring implied by TxEnvelope
-	// 2) append tx suffix at end of Tx.  (TxFooter?)
-	// 3) encrypt tx starting from cryptOfs.. to end.
-
 	*dst = headAndOps
 }
 
@@ -434,9 +452,6 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 	}
 
 	p += int(tx.TxEnvelope.HeaderOffset)
-
-	// TODO (DECRYPT)
-	// lookup keys for TxEnvelope to decrypt remainder of tx, THEN proceed to unmarshal remainder of tx.
 
 	tx.TxHeader = TxHeader{}
 	if err := readPb(src, &p, &tx.TxHeader); err != nil {
@@ -519,6 +534,494 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 	tx.Normalized = false
 
 	return nil
+}
+
+// CryptoProvider supplies the cryptographic operations needed to seal (encrypt+sign) and open (verify+decrypt) TxMsgs.
+// Implemented by the vault/host layer using safe.Enclave and safe.CryptoKit.
+//
+// Methods that accept *TxEnvelope use it to determine the encryption context:
+//   - Planet-level TxMsgs: Epoch is the planet epoch; PlanetEpoch is zero.
+//   - Channel-level TxMsgs: Epoch is the channel epoch; PlanetEpoch records the planet epoch
+//     active at seal time.  The effective key is derived from both:
+//     content_key = HKDF(channel_epoch_key || planet_epoch_key, "content")
+//
+// If the required epoch key is not available, methods return status.ErrEpochKeyNotFound.
+// Callers should retain the TxMsg and retry when the key arrives.
+type CryptoProvider interface {
+
+	// HashDigest computes a cryptographic hash of the given data segments.
+	HashDigest(parts ...[]byte) ([32]byte, error)
+
+	// SignDigest produces a signature of the given digest using the author's signing key.
+	SignDigest(digest []byte) ([]byte, error)
+
+	// VerifyDigest checks a signature against the digest using the given public key and CryptoKit.
+	VerifyDigest(sig []byte, digest []byte, signerPubKey []byte, cryptoKit safe.CryptoKitID) error
+
+	// EncryptPayload encrypts plaintext using the epoch key(s) from the envelope.
+	// Returns nil, nil if no encryption is needed (planet-public).
+	EncryptPayload(plaintext []byte, env *TxEnvelope) ([]byte, error)
+
+	// DecryptPayload decrypts ciphertext using the epoch key(s) from the envelope.
+	// Returns nil, nil if the TxMsg is planet-public (Epoch is nil).
+	DecryptPayload(ciphertext []byte, env *TxEnvelope) ([]byte, error)
+
+	// ComputeMemberProof generates HMAC(proof_key, txID) for relay verification.
+	// proof_key = HKDF(epoch_key, "member-proof")
+	// Returns nil, nil if the TxMsg is planet-public (no epoch).
+	ComputeMemberProof(txID []byte, env *TxEnvelope) ([]byte, error)
+
+	// VerifyMemberProof checks that a MemberProof is valid for the given TxID and epoch.
+	// Returns nil if the TxMsg is planet-public (no epoch).
+	VerifyMemberProof(proof, txID []byte, env *TxEnvelope) error
+}
+
+// SealTx marshals, encrypts, and signs a TxMsg producing a complete wire-format byte slice.
+//
+// One TxMsg = one encryption context: TxEnvelope.Epoch selects a single epoch key.
+// All TxOp(s) must belong to the this same encryption domain.
+// If the epoch is set, a MemberProof (HMAC over TxID using a derived proof key) is attached for relay verification.
+//
+// Wire layout:
+//
+//	Preamble (16B) | TxEnvelope (varint-prefixed) | Payload (encrypted or plaintext) | DataStore | Signature (64B)
+//
+// If crypto is nil, the TxMsg is marshaled without encryption or signing (local session use).
+func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
+	buf := *dst
+	if cap(buf) < 2048 {
+		buf = make([]byte, 2048)
+	}
+
+	// --- Marshal the payload (TxHeader + TxOps) without preamble or envelope ---
+	tx.OpCount = uint64(len(tx.Ops))
+	tx.TxEnvelope.HeaderOffset = 0
+
+	// Marshal TxEnvelope to a temp buffer so we can measure it
+	envBuf, _ := writePb(nil, &tx.TxEnvelope)
+
+	// Marshal payload: TxHeader + TxOps
+	payload := marshalPayload(tx, nil)
+
+	if crypto == nil {
+		// No crypto — standard marshal (local session traffic)
+		tx.MarshalHeadAndOps(dst)
+		return nil
+	}
+
+	// --- Encrypt payload if epoch is set (private planet/channel) ---
+	isPublic := tx.TxEnvelope.IsPublic()
+	var wirePayload []byte
+	if isPublic {
+		wirePayload = payload
+	} else {
+		// Combine payload + DataStore for encryption (they are a single encrypted blob)
+		plaintext := append(payload, tx.DataStore...)
+		encrypted, err := crypto.EncryptPayload(plaintext, &tx.TxEnvelope)
+		if err != nil {
+			return err
+		}
+		wirePayload = encrypted
+
+		// Compute MemberProof for relay verification (HMAC of proof_key over TxID)
+		txIDBytes := make([]byte, 16)
+		binary.BigEndian.PutUint64(txIDBytes[0:8], tx.TxEnvelope.TxID_0)
+		binary.BigEndian.PutUint64(txIDBytes[8:16], tx.TxEnvelope.TxID_1)
+		proof, err := crypto.ComputeMemberProof(txIDBytes, &tx.TxEnvelope)
+		if err != nil {
+			return err
+		}
+		tx.TxEnvelope.MemberProof = proof
+	}
+
+	// --- Build the wire buffer: Preamble | Envelope | Payload [| DataStore] | Signature ---
+	buf = buf[:Const_TxPreamble_Size]
+
+	// Preamble
+	buf[0] = byte((Const_TxPreamble_Marker >> 16) & 0xFF)
+	buf[1] = byte((Const_TxPreamble_Marker >> 8) & 0xFF)
+	buf[2] = byte((Const_TxPreamble_Marker >> 0) & 0xFF)
+	buf[3] = byte(Const_TxPreamble_Version)
+
+	// Envelope
+	buf = append(buf, envBuf...)
+
+	// Payload (+ DataStore if not encrypted together)
+	buf = append(buf, wirePayload...)
+	if isPublic {
+		buf = append(buf, tx.DataStore...)
+	}
+
+	// Fill in preamble sizes now that we know the total
+	sigOfs := len(buf)
+	tx.TxEnvelope.SignatureOffset = uint64(sigOfs)
+
+	// Re-marshal envelope with SignatureOffset set (it changed)
+	envBuf, _ = writePb(nil, &tx.TxEnvelope)
+	// Rebuild: we need the envelope to be final before signing
+	buf = buf[:Const_TxPreamble_Size]
+	buf = append(buf, envBuf...)
+	buf = append(buf, wirePayload...)
+	if isPublic {
+		buf = append(buf, tx.DataStore...)
+	}
+
+	// Update preamble size fields
+	if isPublic {
+		binary.BigEndian.PutUint32(buf[4:8], uint32(int(Const_TxPreamble_Size)+len(envBuf)+len(payload)))
+		binary.BigEndian.PutUint32(buf[8:12], uint32(len(tx.DataStore)))
+	} else {
+		// Encrypted: payload+datastore are combined in wirePayload
+		binary.BigEndian.PutUint32(buf[4:8], uint32(int(Const_TxPreamble_Size)+len(envBuf)+len(wirePayload)))
+		binary.BigEndian.PutUint32(buf[8:12], 0) // DataStore is inside encrypted payload
+	}
+
+	// Update SignatureOffset (now final)
+	tx.TxEnvelope.SignatureOffset = uint64(len(buf))
+
+	// Re-marshal envelope one final time with correct SignatureOffset
+	envBuf, _ = writePb(nil, &tx.TxEnvelope)
+	buf = buf[:Const_TxPreamble_Size]
+	buf = append(buf, envBuf...)
+	buf = append(buf, wirePayload...)
+	if isPublic {
+		buf = append(buf, tx.DataStore...)
+	}
+
+	// --- Sign: hash(Preamble || Envelope || Payload) then sign ---
+	digest, err := crypto.HashDigest(buf)
+	if err != nil {
+		return err
+	}
+
+	sig, err := crypto.SignDigest(digest[:])
+	if err != nil {
+		return err
+	}
+	buf = append(buf, sig...)
+
+	*dst = buf
+	return nil
+}
+
+// OpenTx verifies the signature and decrypts a sealed wire-format TxMsg.
+// The signerPubKey is the author's signing public key (looked up externally via TxHeader.FromID after decryption).
+//
+// If crypto is nil, the buffer is unmarshaled without verification or decryption (local session use).
+func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte) (*TxMsg, error) {
+	if len(wire) < int(Const_TxPreamble_Size) {
+		return nil, status.ErrMalformedTx
+	}
+
+	// Validate preamble
+	marker := uint32(wire[0])<<16 | uint32(wire[1])<<8 | uint32(wire[2])
+	if marker != uint32(Const_TxPreamble_Marker) {
+		return nil, status.ErrMalformedTx
+	}
+	if wire[3] < byte(Const_TxPreamble_Version) {
+		return nil, status.ErrMalformedTx
+	}
+
+	tx := TxNew()
+
+	if crypto == nil {
+		// No crypto — standard unmarshal
+		headLen := int(binary.BigEndian.Uint32(wire[4:8]))
+		dataLen := int(binary.BigEndian.Uint32(wire[8:12]))
+		headBody := wire[Const_TxPreamble_Size:headLen]
+		if err := tx.UnmarshalHead(headBody); err != nil {
+			return nil, err
+		}
+		if dataLen > 0 {
+			tx.DataStore = make([]byte, dataLen)
+			copy(tx.DataStore, wire[headLen:headLen+dataLen])
+		}
+		return tx, nil
+	}
+
+	// --- Parse TxEnvelope from the head (in the clear) ---
+	headLen := int(binary.BigEndian.Uint32(wire[4:8]))
+	dataLen := int(binary.BigEndian.Uint32(wire[8:12]))
+	headBody := wire[Const_TxPreamble_Size:headLen]
+
+	// Read just the envelope
+	p := 0
+	if err := readPb(headBody, &p, &tx.TxEnvelope); err != nil {
+		return nil, err
+	}
+
+	// --- Verify signature ---
+	sigOfs := tx.TxEnvelope.SignatureOffset
+	if sigOfs == 0 || int(sigOfs)+TxSignatureSize > len(wire) {
+		return nil, status.ErrMalformedTx
+	}
+
+	signedData := wire[:sigOfs]
+	sig := wire[sigOfs : sigOfs+TxSignatureSize]
+
+	digest, err := crypto.HashDigest(signedData)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: signerCryptoKit should be passed by the caller rather than defaulting to Poly25519
+	if err := crypto.VerifyDigest(sig, digest[:], signerPubKey, safe.CryptoKitID_Poly25519); err != nil {
+		return nil, err
+	}
+
+	// --- Decrypt if needed ---
+	isPublic := tx.TxEnvelope.IsPublic()
+
+	if isPublic {
+		// Planet-public: payload is plaintext, DataStore is separate
+		payloadStart := int(Const_TxPreamble_Size) + p + int(tx.TxEnvelope.HeaderOffset)
+		payloadAndOps := headBody[p+int(tx.TxEnvelope.HeaderOffset):]
+
+		// Unmarshal TxHeader + TxOps from plaintext
+		tx.TxHeader = TxHeader{}
+		hp := 0
+		if err := readPb(payloadAndOps, &hp, &tx.TxHeader); err != nil {
+			return nil, err
+		}
+		if err := unmarshalOps(tx, payloadAndOps[hp:]); err != nil {
+			return nil, err
+		}
+
+		// DataStore
+		if dataLen > 0 {
+			dsStart := headLen
+			_ = payloadStart // used for clarity
+			tx.DataStore = make([]byte, dataLen)
+			copy(tx.DataStore, wire[dsStart:dsStart+dataLen])
+		}
+	} else {
+		// Encrypted: payload contains TxHeader + TxOps + DataStore
+		encryptedStart := int(Const_TxPreamble_Size) + p + int(tx.TxEnvelope.HeaderOffset)
+		encryptedEnd := int(sigOfs)
+		ciphertext := wire[encryptedStart:encryptedEnd]
+
+		plaintext, err := crypto.DecryptPayload(ciphertext, &tx.TxEnvelope)
+		if err != nil {
+			return nil, err
+		}
+
+		// The plaintext is: marshalPayload output + DataStore
+		// We need to split them. The headLen preamble field tells us where ops end.
+		// For encrypted mode, dataLen=0 in the preamble and the original headLen covers
+		// Preamble + Envelope only. The payload is self-contained.
+		//
+		// Re-unmarshal from the decrypted plaintext
+		hp := 0
+		tx.TxHeader = TxHeader{}
+		if err := readPb(plaintext, &hp, &tx.TxHeader); err != nil {
+			return nil, err
+		}
+
+		// Find where ops end — we marshal OpCount ops, then remainder is DataStore
+		opsAndData := plaintext[hp:]
+		opsEnd, err := skipOps(opsAndData, tx.OpCount)
+		if err != nil {
+			return nil, err
+		}
+		if err := unmarshalOps(tx, opsAndData[:opsEnd]); err != nil {
+			return nil, err
+		}
+		if opsEnd < len(opsAndData) {
+			tx.DataStore = make([]byte, len(opsAndData)-opsEnd)
+			copy(tx.DataStore, opsAndData[opsEnd:])
+		}
+	}
+
+	tx.Normalized = false
+	return tx, nil
+}
+
+// ParseTxEnvelope extracts just the TxEnvelope from a sealed wire-format TxMsg
+// without verifying, decrypting, or parsing the payload.
+//
+// This is used by relay vaults and VaultController to inspect cleartext routing
+// metadata (PlanetID, Epoch, TxID, MemberProof) without needing the epoch key
+// or signer's public key.
+func ParseTxEnvelope(wire []byte) (*TxEnvelope, error) {
+	if len(wire) < int(Const_TxPreamble_Size) {
+		return nil, status.ErrMalformedTx
+	}
+
+	marker := uint32(wire[0])<<16 | uint32(wire[1])<<8 | uint32(wire[2])
+	if marker != uint32(Const_TxPreamble_Marker) {
+		return nil, status.ErrMalformedTx
+	}
+
+	env := &TxEnvelope{}
+	p := 0
+	if err := readPb(wire[Const_TxPreamble_Size:], &p, env); err != nil {
+		return nil, err
+	}
+	return env, nil
+}
+
+// marshalPayload marshals TxHeader + TxOps (the encrypted portion) without preamble or envelope.
+func marshalPayload(tx *TxMsg, dst []byte) []byte {
+	dst, _ = writePb(dst, &tx.TxHeader)
+
+	var (
+		op_prv [TxField_MaxFields]uint64
+		op_cur [TxField_MaxFields]uint64
+	)
+
+	for _, op := range tx.Ops {
+		dst = append(dst, byte(op.Flags))
+		dst = binary.AppendUvarint(dst, op.Citation)
+		dst = binary.AppendUvarint(dst, op.DataOfs)
+		dst = binary.AppendUvarint(dst, op.DataLen)
+		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
+
+		op_cur[TxField_NodeID_0] = op.Addr.NodeID[0]
+		op_cur[TxField_NodeID_1] = op.Addr.NodeID[1]
+		op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
+		op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
+		op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
+		op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
+		op_cur[TxField_EditID_0] = op.Addr.EditID[0]
+		op_cur[TxField_EditID_1] = op.Addr.EditID[1]
+
+		hasFields := uint64(0)
+		for i, fi := range op_cur {
+			if fi != op_prv[i] {
+				hasFields |= (1 << i)
+			}
+		}
+		dst = binary.AppendUvarint(dst, hasFields)
+		for i, fi := range op_cur {
+			if hasFields&(1<<i) != 0 {
+				dst = binary.BigEndian.AppendUint64(dst, fi)
+			}
+		}
+		op_prv = op_cur
+	}
+
+	return dst
+}
+
+// unmarshalOps reads compressed TxOp fields from src into tx.Ops.
+func unmarshalOps(tx *TxMsg, src []byte) error {
+	p := 0
+	var op_cur [TxField_MaxFields]uint64
+
+	for i := uint64(0); i < tx.OpCount; i++ {
+		if p >= len(src) {
+			return status.ErrMalformedTx
+		}
+		var op TxOp
+		var n int
+
+		op.Flags = TxOpFlags(src[p])
+		p++
+
+		if op.Citation, n = binary.Uvarint(src[p:]); n <= 0 {
+			return status.ErrMalformedTx
+		}
+		p += n
+
+		if op.DataOfs, n = binary.Uvarint(src[p:]); n <= 0 {
+			return status.ErrMalformedTx
+		}
+		p += n
+
+		if op.DataLen, n = binary.Uvarint(src[p:]); n <= 0 {
+			return status.ErrMalformedTx
+		}
+		p += n
+
+		var skip uint64
+		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
+			return status.ErrMalformedTx
+		}
+		p += n + int(skip)
+		if p > len(src) {
+			return status.ErrMalformedTx
+		}
+
+		var hasFields uint64
+		if hasFields, n = binary.Uvarint(src[p:]); n <= 0 {
+			return status.ErrMalformedTx
+		}
+		p += n
+
+		for j := range int(TxField_MaxFields) {
+			if hasFields&(1<<j) != 0 {
+				if p+8 > len(src) {
+					return status.ErrMalformedTx
+				}
+				op_cur[j] = binary.BigEndian.Uint64(src[p:])
+				p += 8
+			}
+		}
+
+		op.Addr.NodeID[0] = op_cur[TxField_NodeID_0]
+		op.Addr.NodeID[1] = op_cur[TxField_NodeID_1]
+		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
+		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]
+		op.Addr.ItemID[0] = op_cur[TxField_ItemID_0]
+		op.Addr.ItemID[1] = op_cur[TxField_ItemID_1]
+		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
+		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
+
+		tx.Ops = append(tx.Ops, op)
+	}
+
+	return nil
+}
+
+// skipOps advances past OpCount encoded ops, returning the byte offset where ops end.
+func skipOps(src []byte, opCount uint64) (int, error) {
+	p := 0
+	for i := uint64(0); i < opCount; i++ {
+		if p >= len(src) {
+			return 0, status.ErrMalformedTx
+		}
+		p++ // Flags
+
+		var n int
+		if _, n = binary.Uvarint(src[p:]); n <= 0 {
+			return 0, status.ErrMalformedTx
+		}
+		p += n // Citation
+
+		if _, n = binary.Uvarint(src[p:]); n <= 0 {
+			return 0, status.ErrMalformedTx
+		}
+		p += n // DataOfs
+
+		if _, n = binary.Uvarint(src[p:]); n <= 0 {
+			return 0, status.ErrMalformedTx
+		}
+		p += n // DataLen
+
+		var skip uint64
+		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
+			return 0, status.ErrMalformedTx
+		}
+		p += n + int(skip)
+		if p > len(src) {
+			return 0, status.ErrMalformedTx
+		}
+
+		var hasFields uint64
+		if hasFields, n = binary.Uvarint(src[p:]); n <= 0 {
+			return 0, status.ErrMalformedTx
+		}
+		p += n
+
+		for j := range int(TxField_MaxFields) {
+			if hasFields&(1<<j) != 0 {
+				p += 8
+			}
+		}
+		if p > len(src) {
+			return 0, status.ErrMalformedTx
+		}
+	}
+	return p, nil
 }
 
 // Marshals a proto.Message with a Uvarint length prefix
