@@ -396,13 +396,13 @@ func (id UID) Base32() string {
 	return string(out)
 }
 
-// AsLabel returns a compact "first3..last3" base32 label for debugging / logging.
+// AsLabel returns a compact "first2..last4" base32 label for debugging / logging.
 func (id UID) AsLabel() string {
 	full := id.Base32()
 	if len(full) <= 8 {
 		return full
 	}
-	return full[:3] + ".." + full[len(full)-3:]
+	return full[:2] + ".." + full[len(full)-4:]
 }
 
 func (id UID) UUID() uuid.UUID {
