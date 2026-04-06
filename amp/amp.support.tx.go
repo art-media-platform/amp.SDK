@@ -232,6 +232,10 @@ func (tx *TxMsg) Delete(elemID tag.ElementID, val proto.Message) error {
 //   - TxOp is appended to TxMsg.Ops
 func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 
+	// Derive EditID from the TxID (matching C# TxMsg.MarshalOp behavior)
+	txID := tx.TxID()
+	op.Addr.EditID = txID.DeriveID(op.Addr.EditID)
+
 	// START
 	ds := tx.DataStore
 	startOfs := len(ds)
