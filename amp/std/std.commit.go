@@ -100,7 +100,9 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 }
 
 func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
-	tx.Planet = appCtx.Session().Login().Planet
+	if tx.Planet == nil {
+		tx.Planet = appCtx.Session().Login().Planet
+	}
 	tx.Request = &amp.PinRequest{
 		Mode: amp.PinMode_Commit,
 		URL:  "amp://~/cabinets",
