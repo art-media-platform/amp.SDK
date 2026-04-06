@@ -45,6 +45,14 @@ func (ep *PlanetEpoch) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) boo
 	return (epochUnix - txUnix) <= ep.GracePeriod()
 }
 
+func TagFromName(name tag.Name) *Tag {
+	return &Tag{
+		UID_0: name.ID[0],
+		UID_1: name.ID[1],
+		Text:  name.Canonic,
+	}
+}
+
 func TagFromUID(id tag.UID) *Tag {
 	return &Tag{
 		UID_0: id[0],
@@ -78,8 +86,13 @@ func (v *Tag) UID() tag.UID {
 }
 
 func (v *Tag) Name() tag.Name {
-	name := tag.NameFrom(v.URI)
-	return name
+	if v == nil {
+		return tag.Name{}
+	}
+	return tag.Name{
+		ID:      v.UID(),
+		Canonic: v.Text,
+	}
 }
 
 func (v *Tag) AsLabel() string {
