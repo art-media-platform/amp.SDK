@@ -53,7 +53,7 @@ const (
 	ElementLSM_Size = 3 * UID_Size // NodeID, AttrID, ItemID
 	AddressLSM_Size = 4 * UID_Size // NodeID, AttrID, ItemID, EditID
 
-	PackageTags      = "amp.v707"
+	PackageTags      = "amp.tags.v500"
 	UID_Size         = 16                 // UID octet size
 	UID_Bits         = 8 * UID_Size       // UID bit size
 	UID_Base32Length = (UID_Bits + 4) / 5 // max base32 encoding length of a UID

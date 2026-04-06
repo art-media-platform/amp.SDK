@@ -7,11 +7,12 @@ import (
 	"math/bits"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/encode"
 	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/blake2s"
 )
@@ -204,14 +205,19 @@ func UID_FromName(tagsExpr string) UID {
 func NowID() UID {
 	uid := UID_FromTime(time.Now())
 
-	entropy := rot1*uid[1] ^ gEntropy
+	prev := gEntropy.Load()
+	entropy := rot1*uid[1] ^ prev
 	uid[1] ^= entropy & EntropyMask
-	gEntropy = rot2 * entropy
+	gEntropy.Store(rot2 * entropy)
 
 	return uid
 }
 
-var gEntropy = uint64(37730003773)
+var gEntropy atomic.Uint64
+
+func init() {
+	gEntropy.Store(37730003773)
+}
 
 func NewID() UID {
 	var seed [16]byte
@@ -377,7 +383,7 @@ func (id UID) Base32() string {
 		if b32 != 0 {
 			isZero = false
 		}
-		out[i] = data.Base32Alphabet_Upper[b32]
+		out[i] = encode.Base32Alphabet_Upper[b32]
 
 		x1 = (x0&0x1F)<<59 | (x1 >> 5)
 		x0 >>= 5
@@ -390,21 +396,13 @@ func (id UID) Base32() string {
 	return string(out)
 }
 
-// AsLabel returns the base32 suffix of this ID in string form for debugging / logging.
+// AsLabel returns a compact "first3..last3" base32 label for debugging / logging.
 func (id UID) AsLabel() string {
-	const (
-		suffixBytes = 5 // 40 bits is divisible by 8 and 5
-		suffixLen   = 6 // how many ascii digits to emit
-	)
-
-	var suffix [suffixBytes]byte
-	for i := range uint(suffixBytes) {
-		shift := uint(8 * (suffixBytes - 1 - i))
-		suffix[i] = byte(id[1] >> shift)
+	full := id.Base32()
+	if len(full) <= 8 {
+		return full
 	}
-	label := data.Base32Encoding.EncodeToString(suffix[:])
-	label = label[(len(label) - suffixLen):]
-	return label
+	return full[:3] + ".." + full[len(full)-3:]
 }
 
 func (id UID) UUID() uuid.UUID {
@@ -545,10 +543,10 @@ func UID_ParseBase32(text string) (UID, error) {
 var base32Lookup = [127]byte{}
 
 func init() {
-	for i, c := range data.Base32Alphabet_Lower {
+	for i, c := range encode.Base32Alphabet_Lower {
 		base32Lookup[c] = byte(i + 1)
 	}
-	for i, c := range data.Base32Alphabet_Upper {
+	for i, c := range encode.Base32Alphabet_Upper {
 		base32Lookup[c] = byte(i + 1)
 	}
 }
