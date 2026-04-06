@@ -7,9 +7,9 @@ import (
 	"io"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/encode"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"golang.org/x/crypto/sha3"
@@ -40,25 +40,45 @@ func (a ByKeyringID) Less(i, j int) bool {
 	return (a[i].UID_0 < a[j].UID_0) || (a[i].UID_0 == a[j].UID_0 && a[i].UID_1 < a[j].UID_1)
 }
 
-// ByNewestKey implements sort.Interface based on KeyEntry.TimeCreated
-type ByNewestKey []*KeyEntry
+// TimeID returns the TimeID as a tag.UID.
+func (ki *KeyInfo) TimeID() tag.UID {
+	return tag.UID{ki.TimeID_0, ki.TimeID_1}
+}
 
-func (a ByNewestKey) Len() int           { return len(a) }
-func (a ByNewestKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByNewestKey) Less(i, j int) bool { return a[i].KeyInfo.TimeCreated > a[j].KeyInfo.TimeCreated }
+// SetTimeID sets the TimeID fields from a tag.UID.
+func (ki *KeyInfo) SetTimeID(uid tag.UID) {
+	ki.TimeID_0 = uid[0]
+	ki.TimeID_1 = uid[1]
+}
 
-// CompareKeyInfo fully compares two KeyInfos, sorting first by PubKey, then TimeCreated such that
+// ContainerID returns the ContainerID as a tag.UID.
+func (ek *EpochKeyEntry) ContainerID() tag.UID {
+	return tag.UID{ek.ContainerID_0, ek.ContainerID_1}
+}
+
+// EpochID returns the EpochID as a tag.UID.
+func (ek *EpochKeyEntry) EpochID() tag.UID {
+	return tag.UID{ek.EpochID_0, ek.EpochID_1}
+}
+
+// CompareKeyInfo fully compares two KeyInfos, sorting first by PubKey, then TimeID such that
 //
-//	newer keys will appear first (descending TimeCreated)
+//	newer keys will appear first (descending TimeID)
 //
 // If 0 is returned, a and b are identical.
 func CompareKeyInfo(a, b *KeyInfo) int {
 
 	diff := bytes.Compare(a.PubKey, b.PubKey)
 
-	// If pub keys are equal, ensure newer keys to the left
+	// If pub keys are equal, ensure newer keys to the left (descending TimeID)
 	if diff == 0 {
-		diff = int(b.TimeCreated - a.TimeCreated) // Reverse time for newer keys to appear first
+		aID := a.TimeID()
+		bID := b.TimeID()
+		if bID[0] > aID[0] || (bID[0] == aID[0] && bID[1] > aID[1]) {
+			diff = 1
+		} else if aID[0] > bID[0] || (aID[0] == bID[0] && aID[1] > bID[1]) {
+			diff = -1
+		}
 		if diff == 0 {
 			diff = int(a.KeyType - b.KeyType)
 			if diff == 0 {
@@ -84,9 +104,9 @@ func CompareKeyEntry(a, b *KeyEntry) int {
 	return diff
 }
 
-// ByNewestPubKey implements sort.Interface based on KeyEntry.PubKey followed by TimeCreated.
+// ByNewestPubKey implements sort.Interface based on KeyEntry.PubKey followed by TimeID.
 // See CompareEntries() to see sort order.
-// For keys that have the same PubKey, the newer (larger TimeCreated) keys will appear first.
+// For keys that have the same PubKey, the newer (larger TimeID) keys will appear first.
 type ByNewestPubKey []*KeyEntry
 
 func (a ByNewestPubKey) Len() int           { return len(a) }
@@ -135,7 +155,9 @@ func (kr *Keyring) Optimize() {
 
 // ensureSorted sorts the Keyring if not already sorted by PubKey.
 func (kr *Keyring) ensureSorted() {
-	kr.Resort(Ordering_PubKey)
+	if kr.Ordering != Ordering_PubKey {
+		kr.Resort(Ordering_PubKey)
+	}
 }
 
 // DropDupes sorts this Keyring (if not already sorted) and drops all KeyEntries
@@ -198,8 +220,12 @@ func (kr *Keyring) MergeKeys(srcKeyring *Keyring) {
 		} else {
 			if newest == nil {
 				newest = srcEntry
-			} else if keyInfo.TimeCreated >= newest.KeyInfo.TimeCreated {
-				newest = srcEntry
+			} else {
+				srcID := keyInfo.TimeID()
+				curID := newest.KeyInfo.TimeID()
+				if srcID[0] > curID[0] || (srcID[0] == curID[0] && srcID[1] >= curID[1]) {
+					newest = srcEntry
+				}
 			}
 		}
 	}
@@ -270,7 +296,7 @@ func (kr *Keyring) FetchKey(
 	return nil
 }
 
-// FetchNewestKey returns the KeyEntry with the largest TimeCreated
+// FetchNewestKey returns the KeyEntry with the largest TimeID.
 func (kr *Keyring) FetchNewestKey() *KeyEntry {
 	var newest *KeyEntry
 
@@ -280,8 +306,14 @@ func (kr *Keyring) FetchNewestKey() *KeyEntry {
 		}
 		if newest == nil {
 			for _, key := range kr.Keys {
-				if newest == nil || key.KeyInfo.TimeCreated > newest.KeyInfo.TimeCreated {
+				if newest == nil {
 					newest = key
+				} else {
+					keyID := key.KeyInfo.TimeID()
+					curID := newest.KeyInfo.TimeID()
+					if keyID[0] > curID[0] || (keyID[0] == curID[0] && keyID[1] > curID[1]) {
+						newest = key
+					}
 				}
 			}
 		}
@@ -492,11 +524,13 @@ func (tome *KeyTome) GenerateFork(
 				return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support key generation", curKitID.String())
 			}
 
+			timeID := tag.NowID()
 			newEntry := &KeyEntry{
 				KeyInfo: &KeyInfo{
 					KeyType:     srcInfo.KeyType,
 					CryptoKitID: curKitID,
-					TimeCreated: time.Now().Unix(),
+					TimeID_0:    timeID[0],
+					TimeID_1:    timeID[1],
 				},
 			}
 
@@ -516,7 +550,8 @@ func (tome *KeyTome) GenerateFork(
 
 			// Update the source entry with the new public info (PrivKey stays nil in the "guide" copy)
 			srcInfo.PubKey = newEntry.KeyInfo.PubKey
-			srcInfo.TimeCreated = newEntry.KeyInfo.TimeCreated
+			srcInfo.TimeID_0 = newEntry.KeyInfo.TimeID_0
+			srcInfo.TimeID_1 = newEntry.KeyInfo.TimeID_1
 			srcEntry.PrivKey = nil
 		}
 	}
@@ -531,7 +566,8 @@ func (entry *KeyEntry) EqualTo(other *KeyEntry) bool {
 
 	return a.KeyType == b.KeyType &&
 		a.CryptoKitID == b.CryptoKitID &&
-		a.TimeCreated == b.TimeCreated &&
+		a.TimeID_0 == b.TimeID_0 &&
+		a.TimeID_1 == b.TimeID_1 &&
 		bytes.Equal(a.PubKey, b.PubKey) &&
 		bytes.Equal(entry.PrivKey, other.PrivKey)
 }
@@ -546,7 +582,7 @@ func (entry *KeyEntry) ZeroOut() {
 
 // Label returns a human readable label string for this KeyRef
 func (kref *KeyRef) Label() string {
-	return fmt.Sprintf("%s / %s", kref.KeyringID().Base32(), data.BufDesc(kref.PubKey))
+	return fmt.Sprintf("%s / %s", kref.KeyringID().Base32(), encode.ToBase32(kref.PubKey))
 }
 
 func (kref *KeyRef) KeyringID() tag.UID {
@@ -559,14 +595,6 @@ func (kref *KeyRef) KeyringID() tag.UID {
 func (kref *KeyRef) SetKeyringID(uid tag.UID) {
 	kref.KeyringID_0 = uid[0]
 	kref.KeyringID_1 = uid[1]
-}
-
-// Label returns a human readable label string for this KeyInfo
-func (ki *KeyInfo) Label(verbose bool) string {
-	if verbose {
-		return fmt.Sprint("pubkey ", data.Base32Encoding.EncodeToString(ki.PubKey), " using ", ki.CryptoKitID.String())
-	}
-	return fmt.Sprint("pubkey ", data.BufDesc(ki.PubKey))
 }
 
 // Zero overwrites a buffer with zeros.

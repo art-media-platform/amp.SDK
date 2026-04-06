@@ -300,8 +300,8 @@ func (p *ctx) StartChild(task Task) (Context, error) {
 			p.subsMu.Unlock()
 		}
 
-		// Move to Closed state now that all all that remains is the OnClosed callback and release of the chClosed chan.
-		child.state = Closed
+		// Move to Closed state now that all that remains is the OnClosed callback and release of the chClosed chan.
+		atomic.StoreInt32(&child.state, Closed)
 		if child.task.OnClosed != nil {
 			child.task.OnClosed()
 		}

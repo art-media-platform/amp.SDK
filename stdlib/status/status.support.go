@@ -31,6 +31,7 @@ var (
 	ErrInternal        = Code_AssertFailed.Error("internal error")
 	ErrNotConnected    = Code_NotConnected.Error("not connected")
 	ErrMalformedTx     = Code_MalformedTx.Error("malformed tx")
+	ErrVerifyFailed    = Code_VerifySignatureFailed.Error("verification failed")
 	ErrBadTxEdit       = Code_MalformedTx.Error("tx missing edit ID(s)")
 	ErrBadTxOp         = Code_MalformedTx.Error("bad value byte range")
 	ErrInvalidLogin    = Code_LoginFailed.Error("invalid login")
@@ -49,6 +50,11 @@ var (
 	ErrTimeout         = Code_Timeout.Error("timeout")
 	ErrNoAuthToken     = Code_AuthFailed.Error("no auth token")
 	ErrCancelled       = Code_Cancelled.Error("operation cancelled")
+
+	// ErrEpochKeyNotFound means the epoch key needed for decryption or MemberProof
+	// verification is not yet available in the Enclave.  Callers should retain the
+	// TxMsg and retry when the key arrives (e.g. via a MemberEpoch distribution).
+	ErrEpochKeyNotFound = Code_KeyringNotFound.Error("epoch key not found")
 )
 
 // Error makes our custom error type conform to a standard Go error
