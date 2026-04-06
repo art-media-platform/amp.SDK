@@ -17,3 +17,5 @@
 
 # Go workspace file
 go.work
+
+.claude/settings.local.json
