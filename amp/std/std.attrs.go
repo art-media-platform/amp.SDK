@@ -8,74 +8,10 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-var (
-	AppTag      = tag.Name{}.With("app")
-	SessionAttr = tag.Name{}.With("session")
-	ItemAttr    = tag.Name{}.With("item")
-
-	AppState = AppTag.With("state")
-
-	LoginID           = SessionAttr.With("Login").ID
-	LoginChallengeID  = SessionAttr.With("LoginChallenge").ID
-	LoginResponseID   = SessionAttr.With("LoginResponse").ID
-	LoginCheckpointID = SessionAttr.With("LoginCheckpoint").ID
-	SessionErrorID    = SessionAttr.With("Error").ID
-	SessionTag        = SessionAttr.With("Tag")
-	LaunchWeb         = SessionTag.With("www").ID
-	LaunchOAuth       = SessionTag.With("oauth").ID
-
-	ChildLink = ItemAttr.With("child.link.ID").ID // each TxOp.ItemID is an inline child item ID
-
-	ItemTextTag    = ItemAttr.With("text.Tag")
-	ItemLabel      = ItemTextTag.With("label").ID
-	ItemCaption    = ItemTextTag.With("caption").ID
-	ItemCollection = ItemTextTag.With("collection").ID
-	ItemSynopsis   = ItemTextTag.With("synopsis").ID
-
-	ItemFileInfo = ItemAttr.With("FileInfo").ID
-	MainLink     = ItemAttr.With("Tag.link.main").ID
-	MediaLink    = ItemAttr.With("Tag.link.media")
-
-	ItemVis       = ItemAttr.With("Tag.vis").ID
-	ItemBehaviors = ItemAttr.With("Tags.behaviors").ID
-	ItemGlyphs    = ItemAttr.With("Tags.glyphs").ID
-	ItemLinks     = ItemAttr.With("Tags.links").ID
-
-	MediaItemID    = ItemAttr.With("av.MediaItem").ID
-	MediaReleaseID = ItemAttr.With("av.Tag.MediaRelease").ID
-
-	// Planet governance (ACC — Access Control Channel)
-	ACCAttr         = tag.Name{}.With("amp.acc")
-	ACCPlanetEpoch  = ACCAttr.With("PlanetEpoch")  // planet epoch records
-	ACCMemberEpoch  = ACCAttr.With("MemberEpoch")  // member add/modify/revoke
-	ACCChannelEpoch = ACCAttr.With("ChannelEpoch") // channel permission records
-
-	// Member lifecycle
-	MemberAttr         = tag.Name{}.With("amp.member")
-	MemberInviteImport = MemberAttr.With("InviteImport") // well-known attr for invite bytes sent from client
-
-	// Home planet attributes (persisted in the member's home cabinet)
-	HomeAttr         = tag.Name{}.With("amp.home")
-	PlanetConnection = HomeAttr.With("planet.connection.Tag") // per-planet: label, current epoch, join time (value: amp.Tag)
-
-	// Planet status (vault health, sync progress, operational messages)
-	PlanetStatusAttr = tag.Name{}.With("amp.planet.status")
-	PlanetStatusID   = PlanetStatusAttr.With("status").ID // ItemID=vault/daemon UID, value: amp.Tag
-
-	BlobAttr      = tag.Name{}.With("amp.blob")
-	BlobRefAttrID = BlobAttr.With("ref").ID // blob channel entries (BlobRef values)
-)
-
-const ()
-
 const (
 	DDC_MaxFraction = uint64(999999999 + 1) // 9 digits (000.123456789)
 	DDC_Max         = float64(1000)
 	DDC_to_Fixed    = float64(uint64(1)<<31) / DDC_Max
-	// PublicTag_Category     = uint64(2541) << 32        // uint64(25.41 * DDC_to_Fixed) TODO
-	// PublicTag_Category_DDC = PublicTag_Category + 1851 // Dewey Decimal Classification
-
-	BulletSeparator = " · "
 )
 
 // Constructs a standard tag.UID expressing "{DDC_Whole}.{DDC_Decimal}"
@@ -86,15 +22,6 @@ func PublicTag_DDC(geoTile uint64, DDC_Whole, DDC_Decimal uint32) tag.UID {
 		(uint64(DDC_Whole) << 32) | fract,
 	}
 }
-
-const (
-	// URL prefix for a glyph and is typically followed by a media (mime) type.
-	ContentGlyphURI = "asset:glyph/"
-
-	GenericImageType = "image/*"
-	GenericAudioType = "audio/*"
-	GenericVideoType = "video/*"
-)
 
 // Common universal glyphs
 var (

@@ -1,0 +1,165 @@
+// amp.std.consts.sdl — single source of truth for tag name & scalar constants
+//
+// Compiled by `forge const` into .go and .cs files.
+// DO NOT hand-edit generated output files.
+//
+// All entries emit as tag.Name; callers use .ID for the bare UID.
+
+option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
+option csharp_namespace = "art.media.platform.std";
+
+// Bootstrapping node ID
+const uid HeadNodeID = {0x0, 0x37};
+
+tags Name {
+
+    // App-centric tags
+    App "app" {
+        AppState "state"
+    }
+
+    // Session management
+    SessionAttr "session" {
+        Login             "Login"
+        LoginChallenge    "LoginChallenge"
+        LoginResponse     "LoginResponse"
+        LoginCheckpoint   "LoginCheckpoint"
+        SessionStatus     "Status"
+        SessionTag "Tag" {
+            LaunchWeb     "www"
+            LaunchOAuth   "oauth"
+        }
+    }
+
+    // Item attributes
+    ItemAttr "item" {
+        ChildLink          "child.link.ID"
+        ItemTextTag "text.Tag" {
+            ItemLabel        "label"
+            ItemCaption      "caption"
+            ItemCollection   "collection"
+            ItemSynopsis     "synopsis"
+        }
+        ItemFileInfo     "FileInfo"
+        MainLink         "Tag.link.main"
+
+        ItemVis          "Tag.vis"
+        ItemBehaviors    "Tags.behaviors"
+        ItemGlyphs       "Tags.glyphs"
+        ItemLinks        "Tags.links"
+        ItemCameraState    "CameraState"
+        ItemCameraOptions  "CameraOptions"
+        ItemFSInfo         "FSInfo"
+        GlyphTag           "glyph.Tag"
+        TileAttr "tile" {
+            TileLayout "Tag.layout"
+        }
+        ItemSeries "series" {
+            SeriesTRS      "TRS"
+            SeriesLabels   "Labels"
+            SeriesAssetTag "Tag.asset"
+            SeriesHeadLink "Tag.link"
+            SeriesLinkTree "Tags.link.tree"
+            SeriesS2R      "S2.R.mm"
+            SeriesS2T      "S2.UTC64"
+        }
+
+        MediaLink        "media.link.Tag"
+        MediaRelease     "media.release"
+        MediaItem        "MediaItem"
+        MediaPlaylist    "MediaPlaylist"
+    }
+
+    // Channel metadata and catalog
+    ChannelAttr "channel" {
+        ChannelCatalog "catalog.ChannelEpoch"
+        ChannelEpochs  "ChannelEpoch"
+        ChannelPropertySeries "property.series.JsonValue" {
+            ChannelPropertyLabel       "label"
+            ChannelPropertyDescription "description"
+            ChannelPropertyGlyph       "glyph"
+            ChannelPropertySkybox      "skybox"
+            ChannelPropertyGrid        "grid"
+        }
+        ChannelType "type" {
+            ChannelTypeSpreadsheet  "Spreadsheet"
+            ChannelTypeMessages     "Messages"
+            ChannelTypeTimeline     "Timeline"
+            ChannelTypeNotes        "Notes"
+            ChannelTypeMap          "Map"
+            ChannelTypeGlobe        "Globe"
+            ChannelTypeSpace        "Space"
+            ChannelTypeLinks        "Links"
+            ChannelTypeRegistry     "Registry"
+            ChannelTypeSystem       "System"
+            ChannelTypeWeb          "Web"
+            ChannelTypeCrateManager "CrateManager"
+        }
+    }
+
+    // Planet governance (ACC)
+    ACCAttr "amp.acc" {
+        ACCPlanetEpoch "PlanetEpoch"
+        ACCMemberEpoch "MemberEpoch"
+        ACChannelEpoch "ChannelEpoch"
+    }
+
+    // Member lifecycle
+    MemberAttr "amp.member" {
+        MemberInviteAccept "InviteAccept"
+    }
+
+    // Home planet attributes
+    HomeAttr "amp.home" {
+        PlanetConnection "planet.connection.Tag"
+    }
+
+    // Planet node
+    PlanetNode "planet.node" {
+        PlanetRootACC  "root.ACC"
+        PlanetRegistry "registry"
+    }
+
+    // System properties
+    SystemPropertyAttr "system.property" {
+        SpaceReticleStyle   "reticle.style"
+        SpaceReticleOverlay "reticle.overlay"
+        SpaceSkybox         "skybox.space"
+    }
+
+    // Blob storage
+    BlobAttr "amp.blob" {
+        BlobRef  "ref"
+    }
+
+}
+
+
+// Scalar string constants
+const string ContentGlyphURI   = "asset:glyph/";
+const string GenericImageType  = "image/*";
+const string GenericAudioType  = "audio/*";
+const string GenericVideoType  = "video/*";
+const string BulletSeparator   = " · ";
+
+// Glyph URIs
+const Glyph {
+    string WebLink       = "asset:glyph/web.link";
+    string DefaultNode   = "asset:glyph/default.node";
+    string AssetNotFound = "asset:glyph/asset.not.found";
+    string NewLocation   = "asset:glyph/new-location";
+}
+
+// Locus spatial binding
+const Locus {
+    uint32 Bits         = 6;    // cell index bit width
+    uint32 Span         = 0x40; // total cells per locus (1 << Bits)
+    uint64 Mask         = 0x3F; // low 6-bit extraction mask
+    uint32 HexCells     = 37;   // 3 hex rings: 1+6+12+18
+    uint32 CompassStart = 56;   // first compass rose cell index
+    uint32 CompassCells = 8;    // N, NE, E, SE, S, SW, W, NW
+    uint32 Tier0        = 1;    // center only
+    uint32 Tier1        = 7;    // center + ring 1
+    uint32 Tier2        = 19;   // + ring 2
+    uint32 Tier3        = 37;   // + ring 3
+}
