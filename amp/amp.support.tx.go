@@ -709,10 +709,11 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 }
 
 // OpenTx verifies the signature and decrypts a sealed wire-format TxMsg.
-// The signerPubKey is the author's signing public key (looked up externally via TxHeader.FromID after decryption).
+// signerPubKey and signerCryptoKit are the author's signing public key and CryptoKit
+// (looked up externally from the MemberEpoch via TxHeader.FromID).
 //
 // If crypto is nil, the buffer is unmarshaled without verification or decryption (local session use).
-func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte) (*TxMsg, error) {
+func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCryptoKit safe.CryptoKitID) (*TxMsg, error) {
 	if len(wire) < int(Const_TxPreamble_Size) {
 		return nil, status.ErrMalformedTx
 	}
@@ -767,8 +768,7 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte) (*TxMsg, er
 	if err != nil {
 		return nil, err
 	}
-	// TODO: signerCryptoKit should be passed by the caller rather than defaulting to Poly25519
-	if err := crypto.VerifyDigest(sig, digest[:], signerPubKey, safe.CryptoKitID_Poly25519); err != nil {
+	if err := crypto.VerifyDigest(sig, digest[:], signerPubKey, signerCryptoKit); err != nil {
 		return nil, err
 	}
 
