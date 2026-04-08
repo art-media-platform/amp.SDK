@@ -2346,9 +2346,10 @@ func (x *MemberEpoch) GetEncryptorPubKey() []byte {
 	return nil
 }
 
-// InviteToken is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
+// PlanetaryInvite is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
 // It is passphrase-encrypted via safe.Enclave export before leaving the admin's device.
-type InviteToken struct {
+// File extension: .planetary-invite
+type PlanetaryInvite struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Planet being invited to.
 	PlanetTag *Tag `protobuf:"bytes,1,opt,name=PlanetTag,proto3" json:"PlanetTag,omitempty"`
@@ -2365,7 +2366,7 @@ type InviteToken struct {
 	// Known vault addresses for initial peer discovery.
 	VaultAddrs []string `protobuf:"bytes,15,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
 	// Planet epoch key encrypted for the temp member key (via EncryptToPeer).
-	// ImportInvite decrypts this immediately so the member can participate in the epoch.
+	// InviteAccept decrypts this immediately so the member can participate in the epoch.
 	EncryptedEpochKey []byte `protobuf:"bytes,20,opt,name=EncryptedEpochKey,proto3" json:"EncryptedEpochKey,omitempty"`
 	// Signing public key of the admin who encrypted EncryptedEpochKey.
 	// Needed for DecryptFromPeer (CryptoKit derives asymmetric key internally).
@@ -2374,20 +2375,20 @@ type InviteToken struct {
 	sizeCache       protoimpl.SizeCache
 }
 
-func (x *InviteToken) Reset() {
-	*x = InviteToken{}
+func (x *PlanetaryInvite) Reset() {
+	*x = PlanetaryInvite{}
 	mi := &file_amp_amp_core_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *InviteToken) String() string {
+func (x *PlanetaryInvite) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*InviteToken) ProtoMessage() {}
+func (*PlanetaryInvite) ProtoMessage() {}
 
-func (x *InviteToken) ProtoReflect() protoreflect.Message {
+func (x *PlanetaryInvite) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_amp_core_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2399,61 +2400,61 @@ func (x *InviteToken) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use InviteToken.ProtoReflect.Descriptor instead.
-func (*InviteToken) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanetaryInvite.ProtoReflect.Descriptor instead.
+func (*PlanetaryInvite) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *InviteToken) GetPlanetTag() *Tag {
+func (x *PlanetaryInvite) GetPlanetTag() *Tag {
 	if x != nil {
 		return x.PlanetTag
 	}
 	return nil
 }
 
-func (x *InviteToken) GetEpochTag() *Tag {
+func (x *PlanetaryInvite) GetEpochTag() *Tag {
 	if x != nil {
 		return x.EpochTag
 	}
 	return nil
 }
 
-func (x *InviteToken) GetMemberTag() *Tag {
+func (x *PlanetaryInvite) GetMemberTag() *Tag {
 	if x != nil {
 		return x.MemberTag
 	}
 	return nil
 }
 
-func (x *InviteToken) GetTempPrivKey() []byte {
+func (x *PlanetaryInvite) GetTempPrivKey() []byte {
 	if x != nil {
 		return x.TempPrivKey
 	}
 	return nil
 }
 
-func (x *InviteToken) GetCryptoKitID() safe.CryptoKitID {
+func (x *PlanetaryInvite) GetCryptoKitID() safe.CryptoKitID {
 	if x != nil {
 		return x.CryptoKitID
 	}
 	return safe.CryptoKitID(0)
 }
 
-func (x *InviteToken) GetVaultAddrs() []string {
+func (x *PlanetaryInvite) GetVaultAddrs() []string {
 	if x != nil {
 		return x.VaultAddrs
 	}
 	return nil
 }
 
-func (x *InviteToken) GetEncryptedEpochKey() []byte {
+func (x *PlanetaryInvite) GetEncryptedEpochKey() []byte {
 	if x != nil {
 		return x.EncryptedEpochKey
 	}
 	return nil
 }
 
-func (x *InviteToken) GetEncryptorPubKey() []byte {
+func (x *PlanetaryInvite) GetEncryptorPubKey() []byte {
 	if x != nil {
 		return x.EncryptorPubKey
 	}
@@ -3046,8 +3047,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Status\x18\b \x01(\x05R\x06Status\x12\x16\n" +
 	"\x06PubKey\x18\f \x01(\fR\x06PubKey\x123\n" +
 	"\vCryptoKitID\x18\x0f \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12(\n" +
-	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\"\xd2\x02\n" +
-	"\vInviteToken\x12&\n" +
+	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\"\xd6\x02\n" +
+	"\x0fPlanetaryInvite\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12$\n" +
 	"\bEpochTag\x18\x02 \x01(\v2\b.amp.TagR\bEpochTag\x12&\n" +
 	"\tMemberTag\x18\x03 \x01(\v2\b.amp.TagR\tMemberTag\x12 \n" +
@@ -3250,7 +3251,7 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(*BlobRef)(nil),          // 27: amp.BlobRef
 	(*PlanetEpoch)(nil),      // 28: amp.PlanetEpoch
 	(*MemberEpoch)(nil),      // 29: amp.MemberEpoch
-	(*InviteToken)(nil),      // 30: amp.InviteToken
+	(*PlanetaryInvite)(nil),  // 30: amp.PlanetaryInvite
 	(*SyncMsg)(nil),          // 31: amp.SyncMsg
 	(*SyncWatchList)(nil),    // 32: amp.SyncWatchList
 	(*SyncPlanetStatus)(nil), // 33: amp.SyncPlanetStatus
@@ -3291,10 +3292,10 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	21, // 28: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
 	21, // 29: amp.MemberEpoch.Epoch:type_name -> amp.Tag
 	37, // 30: amp.MemberEpoch.CryptoKitID:type_name -> safe.CryptoKitID
-	21, // 31: amp.InviteToken.PlanetTag:type_name -> amp.Tag
-	21, // 32: amp.InviteToken.EpochTag:type_name -> amp.Tag
-	21, // 33: amp.InviteToken.MemberTag:type_name -> amp.Tag
-	37, // 34: amp.InviteToken.CryptoKitID:type_name -> safe.CryptoKitID
+	21, // 31: amp.PlanetaryInvite.PlanetTag:type_name -> amp.Tag
+	21, // 32: amp.PlanetaryInvite.EpochTag:type_name -> amp.Tag
+	21, // 33: amp.PlanetaryInvite.MemberTag:type_name -> amp.Tag
+	37, // 34: amp.PlanetaryInvite.CryptoKitID:type_name -> safe.CryptoKitID
 	32, // 35: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
 	34, // 36: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
 	35, // 37: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest

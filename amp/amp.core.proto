@@ -552,9 +552,10 @@ message MemberEpoch {
 }
 
 
-// InviteToken is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
+// PlanetaryInvite is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
 // It is passphrase-encrypted via safe.Enclave export before leaving the admin's device.
-message InviteToken {
+// File extension: .planetary-invite
+message PlanetaryInvite {
 
     // Planet being invited to.
     Tag                 PlanetTag = 1;
@@ -577,7 +578,7 @@ message InviteToken {
     repeated string     VaultAddrs = 15;
 
     // Planet epoch key encrypted for the temp member key (via EncryptToPeer).
-    // ImportInvite decrypts this immediately so the member can participate in the epoch.
+    // InviteAccept decrypts this immediately so the member can participate in the epoch.
     bytes               EncryptedEpochKey = 20;
 
     // Signing public key of the admin who encrypted EncryptedEpochKey.
