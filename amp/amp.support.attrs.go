@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/proto"
@@ -58,6 +59,15 @@ func TagFromUID(id tag.UID) *Tag {
 		UID_0: id[0],
 		UID_1: id[1],
 	}
+}
+
+// EffectiveCryptoKit returns the CryptoKitID for this epoch, defaulting to Poly25519
+// if the epoch is nil or the kit is unspecified (backward-compatible with legacy data).
+func (epoch *PlanetEpoch) EffectiveCryptoKit() safe.CryptoKitID {
+	if epoch == nil || epoch.CryptoKitID == safe.CryptoKitID_UnspecifiedKit {
+		return safe.CryptoKitID_Poly25519
+	}
+	return epoch.CryptoKitID
 }
 
 func (v *Tag) SetFromTime(t time.Time) {

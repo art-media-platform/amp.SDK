@@ -116,15 +116,12 @@ type Session interface {
 	// Sets the session's EpochKeyStore. Called by the home app after opening/creating it.
 	SetEpochKeys(eks safe.EpochKeyStore)
 
-	// Registers a planet as joined by this member's session.
-	RegisterPlanet(planetID tag.UID, label string, currentEpoch tag.UID)
+	// Returns the current PlanetEpoch for a joined planet, or nil if not registered.
+	Planet(planetID tag.UID) *PlanetEpoch
 
-	// Returns the current epoch UID for a planet, or nil UID if not registered.
-	PlanetEpoch(planetID tag.UID) tag.UID
-
-	// Updates the current epoch for a previously registered planet.
-	// Called by app.members after a new epoch key is decrypted and stored.
-	UpdatePlanetEpoch(planetID, epochID tag.UID)
+	// Registers or updates a planet's epoch in this session.
+	// First call for a given planetID also joins the planet on the vault controller.
+	SetPlanet(planetID tag.UID, epoch *PlanetEpoch)
 
 	// Called after a new epoch key has been stored in EpochKeyStore.
 	// Notifies the vault controller to re-verify pending journal entries for this epoch.
