@@ -6,7 +6,6 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/proto"
 )
 
 func Annotate(err *error, msg string, args ...any) {
@@ -101,16 +100,16 @@ func IsError(err error, errCodes ...Code) bool {
 	return false
 }
 
-func ErrorToValue(v error) proto.Message {
+func AsStatus(v error) *Status {
 	if v == nil {
 		return nil
 	}
-	entry, _ := v.(*Status)
-	if entry == nil {
+	status, _ := v.(*Status)
+	if status == nil {
 		wrapped := Code_Unnamed.Wrap(v)
-		entry = wrapped.(*Status)
+		status = wrapped.(*Status)
 	}
-	return entry
+	return status
 }
 
 // Error returns an *Error with the given error code
