@@ -3,15 +3,12 @@
 // Compiled by `forge const` into .go and .cs files.
 // DO NOT hand-edit generated output files.
 //
-// All entries emit as tag.Name; callers use .ID for the bare UID.
 
 option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 option csharp_namespace = "art.media.platform.std";
 
-// Bootstrapping node ID
-const uid HeadNodeID = {0x0, 0x37};
 
-tags Name {
+tags Attr {
 
     // App-centric tags
     App "app" {
@@ -114,12 +111,6 @@ tags Name {
         PlanetConnection "planet.connection.Tag"
     }
 
-    // Planet node
-    PlanetNode "planet.node" {
-        PlanetRootACC  "root.ACC"
-        PlanetRegistry "registry"
-    }
-
     // System properties
     SystemPropertyAttr "system.property" {
         SpaceReticleStyle   "reticle.style"
@@ -134,8 +125,13 @@ tags Name {
 
 }
 
+tags Node {
+    PlanetRegistry "planet.node.registry"
 
-// Scalar string constants
+}
+
+
+// Scalar constants
 const string ContentGlyphURI   = "asset:glyph/";
 const string GenericImageType  = "image/*";
 const string GenericAudioType  = "audio/*";

@@ -195,7 +195,7 @@ func (pin *Pin[AppT]) pushState() error {
 			nodeID: pinnedID,
 		}
 
-		tx.Upsert(amp.HeadNodeID, Name.ChildLink.ID, pinnedID, nil)
+		tx.Upsert(amp.HeadNodeID, Attr.ChildLink.ID, pinnedID, nil)
 		pin.Item.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
@@ -203,7 +203,7 @@ func (pin *Pin[AppT]) pushState() error {
 
 		for childID, child := range pin.children {
 			w.nodeID = childID
-			tx.Upsert(pinnedID, Name.ChildLink.ID, childID, nil)
+			tx.Upsert(pinnedID, Attr.ChildLink.ID, childID, nil)
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err

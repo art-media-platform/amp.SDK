@@ -6,7 +6,7 @@ package std
 
 import "github.com/art-media-platform/amp.SDK/stdlib/tag"
 
-var Name = struct {
+var Attr = struct {
 	App                        tag.Name
 	AppState                   tag.Name
 	SessionAttr                tag.Name
@@ -79,16 +79,12 @@ var Name = struct {
 	MemberInviteAccept         tag.Name
 	HomeAttr                   tag.Name
 	PlanetConnection           tag.Name
-	PlanetNode                 tag.Name
-	PlanetRootACC              tag.Name
-	PlanetRegistry             tag.Name
 	SystemPropertyAttr         tag.Name
 	SpaceReticleStyle          tag.Name
 	SpaceReticleOverlay        tag.Name
 	SpaceSkybox                tag.Name
 	BlobAttr                   tag.Name
 	BlobRef                    tag.Name
-	HeadNodeID                 tag.UID
 }{
 
 	// ─── App-centric tags ───────────────────────────────────────────
@@ -190,12 +186,6 @@ var Name = struct {
 
 	PlanetConnection          : tag.Name{ID: tag.UID{0x44B6025FEB31307B, 0x099BADEC15DA4C05}, Canonic: "amp.home.planet.connection.tag"},  // 24QS15ZUTJ61XHM6XEXHBXNM05
 
-	// ─── Planet node ────────────────────────────────────────────────
-	PlanetNode                : tag.Name{ID: tag.UID{0x8E64C9992E7D41D2, 0xF91C3DFEAA87672B}, Canonic: "planet.node"},           // 4FDM4TKCMX879GK71XZUP8FTTC
-
-	PlanetRootACC             : tag.Name{ID: tag.UID{0x6EAE835285CE95C2, 0xD10C9426B4778A3F}, Canonic: "planet.node.root.ACC"},  // 3FPU1P51FFKR1E234N4UU7G2JZ
-	PlanetRegistry            : tag.Name{ID: tag.UID{0x5EDE0507A93587CB, 0x4D01B24F07585E1D}, Canonic: "planet.node.registry"},  // 2YVS2HGB9PHZ5NU0EK9W3PHRHX
-
 	// ─── System properties ──────────────────────────────────────────
 	SystemPropertyAttr        : tag.Name{ID: tag.UID{0x630F4A145BAB11F9, 0xE8ED5B4238E5B2DE}, Canonic: "system.property"},                  // 331X518QXC27WYJVBV88WFCDQY
 
@@ -207,12 +197,16 @@ var Name = struct {
 	BlobAttr                  : tag.Name{ID: tag.UID{0x4A915C500F2D3874, 0xB31931484DA5C826}, Canonic: "amp.blob"},      // 2BK5F503TE71UC669J916UCK16
 
 	BlobRef                   : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},  // 2D3SVVXWMD9PMGN098CHYJ0Z5S
-
-	// ─── Bootstrapping node ID ──────────────────────────────────────
-	HeadNodeID                : tag.UID{0x0, 0x37},
 }
 
-// ─── Scalar string constants ────────────────────────────────────
+var Node = struct {
+	PlanetRegistry tag.Name
+}{
+
+	PlanetRegistry: tag.Name{ID: tag.UID{0x5EDE0507A93587CB, 0x4D01B24F07585E1D}, Canonic: "planet.node.registry"},  // 2YVS2HGB9PHZ5NU0EK9W3PHRHX
+}
+
+// ─── Scalar constants ───────────────────────────────────────────
 const (
 	ContentGlyphURI  = "asset:glyph/"
 	GenericImageType = "image/*"
