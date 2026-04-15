@@ -76,9 +76,10 @@ var Attr = struct {
 	ACCMemberEpoch             tag.Name
 	ACChannelEpoch             tag.Name
 	MemberAttr                 tag.Name
-	MemberInviteAccept         tag.Name
+	PlanetInvite               tag.Name
+	PlanetInviteOp             tag.Name
 	HomeAttr                   tag.Name
-	PlanetConnection           tag.Name
+	PlanetBinding              tag.Name
 	SystemPropertyAttr         tag.Name
 	SpaceReticleStyle          tag.Name
 	SpaceReticleOverlay        tag.Name
@@ -177,14 +178,15 @@ var Attr = struct {
 	ACChannelEpoch            : tag.Name{ID: tag.UID{0xD33F0BDC74CDAAC6, 0xA00FF11ED5D6DF79}, Canonic: "amp.acc.channelepoch"},  // 6M7W5XSX6EPC3B03ZJ3VBXERVT
 
 	// ─── Member lifecycle ───────────────────────────────────────────
-	MemberAttr                : tag.Name{ID: tag.UID{0xA59C8C2D8598D764, 0x7383D4962E7A19D3}, Canonic: "amp.member"},               // 55MK62V1DSUXK770YNKSR7N6FM
+	MemberAttr                : tag.Name{ID: tag.UID{0xA59C8C2D8598D764, 0x7383D4962E7A19D3}, Canonic: "amp.member"},                 // 55MK62V1DSUXK770YNKSR7N6FM
 
-	MemberInviteAccept        : tag.Name{ID: tag.UID{0x87373483FF59AD98, 0x13E68C368792F4BF}, Canonic: "amp.member.inviteaccept"},  // 476WU87ZUTPQD17TND6U3T5X5Z
+	PlanetInvite              : tag.Name{ID: tag.UID{0x2A800266234FA739, 0x8A16051EBF01FDCA}, Canonic: "amp.member.planetinvite"},    // 1BH016D8UGNWWSN5H53UZH3ZFB
+	PlanetInviteOp            : tag.Name{ID: tag.UID{0xD7A4CDB2B0EB7F7A, 0x788C02AB30E8B195}, Canonic: "amp.member.planetinviteop"},  // 6RNM6V5D7CGXX7J302PDSFJDDP
 
 	// ─── Home planet attributes ─────────────────────────────────────
-	HomeAttr                  : tag.Name{ID: tag.UID{0x92330C2085FE2E8D, 0xCAB8728DBB4B9FDC}, Canonic: "amp.home"},                        // 4K6D6211GY5U6WPF3KJQXNR7YW
+	HomeAttr                  : tag.Name{ID: tag.UID{0x92330C2085FE2E8D, 0xCAB8728DBB4B9FDC}, Canonic: "amp.home"},                     // 4K6D6211GY5U6WPF3KJQXNR7YW
 
-	PlanetConnection          : tag.Name{ID: tag.UID{0x44B6025FEB31307B, 0x099BADEC15DA4C05}, Canonic: "amp.home.planet.connection.tag"},  // 24QS15ZUTJ61XHM6XEXHBXNM05
+	PlanetBinding             : tag.Name{ID: tag.UID{0x45F2F73219F58825, 0x90DC421D14D18395}, Canonic: "amp.home.planet.binding.tag"},  // 25YCVM46GPJ0KT1R223NBE30WP
 
 	// ─── System properties ──────────────────────────────────────────
 	SystemPropertyAttr        : tag.Name{ID: tag.UID{0x630F4A145BAB11F9, 0xE8ED5B4238E5B2DE}, Canonic: "system.property"},                  // 331X518QXC27WYJVBV88WFCDQY
@@ -199,13 +201,6 @@ var Attr = struct {
 	BlobRef                   : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},  // 2D3SVVXWMD9PMGN098CHYJ0Z5S
 }
 
-var Node = struct {
-	PlanetRegistry tag.Name
-}{
-
-	PlanetRegistry: tag.Name{ID: tag.UID{0x5EDE0507A93587CB, 0x4D01B24F07585E1D}, Canonic: "planet.node.registry"},  // 2YVS2HGB9PHZ5NU0EK9W3PHRHX
-}
-
 // ─── Scalar constants ───────────────────────────────────────────
 const (
 	ContentGlyphURI  = "asset:glyph/"
@@ -213,6 +208,10 @@ const (
 	GenericAudioType = "audio/*"
 	GenericVideoType = "video/*"
 	BulletSeparator  = " · "
+)
+
+const (
+	PlanetInviteFileExt = ".planet-invite"
 )
 
 // ─── Glyph URIs ─────────────────────────────────────────────────

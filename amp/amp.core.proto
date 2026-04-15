@@ -519,6 +519,20 @@ message PlanetEpoch {
     // Enforced at the application layer, not by relay vaults.
     // If 0, DefaultGracePeriod is used (90 days)
     int64               MaxGracePeriod = 25;
+
+    // Default entry channel — where members land when opening the planet.
+    // The Foyer is to play as Index is to search.
+    Tag                 Foyer = 30;
+
+    // Courtesy listing of public-facing nodes on this planet.
+    // Points to a Node whose attrs enumerate discoverable channels and content.
+    Tag                 Index = 31;
+
+    // Planet glyph or icon reference (e.g. asset URI, emoji, or content-type tag).
+    Tag                 Glyph = 32;
+
+    // Human-readable description of this planet.
+    string              About = 33;
 }
 
 
@@ -552,10 +566,10 @@ message MemberEpoch {
 }
 
 
-// PlanetaryInvite is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
+// PlanetInvite is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
 // It is passphrase-encrypted via safe.Enclave export before leaving the admin's device.
-// File extension: .planetary-invite
-message PlanetaryInvite {
+// File extension: .planet-invite
+message PlanetInvite {
 
     // Planet being invited to.
     Tag                 PlanetTag = 1;
@@ -584,6 +598,23 @@ message PlanetaryInvite {
     // Signing public key of the admin who encrypted EncryptedEpochKey.
     // Needed for DecryptFromPeer (CryptoKit derives asymmetric key internally).
     bytes               EncryptorPubKey = 21;
+}
+
+
+// PlanetInviteOp is the client request to create or accept a member invite.
+// Sent as a TxOp body in the request to amp://~/home/invite/new (create) or invite/accept.
+message PlanetInviteOp {
+
+    // Planet to create or accept an invite for.
+    Tag                 PlanetTag = 1;
+
+    // Passphrase used to encrypt the PlanetInvite for out-of-band delivery (create),
+    // or to decrypt an incoming encrypted invite blob (accept).
+    string              Passphrase = 5;
+
+    // Encrypted PlanetInvite blob (accept only).
+    // On create this is empty; the response returns the encrypted blob.
+    bytes               SealedInvite = 10;
 }
 
 

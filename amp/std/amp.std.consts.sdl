@@ -1,6 +1,6 @@
 // amp.std.consts.sdl — single source of truth for tag name & scalar constants
 //
-// Compiled by `forge const` into .go and .cs files.
+// Compiled by `forge consts` into .go and .cs files.
 // DO NOT hand-edit generated output files.
 //
 
@@ -103,12 +103,13 @@ tags Attr {
 
     // Member lifecycle
     MemberAttr "amp.member" {
-        MemberInviteAccept "InviteAccept"
+        PlanetInvite    "PlanetInvite"
+        PlanetInviteOp  "PlanetInviteOp"
     }
 
     // Home planet attributes
     HomeAttr "amp.home" {
-        PlanetConnection "planet.connection.Tag"
+        PlanetBinding "planet.binding.Tag"
     }
 
     // System properties
@@ -125,10 +126,6 @@ tags Attr {
 
 }
 
-tags Node {
-    PlanetRegistry "planet.node.registry"
-
-}
 
 
 // Scalar constants
@@ -137,6 +134,10 @@ const string GenericImageType  = "image/*";
 const string GenericAudioType  = "audio/*";
 const string GenericVideoType  = "video/*";
 const string BulletSeparator   = " · ";
+
+const Planet {
+    string InviteFileExt = ".planet-invite";
+}
 
 // Glyph URIs
 const Glyph {
