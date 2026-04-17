@@ -32,14 +32,15 @@ func init() {
 }
 
 var kit = safe.CryptoKit{
-	ID:          safe.CryptoKitID_Poly25519,
-	GenerateKey: generateKey,
-	Encrypt:     encrypt,
-	Decrypt:     decrypt,
-	EncryptFor:  encryptFor,
-	DecryptFrom: decryptFrom,
-	Sign:        sign,
-	Verify:      verify,
+	ID:            safe.CryptoKitID_Poly25519,
+	SignatureSize: ed25519.SignatureSize,
+	GenerateKey:   generateKey,
+	Encrypt:       encrypt,
+	Decrypt:       decrypt,
+	EncryptFor:    encryptFor,
+	DecryptFrom:   decryptFrom,
+	Sign:          sign,
+	Verify:        verify,
 }
 
 // resolveAsymKeys converts signing keys to asymmetric keys for ECDH when needed.

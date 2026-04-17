@@ -136,6 +136,9 @@ type EpochKeyStore interface {
 type CryptoKit struct {
 	ID CryptoKitID
 
+	// SignatureSize is the fixed byte length of signatures produced by this kit's Sign function.
+	SignatureSize int
+
 	// GenerateKey populates ioEntry.KeyInfo.PubKey and ioEntry.PrivKey based on ioEntry.KeyInfo.KeyType.
 	// Pre: ioEntry.KeyInfo.KeyType and .CryptoKitID are set; TimeID is set by GenerateFork/caller.
 	// inRequestedKeySz is advisory (ignored by some implementations).
