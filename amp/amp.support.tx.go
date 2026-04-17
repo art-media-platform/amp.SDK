@@ -15,18 +15,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const (
-	// Signature size appended to sealed TxMsgs (determined by the CryptoKit in use).
-	TxSignatureSize = 64
-)
-
 // TxDataStore is a message packet sent to / from a client.
 // It leads with a fixed-size header (TxPreamble_Size).
 type TxDataStore []byte
 
 // TxPreamble is the fixed-size header that leads every TxMsg.
-// See comments for Const_TxPreamble_Size.
-type TxPreamble [Const_TxPreamble_Size]byte
+type TxPreamble [TxPreambleSize]byte
 
 func (preamble TxPreamble) TxHeadLen() int {
 	return int(binary.BigEndian.Uint32(preamble[4:8]))
@@ -34,6 +28,10 @@ func (preamble TxPreamble) TxHeadLen() int {
 
 func (preamble TxPreamble) TxDataLen() int {
 	return int(binary.BigEndian.Uint32(preamble[8:12]))
+}
+
+func (preamble TxPreamble) TxSignatureSize() int {
+	return int(binary.BigEndian.Uint16(preamble[12:14]))
 }
 
 func TxNew() *TxMsg {
@@ -546,6 +544,9 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 // Callers should retain the TxMsg and retry when the key arrives.
 type CryptoProvider interface {
 
+	// SignatureSize returns the fixed byte length of signatures produced by this provider.
+	SignatureSize() int
+
 	// HashDigest computes a cryptographic hash of the given data segments.
 	HashDigest(parts ...[]byte) ([32]byte, error)
 
@@ -581,7 +582,9 @@ type CryptoProvider interface {
 //
 // Wire layout:
 //
-//	Preamble (16B) | TxEnvelope (varint-prefixed) | Payload (encrypted or plaintext) | DataStore | Signature (64B)
+//	Preamble (16B) | TxEnvelope (varint-prefixed) | Payload (encrypted or plaintext) [| DataStore] | Signature
+//
+// Signature length is stored in preamble[12:14] (uint16 BE). The signature is the trailing bytes of the wire.
 //
 // If crypto is nil, the TxMsg is marshaled without encryption or signing (local session use).
 func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
@@ -632,65 +635,35 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 	}
 
 	// --- Build the wire buffer: Preamble | Envelope | Payload [| DataStore] | Signature ---
-	buf = buf[:Const_TxPreamble_Size]
 
-	// Preamble
-	buf[0] = byte((Const_TxPreamble_Marker >> 16) & 0xFF)
-	buf[1] = byte((Const_TxPreamble_Marker >> 8) & 0xFF)
-	buf[2] = byte((Const_TxPreamble_Marker >> 0) & 0xFF)
-	buf[3] = byte(Const_TxPreamble_Version)
-
-	// Envelope
-	buf = append(buf, envBuf...)
-
-	// Payload (+ DataStore if not encrypted together)
-	buf = append(buf, wirePayload...)
-	if isPublic {
-		buf = append(buf, tx.DataStore...)
-	}
-
-	// Fill in preamble sizes now that we know the total
-	sigOfs := len(buf)
-	tx.TxEnvelope.SignatureOffset = uint64(sigOfs)
-
-	// Re-marshal envelope with SignatureOffset set (it changed)
+	// Re-marshal envelope now that MemberProof is set
 	envBuf, _ = writePb(nil, &tx.TxEnvelope)
-	// Rebuild: we need the envelope to be final before signing
-	buf = buf[:Const_TxPreamble_Size]
+
+	buf = buf[:TxPreambleSize]
+	copy(buf[:4], TxPreambleSignature)
 	buf = append(buf, envBuf...)
 	buf = append(buf, wirePayload...)
 	if isPublic {
 		buf = append(buf, tx.DataStore...)
 	}
 
-	// Update preamble size fields
+	// Preamble size fields
 	if isPublic {
-		binary.BigEndian.PutUint32(buf[4:8], uint32(int(Const_TxPreamble_Size)+len(envBuf)+len(payload)))
+		binary.BigEndian.PutUint32(buf[4:8], uint32(int(TxPreambleSize)+len(envBuf)+len(payload)))
 		binary.BigEndian.PutUint32(buf[8:12], uint32(len(tx.DataStore)))
 	} else {
-		// Encrypted: payload+datastore are combined in wirePayload
-		binary.BigEndian.PutUint32(buf[4:8], uint32(int(Const_TxPreamble_Size)+len(envBuf)+len(wirePayload)))
+		binary.BigEndian.PutUint32(buf[4:8], uint32(int(TxPreambleSize)+len(envBuf)+len(wirePayload)))
 		binary.BigEndian.PutUint32(buf[8:12], 0) // DataStore is inside encrypted payload
 	}
 
-	// Update SignatureOffset (now final)
-	tx.TxEnvelope.SignatureOffset = uint64(len(buf))
+	sigSize := crypto.SignatureSize()
+	binary.BigEndian.PutUint16(buf[12:14], uint16(sigSize))
 
-	// Re-marshal envelope one final time with correct SignatureOffset
-	envBuf, _ = writePb(nil, &tx.TxEnvelope)
-	buf = buf[:Const_TxPreamble_Size]
-	buf = append(buf, envBuf...)
-	buf = append(buf, wirePayload...)
-	if isPublic {
-		buf = append(buf, tx.DataStore...)
-	}
-
-	// --- Sign: hash(Preamble || Envelope || Payload) then sign ---
+	// --- Sign: hash(wire before signature) → append signature ---
 	digest, err := crypto.HashDigest(buf)
 	if err != nil {
 		return err
 	}
-
 	sig, err := crypto.SignDigest(digest[:])
 	if err != nil {
 		return err
@@ -707,16 +680,12 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 //
 // If crypto is nil, the buffer is unmarshaled without verification or decryption (local session use).
 func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCryptoKit safe.CryptoKitID) (*TxMsg, error) {
-	if len(wire) < int(Const_TxPreamble_Size) {
+	if len(wire) < int(TxPreambleSize) {
 		return nil, status.ErrMalformedTx
 	}
 
 	// Validate preamble
-	marker := uint32(wire[0])<<16 | uint32(wire[1])<<8 | uint32(wire[2])
-	if marker != uint32(Const_TxPreamble_Marker) {
-		return nil, status.ErrMalformedTx
-	}
-	if wire[3] < byte(Const_TxPreamble_Version) {
+	if string(wire[:4]) != TxPreambleSignature {
 		return nil, status.ErrMalformedTx
 	}
 
@@ -726,7 +695,7 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 		// No crypto — standard unmarshal
 		headLen := int(binary.BigEndian.Uint32(wire[4:8]))
 		dataLen := int(binary.BigEndian.Uint32(wire[8:12]))
-		headBody := wire[Const_TxPreamble_Size:headLen]
+		headBody := wire[TxPreambleSize:headLen]
 		if err := tx.UnmarshalHead(headBody); err != nil {
 			return nil, err
 		}
@@ -740,7 +709,7 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 	// --- Parse TxEnvelope from the head (in the clear) ---
 	headLen := int(binary.BigEndian.Uint32(wire[4:8]))
 	dataLen := int(binary.BigEndian.Uint32(wire[8:12]))
-	headBody := wire[Const_TxPreamble_Size:headLen]
+	headBody := wire[TxPreambleSize:headLen]
 
 	// Read just the envelope
 	p := 0
@@ -749,13 +718,15 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 	}
 
 	// --- Verify signature ---
-	sigOfs := tx.TxEnvelope.SignatureOffset
-	if sigOfs == 0 || int(sigOfs)+TxSignatureSize > len(wire) {
+	// Signature length is in preamble[12:14]; signature is the trailing bytes of wire.
+	sigLen := int(binary.BigEndian.Uint16(wire[12:14]))
+	if sigLen == 0 || sigLen > len(wire)-int(TxPreambleSize) {
 		return nil, status.ErrMalformedTx
 	}
+	sigOfs := len(wire) - sigLen
 
 	signedData := wire[:sigOfs]
-	sig := wire[sigOfs : sigOfs+TxSignatureSize]
+	sig := wire[sigOfs:]
 
 	digest, err := crypto.HashDigest(signedData)
 	if err != nil {
@@ -770,7 +741,7 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 
 	if isPublic {
 		// Planet-public: payload is plaintext, DataStore is separate
-		payloadStart := int(Const_TxPreamble_Size) + p + int(tx.TxEnvelope.HeaderOffset)
+		payloadStart := int(TxPreambleSize) + p + int(tx.TxEnvelope.HeaderOffset)
 		payloadAndOps := headBody[p+int(tx.TxEnvelope.HeaderOffset):]
 
 		// Unmarshal TxHeader + TxOps from plaintext
@@ -792,7 +763,7 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 		}
 	} else {
 		// Encrypted: payload contains TxHeader + TxOps + DataStore
-		encryptedStart := int(Const_TxPreamble_Size) + p + int(tx.TxEnvelope.HeaderOffset)
+		encryptedStart := int(TxPreambleSize) + p + int(tx.TxEnvelope.HeaderOffset)
 		encryptedEnd := int(sigOfs)
 		ciphertext := wire[encryptedStart:encryptedEnd]
 
@@ -839,18 +810,17 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 // metadata (PlanetID, Epoch, TxID, MemberProof) without needing the epoch key
 // or signer's public key.
 func ParseTxEnvelope(wire []byte) (*TxEnvelope, error) {
-	if len(wire) < int(Const_TxPreamble_Size) {
+	if len(wire) < int(TxPreambleSize) {
 		return nil, status.ErrMalformedTx
 	}
 
-	marker := uint32(wire[0])<<16 | uint32(wire[1])<<8 | uint32(wire[2])
-	if marker != uint32(Const_TxPreamble_Marker) {
+	if string(wire[:4]) != TxPreambleSignature {
 		return nil, status.ErrMalformedTx
 	}
 
 	env := &TxEnvelope{}
 	p := 0
-	if err := readPb(wire[Const_TxPreamble_Size:], &p, env); err != nil {
+	if err := readPb(wire[TxPreambleSize:], &p, env); err != nil {
 		return nil, err
 	}
 	return env, nil

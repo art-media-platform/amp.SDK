@@ -105,10 +105,6 @@ message TxEnvelope {
     // Byte offset from the end of the marshalled TxEnvelope to the start of the TxHeader.
     uint64              HeaderOffset = 10;
 
-    // Byte offset from preamble start to the signature.
-    // Allows signature verification without parsing the payload.
-    uint64              SignatureOffset = 20;
-
     // Proves sender is a planet/channel member without revealing identity.
     // HMAC(proof_key, TxID) where proof_key = HKDF(epoch_key, "member-proof").
     // Allows relay vaults to reject spam without decrypting content.
@@ -497,8 +493,8 @@ message PlanetEpoch {
 
     // Planet-wide governance settings (enforced by vaults):
     int64               MaxTxMsgSize = 20;             // Max single TxMsg bytes (default: 1 MB)
-    int64               MaxMemberBytesPerWindow = 21;  // Max bytes per member per window (default: 100 MB)
-    int64               MaxMemberTxPerWindow = 22;     // Max TxMsg count per member per window (default: 10000)
+    int64               MaxBytesPerWindow = 21;        // Max bytes per member per window (default: 100 MB)
+    int64               MaxTxPerWindow = 22;           // Max TxMsg count per member per window (default: 10000)
     int64               RateLimitWindowSecs = 23;      // Sliding window duration in seconds (default: 86400 = 24h)
 
     // Maximum seconds after an epoch rotation during which old-epoch TxMsgs are still accepted.
