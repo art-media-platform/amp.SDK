@@ -294,11 +294,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 		return nil, err
 	}
 
-	marker := uint32(preamble[0])<<16 | uint32(preamble[1])<<8 | uint32(preamble[2])
-	if marker != uint32(Const_TxPreamble_Marker) {
-		return nil, status.ErrMalformedTx
-	}
-	if preamble[3] < byte(Const_TxPreamble_Version) {
+	if string(preamble[:4]) != TxPreambleSignature {
 		return nil, status.ErrMalformedTx
 	}
 
@@ -313,7 +309,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 			tx.DataStore = make([]byte, max(needSz, 2048))
 		}
 
-		buf := tx.DataStore[:headLen-int(Const_TxPreamble_Size)]
+		buf := tx.DataStore[:headLen-int(TxPreambleSize)]
 		if err := readBytes(buf); err != nil {
 			return nil, err
 		}
@@ -334,7 +330,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 // Returns the ceiling byte size of this TxMsg as a serialized buffer.
 func (tx *TxMsg) CeilingSize() int64 {
 	const (
-		txBaseSize = int(Const_TxPreamble_Size) +
+		txBaseSize = int(TxPreambleSize) +
 			int(unsafe.Sizeof(TxEnvelope{})) +
 			int(unsafe.Sizeof(TxHeader{}))
 		txOpSize = int(unsafe.Sizeof(TxOp{}))
@@ -377,13 +373,10 @@ func (tx *TxMsg) MarshalHeadAndOps(dst *[]byte) {
 		buf = make([]byte, 2048)
 	}
 
-	headAndOps := tx.MarshalHead(buf[:Const_TxPreamble_Size])
+	headAndOps := tx.MarshalHead(buf[:TxPreambleSize])
 
-	head := headAndOps[:Const_TxPreamble_Size]
-	head[0] = byte((Const_TxPreamble_Marker >> 16) & 0xFF)
-	head[1] = byte((Const_TxPreamble_Marker >> 8) & 0xFF)
-	head[2] = byte((Const_TxPreamble_Marker >> 0) & 0xFF)
-	head[3] = byte(Const_TxPreamble_Version)
+	head := headAndOps[:TxPreambleSize]
+	copy(head[:4], TxPreambleSignature)
 
 	binary.BigEndian.PutUint32(head[4:8], uint32(len(headAndOps)))
 	binary.BigEndian.PutUint32(head[8:12], uint32(len(tx.DataStore)))

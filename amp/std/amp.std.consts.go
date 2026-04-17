@@ -80,6 +80,7 @@ var Attr = struct {
 	PlanetInviteOp             tag.Name
 	HomeAttr                   tag.Name
 	PlanetBinding              tag.Name
+	PlanetStorageOpts          tag.Name
 	SystemPropertyAttr         tag.Name
 	SpaceReticleStyle          tag.Name
 	SpaceReticleOverlay        tag.Name
@@ -184,9 +185,10 @@ var Attr = struct {
 	PlanetInviteOp            : tag.Name{ID: tag.UID{0xD7A4CDB2B0EB7F7A, 0x788C02AB30E8B195}, Canonic: "amp.member.planetinviteop"},  // 6RNM6V5D7CGXX7J302PDSFJDDP
 
 	// ─── Home planet attributes ─────────────────────────────────────
-	HomeAttr                  : tag.Name{ID: tag.UID{0x92330C2085FE2E8D, 0xCAB8728DBB4B9FDC}, Canonic: "amp.home"},                     // 4K6D6211GY5U6WPF3KJQXNR7YW
+	HomeAttr                  : tag.Name{ID: tag.UID{0x92330C2085FE2E8D, 0xCAB8728DBB4B9FDC}, Canonic: "amp.home"},                                   // 4K6D6211GY5U6WPF3KJQXNR7YW
 
-	PlanetBinding             : tag.Name{ID: tag.UID{0x45F2F73219F58825, 0x90DC421D14D18395}, Canonic: "amp.home.planet.binding.tag"},  // 25YCVM46GPJ0KT1R223NBE30WP
+	PlanetBinding             : tag.Name{ID: tag.UID{0x45F2F73219F58825, 0x90DC421D14D18395}, Canonic: "amp.home.planet.binding.tag"},                // 25YCVM46GPJ0KT1R223NBE30WP
+	PlanetStorageOpts         : tag.Name{ID: tag.UID{0x9E17382947669A37, 0x07DC97D0A95DE3F2}, Canonic: "amp.home.planet.storage.planetstorageopts"},  // 4Y2WW2KJV6M8VHGR4RU2NPVSZK
 
 	// ─── System properties ──────────────────────────────────────────
 	SystemPropertyAttr        : tag.Name{ID: tag.UID{0x630F4A145BAB11F9, 0xE8ED5B4238E5B2DE}, Canonic: "system.property"},                  // 331X518QXC27WYJVBV88WFCDQY
@@ -201,8 +203,10 @@ var Attr = struct {
 	BlobRef                   : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},  // 2D3SVVXWMD9PMGN098CHYJ0Z5S
 }
 
-// ─── Scalar constants ───────────────────────────────────────────
+// ─── The bootstrapping ("head") node ID ─────────────────────────
 const (
+	HeadNodeID_1     = int32(0x37)
+	// Scalar constants
 	ContentGlyphURI  = "asset:glyph/"
 	GenericImageType = "image/*"
 	GenericAudioType = "audio/*"

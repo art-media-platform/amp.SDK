@@ -14,41 +14,6 @@ option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
 option csharp_namespace = "art.media.platform";
 
-
-enum Const {
-    Zero = 0;
-
-    // The bootstrapping ("head") node ID
-    HeadNodeID = 0x37;
-
-    // DefaultServicePort is the default TCP port used to expose amp.Host service.
-    DefaultServicePort = 5192;
-
-    // TxPreamble (values are big endian):
-    //
-    //    00:03  TxPreamble marker ("amp")
-    //    03:04  TxPreamble_Version
-    //    04:08  TxPreamble_Size + serialized(TxHeader) + serialized([]TxOp)
-    //    08:12  len(TxMsg.DataStore)
-    //    12:16  Reserved
-    TxPreamble_Size = 16;
-
-    // Version of the TxPreamble -- first byte
-    TxPreamble_Version = 0x33;
-
-    // The first byte of the TxPreamble is the header size and version and
-    // the following 3 bytes of a serialized TxMsg ("amp")
-    TxPreamble_Marker = 0x616D70;
-
-    // ValueHeader is a variable length preamble to db value entries, see ValueHeaderFlags.
-    ValueHeaderMaxSize = 37; // flags + 4 possible UIDs * 16 bytes per UID
-
-    // בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
-    // oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
-    // now let us get to work!
-    Invocation = 3773;
-}
-
 // TxOpFlags are 8 available bit flags that describe a TxOp.
 enum TxOpFlags {
     Unassigned = 0;    // invalid state

@@ -22,7 +22,7 @@ const (
 
 var (
 	// Bootstrapping aka "head" node ID where to start.
-	HeadNodeID = tag.UID{0, uint64(Const_HeadNodeID)}
+	HeadNodeID = tag.UID{0, uint64(HeadNodeID_1)}
 )
 
 // GracePeriod returns the effective grace period for this epoch.

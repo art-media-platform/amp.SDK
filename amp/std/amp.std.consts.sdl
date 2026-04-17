@@ -109,7 +109,8 @@ tags Attr {
 
     // Home planet attributes
     HomeAttr "amp.home" {
-        PlanetBinding "planet.binding.Tag"
+        PlanetBinding      "planet.binding.Tag"
+        PlanetStorageOpts  "planet.storage.PlanetStorageOpts"
     }
 
     // System properties
@@ -126,6 +127,8 @@ tags Attr {
 
 }
 
+// The bootstrapping ("head") node ID
+const int32 HeadNodeID_1 = 0x37;
 
 
 // Scalar constants

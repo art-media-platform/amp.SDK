@@ -1,0 +1,36 @@
+// amp.consts.sdl — wire protocol and host-level constants
+//
+// Compiled by `forge consts` into .go and .cs files.
+// DO NOT hand-edit generated output files.
+//
+
+option go_package = "github.com/art-media-platform/amp.SDK/amp";
+option csharp_namespace = "art.media.platform";
+
+
+// TxMsg wire framing
+const Tx {
+    // TxPreamble layout (big endian):
+    //
+    //    00:04  PreambleSignature ("amp1")
+    //    04:08  PreambleSize + serialized(TxHeader) + serialized([]TxOp)
+    //    08:12  len(TxMsg.DataStore)
+    //    12:14  SignatureLength (uint16 BE; 0 = unsigned)
+    //    14:16  Reserved
+    const string PreambleSignature = "amp1";
+
+	// Fixed-size header that leads every TxMsg (see amp.consts.sdl for layout).
+	const int32  PreambleSize = 16;
+}
+
+
+// The bootstrapping ("head") node ID
+const int32 HeadNodeID_1 = 0x37;
+
+// Default TCP port used to expose amp.Host service.
+const int32 DefaultServicePort = 5192;
+
+// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
+// oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
+// now let us get to work!
+const int32 Invocation = 3773;
