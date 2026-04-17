@@ -24,12 +24,23 @@ type Host interface {
 	StartNewSession(parent HostService, via Transport) (Session, error)
 }
 
+// TransportInfo describes capabilities and requirements of a Transport.
+type TransportInfo struct {
+
+	// Describes this transport for logging and debugging.
+	Label string
+
+	// If set, the host must perform challenge-response authentication before granting access.
+	// True for remote transports (e.g. TCP), false for local/embedded transports (e.g. lib).
+	RequiresAuth bool
+}
+
 // Transport wraps a TxMsg transport abstraction, allowing a Host to connect over any data transport layer.
 // For example, tcp_service and lib_service each implement amp.Transport.
 type Transport interface {
 
-	// Describes this transport for logging and debugging.
-	Label() string
+	// Returns the parameters describing this transport's capabilities and requirements.
+	Info() TransportInfo
 
 	// Called when this Transport should close because the associated parent host session is closing or has closed.
 	Close() error
