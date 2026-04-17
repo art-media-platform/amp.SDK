@@ -77,7 +77,6 @@ enum CryptoKitID {
 enum HashKitID {
     UnspecifiedHashKit = 0;
     SHA3_256           = 3;
-    SHA3_512           = 4;
     Blake2s_256        = 5;
 }
 
@@ -196,15 +195,4 @@ message EpochKeyEntry {
 message EpochKeyTome {
     int64                   Revision    = 1;    // Incremented on each mutation
     repeated EpochKeyEntry  Keys        = 2;    // All epoch keys (sorted by ContainerID, then EpochID)
-}
-
-
-// SigHeader precedes a signed payload, encoding signer identity and payload geometry.
-message SigHeader {
-    CryptoKitID SignerCryptoKit     = 1;    // CryptoKit used to produce the signature
-    bytes       SignerPubKey        = 2;    // Public key of the signer
-    HashKitID   HashKitID           = 6;    // Hash algorithm for the payload digest
-    uint32      HeaderSz            = 7;    // Size of the hashed+signed header payload
-    uint32      HeaderCodec         = 8;    // Client-specified codec for unmarshalling the header
-    uint64      BodySz              = 9;    // Size of the unhashed body payload
 }

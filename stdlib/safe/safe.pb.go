@@ -172,7 +172,6 @@ type HashKitID int32
 const (
 	HashKitID_UnspecifiedHashKit HashKitID = 0
 	HashKitID_SHA3_256           HashKitID = 3
-	HashKitID_SHA3_512           HashKitID = 4
 	HashKitID_Blake2s_256        HashKitID = 5
 )
 
@@ -181,13 +180,11 @@ var (
 	HashKitID_name = map[int32]string{
 		0: "UnspecifiedHashKit",
 		3: "SHA3_256",
-		4: "SHA3_512",
 		5: "Blake2s_256",
 	}
 	HashKitID_value = map[string]int32{
 		"UnspecifiedHashKit": 0,
 		"SHA3_256":           3,
-		"SHA3_512":           4,
 		"Blake2s_256":        5,
 	}
 )
@@ -1250,91 +1247,6 @@ func (x *EpochKeyTome) GetKeys() []*EpochKeyEntry {
 	return nil
 }
 
-// SigHeader precedes a signed payload, encoding signer identity and payload geometry.
-type SigHeader struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	SignerCryptoKit CryptoKitID            `protobuf:"varint,1,opt,name=SignerCryptoKit,proto3,enum=safe.CryptoKitID" json:"SignerCryptoKit,omitempty"` // CryptoKit used to produce the signature
-	SignerPubKey    []byte                 `protobuf:"bytes,2,opt,name=SignerPubKey,proto3" json:"SignerPubKey,omitempty"`                              // Public key of the signer
-	HashKitID       HashKitID              `protobuf:"varint,6,opt,name=HashKitID,proto3,enum=safe.HashKitID" json:"HashKitID,omitempty"`               // Hash algorithm for the payload digest
-	HeaderSz        uint32                 `protobuf:"varint,7,opt,name=HeaderSz,proto3" json:"HeaderSz,omitempty"`                                     // Size of the hashed+signed header payload
-	HeaderCodec     uint32                 `protobuf:"varint,8,opt,name=HeaderCodec,proto3" json:"HeaderCodec,omitempty"`                               // Client-specified codec for unmarshalling the header
-	BodySz          uint64                 `protobuf:"varint,9,opt,name=BodySz,proto3" json:"BodySz,omitempty"`                                         // Size of the unhashed body payload
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *SigHeader) Reset() {
-	*x = SigHeader{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SigHeader) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SigHeader) ProtoMessage() {}
-
-func (x *SigHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SigHeader.ProtoReflect.Descriptor instead.
-func (*SigHeader) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *SigHeader) GetSignerCryptoKit() CryptoKitID {
-	if x != nil {
-		return x.SignerCryptoKit
-	}
-	return CryptoKitID_UnspecifiedKit
-}
-
-func (x *SigHeader) GetSignerPubKey() []byte {
-	if x != nil {
-		return x.SignerPubKey
-	}
-	return nil
-}
-
-func (x *SigHeader) GetHashKitID() HashKitID {
-	if x != nil {
-		return x.HashKitID
-	}
-	return HashKitID_UnspecifiedHashKit
-}
-
-func (x *SigHeader) GetHeaderSz() uint32 {
-	if x != nil {
-		return x.HeaderSz
-	}
-	return 0
-}
-
-func (x *SigHeader) GetHeaderCodec() uint32 {
-	if x != nil {
-		return x.HeaderCodec
-	}
-	return 0
-}
-
-func (x *SigHeader) GetBodySz() uint64 {
-	if x != nil {
-		return x.BodySz
-	}
-	return 0
-}
-
 var File_stdlib_safe_safe_proto protoreflect.FileDescriptor
 
 const file_stdlib_safe_safe_proto_rawDesc = "" +
@@ -1425,14 +1337,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x03Key\x18\x06 \x01(\fR\x03Key\"S\n" +
 	"\fEpochKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
-	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xf1\x01\n" +
-	"\tSigHeader\x12;\n" +
-	"\x0fSignerCryptoKit\x18\x01 \x01(\x0e2\x11.safe.CryptoKitIDR\x0fSignerCryptoKit\x12\"\n" +
-	"\fSignerPubKey\x18\x02 \x01(\fR\fSignerPubKey\x12-\n" +
-	"\tHashKitID\x18\x06 \x01(\x0e2\x0f.safe.HashKitIDR\tHashKitID\x12\x1a\n" +
-	"\bHeaderSz\x18\a \x01(\rR\bHeaderSz\x12 \n" +
-	"\vHeaderCodec\x18\b \x01(\rR\vHeaderCodec\x12\x16\n" +
-	"\x06BodySz\x18\t \x01(\x04R\x06BodySz*'\n" +
+	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys*'\n" +
 	"\x05Const\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x15\n" +
 	"\x11SealedTomeVersion\x10\x01*<\n" +
@@ -1443,11 +1348,10 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"SigningKey\x10\x03*0\n" +
 	"\vCryptoKitID\x12\x12\n" +
 	"\x0eUnspecifiedKit\x10\x00\x12\r\n" +
-	"\tPoly25519\x10\x01*P\n" +
+	"\tPoly25519\x10\x01*B\n" +
 	"\tHashKitID\x12\x16\n" +
 	"\x12UnspecifiedHashKit\x10\x00\x12\f\n" +
-	"\bSHA3_256\x10\x03\x12\f\n" +
-	"\bSHA3_512\x10\x04\x12\x0f\n" +
+	"\bSHA3_256\x10\x03\x12\x0f\n" +
 	"\vBlake2s_256\x10\x05*[\n" +
 	"\aCryptOp\x12\b\n" +
 	"\x04Sign\x10\x00\x12\x0e\n" +
@@ -1478,7 +1382,7 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 }
 
 var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),            // 0: safe.Const
 	(KeyType)(0),          // 1: safe.KeyType
@@ -1498,7 +1402,6 @@ var file_stdlib_safe_safe_proto_goTypes = []any{
 	(*KeyTome)(nil),       // 15: safe.KeyTome
 	(*EpochKeyEntry)(nil), // 16: safe.EpochKeyEntry
 	(*EpochKeyTome)(nil),  // 17: safe.EpochKeyTome
-	(*SigHeader)(nil),     // 18: safe.SigHeader
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	7,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
@@ -1514,13 +1417,11 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	5,  // 10: safe.KeyTome.Ordering:type_name -> safe.Ordering
 	2,  // 11: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
 	16, // 12: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	2,  // 13: safe.SigHeader.SignerCryptoKit:type_name -> safe.CryptoKitID
-	3,  // 14: safe.SigHeader.HashKitID:type_name -> safe.HashKitID
-	15, // [15:15] is the sub-list for method output_type
-	15, // [15:15] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1534,7 +1435,7 @@ func file_stdlib_safe_safe_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   13,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
