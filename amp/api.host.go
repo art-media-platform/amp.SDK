@@ -154,6 +154,10 @@ type Session interface {
 	// For large files, data is streamed — not buffered in memory.
 	// If onProgress is non-nil, it is called periodically with cumulative bytes written.
 	StoreBlob(planetID tag.UID, data io.Reader, byteSize int64, contentType string, onProgress func(bytesWritten int64)) (*BlobRef, error)
+
+	// BlobStore returns the session's BlobStore for retrieving blobs by (planetID, blobID).
+	// Apps use this to build data.Asset instances backed by stored blobs.
+	BlobStore() BlobStore
 }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
@@ -183,6 +187,14 @@ type BlobStore interface {
 	Store(planetID tag.UID, blobID tag.UID, data io.Reader, byteSize int64) error
 	Retrieve(planetID tag.UID, blobID tag.UID) (io.ReadCloser, error)
 	Has(planetID tag.UID, blobID tag.UID) bool
+
+	// StoreHashed hashes and stores data content-addressed in a single streaming pass.
+	// Caller pre-populates ref.PlanetID_0/1, ref.ByteSize, ref.HashKitID (0 = default Blake2s_256),
+	// and optionally ref.BlobTag.ContentType.
+	// On success, StoreHashed populates ref.Hash_0..3 from the content hash and sets
+	// ref.BlobTag.UID to the leading 16 bytes of that hash (§13.2).
+	// Idempotent: if the hash-derived on-disk path already exists, the temp write is discarded.
+	StoreHashed(ref *BlobRef, data io.Reader, onProgress func(bytesWritten int64)) error
 }
 
 // Registry is where apps and types are registered -- concurrency safe.
