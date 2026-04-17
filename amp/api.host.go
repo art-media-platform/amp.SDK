@@ -155,6 +155,15 @@ type Session interface {
 	// If onProgress is non-nil, it is called periodically with cumulative bytes written.
 	StoreBlob(planetID tag.UID, data io.Reader, byteSize int64, contentType string, onProgress func(bytesWritten int64)) (*BlobRef, error)
 
+	// SeedBlob introduces a local file into a planet's blob pipeline. The host opens the
+	// file directly (no IPC memcpy), hashes-and-stores in a single streaming pass, and
+	// returns a populated BlobRef. Caller is expected to upsert the BlobRef into whatever
+	// attr is appropriate on a target node (e.g. std.Attr.NodeBlobs keyed by BlobTag.UID).
+	//
+	// Content-addressed: re-seeding the same file produces the same BlobRef and is a no-op
+	// at the BlobStore layer (§13.2). ContentType is inferred from the file extension.
+	SeedBlob(planetID tag.UID, path string) (*BlobRef, error)
+
 	// BlobStore returns the session's BlobStore for retrieving blobs by (planetID, blobID).
 	// Apps use this to build data.Asset instances backed by stored blobs.
 	BlobStore() BlobStore

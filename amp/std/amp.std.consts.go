@@ -87,6 +87,7 @@ var Attr = struct {
 	SpaceSkybox                tag.Name
 	BlobAttr                   tag.Name
 	BlobRef                    tag.Name
+	NodeBlobs                  tag.Name
 }{
 
 	// ─── App-centric tags ───────────────────────────────────────────
@@ -198,9 +199,10 @@ var Attr = struct {
 	SpaceSkybox               : tag.Name{ID: tag.UID{0x1AC918CE011E076F, 0x5D1F7AE3ECCBCC07}, Canonic: "system.property.skybox.space"},     // 0UT4DDW08Y0XRPU7VUWGQDRM07
 
 	// ─── Blob storage ───────────────────────────────────────────────
-	BlobAttr                  : tag.Name{ID: tag.UID{0x4A915C500F2D3874, 0xB31931484DA5C826}, Canonic: "amp.blob"},      // 2BK5F503TE71UC669J916UCK16
+	BlobAttr                  : tag.Name{ID: tag.UID{0x4A915C500F2D3874, 0xB31931484DA5C826}, Canonic: "amp.blob"},                // 2BK5F503TE71UC669J916UCK16
 
-	BlobRef                   : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},  // 2D3SVVXWMD9PMGN098CHYJ0Z5S
+	BlobRef                   : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},            // 2D3SVVXWMD9PMGN098CHYJ0Z5S
+	NodeBlobs                 : tag.Name{ID: tag.UID{0x47539BDD1AB3229D, 0xF4090FADFB02BF0B}, Canonic: "amp.blob.node.blobrefs"},  // 27BFEXU6PM4BFZ828GPRXH5GSC
 }
 
 // ─── The bootstrapping ("head") node ID ─────────────────────────

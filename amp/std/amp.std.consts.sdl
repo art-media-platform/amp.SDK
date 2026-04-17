@@ -122,7 +122,8 @@ tags Attr {
 
     // Blob storage
     BlobAttr "amp.blob" {
-        BlobRef  "ref"
+        BlobRef    "ref"
+        NodeBlobs  "node.BlobRefs"
     }
 
 }
