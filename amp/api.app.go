@@ -27,7 +27,7 @@ type AppEnvironment struct {
 
 // AppModule is how an app module registers with amp.Host and is used for internal components as well as for third parties. During runtime, amp.Host instantiates an amp.AppModule when a client request invokes one of the app's registered tags.
 //
-// Similar to a traditional OS service, an amp.AppModule responds to queries it recognizes and operates on client requests. The stock amp runtime offers essential apps, such as file system access and user account services.
+// Like a traditional OS service, an amp.AppModule responds to queries it recognizes and operates on client requests. The stock amp runtime offers essential apps, such as file system access and user account services.
 type AppModule struct {
 	Info AppModuleInfo // indentifying and invocation information
 
@@ -39,7 +39,7 @@ type AppModule struct {
 
 // AppContext is provided by the amp runtime to an AppInstance for support and context.
 type AppContext interface {
-	task.Context    // Allows select{} for graceful handling of app shutdown
+	task.Context   // Allows select{} for graceful handling of app shutdown
 	data.Publisher // Allows an app to publish assets for client consumption
 
 	NewTx() *TxMsg                  // Creates a new tx ready for use
@@ -85,12 +85,12 @@ type Pin interface {
 	Context() task.Context
 }
 
-// TxMsg is the serialized transport container sent between client and host.
+// TxMsg is the serialized transport container of CRDT (append-only modeled) operations
 //
 // A TxMsg carries one encryption context: TxEnvelope.Epoch selects a single planet or
 // channel epoch key that encrypts the entire payload (TxHeader + TxOps + DataStore).
 // All ops in a TxMsg must belong to the same encryption domain.  To write ops under
-// different keys (e.g. two private channels), author separate TxMsgs.
+// different keys (e.g. two private channels), then author separate TxMsgs.
 type TxMsg struct {
 	TxEnvelope        // tx fields for tx routing and decryption (in the clear)
 	TxHeader          // tx fields encrypted by Epoch key
