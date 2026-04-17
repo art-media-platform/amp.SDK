@@ -135,6 +135,14 @@ type Session interface {
 	// Registers a handler to receive verified planet-public governance TxMsgs.
 	// Apps call this during MakeReady to subscribe to governance events.
 	RegisterGovernanceHandler(handler func(planetID tag.UID, tx *TxMsg))
+
+	// StoreBlob hashes and stores blob data locally, returning a populated BlobRef.
+	// The blob is stored encrypted in the host's BlobStore and queued for peer propagation
+	// when the BlobRef is later committed in a TxMsg via SubmitTx.
+	//
+	// For large files, data is streamed — not buffered in memory.
+	// If onProgress is non-nil, it is called periodically with cumulative bytes written.
+	StoreBlob(planetID tag.UID, data io.Reader, byteSize int64, contentType string, onProgress func(bytesWritten int64)) (*BlobRef, error)
 }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.

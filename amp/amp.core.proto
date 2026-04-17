@@ -428,17 +428,23 @@ message ChannelEpoch {
 // BlobRef is a content-addressed reference to an encrypted media blob stored outside a TxMsg.
 // Blobs are encrypted with the planet/channel epoch key before storage and transit.
 // A blob is identified by (PlanetID, BlobTag.UID) where BlobTag.UID is a unique time-based ID.
+// The leading 16 bytes of the hash (Hash_0, Hash_1) also serves as a tag.UID for content-addressing.
 message BlobRef {
 
     // Planet this blob belongs to.
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
 
-    // Plaintext size in bytes.
+    // Plaintext size in bytes (before encryption).
     int64               ByteSize = 5;
 
-    // SHA-256 of the encrypted blob content (4 x fixed64 = 32 bytes).
-    // Used to validate blob integrity after transfer or retrieval from cache.
+    // Hash algorithm used for blob integrity (default: Blake2s_256).
+    // Each BlobRef is self-describing — the validator reads this field
+    // to select the correct HashKit for verification.
+    safe.HashKitID      HashKitID = 8;
+
+    // HashKit digest of encrypted blob content (4 x fixed64 = 32 bytes).
+    // Computed over the encrypted bytes using the algorithm specified by HashKitID.
     fixed64             Hash_0 = 10;
     fixed64             Hash_1 = 11;
     fixed64             Hash_2 = 12;
@@ -448,6 +454,23 @@ message BlobRef {
     // BlobTag.UID is the blob's unique time-based ID (the blob's identity within the planet).
     // BlobTag.ContentType is the MIME type (e.g. "image/jpeg", "audio/mpeg").
     Tag                 BlobTag = 16;
+}
+
+
+// PlanetStorageOpts configures per-planet storage priority and budgets.
+// Stored as a home planet attribute alongside PlanetBinding, keyed by planet UID.
+// Drives cache eviction: lower-priority planets have their decrypted cache evicted first.
+message PlanetStorageOpts {
+
+    // Storage priority (higher = more important, 0 = default).
+    // Drives cache eviction ordering: lowest-priority planets evicted first.
+    int32               Priority = 1;
+
+    // Max encrypted blob storage for this planet in bytes (0 = unlimited).
+    int64               MaxBlobBytes = 2;
+
+    // Max decrypted cache for this planet in bytes (0 = unlimited).
+    int64               MaxCacheBytes = 3;
 }
 
 
