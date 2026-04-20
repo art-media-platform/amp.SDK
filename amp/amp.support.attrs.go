@@ -70,6 +70,26 @@ func (epoch *PlanetEpoch) EffectiveCryptoKit() safe.CryptoKitID {
 	return epoch.CryptoKitID
 }
 
+// Clone returns a new *Tag with all user-visible fields copied from v.
+// Proto internals (MessageState, unknownFields, sizeCache) are freshly initialized.
+// Returns nil if v is nil.
+func (v *Tag) Clone() *Tag {
+	if v == nil {
+		return nil
+	}
+	return &Tag{
+		UID_0:       v.UID_0,
+		UID_1:       v.UID_1,
+		I:           v.I,
+		J:           v.J,
+		K:           v.K,
+		Units:       v.Units,
+		ContentType: v.ContentType,
+		URI:         v.URI,
+		Text:        v.Text,
+	}
+}
+
 func (v *Tag) SetFromTime(t time.Time) {
 	id := tag.UID_FromTime(t)
 	v.UID_0 = id[0]
