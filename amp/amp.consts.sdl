@@ -12,12 +12,12 @@ option csharp_namespace = "art.media.platform";
 const Tx {
     // TxPreamble layout (big endian):
     //
-    //    00:04  PreambleSignature ("amp1")
+    //    00:04  PreambleSignature ("AMP1")
     //    04:08  PreambleSize + serialized(TxHeader) + serialized([]TxOp)
     //    08:12  len(TxMsg.DataStore)
     //    12:14  SignatureLength (uint16 BE; 0 = unsigned)
     //    14:16  Reserved
-    const string PreambleSignature = "amp1";
+    const string PreambleSignature = "AMP1";
 
 	// Fixed-size header that leads every TxMsg (see amp.consts.sdl for layout).
 	const int32  PreambleSize = 16;

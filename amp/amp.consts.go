@@ -19,12 +19,12 @@ const (
 const (
 	// TxPreamble layout (big endian):
 	// 
-	//    00:04  PreambleSignature ("amp1")
+	//    00:04  PreambleSignature ("AMP1")
 	//    04:08  PreambleSize + serialized(TxHeader) + serialized([]TxOp)
 	//    08:12  len(TxMsg.DataStore)
 	//    12:14  SignatureLength (uint16 BE; 0 = unsigned)
 	//    14:16  Reserved
-	TxPreambleSignature = "amp1"
+	TxPreambleSignature = "AMP1"
 	// Fixed-size header that leads every TxMsg (see amp.consts.sdl for layout).
 	TxPreambleSize      = int32(16)
 )
