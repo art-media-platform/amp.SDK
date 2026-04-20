@@ -277,59 +277,6 @@ func (CryptOp) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
 }
 
-// Ordering controls how a collection is sorted for efficient lookup.
-type Ordering int32
-
-const (
-	Ordering_Disabled  Ordering = 0 // Unsorted — will be sorted on demand before search
-	Ordering_KeyringID Ordering = 1 // Sorted by Keyring UID (for KeyTome.Keyrings)
-	Ordering_PubKey    Ordering = 2 // Sorted by PubKey (for Keyring.Keys)
-	Ordering_TimeID    Ordering = 3 // Sorted by TimeID descending (newest first)
-)
-
-// Enum value maps for Ordering.
-var (
-	Ordering_name = map[int32]string{
-		0: "Disabled",
-		1: "KeyringID",
-		2: "PubKey",
-		3: "TimeID",
-	}
-	Ordering_value = map[string]int32{
-		"Disabled":  0,
-		"KeyringID": 1,
-		"PubKey":    2,
-		"TimeID":    3,
-	}
-)
-
-func (x Ordering) Enum() *Ordering {
-	p := new(Ordering)
-	*p = x
-	return p
-}
-
-func (x Ordering) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (Ordering) Descriptor() protoreflect.EnumDescriptor {
-	return file_stdlib_safe_safe_proto_enumTypes[5].Descriptor()
-}
-
-func (Ordering) Type() protoreflect.EnumType {
-	return &file_stdlib_safe_safe_proto_enumTypes[5]
-}
-
-func (x Ordering) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use Ordering.Descriptor instead.
-func (Ordering) EnumDescriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
-}
-
 // GuardInfo describes a Guard's capabilities and identity.
 type GuardInfo struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -766,87 +713,6 @@ func (x *CryptOpOut) GetOpPubKey() []byte {
 	return nil
 }
 
-// KeyInfo describes a key's identity and type.
-//
-// Two modes:
-//  1. Describes an existing key  — all fields populated
-//  2. Key generation guide       — only KeyType and CryptoKitID are used
-type KeyInfo struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CryptoKitID   CryptoKitID            `protobuf:"varint,1,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
-	KeyType       KeyType                `protobuf:"varint,2,opt,name=KeyType,proto3,enum=safe.KeyType" json:"KeyType,omitempty"`
-	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                    // Public part of the key (binary)
-	TimeID_0      uint64                 `protobuf:"fixed64,5,opt,name=TimeID_0,json=TimeID0,proto3" json:"TimeID_0,omitempty"` // Time-based UID, bytes 0..7 (from tag.NowID)
-	TimeID_1      uint64                 `protobuf:"fixed64,6,opt,name=TimeID_1,json=TimeID1,proto3" json:"TimeID_1,omitempty"` // Time-based UID, bytes 8..15
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *KeyInfo) Reset() {
-	*x = KeyInfo{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *KeyInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*KeyInfo) ProtoMessage() {}
-
-func (x *KeyInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use KeyInfo.ProtoReflect.Descriptor instead.
-func (*KeyInfo) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *KeyInfo) GetCryptoKitID() CryptoKitID {
-	if x != nil {
-		return x.CryptoKitID
-	}
-	return CryptoKitID_UnspecifiedKit
-}
-
-func (x *KeyInfo) GetKeyType() KeyType {
-	if x != nil {
-		return x.KeyType
-	}
-	return KeyType_Unspecified
-}
-
-func (x *KeyInfo) GetPubKey() []byte {
-	if x != nil {
-		return x.PubKey
-	}
-	return nil
-}
-
-func (x *KeyInfo) GetTimeID_0() uint64 {
-	if x != nil {
-		return x.TimeID_0
-	}
-	return 0
-}
-
-func (x *KeyInfo) GetTimeID_1() uint64 {
-	if x != nil {
-		return x.TimeID_1
-	}
-	return 0
-}
-
 // KeyRef references a specific key within a KeyTome.
 type KeyRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -859,7 +725,7 @@ type KeyRef struct {
 
 func (x *KeyRef) Reset() {
 	*x = KeyRef{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -871,7 +737,7 @@ func (x *KeyRef) String() string {
 func (*KeyRef) ProtoMessage() {}
 
 func (x *KeyRef) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -884,7 +750,7 @@ func (x *KeyRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyRef.ProtoReflect.Descriptor instead.
 func (*KeyRef) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{6}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *KeyRef) GetKeyringID_0() uint64 {
@@ -908,37 +774,38 @@ func (x *KeyRef) GetPubKey() []byte {
 	return nil
 }
 
-// KeyEntry stores or references a single cryptographic key.
-//
-// Three modes:
-//  1. Storage/Export — all fields populated including PrivKey
-//  2. Reference      — only KeyInfo.PubKey is meaningful, PrivKey is nil
-//  3. KeyGen         — KeyInfo.KeyType + CryptoKitID drive key generation;
-//     on completion KeyInfo is populated and PrivKey is set.
-//     A copy (minus PrivKey) is returned to the caller.
-type KeyEntry struct {
+// KeyPairRecord is the flat on-disk representation of a single key.
+// The runtime layer uses the Go-native PubKey / KeyPair types; this proto exists
+// only so KeyTome can be marshaled into a SealedTome.
+type KeyPairRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	KeyInfo       *KeyInfo               `protobuf:"bytes,1,opt,name=KeyInfo,proto3" json:"KeyInfo,omitempty"`
-	PrivKey       []byte                 `protobuf:"bytes,6,opt,name=PrivKey,proto3" json:"PrivKey,omitempty"` // Private key material (nil in reference mode)
+	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"` // Keyring UID, bytes 0..7
+	KeyringID_1   uint64                 `protobuf:"fixed64,2,opt,name=KeyringID_1,json=KeyringID1,proto3" json:"KeyringID_1,omitempty"` // Keyring UID, bytes 8..15
+	CryptoKitID   CryptoKitID            `protobuf:"varint,3,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
+	KeyType       KeyType                `protobuf:"varint,4,opt,name=KeyType,proto3,enum=safe.KeyType" json:"KeyType,omitempty"`
+	TimeID_0      uint64                 `protobuf:"fixed64,5,opt,name=TimeID_0,json=TimeID0,proto3" json:"TimeID_0,omitempty"` // Time-based UID, bytes 0..7 (from tag.NowID)
+	TimeID_1      uint64                 `protobuf:"fixed64,6,opt,name=TimeID_1,json=TimeID1,proto3" json:"TimeID_1,omitempty"` // Time-based UID, bytes 8..15
+	PubKey        []byte                 `protobuf:"bytes,7,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                    // Public part of the key (binary)
+	PrvKey        []byte                 `protobuf:"bytes,8,opt,name=PrvKey,proto3" json:"PrvKey,omitempty"`                    // Private key material (nil in public-only records)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *KeyEntry) Reset() {
-	*x = KeyEntry{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
+func (x *KeyPairRecord) Reset() {
+	*x = KeyPairRecord{}
+	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *KeyEntry) String() string {
+func (x *KeyPairRecord) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*KeyEntry) ProtoMessage() {}
+func (*KeyPairRecord) ProtoMessage() {}
 
-func (x *KeyEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
+func (x *KeyPairRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -949,115 +816,80 @@ func (x *KeyEntry) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use KeyEntry.ProtoReflect.Descriptor instead.
-func (*KeyEntry) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{7}
+// Deprecated: Use KeyPairRecord.ProtoReflect.Descriptor instead.
+func (*KeyPairRecord) Descriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *KeyEntry) GetKeyInfo() *KeyInfo {
+func (x *KeyPairRecord) GetKeyringID_0() uint64 {
 	if x != nil {
-		return x.KeyInfo
-	}
-	return nil
-}
-
-func (x *KeyEntry) GetPrivKey() []byte {
-	if x != nil {
-		return x.PrivKey
-	}
-	return nil
-}
-
-// Keyring is an ordered collection of keys sharing a common identity.
-type Keyring struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID_0         uint64                 `protobuf:"fixed64,1,opt,name=UID_0,json=UID0,proto3" json:"UID_0,omitempty"`
-	UID_1         uint64                 `protobuf:"fixed64,2,opt,name=UID_1,json=UID1,proto3" json:"UID_1,omitempty"`
-	Keys          []*KeyEntry            `protobuf:"bytes,5,rep,name=Keys,proto3" json:"Keys,omitempty"`                             // Ordered list of keys (sorted by PubKey)
-	Ordering      Ordering               `protobuf:"varint,9,opt,name=Ordering,proto3,enum=safe.Ordering" json:"Ordering,omitempty"` // Current sort order of Keys
-	NewestPubKey  []byte                 `protobuf:"bytes,8,opt,name=NewestPubKey,proto3" json:"NewestPubKey,omitempty"`             // PubKey with the largest TimeID (cache)
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Keyring) Reset() {
-	*x = Keyring{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Keyring) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Keyring) ProtoMessage() {}
-
-func (x *Keyring) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Keyring.ProtoReflect.Descriptor instead.
-func (*Keyring) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *Keyring) GetUID_0() uint64 {
-	if x != nil {
-		return x.UID_0
+		return x.KeyringID_0
 	}
 	return 0
 }
 
-func (x *Keyring) GetUID_1() uint64 {
+func (x *KeyPairRecord) GetKeyringID_1() uint64 {
 	if x != nil {
-		return x.UID_1
+		return x.KeyringID_1
 	}
 	return 0
 }
 
-func (x *Keyring) GetKeys() []*KeyEntry {
+func (x *KeyPairRecord) GetCryptoKitID() CryptoKitID {
 	if x != nil {
-		return x.Keys
+		return x.CryptoKitID
+	}
+	return CryptoKitID_UnspecifiedKit
+}
+
+func (x *KeyPairRecord) GetKeyType() KeyType {
+	if x != nil {
+		return x.KeyType
+	}
+	return KeyType_Unspecified
+}
+
+func (x *KeyPairRecord) GetTimeID_0() uint64 {
+	if x != nil {
+		return x.TimeID_0
+	}
+	return 0
+}
+
+func (x *KeyPairRecord) GetTimeID_1() uint64 {
+	if x != nil {
+		return x.TimeID_1
+	}
+	return 0
+}
+
+func (x *KeyPairRecord) GetPubKey() []byte {
+	if x != nil {
+		return x.PubKey
 	}
 	return nil
 }
 
-func (x *Keyring) GetOrdering() Ordering {
+func (x *KeyPairRecord) GetPrvKey() []byte {
 	if x != nil {
-		return x.Ordering
-	}
-	return Ordering_Disabled
-}
-
-func (x *Keyring) GetNewestPubKey() []byte {
-	if x != nil {
-		return x.NewestPubKey
+		return x.PrvKey
 	}
 	return nil
 }
 
-// KeyTome is the root container for all keyrings and their keys.
+// KeyTome is the root container for all keypair records.
+// Persistence format only; the runtime indexes these in memory by (KeyringID, PubKey).
 type KeyTome struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"`                    // Incremented on each mutation
-	Keyrings      []*Keyring             `protobuf:"bytes,2,rep,name=Keyrings,proto3" json:"Keyrings,omitempty"`                     // Keyrings stored in this tome
-	Ordering      Ordering               `protobuf:"varint,5,opt,name=Ordering,proto3,enum=safe.Ordering" json:"Ordering,omitempty"` // Current sort order of Keyrings
+	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"` // Incremented on each mutation
+	Keys          []*KeyPairRecord       `protobuf:"bytes,2,rep,name=Keys,proto3" json:"Keys,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *KeyTome) Reset() {
 	*x = KeyTome{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1069,7 +901,7 @@ func (x *KeyTome) String() string {
 func (*KeyTome) ProtoMessage() {}
 
 func (x *KeyTome) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1082,7 +914,7 @@ func (x *KeyTome) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyTome.ProtoReflect.Descriptor instead.
 func (*KeyTome) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *KeyTome) GetRevision() int64 {
@@ -1092,18 +924,11 @@ func (x *KeyTome) GetRevision() int64 {
 	return 0
 }
 
-func (x *KeyTome) GetKeyrings() []*Keyring {
+func (x *KeyTome) GetKeys() []*KeyPairRecord {
 	if x != nil {
-		return x.Keyrings
+		return x.Keys
 	}
 	return nil
-}
-
-func (x *KeyTome) GetOrdering() Ordering {
-	if x != nil {
-		return x.Ordering
-	}
-	return Ordering_Disabled
 }
 
 // EpochKeyEntry stores a single symmetric epoch key for a planet or channel.
@@ -1123,7 +948,7 @@ type EpochKeyEntry struct {
 
 func (x *EpochKeyEntry) Reset() {
 	*x = EpochKeyEntry{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1135,7 +960,7 @@ func (x *EpochKeyEntry) String() string {
 func (*EpochKeyEntry) ProtoMessage() {}
 
 func (x *EpochKeyEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1148,7 +973,7 @@ func (x *EpochKeyEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochKeyEntry.ProtoReflect.Descriptor instead.
 func (*EpochKeyEntry) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *EpochKeyEntry) GetContainerID_0() uint64 {
@@ -1205,7 +1030,7 @@ type EpochKeyTome struct {
 
 func (x *EpochKeyTome) Reset() {
 	*x = EpochKeyTome{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1217,7 +1042,7 @@ func (x *EpochKeyTome) String() string {
 func (*EpochKeyTome) ProtoMessage() {}
 
 func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1230,7 +1055,7 @@ func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochKeyTome.ProtoReflect.Descriptor instead.
 func (*EpochKeyTome) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{11}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EpochKeyTome) GetRevision() int64 {
@@ -1302,32 +1127,27 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\n" +
 	"CryptOpOut\x12\x16\n" +
 	"\x06Output\x18\x01 \x01(\fR\x06Output\x12\x1a\n" +
-	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\xb5\x01\n" +
-	"\aKeyInfo\x123\n" +
-	"\vCryptoKitID\x18\x01 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12'\n" +
-	"\aKeyType\x18\x02 \x01(\x0e2\r.safe.KeyTypeR\aKeyType\x12\x16\n" +
-	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\x12\x19\n" +
-	"\bTimeID_0\x18\x05 \x01(\x06R\aTimeID0\x12\x19\n" +
-	"\bTimeID_1\x18\x06 \x01(\x06R\aTimeID1\"b\n" +
+	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"b\n" +
 	"\x06KeyRef\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
 	"\vKeyringID_1\x18\x02 \x01(\x06R\n" +
 	"KeyringID1\x12\x16\n" +
-	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"M\n" +
-	"\bKeyEntry\x12'\n" +
-	"\aKeyInfo\x18\x01 \x01(\v2\r.safe.KeyInfoR\aKeyInfo\x12\x18\n" +
-	"\aPrivKey\x18\x06 \x01(\fR\aPrivKey\"\xa7\x01\n" +
-	"\aKeyring\x12\x13\n" +
-	"\x05UID_0\x18\x01 \x01(\x06R\x04UID0\x12\x13\n" +
-	"\x05UID_1\x18\x02 \x01(\x06R\x04UID1\x12\"\n" +
-	"\x04Keys\x18\x05 \x03(\v2\x0e.safe.KeyEntryR\x04Keys\x12*\n" +
-	"\bOrdering\x18\t \x01(\x0e2\x0e.safe.OrderingR\bOrdering\x12\"\n" +
-	"\fNewestPubKey\x18\b \x01(\fR\fNewestPubKey\"|\n" +
+	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"\x95\x02\n" +
+	"\rKeyPairRecord\x12\x1f\n" +
+	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
+	"KeyringID0\x12\x1f\n" +
+	"\vKeyringID_1\x18\x02 \x01(\x06R\n" +
+	"KeyringID1\x123\n" +
+	"\vCryptoKitID\x18\x03 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12'\n" +
+	"\aKeyType\x18\x04 \x01(\x0e2\r.safe.KeyTypeR\aKeyType\x12\x19\n" +
+	"\bTimeID_0\x18\x05 \x01(\x06R\aTimeID0\x12\x19\n" +
+	"\bTimeID_1\x18\x06 \x01(\x06R\aTimeID1\x12\x16\n" +
+	"\x06PubKey\x18\a \x01(\fR\x06PubKey\x12\x16\n" +
+	"\x06PrvKey\x18\b \x01(\fR\x06PrvKey\"N\n" +
 	"\aKeyTome\x12\x1a\n" +
-	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12)\n" +
-	"\bKeyrings\x18\x02 \x03(\v2\r.safe.KeyringR\bKeyrings\x12*\n" +
-	"\bOrdering\x18\x05 \x01(\x0e2\x0e.safe.OrderingR\bOrdering\"\xda\x01\n" +
+	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
+	"\x04Keys\x18\x02 \x03(\v2\x13.safe.KeyPairRecordR\x04Keys\"\xda\x01\n" +
 	"\rEpochKeyEntry\x12#\n" +
 	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
 	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
@@ -1360,14 +1180,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\n" +
 	"DecryptSym\x10\x02\x12\x11\n" +
 	"\rEncryptToPeer\x10\x03\x12\x13\n" +
-	"\x0fDecryptFromPeer\x10\x04*?\n" +
-	"\bOrdering\x12\f\n" +
-	"\bDisabled\x10\x00\x12\r\n" +
-	"\tKeyringID\x10\x01\x12\n" +
-	"\n" +
-	"\x06PubKey\x10\x02\x12\n" +
-	"\n" +
-	"\x06TimeID\x10\x03BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
+	"\x0fDecryptFromPeer\x10\x04BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
 
 var (
 	file_stdlib_safe_safe_proto_rawDescOnce sync.Once
@@ -1381,47 +1194,40 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 	return file_stdlib_safe_safe_proto_rawDescData
 }
 
-var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),            // 0: safe.Const
 	(KeyType)(0),          // 1: safe.KeyType
 	(CryptoKitID)(0),      // 2: safe.CryptoKitID
 	(HashKitID)(0),        // 3: safe.HashKitID
 	(CryptOp)(0),          // 4: safe.CryptOp
-	(Ordering)(0),         // 5: safe.Ordering
-	(*GuardInfo)(nil),     // 6: safe.GuardInfo
-	(*WrappedDEK)(nil),    // 7: safe.WrappedDEK
-	(*SealedTome)(nil),    // 8: safe.SealedTome
-	(*CryptOpArgs)(nil),   // 9: safe.CryptOpArgs
-	(*CryptOpOut)(nil),    // 10: safe.CryptOpOut
-	(*KeyInfo)(nil),       // 11: safe.KeyInfo
-	(*KeyRef)(nil),        // 12: safe.KeyRef
-	(*KeyEntry)(nil),      // 13: safe.KeyEntry
-	(*Keyring)(nil),       // 14: safe.Keyring
-	(*KeyTome)(nil),       // 15: safe.KeyTome
-	(*EpochKeyEntry)(nil), // 16: safe.EpochKeyEntry
-	(*EpochKeyTome)(nil),  // 17: safe.EpochKeyTome
+	(*GuardInfo)(nil),     // 5: safe.GuardInfo
+	(*WrappedDEK)(nil),    // 6: safe.WrappedDEK
+	(*SealedTome)(nil),    // 7: safe.SealedTome
+	(*CryptOpArgs)(nil),   // 8: safe.CryptOpArgs
+	(*CryptOpOut)(nil),    // 9: safe.CryptOpOut
+	(*KeyRef)(nil),        // 10: safe.KeyRef
+	(*KeyPairRecord)(nil), // 11: safe.KeyPairRecord
+	(*KeyTome)(nil),       // 12: safe.KeyTome
+	(*EpochKeyEntry)(nil), // 13: safe.EpochKeyEntry
+	(*EpochKeyTome)(nil),  // 14: safe.EpochKeyTome
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
-	7,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
+	6,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
 	4,  // 1: safe.CryptOpArgs.Op:type_name -> safe.CryptOp
 	2,  // 2: safe.CryptOpArgs.DefaultKit:type_name -> safe.CryptoKitID
-	12, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
-	2,  // 4: safe.KeyInfo.CryptoKitID:type_name -> safe.CryptoKitID
-	1,  // 5: safe.KeyInfo.KeyType:type_name -> safe.KeyType
-	11, // 6: safe.KeyEntry.KeyInfo:type_name -> safe.KeyInfo
-	13, // 7: safe.Keyring.Keys:type_name -> safe.KeyEntry
-	5,  // 8: safe.Keyring.Ordering:type_name -> safe.Ordering
-	14, // 9: safe.KeyTome.Keyrings:type_name -> safe.Keyring
-	5,  // 10: safe.KeyTome.Ordering:type_name -> safe.Ordering
-	2,  // 11: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
-	16, // 12: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	10, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
+	2,  // 4: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
+	1,  // 5: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
+	11, // 6: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
+	2,  // 7: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
+	13, // 8: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1434,8 +1240,8 @@ func file_stdlib_safe_safe_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
-			NumEnums:      6,
-			NumMessages:   12,
+			NumEnums:      5,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

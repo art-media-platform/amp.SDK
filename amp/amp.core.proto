@@ -421,35 +421,40 @@ message ChannelEpoch {
 }
 
 
-// BlobRef is a content-addressed reference to an encrypted media blob stored outside a TxMsg.
-// Blobs are encrypted with the planet/channel epoch key before storage and transit.
-// A blob is identified by (PlanetID, BlobTag.UID) where BlobTag.UID is a unique time-based ID.
-// The leading 16 bytes of the hash (Hash_0, Hash_1) also serves as a tag.UID for content-addressing.
+// BlobRef is a content-addressed reference to a media blob stored outside a TxMsg.
+// Blobs are sealed with a planet epoch key before storage and transit (zero-knowledge vaults).
+// BlobTag.UID = first 16 bytes of the plaintext hash, providing stable content-addressing
+// (same plaintext → same BlobID across members and restarts).
 message BlobRef {
 
     // Planet this blob belongs to.
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
 
-    // Plaintext size in bytes (before encryption).
-    int64               ByteSize = 5;
-
     // Hash algorithm used for blob integrity (default: Blake2s_256).
     // Each BlobRef is self-describing — the validator reads this field
     // to select the correct HashKit for verification.
     safe.HashKitID      HashKitID = 8;
 
-    // HashKit digest of encrypted blob content (4 x fixed64 = 32 bytes).
-    // Computed over the encrypted bytes using the algorithm specified by HashKitID.
+    // HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
+    // Plaintext hashing gives stable identity across encrypted/public blobs
+    // and lets receivers validate content after decryption.
     fixed64             Hash_0 = 10;
     fixed64             Hash_1 = 11;
     fixed64             Hash_2 = 12;
     fixed64             Hash_3 = 13;
 
-    // Blob identity and content type.
-    // BlobTag.UID is the blob's unique time-based ID (the blob's identity within the planet).
-    // BlobTag.ContentType is the MIME type (e.g. "image/jpeg", "audio/mpeg").
+    // Blob identity, content type, human label, and plaintext byte length.
+    //   BlobTag.UID         — leading 16 bytes of the plaintext hash (content-addressed).
+    //   BlobTag.ContentType — MIME type (e.g. "image/jpeg", "audio/mpeg").
+    //   BlobTag.Text        — caller-supplied label (e.g. the source file name).
+    //   BlobTag.I (Units=Bytes) — authoritative plaintext byte length.
     Tag                 BlobTag = 16;
+
+    // Epoch key used to seal this blob (zero = unsealed / planet-public).
+    // Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
+    fixed64             EpochID_0 = 20;
+    fixed64             EpochID_1 = 21;
 }
 
 
@@ -567,7 +572,11 @@ message PlanetInvite {
     // Temporary private key for the invited member (encrypted with invite passphrase).
     // The member uses this to decrypt their initial EncryptedPlanetKey from the MemberEpoch.
     // Must be rotated immediately after join.
-    bytes               TempPrivKey = 5;
+    bytes               TempPrvKey = 5;
+
+    // Public key matching TempPrvKey.  Carried explicitly so the acceptor can import the
+    // keypair without deriving the pub key from the priv key (algorithm-agnostic).
+    bytes               TempPubKey = 6;
 
     // Crypto suite matching the planet epoch.
     safe.CryptoKitID    CryptoKitID = 10;

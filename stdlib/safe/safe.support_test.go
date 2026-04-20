@@ -22,23 +22,23 @@ func CryptoKitTest(kitToTest CryptoKitID, t *testing.T) {
 	}
 }
 
-func testKit(kit *CryptoKit, inKeyLen int) {
-	msgLen := 0 // start at 0
+func testKit(kit *CryptoKit, keyLen int) {
+	msgLen := 0
 
 	for i := int64(1); i < 37; i++ {
-		testKitWithSizes(kit, inKeyLen, msgLen)
+		testKitWithSizes(kit, keyLen, msgLen)
 		step, _ := crypto_rand.Int(crypto_rand.Reader, big.NewInt(7+37*i))
 		msgLen += int(step.Int64())
 	}
 }
 
-func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
-	msg := make([]byte, inMsgLen)
-	badMsg := make([]byte, inMsgLen)
+func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
+	msg := make([]byte, msgLen)
+	badMsg := make([]byte, msgLen)
 
 	crypto_rand.Read(msg)
 
-	msgOrig := make([]byte, inMsgLen)
+	msgOrig := make([]byte, msgLen)
 	copy(msgOrig, msg)
 
 	reader := crypto_rand.Reader
@@ -49,23 +49,21 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 
 	var crypt []byte
 
-	entry := KeyEntry{
-		KeyInfo: &KeyInfo{
-			CryptoKitID: kit.ID,
-		},
+	kp := KeyPair{
+		Pub: PubKey{CryptoKitID: kit.ID},
 	}
 
 	/*****************************************************
 	** Symmetric test
 	**/
 	if kit.Encrypt != nil && kit.Decrypt != nil && kit.GenerateKey != nil {
-		entry.KeyInfo.KeyType = KeyType_SymmetricKey
-		err := kit.GenerateKey(reader, inKeyLen, &entry)
+		kp.Pub.KeyType = KeyType_SymmetricKey
+		err := kit.GenerateKey(reader, keyLen, &kp)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
 
-		crypt, err = kit.Encrypt(reader, msgOrig, entry.PrivKey)
+		crypt, err = kit.Encrypt(reader, msgOrig, kp.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -74,7 +72,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 			badMsg = make([]byte, len(crypt))
 		}
 
-		msg, err = kit.Decrypt(crypt, entry.PrivKey)
+		msg, err = kit.Decrypt(crypt, kp.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -84,13 +82,12 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 
 		// Vary the data slightly to test
 		for k := 0; k < 100; k++ {
-
 			rndPos := math_rand.Int31n(int32(len(crypt)))
 			rndAdj := 1 + byte(math_rand.Int31n(254))
 			copy(badMsg, crypt)
 			badMsg[rndPos] += rndAdj
 
-			msg, err = kit.Decrypt(badMsg, entry.PrivKey)
+			msg, err = kit.Decrypt(badMsg, kp.Prv)
 			if err == nil {
 				gTesting.Fatal("there should have been a decryption error!")
 			}
@@ -101,25 +98,25 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 	** Asymmetric test (CryptoKit derives asymmetric keys from signing keys)
 	**/
 	if kit.EncryptFor != nil && kit.DecryptFrom != nil && kit.GenerateKey != nil {
-		entry.KeyInfo.KeyType = KeyType_SigningKey
-		err := kit.GenerateKey(reader, inKeyLen, &entry)
+		kp.Pub.KeyType = KeyType_SigningKey
+		err := kit.GenerateKey(reader, keyLen, &kp)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
 
-		recipient := KeyEntry{
-			KeyInfo: &KeyInfo{
+		recipient := KeyPair{
+			Pub: PubKey{
 				KeyType:     KeyType_SigningKey,
 				CryptoKitID: kit.ID,
 			},
 		}
 
-		err = kit.GenerateKey(reader, inKeyLen, &recipient)
+		err = kit.GenerateKey(reader, keyLen, &recipient)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
 
-		crypt, err = kit.EncryptFor(reader, msgOrig, recipient.KeyInfo.PubKey, entry.PrivKey)
+		crypt, err = kit.EncryptFor(reader, msgOrig, recipient.Pub.Bytes, kp.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -128,7 +125,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 			badMsg = make([]byte, len(crypt))
 		}
 
-		msg, err = kit.DecryptFrom(crypt, entry.KeyInfo.PubKey, recipient.PrivKey)
+		msg, err = kit.DecryptFrom(crypt, kp.Pub.Bytes, recipient.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -143,7 +140,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 			copy(badMsg, crypt)
 			badMsg[rndPos] += rndAdj
 
-			msg, err = kit.DecryptFrom(badMsg, entry.KeyInfo.PubKey, recipient.PrivKey)
+			msg, err = kit.DecryptFrom(badMsg, kp.Pub.Bytes, recipient.Prv)
 			if err == nil {
 				gTesting.Fatal("there should have been a decryption error!")
 			}
@@ -154,18 +151,18 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 	** Signing test
 	**/
 	if kit.Sign != nil && kit.Verify != nil && kit.GenerateKey != nil {
-		entry.KeyInfo.KeyType = KeyType_SigningKey
-		err := kit.GenerateKey(reader, inKeyLen, &entry)
+		kp.Pub.KeyType = KeyType_SigningKey
+		err := kit.GenerateKey(reader, keyLen, &kp)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
 
-		crypt, err = kit.Sign(msgOrig, entry.PrivKey)
+		crypt, err = kit.Sign(msgOrig, kp.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
 
-		err = kit.Verify(crypt, msgOrig, entry.KeyInfo.PubKey)
+		err = kit.Verify(crypt, msgOrig, kp.Pub.Bytes)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -181,7 +178,7 @@ func testKitWithSizes(kit *CryptoKit, inKeyLen, inMsgLen int) {
 			copy(badMsg, crypt)
 			badMsg[rndPos] += rndAdj
 
-			err = kit.Verify(badMsg, msgOrig, entry.KeyInfo.PubKey)
+			err = kit.Verify(badMsg, msgOrig, kp.Pub.Bytes)
 			if err == nil {
 				gTesting.Fatal("there should have been a sig failed error!")
 			}

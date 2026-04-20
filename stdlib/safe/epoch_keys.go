@@ -94,32 +94,34 @@ func OpenEpochKeyStore(
 	return eks, nil
 }
 
-func (eks *epochKeyStore) PutKey(containerID, epochID tag.UID, cryptoKit CryptoKitID, key []byte) error {
+func (eks *epochKeyStore) PutKey(containerID tag.UID, key SymKey) error {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
 
 	if eks.closed {
 		return fmt.Errorf("safe: epoch key store is closed")
 	}
+	if !key.EpochID.IsSet() {
+		return fmt.Errorf("safe: PutKey requires a non-zero EpochID")
+	}
 
-	keyCopy := make([]byte, len(key))
-	copy(keyCopy, key)
+	keyCopy := append([]byte(nil), key.Bytes...)
 
-	eks.keys[epochID] = &EpochKeyEntry{
+	eks.keys[key.EpochID] = &EpochKeyEntry{
 		ContainerID_0: containerID[0],
 		ContainerID_1: containerID[1],
-		EpochID_0:     epochID[0],
-		EpochID_1:     epochID[1],
-		CryptoKitID:   cryptoKit,
+		EpochID_0:     key.EpochID[0],
+		EpochID_1:     key.EpochID[1],
+		CryptoKitID:   key.CryptoKitID,
 		Key:           keyCopy,
 	}
 
 	// Auto-set as current if no current epoch exists or if this is newer
 	if cur, ok := eks.current[containerID]; !ok {
-		eks.current[containerID] = epochID
+		eks.current[containerID] = key.EpochID
 	} else {
-		if epochID[0] > cur[0] || (epochID[0] == cur[0] && epochID[1] > cur[1]) {
-			eks.current[containerID] = epochID
+		if key.EpochID[0] > cur[0] || (key.EpochID[0] == cur[0] && key.EpochID[1] > cur[1]) {
+			eks.current[containerID] = key.EpochID
 		}
 	}
 
@@ -127,45 +129,49 @@ func (eks *epochKeyStore) PutKey(containerID, epochID tag.UID, cryptoKit CryptoK
 	return nil
 }
 
-func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID) ([]byte, CryptoKitID, error) {
+func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID) (SymKey, error) {
 	eks.mu.RLock()
 	defer eks.mu.RUnlock()
 
 	if eks.closed {
-		return nil, 0, fmt.Errorf("safe: epoch key store is closed")
+		return SymKey{}, fmt.Errorf("safe: epoch key store is closed")
 	}
 
 	entry, ok := eks.keys[epochID]
 	if !ok {
-		return nil, 0, status.Code_KeyringNotFound.Errorf("epoch key not found: %s", epochID.Base32())
+		return SymKey{}, status.Code_KeyringNotFound.Errorf("epoch key not found: %s", epochID.Base32())
 	}
 
-	out := make([]byte, len(entry.Key))
-	copy(out, entry.Key)
-	return out, entry.CryptoKitID, nil
+	return SymKey{
+		CryptoKitID: entry.CryptoKitID,
+		EpochID:     epochID,
+		Bytes:       append([]byte(nil), entry.Key...),
+	}, nil
 }
 
-func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID) (tag.UID, []byte, error) {
+func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID) (SymKey, error) {
 	eks.mu.RLock()
 	defer eks.mu.RUnlock()
 
 	if eks.closed {
-		return tag.UID{}, nil, fmt.Errorf("safe: epoch key store is closed")
+		return SymKey{}, fmt.Errorf("safe: epoch key store is closed")
 	}
 
 	epochID, ok := eks.current[containerID]
 	if !ok {
-		return tag.UID{}, nil, status.Code_KeyringNotFound.Errorf("no current epoch for container %s", containerID.Base32())
+		return SymKey{}, status.Code_KeyringNotFound.Errorf("no current epoch for container %s", containerID.Base32())
 	}
 
 	entry, ok := eks.keys[epochID]
 	if !ok {
-		return tag.UID{}, nil, status.Code_KeyringNotFound.Errorf("current epoch key missing: %s", epochID.Base32())
+		return SymKey{}, status.Code_KeyringNotFound.Errorf("current epoch key missing: %s", epochID.Base32())
 	}
 
-	out := make([]byte, len(entry.Key))
-	copy(out, entry.Key)
-	return epochID, out, nil
+	return SymKey{
+		CryptoKitID: entry.CryptoKitID,
+		EpochID:     epochID,
+		Bytes:       append([]byte(nil), entry.Key...),
+	}, nil
 }
 
 func (eks *epochKeyStore) SetCurrentEpoch(containerID, epochID tag.UID) error {

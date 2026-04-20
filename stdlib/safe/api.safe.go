@@ -16,6 +16,7 @@ package safe
 
 import (
 	"context"
+	"crypto/cipher"
 	"crypto/rand"
 	"io"
 	"sync"
@@ -58,31 +59,38 @@ type TomeStore interface {
 	Save(ctx context.Context, sealed *SealedTome) error
 }
 
-// Enclave is a live cryptographic session backed by an in-memory KeyTome.
+// KeySpec describes a key to be generated.
+type KeySpec struct {
+	CryptoKitID   CryptoKitID
+	KeyType       KeyType
+	RequestedSize int // advisory; 0 = kit default
+}
+
+// Enclave is a live cryptographic session backed by an in-memory key index.
 //
-// On Open:  TomeStore.Load() -> Guard.UnwrapDEK() -> decrypt -> KeyTome
-// On Close: new DEK -> Guard.WrapDEK() -> encrypt(KeyTome) -> TomeStore.Save()
+// On Open:  TomeStore.Load() -> Guard.UnwrapDEK() -> decrypt -> KeyTome -> index
+// On Close: index -> KeyTome -> new DEK -> Guard.WrapDEK() -> encrypt -> TomeStore.Save()
 //
-// The KeyTome is fully internal — callers interact through the methods below.
 // All methods are threadsafe.
 type Enclave interface {
 
-	// Merges all keys in the given KeyTome with this host KeyTome.
-	// See docs for KeyTome.MergeTome() on how error conditions are addressed.
-	// Note: incoming duplicate key entries are ignored/dropped.
-	ImportKeys(srcTome *KeyTome) error
+	// ImportKey inserts a keypair into the given keyring.
+	// If kp.Pub.TimeID is zero, it is set to tag.NowID().
+	// An exact-match duplicate is a no-op; a pub-key collision that is NOT an
+	// exact dupe is rejected as an error.
+	ImportKey(keyringID tag.UID, kp KeyPair) error
 
-	// Generates a new KeyEntry for each entry in srcTome (based on the entry's KeyType and CryptoKitID, ignoring the rest)
-	// and merges it with the host KeyTome.  A copy of each newly generated entry (except for PrivKey) is placed into the result KeyTome.
-	// See "KeyGen mode" notes where KeyEntry is declared.
-	GenerateKeys(srcTome *KeyTome) (*KeyTome, error)
+	// GenerateKey creates a new keypair in the given keyring and registers it.
+	// Returns the new PubKey (with TimeID populated).
+	GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
 
-	// Returns info about a key for the referenced key.
-	// If len(inKeyRef.PubKey) == 0, then the newest KeyEntry in the implied Keyring is returned.
-	FetchKeyInfo(inKeyRef *KeyRef) (*KeyInfo, error)
+	// FetchPubKey returns the PubKey for ref.
+	// If len(ref.PubKey) == 0, the newest key in the keyring is returned.
+	FetchPubKey(ref *KeyRef) (PubKey, error)
 
-	// Performs signing, encryption, and decryption.
-	DoCryptOp(inArgs *CryptOpArgs) (*CryptOpOut, error)
+	// DoCryptOp performs signing, symmetric encryption/decryption,
+	// and asymmetric encryption/decryption.
+	DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error)
 
 	// ExportSymmetricKey returns a copy of the raw symmetric key bytes for the referenced keyring.
 	// The caller is responsible for zeroing the returned slice after use.
@@ -91,9 +99,9 @@ type Enclave interface {
 	// MUST NOT leave the Enclave.  Symmetric epoch keys are exported so that CryptoProvider
 	// can derive subkeys (content_key, proof_key) via HKDF for payload encryption and
 	// relay membership proofs.  The trust boundary is the process, not the Enclave API.
-	ExportSymmetricKey(inKeyRef *KeyRef) ([]byte, error)
+	ExportSymmetricKey(ref *KeyRef) ([]byte, error)
 
-	// Close re-seals the KeyTome and persists it, then zeros sensitive material.
+	// Close re-seals the key index and persists it, then zeros sensitive material.
 	Close(ctx context.Context) error
 }
 
@@ -109,15 +117,16 @@ type Enclave interface {
 type EpochKeyStore interface {
 
 	// PutKey stores a symmetric epoch key for the given container (planet or channel).
-	PutKey(containerID, epochID tag.UID, cryptoKit CryptoKitID, key []byte) error
+	// key.EpochID and key.Bytes must be set; key.CryptoKitID selects the crypto suite.
+	PutKey(containerID tag.UID, key SymKey) error
 
 	// GetKey retrieves a symmetric epoch key by its container and epoch UIDs.
-	// Returns a copy of the key bytes and its CryptoKitID; the caller must zero the key after use.
-	GetKey(containerID, epochID tag.UID) ([]byte, CryptoKitID, error)
+	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
+	GetKey(containerID, epochID tag.UID) (SymKey, error)
 
 	// GetCurrentKey returns the current (most recent) epoch key for a container.
-	// Returns the epochID and a copy of the key bytes.
-	GetCurrentKey(containerID tag.UID) (epochID tag.UID, key []byte, err error)
+	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
+	GetCurrentKey(containerID tag.UID) (SymKey, error)
 
 	// SetCurrentEpoch marks an epoch as the current one for a container.
 	SetCurrentEpoch(containerID, epochID tag.UID) error
@@ -139,31 +148,35 @@ type CryptoKit struct {
 	// SignatureSize is the fixed byte length of signatures produced by this kit's Sign function.
 	SignatureSize int
 
-	// GenerateKey populates ioEntry.KeyInfo.PubKey and ioEntry.PrivKey based on ioEntry.KeyInfo.KeyType.
-	// Pre: ioEntry.KeyInfo.KeyType and .CryptoKitID are set; TimeID is set by GenerateFork/caller.
-	// inRequestedKeySz is advisory (ignored by some implementations).
-	GenerateKey func(inRand io.Reader, inRequestedKeySz int, ioEntry *KeyEntry) error
+	// GenerateKey populates kp.Pub.Bytes and kp.Prv from kp.Pub.CryptoKitID + kp.Pub.KeyType.
+	// requestedSize is advisory (ignored by some implementations).
+	GenerateKey func(rng io.Reader, requestedSize int, kp *KeyPair) error
 
-	// Encrypt encrypts inMsg with a symmetric key.
-	Encrypt func(inRand io.Reader, inMsg []byte, inKey []byte) ([]byte, error)
+	// Encrypt encrypts msg with a symmetric key.
+	Encrypt func(rng io.Reader, msg []byte, key []byte) ([]byte, error)
 
 	// Decrypt decrypts a buffer produced by Encrypt.
-	Decrypt func(inMsg []byte, inKey []byte) ([]byte, error)
+	Decrypt func(msg []byte, key []byte) ([]byte, error)
 
-	// EncryptFor encrypts inMsg for a peer using asymmetric key agreement.
+	// EncryptFor encrypts msg for a peer using asymmetric key agreement.
 	// The kit derives asymmetric keys from signing keys if needed (implementation-specific).
-	EncryptFor func(inRand io.Reader, inMsg []byte, inPeerPubKey []byte, inPrivKey []byte) ([]byte, error)
+	EncryptFor func(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
 
 	// DecryptFrom decrypts a buffer produced by EncryptFor.
 	// The kit derives asymmetric keys from signing keys if needed (implementation-specific).
-	DecryptFrom func(inMsg []byte, inPeerPubKey []byte, inPrivKey []byte) ([]byte, error)
+	DecryptFrom func(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
 
-	// Sign produces a cryptographic signature of inDigest.
-	Sign func(inDigest []byte, inSignerPrivKey []byte) ([]byte, error)
+	// Sign produces a cryptographic signature of digest.
+	Sign func(digest []byte, signerPrvKey []byte) ([]byte, error)
 
 	// Verify validates a signature against a digest and public key.
 	// Returns nil if the signature is valid.
-	Verify func(inSig []byte, inDigest []byte, inSignerPubKey []byte) error
+	Verify func(sig []byte, digest []byte, signerPubKey []byte) error
+
+	// NewAEAD returns a streaming AEAD cipher bound to key, for callers that need
+	// per-chunk seal/open with explicit nonces and associated data (e.g. blob streams).
+	// Nil means this kit does not expose a streaming AEAD primitive.
+	NewAEAD func(key []byte) (cipher.AEAD, error)
 }
 
 /*****************************************************
@@ -208,7 +221,7 @@ func GetCryptoKit(cryptoKitID CryptoKitID) (*CryptoKit, error) {
 }
 
 // VerifySignature is a convenience function that performs signature validation for any registered CryptoKit.
-// Returns nil if the signature of inDigest plus the signer's private key matches the given signature.
+// Returns nil if the signature of digest plus the signer's private key matches the given signature.
 // This function is threadsafe.
 func VerifySignature(
 	cryptoKitID CryptoKitID,

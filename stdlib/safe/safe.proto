@@ -115,20 +115,6 @@ message CryptOpOut {
 }
 
 
-// KeyInfo describes a key's identity and type.
-//
-// Two modes:
-//   1) Describes an existing key  — all fields populated
-//   2) Key generation guide       — only KeyType and CryptoKitID are used
-message KeyInfo {
-    CryptoKitID CryptoKitID         = 1;
-    KeyType     KeyType             = 2;
-    bytes       PubKey              = 4;    // Public part of the key (binary)
-    fixed64     TimeID_0            = 5;    // Time-based UID, bytes 0..7 (from tag.NowID)
-    fixed64     TimeID_1            = 6;    // Time-based UID, bytes 8..15
-}
-
-
 // KeyRef references a specific key within a KeyTome.
 message KeyRef {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
@@ -137,44 +123,26 @@ message KeyRef {
 }
 
 
-// KeyEntry stores or references a single cryptographic key.
-//
-// Three modes:
-//   1) Storage/Export — all fields populated including PrivKey
-//   2) Reference      — only KeyInfo.PubKey is meaningful, PrivKey is nil
-//   3) KeyGen         — KeyInfo.KeyType + CryptoKitID drive key generation;
-//                       on completion KeyInfo is populated and PrivKey is set.
-//                       A copy (minus PrivKey) is returned to the caller.
-message KeyEntry {
-    KeyInfo     KeyInfo             = 1;
-    bytes       PrivKey             = 6;    // Private key material (nil in reference mode)
+// KeyPairRecord is the flat on-disk representation of a single key.
+// The runtime layer uses the Go-native PubKey / KeyPair types; this proto exists
+// only so KeyTome can be marshaled into a SealedTome.
+message KeyPairRecord {
+    fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
+    fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15
+    CryptoKitID CryptoKitID         = 3;
+    KeyType     KeyType             = 4;
+    fixed64     TimeID_0            = 5;    // Time-based UID, bytes 0..7 (from tag.NowID)
+    fixed64     TimeID_1            = 6;    // Time-based UID, bytes 8..15
+    bytes       PubKey              = 7;    // Public part of the key (binary)
+    bytes       PrvKey              = 8;    // Private key material (nil in public-only records)
 }
 
 
-// Ordering controls how a collection is sorted for efficient lookup.
-enum Ordering {
-    Disabled    = 0;    // Unsorted — will be sorted on demand before search
-    KeyringID   = 1;    // Sorted by Keyring UID (for KeyTome.Keyrings)
-    PubKey      = 2;    // Sorted by PubKey (for Keyring.Keys)
-    TimeID      = 3;    // Sorted by TimeID descending (newest first)
-}
-
-
-// Keyring is an ordered collection of keys sharing a common identity.
-message Keyring {
-    fixed64             UID_0           = 1;
-    fixed64             UID_1           = 2;
-    repeated KeyEntry   Keys            = 5;    // Ordered list of keys (sorted by PubKey)
-    Ordering            Ordering        = 9;    // Current sort order of Keys
-    bytes               NewestPubKey    = 8;    // PubKey with the largest TimeID (cache)
-}
-
-
-// KeyTome is the root container for all keyrings and their keys.
+// KeyTome is the root container for all keypair records.
+// Persistence format only; the runtime indexes these in memory by (KeyringID, PubKey).
 message KeyTome {
-    int64               Revision        = 1;    // Incremented on each mutation
-    repeated Keyring    Keyrings        = 2;    // Keyrings stored in this tome
-    Ordering            Ordering        = 5;    // Current sort order of Keyrings
+    int64                   Revision    = 1;    // Incremented on each mutation
+    repeated KeyPairRecord  Keys        = 2;
 }
 
 

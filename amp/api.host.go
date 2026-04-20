@@ -151,9 +151,14 @@ type Session interface {
 	// The blob is stored encrypted in the host's BlobStore and queued for peer propagation
 	// when the BlobRef is later committed in a TxMsg via SubmitTx.
 	//
+	// meta describes the blob's MIME type (ContentType), human label (Text), and
+	// byte size (I with Units = Bytes, used as the progress denominator); or may be nil.
+	// The stored BlobRef's BlobTag inherits ContentType and Text from meta; UID is set to
+	// the leading 16 bytes of the plaintext hash (content-addressed, §13.2).
+	//
 	// For large files, data is streamed — not buffered in memory.
 	// If onProgress is non-nil, it is called periodically with cumulative bytes written.
-	StoreBlob(planetID tag.UID, data io.Reader, byteSize int64, contentType string, onProgress func(bytesWritten int64)) (*BlobRef, error)
+	StoreBlob(planetID tag.UID, src io.Reader, meta *Tag, onProgress func(bytesWritten int64)) (*BlobRef, error)
 
 	// SeedBlob introduces a local file into a planet's blob pipeline. The host opens the
 	// file directly (no IPC memcpy), hashes-and-stores in a single streaming pass, and
@@ -198,10 +203,11 @@ type BlobStore interface {
 	Has(planetID tag.UID, blobID tag.UID) bool
 
 	// StoreHashed hashes and stores data content-addressed in a single streaming pass.
-	// Caller pre-populates ref.PlanetID_0/1, ref.ByteSize, ref.HashKitID (0 = default Blake2s_256),
-	// and optionally ref.BlobTag.ContentType.
-	// On success, StoreHashed populates ref.Hash_0..3 from the content hash and sets
-	// ref.BlobTag.UID to the leading 16 bytes of that hash (§13.2).
+	// Caller pre-populates ref.PlanetID_0/1, ref.HashKitID (0 = default Blake2s_256), and
+	// optionally ref.BlobTag.ContentType / ref.BlobTag.Text.
+	// On success, StoreHashed populates ref.Hash_0..3 from the content hash, sets
+	// ref.BlobTag.UID to the leading 16 bytes of that hash (§13.2), and sets
+	// ref.BlobTag.I / ref.BlobTag.Units = Bytes to the authoritative plaintext byte count.
 	// Idempotent: if the hash-derived on-disk path already exists, the temp write is discarded.
 	StoreHashed(ref *BlobRef, data io.Reader, onProgress func(bytesWritten int64)) error
 }

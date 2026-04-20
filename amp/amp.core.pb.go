@@ -1911,31 +1911,37 @@ func (x *ChannelEpoch) GetDefaultGrants() *AccessGrants {
 	return nil
 }
 
-// BlobRef is a content-addressed reference to an encrypted media blob stored outside a TxMsg.
-// Blobs are encrypted with the planet/channel epoch key before storage and transit.
-// A blob is identified by (PlanetID, BlobTag.UID) where BlobTag.UID is a unique time-based ID.
-// The leading 16 bytes of the hash (Hash_0, Hash_1) also serves as a tag.UID for content-addressing.
+// BlobRef is a content-addressed reference to a media blob stored outside a TxMsg.
+// Blobs are sealed with a planet epoch key before storage and transit (zero-knowledge vaults).
+// BlobTag.UID = first 16 bytes of the plaintext hash, providing stable content-addressing
+// (same plaintext → same BlobID across members and restarts).
 type BlobRef struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Planet this blob belongs to.
 	PlanetID_0 uint64 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
 	PlanetID_1 uint64 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	// Plaintext size in bytes (before encryption).
-	ByteSize int64 `protobuf:"varint,5,opt,name=ByteSize,proto3" json:"ByteSize,omitempty"`
 	// Hash algorithm used for blob integrity (default: Blake2s_256).
 	// Each BlobRef is self-describing — the validator reads this field
 	// to select the correct HashKit for verification.
 	HashKitID safe.HashKitID `protobuf:"varint,8,opt,name=HashKitID,proto3,enum=safe.HashKitID" json:"HashKitID,omitempty"`
-	// HashKit digest of encrypted blob content (4 x fixed64 = 32 bytes).
-	// Computed over the encrypted bytes using the algorithm specified by HashKitID.
+	// HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
+	// Plaintext hashing gives stable identity across encrypted/public blobs
+	// and lets receivers validate content after decryption.
 	Hash_0 uint64 `protobuf:"fixed64,10,opt,name=Hash_0,json=Hash0,proto3" json:"Hash_0,omitempty"`
 	Hash_1 uint64 `protobuf:"fixed64,11,opt,name=Hash_1,json=Hash1,proto3" json:"Hash_1,omitempty"`
 	Hash_2 uint64 `protobuf:"fixed64,12,opt,name=Hash_2,json=Hash2,proto3" json:"Hash_2,omitempty"`
 	Hash_3 uint64 `protobuf:"fixed64,13,opt,name=Hash_3,json=Hash3,proto3" json:"Hash_3,omitempty"`
-	// Blob identity and content type.
-	// BlobTag.UID is the blob's unique time-based ID (the blob's identity within the planet).
-	// BlobTag.ContentType is the MIME type (e.g. "image/jpeg", "audio/mpeg").
-	BlobTag       *Tag `protobuf:"bytes,16,opt,name=BlobTag,proto3" json:"BlobTag,omitempty"`
+	// Blob identity, content type, human label, and plaintext byte count.
+	//
+	//	BlobTag.UID         — leading 16 bytes of the plaintext hash (content-addressed).
+	//	BlobTag.ContentType — MIME type (e.g. "image/jpeg", "audio/mpeg").
+	//	BlobTag.Text        — caller-supplied label (e.g. the source file name).
+	//	BlobTag.I (Units=Bytes) — authoritative plaintext byte count.
+	BlobTag *Tag `protobuf:"bytes,16,opt,name=BlobTag,proto3" json:"BlobTag,omitempty"`
+	// Epoch key used to seal this blob (zero = unsealed / planet-public).
+	// Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
+	EpochID_0     uint64 `protobuf:"fixed64,20,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`
+	EpochID_1     uint64 `protobuf:"fixed64,21,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1984,13 +1990,6 @@ func (x *BlobRef) GetPlanetID_1() uint64 {
 	return 0
 }
 
-func (x *BlobRef) GetByteSize() int64 {
-	if x != nil {
-		return x.ByteSize
-	}
-	return 0
-}
-
 func (x *BlobRef) GetHashKitID() safe.HashKitID {
 	if x != nil {
 		return x.HashKitID
@@ -2031,6 +2030,20 @@ func (x *BlobRef) GetBlobTag() *Tag {
 		return x.BlobTag
 	}
 	return nil
+}
+
+func (x *BlobRef) GetEpochID_0() uint64 {
+	if x != nil {
+		return x.EpochID_0
+	}
+	return 0
+}
+
+func (x *BlobRef) GetEpochID_1() uint64 {
+	if x != nil {
+		return x.EpochID_1
+	}
+	return 0
 }
 
 // PlanetStorageOpts configures per-planet storage priority and budgets.
@@ -2387,7 +2400,10 @@ type PlanetInvite struct {
 	// Temporary private key for the invited member (encrypted with invite passphrase).
 	// The member uses this to decrypt their initial EncryptedPlanetKey from the MemberEpoch.
 	// Must be rotated immediately after join.
-	TempPrivKey []byte `protobuf:"bytes,5,opt,name=TempPrivKey,proto3" json:"TempPrivKey,omitempty"`
+	TempPrvKey []byte `protobuf:"bytes,5,opt,name=TempPrvKey,proto3" json:"TempPrvKey,omitempty"`
+	// Public key matching TempPrvKey.  Carried explicitly so the acceptor can import the
+	// keypair without deriving the pub key from the priv key (algorithm-agnostic).
+	TempPubKey []byte `protobuf:"bytes,6,opt,name=TempPubKey,proto3" json:"TempPubKey,omitempty"`
 	// Crypto suite matching the planet epoch.
 	CryptoKitID safe.CryptoKitID `protobuf:"varint,10,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
 	// Known vault addresses for initial peer discovery.
@@ -2453,9 +2469,16 @@ func (x *PlanetInvite) GetMemberTag() *Tag {
 	return nil
 }
 
-func (x *PlanetInvite) GetTempPrivKey() []byte {
+func (x *PlanetInvite) GetTempPrvKey() []byte {
 	if x != nil {
-		return x.TempPrivKey
+		return x.TempPrvKey
+	}
+	return nil
+}
+
+func (x *PlanetInvite) GetTempPubKey() []byte {
+	if x != nil {
+		return x.TempPubKey
 	}
 	return nil
 }
@@ -3108,20 +3131,21 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	" \x01(\tR\x05Label\x12\x1c\n" +
 	"\tLegacyURI\x18\v \x01(\tR\tLegacyURI\x125\n" +
 	"\fMemberGrants\x18\x14 \x01(\v2\x11.amp.AccessGrantsR\fMemberGrants\x127\n" +
-	"\rDefaultGrants\x18\x15 \x01(\v2\x11.amp.AccessGrantsR\rDefaultGrants\"\x92\x02\n" +
+	"\rDefaultGrants\x18\x15 \x01(\v2\x11.amp.AccessGrantsR\rDefaultGrants\"\xb0\x02\n" +
 	"\aBlobRef\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
 	"\n" +
-	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x1a\n" +
-	"\bByteSize\x18\x05 \x01(\x03R\bByteSize\x12-\n" +
+	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12-\n" +
 	"\tHashKitID\x18\b \x01(\x0e2\x0f.safe.HashKitIDR\tHashKitID\x12\x15\n" +
 	"\x06Hash_0\x18\n" +
 	" \x01(\x06R\x05Hash0\x12\x15\n" +
 	"\x06Hash_1\x18\v \x01(\x06R\x05Hash1\x12\x15\n" +
 	"\x06Hash_2\x18\f \x01(\x06R\x05Hash2\x12\x15\n" +
 	"\x06Hash_3\x18\r \x01(\x06R\x05Hash3\x12\"\n" +
-	"\aBlobTag\x18\x10 \x01(\v2\b.amp.TagR\aBlobTag\"y\n" +
+	"\aBlobTag\x18\x10 \x01(\v2\b.amp.TagR\aBlobTag\x12\x1b\n" +
+	"\tEpochID_0\x18\x14 \x01(\x06R\bEpochID0\x12\x1b\n" +
+	"\tEpochID_1\x18\x15 \x01(\x06R\bEpochID1\"y\n" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
@@ -3149,12 +3173,17 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Status\x18\b \x01(\x05R\x06Status\x12\x16\n" +
 	"\x06PubKey\x18\f \x01(\fR\x06PubKey\x123\n" +
 	"\vCryptoKitID\x18\x0f \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12(\n" +
-	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\"\xd3\x02\n" +
+	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\"\xf1\x02\n" +
 	"\fPlanetInvite\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12$\n" +
 	"\bEpochTag\x18\x02 \x01(\v2\b.amp.TagR\bEpochTag\x12&\n" +
-	"\tMemberTag\x18\x03 \x01(\v2\b.amp.TagR\tMemberTag\x12 \n" +
-	"\vTempPrivKey\x18\x05 \x01(\fR\vTempPrivKey\x123\n" +
+	"\tMemberTag\x18\x03 \x01(\v2\b.amp.TagR\tMemberTag\x12\x1e\n" +
+	"\n" +
+	"TempPrvKey\x18\x05 \x01(\fR\n" +
+	"TempPrvKey\x12\x1e\n" +
+	"\n" +
+	"TempPubKey\x18\x06 \x01(\fR\n" +
+	"TempPubKey\x123\n" +
 	"\vCryptoKitID\x18\n" +
 	" \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x1e\n" +
 	"\n" +

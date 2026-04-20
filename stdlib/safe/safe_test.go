@@ -98,7 +98,7 @@ func TestExportSymmetricKey(t *testing.T) {
 	defer enc.Close(ctx)
 
 	keyringID := tag.NewID()
-	_, err = safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
+	_, err = enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
@@ -171,14 +171,14 @@ func TestRoundTrip(t *testing.T) {
 	keyRef := safe.KeyRef{}
 	keyRef.SetKeyringID(keyringID)
 
-	keyInfo, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
+	pub, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
-		t.Fatalf("GenerateNewKey: %v", err)
+		t.Fatalf("GenerateKey: %v", err)
 	}
-	keyRef.PubKey = keyInfo.PubKey
+	keyRef.PubKey = pub.Bytes
 
 	// Encrypt a test message
 	testMsg := make([]byte, 200)
@@ -209,13 +209,12 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatalf("OpenEnclave (reload): %v", err)
 	}
 
-	// FetchKeyInfo should find the key
-	fetchedInfo, err := enc2.FetchKeyInfo(&keyRef)
+	fetched, err := enc2.FetchPubKey(&keyRef)
 	if err != nil {
-		t.Fatalf("FetchKeyInfo after reload: %v", err)
+		t.Fatalf("FetchPubKey after reload: %v", err)
 	}
-	if !bytes.Equal(fetchedInfo.PubKey, keyInfo.PubKey) {
-		t.Fatal("fetched key PubKey doesn't match original")
+	if !bytes.Equal(fetched.Bytes, pub.Bytes) {
+		t.Fatal("fetched key Bytes doesn't match original")
 	}
 
 	// Decrypt the ciphertext
@@ -271,39 +270,38 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	}
 	defer enc.Close(ctx)
 
-	// Generate two asymmetric key pairs (Alice and Bob)
 	aliceKeyringID := tag.NewID()
 	aliceRef := safe.KeyRef{}
 	aliceRef.SetKeyringID(aliceKeyringID)
 
-	aliceInfo, err := safe.GenerateNewKey(enc, aliceKeyringID, &safe.KeyInfo{
+	alice, err := enc.GenerateKey(aliceKeyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SigningKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
-		t.Fatalf("GenerateNewKey (Alice): %v", err)
+		t.Fatalf("GenerateKey (Alice): %v", err)
 	}
-	aliceRef.PubKey = aliceInfo.PubKey
+	aliceRef.PubKey = alice.Bytes
 
 	bobKeyringID := tag.NewID()
 	bobRef := safe.KeyRef{}
 	bobRef.SetKeyringID(bobKeyringID)
 
-	bobInfo, err := safe.GenerateNewKey(enc, bobKeyringID, &safe.KeyInfo{
+	bob, err := enc.GenerateKey(bobKeyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SigningKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
-		t.Fatalf("GenerateNewKey (Bob): %v", err)
+		t.Fatalf("GenerateKey (Bob): %v", err)
 	}
-	bobRef.PubKey = bobInfo.PubKey
+	bobRef.PubKey = bob.Bytes
 
 	// Alice encrypts for Bob
 	testMsg := []byte("hello from alice to bob")
 	encOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
 		Op:      safe.CryptOp_EncryptToPeer,
 		OpKey:   &aliceRef,
-		PeerKey: bobInfo.PubKey,
+		PeerKey: bob.Bytes,
 		Input:   testMsg,
 	})
 	if err != nil {
@@ -314,7 +312,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	decOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
 		Op:      safe.CryptOp_DecryptFromPeer,
 		OpKey:   &bobRef,
-		PeerKey: aliceInfo.PubKey,
+		PeerKey: alice.Bytes,
 		Input:   encOut.Output,
 	})
 	if err != nil {
@@ -326,7 +324,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	}
 }
 
-func TestImportKeys(t *testing.T) {
+func TestImportKey(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
 	store := safe.NewLocalTomeStore(filepath.Join(dir, "import.tome"))
@@ -339,54 +337,34 @@ func TestImportKeys(t *testing.T) {
 	}
 	defer enc.Close(ctx)
 
-	// Build a KeyTome with a key to import
 	keyringID := tag.NewID()
-	importTome := &safe.KeyTome{
-		Keyrings: []*safe.Keyring{
-			{
-				UID_0: keyringID[0],
-				UID_1: keyringID[1],
-				Keys: []*safe.KeyEntry{
-					{
-						KeyInfo: &safe.KeyInfo{
-							KeyType:     safe.KeyType_SymmetricKey,
-							CryptoKitID: safe.CryptoKitID_Poly25519,
-							TimeID_0: 1000,
-							PubKey:      make([]byte, 32),
-						},
-						PrivKey: make([]byte, 32),
-					},
-				},
-			},
+
+	pubBytes := make([]byte, 32)
+	rand.Read(pubBytes)
+	privBytes := make([]byte, 32)
+	rand.Read(privBytes)
+
+	kp := safe.KeyPair{
+		Pub: safe.PubKey{
+			CryptoKitID: safe.CryptoKitID_Poly25519,
+			KeyType:     safe.KeyType_SymmetricKey,
+			Bytes:       pubBytes,
 		},
+		Prv: privBytes,
 	}
 
-	// Fill with random data
-	rand.Read(importTome.Keyrings[0].Keys[0].KeyInfo.PubKey)
-	rand.Read(importTome.Keyrings[0].Keys[0].PrivKey)
-
-	pubKey := make([]byte, 32)
-	copy(pubKey, importTome.Keyrings[0].Keys[0].KeyInfo.PubKey)
-
-	err = enc.ImportKeys(importTome)
-	if err != nil {
-		t.Fatalf("ImportKeys: %v", err)
+	if err := enc.ImportKey(keyringID, kp); err != nil {
+		t.Fatalf("ImportKey: %v", err)
 	}
 
-	// All keys should have been merged — no leftovers
-	if len(importTome.Keyrings) != 0 {
-		t.Fatalf("expected 0 leftover keyrings, got %d", len(importTome.Keyrings))
-	}
-
-	// Verify the key is fetchable
-	ref := &safe.KeyRef{PubKey: pubKey}
+	ref := &safe.KeyRef{PubKey: pubBytes}
 	ref.SetKeyringID(keyringID)
 
-	info, err := enc.FetchKeyInfo(ref)
+	got, err := enc.FetchPubKey(ref)
 	if err != nil {
-		t.Fatalf("FetchKeyInfo after import: %v", err)
+		t.Fatalf("FetchPubKey after import: %v", err)
 	}
-	if !bytes.Equal(info.PubKey, pubKey) {
+	if !bytes.Equal(got.Bytes, pubBytes) {
 		t.Fatal("imported key PubKey mismatch")
 	}
 }
@@ -403,7 +381,6 @@ func TestFileGuardWrapUnwrap(t *testing.T) {
 	guard := safe.NewFileGuard(pass, keyID)
 	defer guard.Close()
 
-	// Generate a random DEK
 	dek := make([]byte, 32)
 	if _, err := rand.Read(dek); err != nil {
 		t.Fatal(err)
@@ -439,7 +416,6 @@ func TestLocalTomeStoreLoadSave(t *testing.T) {
 
 	store := safe.NewLocalTomeStore(filepath.Join(dir, "store.tome"))
 
-	// Load from nonexistent file should return nil
 	sealed, err := store.Load(ctx)
 	if err != nil {
 		t.Fatalf("Load (nonexistent): %v", err)
@@ -448,7 +424,6 @@ func TestLocalTomeStoreLoadSave(t *testing.T) {
 		t.Fatal("expected nil for nonexistent file")
 	}
 
-	// Save and reload
 	original := &safe.SealedTome{
 		Version:    1,
 		Purpose:    "test",
@@ -527,46 +502,43 @@ func TestLargePayload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Import a tome with many keyrings to test large-payload persistence
-	largeTome := &safe.KeyTome{
-		Keyrings: make([]*safe.Keyring, 100),
-	}
-	for i := range largeTome.Keyrings {
-		largeTome.Keyrings[i] = &safe.Keyring{
-			UID_0: uint64(i + 1),
-			UID_1: uint64(i + 1000),
+	// Generate many keys across distinct keyrings to exercise large-payload persistence.
+	const ringCount = 100
+	for i := 0; i < ringCount; i++ {
+		keyringID := tag.UID{uint64(i + 1), uint64(i + 1000)}
+		_, err := enc.GenerateKey(keyringID, safe.KeySpec{
+			KeyType:     safe.KeyType_SigningKey,
+			CryptoKitID: safe.CryptoKitID_Poly25519,
+		})
+		if err != nil {
+			t.Fatalf("GenerateKey[%d]: %v", i, err)
 		}
-	}
-	if err := enc.ImportKeys(largeTome); err != nil {
-		t.Fatalf("ImportKeys (large): %v", err)
 	}
 
 	if err := enc.Close(ctx); err != nil {
 		t.Fatal(err)
 	}
 
-	// Verify file was written
-	info, err := os.Stat(filepath.Join(dir, "large.tome"))
+	fi, err := os.Stat(filepath.Join(dir, "large.tome"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if info.Size() == 0 {
+	if fi.Size() == 0 {
 		t.Fatal("tome file should not be empty")
 	}
 
-	// Re-open and verify
+	// Re-open and verify a known keyring is accessible.
 	guard2 := safe.NewFileGuard([]byte("passphrase"), []byte("large-test"))
 	enc2, err := safe.OpenEnclave(ctx, store, guard2, []byte("large"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Spot-check: verify a keyring we imported is accessible
 	ref := &safe.KeyRef{}
-	ref.SetKeyringID([2]uint64{50, 1049})
-	_, err = enc2.FetchKeyInfo(ref)
-	// This will fail since the keyring has no keys — that's expected.
-	// The important thing is the enclave opened without error.
+	ref.SetKeyringID(tag.UID{50, 1049})
+	if _, err := enc2.FetchPubKey(ref); err != nil {
+		t.Fatalf("expected to find keyring after reopen: %v", err)
+	}
 
 	enc2.Close(ctx)
 }
@@ -586,8 +558,7 @@ func TestFetchNewestKey(t *testing.T) {
 
 	keyringID := tag.NewID()
 
-	// Generate two keys on the same keyring
-	info1, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
+	first, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
@@ -595,7 +566,7 @@ func TestFetchNewestKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	info2, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
+	second, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
@@ -603,27 +574,20 @@ func TestFetchNewestKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Fetch with empty PubKey should return the newest
+	// Fetch with empty PubKey should return the newest (second).
 	ref := &safe.KeyRef{}
 	ref.SetKeyringID(keyringID)
 
-	newest, err := enc.FetchKeyInfo(ref)
+	newest, err := enc.FetchPubKey(ref)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// The second key should be newer (or equal TimeID)
-	newestTID := newest.TimeID()
-	info1TID := info1.TimeID()
-	if newestTID[0] < info1TID[0] || (newestTID[0] == info1TID[0] && newestTID[1] < info1TID[1]) {
+	if newest.TimeID[0] < first.TimeID[0] ||
+		(newest.TimeID[0] == first.TimeID[0] && newest.TimeID[1] < first.TimeID[1]) {
 		t.Fatal("newest key should not be older than first key")
 	}
-	_ = info2 // suppress unused warning; info2 was the second key generated
-
-	info2TID := info2.TimeID()
-	if !bytes.Equal(newest.PubKey, info2.PubKey) && newestTID == info2TID {
-		// If same TimeID, either is acceptable
-	}
+	_ = second
 }
 
 func TestEncryptDecryptVariousSizes(t *testing.T) {
@@ -643,16 +607,15 @@ func TestEncryptDecryptVariousSizes(t *testing.T) {
 	keyRef := safe.KeyRef{}
 	keyRef.SetKeyringID(keyringID)
 
-	keyInfo, err := safe.GenerateNewKey(enc, keyringID, &safe.KeyInfo{
+	pub, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	keyRef.PubKey = keyInfo.PubKey
+	keyRef.PubKey = pub.Bytes
 
-	// Test various payload sizes including edge cases
 	sizes := []int{0, 1, 15, 16, 31, 32, 100, 1000, 4096, 65536}
 	for _, sz := range sizes {
 		testMsg := make([]byte, sz)
