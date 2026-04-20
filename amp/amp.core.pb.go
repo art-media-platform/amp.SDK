@@ -1931,12 +1931,12 @@ type BlobRef struct {
 	Hash_1 uint64 `protobuf:"fixed64,11,opt,name=Hash_1,json=Hash1,proto3" json:"Hash_1,omitempty"`
 	Hash_2 uint64 `protobuf:"fixed64,12,opt,name=Hash_2,json=Hash2,proto3" json:"Hash_2,omitempty"`
 	Hash_3 uint64 `protobuf:"fixed64,13,opt,name=Hash_3,json=Hash3,proto3" json:"Hash_3,omitempty"`
-	// Blob identity, content type, human label, and plaintext byte count.
+	// Blob identity, content type, human label, and plaintext byte length.
 	//
 	//	BlobTag.UID         — leading 16 bytes of the plaintext hash (content-addressed).
 	//	BlobTag.ContentType — MIME type (e.g. "image/jpeg", "audio/mpeg").
 	//	BlobTag.Text        — caller-supplied label (e.g. the source file name).
-	//	BlobTag.I (Units=Bytes) — authoritative plaintext byte count.
+	//	BlobTag.I (Units=Bytes) — authoritative plaintext byte length.
 	BlobTag *Tag `protobuf:"bytes,16,opt,name=BlobTag,proto3" json:"BlobTag,omitempty"`
 	// Epoch key used to seal this blob (zero = unsealed / planet-public).
 	// Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
