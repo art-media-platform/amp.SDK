@@ -58,13 +58,20 @@ message SealedTome {
 }
 
 
-// KeyType identifies how a key operates.
-// The CryptoKit may derive additional capabilities from a single key entry
-// (e.g. an asymmetric key derived from a signing key).
+// KeyType identifies the cryptographic role a key plays within an Enclave.
+// Algorithm, hybrid composition, lifecycle, and hardware backing are
+// expressed elsewhere (CryptoKit, lifecycle metadata, GuardInfo).
+//
+// The three roles span the operation space: shared-secret encryption (Symmetric),
+// keypair-based shared-secret agreement / encapsulation (Asymmetric), and
+// keypair-based authentication (Signing).  A CryptoKit may derive one role
+// from another internally (e.g. Poly25519 derives an Asymmetric key from a
+// Signing key via the Edwards-to-Montgomery birational map).
 enum KeyType {
     Unspecified         = 0;
     SymmetricKey        = 1;
-    SigningKey          = 3;
+    AsymmetricKey       = 2;    // Key agreement / encapsulation (X25519, ML-KEM)
+    SigningKey          = 3;    // Signature (Ed25519, ML-DSA)
 }
 
 // CryptoKitID identifies an encryption suite that implements CryptoKit.
@@ -163,4 +170,21 @@ message EpochKeyEntry {
 message EpochKeyTome {
     int64                   Revision    = 1;    // Incremented on each mutation
     repeated EpochKeyEntry  Keys        = 2;    // All epoch keys (sorted by ContainerID, then EpochID)
+}
+
+
+// EncryptedSymKey carries a symmetric key encrypted-to-peer for out-of-band delivery.
+//
+// Primary use cases:
+//   - PlanetInvite: admin encrypts current epoch key for a new member's temp pub key
+//   - Epoch rotation: current members receive the next epoch key encrypted to their pub key
+//   - Any "here's a symmetric key for you" handoff between two known parties
+//
+// The receiver uses DecryptFrom(Ciphertext, SenderPubKey, receiver_prv_key) to recover the key.
+message EncryptedSymKey {
+    CryptoKitID CryptoKitID  = 1;    // Suite that encrypted this key (and must decrypt it)
+    fixed64     EpochID_0    = 3;    // Epoch UID this key belongs to, bytes 0..7 (zero if not epoch-bound)
+    fixed64     EpochID_1    = 4;    // Epoch UID this key belongs to, bytes 8..15
+    bytes       SenderPubKey = 5;    // Pub key of the encryptor (required for DecryptFrom)
+    bytes       Ciphertext   = 8;    // Output of CryptoKit.EncryptFor(symmetric_key, receiver_pub, sender_prv)
 }
