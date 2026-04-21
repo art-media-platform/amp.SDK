@@ -111,6 +111,7 @@ tags Attr {
     HomeAttr "amp.home" {
         PlanetBinding      "planet.binding.Tag"
         PlanetStorageOpts  "planet.storage.PlanetStorageOpts"
+        AppBrand           "app.brand.AppBrand"
     }
 
     // System properties

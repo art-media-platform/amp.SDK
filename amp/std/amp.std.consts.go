@@ -81,6 +81,7 @@ var Attr = struct {
 	HomeAttr                   tag.Name
 	PlanetBinding              tag.Name
 	PlanetStorageOpts          tag.Name
+	AppBrand                   tag.Name
 	SystemPropertyAttr         tag.Name
 	SpaceReticleStyle          tag.Name
 	SpaceReticleOverlay        tag.Name
@@ -190,6 +191,7 @@ var Attr = struct {
 
 	PlanetBinding             : tag.Name{ID: tag.UID{0x45F2F73219F58825, 0x90DC421D14D18395}, Canonic: "amp.home.planet.binding.tag"},                // 25YCVM46GPJ0KT1R223NBE30WP
 	PlanetStorageOpts         : tag.Name{ID: tag.UID{0x9E17382947669A37, 0x07DC97D0A95DE3F2}, Canonic: "amp.home.planet.storage.planetstorageopts"},  // 4Y2WW2KJV6M8VHGR4RU2NPVSZK
+	AppBrand                  : tag.Name{ID: tag.UID{0xE671A6F1B0BEFD10, 0x98A4149F61F319FF}, Canonic: "amp.home.app.brand.appbrand"},                // 76F6MG3D5YZN89J90NMXHZ66GZ
 
 	// ─── System properties ──────────────────────────────────────────
 	SystemPropertyAttr        : tag.Name{ID: tag.UID{0x630F4A145BAB11F9, 0xE8ED5B4238E5B2DE}, Canonic: "system.property"},                  // 331X518QXC27WYJVBV88WFCDQY

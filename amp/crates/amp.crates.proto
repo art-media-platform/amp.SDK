@@ -7,10 +7,44 @@ option csharp_namespace = "art.media.platform";
 option go_package = "github.com/art-media-platform/amp.SDK/amp/crates";
 
 
+// PlatformID identifies a build target.  Orthogonal to OSVariant (same APK covers
+// multiple Android variants, for example).
+enum PlatformID {
+    UnspecifiedPlatform = 0;
+    macOS               = 1;
+    Windows             = 2;
+    Linux               = 3;
+    Android             = 4;
+    iOS                 = 5;
+}
+
+// OSVariant distinguishes privacy/de-Googled forks sharing a PlatformID's binary.
+enum OSVariant {
+    Stock               = 0;    // default stock OS (Apple, Microsoft, Google, Ubuntu, etc.)
+    GrapheneOS          = 1;
+    CalyxOS             = 2;
+    LineageOS           = 3;
+}
+
+// AssetKind identifies what an asset *is* — exactly one kind per AssetEntry.
+// Orthogonal properties (placeable, private, auto-scale, etc.) live as explicit
+// bool fields on AssetEntry.
+enum AssetKind {
+    UnspecifiedKind     = 0;
+    Texture             = 1;
+    Sprite              = 2;
+    Material            = 3;
+    Scene               = 4;
+    Skybox              = 5;
+    Surface             = 6;    // terrain-like / opaque collider (buildings, walls, terrain)
+    VisualLayer         = 7;
+    VisualScope         = 8;
+}
+
+
 message AssetEntry {
 
-    // AssetFlags specifies properties about this AssetEntry.
-    AssetFlags              Flags = 1;
+    AssetKind               Kind = 1;
 
     // EntryURI is a Unix-style pathname that identifies an asset within a crate.
     // By convention, this URI does *not* start or end with '/'
@@ -21,21 +55,24 @@ message AssetEntry {
     // Label is the human-readable label for this asset.
     string                  Label = 3;
 
-    // AssetID is an alternative name for this asset that is used to identify the asset in code.
-    // DEPRECATED -- EntryURI should be used instead of AssetID (or use [2]uint64 that Unity returns)
-    string                  AssetID = 4;
+    // Orthogonal asset properties (each independently settable).
+    bool                    IsPlaceable     = 5;    // can be placed in a space
+    bool                    IsRectTransform = 6;    // has a RectTransform component
+    bool                    HasIcon         = 7;    // ships with a matching icon asset
+    bool                    IsPrivate       = 8;    // not normally visible to end users
+    bool                    AutoScale       = 9;    // place with auto-scale enabled by default
 
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
     // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
     // Y is considered to be the *vertical* (up) direction and by convention rests on the plane y=0.
-    float                   CenterX = 5;
-    float                   CenterY = 6;
-    float                   CenterZ = 7;
+    float                   CenterX = 10;
+    float                   CenterY = 11;
+    float                   CenterZ = 12;
 
     // Extents specify the distance from the center to the extent of the asset on each axis.
-    float                   ExtentsX = 10;
-    float                   ExtentsY = 11;
-    float                   ExtentsZ = 12;
+    float                   ExtentsX = 15;
+    float                   ExtentsY = 16;
+    float                   ExtentsZ = 17;
 
     // Reserved for runtime use -- defaults to empty.
     string                  LocalURI = 30;
@@ -160,76 +197,55 @@ message CrateSnapshot {
     repeated CrateInfo      Crates = 10;
 }
 
-// AppVars help the amp runtime manage dynamic Go or Clib module loading
-// This can be thought of a data record for a registered app in the art-media-platform ecosystem.
-message AppVars {
 
-    // AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
-    string                  AppDomain = 2;
+// AppBrand is the whitelabel skin and install manifest for an amp-built app.
+//
+// Shipped bundled with the app (factory copy) and refreshable over the air via
+// {AppDomain}/.well-known/app.brand.json.  A single AppBrand covers one app's
+// identity, its deep-link schemes, per-platform install targets, and curated
+// entry points — enough for any landing page or planet invite to route a new
+// user to the correct store link for their device.
+message AppBrand {
 
-    // AppDesc is a short human readable description of AppDomain
-    string                  AppDesc = 4;
+    // Identity
+    string                  AppName          = 1;     // "Tunr"
+    string                  AppDomain        = 2;     // "tunr.plan.tools"  (also used for well-known fetches)
+    string                  AppDesc          = 3;     // short one-liner
 
-    // OrgHomeURL is the home link for this org (e.g. "https://plan-systems.org")
-    string                  OrgHomeURL = 6;
+    string                  OrgName          = 5;     // "PLAN Systems"
+    string                  OrgHomeURL       = 6;     // "https://plan-systems.org"
+    string                  AppHomeURL       = 7;     // "https://tunr.plan.tools"
 
-    // AppHomeURL points to the home URL for the app
-    string                  AppHomeURL = 12;
+    // Native URL schemes this app registers (first is primary).
+    // Incoming URLs on these schemes are rewritten to "amp://" internally.
+    repeated string         URLSchemes       = 10;
 
-    // CrateSnapshotURL specifies where to load this org's CrateSnapshot
-    string                  CrateSnapshotURL = 14;
+    // Platform install targets — the portal and onboarding pages choose the
+    // matching AppTarget for the visitor's device.
+    repeated AppTarget      Targets          = 15;
 
-    // AppDownloadURLs are a download URL for a given platform.
-    // A key of "" denotes an unknown platform
-    map<string, string>     AppDownloadURLs = 16;
+    // CrateSnapshot feed this brand consumes for content updates.
+    string                  CrateSnapshotURL = 20;
 
-    // URLSchemes declare URL prefixes used to check if in incoming URL from the OS should be handled.
-    // The first entry is the primary scheme and the rest are alternately recognized schemes.
-    //
-    // If an URL is matched, it is replaced by "amp://" and then passed to the amp runtime.
-    repeated string         URLSchemes = 18;
-
-    // Overrides default settings
-    map<string, string>     Settings = 20;
-
-    // Links is a list of channel URIs for easy access.
-    repeated KVEntry        Links = 40;
+    // Curated deep links: featured planets, support channel, onboarding, etc.
+    repeated AppLink        Links            = 25;
 }
 
-
-enum AssetFlags {
-    NoFlags                 = 0;
-
-    IsTexture               = 0x0001; // asset is a Texture
-    IsSprite                = 0x0002; // asset is a Sprite
-    IsMaterial              = 0x0004; // asset is a Material
-    IsPlaceable             = 0x0008; // asset can be placed in a space
-    IsRectTransform         = 0x0010; // has a RectTransform component.
-    IsScene                 = 0x0020; // has a Scene component.
-
-    // HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
-    HasIcon                 = 0x0100;
-
-    // IsPrivate means this item is not intended for general use and is not normally visible.
-    IsPrivate               = 0x0200;
-
-    // IsSkybox means this is a transform containing a Skybox component.
-    IsSkybox                = 0x0400;
-
-    // AutoScale means this asset should be placed with auto scale enabled by default.
-    AutoScale               = 0x0800;
-
-    // IsSurface means this asset behaves like terrain and/or should be considered a constituent part of a scene.
-    // These objects should be opaque and have colliders attached to them
-    // e.g.  a building, a terrain formation, a wall
-    IsSurface               = 0x1000;
-
-    // IsVisualLayer denotes the asset contains a VisualLayer component.
-    IsVisualLayer           = 0x2000;
-
-    // IsVisualScope denotes the asset contains a VisualScope component
-    IsVisualScope           = 0x4000;
+// AppTarget describes where to obtain the app for one (PlatformID, OSVariant) pair.
+message AppTarget {
+    PlatformID              Platform     = 1;
+    OSVariant               OSVariant    = 2;    // 0 = Stock; set for de-Googled variants
+    string                  DownloadURL  = 3;    // store URL, HTTPS download, magnet link, etc.
+    string                  BundleID     = 4;    // "org.plan.tunr" (iOS/Android bundle ID)
+    string                  MinOSVersion = 5;    // minimum OS version, e.g. "14.0"
 }
+
+// AppLink is one curated entry point — typically an amp:// or https:// URL with a label.
+message AppLink {
+    string                  Label = 1;
+    string                  URL   = 2;
+}
+
 
 // Enum values should be three base-10 digits corresponding to the major, minor, and revision number.
 enum CrateSchema {
@@ -238,10 +254,3 @@ enum CrateSchema {
     // v100 (April 2020) should be used for CrateInfo.CrateSchema
     v100                    = 100;
 }
-
-// KVEntry is a generic entry for any key-value pair.
-message KVEntry {
-    string                  Key   = 1;
-    string                  Value = 2;
-}
-

@@ -23,95 +23,187 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type AssetFlags int32
+// PlatformID identifies a build target.  Orthogonal to OSVariant (same APK covers
+// multiple Android variants, for example).
+type PlatformID int32
 
 const (
-	AssetFlags_NoFlags         AssetFlags = 0
-	AssetFlags_IsTexture       AssetFlags = 1  // asset is a Texture
-	AssetFlags_IsSprite        AssetFlags = 2  // asset is a Sprite
-	AssetFlags_IsMaterial      AssetFlags = 4  // asset is a Material
-	AssetFlags_IsPlaceable     AssetFlags = 8  // asset can be placed in a space
-	AssetFlags_IsRectTransform AssetFlags = 16 // has a RectTransform component.
-	AssetFlags_IsScene         AssetFlags = 32 // has a Scene component.
-	// HasIcon means that this Asset includes an icon with the same name (and has IsIcon set),
-	AssetFlags_HasIcon AssetFlags = 256
-	// IsPrivate means this item is not intended for general use and is not normally visible.
-	AssetFlags_IsPrivate AssetFlags = 512
-	// IsSkybox means this is a transform containing a Skybox component.
-	AssetFlags_IsSkybox AssetFlags = 1024
-	// AutoScale means this asset should be placed with auto scale enabled by default.
-	AssetFlags_AutoScale AssetFlags = 2048
-	// IsSurface means this asset behaves like terrain and/or should be considered a constituent part of a scene.
-	// These objects should be opaque and have colliders attached to them
-	// e.g.  a building, a terrain formation, a wall
-	AssetFlags_IsSurface AssetFlags = 4096
-	// IsVisualLayer denotes the asset contains a VisualLayer component.
-	AssetFlags_IsVisualLayer AssetFlags = 8192
-	// IsVisualScope denotes the asset contains a VisualScope component
-	AssetFlags_IsVisualScope AssetFlags = 16384
+	PlatformID_UnspecifiedPlatform PlatformID = 0
+	PlatformID_macOS               PlatformID = 1
+	PlatformID_Windows             PlatformID = 2
+	PlatformID_Linux               PlatformID = 3
+	PlatformID_Android             PlatformID = 4
+	PlatformID_iOS                 PlatformID = 5
 )
 
-// Enum value maps for AssetFlags.
+// Enum value maps for PlatformID.
 var (
-	AssetFlags_name = map[int32]string{
-		0:     "NoFlags",
-		1:     "IsTexture",
-		2:     "IsSprite",
-		4:     "IsMaterial",
-		8:     "IsPlaceable",
-		16:    "IsRectTransform",
-		32:    "IsScene",
-		256:   "HasIcon",
-		512:   "IsPrivate",
-		1024:  "IsSkybox",
-		2048:  "AutoScale",
-		4096:  "IsSurface",
-		8192:  "IsVisualLayer",
-		16384: "IsVisualScope",
+	PlatformID_name = map[int32]string{
+		0: "UnspecifiedPlatform",
+		1: "macOS",
+		2: "Windows",
+		3: "Linux",
+		4: "Android",
+		5: "iOS",
 	}
-	AssetFlags_value = map[string]int32{
-		"NoFlags":         0,
-		"IsTexture":       1,
-		"IsSprite":        2,
-		"IsMaterial":      4,
-		"IsPlaceable":     8,
-		"IsRectTransform": 16,
-		"IsScene":         32,
-		"HasIcon":         256,
-		"IsPrivate":       512,
-		"IsSkybox":        1024,
-		"AutoScale":       2048,
-		"IsSurface":       4096,
-		"IsVisualLayer":   8192,
-		"IsVisualScope":   16384,
+	PlatformID_value = map[string]int32{
+		"UnspecifiedPlatform": 0,
+		"macOS":               1,
+		"Windows":             2,
+		"Linux":               3,
+		"Android":             4,
+		"iOS":                 5,
 	}
 )
 
-func (x AssetFlags) Enum() *AssetFlags {
-	p := new(AssetFlags)
+func (x PlatformID) Enum() *PlatformID {
+	p := new(PlatformID)
 	*p = x
 	return p
 }
 
-func (x AssetFlags) String() string {
+func (x PlatformID) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (AssetFlags) Descriptor() protoreflect.EnumDescriptor {
+func (PlatformID) Descriptor() protoreflect.EnumDescriptor {
 	return file_amp_crates_amp_crates_proto_enumTypes[0].Descriptor()
 }
 
-func (AssetFlags) Type() protoreflect.EnumType {
+func (PlatformID) Type() protoreflect.EnumType {
 	return &file_amp_crates_amp_crates_proto_enumTypes[0]
 }
 
-func (x AssetFlags) Number() protoreflect.EnumNumber {
+func (x PlatformID) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use AssetFlags.Descriptor instead.
-func (AssetFlags) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use PlatformID.Descriptor instead.
+func (PlatformID) EnumDescriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{0}
+}
+
+// OSVariant distinguishes privacy/de-Googled forks sharing a PlatformID's binary.
+type OSVariant int32
+
+const (
+	OSVariant_Stock      OSVariant = 0 // default stock OS (Apple, Microsoft, Google, Ubuntu, etc.)
+	OSVariant_GrapheneOS OSVariant = 1
+	OSVariant_CalyxOS    OSVariant = 2
+	OSVariant_LineageOS  OSVariant = 3
+)
+
+// Enum value maps for OSVariant.
+var (
+	OSVariant_name = map[int32]string{
+		0: "Stock",
+		1: "GrapheneOS",
+		2: "CalyxOS",
+		3: "LineageOS",
+	}
+	OSVariant_value = map[string]int32{
+		"Stock":      0,
+		"GrapheneOS": 1,
+		"CalyxOS":    2,
+		"LineageOS":  3,
+	}
+)
+
+func (x OSVariant) Enum() *OSVariant {
+	p := new(OSVariant)
+	*p = x
+	return p
+}
+
+func (x OSVariant) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (OSVariant) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_crates_amp_crates_proto_enumTypes[1].Descriptor()
+}
+
+func (OSVariant) Type() protoreflect.EnumType {
+	return &file_amp_crates_amp_crates_proto_enumTypes[1]
+}
+
+func (x OSVariant) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use OSVariant.Descriptor instead.
+func (OSVariant) EnumDescriptor() ([]byte, []int) {
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{1}
+}
+
+// AssetKind identifies what an asset *is* — exactly one kind per AssetEntry.
+// Orthogonal properties (placeable, private, auto-scale, etc.) live as explicit
+// bool fields on AssetEntry.
+type AssetKind int32
+
+const (
+	AssetKind_UnspecifiedKind AssetKind = 0
+	AssetKind_Texture         AssetKind = 1
+	AssetKind_Sprite          AssetKind = 2
+	AssetKind_Material        AssetKind = 3
+	AssetKind_Scene           AssetKind = 4
+	AssetKind_Skybox          AssetKind = 5
+	AssetKind_Surface         AssetKind = 6 // terrain-like / opaque collider (buildings, walls, terrain)
+	AssetKind_VisualLayer     AssetKind = 7
+	AssetKind_VisualScope     AssetKind = 8
+)
+
+// Enum value maps for AssetKind.
+var (
+	AssetKind_name = map[int32]string{
+		0: "UnspecifiedKind",
+		1: "Texture",
+		2: "Sprite",
+		3: "Material",
+		4: "Scene",
+		5: "Skybox",
+		6: "Surface",
+		7: "VisualLayer",
+		8: "VisualScope",
+	}
+	AssetKind_value = map[string]int32{
+		"UnspecifiedKind": 0,
+		"Texture":         1,
+		"Sprite":          2,
+		"Material":        3,
+		"Scene":           4,
+		"Skybox":          5,
+		"Surface":         6,
+		"VisualLayer":     7,
+		"VisualScope":     8,
+	}
+)
+
+func (x AssetKind) Enum() *AssetKind {
+	p := new(AssetKind)
+	*p = x
+	return p
+}
+
+func (x AssetKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AssetKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_crates_amp_crates_proto_enumTypes[2].Descriptor()
+}
+
+func (AssetKind) Type() protoreflect.EnumType {
+	return &file_amp_crates_amp_crates_proto_enumTypes[2]
+}
+
+func (x AssetKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AssetKind.Descriptor instead.
+func (AssetKind) EnumDescriptor() ([]byte, []int) {
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{2}
 }
 
 // Enum values should be three base-10 digits corresponding to the major, minor, and revision number.
@@ -146,11 +238,11 @@ func (x CrateSchema) String() string {
 }
 
 func (CrateSchema) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_crates_amp_crates_proto_enumTypes[1].Descriptor()
+	return file_amp_crates_amp_crates_proto_enumTypes[3].Descriptor()
 }
 
 func (CrateSchema) Type() protoreflect.EnumType {
-	return &file_amp_crates_amp_crates_proto_enumTypes[1]
+	return &file_amp_crates_amp_crates_proto_enumTypes[3]
 }
 
 func (x CrateSchema) Number() protoreflect.EnumNumber {
@@ -159,13 +251,12 @@ func (x CrateSchema) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CrateSchema.Descriptor instead.
 func (CrateSchema) EnumDescriptor() ([]byte, []int) {
-	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{1}
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{3}
 }
 
 type AssetEntry struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// AssetFlags specifies properties about this AssetEntry.
-	Flags AssetFlags `protobuf:"varint,1,opt,name=Flags,proto3,enum=crates.AssetFlags" json:"Flags,omitempty"`
+	Kind  AssetKind              `protobuf:"varint,1,opt,name=Kind,proto3,enum=crates.AssetKind" json:"Kind,omitempty"`
 	// EntryURI is a Unix-style pathname that identifies an asset within a crate.
 	// By convention, this URI does *not* start or end with '/'
 	// An asset URI has the form "{CrateURI}/{EntryURI}"
@@ -173,19 +264,22 @@ type AssetEntry struct {
 	EntryURI string `protobuf:"bytes,2,opt,name=EntryURI,proto3" json:"EntryURI,omitempty"`
 	// Label is the human-readable label for this asset.
 	Label string `protobuf:"bytes,3,opt,name=Label,proto3" json:"Label,omitempty"`
-	// AssetID is an alternative name for this asset that is used to identify the asset in code.
-	// DEPRECATED -- EntryURI should be used instead of AssetID (or use [2]uint64 that Unity returns)
-	AssetID string `protobuf:"bytes,4,opt,name=AssetID,proto3" json:"AssetID,omitempty"`
+	// Orthogonal asset properties (each independently settable).
+	IsPlaceable     bool `protobuf:"varint,5,opt,name=IsPlaceable,proto3" json:"IsPlaceable,omitempty"`         // can be placed in a space
+	IsRectTransform bool `protobuf:"varint,6,opt,name=IsRectTransform,proto3" json:"IsRectTransform,omitempty"` // has a RectTransform component
+	HasIcon         bool `protobuf:"varint,7,opt,name=HasIcon,proto3" json:"HasIcon,omitempty"`                 // ships with a matching icon asset
+	IsPrivate       bool `protobuf:"varint,8,opt,name=IsPrivate,proto3" json:"IsPrivate,omitempty"`             // not normally visible to end users
+	AutoScale       bool `protobuf:"varint,9,opt,name=AutoScale,proto3" json:"AutoScale,omitempty"`             // place with auto-scale enabled by default
 	// CenterX and CenterZ specify the positional center of this asset (and are typically 0).
 	// CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
 	// Y is considered to be the *vertical* (up) direction and by convention rests on the plane y=0.
-	CenterX float32 `protobuf:"fixed32,5,opt,name=CenterX,proto3" json:"CenterX,omitempty"`
-	CenterY float32 `protobuf:"fixed32,6,opt,name=CenterY,proto3" json:"CenterY,omitempty"`
-	CenterZ float32 `protobuf:"fixed32,7,opt,name=CenterZ,proto3" json:"CenterZ,omitempty"`
+	CenterX float32 `protobuf:"fixed32,10,opt,name=CenterX,proto3" json:"CenterX,omitempty"`
+	CenterY float32 `protobuf:"fixed32,11,opt,name=CenterY,proto3" json:"CenterY,omitempty"`
+	CenterZ float32 `protobuf:"fixed32,12,opt,name=CenterZ,proto3" json:"CenterZ,omitempty"`
 	// Extents specify the distance from the center to the extent of the asset on each axis.
-	ExtentsX float32 `protobuf:"fixed32,10,opt,name=ExtentsX,proto3" json:"ExtentsX,omitempty"`
-	ExtentsY float32 `protobuf:"fixed32,11,opt,name=ExtentsY,proto3" json:"ExtentsY,omitempty"`
-	ExtentsZ float32 `protobuf:"fixed32,12,opt,name=ExtentsZ,proto3" json:"ExtentsZ,omitempty"`
+	ExtentsX float32 `protobuf:"fixed32,15,opt,name=ExtentsX,proto3" json:"ExtentsX,omitempty"`
+	ExtentsY float32 `protobuf:"fixed32,16,opt,name=ExtentsY,proto3" json:"ExtentsY,omitempty"`
+	ExtentsZ float32 `protobuf:"fixed32,17,opt,name=ExtentsZ,proto3" json:"ExtentsZ,omitempty"`
 	// Reserved for runtime use -- defaults to empty.
 	LocalURI string `protobuf:"bytes,30,opt,name=LocalURI,proto3" json:"LocalURI,omitempty"`
 	// Comma-delimited and whitespace-trimmed list of tags.
@@ -231,11 +325,11 @@ func (*AssetEntry) Descriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *AssetEntry) GetFlags() AssetFlags {
+func (x *AssetEntry) GetKind() AssetKind {
 	if x != nil {
-		return x.Flags
+		return x.Kind
 	}
-	return AssetFlags_NoFlags
+	return AssetKind_UnspecifiedKind
 }
 
 func (x *AssetEntry) GetEntryURI() string {
@@ -252,11 +346,39 @@ func (x *AssetEntry) GetLabel() string {
 	return ""
 }
 
-func (x *AssetEntry) GetAssetID() string {
+func (x *AssetEntry) GetIsPlaceable() bool {
 	if x != nil {
-		return x.AssetID
+		return x.IsPlaceable
 	}
-	return ""
+	return false
+}
+
+func (x *AssetEntry) GetIsRectTransform() bool {
+	if x != nil {
+		return x.IsRectTransform
+	}
+	return false
+}
+
+func (x *AssetEntry) GetHasIcon() bool {
+	if x != nil {
+		return x.HasIcon
+	}
+	return false
+}
+
+func (x *AssetEntry) GetIsPrivate() bool {
+	if x != nil {
+		return x.IsPrivate
+	}
+	return false
+}
+
+func (x *AssetEntry) GetAutoScale() bool {
+	if x != nil {
+		return x.AutoScale
+	}
+	return false
 }
 
 func (x *AssetEntry) GetCenterX() float32 {
@@ -722,50 +844,50 @@ func (x *CrateSnapshot) GetCrates() []*CrateInfo {
 	return nil
 }
 
-// AppVars help the amp runtime manage dynamic Go or Clib module loading
-// This can be thought of a data record for a registered app in the art-media-platform ecosystem.
-type AppVars struct {
+// AppBrand is the whitelabel skin and install manifest for an amp-built app.
+//
+// Shipped bundled with the app (factory copy) and refreshable over the air via
+// {AppDomain}/.well-known/app.brand.json.  A single AppBrand covers one app's
+// identity, its deep-link schemes, per-platform install targets, and curated
+// entry points — enough for any landing page or planet invite to route a new
+// user to the correct store link for their device.
+type AppBrand struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// AppDomain is the domain name used for primary queries (e.g. "plan-systems.org")
-	AppDomain string `protobuf:"bytes,2,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"`
-	// AppDesc is a short human readable description of AppDomain
-	AppDesc string `protobuf:"bytes,4,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
-	// OrgHomeURL is the home link for this org (e.g. "https://plan-systems.org")
-	OrgHomeURL string `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"`
-	// AppHomeURL points to the home URL for the app
-	AppHomeURL string `protobuf:"bytes,12,opt,name=AppHomeURL,proto3" json:"AppHomeURL,omitempty"`
-	// CrateSnapshotURL specifies where to load this org's CrateSnapshot
-	CrateSnapshotURL string `protobuf:"bytes,14,opt,name=CrateSnapshotURL,proto3" json:"CrateSnapshotURL,omitempty"`
-	// AppDownloadURLs are a download URL for a given platform.
-	// A key of "" denotes an unknown platform
-	AppDownloadURLs map[string]string `protobuf:"bytes,16,rep,name=AppDownloadURLs,proto3" json:"AppDownloadURLs,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// URLSchemes declare URL prefixes used to check if in incoming URL from the OS should be handled.
-	// The first entry is the primary scheme and the rest are alternately recognized schemes.
-	//
-	// If an URL is matched, it is replaced by "amp://" and then passed to the amp runtime.
-	URLSchemes []string `protobuf:"bytes,18,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"`
-	// Overrides default settings
-	Settings map[string]string `protobuf:"bytes,20,rep,name=Settings,proto3" json:"Settings,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	// Links is a list of channel URIs for easy access.
-	Links         []*KVEntry `protobuf:"bytes,40,rep,name=Links,proto3" json:"Links,omitempty"`
+	// Identity
+	AppName    string `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`       // "Tunr"
+	AppDomain  string `protobuf:"bytes,2,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"`   // "tunr.plan.tools"  (also used for well-known fetches)
+	AppDesc    string `protobuf:"bytes,3,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`       // short one-liner
+	OrgName    string `protobuf:"bytes,5,opt,name=OrgName,proto3" json:"OrgName,omitempty"`       // "PLAN Systems"
+	OrgHomeURL string `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"` // "https://plan-systems.org"
+	AppHomeURL string `protobuf:"bytes,7,opt,name=AppHomeURL,proto3" json:"AppHomeURL,omitempty"` // "https://tunr.plan.tools"
+	// Native URL schemes this app registers (first is primary).
+	// Incoming URLs on these schemes are rewritten to "amp://" internally.
+	URLSchemes []string `protobuf:"bytes,10,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"`
+	// Platform install targets — the portal and onboarding pages choose the
+	// matching AppTarget for the visitor's device.
+	Targets []*AppTarget `protobuf:"bytes,15,rep,name=Targets,proto3" json:"Targets,omitempty"`
+	// CrateSnapshot feed this brand consumes for content updates.
+	CrateSnapshotURL string `protobuf:"bytes,20,opt,name=CrateSnapshotURL,proto3" json:"CrateSnapshotURL,omitempty"`
+	// Curated deep links: featured planets, support channel, onboarding, etc.
+	Links         []*AppLink `protobuf:"bytes,25,rep,name=Links,proto3" json:"Links,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AppVars) Reset() {
-	*x = AppVars{}
+func (x *AppBrand) Reset() {
+	*x = AppBrand{}
 	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AppVars) String() string {
+func (x *AppBrand) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AppVars) ProtoMessage() {}
+func (*AppBrand) ProtoMessage() {}
 
-func (x *AppVars) ProtoReflect() protoreflect.Message {
+func (x *AppBrand) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -777,97 +899,107 @@ func (x *AppVars) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AppVars.ProtoReflect.Descriptor instead.
-func (*AppVars) Descriptor() ([]byte, []int) {
+// Deprecated: Use AppBrand.ProtoReflect.Descriptor instead.
+func (*AppBrand) Descriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *AppVars) GetAppDomain() string {
+func (x *AppBrand) GetAppName() string {
+	if x != nil {
+		return x.AppName
+	}
+	return ""
+}
+
+func (x *AppBrand) GetAppDomain() string {
 	if x != nil {
 		return x.AppDomain
 	}
 	return ""
 }
 
-func (x *AppVars) GetAppDesc() string {
+func (x *AppBrand) GetAppDesc() string {
 	if x != nil {
 		return x.AppDesc
 	}
 	return ""
 }
 
-func (x *AppVars) GetOrgHomeURL() string {
+func (x *AppBrand) GetOrgName() string {
+	if x != nil {
+		return x.OrgName
+	}
+	return ""
+}
+
+func (x *AppBrand) GetOrgHomeURL() string {
 	if x != nil {
 		return x.OrgHomeURL
 	}
 	return ""
 }
 
-func (x *AppVars) GetAppHomeURL() string {
+func (x *AppBrand) GetAppHomeURL() string {
 	if x != nil {
 		return x.AppHomeURL
 	}
 	return ""
 }
 
-func (x *AppVars) GetCrateSnapshotURL() string {
-	if x != nil {
-		return x.CrateSnapshotURL
-	}
-	return ""
-}
-
-func (x *AppVars) GetAppDownloadURLs() map[string]string {
-	if x != nil {
-		return x.AppDownloadURLs
-	}
-	return nil
-}
-
-func (x *AppVars) GetURLSchemes() []string {
+func (x *AppBrand) GetURLSchemes() []string {
 	if x != nil {
 		return x.URLSchemes
 	}
 	return nil
 }
 
-func (x *AppVars) GetSettings() map[string]string {
+func (x *AppBrand) GetTargets() []*AppTarget {
 	if x != nil {
-		return x.Settings
+		return x.Targets
 	}
 	return nil
 }
 
-func (x *AppVars) GetLinks() []*KVEntry {
+func (x *AppBrand) GetCrateSnapshotURL() string {
+	if x != nil {
+		return x.CrateSnapshotURL
+	}
+	return ""
+}
+
+func (x *AppBrand) GetLinks() []*AppLink {
 	if x != nil {
 		return x.Links
 	}
 	return nil
 }
 
-// KVEntry is a generic entry for any key-value pair.
-type KVEntry struct {
+// AppTarget describes where to obtain the app for one (PlatformID, OSVariant) pair.
+type AppTarget struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Key           string                 `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
-	Value         string                 `protobuf:"bytes,2,opt,name=Value,proto3" json:"Value,omitempty"`
+	Platform      PlatformID             `protobuf:"varint,1,opt,name=Platform,proto3,enum=crates.PlatformID" json:"Platform,omitempty"`
+	OSVariant     OSVariant              `protobuf:"varint,2,opt,name=OSVariant,proto3,enum=crates.OSVariant" json:"OSVariant,omitempty"` // 0 = Stock; set for de-Googled variants
+	DownloadURL   string                 `protobuf:"bytes,3,opt,name=DownloadURL,proto3" json:"DownloadURL,omitempty"`                    // store URL, HTTPS download, magnet link, etc.
+	BundleID      string                 `protobuf:"bytes,4,opt,name=BundleID,proto3" json:"BundleID,omitempty"`                          // "org.plan.tunr" (iOS/Android bundle ID)
+	MinOSVersion  string                 `protobuf:"bytes,5,opt,name=MinOSVersion,proto3" json:"MinOSVersion,omitempty"`                  // minimum OS version, e.g. "14.0"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *KVEntry) Reset() {
-	*x = KVEntry{}
+func (x *AppTarget) Reset() {
+	*x = AppTarget{}
 	mi := &file_amp_crates_amp_crates_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *KVEntry) String() string {
+func (x *AppTarget) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*KVEntry) ProtoMessage() {}
+func (*AppTarget) ProtoMessage() {}
 
-func (x *KVEntry) ProtoReflect() protoreflect.Message {
+func (x *AppTarget) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_crates_amp_crates_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -879,21 +1011,95 @@ func (x *KVEntry) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use KVEntry.ProtoReflect.Descriptor instead.
-func (*KVEntry) Descriptor() ([]byte, []int) {
+// Deprecated: Use AppTarget.ProtoReflect.Descriptor instead.
+func (*AppTarget) Descriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *KVEntry) GetKey() string {
+func (x *AppTarget) GetPlatform() PlatformID {
 	if x != nil {
-		return x.Key
+		return x.Platform
+	}
+	return PlatformID_UnspecifiedPlatform
+}
+
+func (x *AppTarget) GetOSVariant() OSVariant {
+	if x != nil {
+		return x.OSVariant
+	}
+	return OSVariant_Stock
+}
+
+func (x *AppTarget) GetDownloadURL() string {
+	if x != nil {
+		return x.DownloadURL
 	}
 	return ""
 }
 
-func (x *KVEntry) GetValue() string {
+func (x *AppTarget) GetBundleID() string {
 	if x != nil {
-		return x.Value
+		return x.BundleID
+	}
+	return ""
+}
+
+func (x *AppTarget) GetMinOSVersion() string {
+	if x != nil {
+		return x.MinOSVersion
+	}
+	return ""
+}
+
+// AppLink is one curated entry point — typically an amp:// or https:// URL with a label.
+type AppLink struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Label         string                 `protobuf:"bytes,1,opt,name=Label,proto3" json:"Label,omitempty"`
+	URL           string                 `protobuf:"bytes,2,opt,name=URL,proto3" json:"URL,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AppLink) Reset() {
+	*x = AppLink{}
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AppLink) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AppLink) ProtoMessage() {}
+
+func (x *AppLink) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AppLink.ProtoReflect.Descriptor instead.
+func (*AppLink) Descriptor() ([]byte, []int) {
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *AppLink) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *AppLink) GetURL() string {
+	if x != nil {
+		return x.URL
 	}
 	return ""
 }
@@ -902,20 +1108,24 @@ var File_amp_crates_amp_crates_proto protoreflect.FileDescriptor
 
 const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\n" +
-	"\x1bamp/crates/amp.crates.proto\x12\x06crates\"\xf2\x02\n" +
+	"\x1bamp/crates/amp.crates.proto\x12\x06crates\"\xf7\x03\n" +
 	"\n" +
-	"AssetEntry\x12(\n" +
-	"\x05Flags\x18\x01 \x01(\x0e2\x12.crates.AssetFlagsR\x05Flags\x12\x1a\n" +
+	"AssetEntry\x12%\n" +
+	"\x04Kind\x18\x01 \x01(\x0e2\x11.crates.AssetKindR\x04Kind\x12\x1a\n" +
 	"\bEntryURI\x18\x02 \x01(\tR\bEntryURI\x12\x14\n" +
-	"\x05Label\x18\x03 \x01(\tR\x05Label\x12\x18\n" +
-	"\aAssetID\x18\x04 \x01(\tR\aAssetID\x12\x18\n" +
-	"\aCenterX\x18\x05 \x01(\x02R\aCenterX\x12\x18\n" +
-	"\aCenterY\x18\x06 \x01(\x02R\aCenterY\x12\x18\n" +
-	"\aCenterZ\x18\a \x01(\x02R\aCenterZ\x12\x1a\n" +
-	"\bExtentsX\x18\n" +
-	" \x01(\x02R\bExtentsX\x12\x1a\n" +
-	"\bExtentsY\x18\v \x01(\x02R\bExtentsY\x12\x1a\n" +
-	"\bExtentsZ\x18\f \x01(\x02R\bExtentsZ\x12\x1a\n" +
+	"\x05Label\x18\x03 \x01(\tR\x05Label\x12 \n" +
+	"\vIsPlaceable\x18\x05 \x01(\bR\vIsPlaceable\x12(\n" +
+	"\x0fIsRectTransform\x18\x06 \x01(\bR\x0fIsRectTransform\x12\x18\n" +
+	"\aHasIcon\x18\a \x01(\bR\aHasIcon\x12\x1c\n" +
+	"\tIsPrivate\x18\b \x01(\bR\tIsPrivate\x12\x1c\n" +
+	"\tAutoScale\x18\t \x01(\bR\tAutoScale\x12\x18\n" +
+	"\aCenterX\x18\n" +
+	" \x01(\x02R\aCenterX\x12\x18\n" +
+	"\aCenterY\x18\v \x01(\x02R\aCenterY\x12\x18\n" +
+	"\aCenterZ\x18\f \x01(\x02R\aCenterZ\x12\x1a\n" +
+	"\bExtentsX\x18\x0f \x01(\x02R\bExtentsX\x12\x1a\n" +
+	"\bExtentsY\x18\x10 \x01(\x02R\bExtentsY\x12\x1a\n" +
+	"\bExtentsZ\x18\x11 \x01(\x02R\bExtentsZ\x12\x1a\n" +
 	"\bLocalURI\x18\x1e \x01(\tR\bLocalURI\x12\x12\n" +
 	"\x04Tags\x18\x1f \x01(\tR\x04Tags\x12\x1c\n" +
 	"\tShortDesc\x18  \x01(\tR\tShortDesc\"\xa4\x01\n" +
@@ -954,49 +1164,60 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x05RevID\x18\x01 \x01(\x03R\x05RevID\x12 \n" +
 	"\vDownloadURL\x18\x03 \x01(\tR\vDownloadURL\x12)\n" +
 	"\x06Crates\x18\n" +
-	" \x03(\v2\x11.crates.CrateInfoR\x06Crates\"\x80\x04\n" +
-	"\aAppVars\x12\x1c\n" +
+	" \x03(\v2\x11.crates.CrateInfoR\x06Crates\"\xd6\x02\n" +
+	"\bAppBrand\x12\x18\n" +
+	"\aAppName\x18\x01 \x01(\tR\aAppName\x12\x1c\n" +
 	"\tAppDomain\x18\x02 \x01(\tR\tAppDomain\x12\x18\n" +
-	"\aAppDesc\x18\x04 \x01(\tR\aAppDesc\x12\x1e\n" +
+	"\aAppDesc\x18\x03 \x01(\tR\aAppDesc\x12\x18\n" +
+	"\aOrgName\x18\x05 \x01(\tR\aOrgName\x12\x1e\n" +
 	"\n" +
 	"OrgHomeURL\x18\x06 \x01(\tR\n" +
 	"OrgHomeURL\x12\x1e\n" +
 	"\n" +
-	"AppHomeURL\x18\f \x01(\tR\n" +
-	"AppHomeURL\x12*\n" +
-	"\x10CrateSnapshotURL\x18\x0e \x01(\tR\x10CrateSnapshotURL\x12N\n" +
-	"\x0fAppDownloadURLs\x18\x10 \x03(\v2$.crates.AppVars.AppDownloadURLsEntryR\x0fAppDownloadURLs\x12\x1e\n" +
+	"AppHomeURL\x18\a \x01(\tR\n" +
+	"AppHomeURL\x12\x1e\n" +
 	"\n" +
-	"URLSchemes\x18\x12 \x03(\tR\n" +
-	"URLSchemes\x129\n" +
-	"\bSettings\x18\x14 \x03(\v2\x1d.crates.AppVars.SettingsEntryR\bSettings\x12%\n" +
-	"\x05Links\x18( \x03(\v2\x0f.crates.KVEntryR\x05Links\x1aB\n" +
-	"\x14AppDownloadURLsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\x1a;\n" +
-	"\rSettingsEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"1\n" +
-	"\aKVEntry\x12\x10\n" +
-	"\x03Key\x18\x01 \x01(\tR\x03Key\x12\x14\n" +
-	"\x05Value\x18\x02 \x01(\tR\x05Value*\xef\x01\n" +
+	"URLSchemes\x18\n" +
+	" \x03(\tR\n" +
+	"URLSchemes\x12+\n" +
+	"\aTargets\x18\x0f \x03(\v2\x11.crates.AppTargetR\aTargets\x12*\n" +
+	"\x10CrateSnapshotURL\x18\x14 \x01(\tR\x10CrateSnapshotURL\x12%\n" +
+	"\x05Links\x18\x19 \x03(\v2\x0f.crates.AppLinkR\x05Links\"\xce\x01\n" +
+	"\tAppTarget\x12.\n" +
+	"\bPlatform\x18\x01 \x01(\x0e2\x12.crates.PlatformIDR\bPlatform\x12/\n" +
+	"\tOSVariant\x18\x02 \x01(\x0e2\x11.crates.OSVariantR\tOSVariant\x12 \n" +
+	"\vDownloadURL\x18\x03 \x01(\tR\vDownloadURL\x12\x1a\n" +
+	"\bBundleID\x18\x04 \x01(\tR\bBundleID\x12\"\n" +
+	"\fMinOSVersion\x18\x05 \x01(\tR\fMinOSVersion\"1\n" +
+	"\aAppLink\x12\x14\n" +
+	"\x05Label\x18\x01 \x01(\tR\x05Label\x12\x10\n" +
+	"\x03URL\x18\x02 \x01(\tR\x03URL*^\n" +
 	"\n" +
-	"AssetFlags\x12\v\n" +
-	"\aNoFlags\x10\x00\x12\r\n" +
-	"\tIsTexture\x10\x01\x12\f\n" +
-	"\bIsSprite\x10\x02\x12\x0e\n" +
+	"PlatformID\x12\x17\n" +
+	"\x13UnspecifiedPlatform\x10\x00\x12\t\n" +
+	"\x05macOS\x10\x01\x12\v\n" +
+	"\aWindows\x10\x02\x12\t\n" +
+	"\x05Linux\x10\x03\x12\v\n" +
+	"\aAndroid\x10\x04\x12\a\n" +
+	"\x03iOS\x10\x05*B\n" +
+	"\tOSVariant\x12\t\n" +
+	"\x05Stock\x10\x00\x12\x0e\n" +
 	"\n" +
-	"IsMaterial\x10\x04\x12\x0f\n" +
-	"\vIsPlaceable\x10\b\x12\x13\n" +
-	"\x0fIsRectTransform\x10\x10\x12\v\n" +
-	"\aIsScene\x10 \x12\f\n" +
-	"\aHasIcon\x10\x80\x02\x12\x0e\n" +
-	"\tIsPrivate\x10\x80\x04\x12\r\n" +
-	"\bIsSkybox\x10\x80\b\x12\x0e\n" +
-	"\tAutoScale\x10\x80\x10\x12\x0e\n" +
-	"\tIsSurface\x10\x80 \x12\x12\n" +
-	"\rIsVisualLayer\x10\x80@\x12\x13\n" +
-	"\rIsVisualScope\x10\x80\x80\x01*,\n" +
+	"GrapheneOS\x10\x01\x12\v\n" +
+	"\aCalyxOS\x10\x02\x12\r\n" +
+	"\tLineageOS\x10\x03*\x8d\x01\n" +
+	"\tAssetKind\x12\x13\n" +
+	"\x0fUnspecifiedKind\x10\x00\x12\v\n" +
+	"\aTexture\x10\x01\x12\n" +
+	"\n" +
+	"\x06Sprite\x10\x02\x12\f\n" +
+	"\bMaterial\x10\x03\x12\t\n" +
+	"\x05Scene\x10\x04\x12\n" +
+	"\n" +
+	"\x06Skybox\x10\x05\x12\v\n" +
+	"\aSurface\x10\x06\x12\x0f\n" +
+	"\vVisualLayer\x10\a\x12\x0f\n" +
+	"\vVisualScope\x10\b*,\n" +
 	"\vCrateSchema\x12\x13\n" +
 	"\x0fUndefinedSchema\x10\x00\x12\b\n" +
 	"\x04v100\x10dBGZ0github.com/art-media-platform/amp.SDK/amp/crates\xaa\x02\x12art.media.platformb\x06proto3"
@@ -1013,35 +1234,37 @@ func file_amp_crates_amp_crates_proto_rawDescGZIP() []byte {
 	return file_amp_crates_amp_crates_proto_rawDescData
 }
 
-var file_amp_crates_amp_crates_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_amp_crates_amp_crates_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_amp_crates_amp_crates_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_amp_crates_amp_crates_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_amp_crates_amp_crates_proto_goTypes = []any{
-	(AssetFlags)(0),        // 0: crates.AssetFlags
-	(CrateSchema)(0),       // 1: crates.CrateSchema
-	(*AssetEntry)(nil),     // 2: crates.AssetEntry
-	(*BundleManifest)(nil), // 3: crates.BundleManifest
-	(*CrateInfo)(nil),      // 4: crates.CrateInfo
-	(*CrateManifest)(nil),  // 5: crates.CrateManifest
-	(*CrateSnapshot)(nil),  // 6: crates.CrateSnapshot
-	(*AppVars)(nil),        // 7: crates.AppVars
-	(*KVEntry)(nil),        // 8: crates.KVEntry
-	nil,                    // 9: crates.AppVars.AppDownloadURLsEntry
-	nil,                    // 10: crates.AppVars.SettingsEntry
+	(PlatformID)(0),        // 0: crates.PlatformID
+	(OSVariant)(0),         // 1: crates.OSVariant
+	(AssetKind)(0),         // 2: crates.AssetKind
+	(CrateSchema)(0),       // 3: crates.CrateSchema
+	(*AssetEntry)(nil),     // 4: crates.AssetEntry
+	(*BundleManifest)(nil), // 5: crates.BundleManifest
+	(*CrateInfo)(nil),      // 6: crates.CrateInfo
+	(*CrateManifest)(nil),  // 7: crates.CrateManifest
+	(*CrateSnapshot)(nil),  // 8: crates.CrateSnapshot
+	(*AppBrand)(nil),       // 9: crates.AppBrand
+	(*AppTarget)(nil),      // 10: crates.AppTarget
+	(*AppLink)(nil),        // 11: crates.AppLink
 }
 var file_amp_crates_amp_crates_proto_depIdxs = []int32{
-	0,  // 0: crates.AssetEntry.Flags:type_name -> crates.AssetFlags
-	2,  // 1: crates.BundleManifest.Assets:type_name -> crates.AssetEntry
-	4,  // 2: crates.CrateManifest.Info:type_name -> crates.CrateInfo
-	3,  // 3: crates.CrateManifest.Bundles:type_name -> crates.BundleManifest
-	4,  // 4: crates.CrateSnapshot.Crates:type_name -> crates.CrateInfo
-	9,  // 5: crates.AppVars.AppDownloadURLs:type_name -> crates.AppVars.AppDownloadURLsEntry
-	10, // 6: crates.AppVars.Settings:type_name -> crates.AppVars.SettingsEntry
-	8,  // 7: crates.AppVars.Links:type_name -> crates.KVEntry
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	2,  // 0: crates.AssetEntry.Kind:type_name -> crates.AssetKind
+	4,  // 1: crates.BundleManifest.Assets:type_name -> crates.AssetEntry
+	6,  // 2: crates.CrateManifest.Info:type_name -> crates.CrateInfo
+	5,  // 3: crates.CrateManifest.Bundles:type_name -> crates.BundleManifest
+	6,  // 4: crates.CrateSnapshot.Crates:type_name -> crates.CrateInfo
+	10, // 5: crates.AppBrand.Targets:type_name -> crates.AppTarget
+	11, // 6: crates.AppBrand.Links:type_name -> crates.AppLink
+	0,  // 7: crates.AppTarget.Platform:type_name -> crates.PlatformID
+	1,  // 8: crates.AppTarget.OSVariant:type_name -> crates.OSVariant
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_amp_crates_amp_crates_proto_init() }
@@ -1054,8 +1277,8 @@ func file_amp_crates_amp_crates_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_crates_amp_crates_proto_rawDesc), len(file_amp_crates_amp_crates_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   9,
+			NumEnums:      4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
