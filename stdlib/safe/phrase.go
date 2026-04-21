@@ -2,9 +2,11 @@ package safe
 
 import (
 	"crypto/hmac"
+	"crypto/sha256"
 	"strings"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
+	"golang.org/x/crypto/hkdf"
 )
 
 // PhraseChecksumSize is the number of checksum bytes appended before encoding.
@@ -87,4 +89,37 @@ func phraseDigest(entropy []byte) []byte {
 	kit, _ := NewHashKit(0)
 	kit.Hasher.Write(entropy)
 	return kit.Hasher.Sum(nil)
+}
+
+// KeyPairFromPhrase deterministically derives a KeyPair from phrase entropy.
+// Purpose provides domain separation — the same phrase yields distinct keys
+// for different roles (e.g. "founder-sig", "device-link", "epoch-seed").
+//
+// The phrase's checksum is verified before any derivation occurs. The returned
+// KeyPair's private material is fresh and owned by the caller; Zero() it after use.
+func KeyPairFromPhrase(phrase Phrase, spec KeySpec, purpose string) (KeyPair, error) {
+	kit, err := GetCryptoKit(spec.CryptoKitID)
+	if err != nil {
+		return KeyPair{}, err
+	}
+	if kit.GenerateKey == nil {
+		return KeyPair{}, status.Code_Unimplemented.Errorf("CryptoKit %s does not support key generation", spec.CryptoKitID.String())
+	}
+	entropy, err := DecodePhrase(phrase)
+	if err != nil {
+		return KeyPair{}, err
+	}
+	defer Zero(entropy)
+
+	rng := hkdf.New(sha256.New, entropy, nil, []byte(purpose))
+	kp := KeyPair{
+		Pub: PubKey{
+			CryptoKitID: spec.CryptoKitID,
+			KeyType:     spec.KeyType,
+		},
+	}
+	if err := kit.GenerateKey(rng, spec.RequestedSize, &kp); err != nil {
+		return KeyPair{}, err
+	}
+	return kp, nil
 }

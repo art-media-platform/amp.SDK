@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
+	_ "github.com/art-media-platform/amp.SDK/stdlib/safe/poly25519"
 )
 
 func TestPhrase_Roundtrip(t *testing.T) {
@@ -114,6 +115,58 @@ func TestPhrase_DeriveKeyStable(t *testing.T) {
 	}
 	if bytes.Equal(key1, key3) {
 		t.Fatal("different purpose must yield different key")
+	}
+}
+
+func TestPhrase_KeyPairDeterministic(t *testing.T) {
+	entropy := make([]byte, 32)
+	rand.Read(entropy)
+	phrase := safe.EncodePhrase(entropy)
+
+	spec := safe.KeySpec{
+		CryptoKitID: safe.CryptoKitID_Poly25519,
+		KeyType:     safe.KeyType_SigningKey,
+	}
+
+	kp1, err := safe.KeyPairFromPhrase(phrase, spec, "founder-sig")
+	if err != nil {
+		t.Fatal(err)
+	}
+	kp2, err := safe.KeyPairFromPhrase(phrase, spec, "founder-sig")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(kp1.Pub.Bytes, kp2.Pub.Bytes) || !bytes.Equal(kp1.Prv, kp2.Prv) {
+		t.Fatal("same phrase+purpose+spec must yield identical KeyPair")
+	}
+
+	// Domain separation: different purpose → different key
+	kp3, err := safe.KeyPairFromPhrase(phrase, spec, "device-link")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(kp1.Pub.Bytes, kp3.Pub.Bytes) {
+		t.Fatal("different purpose must yield different KeyPair")
+	}
+}
+
+func TestPhrase_KeyPairRejectsBadChecksum(t *testing.T) {
+	entropy := make([]byte, 16)
+	rand.Read(entropy)
+	phrase := safe.EncodePhrase(entropy)
+	// Swap word[0] — invalidates checksum
+	alt := safe.PhraseWordAt(0)
+	if phrase[0] == alt {
+		alt = safe.PhraseWordAt(1)
+	}
+	bad := append(safe.Phrase{alt}, phrase[1:]...)
+
+	spec := safe.KeySpec{
+		CryptoKitID: safe.CryptoKitID_Poly25519,
+		KeyType:     safe.KeyType_SigningKey,
+	}
+	if _, err := safe.KeyPairFromPhrase(bad, spec, "founder-sig"); err == nil {
+		t.Fatal("expected checksum rejection before key derivation")
 	}
 }
 
