@@ -70,6 +70,44 @@ func (epoch *PlanetEpoch) EffectiveCryptoKit() safe.CryptoKitID {
 	return epoch.CryptoKitID
 }
 
+// CanonicalBytes returns the deterministic wire encoding of this PlanetEpoch
+// with the Signatures field cleared. This is the exact payload that each
+// co-signer passes to CryptoKit.Sign and that verifiers pass to CryptoKit.Verify.
+//
+// Each CryptoKit handles its own hashing convention (e.g. Ed25519 uses HashEdDSA;
+// ECDSA kits hash internally with their suite's hash; Ethereum secp256k1 adds the
+// EIP-191 prefix). The canonical byte sequence is identical across suites, which
+// is what enables mixed-suite quorums.
+func (epoch *PlanetEpoch) CanonicalBytes() ([]byte, error) {
+	if epoch == nil {
+		return nil, status.Code_BadRequest.Error("amp: nil PlanetEpoch")
+	}
+	clone := proto.Clone(epoch).(*PlanetEpoch)
+	clone.Signatures = nil
+	marshalOpts := proto.MarshalOptions{Deterministic: true}
+	return marshalOpts.Marshal(clone)
+}
+
+// VerifyCoSignature checks that cosig is a valid signature over this epoch's
+// canonical bytes using signerPubKey and signerKit. Returns nil on success.
+func (epoch *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []byte, signerKit safe.CryptoKitID) error {
+	if cosig == nil || len(cosig.Signature) == 0 {
+		return status.Code_BadRequest.Error("amp: empty CoSignature")
+	}
+	kit, err := safe.GetCryptoKit(signerKit)
+	if err != nil {
+		return err
+	}
+	if kit.Verify == nil {
+		return status.Code_Unimplemented.Errorf("CryptoKit %s does not support verification", signerKit.String())
+	}
+	canon, err := epoch.CanonicalBytes()
+	if err != nil {
+		return err
+	}
+	return kit.Verify(cosig.Signature, canon, signerPubKey)
+}
+
 // Clone returns a new *Tag with all user-visible fields copied from v.
 // Proto internals (MessageState, unknownFields, sizeCache) are freshly initialized.
 // Returns nil if v is nil.
