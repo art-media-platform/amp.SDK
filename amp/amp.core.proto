@@ -522,6 +522,35 @@ message PlanetEpoch {
 
     // Human-readable description of this planet.
     string              About = 33;
+
+    // Governance: the ACC group whose members must co-sign this epoch.
+    // Zero/unset for genesis epochs when Signatures contains the founding set directly.
+    // For rotation epochs, resolves to a Group defined in the prior epoch's member set.
+    Tag                 GovernanceGroup = 42;
+
+    // Number of signatures required from GovernanceGroup for this epoch to be valid.
+    // 0 means "all members of GovernanceGroup must sign" (paranoid default).
+    // Genesis with 1-of-1 is the degenerate single-founder case.
+    int32               RequiredSignatures = 43;
+
+    // Co-signatures over the canonical serialization of this PlanetEpoch
+    // (with Signatures itself excluded from the signed payload).
+    // Each signer's CryptoKitID is resolved via their MemberTag, enabling
+    // mixed-suite quorums (e.g. one signer on Poly25519, one on P-256, one on secp256k1).
+    repeated CoSignature Signatures = 44;
+}
+
+
+// CoSignature is one member's signature contribution to a multi-sig epoch.
+// Used for Planet genesis (Founders) and for epoch rotation under M-of-N governance.
+message CoSignature {
+
+    // The signing member. Their CryptoKitID is resolved via MemberEpoch,
+    // allowing each co-signer to use a different crypto suite.
+    Tag                 MemberTag = 1;
+
+    // Raw signature bytes, interpreted per the signer's CryptoKitID.
+    bytes               Signature = 2;
 }
 
 
