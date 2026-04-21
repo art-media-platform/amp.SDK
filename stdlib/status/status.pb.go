@@ -65,6 +65,7 @@ const (
 	Code_VerifySignatureFailed      Code = -23103
 	Code_BadKeyFormat               Code = -23104
 	Code_KeyGenerationFailed        Code = -23105
+	Code_SigningFailed              Code = -23109
 	Code_KeyringNotFound            Code = -23106
 	Code_KeyEntryNotFound           Code = -23107
 	Code_HashKitNotFound            Code = -23108
@@ -116,6 +117,7 @@ var (
 		-23103: "VerifySignatureFailed",
 		-23104: "BadKeyFormat",
 		-23105: "KeyGenerationFailed",
+		-23109: "SigningFailed",
 		-23106: "KeyringNotFound",
 		-23107: "KeyEntryNotFound",
 		-23108: "HashKitNotFound",
@@ -164,6 +166,7 @@ var (
 		"VerifySignatureFailed":      -23103,
 		"BadKeyFormat":               -23104,
 		"KeyGenerationFailed":        -23105,
+		"SigningFailed":              -23109,
 		"KeyringNotFound":            -23106,
 		"KeyEntryNotFound":           -23107,
 		"HashKitNotFound":            -23108,
@@ -348,7 +351,8 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\x05Level\x18\x03 \x01(\x05R\x05Level\x12\x18\n" +
 	"\aMessage\x18\x04 \x01(\tR\aMessage\x12\x19\n" +
 	"\bTimeID_0\x18\b \x01(\x06R\aTimeID0\x12\x19\n" +
-	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\xf7\t\n" +
+	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\x93\n" +
+	"\n" +
 	"\x04Code\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x14\n" +
 	"\aUnnamed\x10\xa7\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
@@ -391,7 +395,8 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\rDecryptFailed\x10\xc2\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\"\n" +
 	"\x15VerifySignatureFailed\x10\xc1\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fBadKeyFormat\x10\xc0\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12 \n" +
-	"\x13KeyGenerationFailed\x10\xbf\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
+	"\x13KeyGenerationFailed\x10\xbf\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
+	"\rSigningFailed\x10\xbb\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
 	"\x0fKeyringNotFound\x10\xbe\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1d\n" +
 	"\x10KeyEntryNotFound\x10\xbd\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
 	"\x0fHashKitNotFound\x10\xbc\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12 \n" +

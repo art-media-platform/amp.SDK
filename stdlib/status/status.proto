@@ -52,6 +52,7 @@ enum Code {
     VerifySignatureFailed       = -23103;
     BadKeyFormat                = -23104;
     KeyGenerationFailed         = -23105;
+    SigningFailed               = -23109;
     KeyringNotFound             = -23106;
     KeyEntryNotFound            = -23107;
     HashKitNotFound             = -23108;
