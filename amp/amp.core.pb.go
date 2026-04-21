@@ -2150,6 +2150,17 @@ type PlanetEpoch struct {
 	Glyph *Tag `protobuf:"bytes,32,opt,name=Glyph,proto3" json:"Glyph,omitempty"`
 	// Human-readable description of this planet.
 	About string `protobuf:"bytes,33,opt,name=About,proto3" json:"About,omitempty"`
+	// Human-readable declaration of intent, signed into canonical bytes.
+	// This is what a founder reads before signing: "We found this planet to ...",
+	// "We, by mutual consent, enter into this partnership ...", "The Martinez
+	// kids' treehouse — only us."  Cryptographic founding without a signed
+	// statement of purpose is alien to how humans bind themselves; this field
+	// is the vows, the operating clause, the house rules.
+	//
+	// Canonically signed (included in CanonicalBytes).  Free-form UTF-8;
+	// markdown is conventional.  Content beyond human intent (schemas, policies)
+	// belongs elsewhere.  Empty is legal but strongly discouraged for genesis.
+	Declaration string `protobuf:"bytes,40,opt,name=Declaration,proto3" json:"Declaration,omitempty"`
 	// Governance: the ACC group whose members must co-sign this epoch.
 	// Zero/unset for genesis epochs when Signatures contains the founding set directly.
 	// For rotation epochs, resolves to a Group defined in the prior epoch's member set.
@@ -2159,10 +2170,19 @@ type PlanetEpoch struct {
 	// Genesis with 1-of-1 is the degenerate single-founder case.
 	RequiredSignatures int32 `protobuf:"varint,43,opt,name=RequiredSignatures,proto3" json:"RequiredSignatures,omitempty"`
 	// Co-signatures over the canonical serialization of this PlanetEpoch
-	// (with Signatures itself excluded from the signed payload).
+	// (with Signatures and Witnesses excluded from the signed payload).
 	// Each signer's CryptoKitID is resolved via their MemberTag, enabling
 	// mixed-suite quorums (e.g. one signer on Poly25519, one on P-256, one on secp256k1).
-	Signatures    []*CoSignature `protobuf:"bytes,44,rep,name=Signatures,proto3" json:"Signatures,omitempty"`
+	Signatures []*CoSignature `protobuf:"bytes,44,rep,name=Signatures,proto3" json:"Signatures,omitempty"`
+	// Non-voting attestors: notaries, officiants, friends, auditors, AI monitors —
+	// anyone whose cryptographic presence lends legitimacy without conferring
+	// authority.  A rabbi at a wedding, a lawyer witnessing an operating agreement,
+	// a friend attesting a kid's treehouse charter.  Signatures over the same
+	// canonical bytes as Signatures; distinguished by role, not by form.
+	//
+	// Excluded from canonical bytes (same treatment as Signatures) so witnesses
+	// can be added after-the-fact without re-signing the quorum.
+	Witnesses     []*CoSignature `protobuf:"bytes,45,rep,name=Witnesses,proto3" json:"Witnesses,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2295,6 +2315,13 @@ func (x *PlanetEpoch) GetAbout() string {
 	return ""
 }
 
+func (x *PlanetEpoch) GetDeclaration() string {
+	if x != nil {
+		return x.Declaration
+	}
+	return ""
+}
+
 func (x *PlanetEpoch) GetGovernanceGroup() *Tag {
 	if x != nil {
 		return x.GovernanceGroup
@@ -2312,6 +2339,13 @@ func (x *PlanetEpoch) GetRequiredSignatures() int32 {
 func (x *PlanetEpoch) GetSignatures() []*CoSignature {
 	if x != nil {
 		return x.Signatures
+	}
+	return nil
+}
+
+func (x *PlanetEpoch) GetWitnesses() []*CoSignature {
+	if x != nil {
+		return x.Witnesses
 	}
 	return nil
 }
@@ -3212,7 +3246,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xaa\x05\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xfc\x05\n" +
 	"\vPlanetEpoch\x12$\n" +
 	"\bEpochTag\x18\x01 \x01(\v2\b.amp.TagR\bEpochTag\x12.\n" +
 	"\rPreviousEpoch\x18\x02 \x01(\v2\b.amp.TagR\rPreviousEpoch\x12\x14\n" +
@@ -3228,12 +3262,14 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x05Foyer\x18\x1e \x01(\v2\b.amp.TagR\x05Foyer\x12\x1e\n" +
 	"\x05Index\x18\x1f \x01(\v2\b.amp.TagR\x05Index\x12\x1e\n" +
 	"\x05Glyph\x18  \x01(\v2\b.amp.TagR\x05Glyph\x12\x14\n" +
-	"\x05About\x18! \x01(\tR\x05About\x122\n" +
+	"\x05About\x18! \x01(\tR\x05About\x12 \n" +
+	"\vDeclaration\x18( \x01(\tR\vDeclaration\x122\n" +
 	"\x0fGovernanceGroup\x18* \x01(\v2\b.amp.TagR\x0fGovernanceGroup\x12.\n" +
 	"\x12RequiredSignatures\x18+ \x01(\x05R\x12RequiredSignatures\x120\n" +
 	"\n" +
 	"Signatures\x18, \x03(\v2\x10.amp.CoSignatureR\n" +
-	"Signatures\"S\n" +
+	"Signatures\x12.\n" +
+	"\tWitnesses\x18- \x03(\v2\x10.amp.CoSignatureR\tWitnesses\"S\n" +
 	"\vCoSignature\x12&\n" +
 	"\tMemberTag\x18\x01 \x01(\v2\b.amp.TagR\tMemberTag\x12\x1c\n" +
 	"\tSignature\x18\x02 \x01(\fR\tSignature\"\x94\x02\n" +
@@ -3490,26 +3526,27 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	20, // 31: amp.PlanetEpoch.Glyph:type_name -> amp.Tag
 	20, // 32: amp.PlanetEpoch.GovernanceGroup:type_name -> amp.Tag
 	29, // 33: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
-	20, // 34: amp.CoSignature.MemberTag:type_name -> amp.Tag
-	20, // 35: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
-	20, // 36: amp.MemberEpoch.Epoch:type_name -> amp.Tag
-	40, // 37: amp.MemberEpoch.CryptoKitID:type_name -> safe.CryptoKitID
-	20, // 38: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
-	20, // 39: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
-	20, // 40: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	41, // 41: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	42, // 42: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
-	20, // 43: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
-	34, // 44: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	36, // 45: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	37, // 46: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	35, // 47: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	10, // 48: amp.PeerAddr.Transport:type_name -> amp.TransportType
-	49, // [49:49] is the sub-list for method output_type
-	49, // [49:49] is the sub-list for method input_type
-	49, // [49:49] is the sub-list for extension type_name
-	49, // [49:49] is the sub-list for extension extendee
-	0,  // [0:49] is the sub-list for field type_name
+	29, // 34: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
+	20, // 35: amp.CoSignature.MemberTag:type_name -> amp.Tag
+	20, // 36: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
+	20, // 37: amp.MemberEpoch.Epoch:type_name -> amp.Tag
+	40, // 38: amp.MemberEpoch.CryptoKitID:type_name -> safe.CryptoKitID
+	20, // 39: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
+	20, // 40: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
+	20, // 41: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
+	41, // 42: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	42, // 43: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	20, // 44: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	34, // 45: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	36, // 46: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	37, // 47: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	35, // 48: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	10, // 49: amp.PeerAddr.Transport:type_name -> amp.TransportType
+	50, // [50:50] is the sub-list for method output_type
+	50, // [50:50] is the sub-list for method input_type
+	50, // [50:50] is the sub-list for extension type_name
+	50, // [50:50] is the sub-list for extension extendee
+	0,  // [0:50] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }

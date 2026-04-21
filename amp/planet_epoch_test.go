@@ -164,6 +164,99 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	}
 }
 
+// TestPlanetEpoch_Declaration_ParticipatesInSigning confirms that the
+// human-readable Declaration is part of canonical bytes — tampering with the
+// founders' stated intent must break verification, just like tampering with
+// EpochTag or GovernanceGroup.  This is what makes the declaration load-bearing
+// rather than decorative.
+func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
+	epoch := makeTestEpoch(t)
+	epoch.Declaration = "We, Alice and Bob, found this planet for our shared art practice."
+
+	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	canon, err := epoch.CanonicalBytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sig, err := kit.Sign(canon, prv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cosig := &amp.CoSignature{
+		MemberTag: amp.TagFromUID(tag.UID{42, 43}),
+		Signature: sig,
+	}
+
+	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err != nil {
+		t.Fatalf("verify should succeed on untampered epoch: %v", err)
+	}
+
+	epoch.Declaration = "We, Alice and Bob, found this planet for money laundering."
+	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err == nil {
+		t.Fatal("verify must reject signature after Declaration tamper")
+	}
+}
+
+// TestPlanetEpoch_Witnesses_ExcludedFromCanonicalBytes confirms that appending
+// witnesses after-the-fact does not invalidate the founders' quorum signatures.
+// Witnesses attest; they do not re-open the signing payload.
+func TestPlanetEpoch_Witnesses_ExcludedFromCanonicalBytes(t *testing.T) {
+	epoch := makeTestEpoch(t)
+
+	canonBefore, err := epoch.CanonicalBytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	epoch.Witnesses = []*amp.CoSignature{
+		{MemberTag: amp.TagFromUID(tag.UID{99, 1}), Signature: []byte{0xaa, 0xbb}},
+		{MemberTag: amp.TagFromUID(tag.UID{99, 2}), Signature: []byte{0xcc, 0xdd}},
+	}
+
+	canonAfter, err := epoch.CanonicalBytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(canonBefore) != string(canonAfter) {
+		t.Fatal("CanonicalBytes must be identical regardless of Witnesses content")
+	}
+}
+
+// TestPlanetEpoch_Witnesses_VerifyOverSameCanonicalBytes confirms that a
+// witness signs the exact same payload as a quorum signer — the role
+// distinction (voting vs. attesting) lives in which slice the signature lands,
+// not in a different signed message.  A notary, officiant, or AI monitor's
+// signature can be validated with the same VerifyCoSignature call that
+// validates a founder's.
+func TestPlanetEpoch_Witnesses_VerifyOverSameCanonicalBytes(t *testing.T) {
+	epoch := makeTestEpoch(t)
+	epoch.Declaration = "Alice and Bob co-found, witnessed by Carol the notary."
+
+	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	canon, err := epoch.CanonicalBytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	witnessSig, err := kit.Sign(canon, prv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	witness := &amp.CoSignature{
+		MemberTag: amp.TagFromUID(tag.UID{77, 77}),
+		Signature: witnessSig,
+	}
+
+	epoch.Witnesses = []*amp.CoSignature{witness}
+
+	// The witness's signature verifies by the same mechanism as a founder's —
+	// the only difference is the slice it lives in.
+	if err := epoch.VerifyCoSignature(witness, pub, safe.CryptoKitID_Poly25519); err != nil {
+		t.Fatalf("witness signature must verify under the same canonical bytes: %v", err)
+	}
+}
+
 func makeTestEpoch(t *testing.T) *amp.PlanetEpoch {
 	t.Helper()
 	return &amp.PlanetEpoch{

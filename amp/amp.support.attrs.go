@@ -71,8 +71,15 @@ func (epoch *PlanetEpoch) EffectiveCryptoKit() safe.CryptoKitID {
 }
 
 // CanonicalBytes returns the deterministic wire encoding of this PlanetEpoch
-// with the Signatures field cleared. This is the exact payload that each
-// co-signer passes to CryptoKit.Sign and that verifiers pass to CryptoKit.Verify.
+// with the Signatures and Witnesses fields cleared. This is the exact payload
+// that each co-signer (and each witness) passes to CryptoKit.Sign and that
+// verifiers pass to CryptoKit.Verify.
+//
+// Signatures are excluded so quorum members can add their signatures
+// incrementally without invalidating earlier ones.  Witnesses are excluded so
+// attestors can be appended after-the-fact without re-signing the quorum.
+// Declaration, GovernanceGroup, RequiredSignatures, and all governance fields
+// ARE included — those are the founding terms under which everyone commits.
 //
 // Each CryptoKit handles its own hashing convention (e.g. Ed25519 uses HashEdDSA;
 // ECDSA kits hash internally with their suite's hash; Ethereum secp256k1 adds the
@@ -84,6 +91,7 @@ func (epoch *PlanetEpoch) CanonicalBytes() ([]byte, error) {
 	}
 	clone := proto.Clone(epoch).(*PlanetEpoch)
 	clone.Signatures = nil
+	clone.Witnesses = nil
 	marshalOpts := proto.MarshalOptions{Deterministic: true}
 	return marshalOpts.Marshal(clone)
 }

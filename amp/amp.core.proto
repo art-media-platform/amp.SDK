@@ -523,6 +523,18 @@ message PlanetEpoch {
     // Human-readable description of this planet.
     string              About = 33;
 
+    // Human-readable declaration of intent, signed into canonical bytes.
+    // This is what a founder reads before signing: "We found this planet to ...",
+    // "We, by mutual consent, enter into this partnership ...", "The Martinez
+    // kids' treehouse — only us."  Cryptographic founding without a signed
+    // statement of purpose is alien to how humans bind themselves; this field
+    // is the vows, the operating clause, the house rules.
+    //
+    // Canonically signed (included in CanonicalBytes).  Free-form UTF-8;
+    // markdown is conventional.  Content beyond human intent (schemas, policies)
+    // belongs elsewhere.  Empty is legal but strongly discouraged for genesis.
+    string              Declaration = 40;
+
     // Governance: the ACC group whose members must co-sign this epoch.
     // Zero/unset for genesis epochs when Signatures contains the founding set directly.
     // For rotation epochs, resolves to a Group defined in the prior epoch's member set.
@@ -534,10 +546,20 @@ message PlanetEpoch {
     int32               RequiredSignatures = 43;
 
     // Co-signatures over the canonical serialization of this PlanetEpoch
-    // (with Signatures itself excluded from the signed payload).
+    // (with Signatures and Witnesses excluded from the signed payload).
     // Each signer's CryptoKitID is resolved via their MemberTag, enabling
     // mixed-suite quorums (e.g. one signer on Poly25519, one on P-256, one on secp256k1).
     repeated CoSignature Signatures = 44;
+
+    // Non-voting attestors: notaries, officiants, friends, auditors, AI monitors —
+    // anyone whose cryptographic presence lends legitimacy without conferring
+    // authority.  A rabbi at a wedding, a lawyer witnessing an operating agreement,
+    // a friend attesting a kid's treehouse charter.  Signatures over the same
+    // canonical bytes as Signatures; distinguished by role, not by form.
+    //
+    // Excluded from canonical bytes (same treatment as Signatures) so witnesses
+    // can be added after-the-fact without re-signing the quorum.
+    repeated CoSignature Witnesses = 45;
 }
 
 
