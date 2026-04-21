@@ -27,8 +27,10 @@ func NameFrom(tagName string) Name {
 }
 
 // Parses the given string the best possible.
-func NameParse(tagName string) (name Name, err error) { // TODO: make more robust
-	if strings.IndexByte(tagName, CanonicSeparatorChar) >= 0 {
+func NameParse(tagName string) (name Name, err error) {
+	// If it contains a canonic separator or a URL-trigger char (:, /, \),
+	// interpret it as a tag name expression; otherwise try base32-UID.
+	if strings.IndexByte(tagName, CanonicSeparatorChar) >= 0 || PathStart(tagName) >= 0 {
 		name = Name{}.With(tagName)
 		return
 	}
@@ -59,38 +61,68 @@ func (name Name) IsWildcard() bool {
 	return name.ID.IsWildcard() || name.Canonic == CanonicWildcard
 }
 
-// With() is a communative tag.UID operator that combines a tag.Name with a string expression into a new canonic tag.UID.
+// With folds expr into this tag.Name, returning a new canonic Name.
+//
+// Canonicalization rule — the two halves:
+//
+//  1. Left of the first `/`, `:`, or `\` is the *name* part: split into words
+//     by whitespace and punctuation, lowercased (unless fully uppercase like
+//     USA), joined with `.`.  Each word hashes into the ID commutatively.
+//
+//  2. From the first `/`, `:`, or `\` onward is the *URL* part: kept exactly
+//     as-is, hashed as a single atomic literal.
+//
+// Property: any string containing a URL-trigger char is a fixed point of
+// canonicalization — `NameFrom(s).Canonic == s` for scheme-bearing URLs.
+//
+// Note: if name.Canonic already ends in a URL part, calling .With() with more
+// words produces a canonic string that does not round-trip through NameFrom.
+// URL-terminated names are effectively leaves — don't append to them.
 func (name Name) With(expr string) Name {
 
 	if expr == CanonicWildcard {
 		return Wildcard()
 	}
 
-	expr = sSeparatorRegex.ReplaceAllString(expr, string(CanonicSeparatorChar))
+	expr = strings.TrimSpace(expr)
+	if expr == "" {
+		return name
+	}
+
+	// Split expr into name-part (canonicalized) and URL-part (verbatim).
+	namePart := expr
+	urlPart := ""
+	if split := PathStart(expr); split >= 0 {
+		namePart = expr[:split]
+		urlPart = expr[split:]
+	}
+
+	namePart = sSeparatorRegex.ReplaceAllString(namePart, string(CanonicSeparatorChar))
+
 	var body strings.Builder
-	body.Grow(len(name.Canonic) + len(expr))
+	body.Grow(len(name.Canonic) + len(namePart) + len(urlPart) + 1)
 	body.WriteString(name.Canonic)
 	exprID := name.ID
-	exprLen := len(expr)
 
-	for i := 0; i < exprLen; {
+	namePartLen := len(namePart)
+	for i := 0; i < namePartLen; {
 
-		// ignore leading delimiters
-		for ; i < exprLen && expr[i] == CanonicSeparatorChar; i++ {
+		// skip leading delimiters
+		for ; i < namePartLen && namePart[i] == CanonicSeparatorChar; i++ {
 		}
-		if i >= exprLen {
+		if i >= namePartLen {
 			break
 		}
 
-		end := strings.IndexByte(expr[i:], CanonicSeparatorChar)
+		end := strings.IndexByte(namePart[i:], CanonicSeparatorChar)
 		if end < 0 {
-			end = exprLen
+			end = namePartLen
 		} else {
 			end += i
 		}
 
 		// fully capitalized literals remain upper case, e.g. USA, YMCA
-		term := expr[i:end]
+		term := namePart[i:end]
 		if utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
 			term = strings.ToLower(term)
 		}
@@ -104,6 +136,13 @@ func (name Name) With(expr string) Name {
 		body.WriteString(term)
 
 		i = end + 1
+	}
+
+	// URL part is atomic: one literal hash, appended verbatim with no
+	// separator (the URL-trigger char itself is the delimiter).
+	if urlPart != "" {
+		exprID = exprID.With(UID_HashLiteral([]byte(urlPart)))
+		body.WriteString(urlPart)
 	}
 
 	return Name{

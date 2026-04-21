@@ -15,17 +15,17 @@
                                	L02.Planetary Motion and Numerical Computation & Modeling
   5EB8QTXS9M93MHR80EBF09F683   L02.planetary.motion.and.numerical.computation.modeling
                                	L03.A New Science 1: Introduction to cryptography, code breaking, and war fighting
-  5PGYEH0D1041SU297UM2303NES   L03.a.new.science.1.introduction.to.cryptography.code.breaking.and.war.fighting
+  00X03ZN90B077HRD685N7RZK0D   L03.a.new.science.1: Introduction to cryptography, code breaking, and war fighting
                                	L04.A New Science 2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
-  28F1SPFF2DBV0W8U9QBN6FQRBN   L04.a.new.science.2.the.microcomputer.revolution.arpanet.interpreters.numerical.methods.and.rise.of.computer.science
+  43KSRFRTEKS9MPRZTQKXM8JNHY   L04.a.new.science.2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
                                	L05.A New Science 3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
-  4UYTCGC6PH6H26C2JNPGM2MSFV   L05.a.new.science.3.miniaturization.of.PC.mobile.hardware.computerization.of.securities.markets.and.exchanges.video.games
+  0VFEEQ0EDGUJC84F6RYSJMY124   L05.a.new.science.3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
                                	L06.A New Science 4: Community-Centric systems
-  7DD5DZ7RGSZ2KD7TVRFN6C5Z17   L06.a.new.science.4.community.centric.systems
+  5UBWVDUQ6TCEUQH398V6VQ344R   L06.a.new.science.4: Community-Centric systems
                                	L07.Physics Unbound 1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
-  53WK8FN7PS2MQ3B7614SMZX0PC   L07.physics.unbound.1.rise.of.general.relativity.quantum.theory.in.a.newtonian.world.hungry.for.answers.feat.sean.carroll.phd.theoretical.physicist.caltech
+  37GSUWRWPEDPG3R26KPBEEZ71S   L07.physics.unbound.1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
                                	L08.Physics Unbound 2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
-  5DNGRBK24EE623E5QXR5UNFTFH   L08.physics.unbound.2.black.holes.origins.of.life.the.physical.universe.big.bang.quantum.theory.and.open.mysteries.in.modern.physics
+  0UQGV6NH419S8G2T3TM57UH6CD   L08.physics.unbound.2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
 
 
 

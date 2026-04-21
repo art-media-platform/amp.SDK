@@ -57,3 +57,18 @@ said a drill, is this not Yoda?
 spaces.plan.tools
 plan.tools.spaces
 
+Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is.
+
+https://example.com/path
+HTTPS://Example.com/Path
+amp://planet/home
+file:///var/log/app.log
+ftp://user@host:21/dir
+scheme://MixedCase/PreservedExactly
+amp://planet.com/deep/path/with-dashes.and.dots
+
+Words left of the URL get canonicalized; the URL stays exact.
+hello world https://foo.com
+My App amp://planet/home
+  trimmed  amp://x
+

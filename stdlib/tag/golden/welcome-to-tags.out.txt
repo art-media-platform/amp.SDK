@@ -99,4 +99,31 @@
                                plan.tools.spaces
   6489TXSFTM8BVH9ZRXS81D9URV   plan.tools.spaces
 
+                               Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is.
+  38V9J7V8KCBVNV1MJ99FFGW1QN   tag.names.have.two.halves.left.of.the.first/, :, or \ is the "name" part — cleaned up into canonic dotted form.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is.
+
+                               https://example.com/path
+  6Z5W459BQ5920KPEK38029800H   https://example.com/path
+                               HTTPS://Example.com/Path
+  6PKZW229X5Z6376XQM4B020K3N   HTTPS://Example.com/Path
+                               amp://planet/home
+  4VJUYXH6QFNPUF6CKPR8UN2B0M   amp://planet/home
+                               file:///var/log/app.log
+  7497KU7GU6N9HZ8FXRD6XV1PJ5   file:///var/log/app.log
+                               ftp://user@host:21/dir
+  5JJ3M7F9Z6PMHWNSF1BNR1FG7M   ftp://user@host:21/dir
+                               scheme://MixedCase/PreservedExactly
+  329RVU0HUK804CR0GMKHQJNW8M   scheme://MixedCase/PreservedExactly
+                               amp://planet.com/deep/path/with-dashes.and.dots
+  1PTFURKT5NFSMD8GMDCT3NK7D0   amp://planet.com/deep/path/with-dashes.and.dots
+
+                               Words left of the URL get canonicalized; the URL stays exact.
+  1QRS2R5TRD2V5QXZM7VC6JTKSS   words.left.of.the.URL.get.canonicalized;.the.URL.stays.exact
+                               hello world https://foo.com
+  2XWZ8HF2PW74TU1NBN8P7ZK0TM   hello.world.https://foo.com
+                               My App amp://planet/home
+  47G6T4CFKP3F6W038UZP0140GY   my.app.amp://planet/home
+                                 trimmed  amp://x
+  30B2K165HPSTQMT4KQGG6006SH   trimmed.amp://x
+
 
