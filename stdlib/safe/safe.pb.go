@@ -133,7 +133,9 @@ type CryptoKitID int32
 
 const (
 	CryptoKitID_UnspecifiedKit CryptoKitID = 0
-	CryptoKitID_Poly25519      CryptoKitID = 1 //XChaCha20-Poly1305 symmetric, X25519 asymmetric, ED25519 signing
+	CryptoKitID_Poly25519      CryptoKitID = 1 // XChaCha20-Poly1305 symmetric, X25519 asymmetric, ED25519 signing
+	CryptoKitID_P256           CryptoKitID = 2 // XChaCha20-Poly1305 symmetric, ECDH-P256 asymmetric, ECDSA-P256+SHA-256 signing (NIST; YubiKey PIV)
+	CryptoKitID_Secp256k1      CryptoKitID = 3 // XChaCha20-Poly1305 symmetric, ECDH-secp256k1 asymmetric, ECDSA-secp256k1+Keccak-256 signing (crypto-wallet interop)
 )
 
 // Enum value maps for CryptoKitID.
@@ -141,10 +143,14 @@ var (
 	CryptoKitID_name = map[int32]string{
 		0: "UnspecifiedKit",
 		1: "Poly25519",
+		2: "P256",
+		3: "Secp256k1",
 	}
 	CryptoKitID_value = map[string]int32{
 		"UnspecifiedKit": 0,
 		"Poly25519":      1,
+		"P256":           2,
+		"Secp256k1":      3,
 	}
 )
 
@@ -1267,10 +1273,12 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\fSymmetricKey\x10\x01\x12\x11\n" +
 	"\rAsymmetricKey\x10\x02\x12\x0e\n" +
 	"\n" +
-	"SigningKey\x10\x03*0\n" +
+	"SigningKey\x10\x03*I\n" +
 	"\vCryptoKitID\x12\x12\n" +
 	"\x0eUnspecifiedKit\x10\x00\x12\r\n" +
-	"\tPoly25519\x10\x01*B\n" +
+	"\tPoly25519\x10\x01\x12\b\n" +
+	"\x04P256\x10\x02\x12\r\n" +
+	"\tSecp256k1\x10\x03*B\n" +
 	"\tHashKitID\x12\x16\n" +
 	"\x12UnspecifiedHashKit\x10\x00\x12\f\n" +
 	"\bSHA3_256\x10\x03\x12\x0f\n" +

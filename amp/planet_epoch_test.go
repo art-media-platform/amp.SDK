@@ -6,6 +6,7 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
+	_ "github.com/art-media-platform/amp.SDK/stdlib/safe/p256"
 	_ "github.com/art-media-platform/amp.SDK/stdlib/safe/poly25519"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
@@ -93,6 +94,73 @@ func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 	}, pub, safe.CryptoKitID_Poly25519)
 	if err == nil {
 		t.Fatal("verify must reject empty signature")
+	}
+}
+
+// TestPlanetEpoch_MixedSuiteQuorum is the load-bearing demonstration that a
+// single genesis epoch can be co-signed by founders on different CryptoKits.
+// One Poly25519 founder + one P-256 founder both sign the same canonical
+// bytes; each signature is verified against its signer's native kit.
+//
+// This is the proof that PlanetEpoch.VerifyCoSignature is per-signer by design.
+//
+// The three-kit version (adding secp256k1 / wallet interop) lives in amp.planet
+// where the secp256k1 kit is registered — see amp/apps/app.metamask.
+func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
+	epoch := makeTestEpoch(t)
+
+	canon, err := epoch.CanonicalBytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	polyKit, polyPub, polyPrv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	p256Kit, p256Pub, p256Prv := freshKeyPair(t, safe.CryptoKitID_P256)
+
+	polySig, err := polyKit.Sign(canon, polyPrv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p256Sig, err := p256Kit.Sign(canon, p256Prv)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	polyCoSig := &amp.CoSignature{
+		MemberTag: amp.TagFromUID(tag.UID{1, 1}),
+		Signature: polySig,
+	}
+	p256CoSig := &amp.CoSignature{
+		MemberTag: amp.TagFromUID(tag.UID{2, 2}),
+		Signature: p256Sig,
+	}
+
+	// Each CoSignature is verified against its signer's own kit.  This is the
+	// flow a vault controller runs when validating a multi-founder genesis.
+	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.CryptoKitID_Poly25519); err != nil {
+		t.Fatalf("Poly25519 cosignature must verify: %v", err)
+	}
+	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.CryptoKitID_P256); err != nil {
+		t.Fatalf("P-256 cosignature must verify: %v", err)
+	}
+
+	// Cross-kit swaps must fail: a Poly25519 signature cannot be verified as P-256,
+	// and a P-256 signature cannot be verified as Poly25519.
+	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.CryptoKitID_P256); err == nil {
+		t.Fatal("Poly25519 signature must not verify under P-256 kit")
+	}
+	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.CryptoKitID_Poly25519); err == nil {
+		t.Fatal("P-256 signature must not verify under Poly25519 kit")
+	}
+
+	// Populating Signatures[] for both founders must not break verification —
+	// CanonicalBytes() excludes Signatures from the signed payload.
+	epoch.Signatures = []*amp.CoSignature{polyCoSig, p256CoSig}
+	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.CryptoKitID_Poly25519); err != nil {
+		t.Fatalf("Poly25519 verify after Signatures populated: %v", err)
+	}
+	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.CryptoKitID_P256); err != nil {
+		t.Fatalf("P-256 verify after Signatures populated: %v", err)
 	}
 }
 

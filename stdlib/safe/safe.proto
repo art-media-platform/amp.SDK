@@ -77,7 +77,9 @@ enum KeyType {
 // CryptoKitID identifies an encryption suite that implements CryptoKit.
 enum CryptoKitID {
     UnspecifiedKit      = 0;
-    Poly25519           = 1;    //XChaCha20-Poly1305 symmetric, X25519 asymmetric, ED25519 signing
+    Poly25519           = 1;    // XChaCha20-Poly1305 symmetric, X25519 asymmetric, ED25519 signing
+    P256                = 2;    // XChaCha20-Poly1305 symmetric, ECDH-P256 asymmetric, ECDSA-P256+SHA-256 signing (NIST; YubiKey PIV)
+    Secp256k1           = 3;    // XChaCha20-Poly1305 symmetric, ECDH-secp256k1 asymmetric, ECDSA-secp256k1+Keccak-256 signing (crypto-wallet interop)
 }
 
 // HashKitID identifies a hash algorithm.

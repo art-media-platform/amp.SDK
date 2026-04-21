@@ -1,0 +1,175 @@
+package p256_test
+
+import (
+	"bytes"
+	"crypto/rand"
+	"testing"
+
+	"github.com/art-media-platform/amp.SDK/stdlib/safe"
+	_ "github.com/art-media-platform/amp.SDK/stdlib/safe/p256" // register P-256 CryptoKit
+)
+
+// TestP256_KeyPair_Shape exercises key generation and confirms the on-wire
+// byte sizes match the kit's declared constants (SEC1 uncompressed public,
+// raw 32-byte scalar private).
+func TestP256_KeyPair_Shape(t *testing.T) {
+	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	if err != nil {
+		t.Fatalf("GetCryptoKit: %v", err)
+	}
+
+	kp := safe.KeyPair{
+		Pub: safe.PubKey{CryptoKitID: safe.CryptoKitID_P256, KeyType: safe.KeyType_SigningKey},
+	}
+	if err := kit.GenerateKey(rand.Reader, 0, &kp); err != nil {
+		t.Fatalf("GenerateKey: %v", err)
+	}
+
+	if len(kp.Pub.Bytes) != 65 {
+		t.Errorf("P-256 public key must be 65 bytes (SEC1 uncompressed), got %d", len(kp.Pub.Bytes))
+	}
+	if kp.Pub.Bytes[0] != 0x04 {
+		t.Errorf("P-256 public key must lead with 0x04 (uncompressed tag), got 0x%02x", kp.Pub.Bytes[0])
+	}
+	if len(kp.Prv) != 32 {
+		t.Errorf("P-256 private key must be 32 bytes (raw scalar), got %d", len(kp.Prv))
+	}
+	if kit.SignatureSize != 64 {
+		t.Errorf("P-256 signature size must be 64 bytes (r||s), got %d", kit.SignatureSize)
+	}
+}
+
+// TestP256_SignVerify exercises the primary identity-key use case: sign a
+// canonical byte blob (e.g. a PlanetEpoch) and verify with the public key.
+// This is the shape `PlanetEpoch.VerifyCoSignature` drives.
+func TestP256_SignVerify(t *testing.T) {
+	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	if err != nil {
+		t.Fatalf("GetCryptoKit: %v", err)
+	}
+
+	kp := safe.KeyPair{
+		Pub: safe.PubKey{CryptoKitID: safe.CryptoKitID_P256, KeyType: safe.KeyType_SigningKey},
+	}
+	if err := kit.GenerateKey(rand.Reader, 0, &kp); err != nil {
+		t.Fatalf("GenerateKey: %v", err)
+	}
+
+	msg := []byte("genesis PlanetEpoch canonical bytes")
+	sig, err := kit.Sign(msg, kp.Prv)
+	if err != nil {
+		t.Fatalf("Sign: %v", err)
+	}
+	if len(sig) != kit.SignatureSize {
+		t.Fatalf("signature size mismatch: got %d, want %d", len(sig), kit.SignatureSize)
+	}
+
+	if err := kit.Verify(sig, msg, kp.Pub.Bytes); err != nil {
+		t.Fatalf("Verify should succeed: %v", err)
+	}
+
+	// Tampered message must fail.
+	bad := append([]byte{}, msg...)
+	bad[0] ^= 0xFF
+	if err := kit.Verify(sig, bad, kp.Pub.Bytes); err == nil {
+		t.Fatal("Verify must reject tampered message")
+	}
+
+	// Tampered signature must fail.
+	tamperedSig := append([]byte{}, sig...)
+	tamperedSig[0] ^= 0xFF
+	if err := kit.Verify(tamperedSig, msg, kp.Pub.Bytes); err == nil {
+		t.Fatal("Verify must reject tampered signature")
+	}
+}
+
+// TestP256_SymmetricRoundtrip exercises the shared-key AEAD path.  P-256 uses
+// the same XChaCha20-Poly1305 symmetric cipher as Poly25519, so an epoch key
+// wrapped by one kit is readable by any other — this is what enables mixed-
+// suite quorums.
+func TestP256_SymmetricRoundtrip(t *testing.T) {
+	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	if err != nil {
+		t.Fatalf("GetCryptoKit: %v", err)
+	}
+
+	key := make([]byte, safe.DEKSize)
+	if _, err := rand.Read(key); err != nil {
+		t.Fatal(err)
+	}
+
+	plaintext := []byte("epoch-key-wrapped symmetric content")
+	ciphertext, err := kit.Encrypt(rand.Reader, plaintext, key)
+	if err != nil {
+		t.Fatalf("Encrypt: %v", err)
+	}
+	if bytes.Equal(plaintext, ciphertext) {
+		t.Fatal("ciphertext must differ from plaintext")
+	}
+
+	got, err := kit.Decrypt(ciphertext, key)
+	if err != nil {
+		t.Fatalf("Decrypt: %v", err)
+	}
+	if !bytes.Equal(plaintext, got) {
+		t.Fatalf("Decrypt roundtrip mismatch: got %q, want %q", got, plaintext)
+	}
+}
+
+// TestP256_ECDH exercises the asymmetric encryption path — Alice encrypts to
+// Bob's public key using her private key, Bob decrypts using his private key
+// and Alice's public key.  This is how epoch keys are sealed to a new member
+// at invite time.
+func TestP256_ECDH(t *testing.T) {
+	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	if err != nil {
+		t.Fatalf("GetCryptoKit: %v", err)
+	}
+
+	alice := freshKeyPair(t, kit)
+	bob := freshKeyPair(t, kit)
+
+	secret := []byte("planet epoch key material")
+	sealed, err := kit.EncryptFor(rand.Reader, secret, bob.Pub.Bytes, alice.Prv)
+	if err != nil {
+		t.Fatalf("EncryptFor: %v", err)
+	}
+
+	// Bob decrypts using his private key and Alice's public key.
+	opened, err := kit.DecryptFrom(sealed, alice.Pub.Bytes, bob.Prv)
+	if err != nil {
+		t.Fatalf("DecryptFrom: %v", err)
+	}
+	if !bytes.Equal(secret, opened) {
+		t.Fatalf("ECDH roundtrip mismatch: got %q, want %q", opened, secret)
+	}
+
+	// Wrong recipient private key must fail.
+	eve := freshKeyPair(t, kit)
+	if _, err := kit.DecryptFrom(sealed, alice.Pub.Bytes, eve.Prv); err == nil {
+		t.Fatal("DecryptFrom must fail with non-recipient private key")
+	}
+}
+
+// TestP256_Registered confirms the kit self-registers via import side-effect,
+// so callers that do `import _ ".../p256"` can `safe.GetCryptoKit(P256)`.
+func TestP256_Registered(t *testing.T) {
+	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	if err != nil {
+		t.Fatalf("P-256 kit must be registered via blank import: %v", err)
+	}
+	if kit.ID != safe.CryptoKitID_P256 {
+		t.Errorf("registered kit has wrong ID: got %v, want %v", kit.ID, safe.CryptoKitID_P256)
+	}
+}
+
+func freshKeyPair(t *testing.T, kit *safe.CryptoKit) safe.KeyPair {
+	t.Helper()
+	kp := safe.KeyPair{
+		Pub: safe.PubKey{CryptoKitID: safe.CryptoKitID_P256, KeyType: safe.KeyType_SigningKey},
+	}
+	if err := kit.GenerateKey(rand.Reader, 0, &kp); err != nil {
+		t.Fatal(err)
+	}
+	return kp
+}
