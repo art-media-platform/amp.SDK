@@ -2397,25 +2397,18 @@ type PlanetInvite struct {
 	EpochTag *Tag `protobuf:"bytes,2,opt,name=EpochTag,proto3" json:"EpochTag,omitempty"`
 	// Newly generated member identity assigned by the admin.
 	MemberTag *Tag `protobuf:"bytes,3,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"`
-	// Temporary private key for the invited member (encrypted with invite passphrase).
-	// The member uses this to decrypt their initial EncryptedPlanetKey from the MemberEpoch.
-	// Must be rotated immediately after join.
-	TempPrvKey []byte `protobuf:"bytes,5,opt,name=TempPrvKey,proto3" json:"TempPrvKey,omitempty"`
-	// Public key matching TempPrvKey.  Carried explicitly so the acceptor can import the
-	// keypair without deriving the pub key from the priv key (algorithm-agnostic).
-	TempPubKey []byte `protobuf:"bytes,6,opt,name=TempPubKey,proto3" json:"TempPubKey,omitempty"`
-	// Crypto suite matching the planet epoch.
-	CryptoKitID safe.CryptoKitID `protobuf:"varint,10,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
+	// Temporary keypair for the invited member.  Prv is cleartext within the invite;
+	// the invite itself is passphrase-sealed before leaving the admin's device.
+	// The acceptor imports this keypair and rotates it immediately after join.
+	TempKey *safe.KeyPairRecord `protobuf:"bytes,5,opt,name=TempKey,proto3" json:"TempKey,omitempty"`
 	// Known vault addresses for initial peer discovery.
 	VaultAddrs []string `protobuf:"bytes,15,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
-	// Planet epoch key encrypted for the temp member key (via EncryptToPeer).
+	// Planet epoch key encrypted for TempKey via CryptoKit.EncryptFor.
 	// InviteAccept decrypts this immediately so the member can participate in the epoch.
-	EncryptedEpochKey []byte `protobuf:"bytes,20,opt,name=EncryptedEpochKey,proto3" json:"EncryptedEpochKey,omitempty"`
-	// Signing public key of the admin who encrypted EncryptedEpochKey.
-	// Needed for DecryptFromPeer (CryptoKit derives asymmetric key internally).
-	EncryptorPubKey []byte `protobuf:"bytes,21,opt,name=EncryptorPubKey,proto3" json:"EncryptorPubKey,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// SenderPubKey identifies the admin who encrypted it.
+	EpochKey      *safe.EncryptedSymKey `protobuf:"bytes,20,opt,name=EpochKey,proto3" json:"EpochKey,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PlanetInvite) Reset() {
@@ -2469,25 +2462,11 @@ func (x *PlanetInvite) GetMemberTag() *Tag {
 	return nil
 }
 
-func (x *PlanetInvite) GetTempPrvKey() []byte {
+func (x *PlanetInvite) GetTempKey() *safe.KeyPairRecord {
 	if x != nil {
-		return x.TempPrvKey
+		return x.TempKey
 	}
 	return nil
-}
-
-func (x *PlanetInvite) GetTempPubKey() []byte {
-	if x != nil {
-		return x.TempPubKey
-	}
-	return nil
-}
-
-func (x *PlanetInvite) GetCryptoKitID() safe.CryptoKitID {
-	if x != nil {
-		return x.CryptoKitID
-	}
-	return safe.CryptoKitID(0)
 }
 
 func (x *PlanetInvite) GetVaultAddrs() []string {
@@ -2497,16 +2476,9 @@ func (x *PlanetInvite) GetVaultAddrs() []string {
 	return nil
 }
 
-func (x *PlanetInvite) GetEncryptedEpochKey() []byte {
+func (x *PlanetInvite) GetEpochKey() *safe.EncryptedSymKey {
 	if x != nil {
-		return x.EncryptedEpochKey
-	}
-	return nil
-}
-
-func (x *PlanetInvite) GetEncryptorPubKey() []byte {
-	if x != nil {
-		return x.EncryptorPubKey
+		return x.EpochKey
 	}
 	return nil
 }
@@ -3173,24 +3145,16 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Status\x18\b \x01(\x05R\x06Status\x12\x16\n" +
 	"\x06PubKey\x18\f \x01(\fR\x06PubKey\x123\n" +
 	"\vCryptoKitID\x18\x0f \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12(\n" +
-	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\"\xf1\x02\n" +
+	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\"\x86\x02\n" +
 	"\fPlanetInvite\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12$\n" +
 	"\bEpochTag\x18\x02 \x01(\v2\b.amp.TagR\bEpochTag\x12&\n" +
-	"\tMemberTag\x18\x03 \x01(\v2\b.amp.TagR\tMemberTag\x12\x1e\n" +
-	"\n" +
-	"TempPrvKey\x18\x05 \x01(\fR\n" +
-	"TempPrvKey\x12\x1e\n" +
-	"\n" +
-	"TempPubKey\x18\x06 \x01(\fR\n" +
-	"TempPubKey\x123\n" +
-	"\vCryptoKitID\x18\n" +
-	" \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x1e\n" +
+	"\tMemberTag\x18\x03 \x01(\v2\b.amp.TagR\tMemberTag\x12-\n" +
+	"\aTempKey\x18\x05 \x01(\v2\x13.safe.KeyPairRecordR\aTempKey\x12\x1e\n" +
 	"\n" +
 	"VaultAddrs\x18\x0f \x03(\tR\n" +
-	"VaultAddrs\x12,\n" +
-	"\x11EncryptedEpochKey\x18\x14 \x01(\fR\x11EncryptedEpochKey\x12(\n" +
-	"\x0fEncryptorPubKey\x18\x15 \x01(\fR\x0fEncryptorPubKey\"|\n" +
+	"VaultAddrs\x121\n" +
+	"\bEpochKey\x18\x14 \x01(\v2\x15.safe.EncryptedSymKeyR\bEpochKey\"|\n" +
 	"\x0ePlanetInviteOp\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12\x1e\n" +
 	"\n" +
@@ -3348,46 +3312,48 @@ func file_amp_amp_core_proto_rawDescGZIP() []byte {
 var file_amp_amp_core_proto_enumTypes = make([]protoimpl.EnumInfo, 11)
 var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_amp_amp_core_proto_goTypes = []any{
-	(TxOpFlags)(0),            // 0: amp.TxOpFlags
-	(TxField)(0),              // 1: amp.TxField
-	(ValueHeaderFlags)(0),     // 2: amp.ValueHeaderFlags
-	(TxStatus)(0),             // 3: amp.TxStatus
-	(PinStatus)(0),            // 4: amp.PinStatus
-	(PinMode)(0),              // 5: amp.PinMode
-	(Enable)(0),               // 6: amp.Enable
-	(UriScheme)(0),            // 7: amp.UriScheme
-	(Units)(0),                // 8: amp.Units
-	(Access)(0),               // 9: amp.Access
-	(TransportType)(0),        // 10: amp.TransportType
-	(*TxEnvelope)(nil),        // 11: amp.TxEnvelope
-	(*TxHeader)(nil),          // 12: amp.TxHeader
-	(*Login)(nil),             // 13: amp.Login
-	(*LoginChallenge)(nil),    // 14: amp.LoginChallenge
-	(*LoginResponse)(nil),     // 15: amp.LoginResponse
-	(*LoginCheckpoint)(nil),   // 16: amp.LoginCheckpoint
-	(*PinRequest)(nil),        // 17: amp.PinRequest
-	(*ItemSelector)(nil),      // 18: amp.ItemSelector
-	(*ItemSpan)(nil),          // 19: amp.ItemSpan
-	(*Tag)(nil),               // 20: amp.Tag
-	(*Tags)(nil),              // 21: amp.Tags
-	(*Citation)(nil),          // 22: amp.Citation
-	(*AccessGrant)(nil),       // 23: amp.AccessGrant
-	(*AccessGrants)(nil),      // 24: amp.AccessGrants
-	(*ChannelEpoch)(nil),      // 25: amp.ChannelEpoch
-	(*BlobRef)(nil),           // 26: amp.BlobRef
-	(*PlanetStorageOpts)(nil), // 27: amp.PlanetStorageOpts
-	(*PlanetEpoch)(nil),       // 28: amp.PlanetEpoch
-	(*MemberEpoch)(nil),       // 29: amp.MemberEpoch
-	(*PlanetInvite)(nil),      // 30: amp.PlanetInvite
-	(*PlanetInviteOp)(nil),    // 31: amp.PlanetInviteOp
-	(*SyncMsg)(nil),           // 32: amp.SyncMsg
-	(*SyncWatchList)(nil),     // 33: amp.SyncWatchList
-	(*SyncPlanetStatus)(nil),  // 34: amp.SyncPlanetStatus
-	(*SyncRangeOffer)(nil),    // 35: amp.SyncRangeOffer
-	(*SyncRangeRequest)(nil),  // 36: amp.SyncRangeRequest
-	(*PeerAddr)(nil),          // 37: amp.PeerAddr
-	(safe.HashKitID)(0),       // 38: safe.HashKitID
-	(safe.CryptoKitID)(0),     // 39: safe.CryptoKitID
+	(TxOpFlags)(0),               // 0: amp.TxOpFlags
+	(TxField)(0),                 // 1: amp.TxField
+	(ValueHeaderFlags)(0),        // 2: amp.ValueHeaderFlags
+	(TxStatus)(0),                // 3: amp.TxStatus
+	(PinStatus)(0),               // 4: amp.PinStatus
+	(PinMode)(0),                 // 5: amp.PinMode
+	(Enable)(0),                  // 6: amp.Enable
+	(UriScheme)(0),               // 7: amp.UriScheme
+	(Units)(0),                   // 8: amp.Units
+	(Access)(0),                  // 9: amp.Access
+	(TransportType)(0),           // 10: amp.TransportType
+	(*TxEnvelope)(nil),           // 11: amp.TxEnvelope
+	(*TxHeader)(nil),             // 12: amp.TxHeader
+	(*Login)(nil),                // 13: amp.Login
+	(*LoginChallenge)(nil),       // 14: amp.LoginChallenge
+	(*LoginResponse)(nil),        // 15: amp.LoginResponse
+	(*LoginCheckpoint)(nil),      // 16: amp.LoginCheckpoint
+	(*PinRequest)(nil),           // 17: amp.PinRequest
+	(*ItemSelector)(nil),         // 18: amp.ItemSelector
+	(*ItemSpan)(nil),             // 19: amp.ItemSpan
+	(*Tag)(nil),                  // 20: amp.Tag
+	(*Tags)(nil),                 // 21: amp.Tags
+	(*Citation)(nil),             // 22: amp.Citation
+	(*AccessGrant)(nil),          // 23: amp.AccessGrant
+	(*AccessGrants)(nil),         // 24: amp.AccessGrants
+	(*ChannelEpoch)(nil),         // 25: amp.ChannelEpoch
+	(*BlobRef)(nil),              // 26: amp.BlobRef
+	(*PlanetStorageOpts)(nil),    // 27: amp.PlanetStorageOpts
+	(*PlanetEpoch)(nil),          // 28: amp.PlanetEpoch
+	(*MemberEpoch)(nil),          // 29: amp.MemberEpoch
+	(*PlanetInvite)(nil),         // 30: amp.PlanetInvite
+	(*PlanetInviteOp)(nil),       // 31: amp.PlanetInviteOp
+	(*SyncMsg)(nil),              // 32: amp.SyncMsg
+	(*SyncWatchList)(nil),        // 33: amp.SyncWatchList
+	(*SyncPlanetStatus)(nil),     // 34: amp.SyncPlanetStatus
+	(*SyncRangeOffer)(nil),       // 35: amp.SyncRangeOffer
+	(*SyncRangeRequest)(nil),     // 36: amp.SyncRangeRequest
+	(*PeerAddr)(nil),             // 37: amp.PeerAddr
+	(safe.HashKitID)(0),          // 38: safe.HashKitID
+	(safe.CryptoKitID)(0),        // 39: safe.CryptoKitID
+	(*safe.KeyPairRecord)(nil),   // 40: safe.KeyPairRecord
+	(*safe.EncryptedSymKey)(nil), // 41: safe.EncryptedSymKey
 }
 var file_amp_amp_core_proto_depIdxs = []int32{
 	20, // 0: amp.TxEnvelope.Planet:type_name -> amp.Tag
@@ -3428,18 +3394,19 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	20, // 35: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
 	20, // 36: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
 	20, // 37: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	39, // 38: amp.PlanetInvite.CryptoKitID:type_name -> safe.CryptoKitID
-	20, // 39: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
-	33, // 40: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	35, // 41: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	36, // 42: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	34, // 43: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	10, // 44: amp.PeerAddr.Transport:type_name -> amp.TransportType
-	45, // [45:45] is the sub-list for method output_type
-	45, // [45:45] is the sub-list for method input_type
-	45, // [45:45] is the sub-list for extension type_name
-	45, // [45:45] is the sub-list for extension extendee
-	0,  // [0:45] is the sub-list for field type_name
+	40, // 38: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	41, // 39: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	20, // 40: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	33, // 41: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	35, // 42: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	36, // 43: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	34, // 44: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	10, // 45: amp.PeerAddr.Transport:type_name -> amp.TransportType
+	46, // [46:46] is the sub-list for method output_type
+	46, // [46:46] is the sub-list for method input_type
+	46, // [46:46] is the sub-list for extension type_name
+	46, // [46:46] is the sub-list for extension extendee
+	0,  // [0:46] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }

@@ -561,36 +561,26 @@ message MemberEpoch {
 message PlanetInvite {
 
     // Planet being invited to.
-    Tag                 PlanetTag = 1;
+    Tag                     PlanetTag = 1;
 
     // Current epoch at the time of invite (for initial sync).
-    Tag                 EpochTag = 2;
+    Tag                     EpochTag = 2;
 
     // Newly generated member identity assigned by the admin.
-    Tag                 MemberTag = 3;
+    Tag                     MemberTag = 3;
 
-    // Temporary private key for the invited member (encrypted with invite passphrase).
-    // The member uses this to decrypt their initial EncryptedPlanetKey from the MemberEpoch.
-    // Must be rotated immediately after join.
-    bytes               TempPrvKey = 5;
-
-    // Public key matching TempPrvKey.  Carried explicitly so the acceptor can import the
-    // keypair without deriving the pub key from the priv key (algorithm-agnostic).
-    bytes               TempPubKey = 6;
-
-    // Crypto suite matching the planet epoch.
-    safe.CryptoKitID    CryptoKitID = 10;
+    // Temporary keypair for the invited member.  Prv is cleartext within the invite;
+    // the invite itself is passphrase-sealed before leaving the admin's device.
+    // The acceptor imports this keypair and rotates it immediately after join.
+    safe.KeyPairRecord      TempKey = 5;
 
     // Known vault addresses for initial peer discovery.
-    repeated string     VaultAddrs = 15;
+    repeated string         VaultAddrs = 15;
 
-    // Planet epoch key encrypted for the temp member key (via EncryptToPeer).
+    // Planet epoch key encrypted for TempKey via CryptoKit.EncryptFor.
     // InviteAccept decrypts this immediately so the member can participate in the epoch.
-    bytes               EncryptedEpochKey = 20;
-
-    // Signing public key of the admin who encrypted EncryptedEpochKey.
-    // Needed for DecryptFromPeer (CryptoKit derives asymmetric key internally).
-    bytes               EncryptorPubKey = 21;
+    // SenderPubKey identifies the admin who encrypted it.
+    safe.EncryptedSymKey    EpochKey = 20;
 }
 
 
