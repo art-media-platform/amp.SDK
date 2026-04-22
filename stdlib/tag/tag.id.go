@@ -89,7 +89,7 @@ func (name Name) With(expr string) Name {
 		return name
 	}
 
-	// Split expr into name-part (canonicalized) and URL-part (verbatim).
+	// Split expr into name-part (canonized) and URL-part (verbatim).
 	namePart := expr
 	urlPart := ""
 	if split := PathStart(expr); split >= 0 {

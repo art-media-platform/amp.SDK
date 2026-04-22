@@ -67,7 +67,7 @@ ftp://user@host:21/dir
 scheme://MixedCase/PreservedExactly
 amp://planet.com/deep/path/with-dashes.and.dots
 
-Words left of the URL get canonicalized; the URL stays exact.
+Words left of the URL get canonized; the URL stays exact.
 hello world https://foo.com
 My App amp://planet/home
   trimmed  amp://x

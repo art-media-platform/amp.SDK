@@ -117,8 +117,8 @@
                                amp://planet.com/deep/path/with-dashes.and.dots
   1PTFURKT5NFSMD8GMDCT3NK7D0   amp://planet.com/deep/path/with-dashes.and.dots
 
-                               Words left of the URL get canonicalized; the URL stays exact.
-  1QRS2R5TRD2V5QXZM7VC6JTKSS   words.left.of.the.URL.get.canonicalized;.the.URL.stays.exact
+                               Words left of the URL get canonized; the URL stays exact.
+  2BEJYV4B5199VQFBKN8G7V4KNQ   words.left.of.the.URL.get.canonized;.the.URL.stays.exact
                                hello world https://foo.com
   2XWZ8HF2PW74TU1NBN8P7ZK0TM   hello.world.https://foo.com
                                My App amp://planet/home
