@@ -8,13 +8,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/log"
+	"github.com/art-media-platform/amp.SDK/stdlib/alog"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 // ctx implements Context
 type ctx struct {
-	log            log.Logger
+	log            alog.Logger
 	task           Task
 	state          int32
 	idle           bool
@@ -159,7 +159,7 @@ func (p *ctx) Info() Info {
 	return p.task.Info
 }
 
-func (p *ctx) Log() log.Logger {
+func (p *ctx) Log() alog.Logger {
 	return p.log
 }
 
@@ -222,7 +222,7 @@ func (p *ctx) StartChild(task Task) (Context, error) {
 		task.Label = task.Info.TaskID.AsLabel()
 	}
 	child := &ctx{
-		log:       log.NewLogger(task.Label),
+		log:       alog.NewLogger(task.Label),
 		state:     Running,
 		task:      task,
 		chClosing: make(chan struct{}),

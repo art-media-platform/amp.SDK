@@ -5,7 +5,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/log"
+	"github.com/art-media-platform/amp.SDK/stdlib/alog"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -57,7 +57,7 @@ type Task struct {
 //   - the OnClosing() hook, allowing cleanup to occur  when a Context is closed but before its parent is closed.
 //   - PrintTreePeriodically() which visualizes a Context's child tree and is helpful for debugging in large projects.
 type Context interface {
-	Log() log.Logger
+	Log() alog.Logger
 
 	// Includes functionality and behavior of a context.Context.
 	context.Context
