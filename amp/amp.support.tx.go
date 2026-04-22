@@ -537,8 +537,9 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 // Methods that accept *TxEnvelope use it to determine the encryption context:
 //   - Planet-level TxMsgs: Epoch is the planet epoch; PlanetEpoch is zero.
 //   - Channel-level TxMsgs: Epoch is the channel epoch; PlanetEpoch records the planet epoch
-//     active at seal time.  The effective key is derived from both:
-//     content_key = HKDF(channel_epoch_key || planet_epoch_key, "content")
+//     active at seal time.  Effective keys are derived per role (see safe.KeyRole):
+//     content_key = HKDF(node_content_key || planet_epoch_key, "content")
+//     proof_key   = HKDF(node_write_seed || planet_epoch_key, "member-proof")
 //
 // If the required epoch key is not available, methods return status.ErrEpochKeyNotFound.
 // Callers should retain the TxMsg and retry when the key arrives.

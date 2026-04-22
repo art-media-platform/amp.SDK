@@ -833,10 +833,14 @@ type TxEnvelope struct {
 	// Allows relay vaults to reject spam without decrypting content.
 	MemberProof []byte `protobuf:"bytes,25,opt,name=MemberProof,proto3" json:"MemberProof,omitempty"`
 	// Planet epoch UID that was active when this TxMsg was sealed.
-	// For channel-encrypted TxMsgs, this enables the derived content key:
+	// For channel-encrypted TxMsgs, this enables role-specific derived keys:
 	//
-	//	content_key = HKDF(channel_epoch_key || planet_epoch_key, "content")
+	//	content_key = HKDF(node_content_key || planet_epoch_key, "content")
+	//	proof_key   = HKDF(node_write_seed || planet_epoch_key, "member-proof")
 	//
+	// The channel side uses access-tiered materials (see safe.KeyRole): ReadOnly+
+	// holds ContentKey; ReadWrite+ additionally holds WriteSeed.  Members without
+	// WriteSeed cannot forge a valid MemberProof — cryptographic write gating.
 	// Rotating the planet epoch automatically invalidates all channel-derived keys,
 	// even if the channel epoch hasn't rotated.
 	// For planet-encrypted TxMsgs (Epoch = planet epoch), this is zero/omitted.
