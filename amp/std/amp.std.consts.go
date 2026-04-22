@@ -218,7 +218,6 @@ var Attr = struct {
 }
 
 const (
-	// Scalar constants
 	ContentGlyphURI  = "asset:glyph/"
 	GenericImageType = "image/*"
 	GenericAudioType = "audio/*"

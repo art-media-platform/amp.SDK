@@ -144,7 +144,6 @@ const Session {
     uid ContextID = {0x0, 0x777};
 }
 
-ååå
 const string ContentGlyphURI   = "asset:glyph/";
 const string GenericImageType  = "image/*";
 const string GenericAudioType  = "audio/*";
