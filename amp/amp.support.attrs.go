@@ -18,6 +18,11 @@ const (
 	// DefaultMaxGracePeriod is the default epoch grace period in seconds (90 days).
 	// After an epoch rotation, old-epoch TxMsgs are accepted for this duration.
 	DefaultMaxGracePeriod int64 = 90 * 24 * 60 * 60
+
+	// DefaultQuarantineRetention is the default TTL for journal entries quarantined
+	// for failed MemberProof or bad signature (7 days).  Long enough for Strike
+	// attestations to propagate and be audited against the rejected bytes.
+	DefaultQuarantineRetention int64 = 7 * 24 * 60 * 60
 )
 
 // GracePeriod returns the effective grace period for this epoch.
@@ -27,6 +32,19 @@ func (ep *PlanetEpoch) GracePeriod() int64 {
 		return DefaultMaxGracePeriod
 	}
 	return ep.MaxGracePeriod
+}
+
+// QuarantineRetention returns the effective journal quarantine TTL for this epoch
+// as a time.Duration.  Returns DefaultQuarantineRetention seconds if unset.
+func (ep *PlanetEpoch) QuarantineRetention() time.Duration {
+	secs := int64(0)
+	if ep != nil {
+		secs = ep.QuarantineRetentionSecs
+	}
+	if secs <= 0 {
+		secs = DefaultQuarantineRetention
+	}
+	return time.Duration(secs) * time.Second
 }
 
 // TxWithinGracePeriod returns true if a TxMsg authored under a previous epoch

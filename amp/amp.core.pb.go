@@ -2252,6 +2252,13 @@ type PlanetEpoch struct {
 	MaxBytesPerWindow   int64 `protobuf:"varint,21,opt,name=MaxBytesPerWindow,proto3" json:"MaxBytesPerWindow,omitempty"`     // Max bytes per member per window (default: 100 MB)
 	MaxTxPerWindow      int64 `protobuf:"varint,22,opt,name=MaxTxPerWindow,proto3" json:"MaxTxPerWindow,omitempty"`           // Max TxMsg count per member per window (default: 10000)
 	RateLimitWindowSecs int64 `protobuf:"varint,23,opt,name=RateLimitWindowSecs,proto3" json:"RateLimitWindowSecs,omitempty"` // Sliding window duration in seconds (default: 86400 = 24h)
+	// Seconds a vault retains a TxMsg quarantined for failed MemberProof or bad signature.
+	// Quarantined entries are excluded from fanout + ReadSince but remain in the journal so
+	// independent observers can audit cited ledger attestations (Strikes) that reference the
+	// rejected TxID.  After expiry, Badger GC evicts the bytes; the attestation still stands
+	// because its CanonicalBytes include the TxID.
+	// If 0, DefaultQuarantineRetention is used (7 days).
+	QuarantineRetentionSecs int64 `protobuf:"varint,24,opt,name=QuarantineRetentionSecs,proto3" json:"QuarantineRetentionSecs,omitempty"`
 	// Maximum seconds after an epoch rotation during which old-epoch TxMsgs are still accepted.
 	// Allows offline members (mesh-only, off-grid) to author under the old epoch and have their
 	// TxMsgs accepted when they reconnect.  After this window, old-epoch TxMsgs are rejected.
@@ -2394,6 +2401,13 @@ func (x *PlanetEpoch) GetMaxTxPerWindow() int64 {
 func (x *PlanetEpoch) GetRateLimitWindowSecs() int64 {
 	if x != nil {
 		return x.RateLimitWindowSecs
+	}
+	return 0
+}
+
+func (x *PlanetEpoch) GetQuarantineRetentionSecs() int64 {
+	if x != nil {
+		return x.QuarantineRetentionSecs
 	}
 	return 0
 }
@@ -3653,7 +3667,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xfc\x05\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xb6\x06\n" +
 	"\vPlanetEpoch\x12$\n" +
 	"\bEpochTag\x18\x01 \x01(\v2\b.amp.TagR\bEpochTag\x12.\n" +
 	"\rPreviousEpoch\x18\x02 \x01(\v2\b.amp.TagR\rPreviousEpoch\x12\x14\n" +
@@ -3664,7 +3678,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\fMaxTxMsgSize\x18\x14 \x01(\x03R\fMaxTxMsgSize\x12,\n" +
 	"\x11MaxBytesPerWindow\x18\x15 \x01(\x03R\x11MaxBytesPerWindow\x12&\n" +
 	"\x0eMaxTxPerWindow\x18\x16 \x01(\x03R\x0eMaxTxPerWindow\x120\n" +
-	"\x13RateLimitWindowSecs\x18\x17 \x01(\x03R\x13RateLimitWindowSecs\x12&\n" +
+	"\x13RateLimitWindowSecs\x18\x17 \x01(\x03R\x13RateLimitWindowSecs\x128\n" +
+	"\x17QuarantineRetentionSecs\x18\x18 \x01(\x03R\x17QuarantineRetentionSecs\x12&\n" +
 	"\x0eMaxGracePeriod\x18\x19 \x01(\x03R\x0eMaxGracePeriod\x12\x1e\n" +
 	"\x05Foyer\x18\x1e \x01(\v2\b.amp.TagR\x05Foyer\x12\x1e\n" +
 	"\x05Index\x18\x1f \x01(\v2\b.amp.TagR\x05Index\x12\x1e\n" +

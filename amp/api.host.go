@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/url"
+	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
@@ -177,12 +178,26 @@ type Session interface {
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
 // This is the primary storage for the vault sync engine — it preserves the original wire-format
 // TxMsg bytes for signature verification and peer-to-peer propagation.
+//
+// Quarantine: entries that fail cryptographic verification (bad MemberProof or bad signature)
+// can be marked quarantined with a TTL.  Quarantined entries are suppressed from ReadSince
+// (and therefore from fanout + sync propagation) while remaining retrievable via ReadQuarantined
+// for audit.  HighWater and RangeHash continue to include quarantined entries so peers converge
+// on the same journal shape.  The underlying store evicts quarantined entries after TTL.
 type TxJournal interface {
 	Close() error
 	Append(planetID tag.UID, txTimeID tag.UID, raw []byte) error
 	ReadSince(planetID tag.UID, after tag.UID, cb func(txTimeID tag.UID, raw []byte) bool) error
 	HighWater(planetID tag.UID) (tag.UID, error)
 	RangeHash(planetID tag.UID, start, end tag.UID) ([32]byte, error)
+
+	// Quarantine rewrites the existing entry for (planetID, txTimeID) with a quarantine
+	// flag and the given TTL.  Returns ErrNotFound-style status if the entry is absent.
+	Quarantine(planetID tag.UID, txTimeID tag.UID, ttl time.Duration) error
+
+	// ReadQuarantined iterates quarantined entries strictly after the `after` mark.
+	// Parallel to ReadSince; returning false from the callback stops iteration.
+	ReadQuarantined(planetID tag.UID, after tag.UID, cb func(txTimeID tag.UID, raw []byte) bool) error
 }
 
 // TxOutbox queues locally authored TxMsgs and blobs for propagation to vaults.

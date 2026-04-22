@@ -492,6 +492,14 @@ message PlanetEpoch {
     int64               MaxTxPerWindow = 22;           // Max TxMsg count per member per window (default: 10000)
     int64               RateLimitWindowSecs = 23;      // Sliding window duration in seconds (default: 86400 = 24h)
 
+    // Seconds a vault retains a TxMsg quarantined for failed MemberProof or bad signature.
+    // Quarantined entries are excluded from fanout + ReadSince but remain in the journal so
+    // independent observers can audit cited ledger attestations (Strikes) that reference the
+    // rejected TxID.  After expiry, Badger GC evicts the bytes; the attestation still stands
+    // because its CanonicalBytes include the TxID.
+    // If 0, DefaultQuarantineRetention is used (7 days).
+    int64               QuarantineRetentionSecs = 24;
+
     // Maximum seconds after an epoch rotation during which old-epoch TxMsgs are still accepted.
     // Allows offline members (mesh-only, off-grid) to author under the old epoch and have their
     // TxMsgs accepted when they reconnect.  After this window, old-epoch TxMsgs are rejected.
