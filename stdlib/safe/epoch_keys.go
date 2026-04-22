@@ -12,6 +12,9 @@ import (
 
 // epochKeyStore implements EpochKeyStore with in-memory maps and encrypted-at-rest persistence.
 //
+// Each epoch gets one EpochKeyEntry carrying up to 4 role-tagged materials (see KeyRole).
+// Map is keyed by EpochID; role lookup is a short linear scan within the entry.
+//
 // All epoch keys are loaded on Open and persisted on Close via the same Guard/TomeStore mechanism
 // used by the identity Enclave.  For extreme scale (millions of historical keys), a future
 // implementation can add LRU eviction and lazy disk loading — the interface is unchanged.
@@ -23,7 +26,7 @@ type epochKeyStore struct {
 	closed  bool
 	changed bool
 
-	// All epoch keys indexed by epochID for O(1) lookup.
+	// All epoch entries indexed by epochID for O(1) lookup.
 	keys map[tag.UID]*EpochKeyEntry
 
 	// Tracks which epochID is current for each containerID.
@@ -107,13 +110,34 @@ func (eks *epochKeyStore) PutKey(containerID tag.UID, key SymKey) error {
 
 	keyCopy := append([]byte(nil), key.Bytes...)
 
-	eks.keys[key.EpochID] = &EpochKeyEntry{
-		ContainerID_0: containerID[0],
-		ContainerID_1: containerID[1],
-		EpochID_0:     key.EpochID[0],
-		EpochID_1:     key.EpochID[1],
-		CryptoKitID:   key.CryptoKitID,
-		Key:           keyCopy,
+	// Merge into the existing epoch entry if present; otherwise create one.
+	entry, ok := eks.keys[key.EpochID]
+	if !ok {
+		entry = &EpochKeyEntry{
+			ContainerID_0: containerID[0],
+			ContainerID_1: containerID[1],
+			EpochID_0:     key.EpochID[0],
+			EpochID_1:     key.EpochID[1],
+			CryptoKitID:   key.CryptoKitID,
+		}
+		eks.keys[key.EpochID] = entry
+	}
+
+	// Upsert the role within this epoch's RoleKeys.
+	placed := false
+	for i, rk := range entry.RoleKeys {
+		if rk.Role == key.Role {
+			Zero(entry.RoleKeys[i].Key)
+			entry.RoleKeys[i].Key = keyCopy
+			placed = true
+			break
+		}
+	}
+	if !placed {
+		entry.RoleKeys = append(entry.RoleKeys, &RoleKey{
+			Role: key.Role,
+			Key:  keyCopy,
+		})
 	}
 
 	// Auto-set as current if no current epoch exists or if this is newer
@@ -129,7 +153,7 @@ func (eks *epochKeyStore) PutKey(containerID tag.UID, key SymKey) error {
 	return nil
 }
 
-func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID) (SymKey, error) {
+func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID, role KeyRole) (SymKey, error) {
 	eks.mu.RLock()
 	defer eks.mu.RUnlock()
 
@@ -141,15 +165,20 @@ func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID) (SymKey, error) {
 	if !ok {
 		return SymKey{}, status.Code_KeyringNotFound.Errorf("epoch key not found: %s", epochID.Base32())
 	}
-
-	return SymKey{
-		CryptoKitID: entry.CryptoKitID,
-		EpochID:     epochID,
-		Bytes:       append([]byte(nil), entry.Key...),
-	}, nil
+	for _, rk := range entry.RoleKeys {
+		if rk.Role == role {
+			return SymKey{
+				CryptoKitID: entry.CryptoKitID,
+				EpochID:     epochID,
+				Role:        rk.Role,
+				Bytes:       append([]byte(nil), rk.Key...),
+			}, nil
+		}
+	}
+	return SymKey{}, status.Code_KeyringNotFound.Errorf("epoch key role not found: %s role=%s", epochID.Base32(), role)
 }
 
-func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID) (SymKey, error) {
+func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID, role KeyRole) (SymKey, error) {
 	eks.mu.RLock()
 	defer eks.mu.RUnlock()
 
@@ -166,12 +195,17 @@ func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID) (SymKey, error) {
 	if !ok {
 		return SymKey{}, status.Code_KeyringNotFound.Errorf("current epoch key missing: %s", epochID.Base32())
 	}
-
-	return SymKey{
-		CryptoKitID: entry.CryptoKitID,
-		EpochID:     epochID,
-		Bytes:       append([]byte(nil), entry.Key...),
-	}, nil
+	for _, rk := range entry.RoleKeys {
+		if rk.Role == role {
+			return SymKey{
+				CryptoKitID: entry.CryptoKitID,
+				EpochID:     epochID,
+				Role:        rk.Role,
+				Bytes:       append([]byte(nil), rk.Key...),
+			}, nil
+		}
+	}
+	return SymKey{}, status.Code_KeyringNotFound.Errorf("current epoch key role missing: %s role=%s", epochID.Base32(), role)
 }
 
 func (eks *epochKeyStore) SetCurrentEpoch(containerID, epochID tag.UID) error {
@@ -256,7 +290,9 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 
 func (eks *epochKeyStore) zeroKeys() {
 	for _, entry := range eks.keys {
-		Zero(entry.Key)
+		for _, rk := range entry.RoleKeys {
+			Zero(rk.Key)
+		}
 	}
 	eks.keys = nil
 	eks.current = nil

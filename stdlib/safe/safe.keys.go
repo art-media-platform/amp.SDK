@@ -36,12 +36,14 @@ func (kp *KeyPair) Zero() {
 	kp.Prv = nil
 }
 
-// SymKey is a runtime symmetric key, carrying its CryptoKit and the EpochID
-// under which it was registered. Bytes must be zeroed (via Zero) when no longer
-// needed.
+// SymKey is a runtime symmetric key, carrying its CryptoKit, EpochID, and Role.
+// A given epoch may carry up to 4 distinct SymKeys (one per KeyRole) — access-tiered
+// distribution places different roles in different members' hands (see KeyRole).
+// Bytes must be zeroed (via Zero) when no longer needed.
 type SymKey struct {
 	CryptoKitID CryptoKitID
 	EpochID     tag.UID
+	Role        KeyRole
 	Bytes       []byte
 }
 

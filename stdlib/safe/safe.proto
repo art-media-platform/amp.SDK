@@ -89,6 +89,20 @@ enum HashKitID {
     Blake2s_256        = 5;
 }
 
+// KeyRole is a 2-bit role tag for symmetric epoch keys.  Each epoch may carry
+// up to 4 roles of distributed key material, keyed on (containerID, epochID, role).
+//
+// Roles gate different capabilities: Content admits decryption; WriteSeed admits
+// MemberProof forgery (and thus cryptographic write-access enforcement at the vault).
+// Access-tiered key distribution is the substrate that makes channel-level ACC
+// enforcement cryptographic rather than policy-based.
+enum KeyRole {
+    ContentKey      = 0;    // planet content key / channel read key — drives decryption
+    WriteSeed       = 1;    // channel write seed — drives MemberProof (ReadWrite+ only)
+    ReservedRole2   = 2;    // reserved for future role (e.g. audit / observation key)
+    ReservedRole3   = 3;    // reserved
+}
+
 
 // CryptOp enumerates cryptographic operations performed by an Enclave.
 enum CryptOp {
@@ -155,16 +169,33 @@ message KeyTome {
 }
 
 
-// EpochKeyEntry stores a single symmetric epoch key for a planet or channel.
-// Addressed by (ContainerID, EpochID) — both are tag.UIDs.
+// RoleKey is one role-tagged symmetric key material — the decrypted, at-rest form
+// held inside an EpochKeyEntry.  Parallels amp.WrappedKey (the in-transit,
+// encrypted-to-peer form carried in MemberEpoch): same 2-bit role namespace,
+// different storage context.
+//
+// Invariant: symmetric key material only.  Asymmetric private keys never ride
+// this channel — they live in Enclave and are distributed (if at all) via
+// Enclave-to-Enclave transfer.  Future asymmetric per-epoch roles (threshold
+// signing shares, per-epoch signing identities) require a distinct structure,
+// not an extension of RoleKey.
+message RoleKey {
+    KeyRole             Role = 1;    // which role this material serves (up to 4 per epoch)
+    bytes               Key  = 2;    // symmetric key material (typically 32 bytes; HKDF input)
+}
+
+// EpochKeyEntry stores the symmetric key materials for one epoch on one container.
+// Each epoch may carry up to 4 role-tagged materials (see KeyRole) — access-tiered
+// distribution places different roles in different members' hands.  The epoch is the
+// unit of rotation, grant, and eviction, so its roles live together.
 // EpochID is time-based (from tag.NowID), providing natural temporal ordering.
 message EpochKeyEntry {
     fixed64             ContainerID_0   = 1;    // Planet or channel UID, bytes 0..7
     fixed64             ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
     fixed64             EpochID_0       = 3;    // Epoch UID, bytes 0..7 (time-based)
     fixed64             EpochID_1       = 4;    // Epoch UID, bytes 8..15
-    CryptoKitID         CryptoKitID     = 5;    // Crypto suite for this epoch key
-    bytes               Key             = 6;    // Symmetric key material (32 bytes)
+    CryptoKitID         CryptoKitID     = 5;    // Crypto suite for this epoch
+    repeated RoleKey    RoleKeys        = 8;    // 1-4 role-tagged materials held for this epoch
 }
 
 // EpochKeyTome is the persistence format for all symmetric epoch keys.

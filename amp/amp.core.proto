@@ -574,20 +574,49 @@ enum MemberStatus {
 }
 
 
-// MemberEpoch is published in the ACC channel to add, modify, or revoke a member.
+// WrappedKey carries one role-tagged symmetric key, encrypted to a specific member
+// via EncryptToPeer (X25519 ECDH + AEAD).  A MemberEpoch publishes one WrappedKey
+// per role the recipient is authorized for (up to 4 roles per epoch — see safe.KeyRole).
+//
+// Planet scope: one entry with Role=ContentKey (the planet content key).
+// Channel scope: one entry with Role=ContentKey (for ReadOnly+), and if ReadWrite+,
+// a second entry with Role=WriteSeed.
+//
+// Invariant: symmetric key material only.  Asymmetric private keys never ride
+// this channel — they live in Enclave and are distributed (if at all) via
+// Enclave-to-Enclave transfer, not MemberEpoch.
+message WrappedKey {
+    safe.KeyRole        Role      = 1;    // which role this key material serves
+    bytes               Encrypted = 2;    // ciphertext produced by EncryptToPeer(admin, recipient)
+}
+
+// MemberEpoch delivers epoch-scoped key material and status for one member on one node.
+// Node = planet head (amp.HeadNodeID) for planet-level records, channel UID for channel records.
+// Published as an op in the ACC channel by the node's admin when:
+//   - The node's epoch rotates (fresh keys for all members)
+//   - A member is added / removed / changed
+//
+// WrappedKeys are access-tiered: ReadOnly+ members receive Role=Content; ReadWrite+
+// additionally receive Role=WriteSeed.  The WriteSeed is the substrate for MemberProof
+// HMAC, so members without it cannot forge write proofs — the vault's enforcement of
+// channel ACC becomes cryptographic rather than policy-based.
 message MemberEpoch {
 
-    // Member identity.
+    // Member identity (recipient of the wrapped keys).
     Tag                 MemberTag = 1;
 
-    // Planet (or channel) epoch this entry belongs to.
-    // Must match the PlanetEpoch.EpochTag so recipients store the key under the correct ID.
+    // Node this epoch record applies to — planet head for planet-level, channel UID otherwise.
+    Tag                 Node = 3;
+
+    // Epoch this entry belongs to (planet epoch or channel epoch).
+    // Must match PlanetEpoch.EpochTag / ChannelEpoch.Epoch so recipients store keys under the correct ID.
     Tag                 Epoch = 2;
 
-    // Planet epoch key encrypted with this member's asymmetric public key (via EncryptToPeer).
-    bytes               EncryptedPlanetKey = 5;
+    // Role-tagged wrapped keys, encrypted to the recipient via EncryptToPeer.
+    // Empty for Revoked/Suspended records.
+    repeated WrappedKey WrappedKeys = 30;
 
-    // Lifecycle state as of this MemberEpoch.
+    // Lifecycle state as of this MemberEpoch.  Meaningful at planet scope; reserved at channel scope.
     MemberStatus        Status = 8;
 
     // Member's signing public key — used for signature verification and,
@@ -598,7 +627,7 @@ message MemberEpoch {
     // Typically matches the epoch's CryptoKitID but allows per-member override.
     safe.CryptoKitID    CryptoKitID = 15;
 
-    // Signing public key of the admin who encrypted EncryptedPlanetKey.
+    // Signing public key of the admin who wrapped the WrappedKeys payload.
     // The recipient needs this for DecryptFromPeer (CryptoKit derives asymmetric key internally).
     bytes               EncryptorPubKey = 18;
 

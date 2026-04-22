@@ -231,6 +231,65 @@ func (HashKitID) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{3}
 }
 
+// KeyRole is a 2-bit role tag for symmetric epoch keys.  Each epoch may carry
+// up to 4 roles of distributed key material, keyed on (containerID, epochID, role).
+//
+// Roles gate different capabilities: Content admits decryption; WriteSeed admits
+// MemberProof forgery (and thus cryptographic write-access enforcement at the vault).
+// Access-tiered key distribution is the substrate that makes channel-level ACC
+// enforcement cryptographic rather than policy-based.
+type KeyRole int32
+
+const (
+	KeyRole_ContentKey    KeyRole = 0 // planet content key / channel read key — drives decryption
+	KeyRole_WriteSeed     KeyRole = 1 // channel write seed — drives MemberProof (ReadWrite+ only)
+	KeyRole_ReservedRole2 KeyRole = 2 // reserved for future role (e.g. audit / observation key)
+	KeyRole_ReservedRole3 KeyRole = 3 // reserved
+)
+
+// Enum value maps for KeyRole.
+var (
+	KeyRole_name = map[int32]string{
+		0: "ContentKey",
+		1: "WriteSeed",
+		2: "ReservedRole2",
+		3: "ReservedRole3",
+	}
+	KeyRole_value = map[string]int32{
+		"ContentKey":    0,
+		"WriteSeed":     1,
+		"ReservedRole2": 2,
+		"ReservedRole3": 3,
+	}
+)
+
+func (x KeyRole) Enum() *KeyRole {
+	p := new(KeyRole)
+	*p = x
+	return p
+}
+
+func (x KeyRole) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (KeyRole) Descriptor() protoreflect.EnumDescriptor {
+	return file_stdlib_safe_safe_proto_enumTypes[4].Descriptor()
+}
+
+func (KeyRole) Type() protoreflect.EnumType {
+	return &file_stdlib_safe_safe_proto_enumTypes[4]
+}
+
+func (x KeyRole) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use KeyRole.Descriptor instead.
+func (KeyRole) EnumDescriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
+}
+
 // CryptOp enumerates cryptographic operations performed by an Enclave.
 type CryptOp int32
 
@@ -276,11 +335,11 @@ func (x CryptOp) String() string {
 }
 
 func (CryptOp) Descriptor() protoreflect.EnumDescriptor {
-	return file_stdlib_safe_safe_proto_enumTypes[4].Descriptor()
+	return file_stdlib_safe_safe_proto_enumTypes[5].Descriptor()
 }
 
 func (CryptOp) Type() protoreflect.EnumType {
-	return &file_stdlib_safe_safe_proto_enumTypes[4]
+	return &file_stdlib_safe_safe_proto_enumTypes[5]
 }
 
 func (x CryptOp) Number() protoreflect.EnumNumber {
@@ -289,7 +348,7 @@ func (x CryptOp) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CryptOp.Descriptor instead.
 func (CryptOp) EnumDescriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
 }
 
 // GuardInfo describes a Guard's capabilities and identity.
@@ -946,8 +1005,72 @@ func (x *KeyTome) GetKeys() []*KeyPairRecord {
 	return nil
 }
 
-// EpochKeyEntry stores a single symmetric epoch key for a planet or channel.
-// Addressed by (ContainerID, EpochID) — both are tag.UIDs.
+// RoleKey is one role-tagged symmetric key material — the decrypted, at-rest form
+// held inside an EpochKeyEntry.  Parallels amp.WrappedKey (the in-transit,
+// encrypted-to-peer form carried in MemberEpoch): same 2-bit role namespace,
+// different storage context.
+//
+// Invariant: symmetric key material only.  Asymmetric private keys never ride
+// this channel — they live in Enclave and are distributed (if at all) via
+// Enclave-to-Enclave transfer.  Future asymmetric per-epoch roles (threshold
+// signing shares, per-epoch signing identities) require a distinct structure,
+// not an extension of RoleKey.
+type RoleKey struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Role          KeyRole                `protobuf:"varint,1,opt,name=Role,proto3,enum=safe.KeyRole" json:"Role,omitempty"` // which role this material serves (up to 4 per epoch)
+	Key           []byte                 `protobuf:"bytes,2,opt,name=Key,proto3" json:"Key,omitempty"`                      // symmetric key material (typically 32 bytes; HKDF input)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RoleKey) Reset() {
+	*x = RoleKey{}
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoleKey) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoleKey) ProtoMessage() {}
+
+func (x *RoleKey) ProtoReflect() protoreflect.Message {
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoleKey.ProtoReflect.Descriptor instead.
+func (*RoleKey) Descriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *RoleKey) GetRole() KeyRole {
+	if x != nil {
+		return x.Role
+	}
+	return KeyRole_ContentKey
+}
+
+func (x *RoleKey) GetKey() []byte {
+	if x != nil {
+		return x.Key
+	}
+	return nil
+}
+
+// EpochKeyEntry stores the symmetric key materials for one epoch on one container.
+// Each epoch may carry up to 4 role-tagged materials (see KeyRole) — access-tiered
+// distribution places different roles in different members' hands.  The epoch is the
+// unit of rotation, grant, and eviction, so its roles live together.
 // EpochID is time-based (from tag.NowID), providing natural temporal ordering.
 type EpochKeyEntry struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -955,15 +1078,15 @@ type EpochKeyEntry struct {
 	ContainerID_1 uint64                 `protobuf:"fixed64,2,opt,name=ContainerID_1,json=ContainerID1,proto3" json:"ContainerID_1,omitempty"` // Planet or channel UID, bytes 8..15
 	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`             // Epoch UID, bytes 0..7 (time-based)
 	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Epoch UID, bytes 8..15
-	CryptoKitID   CryptoKitID            `protobuf:"varint,5,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`  // Crypto suite for this epoch key
-	Key           []byte                 `protobuf:"bytes,6,opt,name=Key,proto3" json:"Key,omitempty"`                                         // Symmetric key material (32 bytes)
+	CryptoKitID   CryptoKitID            `protobuf:"varint,5,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`  // Crypto suite for this epoch
+	RoleKeys      []*RoleKey             `protobuf:"bytes,8,rep,name=RoleKeys,proto3" json:"RoleKeys,omitempty"`                               // 1-4 role-tagged materials held for this epoch
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *EpochKeyEntry) Reset() {
 	*x = EpochKeyEntry{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -975,7 +1098,7 @@ func (x *EpochKeyEntry) String() string {
 func (*EpochKeyEntry) ProtoMessage() {}
 
 func (x *EpochKeyEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -988,7 +1111,7 @@ func (x *EpochKeyEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochKeyEntry.ProtoReflect.Descriptor instead.
 func (*EpochKeyEntry) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EpochKeyEntry) GetContainerID_0() uint64 {
@@ -1026,9 +1149,9 @@ func (x *EpochKeyEntry) GetCryptoKitID() CryptoKitID {
 	return CryptoKitID_UnspecifiedKit
 }
 
-func (x *EpochKeyEntry) GetKey() []byte {
+func (x *EpochKeyEntry) GetRoleKeys() []*RoleKey {
 	if x != nil {
-		return x.Key
+		return x.RoleKeys
 	}
 	return nil
 }
@@ -1045,7 +1168,7 @@ type EpochKeyTome struct {
 
 func (x *EpochKeyTome) Reset() {
 	*x = EpochKeyTome{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1057,7 +1180,7 @@ func (x *EpochKeyTome) String() string {
 func (*EpochKeyTome) ProtoMessage() {}
 
 func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1070,7 +1193,7 @@ func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochKeyTome.ProtoReflect.Descriptor instead.
 func (*EpochKeyTome) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *EpochKeyTome) GetRevision() int64 {
@@ -1108,7 +1231,7 @@ type EncryptedSymKey struct {
 
 func (x *EncryptedSymKey) Reset() {
 	*x = EncryptedSymKey{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1120,7 +1243,7 @@ func (x *EncryptedSymKey) String() string {
 func (*EncryptedSymKey) ProtoMessage() {}
 
 func (x *EncryptedSymKey) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1133,7 +1256,7 @@ func (x *EncryptedSymKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EncryptedSymKey.ProtoReflect.Descriptor instead.
 func (*EncryptedSymKey) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *EncryptedSymKey) GetCryptoKitID() CryptoKitID {
@@ -1246,14 +1369,17 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x06PrvKey\x18\b \x01(\fR\x06PrvKey\"N\n" +
 	"\aKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
-	"\x04Keys\x18\x02 \x03(\v2\x13.safe.KeyPairRecordR\x04Keys\"\xda\x01\n" +
+	"\x04Keys\x18\x02 \x03(\v2\x13.safe.KeyPairRecordR\x04Keys\">\n" +
+	"\aRoleKey\x12!\n" +
+	"\x04Role\x18\x01 \x01(\x0e2\r.safe.KeyRoleR\x04Role\x12\x10\n" +
+	"\x03Key\x18\x02 \x01(\fR\x03Key\"\xf3\x01\n" +
 	"\rEpochKeyEntry\x12#\n" +
 	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
 	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
 	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
 	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x123\n" +
-	"\vCryptoKitID\x18\x05 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x10\n" +
-	"\x03Key\x18\x06 \x01(\fR\x03Key\"S\n" +
+	"\vCryptoKitID\x18\x05 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12)\n" +
+	"\bRoleKeys\x18\b \x03(\v2\r.safe.RoleKeyR\bRoleKeys\"S\n" +
 	"\fEpochKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
 	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xc4\x01\n" +
@@ -1282,7 +1408,13 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\tHashKitID\x12\x16\n" +
 	"\x12UnspecifiedHashKit\x10\x00\x12\f\n" +
 	"\bSHA3_256\x10\x03\x12\x0f\n" +
-	"\vBlake2s_256\x10\x05*[\n" +
+	"\vBlake2s_256\x10\x05*N\n" +
+	"\aKeyRole\x12\x0e\n" +
+	"\n" +
+	"ContentKey\x10\x00\x12\r\n" +
+	"\tWriteSeed\x10\x01\x12\x11\n" +
+	"\rReservedRole2\x10\x02\x12\x11\n" +
+	"\rReservedRole3\x10\x03*[\n" +
 	"\aCryptOp\x12\b\n" +
 	"\x04Sign\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -1304,42 +1436,46 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 	return file_stdlib_safe_safe_proto_rawDescData
 }
 
-var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
+var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),              // 0: safe.Const
 	(KeyType)(0),            // 1: safe.KeyType
 	(CryptoKitID)(0),        // 2: safe.CryptoKitID
 	(HashKitID)(0),          // 3: safe.HashKitID
-	(CryptOp)(0),            // 4: safe.CryptOp
-	(*GuardInfo)(nil),       // 5: safe.GuardInfo
-	(*WrappedDEK)(nil),      // 6: safe.WrappedDEK
-	(*SealedTome)(nil),      // 7: safe.SealedTome
-	(*CryptOpArgs)(nil),     // 8: safe.CryptOpArgs
-	(*CryptOpOut)(nil),      // 9: safe.CryptOpOut
-	(*KeyRef)(nil),          // 10: safe.KeyRef
-	(*KeyPairRecord)(nil),   // 11: safe.KeyPairRecord
-	(*KeyTome)(nil),         // 12: safe.KeyTome
-	(*EpochKeyEntry)(nil),   // 13: safe.EpochKeyEntry
-	(*EpochKeyTome)(nil),    // 14: safe.EpochKeyTome
-	(*EncryptedSymKey)(nil), // 15: safe.EncryptedSymKey
+	(KeyRole)(0),            // 4: safe.KeyRole
+	(CryptOp)(0),            // 5: safe.CryptOp
+	(*GuardInfo)(nil),       // 6: safe.GuardInfo
+	(*WrappedDEK)(nil),      // 7: safe.WrappedDEK
+	(*SealedTome)(nil),      // 8: safe.SealedTome
+	(*CryptOpArgs)(nil),     // 9: safe.CryptOpArgs
+	(*CryptOpOut)(nil),      // 10: safe.CryptOpOut
+	(*KeyRef)(nil),          // 11: safe.KeyRef
+	(*KeyPairRecord)(nil),   // 12: safe.KeyPairRecord
+	(*KeyTome)(nil),         // 13: safe.KeyTome
+	(*RoleKey)(nil),         // 14: safe.RoleKey
+	(*EpochKeyEntry)(nil),   // 15: safe.EpochKeyEntry
+	(*EpochKeyTome)(nil),    // 16: safe.EpochKeyTome
+	(*EncryptedSymKey)(nil), // 17: safe.EncryptedSymKey
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
-	6,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
-	4,  // 1: safe.CryptOpArgs.Op:type_name -> safe.CryptOp
+	7,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
+	5,  // 1: safe.CryptOpArgs.Op:type_name -> safe.CryptOp
 	2,  // 2: safe.CryptOpArgs.DefaultKit:type_name -> safe.CryptoKitID
-	10, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
+	11, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
 	2,  // 4: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
 	1,  // 5: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
-	11, // 6: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
-	2,  // 7: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
-	13, // 8: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	2,  // 9: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	12, // 6: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
+	4,  // 7: safe.RoleKey.Role:type_name -> safe.KeyRole
+	2,  // 8: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
+	14, // 9: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
+	15, // 10: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	2,  // 11: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1352,8 +1488,8 @@ func file_stdlib_safe_safe_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
-			NumEnums:      5,
-			NumMessages:   11,
+			NumEnums:      6,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

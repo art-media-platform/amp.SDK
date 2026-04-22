@@ -111,22 +111,25 @@ type Enclave interface {
 //   - High volume: up to millions of keys per user across all planets/channels
 //   - Must be exported for HKDF derivation (content_key, proof_key)
 //   - Hot/cold separation: only current epoch keys need to be in memory
-//   - Simple put/get by (containerID, epochID) — no PubKey indexing needed
+//   - Each epoch may carry up to 4 distinct key materials (one per KeyRole) —
+//     access-tiered channel key distribution puts different roles in different
+//     members' hands
+//   - Put/get keyed by (containerID, epochID, role)
 //
 // All methods are threadsafe.
 type EpochKeyStore interface {
 
 	// PutKey stores a symmetric epoch key for the given container (planet or channel).
-	// key.EpochID and key.Bytes must be set; key.CryptoKitID selects the crypto suite.
+	// key.EpochID, key.Role, and key.Bytes must be set; key.CryptoKitID selects the crypto suite.
 	PutKey(containerID tag.UID, key SymKey) error
 
-	// GetKey retrieves a symmetric epoch key by its container and epoch UIDs.
+	// GetKey retrieves a symmetric epoch key by its container + epoch UIDs + role.
 	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
-	GetKey(containerID, epochID tag.UID) (SymKey, error)
+	GetKey(containerID, epochID tag.UID, role KeyRole) (SymKey, error)
 
-	// GetCurrentKey returns the current (most recent) epoch key for a container.
+	// GetCurrentKey returns the current (most recent) epoch key for a container + role.
 	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
-	GetCurrentKey(containerID tag.UID) (SymKey, error)
+	GetCurrentKey(containerID tag.UID, role KeyRole) (SymKey, error)
 
 	// SetCurrentEpoch marks an epoch as the current one for a container.
 	SetCurrentEpoch(containerID, epochID tag.UID) error
