@@ -24,8 +24,10 @@ const Tx {
 }
 
 
-// The bootstrapping ("head") node ID
-const int32 HeadNodeID_1 = 0x37;
+// The bootstrapping ("head") node — well-known channel UID hosting planet
+// governance records (PlanetEpoch, MemberEpoch, ChannelEpoch) and session
+// meta-ops (Login, PlanetInviteOp).  Deterministic across all planets.
+const uid HeadNodeID = {0x0, 0x37};
 
 // Default TCP port used to expose amp.Host service.
 const int32 DefaultServicePort = 5192;

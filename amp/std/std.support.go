@@ -34,8 +34,6 @@ func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess am
 	return dst.PushTx(tx, sess)
 }
 
-var SessionContextID = tag.UID{0, 8675309}
-
 // LedgerNodeID is the well-known channel UID of the planet ledger — where
 // Attestations (strikes, endorsements, witness records, audits, amnesties)
 // are filed.  Deterministic across all planets so every member resolves the

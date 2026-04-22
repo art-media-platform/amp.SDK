@@ -20,11 +20,6 @@ const (
 	DefaultMaxGracePeriod int64 = 90 * 24 * 60 * 60
 )
 
-var (
-	// Bootstrapping aka "head" node ID where to start.
-	HeadNodeID = tag.UID{0, uint64(HeadNodeID_1)}
-)
-
 // GracePeriod returns the effective grace period for this epoch.
 // Returns DefaultMaxGracePeriod if MaxGracePeriod is zero (unset).
 func (ep *PlanetEpoch) GracePeriod() int64 {

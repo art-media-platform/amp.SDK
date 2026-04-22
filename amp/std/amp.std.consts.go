@@ -91,7 +91,6 @@ var Attr = struct {
 	BlobAttr                   tag.Name
 	BlobRef                    tag.Name
 	NodeBlobs                  tag.Name
-	ContextID                  tag.UID
 }{
 
 	// ─── App-centric tags ───────────────────────────────────────────
@@ -216,19 +215,22 @@ var Attr = struct {
 
 	BlobRef                   : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},            // 2D3SVVXWMD9PMGN098CHYJ0Z5S
 	NodeBlobs                 : tag.Name{ID: tag.UID{0x47539BDD1AB3229D, 0xF4090FADFB02BF0B}, Canonic: "amp.blob.node.blobrefs"},  // 27BFEXU6PM4BFZ828GPRXH5GSC
-
-	ContextID                 : tag.UID{0x0, 0x777},
 }
 
-// ─── The bootstrapping ("head") node ID ─────────────────────────
 const (
-	HeadNodeID_1     = int32(0x37)
 	// Scalar constants
 	ContentGlyphURI  = "asset:glyph/"
 	GenericImageType = "image/*"
 	GenericAudioType = "audio/*"
 	GenericVideoType = "video/*"
 	BulletSeparator  = " · "
+)
+
+// ─── Session-scope well-known IDs. ──────────────────────────────
+// ContextID is attached to TxMsgs that carry session-level meta-ops
+// (login, logout, status) so the receiving session can match request/response.
+var (
+	SessionContextID = tag.UID{0x0, 0x777}
 )
 
 const (

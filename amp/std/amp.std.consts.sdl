@@ -137,11 +137,14 @@ tags Attr {
 
 }
 
-// The bootstrapping ("head") node ID
-const int32 HeadNodeID_1 = 0x37;
+// Session-scope well-known IDs.
+// ContextID is attached to TxMsgs that carry session-level meta-ops
+// (login, logout, status) so the receiving session can match request/response.
+const Session {
+    uid ContextID = {0x0, 0x777};
+}
 
-
-// Scalar constants
+ååå
 const string ContentGlyphURI   = "asset:glyph/";
 const string GenericImageType  = "image/*";
 const string GenericAudioType  = "audio/*";

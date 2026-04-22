@@ -4,9 +4,16 @@
 
 package amp
 
-// ─── The bootstrapping ("head") node ID ─────────────────────────
+import "github.com/art-media-platform/amp.SDK/stdlib/tag"
+
+var (
+	// The bootstrapping ("head") node — well-known channel UID hosting planet
+	// governance records (PlanetEpoch, MemberEpoch, ChannelEpoch) and session
+	// meta-ops (Login, PlanetInviteOp).  Deterministic across all planets.
+	HeadNodeID = tag.UID{0x0, 0x37}
+)
+
 const (
-	HeadNodeID_1       = int32(0x37)
 	// Default TCP port used to expose amp.Host service.
 	DefaultServicePort = int32(5192)
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
