@@ -68,7 +68,10 @@ func TestP256_SignVerify(t *testing.T) {
 		t.Fatalf("Verify should succeed: %v", err)
 	}
 
-	// Tampered message must fail.
+	// Tampered message must fail.  P-256 ECDSA signatures are deterministic over
+	// the message digest (SHA-256), so any single-bit change in the input produces
+	// a digest the signature no longer validates against.  An attacker cannot
+	// re-use a valid signature for a different message.
 	bad := append([]byte{}, msg...)
 	bad[0] ^= 0xFF
 	if err := kit.Verify(sig, bad, kp.Pub.Bytes); err == nil {
