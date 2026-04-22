@@ -117,6 +117,46 @@ func TestTxSerialize(t *testing.T) {
 	}
 }
 
+// TestTxWithinGracePeriod exercises the revocation-cliff math: after a member
+// is suspended or revoked under a new epoch, TxMsgs they authored before that
+// epoch's timestamp remain acceptable for MaxGracePeriod seconds and are rejected
+// after.  This is the "90-day wind-down" window that lets a departing member
+// publish a final handoff, while capping how long a compromised key can forge
+// authority after rotation.
+func TestTxWithinGracePeriod(t *testing.T) {
+	mkUID := func(unix int64) tag.UID {
+		return tag.UID{uint64(unix) << 16, 0}
+	}
+
+	epochTime := int64(1_700_000_000)
+	epochID := mkUID(epochTime)
+
+	cases := []struct {
+		name      string
+		epoch     *PlanetEpoch
+		txTime    int64
+		wantAllow bool
+	}{
+		{"future tx (tx >= epoch)", nil, epochTime + 1, true},
+		{"concurrent tx (tx == epoch)", nil, epochTime, true},
+		{"inside default grace (89 days)", nil, epochTime - 89*86400, true},
+		{"at default grace boundary (90 days)", nil, epochTime - 90*86400, true},
+		{"outside default grace (91 days)", nil, epochTime - 91*86400, false},
+		{"custom short grace 7 days — inside", &PlanetEpoch{MaxGracePeriod: 7 * 86400}, epochTime - 6*86400, true},
+		{"custom short grace 7 days — outside", &PlanetEpoch{MaxGracePeriod: 7 * 86400}, epochTime - 8*86400, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.epoch.TxWithinGracePeriod(mkUID(tc.txTime), epochID)
+			if got != tc.wantAllow {
+				t.Fatalf("TxWithinGracePeriod(tx=%d, epoch=%d, grace=%d) = %v, want %v",
+					tc.txTime, epochTime, tc.epoch.GracePeriod(), got, tc.wantAllow)
+			}
+		})
+	}
+}
+
 type bufReader struct {
 	buf []byte
 	pos int

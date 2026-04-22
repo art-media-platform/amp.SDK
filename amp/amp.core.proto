@@ -576,6 +576,18 @@ message CoSignature {
 }
 
 
+// MemberStatus is the member's lifecycle state as of this MemberEpoch.
+// Transitions are one-way: Active → Suspended → Revoked.  Suspended is a
+// reversible pause (e.g. key rotation pending).  Revoked is permanent and
+// starts the MaxGracePeriod clock after which the member's signatures are
+// no longer accepted.
+enum MemberStatus {
+    Active    = 0;
+    Suspended = 1;
+    Revoked   = 2;
+}
+
+
 // MemberEpoch is published in the ACC channel to add, modify, or revoke a member.
 message MemberEpoch {
 
@@ -589,8 +601,8 @@ message MemberEpoch {
     // Planet epoch key encrypted with this member's asymmetric public key (via EncryptToPeer).
     bytes               EncryptedPlanetKey = 5;
 
-    // 0=active, 1=suspended, 2=revoked
-    int32               Status = 8;
+    // Lifecycle state as of this MemberEpoch.
+    MemberStatus        Status = 8;
 
     // Member's signing public key — used for signature verification and,
     // via CryptoKit derivation, for asymmetric encryption (EncryptToPeer/DecryptFromPeer).
