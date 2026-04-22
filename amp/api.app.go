@@ -104,11 +104,11 @@ type TxMsg struct {
 // TxOp is a transaction op and the most granular unit of change.
 // A TxOp's serialized data is located in a TxMsg.DataStore or some other data segment.
 type TxOp struct {
-	Addr     tag.Address // CRDT item address
-	Flags    TxOpFlags   // operation to perform
-	Citation uint64      // Citation ID that resides within TxHeader.Citations
-	DataOfs  uint64      // byte offset to where serialized data is stored
-	DataLen  uint64      // byte length of associated serialized data
+	Addr        tag.Address // CRDT item address
+	Flags       TxOpFlags   // operation to perform
+	AuthContext uint64      // AuthContext index that resides within TxHeader.AuthContexts
+	DataOfs     uint64      // byte offset to where serialized data is stored
+	DataLen     uint64      // byte length of associated serialized data
 }
 
 // Binds an proto.Message prototype to its associated attribute tag.

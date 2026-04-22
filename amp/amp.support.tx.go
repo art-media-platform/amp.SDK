@@ -397,7 +397,7 @@ func (tx *TxMsg) MarshalHead(dst []byte) []byte {
 
 	for _, op := range tx.Ops {
 		dst = append(dst, byte(op.Flags))
-		dst = binary.AppendUvarint(dst, op.Citation)
+		dst = binary.AppendUvarint(dst, op.AuthContext)
 		dst = binary.AppendUvarint(dst, op.DataOfs)
 		dst = binary.AppendUvarint(dst, op.DataLen)
 		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
@@ -465,8 +465,8 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 		op.Flags = TxOpFlags(src[p])
 		p += 1
 
-		// Citation
-		if op.Citation, n = binary.Uvarint(src[p:]); n <= 0 {
+		// AuthContext
+		if op.AuthContext, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
 		}
 		p += n
@@ -837,7 +837,7 @@ func marshalPayload(tx *TxMsg, dst []byte) []byte {
 
 	for _, op := range tx.Ops {
 		dst = append(dst, byte(op.Flags))
-		dst = binary.AppendUvarint(dst, op.Citation)
+		dst = binary.AppendUvarint(dst, op.AuthContext)
 		dst = binary.AppendUvarint(dst, op.DataOfs)
 		dst = binary.AppendUvarint(dst, op.DataLen)
 		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
@@ -884,7 +884,7 @@ func unmarshalOps(tx *TxMsg, src []byte) error {
 		op.Flags = TxOpFlags(src[p])
 		p++
 
-		if op.Citation, n = binary.Uvarint(src[p:]); n <= 0 {
+		if op.AuthContext, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
 		}
 		p += n
@@ -952,7 +952,7 @@ func skipOps(src []byte, opCount uint64) (int, error) {
 		if _, n = binary.Uvarint(src[p:]); n <= 0 {
 			return 0, status.ErrMalformedTx
 		}
-		p += n // Citation
+		p += n // AuthContext
 
 		if _, n = binary.Uvarint(src[p:]); n <= 0 {
 			return 0, status.ErrMalformedTx

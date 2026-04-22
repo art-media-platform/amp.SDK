@@ -144,8 +144,8 @@ message TxHeader {
     // If set, updates the active PinRequest state.
     PinRequest          Request = 12;
 
-    // Referenced by a TxOp; a Citation references necessary context that authorizes the TxOp to be applied.
-    repeated Citation   Citations = 14;
+    // Referenced by a TxOp; an AuthContext names the governance record that authorizes the TxOp to be applied.
+    repeated AuthContext AuthContexts = 14;
 
 }
 
@@ -337,7 +337,7 @@ enum Units {
 
 
 
-// A Citation is referenced by a tx operation (TxOp), pointing to values that are expected to validate the operation to be performed.
+// An AuthContext is referenced by a tx operation (TxOp), pointing to values that authorize the operation to be performed.
 //
 // Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
 //
@@ -350,30 +350,16 @@ enum Units {
 //
 // When an ACC removes or alters a member's access, it must issue a new keyring epoch. This means for each channel member, the channel's private key
 //   is encrypted using each member's latest public key, so that only the member can decrypt them.
-message Citation {
-
-    // If set, selects which items this Citation applies to.
-    // ItemSpan            Span = 1;
+message AuthContext {
 
     // The channel epoch that contains the authorizing ACC reference
     fixed64             ChannelEpochID_0 = 2;
     fixed64             ChannelEpochID_1 = 3;
 
-    // Access Control Channel (ACC)
-    // fixed64             ACC_0 = 2;
-    // fixed64             ACC_1 = 3;
 
     // ACC epoch that authorizes the requested operation.
     fixed64             ACC_Epoch_0 = 4;
     fixed64             ACC_Epoch_1 = 5;
-
-    // // Which member authored this operation
-    // fixed64             AuthorID_0 = 6;
-    // fixed64             AuthorID_1 = 7;
-
-    // // Author epoch containing their latest public keys
-    // fixed64             AuthorEpochID_0 = 8;
-    // fixed64             AuthorEpochID_1 = 9;
 
     // Keyring ID match
     fixed64             KeyringID_0 = 10;
@@ -615,6 +601,80 @@ message MemberEpoch {
     // Signing public key of the admin who encrypted EncryptedPlanetKey.
     // The recipient needs this for DecryptFromPeer (CryptoKit derives asymmetric key internally).
     bytes               EncryptorPubKey = 18;
+
+    // Citations referenced as the basis for this epoch.  For suspensions and
+    // revocations, these point to ledger entries (strikes, audits, witness records)
+    // that informed the decision — making every governance act reviewable and
+    // appealable.  Empty for routine epochs (e.g. initial Active, key rotation).
+    repeated Citation Cites = 20;
+}
+
+
+// AttestationType names the kind of observation being recorded in the planet ledger.
+// Apps may use values above 100 for domain-specific types; 0-99 are reserved.
+enum AttestationType {
+    NotSpecified       = 0;
+    Strike             = 1;  // ACC violation observed
+    Endorsement        = 2;  // positive observation (clean cosign, delivery, etc.)
+    Witness            = 3;  // witnessed an event (for dispute resolution)
+    Audit              = 4;  // decision record — what a choice was based on
+    Amnesty            = 5;  // reverses a prior attestation (admin action)
+}
+
+
+// Attestation is a durable observation referencing a specific TxMsg as evidence.
+// Attestations live in the planet ledger (well-known channel amp.ledger) and are
+// written as ordinary TxOps — signed, synced, and journaled by the vault machinery.
+//
+// Convergence: independent observers of the same fact compute the same ItemID
+// (derived from Type + Subject + CitedTxID + CitedOpIndex), so their filings CRDT-merge
+// into a single record rather than N duplicates.
+//
+// Attestations INFORM decisions; they do not execute them.  Admin acts (issued via
+// MemberEpoch or ChannelEpoch) cite attestations via CitedAttestations, making the
+// basis of every governance decision publicly auditable.
+message Attestation {
+
+    // What or whom the attestation is about (member UID, channel UID, etc).
+    Tag                 Subject = 1;
+
+    // Kind of observation.
+    AttestationType     Type = 2;
+
+    // TxMsg being cited as evidence.  Already present in the journal and
+    // independently verifiable by any member — false attestations are self-refuting.
+    fixed64             CitedTxID_0 = 4;
+    fixed64             CitedTxID_1 = 5;
+
+    // Which op within the cited TxMsg (0 if the attestation is about the TxMsg as a whole).
+    uint32              CitedOpIndex = 6;
+
+    // Observer identity — who filed.  Not trust-authoritative: the observer's word
+    // carries no inherent weight beyond their ability to cite verifiable evidence.
+    Tag                 ObserverID = 8;
+
+    // When observed (unix seconds).  Used for windowed aggregation
+    // (e.g. "strikes in the last 30 days").
+    int64               ObservedAt = 10;
+
+    // Optional free-text rationale.  Not cryptographic; for human review.
+    string              Rationale = 15;
+}
+
+
+// Citation points to a specific Attestation from within a decision record.
+// Decisions (MemberEpoch suspensions, ChannelEpoch closures, etc.) embed
+// citations to make their basis auditable.  Readers resolve (ChannelID, ItemID)
+// to the original Attestation and independently verify the cited evidence.
+message Citation {
+
+    // Channel the cited Attestation lives in (typically the planet's amp.ledger).
+    fixed64             ChannelID_0 = 1;
+    fixed64             ChannelID_1 = 2;
+
+    // CRDT item ID of the cited Attestation within that channel.
+    fixed64             ItemID_0 = 4;
+    fixed64             ItemID_1 = 5;
 }
 
 
