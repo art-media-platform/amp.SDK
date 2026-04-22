@@ -36,6 +36,17 @@ func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess am
 
 var SessionContextID = tag.UID{0, 8675309}
 
+// LedgerNodeID is the well-known channel UID of the planet ledger — where
+// Attestations (strikes, endorsements, witness records, audits, amnesties)
+// are filed.  Deterministic across all planets so every member resolves the
+// same channel for citation-based security workflows.
+var LedgerNodeID = Attr.LedgerAttr.ID
+
+// ArbitrateNodeID is the well-known channel UID of the planet arbitration channel —
+// reserved for dispute proceedings, appeals, and formal rulings.  Peer institution
+// to the ACC (which legislates) and the Ledger (which records the evidence).
+var ArbitrateNodeID = tag.Name{}.With("amp.arbitrate").ID
+
 func PushSessionOp(sess amp.Session, attrID tag.UID, value proto.Message) error {
 	return PushMetaOp(attrID, value, sess, sess, SessionContextID, amp.PinStatus_Synced)
 }

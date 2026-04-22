@@ -101,6 +101,14 @@ tags Attr {
         ACChannelEpoch "ChannelEpoch"
     }
 
+    // Planet ledger — durable record of observations and citations.
+    // Attestations (strikes, endorsements, witness records, audits, amnesties)
+    // live here as convergent TxOps.  Admin acts in the ACC cite entries from
+    // the ledger via AttestationRef, making every governance decision auditable.
+    LedgerAttr "amp.ledger" {
+        LedgerAttestation "Attestation"
+    }
+
     // Member lifecycle
     MemberAttr "amp.member" {
         PlanetInvite    "PlanetInvite"

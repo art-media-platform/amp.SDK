@@ -75,6 +75,8 @@ var Attr = struct {
 	ACCPlanetEpoch             tag.Name
 	ACCMemberEpoch             tag.Name
 	ACChannelEpoch             tag.Name
+	LedgerAttr                 tag.Name
+	LedgerAttestation          tag.Name
 	MemberAttr                 tag.Name
 	PlanetInvite               tag.Name
 	PlanetInviteOp             tag.Name
@@ -89,6 +91,7 @@ var Attr = struct {
 	BlobAttr                   tag.Name
 	BlobRef                    tag.Name
 	NodeBlobs                  tag.Name
+	ContextID                  tag.UID
 }{
 
 	// ─── App-centric tags ───────────────────────────────────────────
@@ -180,6 +183,14 @@ var Attr = struct {
 	ACCMemberEpoch            : tag.Name{ID: tag.UID{0x1D6316F912DDE07C, 0x4406025A48C682F7}, Canonic: "amp.acc.memberepoch"},   // 0XDDCGK4QXW1Y481H2C94DE0RR
 	ACChannelEpoch            : tag.Name{ID: tag.UID{0xD33F0BDC74CDAAC6, 0xA00FF11ED5D6DF79}, Canonic: "amp.acc.channelepoch"},  // 6M7W5XSX6EPC3B03ZJ3VBXERVT
 
+	// ─── Planet ledger — durable record of observations and citations. ───
+	// Attestations (strikes, endorsements, witness records, audits, amnesties)
+	// live here as convergent TxOps.  Admin acts in the ACC cite entries from
+	// the ledger via AttestationRef, making every governance decision auditable.
+	LedgerAttr                : tag.Name{ID: tag.UID{0x4C04FA3F6AB87E3F, 0x119C1851084D9F1B}, Canonic: "amp.ledger"},              // 2D0MX3YUPSGSZJ370SB444V7SV
+
+	LedgerAttestation         : tag.Name{ID: tag.UID{0x911C12A6BD403FC5, 0xD634D7C4340FBF7B}, Canonic: "amp.ledger.attestation"},  // 4J3H9BEGB07Z2XDE6RSHU0ZGVV
+
 	// ─── Member lifecycle ───────────────────────────────────────────
 	MemberAttr                : tag.Name{ID: tag.UID{0xA59C8C2D8598D764, 0x7383D4962E7A19D3}, Canonic: "amp.member"},                 // 55MK62V1DSUXK770YNKSR7N6FM
 
@@ -205,6 +216,8 @@ var Attr = struct {
 
 	BlobRef                   : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},            // 2D3SVVXWMD9PMGN098CHYJ0Z5S
 	NodeBlobs                 : tag.Name{ID: tag.UID{0x47539BDD1AB3229D, 0xF4090FADFB02BF0B}, Canonic: "amp.blob.node.blobrefs"},  // 27BFEXU6PM4BFZ828GPRXH5GSC
+
+	ContextID                 : tag.UID{0x0, 0x777},
 }
 
 // ─── The bootstrapping ("head") node ID ─────────────────────────
