@@ -583,6 +583,14 @@ message PlanetEpoch {
     // Excluded from canonical bytes (same treatment as Signatures) so witnesses
     // can be added after-the-fact without re-signing the quorum.
     repeated CoSignature Witnesses = 45;
+
+    // If true, this planet is local to one host and never announced to peers.
+    // The host-planet holds runtime state (ledger observability, admin ops,
+    // telemetry) inside the same substrate as content planets.  The vault
+    // controller refuses to announce it, rejects inbound TxMsgs claiming this
+    // planet from remote peers, and skips it in watch-list exchanges.
+    // See PRD-host-planet.
+    bool                LocalOnly = 50;
 }
 
 
@@ -849,6 +857,220 @@ message PeerAddr {
     TransportType       Transport = 1;    // which transport layer
     string              Address   = 2;    // transport-specific (e.g. "192.168.1.5:5192", Reticulum hash)
     float               Score     = 3;    // 0.0–1.0; higher = preferred; updated by connection quality
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// Chronicle & Codex — PRD-chronicle-and-codex.md
+// ══════════════════════════════════════════════════════════════════════
+
+// Artifact is one addressable unit in a planet: a (NodeID, AttrID, ItemID)
+// triple plus its resolved value.  Appears in Codex entries.
+message Artifact {
+
+    // Address within the planet's CRDT space.
+    fixed64             NodeID_0 = 1;
+    fixed64             NodeID_1 = 2;
+    fixed64             AttrID_0 = 3;
+    fixed64             AttrID_1 = 4;
+    fixed64             ItemID_0 = 5;
+    fixed64             ItemID_1 = 6;
+
+    // Logical EditID (latest write's TxID) — informational only.
+    // On import, this is replaced by the importing TxMsg's TxID.
+    fixed64             EditID_0 = 7;
+    fixed64             EditID_1 = 8;
+
+    // The value.  Exactly one of these is set.  Threshold between inline and
+    // blob is a writer policy (default 64 KiB); importers accept either form.
+    bytes               InlineValue = 10;
+    BlobRef             BlobValue = 11;
+}
+
+// PlanetAnchor is a forward-only provenance pointer recording that this planet
+// was forked from another.  Carries no authority over this planet; the origin
+// is informational.  Stored as a planet-public attribute
+// (HeadNodeID / std.Attr.PlanetAnchor / fromPlanetID) on the fork's genesis epoch.
+message PlanetAnchor {
+
+    // The planet this fork came from.
+    Tag                 FromPlanet = 1;
+
+    // The epoch active on FromPlanet at fork time.
+    Tag                 FromEpoch = 2;
+
+    // FromPlanet's chronicle head (TxID) at fork time — the most recent TxMsg
+    // included in the source Codex.  Informational; useful for forensics.
+    fixed64             FromChronicleHead_0 = 3;
+    fixed64             FromChronicleHead_1 = 4;
+
+    // Wall-clock fork time (UTC seconds).  Not trusted; informational.
+    int64               ForkTime = 5;
+
+    // Optional human-readable reason.  Not interpreted by the protocol.
+    string              Label = 6;
+
+    // Version for future extensions.
+    int32               Version = 100;
+}
+
+// BlobManifestEntry describes one blob in a sibling content-addressed store.
+// Shared between PlanetChronicle and Codex manifests — same shape, same semantics.
+message BlobManifestEntry {
+
+    // Blob identity (leading 16 bytes of plaintext hash).
+    fixed64             BlobID_0 = 1;
+    fixed64             BlobID_1 = 2;
+
+    // Plaintext byte length.
+    int64               Size = 3;
+
+    // MIME type (e.g. "image/jpeg"), if known.
+    string              ContentType = 4;
+
+    // Path relative to the export root (e.g. "blobs/ab/cd/<blobtag>.bin").
+    // Implementations MAY flatten the tree; content addressing is by BlobID.
+    string              RelativePath = 5;
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Codex — resolved-state snapshot.  Authority resets on import.
+// ──────────────────────────────────────────────────────────────────────
+
+// CodexManifest summarizes a Codex for pre-flight validation.
+message CodexManifest {
+
+    int64               ArtifactCount = 1;
+    int64               BlobCount = 2;
+    int64               TotalBytes = 3;
+
+    // Attribute types present in the Codex (for fast schema introspection).
+    repeated Tag        AttributeKinds = 4;
+}
+
+// CodexHeader is the first protobuf record in codex.bin after the preamble.
+// A Codex carries resolved state only — no TxMsgs, no source authority.
+message CodexHeader {
+
+    // The planet this Codex was exported from.  May be a synthetic tag for
+    // external-source imports (e.g. "amp-gen2/prod.plan.tools").
+    Tag                 SourcePlanet = 1;
+
+    // The epoch active on SourcePlanet at export time.  Informational.
+    Tag                 SourceEpoch = 2;
+
+    // Wall-clock time of export (UTC seconds since epoch).
+    int64               CodexTime = 3;
+
+    // Provenance pointer to materialize as PlanetAnchor on the importing planet's
+    // genesis.  Nil for external-source imports with no amp origin.
+    PlanetAnchor        Anchor = 4;
+
+    // Summary for pre-flight validation.
+    CodexManifest       Manifest = 5;
+
+    // Optional exporter-provided label.
+    string              Label = 6;
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// PlanetChronicle — portable signed-TxMsg slice.  Authority preserved.
+// Used for backup, offline SSD transport, restore, and rebase output.
+// ──────────────────────────────────────────────────────────────────────
+
+// ChronicleRebasePoint records one rebase event in the lineage chain.
+message ChronicleRebasePoint {
+
+    // Chronicle up to this TxID was rebased; older TxMsgs are discardable.
+    fixed64             UpToTxID_0 = 1;
+    fixed64             UpToTxID_1 = 2;
+
+    // Wall-clock rebase time (UTC seconds).
+    int64               RebaseTime = 3;
+
+    // Digest of the compacted slice — detects rebase-result divergence.
+    bytes               CompactedDigest = 4;
+
+    // TxID of the ChronicleRebase governance TxMsg itself.
+    fixed64             RebaseTxID_0 = 5;
+    fixed64             RebaseTxID_1 = 6;
+}
+
+// ChronicleRebaseHistory is the ordered lineage of rebase points for a planet.
+// Oldest first.  Empty if the chronicle has never been rebased.
+message ChronicleRebaseHistory {
+    repeated ChronicleRebasePoint Points = 1;
+}
+
+// ChronicleRebase is the governance TxMsg that declares a chronicle compaction.
+// Signed by the governance quorum.  Peers with the full chronicle may keep it
+// for forensics; peers syncing fresh after rebase receive only the compacted
+// form plus post-rebase TxMsgs.  See PRD-chronicle-and-codex §4.7.
+message ChronicleRebase {
+
+    // TxID up to which the chronicle has been rebased; older TxMsgs discardable.
+    fixed64             UpToTxID_0 = 1;
+    fixed64             UpToTxID_1 = 2;
+
+    // Digest of the compacted chronicle at the time of rebase.
+    bytes               CompactedDigest = 3;
+
+    // Wall-clock rebase time (UTC seconds).
+    int64               RebaseTime = 4;
+
+    // Optional rationale for audit trails.
+    string              Label = 5;
+
+    // Reserved for future redaction manifest (PRD-chronicle-and-codex §4.7.4).
+    reserved 10 to 19;
+}
+
+// PlanetChronicleManifest summarizes a PlanetChronicle for pre-flight validation.
+message PlanetChronicleManifest {
+    int64               TxMsgCount = 1;
+    int64               BlobCount = 2;
+    int64               TotalBytes = 3;
+}
+
+// PlanetChronicleHeader is the first protobuf record in chronicle.bin after
+// the preamble.  The portable realization of a planet's Chronicle.  The
+// embedded GenesisEpoch TxMsg lets any receiver with the founders' pubkeys
+// verify every TxMsg in this chronicle offline — no network required.
+message PlanetChronicleHeader {
+
+    // The planet this chronicle was exported from.
+    Tag                     SourcePlanet = 1;
+
+    // Governance snapshot: the epoch active on SourcePlanet at export time.
+    Tag                     SourceEpoch = 2;
+
+    // The genesis PlanetEpoch TxMsg, embedded verbatim (raw signed bytes) so
+    // any receiver with the founders' pubkeys can verify every TxMsg in this
+    // chronicle offline.
+    bytes                   GenesisEpoch = 3;
+
+    // TxID range included, inclusive on both ends.  Whole-planet export:
+    // RangeStart is the genesis TxID, RangeEnd is the chronicle head at
+    // export time.  Slice: RangeStart/RangeEnd bound the slice.
+    fixed64                 RangeStart_0 = 4;
+    fixed64                 RangeStart_1 = 5;
+    fixed64                 RangeEnd_0 = 6;
+    fixed64                 RangeEnd_1 = 7;
+
+    // Wall-clock time of export (UTC seconds since epoch).
+    int64                   ExportTime = 8;
+
+    // Rebase lineage.  Nil if this chronicle has never been rebased.
+    ChronicleRebaseHistory  RebaseHistory = 9;
+
+    // Reserved for future redaction manifest (PRD-chronicle-and-codex §4.7.4).
+    reserved 10 to 19;
+
+    // Summary for pre-flight validation.
+    PlanetChronicleManifest Manifest = 20;
+
+    // Optional exporter-provided label ("nightly-backup 2026-04-23").
+    string                  Label = 21;
 }
 
 
