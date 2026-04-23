@@ -71,10 +71,10 @@ var Attr = struct {
 	ChannelTypeSystem          tag.Name
 	ChannelTypeWeb             tag.Name
 	ChannelTypeCrateManager    tag.Name
-	ACCAttr                    tag.Name
-	ACCPlanetEpoch             tag.Name
-	ACCMemberEpoch             tag.Name
-	ACChannelEpoch             tag.Name
+	LegislateAttr              tag.Name
+	LegislatePlanetEpoch       tag.Name
+	LegislateMemberEpoch       tag.Name
+	LegislateChannelEpoch      tag.Name
 	LedgerAttr                 tag.Name
 	LedgerAttestation          tag.Name
 	MemberAttr                 tag.Name
@@ -175,12 +175,14 @@ var Attr = struct {
 	ChannelTypeWeb            : tag.Name{ID: tag.UID{0x2A643F1C3CCD963B, 0x59D9F3468B72F446}, Canonic: "channel.type.web"},                               // 1BDHZJSG6EKSXPMQGM8U5R5X26
 	ChannelTypeCrateManager   : tag.Name{ID: tag.UID{0x5D245D81FEB5590D, 0x26DE9A083BD0A9A4}, Canonic: "channel.type.cratemanager"},                      // 2X4JFS3ZPPC46KERNU10XX1BE4
 
-	// ─── Planet governance (ACC) ────────────────────────────────────
-	ACCAttr                   : tag.Name{ID: tag.UID{0x6C1783CDDF211160, 0x1315532065FD1B9C}, Canonic: "amp.acc"},               // 3D2Y1WVRT125H165BM41KZU6WW
+	// ─── Planet governance — the legislating channel (sibling of amp.ledger + amp.arbitrate). ───
+	// "Legislate" names the role concretely: this channel grants, revises, and revokes
+	// the permissions other channels inherit.
+	LegislateAttr             : tag.Name{ID: tag.UID{0xCB2EFAA75467721F, 0x5071A58D9E616F0D}, Canonic: "amp.legislate"},               // 6C5VXBFP37F8GP0WE5JQG62VSE
 
-	ACCPlanetEpoch            : tag.Name{ID: tag.UID{0xA61309E95FE1C565, 0xBBE671A5DD289201}, Canonic: "amp.acc.planetepoch"},   // 562D4YKRZ1SPKVRTMJNRFKJ4H1
-	ACCMemberEpoch            : tag.Name{ID: tag.UID{0x1D6316F912DDE07C, 0x4406025A48C682F7}, Canonic: "amp.acc.memberepoch"},   // 0XDDCGK4QXW1Y481H2C94DE0RR
-	ACChannelEpoch            : tag.Name{ID: tag.UID{0xD33F0BDC74CDAAC6, 0xA00FF11ED5D6DF79}, Canonic: "amp.acc.channelepoch"},  // 6M7W5XSX6EPC3B03ZJ3VBXERVT
+	LegislatePlanetEpoch      : tag.Name{ID: tag.UID{0x052A80C2D5282624, 0xF942C413158CE572}, Canonic: "amp.legislate.planetepoch"},   // 055B0D5P984SKGKHQ42DBSTTCK
+	LegislateMemberEpoch      : tag.Name{ID: tag.UID{0x7C7A8DD28824413B, 0x816254C7812AD668}, Canonic: "amp.legislate.memberepoch"},   // 3WGB6X521484XS2SKNSY0KPPM8
+	LegislateChannelEpoch     : tag.Name{ID: tag.UID{0x325682B5EA140B85, 0xDD6C438C0E3B32EA}, Canonic: "amp.legislate.channelepoch"},  // 1KBU1CCUHN1F2XUV23JH73QDRB
 
 	// ─── Planet ledger — durable record of observations and citations. ───
 	// Attestations (strikes, endorsements, witness records, audits, amnesties)

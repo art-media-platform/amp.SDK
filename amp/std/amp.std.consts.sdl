@@ -94,11 +94,13 @@ tags Attr {
         }
     }
 
-    // Planet governance (ACC)
-    ACCAttr "amp.acc" {
-        ACCPlanetEpoch "PlanetEpoch"
-        ACCMemberEpoch "MemberEpoch"
-        ACChannelEpoch "ChannelEpoch"
+    // Planet governance — the legislating channel (sibling of amp.ledger + amp.arbitrate).
+    // "Legislate" names the role concretely: this channel grants, revises, and revokes
+    // the permissions other channels inherit.
+    LegislateAttr "amp.legislate" {
+        LegislatePlanetEpoch  "PlanetEpoch"
+        LegislateMemberEpoch  "MemberEpoch"
+        LegislateChannelEpoch "ChannelEpoch"
     }
 
     // Planet ledger — durable record of observations and citations.

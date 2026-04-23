@@ -345,25 +345,25 @@ enum Units {
 //
 // Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
 //
-//   ChannelID      AttrID                    ItemID                     EditID
-//   ---------      ------                    ------                     ------
-//   {ACC_ChID}  / "series.Keyring.ACC"    / {KeyringID}.{GroupID} / {ACC_Epoch}    // where an ACC publishes keys for an explicit member or child ACC IDs
-//   {GroupID}   / "series.Keyring.public" / {KeyringID}           / {Group_Epoch}  // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
+//   ChannelID          AttrID                          ItemID                     EditID
+//   ---------          ------                          ------                     ------
+//   {LegislateChID} / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LegislateEpoch}  // where a legislating channel publishes keys for an explicit member or child legislature IDs
+//   {GroupID}       / "series.Keyring.public"       / {KeyringID}           / {Group_Epoch}     // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
 //
 // To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
 //
-// When an ACC removes or alters a member's access, it must issue a new keyring epoch. This means for each channel member, the channel's private key
+// When a legislating channel removes or alters a member's access, it must issue a new keyring epoch. This means for each channel member, the channel's private key
 //   is encrypted using each member's latest public key, so that only the member can decrypt them.
 message AuthContext {
 
-    // The channel epoch that contains the authorizing ACC reference
+    // The channel epoch that contains the authorizing legislature reference
     fixed64             ChannelEpochID_0 = 2;
     fixed64             ChannelEpochID_1 = 3;
 
 
-    // ACC epoch that authorizes the requested operation.
-    fixed64             ACC_Epoch_0 = 4;
-    fixed64             ACC_Epoch_1 = 5;
+    // Legislating-channel epoch that authorizes the requested operation.
+    fixed64             LegislateEpoch_0 = 4;
+    fixed64             LegislateEpoch_1 = 5;
 
     // Keyring ID match
     fixed64             KeyringID_0 = 10;
@@ -397,7 +397,7 @@ message AccessGrants {
 // Governing unit of amp channel permissions and security.
 message ChannelEpoch {
     Tag                 Channel = 1; // channel this record applies to
-    Tag                 ACC     = 2; // channel with access authority.  if nil, Channel is its own ACC.
+    Tag                 Parent  = 2; // parent legislating channel whose grants are inherited; if nil, Channel legislates itself
     Tag                 ChType  = 6; // channel type name and/or ID
 
     string              Label     = 10; // debugging

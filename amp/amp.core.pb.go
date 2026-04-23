@@ -1938,7 +1938,7 @@ func (x *AccessGrants) GetGrants() []*AccessGrant {
 type ChannelEpoch struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	Channel   *Tag                   `protobuf:"bytes,1,opt,name=Channel,proto3" json:"Channel,omitempty"` // channel this record applies to
-	ACC       *Tag                   `protobuf:"bytes,2,opt,name=ACC,proto3" json:"ACC,omitempty"`         // channel with access authority.  if nil, Channel is its own ACC.
+	Parent    *Tag                   `protobuf:"bytes,2,opt,name=Parent,proto3" json:"Parent,omitempty"`   // parent legislating channel whose grants are inherited; if nil, Channel legislates itself
 	ChType    *Tag                   `protobuf:"bytes,6,opt,name=ChType,proto3" json:"ChType,omitempty"`   // channel type name and/or ID
 	Label     string                 `protobuf:"bytes,10,opt,name=Label,proto3" json:"Label,omitempty"`    // debugging
 	LegacyURI string                 `protobuf:"bytes,11,opt,name=LegacyURI,proto3" json:"LegacyURI,omitempty"`
@@ -1987,9 +1987,9 @@ func (x *ChannelEpoch) GetChannel() *Tag {
 	return nil
 }
 
-func (x *ChannelEpoch) GetACC() *Tag {
+func (x *ChannelEpoch) GetParent() *Tag {
 	if x != nil {
-		return x.ACC
+		return x.Parent
 	}
 	return nil
 }
@@ -3722,10 +3722,10 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tMemberTag\x18\x01 \x01(\v2\b.amp.TagR\tMemberTag\x12#\n" +
 	"\x06Access\x18\x02 \x01(\x0e2\v.amp.AccessR\x06Access\"8\n" +
 	"\fAccessGrants\x12(\n" +
-	"\x06Grants\x18\x01 \x03(\v2\x10.amp.AccessGrantR\x06Grants\"\x94\x02\n" +
+	"\x06Grants\x18\x01 \x03(\v2\x10.amp.AccessGrantR\x06Grants\"\x9a\x02\n" +
 	"\fChannelEpoch\x12\"\n" +
-	"\aChannel\x18\x01 \x01(\v2\b.amp.TagR\aChannel\x12\x1a\n" +
-	"\x03ACC\x18\x02 \x01(\v2\b.amp.TagR\x03ACC\x12 \n" +
+	"\aChannel\x18\x01 \x01(\v2\b.amp.TagR\aChannel\x12 \n" +
+	"\x06Parent\x18\x02 \x01(\v2\b.amp.TagR\x06Parent\x12 \n" +
 	"\x06ChType\x18\x06 \x01(\v2\b.amp.TagR\x06ChType\x12\x14\n" +
 	"\x05Label\x18\n" +
 	" \x01(\tR\x05Label\x12\x1c\n" +
@@ -4070,7 +4070,7 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	9,  // 17: amp.AccessGrant.Access:type_name -> amp.Access
 	25, // 18: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
 	22, // 19: amp.ChannelEpoch.Channel:type_name -> amp.Tag
-	22, // 20: amp.ChannelEpoch.ACC:type_name -> amp.Tag
+	22, // 20: amp.ChannelEpoch.Parent:type_name -> amp.Tag
 	22, // 21: amp.ChannelEpoch.ChType:type_name -> amp.Tag
 	26, // 22: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
 	26, // 23: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
