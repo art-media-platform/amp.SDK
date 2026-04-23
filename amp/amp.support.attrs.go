@@ -23,6 +23,12 @@ const (
 	// for failed MemberProof or bad signature (7 days).  Long enough for Strike
 	// attestations to propagate and be audited against the rejected bytes.
 	DefaultQuarantineRetention int64 = 7 * 24 * 60 * 60
+
+	// DefaultMaxFutureSkew is the default intake guard for future-stamped TxMsgs
+	// (5 minutes, in seconds).  NTP-configured devices are sub-second; 5 minutes
+	// covers mild clock drift and devices briefly offline.  Further-future stamps
+	// are dropped at intake — cheaper than quarantine and prevents journal spam.
+	DefaultMaxFutureSkew int64 = 5 * 60
 )
 
 // GracePeriod returns the effective grace period for this epoch.
@@ -43,6 +49,19 @@ func (ep *PlanetEpoch) QuarantineRetention() time.Duration {
 	}
 	if secs <= 0 {
 		secs = DefaultQuarantineRetention
+	}
+	return time.Duration(secs) * time.Second
+}
+
+// MaxFutureSkew returns the effective future-stamp intake guard as a time.Duration.
+// Returns DefaultMaxFutureSkew seconds if unset.
+func (ep *PlanetEpoch) MaxFutureSkew() time.Duration {
+	secs := int64(0)
+	if ep != nil {
+		secs = ep.MaxFutureSkewSecs
+	}
+	if secs <= 0 {
+		secs = DefaultMaxFutureSkew
 	}
 	return time.Duration(secs) * time.Second
 }

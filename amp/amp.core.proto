@@ -507,6 +507,15 @@ message PlanetEpoch {
     // If 0, DefaultGracePeriod is used (90 days)
     int64               MaxGracePeriod = 25;
 
+    // Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
+    // TxMsgs stamped further into the future are dropped at intake — never journaled, never
+    // fanned out.  Guards against clock-skew-induced journal drift and adversarial
+    // future-stamping (which would otherwise park entries indefinitely in the journal or
+    // inflate quarantine TTLs).  Past-stamped TxMsgs are unrestricted (legitimate catchup
+    // scenarios: resync, mesh delay, offline authoring — see MaxGracePeriod for the app-layer
+    // age bound).  If 0, DefaultMaxFutureSkew applies (5 minutes).
+    int64               MaxFutureSkewSecs = 26;
+
     // Default entry channel — where members land when opening the planet.
     // The Foyer is to play as Index is to search.
     Tag                 Foyer = 30;

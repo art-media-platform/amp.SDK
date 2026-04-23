@@ -2265,6 +2265,14 @@ type PlanetEpoch struct {
 	// Enforced at the application layer, not by relay vaults.
 	// If 0, DefaultGracePeriod is used (90 days)
 	MaxGracePeriod int64 `protobuf:"varint,25,opt,name=MaxGracePeriod,proto3" json:"MaxGracePeriod,omitempty"`
+	// Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
+	// TxMsgs stamped further into the future are dropped at intake — never journaled, never
+	// fanned out.  Guards against clock-skew-induced journal drift and adversarial
+	// future-stamping (which would otherwise park entries indefinitely in the journal or
+	// inflate quarantine TTLs).  Past-stamped TxMsgs are unrestricted (legitimate catchup
+	// scenarios: resync, mesh delay, offline authoring — see MaxGracePeriod for the app-layer
+	// age bound).  If 0, DefaultMaxFutureSkew applies (5 minutes).
+	MaxFutureSkewSecs int64 `protobuf:"varint,26,opt,name=MaxFutureSkewSecs,proto3" json:"MaxFutureSkewSecs,omitempty"`
 	// Default entry channel — where members land when opening the planet.
 	// The Foyer is to play as Index is to search.
 	Foyer *Tag `protobuf:"bytes,30,opt,name=Foyer,proto3" json:"Foyer,omitempty"`
@@ -2415,6 +2423,13 @@ func (x *PlanetEpoch) GetQuarantineRetentionSecs() int64 {
 func (x *PlanetEpoch) GetMaxGracePeriod() int64 {
 	if x != nil {
 		return x.MaxGracePeriod
+	}
+	return 0
+}
+
+func (x *PlanetEpoch) GetMaxFutureSkewSecs() int64 {
+	if x != nil {
+		return x.MaxFutureSkewSecs
 	}
 	return 0
 }
@@ -3667,7 +3682,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xb6\x06\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xe4\x06\n" +
 	"\vPlanetEpoch\x12$\n" +
 	"\bEpochTag\x18\x01 \x01(\v2\b.amp.TagR\bEpochTag\x12.\n" +
 	"\rPreviousEpoch\x18\x02 \x01(\v2\b.amp.TagR\rPreviousEpoch\x12\x14\n" +
@@ -3680,7 +3695,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x0eMaxTxPerWindow\x18\x16 \x01(\x03R\x0eMaxTxPerWindow\x120\n" +
 	"\x13RateLimitWindowSecs\x18\x17 \x01(\x03R\x13RateLimitWindowSecs\x128\n" +
 	"\x17QuarantineRetentionSecs\x18\x18 \x01(\x03R\x17QuarantineRetentionSecs\x12&\n" +
-	"\x0eMaxGracePeriod\x18\x19 \x01(\x03R\x0eMaxGracePeriod\x12\x1e\n" +
+	"\x0eMaxGracePeriod\x18\x19 \x01(\x03R\x0eMaxGracePeriod\x12,\n" +
+	"\x11MaxFutureSkewSecs\x18\x1a \x01(\x03R\x11MaxFutureSkewSecs\x12\x1e\n" +
 	"\x05Foyer\x18\x1e \x01(\v2\b.amp.TagR\x05Foyer\x12\x1e\n" +
 	"\x05Index\x18\x1f \x01(\v2\b.amp.TagR\x05Index\x12\x1e\n" +
 	"\x05Glyph\x18  \x01(\v2\b.amp.TagR\x05Glyph\x12\x14\n" +
