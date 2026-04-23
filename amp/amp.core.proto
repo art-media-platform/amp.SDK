@@ -465,6 +465,39 @@ message PlanetStorageOpts {
 }
 
 
+// VaultOpts bundles the per-planet workload tunables that relay vaults enforce.
+// All fields are advisory — unset (zero) means "use the protocol default" from
+// amp.support.attrs.go DefaultXxx consts.  Passed around as *VaultOpts; helpers
+// on the pointer receiver are nil-safe so callers don't have to guard.
+message VaultOpts {
+
+    // Rate limiting (per-member, sliding window):
+    int64   MaxTxMsgSize         = 1;   // Max single TxMsg bytes (default: 1 MB)
+    int64   MaxBytesPerWindow    = 2;   // Max bytes per member per window (default: 100 MB)
+    int64   MaxTxPerWindow       = 3;   // Max TxMsg count per member per window (default: 10000)
+    int64   RateLimitWindowSecs  = 4;   // Sliding window duration in seconds (default: 86400 = 24h)
+
+    // Quarantine retention for TxMsgs that fail MemberProof or signature verification.
+    // Quarantined entries are excluded from fanout + ReadSince but remain in the journal
+    // so Strike attestations citing the rejected TxID can be audited against the bytes.
+    // After expiry, Badger GC evicts; the Strike still stands (canonical bytes include TxID).
+    // If 0, DefaultQuarantineRetention applies (7 days).
+    int64   QuarantineRetentionSecs = 5;
+
+    // Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
+    // TxMsgs stamped further into the future are dropped at intake.  Past-stamped TxMsgs
+    // are unrestricted (catchup/resync).  If 0, DefaultMaxFutureSkew applies (5 minutes).
+    int64   MaxFutureSkewSecs = 6;
+
+    // Late-key pending queue caps.  Bound memory used tracking encrypted TxMsgs awaiting
+    // their epoch key.  Saturation is not data loss — entries remain in the journal and
+    // are decryptable when the key arrives; saturation just skips the audit-drain re-verify.
+    // If 0, the DefaultMaxPendingPerEpoch / DefaultMaxPendingEpochs apply.
+    uint32  MaxPendingPerEpoch = 7;
+    uint32  MaxPendingEpochs   = 8;
+}
+
+
 // PlanetEpoch is published in the root ACC channel to establish or rotate a planet epoch key.
 message PlanetEpoch {
 
@@ -486,19 +519,11 @@ message PlanetEpoch {
     // Anyone can syndicate and view content; only members can author (signature required).
     bool                IsPublic = 15;
 
-    // Planet-wide governance settings (enforced by vaults):
-    int64               MaxTxMsgSize = 20;             // Max single TxMsg bytes (default: 1 MB)
-    int64               MaxBytesPerWindow = 21;        // Max bytes per member per window (default: 100 MB)
-    int64               MaxTxPerWindow = 22;           // Max TxMsg count per member per window (default: 10000)
-    int64               RateLimitWindowSecs = 23;      // Sliding window duration in seconds (default: 86400 = 24h)
-
-    // Seconds a vault retains a TxMsg quarantined for failed MemberProof or bad signature.
-    // Quarantined entries are excluded from fanout + ReadSince but remain in the journal so
-    // independent observers can audit cited ledger attestations (Strikes) that reference the
-    // rejected TxID.  After expiry, Badger GC evicts the bytes; the attestation still stands
-    // because its CanonicalBytes include the TxID.
-    // If 0, DefaultQuarantineRetention is used (7 days).
-    int64               QuarantineRetentionSecs = 24;
+    // Vault-enforced workload tunables (rate limits, quarantine retention, intake guards,
+    // pending-queue caps).  Grouped under VaultOpts so operators can revise the ops posture
+    // per-planet without bloating PlanetEpoch's top-level schema.  Null-safe: unset fields
+    // fall back to the DefaultXxx consts in amp.support.attrs.go.
+    VaultOpts           VaultOpts = 20;
 
     // Maximum seconds after an epoch rotation during which old-epoch TxMsgs are still accepted.
     // Allows offline members (mesh-only, off-grid) to author under the old epoch and have their
@@ -506,15 +531,6 @@ message PlanetEpoch {
     // Enforced at the application layer, not by relay vaults.
     // If 0, DefaultGracePeriod is used (90 days)
     int64               MaxGracePeriod = 25;
-
-    // Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
-    // TxMsgs stamped further into the future are dropped at intake — never journaled, never
-    // fanned out.  Guards against clock-skew-induced journal drift and adversarial
-    // future-stamping (which would otherwise park entries indefinitely in the journal or
-    // inflate quarantine TTLs).  Past-stamped TxMsgs are unrestricted (legitimate catchup
-    // scenarios: resync, mesh delay, offline authoring — see MaxGracePeriod for the app-layer
-    // age bound).  If 0, DefaultMaxFutureSkew applies (5 minutes).
-    int64               MaxFutureSkewSecs = 26;
 
     // Default entry channel — where members land when opening the planet.
     // The Foyer is to play as Index is to search.

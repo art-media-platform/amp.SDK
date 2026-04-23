@@ -29,6 +29,26 @@ const (
 	// covers mild clock drift and devices briefly offline.  Further-future stamps
 	// are dropped at intake — cheaper than quarantine and prevents journal spam.
 	DefaultMaxFutureSkew int64 = 5 * 60
+
+	// DefaultMaxTxMsgSize caps a single TxMsg's wire size (1 MB).
+	DefaultMaxTxMsgSize int64 = 1 * 1024 * 1024
+
+	// DefaultMaxBytesPerWindow is the default per-member byte budget (100 MB)
+	// within the sliding rate-limit window.
+	DefaultMaxBytesPerWindow int64 = 100 * 1024 * 1024
+
+	// DefaultMaxTxPerWindow is the default per-member TxMsg count budget (10000)
+	// within the sliding rate-limit window.
+	DefaultMaxTxPerWindow int64 = 10000
+
+	// DefaultRateLimitWindow is the default sliding window duration in seconds (24h).
+	DefaultRateLimitWindow int64 = 24 * 60 * 60
+
+	// DefaultMaxPendingPerEpoch caps late-key pending entries tracked per epoch UID.
+	DefaultMaxPendingPerEpoch uint32 = 1000
+
+	// DefaultMaxPendingEpochs caps the number of distinct epochs with pending entries.
+	DefaultMaxPendingEpochs uint32 = 100
 )
 
 // GracePeriod returns the effective grace period for this epoch.
@@ -40,12 +60,18 @@ func (ep *PlanetEpoch) GracePeriod() int64 {
 	return ep.MaxGracePeriod
 }
 
-// QuarantineRetention returns the effective journal quarantine TTL for this epoch
-// as a time.Duration.  Returns DefaultQuarantineRetention seconds if unset.
-func (ep *PlanetEpoch) QuarantineRetention() time.Duration {
+// Helpers on *VaultOpts convert the on-wire units into runtime-friendly forms
+// (e.g. seconds → time.Duration) and substitute DefaultXxx when the proto field
+// is unset.  Helpers that would collide with generated proto field names (plain
+// count/byte fields) are NOT defined — callers read those via the proto-generated
+// GetXxx getters combined with nonZeroInt64/nonZeroUint32 below.
+
+// QuarantineRetention returns the effective journal quarantine TTL as a time.Duration.
+// Nil-safe: returns DefaultQuarantineRetention seconds when opts is nil or the field is zero.
+func (opts *VaultOpts) QuarantineRetention() time.Duration {
 	secs := int64(0)
-	if ep != nil {
-		secs = ep.QuarantineRetentionSecs
+	if opts != nil {
+		secs = opts.QuarantineRetentionSecs
 	}
 	if secs <= 0 {
 		secs = DefaultQuarantineRetention
@@ -54,16 +80,46 @@ func (ep *PlanetEpoch) QuarantineRetention() time.Duration {
 }
 
 // MaxFutureSkew returns the effective future-stamp intake guard as a time.Duration.
-// Returns DefaultMaxFutureSkew seconds if unset.
-func (ep *PlanetEpoch) MaxFutureSkew() time.Duration {
+// Nil-safe: returns DefaultMaxFutureSkew seconds when opts is nil or the field is zero.
+func (opts *VaultOpts) MaxFutureSkew() time.Duration {
 	secs := int64(0)
-	if ep != nil {
-		secs = ep.MaxFutureSkewSecs
+	if opts != nil {
+		secs = opts.MaxFutureSkewSecs
 	}
 	if secs <= 0 {
 		secs = DefaultMaxFutureSkew
 	}
 	return time.Duration(secs) * time.Second
+}
+
+// RateLimitWindow returns the effective sliding rate-limit window as a time.Duration.
+// Nil-safe: returns DefaultRateLimitWindow seconds when opts is nil or the field is zero.
+func (opts *VaultOpts) RateLimitWindow() time.Duration {
+	secs := int64(0)
+	if opts != nil {
+		secs = opts.RateLimitWindowSecs
+	}
+	if secs <= 0 {
+		secs = DefaultRateLimitWindow
+	}
+	return time.Duration(secs) * time.Second
+}
+
+// NonZeroInt64 returns val when non-zero, else fallback — typed default-resolver
+// for optional proto int64 fields where zero means "use the protocol default."
+func NonZeroInt64(val, fallback int64) int64 {
+	if val > 0 {
+		return val
+	}
+	return fallback
+}
+
+// NonZeroUint32 is the uint32 counterpart to NonZeroInt64.
+func NonZeroUint32(val, fallback uint32) uint32 {
+	if val > 0 {
+		return val
+	}
+	return fallback
 }
 
 // TxWithinGracePeriod returns true if a TxMsg authored under a previous epoch

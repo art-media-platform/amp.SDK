@@ -2231,6 +2231,123 @@ func (x *PlanetStorageOpts) GetMaxCacheBytes() int64 {
 	return 0
 }
 
+// VaultOpts bundles the per-planet workload tunables that relay vaults enforce.
+// All fields are advisory — unset (zero) means "use the protocol default" from
+// amp.support.attrs.go DefaultXxx consts.  Passed around as *VaultOpts; helpers
+// on the pointer receiver are nil-safe so callers don't have to guard.
+type VaultOpts struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Rate limiting (per-member, sliding window):
+	MaxTxMsgSize        int64 `protobuf:"varint,1,opt,name=MaxTxMsgSize,proto3" json:"MaxTxMsgSize,omitempty"`               // Max single TxMsg bytes (default: 1 MB)
+	MaxBytesPerWindow   int64 `protobuf:"varint,2,opt,name=MaxBytesPerWindow,proto3" json:"MaxBytesPerWindow,omitempty"`     // Max bytes per member per window (default: 100 MB)
+	MaxTxPerWindow      int64 `protobuf:"varint,3,opt,name=MaxTxPerWindow,proto3" json:"MaxTxPerWindow,omitempty"`           // Max TxMsg count per member per window (default: 10000)
+	RateLimitWindowSecs int64 `protobuf:"varint,4,opt,name=RateLimitWindowSecs,proto3" json:"RateLimitWindowSecs,omitempty"` // Sliding window duration in seconds (default: 86400 = 24h)
+	// Quarantine retention for TxMsgs that fail MemberProof or signature verification.
+	// Quarantined entries are excluded from fanout + ReadSince but remain in the journal
+	// so Strike attestations citing the rejected TxID can be audited against the bytes.
+	// After expiry, Badger GC evicts; the Strike still stands (canonical bytes include TxID).
+	// If 0, DefaultQuarantineRetention applies (7 days).
+	QuarantineRetentionSecs int64 `protobuf:"varint,5,opt,name=QuarantineRetentionSecs,proto3" json:"QuarantineRetentionSecs,omitempty"`
+	// Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
+	// TxMsgs stamped further into the future are dropped at intake.  Past-stamped TxMsgs
+	// are unrestricted (catchup/resync).  If 0, DefaultMaxFutureSkew applies (5 minutes).
+	MaxFutureSkewSecs int64 `protobuf:"varint,6,opt,name=MaxFutureSkewSecs,proto3" json:"MaxFutureSkewSecs,omitempty"`
+	// Late-key pending queue caps.  Bound memory used tracking encrypted TxMsgs awaiting
+	// their epoch key.  Saturation is not data loss — entries remain in the journal and
+	// are decryptable when the key arrives; saturation just skips the audit-drain re-verify.
+	// If 0, the DefaultMaxPendingPerEpoch / DefaultMaxPendingEpochs apply.
+	MaxPendingPerEpoch uint32 `protobuf:"varint,7,opt,name=MaxPendingPerEpoch,proto3" json:"MaxPendingPerEpoch,omitempty"`
+	MaxPendingEpochs   uint32 `protobuf:"varint,8,opt,name=MaxPendingEpochs,proto3" json:"MaxPendingEpochs,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *VaultOpts) Reset() {
+	*x = VaultOpts{}
+	mi := &file_amp_amp_core_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VaultOpts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VaultOpts) ProtoMessage() {}
+
+func (x *VaultOpts) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VaultOpts.ProtoReflect.Descriptor instead.
+func (*VaultOpts) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *VaultOpts) GetMaxTxMsgSize() int64 {
+	if x != nil {
+		return x.MaxTxMsgSize
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetMaxBytesPerWindow() int64 {
+	if x != nil {
+		return x.MaxBytesPerWindow
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetMaxTxPerWindow() int64 {
+	if x != nil {
+		return x.MaxTxPerWindow
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetRateLimitWindowSecs() int64 {
+	if x != nil {
+		return x.RateLimitWindowSecs
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetQuarantineRetentionSecs() int64 {
+	if x != nil {
+		return x.QuarantineRetentionSecs
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetMaxFutureSkewSecs() int64 {
+	if x != nil {
+		return x.MaxFutureSkewSecs
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetMaxPendingPerEpoch() uint32 {
+	if x != nil {
+		return x.MaxPendingPerEpoch
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetMaxPendingEpochs() uint32 {
+	if x != nil {
+		return x.MaxPendingEpochs
+	}
+	return 0
+}
+
 // PlanetEpoch is published in the root ACC channel to establish or rotate a planet epoch key.
 type PlanetEpoch struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -2247,32 +2364,17 @@ type PlanetEpoch struct {
 	// Set at genesis and cannot be changed without planet rebase.
 	// Anyone can syndicate and view content; only members can author (signature required).
 	IsPublic bool `protobuf:"varint,15,opt,name=IsPublic,proto3" json:"IsPublic,omitempty"`
-	// Planet-wide governance settings (enforced by vaults):
-	MaxTxMsgSize        int64 `protobuf:"varint,20,opt,name=MaxTxMsgSize,proto3" json:"MaxTxMsgSize,omitempty"`               // Max single TxMsg bytes (default: 1 MB)
-	MaxBytesPerWindow   int64 `protobuf:"varint,21,opt,name=MaxBytesPerWindow,proto3" json:"MaxBytesPerWindow,omitempty"`     // Max bytes per member per window (default: 100 MB)
-	MaxTxPerWindow      int64 `protobuf:"varint,22,opt,name=MaxTxPerWindow,proto3" json:"MaxTxPerWindow,omitempty"`           // Max TxMsg count per member per window (default: 10000)
-	RateLimitWindowSecs int64 `protobuf:"varint,23,opt,name=RateLimitWindowSecs,proto3" json:"RateLimitWindowSecs,omitempty"` // Sliding window duration in seconds (default: 86400 = 24h)
-	// Seconds a vault retains a TxMsg quarantined for failed MemberProof or bad signature.
-	// Quarantined entries are excluded from fanout + ReadSince but remain in the journal so
-	// independent observers can audit cited ledger attestations (Strikes) that reference the
-	// rejected TxID.  After expiry, Badger GC evicts the bytes; the attestation still stands
-	// because its CanonicalBytes include the TxID.
-	// If 0, DefaultQuarantineRetention is used (7 days).
-	QuarantineRetentionSecs int64 `protobuf:"varint,24,opt,name=QuarantineRetentionSecs,proto3" json:"QuarantineRetentionSecs,omitempty"`
+	// Vault-enforced workload tunables (rate limits, quarantine retention, intake guards,
+	// pending-queue caps).  Grouped under VaultOpts so operators can revise the ops posture
+	// per-planet without bloating PlanetEpoch's top-level schema.  Null-safe: unset fields
+	// fall back to the DefaultXxx consts in amp.support.attrs.go.
+	VaultOpts *VaultOpts `protobuf:"bytes,20,opt,name=VaultOpts,proto3" json:"VaultOpts,omitempty"`
 	// Maximum seconds after an epoch rotation during which old-epoch TxMsgs are still accepted.
 	// Allows offline members (mesh-only, off-grid) to author under the old epoch and have their
 	// TxMsgs accepted when they reconnect.  After this window, old-epoch TxMsgs are rejected.
 	// Enforced at the application layer, not by relay vaults.
 	// If 0, DefaultGracePeriod is used (90 days)
 	MaxGracePeriod int64 `protobuf:"varint,25,opt,name=MaxGracePeriod,proto3" json:"MaxGracePeriod,omitempty"`
-	// Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
-	// TxMsgs stamped further into the future are dropped at intake — never journaled, never
-	// fanned out.  Guards against clock-skew-induced journal drift and adversarial
-	// future-stamping (which would otherwise park entries indefinitely in the journal or
-	// inflate quarantine TTLs).  Past-stamped TxMsgs are unrestricted (legitimate catchup
-	// scenarios: resync, mesh delay, offline authoring — see MaxGracePeriod for the app-layer
-	// age bound).  If 0, DefaultMaxFutureSkew applies (5 minutes).
-	MaxFutureSkewSecs int64 `protobuf:"varint,26,opt,name=MaxFutureSkewSecs,proto3" json:"MaxFutureSkewSecs,omitempty"`
 	// Default entry channel — where members land when opening the planet.
 	// The Foyer is to play as Index is to search.
 	Foyer *Tag `protobuf:"bytes,30,opt,name=Foyer,proto3" json:"Foyer,omitempty"`
@@ -2322,7 +2424,7 @@ type PlanetEpoch struct {
 
 func (x *PlanetEpoch) Reset() {
 	*x = PlanetEpoch{}
-	mi := &file_amp_amp_core_proto_msgTypes[17]
+	mi := &file_amp_amp_core_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2334,7 +2436,7 @@ func (x *PlanetEpoch) String() string {
 func (*PlanetEpoch) ProtoMessage() {}
 
 func (x *PlanetEpoch) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[17]
+	mi := &file_amp_amp_core_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2347,7 +2449,7 @@ func (x *PlanetEpoch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetEpoch.ProtoReflect.Descriptor instead.
 func (*PlanetEpoch) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{17}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *PlanetEpoch) GetEpochTag() *Tag {
@@ -2385,51 +2487,16 @@ func (x *PlanetEpoch) GetIsPublic() bool {
 	return false
 }
 
-func (x *PlanetEpoch) GetMaxTxMsgSize() int64 {
+func (x *PlanetEpoch) GetVaultOpts() *VaultOpts {
 	if x != nil {
-		return x.MaxTxMsgSize
+		return x.VaultOpts
 	}
-	return 0
-}
-
-func (x *PlanetEpoch) GetMaxBytesPerWindow() int64 {
-	if x != nil {
-		return x.MaxBytesPerWindow
-	}
-	return 0
-}
-
-func (x *PlanetEpoch) GetMaxTxPerWindow() int64 {
-	if x != nil {
-		return x.MaxTxPerWindow
-	}
-	return 0
-}
-
-func (x *PlanetEpoch) GetRateLimitWindowSecs() int64 {
-	if x != nil {
-		return x.RateLimitWindowSecs
-	}
-	return 0
-}
-
-func (x *PlanetEpoch) GetQuarantineRetentionSecs() int64 {
-	if x != nil {
-		return x.QuarantineRetentionSecs
-	}
-	return 0
+	return nil
 }
 
 func (x *PlanetEpoch) GetMaxGracePeriod() int64 {
 	if x != nil {
 		return x.MaxGracePeriod
-	}
-	return 0
-}
-
-func (x *PlanetEpoch) GetMaxFutureSkewSecs() int64 {
-	if x != nil {
-		return x.MaxFutureSkewSecs
 	}
 	return 0
 }
@@ -2512,7 +2579,7 @@ type CoSignature struct {
 
 func (x *CoSignature) Reset() {
 	*x = CoSignature{}
-	mi := &file_amp_amp_core_proto_msgTypes[18]
+	mi := &file_amp_amp_core_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2524,7 +2591,7 @@ func (x *CoSignature) String() string {
 func (*CoSignature) ProtoMessage() {}
 
 func (x *CoSignature) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[18]
+	mi := &file_amp_amp_core_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2537,7 +2604,7 @@ func (x *CoSignature) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CoSignature.ProtoReflect.Descriptor instead.
 func (*CoSignature) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{18}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *CoSignature) GetMemberTag() *Tag {
@@ -2575,7 +2642,7 @@ type WrappedKey struct {
 
 func (x *WrappedKey) Reset() {
 	*x = WrappedKey{}
-	mi := &file_amp_amp_core_proto_msgTypes[19]
+	mi := &file_amp_amp_core_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2587,7 +2654,7 @@ func (x *WrappedKey) String() string {
 func (*WrappedKey) ProtoMessage() {}
 
 func (x *WrappedKey) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[19]
+	mi := &file_amp_amp_core_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2600,7 +2667,7 @@ func (x *WrappedKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WrappedKey.ProtoReflect.Descriptor instead.
 func (*WrappedKey) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{19}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *WrappedKey) GetRole() safe.KeyRole {
@@ -2661,7 +2728,7 @@ type MemberEpoch struct {
 
 func (x *MemberEpoch) Reset() {
 	*x = MemberEpoch{}
-	mi := &file_amp_amp_core_proto_msgTypes[20]
+	mi := &file_amp_amp_core_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2673,7 +2740,7 @@ func (x *MemberEpoch) String() string {
 func (*MemberEpoch) ProtoMessage() {}
 
 func (x *MemberEpoch) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[20]
+	mi := &file_amp_amp_core_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2686,7 +2753,7 @@ func (x *MemberEpoch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberEpoch.ProtoReflect.Descriptor instead.
 func (*MemberEpoch) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{20}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *MemberEpoch) GetMemberTag() *Tag {
@@ -2789,7 +2856,7 @@ type Attestation struct {
 
 func (x *Attestation) Reset() {
 	*x = Attestation{}
-	mi := &file_amp_amp_core_proto_msgTypes[21]
+	mi := &file_amp_amp_core_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2801,7 +2868,7 @@ func (x *Attestation) String() string {
 func (*Attestation) ProtoMessage() {}
 
 func (x *Attestation) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[21]
+	mi := &file_amp_amp_core_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2814,7 +2881,7 @@ func (x *Attestation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Attestation.ProtoReflect.Descriptor instead.
 func (*Attestation) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{21}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *Attestation) GetSubject() *Tag {
@@ -2891,7 +2958,7 @@ type Citation struct {
 
 func (x *Citation) Reset() {
 	*x = Citation{}
-	mi := &file_amp_amp_core_proto_msgTypes[22]
+	mi := &file_amp_amp_core_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2903,7 +2970,7 @@ func (x *Citation) String() string {
 func (*Citation) ProtoMessage() {}
 
 func (x *Citation) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[22]
+	mi := &file_amp_amp_core_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2916,7 +2983,7 @@ func (x *Citation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Citation.ProtoReflect.Descriptor instead.
 func (*Citation) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{22}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *Citation) GetChannelID_0() uint64 {
@@ -2974,7 +3041,7 @@ type PlanetInvite struct {
 
 func (x *PlanetInvite) Reset() {
 	*x = PlanetInvite{}
-	mi := &file_amp_amp_core_proto_msgTypes[23]
+	mi := &file_amp_amp_core_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2986,7 +3053,7 @@ func (x *PlanetInvite) String() string {
 func (*PlanetInvite) ProtoMessage() {}
 
 func (x *PlanetInvite) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[23]
+	mi := &file_amp_amp_core_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2999,7 +3066,7 @@ func (x *PlanetInvite) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetInvite.ProtoReflect.Descriptor instead.
 func (*PlanetInvite) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{23}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *PlanetInvite) GetPlanetTag() *Tag {
@@ -3062,7 +3129,7 @@ type PlanetInviteOp struct {
 
 func (x *PlanetInviteOp) Reset() {
 	*x = PlanetInviteOp{}
-	mi := &file_amp_amp_core_proto_msgTypes[24]
+	mi := &file_amp_amp_core_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3074,7 +3141,7 @@ func (x *PlanetInviteOp) String() string {
 func (*PlanetInviteOp) ProtoMessage() {}
 
 func (x *PlanetInviteOp) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[24]
+	mi := &file_amp_amp_core_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3087,7 +3154,7 @@ func (x *PlanetInviteOp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetInviteOp.ProtoReflect.Descriptor instead.
 func (*PlanetInviteOp) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{24}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *PlanetInviteOp) GetPlanetTag() *Tag {
@@ -3127,7 +3194,7 @@ type SyncMsg struct {
 
 func (x *SyncMsg) Reset() {
 	*x = SyncMsg{}
-	mi := &file_amp_amp_core_proto_msgTypes[25]
+	mi := &file_amp_amp_core_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3139,7 +3206,7 @@ func (x *SyncMsg) String() string {
 func (*SyncMsg) ProtoMessage() {}
 
 func (x *SyncMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[25]
+	mi := &file_amp_amp_core_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3152,7 +3219,7 @@ func (x *SyncMsg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncMsg.ProtoReflect.Descriptor instead.
 func (*SyncMsg) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{25}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *SyncMsg) GetBody() isSyncMsg_Body {
@@ -3222,7 +3289,7 @@ type SyncWatchList struct {
 
 func (x *SyncWatchList) Reset() {
 	*x = SyncWatchList{}
-	mi := &file_amp_amp_core_proto_msgTypes[26]
+	mi := &file_amp_amp_core_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3234,7 +3301,7 @@ func (x *SyncWatchList) String() string {
 func (*SyncWatchList) ProtoMessage() {}
 
 func (x *SyncWatchList) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[26]
+	mi := &file_amp_amp_core_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3247,7 +3314,7 @@ func (x *SyncWatchList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncWatchList.ProtoReflect.Descriptor instead.
 func (*SyncWatchList) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{26}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *SyncWatchList) GetPlanets() []*SyncPlanetStatus {
@@ -3270,7 +3337,7 @@ type SyncPlanetStatus struct {
 
 func (x *SyncPlanetStatus) Reset() {
 	*x = SyncPlanetStatus{}
-	mi := &file_amp_amp_core_proto_msgTypes[27]
+	mi := &file_amp_amp_core_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3282,7 +3349,7 @@ func (x *SyncPlanetStatus) String() string {
 func (*SyncPlanetStatus) ProtoMessage() {}
 
 func (x *SyncPlanetStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[27]
+	mi := &file_amp_amp_core_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3295,7 +3362,7 @@ func (x *SyncPlanetStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncPlanetStatus.ProtoReflect.Descriptor instead.
 func (*SyncPlanetStatus) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{27}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *SyncPlanetStatus) GetPlanetID_0() uint64 {
@@ -3343,7 +3410,7 @@ type SyncRangeOffer struct {
 
 func (x *SyncRangeOffer) Reset() {
 	*x = SyncRangeOffer{}
-	mi := &file_amp_amp_core_proto_msgTypes[28]
+	mi := &file_amp_amp_core_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3355,7 +3422,7 @@ func (x *SyncRangeOffer) String() string {
 func (*SyncRangeOffer) ProtoMessage() {}
 
 func (x *SyncRangeOffer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[28]
+	mi := &file_amp_amp_core_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3368,7 +3435,7 @@ func (x *SyncRangeOffer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRangeOffer.ProtoReflect.Descriptor instead.
 func (*SyncRangeOffer) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{28}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SyncRangeOffer) GetPlanetID_0() uint64 {
@@ -3434,7 +3501,7 @@ type SyncRangeRequest struct {
 
 func (x *SyncRangeRequest) Reset() {
 	*x = SyncRangeRequest{}
-	mi := &file_amp_amp_core_proto_msgTypes[29]
+	mi := &file_amp_amp_core_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3446,7 +3513,7 @@ func (x *SyncRangeRequest) String() string {
 func (*SyncRangeRequest) ProtoMessage() {}
 
 func (x *SyncRangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[29]
+	mi := &file_amp_amp_core_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3459,7 +3526,7 @@ func (x *SyncRangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRangeRequest.ProtoReflect.Descriptor instead.
 func (*SyncRangeRequest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{29}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *SyncRangeRequest) GetPlanetID_0() uint64 {
@@ -3502,7 +3569,7 @@ type PeerAddr struct {
 
 func (x *PeerAddr) Reset() {
 	*x = PeerAddr{}
-	mi := &file_amp_amp_core_proto_msgTypes[30]
+	mi := &file_amp_amp_core_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3514,7 +3581,7 @@ func (x *PeerAddr) String() string {
 func (*PeerAddr) ProtoMessage() {}
 
 func (x *PeerAddr) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[30]
+	mi := &file_amp_amp_core_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3527,7 +3594,7 @@ func (x *PeerAddr) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PeerAddr.ProtoReflect.Descriptor instead.
 func (*PeerAddr) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{30}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *PeerAddr) GetTransport() TransportType {
@@ -3682,21 +3749,25 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xe4\x06\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xfb\x02\n" +
+	"\tVaultOpts\x12\"\n" +
+	"\fMaxTxMsgSize\x18\x01 \x01(\x03R\fMaxTxMsgSize\x12,\n" +
+	"\x11MaxBytesPerWindow\x18\x02 \x01(\x03R\x11MaxBytesPerWindow\x12&\n" +
+	"\x0eMaxTxPerWindow\x18\x03 \x01(\x03R\x0eMaxTxPerWindow\x120\n" +
+	"\x13RateLimitWindowSecs\x18\x04 \x01(\x03R\x13RateLimitWindowSecs\x128\n" +
+	"\x17QuarantineRetentionSecs\x18\x05 \x01(\x03R\x17QuarantineRetentionSecs\x12,\n" +
+	"\x11MaxFutureSkewSecs\x18\x06 \x01(\x03R\x11MaxFutureSkewSecs\x12.\n" +
+	"\x12MaxPendingPerEpoch\x18\a \x01(\rR\x12MaxPendingPerEpoch\x12*\n" +
+	"\x10MaxPendingEpochs\x18\b \x01(\rR\x10MaxPendingEpochs\"\xfe\x04\n" +
 	"\vPlanetEpoch\x12$\n" +
 	"\bEpochTag\x18\x01 \x01(\v2\b.amp.TagR\bEpochTag\x12.\n" +
 	"\rPreviousEpoch\x18\x02 \x01(\v2\b.amp.TagR\rPreviousEpoch\x12\x14\n" +
 	"\x05Label\x18\x05 \x01(\tR\x05Label\x123\n" +
 	"\vCryptoKitID\x18\n" +
 	" \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x1a\n" +
-	"\bIsPublic\x18\x0f \x01(\bR\bIsPublic\x12\"\n" +
-	"\fMaxTxMsgSize\x18\x14 \x01(\x03R\fMaxTxMsgSize\x12,\n" +
-	"\x11MaxBytesPerWindow\x18\x15 \x01(\x03R\x11MaxBytesPerWindow\x12&\n" +
-	"\x0eMaxTxPerWindow\x18\x16 \x01(\x03R\x0eMaxTxPerWindow\x120\n" +
-	"\x13RateLimitWindowSecs\x18\x17 \x01(\x03R\x13RateLimitWindowSecs\x128\n" +
-	"\x17QuarantineRetentionSecs\x18\x18 \x01(\x03R\x17QuarantineRetentionSecs\x12&\n" +
-	"\x0eMaxGracePeriod\x18\x19 \x01(\x03R\x0eMaxGracePeriod\x12,\n" +
-	"\x11MaxFutureSkewSecs\x18\x1a \x01(\x03R\x11MaxFutureSkewSecs\x12\x1e\n" +
+	"\bIsPublic\x18\x0f \x01(\bR\bIsPublic\x12,\n" +
+	"\tVaultOpts\x18\x14 \x01(\v2\x0e.amp.VaultOptsR\tVaultOpts\x12&\n" +
+	"\x0eMaxGracePeriod\x18\x19 \x01(\x03R\x0eMaxGracePeriod\x12\x1e\n" +
 	"\x05Foyer\x18\x1e \x01(\v2\b.amp.TagR\x05Foyer\x12\x1e\n" +
 	"\x05Index\x18\x1f \x01(\v2\b.amp.TagR\x05Index\x12\x1e\n" +
 	"\x05Glyph\x18  \x01(\v2\b.amp.TagR\x05Glyph\x12\x14\n" +
@@ -3925,7 +3996,7 @@ func file_amp_amp_core_proto_rawDescGZIP() []byte {
 }
 
 var file_amp_amp_core_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
-var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_amp_amp_core_proto_goTypes = []any{
 	(TxOpFlags)(0),               // 0: amp.TxOpFlags
 	(TxField)(0),                 // 1: amp.TxField
@@ -3957,25 +4028,26 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(*ChannelEpoch)(nil),         // 27: amp.ChannelEpoch
 	(*BlobRef)(nil),              // 28: amp.BlobRef
 	(*PlanetStorageOpts)(nil),    // 29: amp.PlanetStorageOpts
-	(*PlanetEpoch)(nil),          // 30: amp.PlanetEpoch
-	(*CoSignature)(nil),          // 31: amp.CoSignature
-	(*WrappedKey)(nil),           // 32: amp.WrappedKey
-	(*MemberEpoch)(nil),          // 33: amp.MemberEpoch
-	(*Attestation)(nil),          // 34: amp.Attestation
-	(*Citation)(nil),             // 35: amp.Citation
-	(*PlanetInvite)(nil),         // 36: amp.PlanetInvite
-	(*PlanetInviteOp)(nil),       // 37: amp.PlanetInviteOp
-	(*SyncMsg)(nil),              // 38: amp.SyncMsg
-	(*SyncWatchList)(nil),        // 39: amp.SyncWatchList
-	(*SyncPlanetStatus)(nil),     // 40: amp.SyncPlanetStatus
-	(*SyncRangeOffer)(nil),       // 41: amp.SyncRangeOffer
-	(*SyncRangeRequest)(nil),     // 42: amp.SyncRangeRequest
-	(*PeerAddr)(nil),             // 43: amp.PeerAddr
-	(safe.HashKitID)(0),          // 44: safe.HashKitID
-	(safe.CryptoKitID)(0),        // 45: safe.CryptoKitID
-	(safe.KeyRole)(0),            // 46: safe.KeyRole
-	(*safe.KeyPairRecord)(nil),   // 47: safe.KeyPairRecord
-	(*safe.EncryptedSymKey)(nil), // 48: safe.EncryptedSymKey
+	(*VaultOpts)(nil),            // 30: amp.VaultOpts
+	(*PlanetEpoch)(nil),          // 31: amp.PlanetEpoch
+	(*CoSignature)(nil),          // 32: amp.CoSignature
+	(*WrappedKey)(nil),           // 33: amp.WrappedKey
+	(*MemberEpoch)(nil),          // 34: amp.MemberEpoch
+	(*Attestation)(nil),          // 35: amp.Attestation
+	(*Citation)(nil),             // 36: amp.Citation
+	(*PlanetInvite)(nil),         // 37: amp.PlanetInvite
+	(*PlanetInviteOp)(nil),       // 38: amp.PlanetInviteOp
+	(*SyncMsg)(nil),              // 39: amp.SyncMsg
+	(*SyncWatchList)(nil),        // 40: amp.SyncWatchList
+	(*SyncPlanetStatus)(nil),     // 41: amp.SyncPlanetStatus
+	(*SyncRangeOffer)(nil),       // 42: amp.SyncRangeOffer
+	(*SyncRangeRequest)(nil),     // 43: amp.SyncRangeRequest
+	(*PeerAddr)(nil),             // 44: amp.PeerAddr
+	(safe.HashKitID)(0),          // 45: safe.HashKitID
+	(safe.CryptoKitID)(0),        // 46: safe.CryptoKitID
+	(safe.KeyRole)(0),            // 47: safe.KeyRole
+	(*safe.KeyPairRecord)(nil),   // 48: safe.KeyPairRecord
+	(*safe.EncryptedSymKey)(nil), // 49: safe.EncryptedSymKey
 }
 var file_amp_amp_core_proto_depIdxs = []int32{
 	22, // 0: amp.TxEnvelope.Planet:type_name -> amp.Tag
@@ -4002,45 +4074,46 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	22, // 21: amp.ChannelEpoch.ChType:type_name -> amp.Tag
 	26, // 22: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
 	26, // 23: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
-	44, // 24: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
+	45, // 24: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
 	22, // 25: amp.BlobRef.BlobTag:type_name -> amp.Tag
 	22, // 26: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
 	22, // 27: amp.PlanetEpoch.PreviousEpoch:type_name -> amp.Tag
-	45, // 28: amp.PlanetEpoch.CryptoKitID:type_name -> safe.CryptoKitID
-	22, // 29: amp.PlanetEpoch.Foyer:type_name -> amp.Tag
-	22, // 30: amp.PlanetEpoch.Index:type_name -> amp.Tag
-	22, // 31: amp.PlanetEpoch.Glyph:type_name -> amp.Tag
-	22, // 32: amp.PlanetEpoch.GovernanceGroup:type_name -> amp.Tag
-	31, // 33: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
-	31, // 34: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
-	22, // 35: amp.CoSignature.MemberTag:type_name -> amp.Tag
-	46, // 36: amp.WrappedKey.Role:type_name -> safe.KeyRole
-	22, // 37: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
-	22, // 38: amp.MemberEpoch.Node:type_name -> amp.Tag
-	22, // 39: amp.MemberEpoch.Epoch:type_name -> amp.Tag
-	32, // 40: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
-	10, // 41: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
-	45, // 42: amp.MemberEpoch.CryptoKitID:type_name -> safe.CryptoKitID
-	35, // 43: amp.MemberEpoch.Cites:type_name -> amp.Citation
-	22, // 44: amp.Attestation.Subject:type_name -> amp.Tag
-	11, // 45: amp.Attestation.Type:type_name -> amp.AttestationType
-	22, // 46: amp.Attestation.ObserverID:type_name -> amp.Tag
-	22, // 47: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
-	22, // 48: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
-	22, // 49: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	47, // 50: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	48, // 51: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
-	22, // 52: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
-	39, // 53: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	41, // 54: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	42, // 55: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	40, // 56: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	12, // 57: amp.PeerAddr.Transport:type_name -> amp.TransportType
-	58, // [58:58] is the sub-list for method output_type
-	58, // [58:58] is the sub-list for method input_type
-	58, // [58:58] is the sub-list for extension type_name
-	58, // [58:58] is the sub-list for extension extendee
-	0,  // [0:58] is the sub-list for field type_name
+	46, // 28: amp.PlanetEpoch.CryptoKitID:type_name -> safe.CryptoKitID
+	30, // 29: amp.PlanetEpoch.VaultOpts:type_name -> amp.VaultOpts
+	22, // 30: amp.PlanetEpoch.Foyer:type_name -> amp.Tag
+	22, // 31: amp.PlanetEpoch.Index:type_name -> amp.Tag
+	22, // 32: amp.PlanetEpoch.Glyph:type_name -> amp.Tag
+	22, // 33: amp.PlanetEpoch.GovernanceGroup:type_name -> amp.Tag
+	32, // 34: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
+	32, // 35: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
+	22, // 36: amp.CoSignature.MemberTag:type_name -> amp.Tag
+	47, // 37: amp.WrappedKey.Role:type_name -> safe.KeyRole
+	22, // 38: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
+	22, // 39: amp.MemberEpoch.Node:type_name -> amp.Tag
+	22, // 40: amp.MemberEpoch.Epoch:type_name -> amp.Tag
+	33, // 41: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
+	10, // 42: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
+	46, // 43: amp.MemberEpoch.CryptoKitID:type_name -> safe.CryptoKitID
+	36, // 44: amp.MemberEpoch.Cites:type_name -> amp.Citation
+	22, // 45: amp.Attestation.Subject:type_name -> amp.Tag
+	11, // 46: amp.Attestation.Type:type_name -> amp.AttestationType
+	22, // 47: amp.Attestation.ObserverID:type_name -> amp.Tag
+	22, // 48: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
+	22, // 49: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
+	22, // 50: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
+	48, // 51: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	49, // 52: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	22, // 53: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	40, // 54: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	42, // 55: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	43, // 56: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	41, // 57: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	12, // 58: amp.PeerAddr.Transport:type_name -> amp.TransportType
+	59, // [59:59] is the sub-list for method output_type
+	59, // [59:59] is the sub-list for method input_type
+	59, // [59:59] is the sub-list for extension type_name
+	59, // [59:59] is the sub-list for extension extendee
+	0,  // [0:59] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }
@@ -4048,7 +4121,7 @@ func file_amp_amp_core_proto_init() {
 	if File_amp_amp_core_proto != nil {
 		return
 	}
-	file_amp_amp_core_proto_msgTypes[25].OneofWrappers = []any{
+	file_amp_amp_core_proto_msgTypes[26].OneofWrappers = []any{
 		(*SyncMsg_WatchList)(nil),
 		(*SyncMsg_RangeOffer)(nil),
 		(*SyncMsg_RangeRequest)(nil),
@@ -4059,7 +4132,7 @@ func file_amp_amp_core_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_amp_core_proto_rawDesc), len(file_amp_amp_core_proto_rawDesc)),
 			NumEnums:      13,
-			NumMessages:   31,
+			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
