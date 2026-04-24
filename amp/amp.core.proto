@@ -347,8 +347,8 @@ enum Units {
 //
 //   ChannelID          AttrID                          ItemID                     EditID
 //   ---------          ------                          ------                     ------
-//   {LegislateChID} / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LegislateEpoch}  // where a legislating channel publishes keys for an explicit member or child legislature IDs
-//   {GroupID}       / "series.Keyring.public"       / {KeyringID}           / {Group_Epoch}     // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
+//   {LawChID}  / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LawEpoch}  // where a legislating channel publishes keys for an explicit member or child legislature IDs
+//   {GroupID}  / "series.Keyring.public"       / {KeyringID}           / {Group_Epoch}     // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
 //
 // To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
 //
@@ -362,8 +362,8 @@ message AuthContext {
 
 
     // Legislating-channel epoch that authorizes the requested operation.
-    fixed64             LegislateEpoch_0 = 4;
-    fixed64             LegislateEpoch_1 = 5;
+    fixed64             LawEpoch_0 = 4;
+    fixed64             LawEpoch_1 = 5;
 
     // Keyring ID match
     fixed64             KeyringID_0 = 10;
@@ -914,8 +914,17 @@ message PlanetAnchor {
     int32               Version = 100;
 }
 
+// UIDRange is an inclusive range of tag.UIDs — [Start, End] — used to bound
+// chronicle slices, Merkle sync ranges, journal scans, and similar spans.
+message UIDRange {
+    fixed64             Start_0 = 1;
+    fixed64             Start_1 = 2;
+    fixed64             End_0 = 3;
+    fixed64             End_1 = 4;
+}
+
 // BlobManifestEntry describes one blob in a sibling content-addressed store.
-// Shared between PlanetChronicle and Codex manifests — same shape, same semantics.
+// Shared between Chronicle and Codex manifests — same shape, same semantics.
 message BlobManifestEntry {
 
     // Blob identity (leading 16 bytes of plaintext hash).
@@ -974,39 +983,39 @@ message CodexHeader {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// PlanetChronicle — portable signed-TxMsg slice.  Authority preserved.
+// Chronicle — portable signed-TxMsg slice.  Authority preserved.
 // Used for backup, offline SSD transport, restore, and rebase output.
 // ──────────────────────────────────────────────────────────────────────
 
-// ChronicleRebasePoint records one rebase event in the lineage chain.
-message ChronicleRebasePoint {
+// ChronicleCompactPoint records one rebase event in the lineage chain.
+message ChronicleCompactPoint {
 
     // Chronicle up to this TxID was rebased; older TxMsgs are discardable.
     fixed64             UpToTxID_0 = 1;
     fixed64             UpToTxID_1 = 2;
 
     // Wall-clock rebase time (UTC seconds).
-    int64               RebaseTime = 3;
+    int64               CompactTime = 3;
 
     // Digest of the compacted slice — detects rebase-result divergence.
     bytes               CompactedDigest = 4;
 
-    // TxID of the ChronicleRebase governance TxMsg itself.
-    fixed64             RebaseTxID_0 = 5;
-    fixed64             RebaseTxID_1 = 6;
+    // TxID of the ChronicleCompact governance TxMsg itself.
+    fixed64             CompactTxID_0 = 5;
+    fixed64             CompactTxID_1 = 6;
 }
 
-// ChronicleRebaseHistory is the ordered lineage of rebase points for a planet.
+// ChronicleCompactHistory is the ordered lineage of rebase points for a planet.
 // Oldest first.  Empty if the chronicle has never been rebased.
-message ChronicleRebaseHistory {
-    repeated ChronicleRebasePoint Points = 1;
+message ChronicleCompactHistory {
+    repeated ChronicleCompactPoint Points = 1;
 }
 
-// ChronicleRebase is the governance TxMsg that declares a chronicle compaction.
+// ChronicleCompact is the governance TxMsg that declares a chronicle compact.
 // Signed by the governance quorum.  Peers with the full chronicle may keep it
 // for forensics; peers syncing fresh after rebase receive only the compacted
 // form plus post-rebase TxMsgs.  See PRD-chronicle-and-codex §4.7.
-message ChronicleRebase {
+message ChronicleCompact {
 
     // TxID up to which the chronicle has been rebased; older TxMsgs discardable.
     fixed64             UpToTxID_0 = 1;
@@ -1016,7 +1025,7 @@ message ChronicleRebase {
     bytes               CompactedDigest = 3;
 
     // Wall-clock rebase time (UTC seconds).
-    int64               RebaseTime = 4;
+    int64               CompactTime = 4;
 
     // Optional rationale for audit trails.
     string              Label = 5;
@@ -1025,18 +1034,18 @@ message ChronicleRebase {
     reserved 10 to 19;
 }
 
-// PlanetChronicleManifest summarizes a PlanetChronicle for pre-flight validation.
-message PlanetChronicleManifest {
+// ChronicleManifest summarizes a Chronicle for pre-flight validation.
+message ChronicleManifest {
     int64               TxMsgCount = 1;
     int64               BlobCount = 2;
     int64               TotalBytes = 3;
 }
 
-// PlanetChronicleHeader is the first protobuf record in chronicle.bin after
+// ChronicleHeader is the first protobuf record in chronicle.bin after
 // the preamble.  The portable realization of a planet's Chronicle.  The
 // embedded GenesisEpoch TxMsg lets any receiver with the founders' pubkeys
 // verify every TxMsg in this chronicle offline — no network required.
-message PlanetChronicleHeader {
+message ChronicleHeader {
 
     // The planet this chronicle was exported from.
     Tag                     SourcePlanet = 1;
@@ -1050,24 +1059,21 @@ message PlanetChronicleHeader {
     bytes                   GenesisEpoch = 3;
 
     // TxID range included, inclusive on both ends.  Whole-planet export:
-    // RangeStart is the genesis TxID, RangeEnd is the chronicle head at
-    // export time.  Slice: RangeStart/RangeEnd bound the slice.
-    fixed64                 RangeStart_0 = 4;
-    fixed64                 RangeStart_1 = 5;
-    fixed64                 RangeEnd_0 = 6;
-    fixed64                 RangeEnd_1 = 7;
+    // Range.Start is the genesis TxID, Range.End is the chronicle head at
+    // export time.  Slice: Range bounds the slice.
+    UIDRange                Range = 4;
 
     // Wall-clock time of export (UTC seconds since epoch).
-    int64                   ExportTime = 8;
+    int64                   ExportTime = 5;
 
-    // Rebase lineage.  Nil if this chronicle has never been rebased.
-    ChronicleRebaseHistory  RebaseHistory = 9;
+    // Compact lineage.  Nil if this chronicle has never been compacted.
+    ChronicleCompactHistory  CompactHistory = 6;
 
     // Reserved for future redaction manifest (PRD-chronicle-and-codex §4.7.4).
     reserved 10 to 19;
 
     // Summary for pre-flight validation.
-    PlanetChronicleManifest Manifest = 20;
+    ChronicleManifest Manifest = 20;
 
     // Optional exporter-provided label ("nightly-backup 2026-04-23").
     string                  Label = 21;

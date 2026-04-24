@@ -94,13 +94,14 @@ tags Attr {
         }
     }
 
-    // Planet governance — the legislating channel (sibling of amp.ledger + amp.arbitrate).
-    // "Legislate" names the role concretely: this channel grants, revises, and revokes
+    // Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate).
+    // "Law" names the role concretely: this channel grants, revises, and revokes
     // the permissions other channels inherit.
-    LegislateAttr "amp.legislate" {
-        LegislatePlanetEpoch  "PlanetEpoch"
-        LegislateMemberEpoch  "MemberEpoch"
-        LegislateChannelEpoch "ChannelEpoch"
+    LawAttr "amp.law" {
+        LawPlanetEpoch  "PlanetEpoch"
+        LawMemberEpoch  "MemberEpoch"
+        LawChannelEpoch "ChannelEpoch"
+        LawPlanetAnchor "PlanetAnchor"
     }
 
     // Planet ledger — durable record of observations and citations.
