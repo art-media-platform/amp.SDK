@@ -16,7 +16,6 @@ package safe
 
 import (
 	"context"
-	"crypto/cipher"
 	"crypto/rand"
 	"io"
 	"sync"
@@ -139,35 +138,31 @@ type EpochKeyStore interface {
 }
 
 /*****************************************************
-** CryptoKit — pluggable crypto implementation
+** KitSpec — pluggable crypto implementation
 **/
 
-// CryptoKit is a pluggable cryptographic suite identified by a CryptoKitID.
-// Each function field implements a specific capability; nil fields mean "not supported."
-// All non-nil functions must be threadsafe.
-type CryptoKit struct {
-	ID CryptoKitID
+// KitSpec is a pluggable cryptographic suite identified by a CryptoKitID.
+// It bundles two independent capability axes — signing and asymmetric
+// encryption — so a kit can expose one, the other, or both. Symmetric AEAD
+// is kit-agnostic and lives on the safe package directly (SealAEAD / OpenAEAD).
+//
+// Nil capability pointers mean "not supported by this kit" (e.g. a future
+// Dilithium kit would expose Signing only; a Kyber kit would expose Encrypt only).
+type KitSpec struct {
+	ID      CryptoKitID
+	Signing *SigningOps // identity / signatures; nil if kit doesn't sign
+	Encrypt *EncryptOps // ECDH / asymmetric encrypt; nil if kit doesn't ECDH
+}
 
-	// SignatureSize is the fixed byte length of signatures produced by this kit's Sign function.
+// SigningOps bundles the signing-side primitives of a KitSpec.
+// All non-nil functions must be threadsafe.
+type SigningOps struct {
+	// SignatureSize is the fixed byte length of signatures produced by Sign.
 	SignatureSize int
 
-	// GenerateKey populates kp.Pub.Bytes and kp.Prv from kp.Pub.CryptoKitID + kp.Pub.KeyType.
-	// requestedSize is advisory (ignored by some implementations).
-	GenerateKey func(rng io.Reader, requestedSize int, kp *KeyPair) error
-
-	// Encrypt encrypts msg with a symmetric key.
-	Encrypt func(rng io.Reader, msg []byte, key []byte) ([]byte, error)
-
-	// Decrypt decrypts a buffer produced by Encrypt.
-	Decrypt func(msg []byte, key []byte) ([]byte, error)
-
-	// EncryptFor encrypts msg for a peer using asymmetric key agreement.
-	// The kit derives asymmetric keys from signing keys if needed (implementation-specific).
-	EncryptFor func(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
-
-	// DecryptFrom decrypts a buffer produced by EncryptFor.
-	// The kit derives asymmetric keys from signing keys if needed (implementation-specific).
-	DecryptFrom func(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
+	// Generate populates kp.Pub.Bytes and kp.Prv with a fresh SigningKey keypair
+	// in this kit. The caller sets kp.Pub.CryptoKitID and kp.Pub.KeyType beforehand.
+	Generate func(rng io.Reader, kp *KeyPair) error
 
 	// Sign produces a cryptographic signature of digest.
 	Sign func(digest []byte, signerPrvKey []byte) ([]byte, error)
@@ -175,56 +170,71 @@ type CryptoKit struct {
 	// Verify validates a signature against a digest and public key.
 	// Returns nil if the signature is valid.
 	Verify func(sig []byte, digest []byte, signerPubKey []byte) error
+}
 
-	// NewAEAD returns a streaming AEAD cipher bound to key, for callers that need
-	// per-chunk seal/open with explicit nonces and associated data (e.g. blob streams).
-	// Nil means this kit does not expose a streaming AEAD primitive.
-	NewAEAD func(key []byte) (cipher.AEAD, error)
+// EncryptOps bundles the asymmetric-encryption primitives of a KitSpec.
+// All non-nil functions must be threadsafe.
+//
+// The Seal/Open vocabulary mirrors safe.SealAEAD/OpenAEAD at the symmetric
+// layer and aligns with Go's cipher.AEAD.Seal/Open and libsodium's
+// crypto_box_seal — Seal produces an authenticated, peer-targeted ciphertext;
+// Open reverses it given the matching private key.
+type EncryptOps struct {
+	// Generate populates kp.Pub.Bytes and kp.Prv with a fresh AsymmetricKey
+	// keypair in this kit. The caller sets kp.Pub.CryptoKitID and kp.Pub.KeyType.
+	Generate func(rng io.Reader, kp *KeyPair) error
+
+	// Seal encrypts msg for a peer using ECDH key agreement.
+	Seal func(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
+
+	// Open decrypts a buffer produced by Seal using the recipient's private
+	// key and the sender's public key.
+	Open func(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
 }
 
 /*****************************************************
-** CryptoKit registry
+** KitSpec registry
 **/
 
-// gRegistry maps a CryptoKitID to an available ("registered") CryptoKit.
+// gRegistry maps a CryptoKitID to a registered KitSpec.
 var gRegistry struct {
 	sync.RWMutex
-	Lookup map[CryptoKitID]*CryptoKit
+	Lookup map[CryptoKitID]*KitSpec
 }
 
-// RegisterCryptoKit registers the given CryptoKit so it can be retrieved via GetCryptoKit().
+// RegisterKit registers the given KitSpec so it can be retrieved via GetKit().
 // It is safe to call from init().  Registering the same kit twice (same pointer) is a no-op.
-func RegisterCryptoKit(kit *CryptoKit) error {
+func RegisterKit(kit *KitSpec) error {
 	var err error
 	gRegistry.Lock()
 	if gRegistry.Lookup == nil {
-		gRegistry.Lookup = map[CryptoKitID]*CryptoKit{}
+		gRegistry.Lookup = map[CryptoKitID]*KitSpec{}
 	}
 	existing := gRegistry.Lookup[kit.ID]
 	if existing == nil {
 		gRegistry.Lookup[kit.ID] = kit
 	} else if existing != kit {
-		err = status.Code_UnrecognizedCryptoKit.Errorf("CryptoKit %d (%s) is already registered", kit.ID, kit.ID.String())
+		err = status.Code_UnrecognizedCryptoKit.Errorf("KitSpec %d (%s) is already registered", kit.ID, kit.ID.String())
 	}
 	gRegistry.Unlock()
 	return err
 }
 
-// GetCryptoKit fetches a registered CryptoKit by its ID.
-// If the associated CryptoKit has not been registered, an error is returned.
-func GetCryptoKit(cryptoKitID CryptoKitID) (*CryptoKit, error) {
+// GetKit fetches a registered KitSpec by its ID.
+// If the associated KitSpec has not been registered, an error is returned.
+func GetKit(cryptoKitID CryptoKitID) (*KitSpec, error) {
 	gRegistry.RLock()
 	kit := gRegistry.Lookup[cryptoKitID]
 	gRegistry.RUnlock()
 
 	if kit == nil {
-		return nil, status.Code_CryptoKitAlreadyRegistered.Errorf("CryptoKit %d not found", cryptoKitID)
+		return nil, status.Code_CryptoKitAlreadyRegistered.Errorf("KitSpec %d not found", cryptoKitID)
 	}
 	return kit, nil
 }
 
-// VerifySignature is a convenience function that performs signature validation for any registered CryptoKit.
-// Returns nil if the signature of digest plus the signer's private key matches the given signature.
+// VerifySignature is a convenience function that performs signature validation
+// for any registered KitSpec.  Returns nil if the signature is valid.
 // This function is threadsafe.
 func VerifySignature(
 	cryptoKitID CryptoKitID,
@@ -232,12 +242,12 @@ func VerifySignature(
 	digest []byte,
 	signerPubKey []byte,
 ) error {
-	kit, err := GetCryptoKit(cryptoKitID)
+	kit, err := GetKit(cryptoKitID)
 	if err != nil {
 		return err
 	}
-	if kit.Verify == nil {
-		return status.Code_Unimplemented.Errorf("CryptoKit %d does not support signature verification", cryptoKitID)
+	if kit.Signing == nil || kit.Signing.Verify == nil {
+		return status.Code_Unimplemented.Errorf("KitSpec %d does not support signature verification", cryptoKitID)
 	}
-	return kit.Verify(sig, digest, signerPubKey)
+	return kit.Signing.Verify(sig, digest, signerPubKey)
 }

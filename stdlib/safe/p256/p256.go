@@ -17,7 +17,6 @@ package p256
 
 import (
 	"bytes"
-	"crypto/cipher"
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -28,7 +27,6 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
-	"golang.org/x/crypto/chacha20poly1305"
 )
 
 const (
@@ -43,96 +41,61 @@ const (
 )
 
 func init() {
-	safe.RegisterCryptoKit(&kit)
+	safe.RegisterKit(&kit)
 }
 
-var kit = safe.CryptoKit{
-	ID:            safe.CryptoKitID_P256,
-	SignatureSize: SignatureSize,
-	GenerateKey:   generateKey,
-	Encrypt:       encrypt,
-	Decrypt:       decrypt,
-	EncryptFor:    encryptFor,
-	DecryptFrom:   decryptFrom,
-	Sign:          sign,
-	Verify:        verify,
-	NewAEAD:       newAEAD,
+var kit = safe.KitSpec{
+	ID: safe.CryptoKitID_P256,
+	Signing: &safe.SigningOps{
+		SignatureSize: SignatureSize,
+		Generate:      generateP256Key,
+		Sign:          sign,
+		Verify:        verify,
+	},
+	Encrypt: &safe.EncryptOps{
+		Generate: generateP256Key,
+		Seal:     seal,
+		Open:     open,
+	},
 }
 
-func newAEAD(key []byte) (cipher.AEAD, error) {
-	if len(key) != safe.DEKSize {
-		return nil, status.Code_BadKeyFormat.Errorf("symmetric key must be %d bytes, got %d", safe.DEKSize, len(key))
+// generateP256Key produces a fresh ECDH-P256 keypair.  The same scalar /
+// SEC1-uncompressed public key serves both ECDSA signing and ECDH-P256, so
+// SignOps and EncryptOps share the same generator (kit-unified key model;
+// matches what hardware tokens like YubiKey PIV emit).
+func generateP256Key(rng io.Reader, kp *safe.KeyPair) error {
+	priv, err := ecdh.P256().GenerateKey(rng)
+	if err != nil {
+		return status.Code_KeyGenerationFailed.Wrap(err)
 	}
-	return chacha20poly1305.NewX(key)
-}
-
-func generateKey(rng io.Reader, requestedSize int, kp *safe.KeyPair) error {
-	switch kp.Pub.KeyType {
-	case safe.KeyType_SymmetricKey:
-		pubSize := requestedSize
-		if pubSize < 16 {
-			pubSize = 32
-		}
-		kp.Pub.Bytes = make([]byte, pubSize)
-		if _, err := io.ReadFull(rng, kp.Pub.Bytes); err != nil {
-			return status.Code_KeyGenerationFailed.Wrap(err)
-		}
-		kp.Prv = make([]byte, safe.DEKSize)
-		if _, err := io.ReadFull(rng, kp.Prv); err != nil {
-			return status.Code_KeyGenerationFailed.Wrap(err)
-		}
-
-	case safe.KeyType_SigningKey, safe.KeyType_AsymmetricKey:
-		priv, err := ecdh.P256().GenerateKey(rng)
-		if err != nil {
-			return status.Code_KeyGenerationFailed.Wrap(err)
-		}
-		kp.Prv = priv.Bytes()
-		kp.Pub.Bytes = priv.PublicKey().Bytes()
-
-	default:
-		return status.ErrUnimplemented
-	}
+	kp.Prv = priv.Bytes()
+	kp.Pub.Bytes = priv.PublicKey().Bytes()
 	return nil
 }
 
-func encrypt(rng io.Reader, msg []byte, key []byte) ([]byte, error) {
-	if len(key) != safe.DEKSize {
-		return nil, status.Code_BadKeyFormat.Errorf("symmetric key must be %d bytes, got %d", safe.DEKSize, len(key))
-	}
-	nonce, cipherblob, err := safe.SealAEAD(rng, key, msg, nil)
+func seal(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
+	shared, err := ecdhDeriveKey(prvKey, peerPubKey)
 	if err != nil {
 		return nil, err
 	}
-	return append(nonce, cipherblob...), nil
+	defer safe.Zero(shared)
+	nonce, ct, err := safe.SealAEAD(rng, shared, msg, nil)
+	if err != nil {
+		return nil, err
+	}
+	return append(nonce, ct...), nil
 }
 
-func decrypt(msg []byte, key []byte) ([]byte, error) {
-	if len(key) != safe.DEKSize {
-		return nil, status.Code_BadKeyFormat.Errorf("symmetric key must be %d bytes, got %d", safe.DEKSize, len(key))
+func open(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
+	shared, err := ecdhDeriveKey(prvKey, peerPubKey)
+	if err != nil {
+		return nil, err
 	}
+	defer safe.Zero(shared)
 	if len(msg) < safe.NonceSize {
 		return nil, status.Code_DecryptFailed.Error("ciphertext too short")
 	}
-	return safe.OpenAEAD(key, msg[:safe.NonceSize], msg[safe.NonceSize:], nil)
-}
-
-func encryptFor(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	shared, err := ecdhDeriveKey(prvKey, peerPubKey)
-	if err != nil {
-		return nil, err
-	}
-	defer safe.Zero(shared)
-	return encrypt(rng, msg, shared)
-}
-
-func decryptFrom(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	shared, err := ecdhDeriveKey(prvKey, peerPubKey)
-	if err != nil {
-		return nil, err
-	}
-	defer safe.Zero(shared)
-	return decrypt(msg, shared)
+	return safe.OpenAEAD(shared, msg[:safe.NonceSize], msg[safe.NonceSize:], nil)
 }
 
 // ecdhDeriveKey computes the ECDH shared secret and derives a symmetric key

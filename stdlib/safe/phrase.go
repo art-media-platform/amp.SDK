@@ -3,6 +3,7 @@ package safe
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"io"
 	"strings"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
@@ -98,12 +99,9 @@ func phraseDigest(entropy []byte) []byte {
 // The phrase's checksum is verified before any derivation occurs. The returned
 // KeyPair's private material is fresh and owned by the caller; Zero() it after use.
 func KeyPairFromPhrase(phrase Phrase, spec KeySpec, purpose string) (KeyPair, error) {
-	kit, err := GetCryptoKit(spec.CryptoKitID)
+	kit, err := GetKit(spec.CryptoKitID)
 	if err != nil {
 		return KeyPair{}, err
-	}
-	if kit.GenerateKey == nil {
-		return KeyPair{}, status.Code_Unimplemented.Errorf("CryptoKit %s does not support key generation", spec.CryptoKitID.String())
 	}
 	entropy, err := DecodePhrase(phrase)
 	if err != nil {
@@ -118,8 +116,41 @@ func KeyPairFromPhrase(phrase Phrase, spec KeySpec, purpose string) (KeyPair, er
 			KeyType:     spec.KeyType,
 		},
 	}
-	if err := kit.GenerateKey(rng, spec.RequestedSize, &kp); err != nil {
+	if err := generateKeyForSpec(kit, rng, spec.RequestedSize, &kp); err != nil {
 		return KeyPair{}, err
 	}
 	return kp, nil
+}
+
+// generateKeyForSpec dispatches GenerateKey to the kit's appropriate capability
+// based on KeyType.  Symmetric keys are kit-agnostic (random bytes for both halves).
+func generateKeyForSpec(kit *KitSpec, rng io.Reader, requestedSize int, kp *KeyPair) error {
+	switch kp.Pub.KeyType {
+	case KeyType_SymmetricKey:
+		pubSize := requestedSize
+		if pubSize < 16 {
+			pubSize = 32
+		}
+		kp.Pub.Bytes = make([]byte, pubSize)
+		if _, err := io.ReadFull(rng, kp.Pub.Bytes); err != nil {
+			return status.Code_KeyGenerationFailed.Wrap(err)
+		}
+		kp.Prv = make([]byte, DEKSize)
+		if _, err := io.ReadFull(rng, kp.Prv); err != nil {
+			return status.Code_KeyGenerationFailed.Wrap(err)
+		}
+		return nil
+	case KeyType_SigningKey:
+		if kit.Signing == nil || kit.Signing.Generate == nil {
+			return status.Code_Unimplemented.Errorf("KitSpec %s does not generate SigningKeys", kit.ID.String())
+		}
+		return kit.Signing.Generate(rng, kp)
+	case KeyType_AsymmetricKey:
+		if kit.Encrypt == nil || kit.Encrypt.Generate == nil {
+			return status.Code_Unimplemented.Errorf("KitSpec %s does not generate AsymmetricKeys", kit.ID.String())
+		}
+		return kit.Encrypt.Generate(rng, kp)
+	default:
+		return status.Code_Unimplemented.Errorf("unsupported KeyType: %v", kp.Pub.KeyType)
+	}
 }

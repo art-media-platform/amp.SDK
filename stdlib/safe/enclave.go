@@ -145,12 +145,9 @@ func (enc *enclave) GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
 		return PubKey{}, fmt.Errorf("safe: enclave is closed")
 	}
 
-	kit, err := GetCryptoKit(spec.CryptoKitID)
+	kit, err := GetKit(spec.CryptoKitID)
 	if err != nil {
 		return PubKey{}, err
-	}
-	if kit.GenerateKey == nil {
-		return PubKey{}, status.Code_Unimplemented.Errorf("CryptoKit %s does not support key generation", spec.CryptoKitID.String())
 	}
 
 	size := spec.RequestedSize
@@ -168,11 +165,11 @@ func (enc *enclave) GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
 				TimeID:      tag.NowID(),
 			},
 		}
-		if err := kit.GenerateKey(RandReader, size, kp); err != nil {
+		if err := generateKeyForSpec(kit, RandReader, size, kp); err != nil {
 			return PubKey{}, err
 		}
 		if kp.Pub.CryptoKitID != spec.CryptoKitID || kp.Pub.KeyType != spec.KeyType {
-			return PubKey{}, status.Code_KeyGenerationFailed.Error("safe: CryptoKit mutated key spec")
+			return PubKey{}, status.Code_KeyGenerationFailed.Error("safe: KitSpec mutated key spec")
 		}
 
 		rec := &KeyPairRecord{
@@ -232,7 +229,7 @@ func (enc *enclave) DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error) {
 		return nil, err
 	}
 
-	kit, err := GetCryptoKit(rec.CryptoKitID)
+	kit, err := GetKit(rec.CryptoKitID)
 	if err != nil {
 		return nil, err
 	}
@@ -241,37 +238,59 @@ func (enc *enclave) DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error) {
 		OpPubKey: rec.PubKey,
 	}
 
+	// Belt-and-suspenders: cross-check the resolved record's KeyType against the
+	// requested Op.  fetchRecord already honors KeyRef.Type, so a wrong-type
+	// record is normally unreachable — this catches future bugs that construct a
+	// KeyRef with a mismatched Type or skip the discriminator entirely.
+	switch args.Op {
+	case CryptOp_Sign:
+		if rec.KeyType != KeyType_SigningKey {
+			return nil, status.Code_BadKeyFormat.Errorf("Sign requires SigningKey, got %s", rec.KeyType.String())
+		}
+	case CryptOp_EncryptToPeer, CryptOp_DecryptFromPeer:
+		if rec.KeyType != KeyType_AsymmetricKey {
+			return nil, status.Code_BadKeyFormat.Errorf("ECDH requires AsymmetricKey, got %s", rec.KeyType.String())
+		}
+	case CryptOp_EncryptSym, CryptOp_DecryptSym:
+		if rec.KeyType != KeyType_SymmetricKey {
+			return nil, status.Code_BadKeyFormat.Errorf("symmetric op requires SymmetricKey, got %s", rec.KeyType.String())
+		}
+	}
+
 	switch args.Op {
 
 	case CryptOp_Sign:
-		if kit.Sign == nil {
-			return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support signing", kit.ID.String())
+		if kit.Signing == nil || kit.Signing.Sign == nil {
+			return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support signing", kit.ID.String())
 		}
-		out.Output, err = kit.Sign(args.Input, rec.PrvKey)
+		out.Output, err = kit.Signing.Sign(args.Input, rec.PrvKey)
 
 	case CryptOp_EncryptSym:
-		if kit.Encrypt == nil {
-			return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support symmetric encryption", kit.ID.String())
+		// Symmetric AEAD is kit-agnostic (XChaCha20-Poly1305 across all kits).
+		// Output: nonce || cipherblob.
+		nonce, ct, sealErr := SealAEAD(RandReader, rec.PrvKey, args.Input, nil)
+		if sealErr != nil {
+			return nil, sealErr
 		}
-		out.Output, err = kit.Encrypt(RandReader, args.Input, rec.PrvKey)
+		out.Output = append(nonce, ct...)
 
 	case CryptOp_DecryptSym:
-		if kit.Decrypt == nil {
-			return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support symmetric decryption", kit.ID.String())
+		if len(args.Input) < NonceSize {
+			return nil, status.Code_DecryptFailed.Error("ciphertext too short")
 		}
-		out.Output, err = kit.Decrypt(args.Input, rec.PrvKey)
+		out.Output, err = OpenAEAD(rec.PrvKey, args.Input[:NonceSize], args.Input[NonceSize:], nil)
 
 	case CryptOp_EncryptToPeer:
-		if kit.EncryptFor == nil {
-			return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support asymmetric encryption", kit.ID.String())
+		if kit.Encrypt == nil || kit.Encrypt.Seal == nil {
+			return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric encryption", kit.ID.String())
 		}
-		out.Output, err = kit.EncryptFor(RandReader, args.Input, args.PeerKey, rec.PrvKey)
+		out.Output, err = kit.Encrypt.Seal(RandReader, args.Input, args.PeerKey, rec.PrvKey)
 
 	case CryptOp_DecryptFromPeer:
-		if kit.DecryptFrom == nil {
-			return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support asymmetric decryption", kit.ID.String())
+		if kit.Encrypt == nil || kit.Encrypt.Open == nil {
+			return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric decryption", kit.ID.String())
 		}
-		out.Output, err = kit.DecryptFrom(args.Input, args.PeerKey, rec.PrvKey)
+		out.Output, err = kit.Encrypt.Open(args.Input, args.PeerKey, rec.PrvKey)
 
 	default:
 		return nil, status.Code_Unimplemented.Errorf("unsupported CryptOp: %v", args.Op)
@@ -306,8 +325,6 @@ func (enc *enclave) ExportSymmetricKey(ref *KeyRef) ([]byte, error) {
 	copy(out, rec.PrvKey)
 	return out, nil
 }
-
-
 
 // Close seals the current key index and persists it, then zeros sensitive material.
 func (enc *enclave) Close(ctx context.Context) error {
@@ -362,8 +379,13 @@ func (enc *enclave) Close(ctx context.Context) error {
 	return nil
 }
 
-// mergeRecord inserts a single record into the index, rejecting mismatched pub-key collisions.
-// Exact duplicates are ignored. Must be called with enc.mu held.
+// mergeRecord inserts a single record into the index, rejecting mismatched
+// (PubKey, KeyType) collisions.  Exact duplicates are ignored.  Same PubKey
+// under different KeyTypes is permitted: a keyring may hold one identity
+// SigningKey and one encrypt AsymmetricKey whose raw bytes happen to coincide
+// (e.g. a temp bootstrap key imported under both types during invite onboarding).
+//
+// Must be called with enc.mu held.
 func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 	ringID := recordKeyringID(rec)
 	ring := enc.byRing[ringID]
@@ -375,9 +397,11 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 	pos := sort.Search(len(ring.records), func(i int) bool {
 		return bytes.Compare(ring.records[i].PubKey, rec.PubKey) >= 0
 	})
-	if pos < len(ring.records) && bytes.Equal(ring.records[pos].PubKey, rec.PubKey) {
-		existing := ring.records[pos]
-		if !recordsEqual(existing, rec) {
+	for i := pos; i < len(ring.records) && bytes.Equal(ring.records[i].PubKey, rec.PubKey); i++ {
+		if ring.records[i].KeyType != rec.KeyType {
+			continue
+		}
+		if !recordsEqual(ring.records[i], rec) {
 			return status.Code_BadKeyFormat.Errorf("safe: pub-key collision for keyring %s", ringID.Base32())
 		}
 		return nil
@@ -419,22 +443,24 @@ func (enc *enclave) fetchRecord(ref *KeyRef) (*KeyPairRecord, error) {
 			if len(pub) == 0 {
 				return nil, status.Code_KeyringNotFound.Errorf("keyring %v has no %s keys", ringID, ref.Type.String())
 			}
-			return ringLookup(ring, pub), nil
+			if rec := ringLookupTyped(ring, pub, ref.Type); rec != nil {
+				return rec, nil
+			}
+			return nil, status.Code_KeyringNotFound.Errorf("keyring %v: %s newest pointer stale", ringID, ref.Type.String())
 		}
 		bestPub, _ := ringNewestAcrossTypes(ring)
 		if bestPub == nil {
 			return nil, status.Code_KeyringNotFound.Errorf("keyring %v has no keys", ringID)
 		}
-		return ringLookup(ring, bestPub), nil
+		if rec := ringLookup(ring, bestPub); rec != nil {
+			return rec, nil
+		}
+		return nil, status.Code_KeyringNotFound.Errorf("keyring %v: newest pointer stale", ringID)
 	}
-	rec := ringLookupPrefix(ring, ref.PubKey)
-	if rec == nil {
-		return nil, status.Code_KeyringNotFound.Errorf("key not found in keyring %v (pubKey prefix: %x)", ringID, ref.PubKey)
+	if rec := ringLookupTypedPrefix(ring, ref.PubKey, ref.Type); rec != nil {
+		return rec, nil
 	}
-	if ref.Type != KeyType_Unspecified && rec.KeyType != ref.Type {
-		return nil, status.Code_KeyringNotFound.Errorf("key in keyring %v has type %s, want %s", ringID, rec.KeyType.String(), ref.Type.String())
-	}
-	return rec, nil
+	return nil, status.Code_KeyringNotFound.Errorf("key not found in keyring %v (pubKey prefix: %x type: %s)", ringID, ref.PubKey, ref.Type.String())
 }
 
 // ringNewestAcrossTypes returns the newest record's pub key across all KeyType
@@ -447,7 +473,7 @@ func ringNewestAcrossTypes(ring *ringIndex) ([]byte, tag.UID) {
 		if len(pub) == 0 {
 			continue
 		}
-		rec := ringLookup(ring, pub)
+		rec := ringLookupTyped(ring, pub, kt)
 		if rec == nil {
 			continue
 		}
@@ -524,12 +550,33 @@ func ringLookup(ring *ringIndex, pubKey []byte) *KeyPairRecord {
 	return nil
 }
 
-func ringLookupPrefix(ring *ringIndex, prefix []byte) *KeyPairRecord {
+// ringLookupTyped returns the record with both an exact PubKey match and the
+// requested KeyType, scanning the small run of same-PubKey siblings.
+func ringLookupTyped(ring *ringIndex, pubKey []byte, kt KeyType) *KeyPairRecord {
+	pos := sort.Search(len(ring.records), func(i int) bool {
+		return bytes.Compare(ring.records[i].PubKey, pubKey) >= 0
+	})
+	for i := pos; i < len(ring.records) && bytes.Equal(ring.records[i].PubKey, pubKey); i++ {
+		if ring.records[i].KeyType == kt {
+			return ring.records[i]
+		}
+	}
+	return nil
+}
+
+// ringLookupTypedPrefix returns the first record whose PubKey starts with the
+// given prefix and (if kt != Unspecified) matches the requested KeyType.
+func ringLookupTypedPrefix(ring *ringIndex, prefix []byte, kt KeyType) *KeyPairRecord {
 	pos := sort.Search(len(ring.records), func(i int) bool {
 		return bytes.Compare(ring.records[i].PubKey, prefix) >= 0
 	})
-	if pos < len(ring.records) && bytes.HasPrefix(ring.records[pos].PubKey, prefix) {
-		return ring.records[pos]
+	for i := pos; i < len(ring.records); i++ {
+		if !bytes.HasPrefix(ring.records[i].PubKey, prefix) {
+			break
+		}
+		if kt == KeyType_Unspecified || ring.records[i].KeyType == kt {
+			return ring.records[i]
+		}
 	}
 	return nil
 }
@@ -539,7 +586,7 @@ func ringNewestTimeID(ring *ringIndex, kt KeyType) tag.UID {
 	if len(pub) == 0 {
 		return tag.UID{}
 	}
-	rec := ringLookup(ring, pub)
+	rec := ringLookupTyped(ring, pub, kt)
 	if rec == nil {
 		return tag.UID{}
 	}

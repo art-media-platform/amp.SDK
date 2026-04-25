@@ -130,12 +130,12 @@ func TestExportSymmetricKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Use the CryptoKit directly with the exported key
-	kit, err := safe.GetCryptoKit(safe.CryptoKitID_Poly25519)
-	if err != nil {
-		t.Fatal(err)
+	// Symmetric AEAD is kit-agnostic; verify the exported key opens what the
+	// Enclave produced.  Wire format: nonce || cipherblob.
+	if len(encOut.Output) < safe.NonceSize {
+		t.Fatal("ciphertext shorter than nonce")
 	}
-	decrypted, err := kit.Decrypt(encOut.Output, exported)
+	decrypted, err := safe.OpenAEAD(exported, encOut.Output[:safe.NonceSize], encOut.Output[safe.NonceSize:], nil)
 	if err != nil {
 		t.Fatal("decrypt with exported key failed:", err)
 	}
@@ -272,11 +272,11 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	defer enc.Close(ctx)
 
 	aliceKeyringID := tag.NewID()
-	aliceRef := safe.KeyRef{}
+	aliceRef := safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
 	aliceRef.SetKeyringID(aliceKeyringID)
 
 	alice, err := enc.GenerateKey(aliceKeyringID, safe.KeySpec{
-		KeyType:     safe.KeyType_SigningKey,
+		KeyType:     safe.KeyType_AsymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {
@@ -285,11 +285,11 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	aliceRef.PubKey = alice.Bytes
 
 	bobKeyringID := tag.NewID()
-	bobRef := safe.KeyRef{}
+	bobRef := safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
 	bobRef.SetKeyringID(bobKeyringID)
 
 	bob, err := enc.GenerateKey(bobKeyringID, safe.KeySpec{
-		KeyType:     safe.KeyType_SigningKey,
+		KeyType:     safe.KeyType_AsymmetricKey,
 		CryptoKitID: safe.CryptoKitID_Poly25519,
 	})
 	if err != nil {

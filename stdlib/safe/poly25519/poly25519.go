@@ -1,15 +1,11 @@
 // Package poly25519 registers the Poly25519 CryptoKit with the safe package.
 //
 // This kit provides:
-//   - Symmetric encryption: XChaCha20-Poly1305
-//   - Asymmetric encryption: X25519 ECDH key agreement + HKDF + XChaCha20-Poly1305
-//   - Signing: Ed25519
+//   - Asymmetric encryption (KeyType_AsymmetricKey): X25519 ECDH + HKDF + XChaCha20-Poly1305
+//   - Signing (KeyType_SigningKey): Ed25519
 //
-// Signing keys (KeyType_SigningKey) are Ed25519 keypairs; asymmetric encryption keys
-// (KeyType_AsymmetricKey) are X25519 keypairs generated independently. EncryptFor /
-// DecryptFrom also accept Ed25519 signing keys directly — they are converted on the
-// fly via the Edwards-to-Montgomery birational map for backward compatibility with
-// callers that derive ECDH from a single identity key.
+// SigningKeys and AsymmetricKeys are independent keypairs.  Symmetric AEAD lives at
+// the safe package level (safe.SealAEAD / safe.OpenAEAD) and is kit-agnostic.
 //
 // Import this package (typically via blank import) to register the kit:
 //
@@ -18,189 +14,82 @@ package poly25519
 
 import (
 	"bytes"
-	"crypto/cipher"
 	"crypto/ecdh"
 	"crypto/ed25519"
-	"crypto/sha512"
 	"io"
 
-	"filippo.io/edwards25519"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
-	"golang.org/x/crypto/chacha20poly1305"
 )
 
 func init() {
-	safe.RegisterCryptoKit(&kit)
+	safe.RegisterKit(&kit)
 }
 
-var kit = safe.CryptoKit{
-	ID:            safe.CryptoKitID_Poly25519,
-	SignatureSize: ed25519.SignatureSize,
-	GenerateKey:   generateKey,
-	Encrypt:       encrypt,
-	Decrypt:       decrypt,
-	EncryptFor:    encryptFor,
-	DecryptFrom:   decryptFrom,
-	Sign:          sign,
-	Verify:        verify,
-	NewAEAD:       newAEAD,
+var kit = safe.KitSpec{
+	ID: safe.CryptoKitID_Poly25519,
+	Signing: &safe.SigningOps{
+		SignatureSize: ed25519.SignatureSize,
+		Generate:      generateSignKey,
+		Sign:          sign,
+		Verify:        verify,
+	},
+	Encrypt: &safe.EncryptOps{
+		Generate: generateEncKey,
+		Seal:     seal,
+		Open:     open,
+	},
 }
 
-// newAEAD returns an XChaCha20-Poly1305 AEAD for streaming seal/open with
-// per-chunk nonces and AAD. Used by blob stream crypto.
-func newAEAD(key []byte) (cipher.AEAD, error) {
-	if len(key) != safe.DEKSize {
-		return nil, status.Code_BadKeyFormat.Errorf("symmetric key must be %d bytes, got %d", safe.DEKSize, len(key))
-	}
-	return chacha20poly1305.NewX(key)
-}
-
-// resolveAsymKeys converts signing keys to asymmetric keys for ECDH when needed.
-// If prvKey is a signing key (64 bytes for this kit), both keys are converted;
-// otherwise they are used as-is (already in asymmetric form).
-func resolveAsymKeys(prvKey, peerPubKey []byte) (prvAsym, peerAsym []byte, err error) {
-	if len(prvKey) == ed25519.PrivateKeySize {
-		prvAsym, err = deriveAsymPrv(prvKey)
-		if err != nil {
-			return nil, nil, err
-		}
-		peerAsym, err = deriveAsymPub(peerPubKey)
-		if err != nil {
-			safe.Zero(prvAsym)
-			return nil, nil, err
-		}
-		return prvAsym, peerAsym, nil
-	}
-	return prvKey, peerPubKey, nil
-}
-
-// deriveAsymPub converts an Ed25519 public key to X25519 via the Edwards->Montgomery birational map.
-func deriveAsymPub(edPub []byte) ([]byte, error) {
-	if len(edPub) != ed25519.PublicKeySize {
-		return nil, status.Code_BadKeyFormat.Errorf("signing public key must be %d bytes, got %d", ed25519.PublicKeySize, len(edPub))
-	}
-	pt, err := new(edwards25519.Point).SetBytes(edPub)
+// generateSignKey produces a fresh Ed25519 keypair.
+func generateSignKey(rng io.Reader, kp *safe.KeyPair) error {
+	pub, priv, err := ed25519.GenerateKey(rng)
 	if err != nil {
-		return nil, status.Code_BadKeyFormat.Errorf("invalid signing public key: %v", err)
+		return status.Code_KeyGenerationFailed.Wrap(err)
 	}
-	return pt.BytesMontgomery(), nil
-}
-
-// deriveAsymPrv derives an X25519 private key from an Ed25519 private key.
-func deriveAsymPrv(edPrv []byte) ([]byte, error) {
-	if len(edPrv) != ed25519.PrivateKeySize {
-		return nil, status.Code_BadKeyFormat.Errorf("signing private key must be %d bytes, got %d", ed25519.PrivateKeySize, len(edPrv))
-	}
-	hash := sha512.Sum512(edPrv[:ed25519.SeedSize])
-	hash[0] &= 248
-	hash[31] &= 127
-	hash[31] |= 64
-	out := make([]byte, 32)
-	copy(out, hash[:32])
-	return out, nil
-}
-
-// generateKey generates a new key pair based on KeyType.
-func generateKey(rng io.Reader, requestedSize int, kp *safe.KeyPair) error {
-	switch kp.Pub.KeyType {
-	case safe.KeyType_SymmetricKey:
-		// PubKey acts as a public identifier; PrivKey is the symmetric secret.
-		pubSz := requestedSize
-		if pubSz < 16 {
-			pubSz = 32
-		}
-		kp.Pub.Bytes = make([]byte, pubSz)
-		if _, err := io.ReadFull(rng, kp.Pub.Bytes); err != nil {
-			return status.Code_KeyGenerationFailed.Wrap(err)
-		}
-		kp.Prv = make([]byte, safe.DEKSize)
-		if _, err := io.ReadFull(rng, kp.Prv); err != nil {
-			return status.Code_KeyGenerationFailed.Wrap(err)
-		}
-
-	case safe.KeyType_SigningKey:
-		pub, priv, err := ed25519.GenerateKey(rng)
-		if err != nil {
-			return status.Code_KeyGenerationFailed.Wrap(err)
-		}
-		kp.Pub.Bytes = pub
-		kp.Prv = priv
-
-	case safe.KeyType_AsymmetricKey:
-		priv, err := ecdh.X25519().GenerateKey(rng)
-		if err != nil {
-			return status.Code_KeyGenerationFailed.Wrap(err)
-		}
-		kp.Prv = priv.Bytes()
-		kp.Pub.Bytes = priv.PublicKey().Bytes()
-
-	default:
-		return status.ErrUnimplemented
-	}
+	kp.Pub.Bytes = pub
+	kp.Prv = priv
 	return nil
 }
 
-// encrypt encrypts msg with a symmetric key using XChaCha20-Poly1305.
-// Output: nonce (24 bytes) || ciphertext+tag
-func encrypt(rng io.Reader, msg []byte, key []byte) ([]byte, error) {
-	if len(key) != safe.DEKSize {
-		return nil, status.Code_BadKeyFormat.Errorf("symmetric key must be %d bytes, got %d", safe.DEKSize, len(key))
+// generateEncKey produces a fresh X25519 keypair (independent of the sign key).
+func generateEncKey(rng io.Reader, kp *safe.KeyPair) error {
+	priv, err := ecdh.X25519().GenerateKey(rng)
+	if err != nil {
+		return status.Code_KeyGenerationFailed.Wrap(err)
 	}
+	kp.Prv = priv.Bytes()
+	kp.Pub.Bytes = priv.PublicKey().Bytes()
+	return nil
+}
 
-	nonce, cipherblob, err := safe.SealAEAD(rng, key, msg, nil)
+// seal encrypts msg for a peer via X25519 ECDH + HKDF + XChaCha20-Poly1305.
+// Both prvKey and peerPubKey must be 32-byte X25519 keys.
+// Output: nonce (24 bytes) || ciphertext+tag
+func seal(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
+	sharedKey, err := x25519DeriveKey(prvKey, peerPubKey)
 	if err != nil {
 		return nil, err
 	}
-	return append(nonce, cipherblob...), nil
+	defer safe.Zero(sharedKey)
+	nonce, ct, err := safe.SealAEAD(rng, sharedKey, msg, nil)
+	if err != nil {
+		return nil, err
+	}
+	return append(nonce, ct...), nil
 }
 
-// decrypt decrypts a buffer produced by encrypt.
-func decrypt(msg []byte, key []byte) ([]byte, error) {
-	if len(key) != safe.DEKSize {
-		return nil, status.Code_BadKeyFormat.Errorf("symmetric key must be %d bytes, got %d", safe.DEKSize, len(key))
+// open decrypts a buffer produced by seal.
+func open(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
+	sharedKey, err := x25519DeriveKey(prvKey, peerPubKey)
+	if err != nil {
+		return nil, err
 	}
+	defer safe.Zero(sharedKey)
 	if len(msg) < safe.NonceSize {
 		return nil, status.Code_DecryptFailed.Error("ciphertext too short")
 	}
-	return safe.OpenAEAD(key, msg[:safe.NonceSize], msg[safe.NonceSize:], nil)
-}
-
-// encryptFor encrypts msg for a peer via ECDH key agreement + HKDF + XChaCha20-Poly1305.
-// Signing keys are automatically converted to asymmetric keys for ECDH.
-// Output: nonce (24 bytes) || ciphertext+tag
-func encryptFor(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	prvX, peerX, err := resolveAsymKeys(prvKey, peerPubKey)
-	if err != nil {
-		return nil, err
-	}
-	if prvX != nil {
-		defer safe.Zero(prvX)
-	}
-	sharedKey, err := x25519DeriveKey(prvX, peerX)
-	if err != nil {
-		return nil, err
-	}
-	defer safe.Zero(sharedKey)
-	return encrypt(rng, msg, sharedKey)
-}
-
-// decryptFrom decrypts a buffer produced by encryptFor.
-// Signing keys are automatically converted to asymmetric keys for ECDH.
-func decryptFrom(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	prvX, peerX, err := resolveAsymKeys(prvKey, peerPubKey)
-	if err != nil {
-		return nil, err
-	}
-	if prvX != nil {
-		defer safe.Zero(prvX)
-	}
-	sharedKey, err := x25519DeriveKey(prvX, peerX)
-	if err != nil {
-		return nil, err
-	}
-	defer safe.Zero(sharedKey)
-	return decrypt(msg, sharedKey)
+	return safe.OpenAEAD(sharedKey, msg[:safe.NonceSize], msg[safe.NonceSize:], nil)
 }
 
 // x25519DeriveKey computes an ECDH shared secret and derives a symmetric key via HKDF.

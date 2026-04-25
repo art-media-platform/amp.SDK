@@ -42,7 +42,7 @@ func TestPlanetEpoch_SignVerify_Roundtrip(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sig, err := kit.Sign(canon, prv)
+	sig, err := kit.Signing.Sign(canon, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestPlanetEpoch_Verify_RejectsTampered(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sig, err := kit.Sign(canon, prv)
+	sig, err := kit.Signing.Sign(canon, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,11 +117,11 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	polyKit, polyPub, polyPrv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
 	p256Kit, p256Pub, p256Prv := freshKeyPair(t, safe.CryptoKitID_P256)
 
-	polySig, err := polyKit.Sign(canon, polyPrv)
+	polySig, err := polyKit.Signing.Sign(canon, polyPrv)
 	if err != nil {
 		t.Fatal(err)
 	}
-	p256Sig, err := p256Kit.Sign(canon, p256Prv)
+	p256Sig, err := p256Kit.Signing.Sign(canon, p256Prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +178,7 @@ func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	sig, err := kit.Sign(canon, prv)
+	sig, err := kit.Signing.Sign(canon, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,7 +238,7 @@ func TestPlanetEpoch_Witnesses_VerifyOverSameCanonicalBytes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	witnessSig, err := kit.Sign(canon, prv)
+	witnessSig, err := kit.Signing.Sign(canon, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,9 +267,9 @@ func makeTestEpoch(t *testing.T) *amp.PlanetEpoch {
 	}
 }
 
-func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.CryptoKit, []byte, []byte) {
+func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.KitSpec, []byte, []byte) {
 	t.Helper()
-	kit, err := safe.GetCryptoKit(kitID)
+	kit, err := safe.GetKit(kitID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,7 +279,7 @@ func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.CryptoKit, []byte
 			KeyType:     safe.KeyType_SigningKey,
 		},
 	}
-	if err := kit.GenerateKey(rand.Reader, 0, &kp); err != nil {
+	if err := kit.Signing.Generate(rand.Reader, &kp); err != nil {
 		t.Fatal(err)
 	}
 	return kit, kp.Pub.Bytes, kp.Prv

@@ -190,18 +190,18 @@ func (epoch *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []b
 	if cosig == nil || len(cosig.Signature) == 0 {
 		return status.Code_BadRequest.Error("amp: empty CoSignature")
 	}
-	kit, err := safe.GetCryptoKit(signerKit)
+	kit, err := safe.GetKit(signerKit)
 	if err != nil {
 		return err
 	}
-	if kit.Verify == nil {
-		return status.Code_Unimplemented.Errorf("CryptoKit %s does not support verification", signerKit.String())
+	if kit.Signing == nil || kit.Signing.Verify == nil {
+		return status.Code_Unimplemented.Errorf("KitSpec %s does not support verification", signerKit.String())
 	}
 	canon, err := epoch.CanonicalBytes()
 	if err != nil {
 		return err
 	}
-	return kit.Verify(cosig.Signature, canon, signerPubKey)
+	return kit.Signing.Verify(cosig.Signature, canon, signerPubKey)
 }
 
 // Clone returns a new *Tag with all user-visible fields copied from v.

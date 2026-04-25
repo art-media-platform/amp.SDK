@@ -11,39 +11,42 @@ import (
 // which then encrypts/decrypts the DEK using XChaCha20-Poly1305 + HKDF.
 //
 // Dependencies:
-//   go get github.com/go-piv/piv-go/v2/piv
+//
+//	go get github.com/go-piv/piv-go/v2/piv
 //
 // Hardware pairing:
-//   The YubiKey 5 series supports PIV, and USB-C models (e.g. YubiKey 5C NFC)
-//   are ideal for a USB-C+storage combo dongle.
 //
-//   Bulk YubiKey + USB-C storage combo:
-//     - YubiKey 5C Nano or 5C NFC for the crypto engine
-//     - Pair with a high-capacity USB-C flash drive (e.g. Samsung FIT Plus 64GB–256GB)
-//     - Custom enclosure/keychain housing both in one unit
-//     - Suppliers: Yubico reseller program for bulk (500+ units), combined with
-//       a USB-C flash OEM (Kingston, Samsung, or Phison-based) for the storage side.
-//     - For merch/jewelry: CNC-milled aluminum or resin-cast housing with
-//       the YubiKey PCB and flash storage PCB side-by-side on a shared USB-C connector.
+//	The YubiKey 5 series supports PIV, and USB-C models (e.g. YubiKey 5C NFC)
+//	are ideal for a USB-C+storage combo dongle.
 //
-//   For active teens/20-somethings:
-//     - NFC ring or wristband with embedded NFC tag + companion app
-//       (the ring taps to authorize, the phone holds the encrypted tome)
-//     - Alternatively, a YubiKey 5 NFC in a custom silicone keychain/carabiner
-//       that clips to a bag or lanyard — functional fashion.
+//	Bulk YubiKey + USB-C storage combo:
+//	  - YubiKey 5C Nano or 5C NFC for the crypto engine
+//	  - Pair with a high-capacity USB-C flash drive (e.g. Samsung FIT Plus 64GB–256GB)
+//	  - Custom enclosure/keychain housing both in one unit
+//	  - Suppliers: Yubico reseller program for bulk (500+ units), combined with
+//	    a USB-C flash OEM (Kingston, Samsung, or Phison-based) for the storage side.
+//	  - For merch/jewelry: CNC-milled aluminum or resin-cast housing with
+//	    the YubiKey PCB and flash storage PCB side-by-side on a shared USB-C connector.
+//
+//	For active teens/20-somethings:
+//	  - NFC ring or wristband with embedded NFC tag + companion app
+//	    (the ring taps to authorize, the phone holds the encrypted tome)
+//	  - Alternatively, a YubiKey 5 NFC in a custom silicone keychain/carabiner
+//	    that clips to a bag or lanyard — functional fashion.
 //
 // Flow:
-//   WrapDEK:
-//     1. Generate ephemeral EC key pair
-//     2. ECDH(ephemeral_priv, yubikey_pub) -> shared_secret
-//     3. HKDF(shared_secret, salt, info) -> wrapping_key
-//     4. XChaCha20-Poly1305.Seal(wrapping_key, DEK) -> cipherblob
-//     5. Store ephemeral_pub in WrappedDEK.EphemeralPubKey
 //
-//   UnwrapDEK:
-//     1. ECDH(yubikey_priv, ephemeral_pub) -> shared_secret  (computed on-card)
-//     2. HKDF(shared_secret, salt, info) -> wrapping_key
-//     3. XChaCha20-Poly1305.Open(wrapping_key, cipherblob) -> DEK
+//	WrapDEK:
+//	  1. Generate ephemeral EC key pair
+//	  2. ECDH(ephemeral_priv, yubikey_pub) -> shared_secret
+//	  3. HKDF(shared_secret, salt, info) -> wrapping_key
+//	  4. XChaCha20-Poly1305.Seal(wrapping_key, DEK) -> cipherblob
+//	  5. Store ephemeral_pub in WrappedDEK.EphemeralPubKey
+//
+//	UnwrapDEK:
+//	  1. ECDH(yubikey_priv, ephemeral_pub) -> shared_secret  (computed on-card)
+//	  2. HKDF(shared_secret, salt, info) -> wrapping_key
+//	  3. XChaCha20-Poly1305.Open(wrapping_key, cipherblob) -> DEK
 type yubiGuard struct {
 	// piv *piv.YubiKey   // uncomment when go-piv is wired in
 	// slot piv.Slot

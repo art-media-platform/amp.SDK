@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 )
@@ -47,21 +46,13 @@ func NewAEAD(key []byte) (cipher.AEAD, error) {
 	return chacha20poly1305.NewX(key)
 }
 
-// NewAEADForKit returns a streaming AEAD from the given CryptoKit, for callers that
-// received (key, cryptoKitID) from an EpochKeyStore or similar. kitID = 0 maps to the
-// default kit (Poly25519), mirroring NewHashKit's 0 → Blake2s_256 convention.
+// NewAEADForKit returns a streaming AEAD for callers that received (key,
+// cryptoKitID) from an EpochKeyStore or similar.  All registered kits use
+// XChaCha20-Poly1305 for symmetric AEAD, so this just routes to NewAEAD; the
+// kitID parameter is retained to satisfy callers that pass it for completeness.
 func NewAEADForKit(cryptoKitID CryptoKitID, key []byte) (cipher.AEAD, error) {
-	if cryptoKitID == CryptoKitID_UnspecifiedKit {
-		cryptoKitID = CryptoKitID_Poly25519
-	}
-	kit, err := GetCryptoKit(cryptoKitID)
-	if err != nil {
-		return nil, err
-	}
-	if kit.NewAEAD == nil {
-		return nil, status.Code_Unimplemented.Errorf("CryptoKit %v does not expose a streaming AEAD", cryptoKitID)
-	}
-	return kit.NewAEAD(key)
+	_ = cryptoKitID
+	return NewAEAD(key)
 }
 
 // DeriveKey uses HKDF-SHA256 to derive a key from root material + salt + info.

@@ -14,7 +14,7 @@ func CryptoKitTest(kitToTest CryptoKitID, t *testing.T) {
 	gTesting = t
 
 	for i := 0; i < 5; i++ {
-		kit, err := GetCryptoKit(kitToTest)
+		kit, err := GetKit(kitToTest)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -22,7 +22,7 @@ func CryptoKitTest(kitToTest CryptoKitID, t *testing.T) {
 	}
 }
 
-func testKit(kit *CryptoKit, keyLen int) {
+func testKit(kit *KitSpec, keyLen int) {
 	msgLen := 0
 
 	for i := int64(1); i < 37; i++ {
@@ -32,7 +32,7 @@ func testKit(kit *CryptoKit, keyLen int) {
 	}
 }
 
-func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
+func testKitWithSizes(kit *KitSpec, keyLen, msgLen int) {
 	msg := make([]byte, msgLen)
 	badMsg := make([]byte, msgLen)
 
@@ -49,30 +49,24 @@ func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
 
 	var crypt []byte
 
-	kp := KeyPair{
-		Pub: PubKey{CryptoKitID: kit.ID},
-	}
-
 	/*****************************************************
-	** Symmetric test
+	** Symmetric test (kit-agnostic — uses package-level AEAD primitives)
 	**/
-	if kit.Encrypt != nil && kit.Decrypt != nil && kit.GenerateKey != nil {
-		kp.Pub.KeyType = KeyType_SymmetricKey
-		err := kit.GenerateKey(reader, keyLen, &kp)
-		if err != nil {
-			gTesting.Fatal(err)
-		}
+	{
+		symKey := make([]byte, DEKSize)
+		crypto_rand.Read(symKey)
 
-		crypt, err = kit.Encrypt(reader, msgOrig, kp.Prv)
+		nonce, ct, err := SealAEAD(reader, symKey, msgOrig, nil)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
+		crypt = append(nonce, ct...)
 
 		if len(badMsg) != len(crypt) {
 			badMsg = make([]byte, len(crypt))
 		}
 
-		msg, err = kit.Decrypt(crypt, kp.Prv)
+		msg, err = OpenAEAD(symKey, crypt[:NonceSize], crypt[NonceSize:], nil)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -80,14 +74,13 @@ func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
 			gTesting.Fatal("symmetric decrypt failed check")
 		}
 
-		// Vary the data slightly to test
 		for k := 0; k < 100; k++ {
 			rndPos := math_rand.Int31n(int32(len(crypt)))
 			rndAdj := 1 + byte(math_rand.Int31n(254))
 			copy(badMsg, crypt)
 			badMsg[rndPos] += rndAdj
 
-			msg, err = kit.Decrypt(badMsg, kp.Prv)
+			_, err = OpenAEAD(symKey, badMsg[:NonceSize], badMsg[NonceSize:], nil)
 			if err == nil {
 				gTesting.Fatal("there should have been a decryption error!")
 			}
@@ -95,28 +88,21 @@ func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
 	}
 
 	/*****************************************************
-	** Asymmetric test (CryptoKit derives asymmetric keys from signing keys)
+	** Asymmetric test (EncryptOps capability)
 	**/
-	if kit.EncryptFor != nil && kit.DecryptFrom != nil && kit.GenerateKey != nil {
-		kp.Pub.KeyType = KeyType_SigningKey
-		err := kit.GenerateKey(reader, keyLen, &kp)
-		if err != nil {
+	if kit.Encrypt != nil && kit.Encrypt.Seal != nil && kit.Encrypt.Open != nil && kit.Encrypt.Generate != nil {
+		kp := KeyPair{Pub: PubKey{KeyType: KeyType_AsymmetricKey, CryptoKitID: kit.ID}}
+		if err := kit.Encrypt.Generate(reader, &kp); err != nil {
 			gTesting.Fatal(err)
 		}
 
-		recipient := KeyPair{
-			Pub: PubKey{
-				KeyType:     KeyType_SigningKey,
-				CryptoKitID: kit.ID,
-			},
-		}
-
-		err = kit.GenerateKey(reader, keyLen, &recipient)
-		if err != nil {
+		recipient := KeyPair{Pub: PubKey{KeyType: KeyType_AsymmetricKey, CryptoKitID: kit.ID}}
+		if err := kit.Encrypt.Generate(reader, &recipient); err != nil {
 			gTesting.Fatal(err)
 		}
 
-		crypt, err = kit.EncryptFor(reader, msgOrig, recipient.Pub.Bytes, kp.Prv)
+		var err error
+		crypt, err = kit.Encrypt.Seal(reader, msgOrig, recipient.Pub.Bytes, kp.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -125,7 +111,7 @@ func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
 			badMsg = make([]byte, len(crypt))
 		}
 
-		msg, err = kit.DecryptFrom(crypt, kp.Pub.Bytes, recipient.Prv)
+		msg, err = kit.Encrypt.Open(crypt, kp.Pub.Bytes, recipient.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -133,14 +119,13 @@ func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
 			gTesting.Fatal("asymmetric decrypt failed check")
 		}
 
-		// Vary the data slightly to test
 		for k := 0; k < 100; k++ {
 			rndPos := math_rand.Int31n(int32(len(crypt)))
 			rndAdj := 1 + byte(math_rand.Int31n(254))
 			copy(badMsg, crypt)
 			badMsg[rndPos] += rndAdj
 
-			msg, err = kit.DecryptFrom(badMsg, kp.Pub.Bytes, recipient.Prv)
+			_, err = kit.Encrypt.Open(badMsg, kp.Pub.Bytes, recipient.Prv)
 			if err == nil {
 				gTesting.Fatal("there should have been a decryption error!")
 			}
@@ -148,22 +133,21 @@ func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
 	}
 
 	/*****************************************************
-	** Signing test
+	** Signing test (SignOps capability)
 	**/
-	if kit.Sign != nil && kit.Verify != nil && kit.GenerateKey != nil {
-		kp.Pub.KeyType = KeyType_SigningKey
-		err := kit.GenerateKey(reader, keyLen, &kp)
+	if kit.Signing != nil && kit.Signing.Sign != nil && kit.Signing.Verify != nil && kit.Signing.Generate != nil {
+		kp := KeyPair{Pub: PubKey{KeyType: KeyType_SigningKey, CryptoKitID: kit.ID}}
+		if err := kit.Signing.Generate(reader, &kp); err != nil {
+			gTesting.Fatal(err)
+		}
+
+		var err error
+		crypt, err = kit.Signing.Sign(msgOrig, kp.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
 
-		crypt, err = kit.Sign(msgOrig, kp.Prv)
-		if err != nil {
-			gTesting.Fatal(err)
-		}
-
-		err = kit.Verify(crypt, msgOrig, kp.Pub.Bytes)
-		if err != nil {
+		if err := kit.Signing.Verify(crypt, msgOrig, kp.Pub.Bytes); err != nil {
 			gTesting.Fatal(err)
 		}
 
@@ -171,14 +155,13 @@ func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
 			badMsg = make([]byte, len(crypt))
 		}
 
-		// Vary the data slightly to test
 		for k := 0; k < 100; k++ {
 			rndPos := math_rand.Int31n(int32(len(crypt)))
 			rndAdj := 1 + byte(math_rand.Int31n(254))
 			copy(badMsg, crypt)
 			badMsg[rndPos] += rndAdj
 
-			err = kit.Verify(badMsg, msgOrig, kp.Pub.Bytes)
+			err = kit.Signing.Verify(badMsg, msgOrig, kp.Pub.Bytes)
 			if err == nil {
 				gTesting.Fatal("there should have been a sig failed error!")
 			}
