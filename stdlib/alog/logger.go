@@ -266,12 +266,12 @@ func (verbosityFlag) IsBoolFlag() bool { return false }
 
 func (l *logger) LogV(level int32) bool { return level == 0 || level <= gVLevel.Load() }
 
-func (l *logger) Debug(args ...any)            { l.emit(sevDebug, 0, fmt.Sprint(args...)) }
-func (l *logger) Debugf(f string, a ...any)    { l.emit(sevDebug, 0, fmt.Sprintf(f, a...)) }
-func (l *logger) Warn(args ...any)             { l.emit(sevWarn, 0, fmt.Sprint(args...)) }
-func (l *logger) Warnf(f string, a ...any)     { l.emit(sevWarn, 0, fmt.Sprintf(f, a...)) }
-func (l *logger) Error(args ...any)            { l.emit(sevError, 0, fmt.Sprint(args...)) }
-func (l *logger) Errorf(f string, a ...any)    { l.emit(sevError, 0, fmt.Sprintf(f, a...)) }
+func (l *logger) Debug(args ...any)         { l.emit(sevDebug, 0, fmt.Sprint(args...)) }
+func (l *logger) Debugf(f string, a ...any) { l.emit(sevDebug, 0, fmt.Sprintf(f, a...)) }
+func (l *logger) Warn(args ...any)          { l.emit(sevWarn, 0, fmt.Sprint(args...)) }
+func (l *logger) Warnf(f string, a ...any)  { l.emit(sevWarn, 0, fmt.Sprintf(f, a...)) }
+func (l *logger) Error(args ...any)         { l.emit(sevError, 0, fmt.Sprint(args...)) }
+func (l *logger) Errorf(f string, a ...any) { l.emit(sevError, 0, fmt.Sprintf(f, a...)) }
 
 func (l *logger) Info(level int32, args ...any) {
 	if l.LogV(level) {

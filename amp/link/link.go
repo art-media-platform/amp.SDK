@@ -43,10 +43,10 @@ const (
 
 // LinkToken holds the decoded contents of a deep link.
 type LinkToken struct {
-	Version   byte
-	PlanetID  tag.UID
-	NodeID tag.UID
-	ItemID    tag.UID
+	Version  byte
+	PlanetID tag.UID
+	NodeID   tag.UID
+	ItemID   tag.UID
 }
 
 // SealToken encrypts a LinkToken under the given epoch key and returns
@@ -150,4 +150,3 @@ func unmarshalToken(data []byte) (LinkToken, error) {
 	tok.ItemID[1] = binary.BigEndian.Uint64(data[off+8:])
 	return tok, nil
 }
-

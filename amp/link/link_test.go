@@ -12,10 +12,10 @@ func TestSealOpenRoundTrip(t *testing.T) {
 	rand.Read(epochKey)
 
 	tok := LinkToken{
-		Version:   TokenVersion,
-		PlanetID:  tag.NewID(),
-		NodeID: tag.NewID(),
-		ItemID:    tag.NewID(),
+		Version:  TokenVersion,
+		PlanetID: tag.NewID(),
+		NodeID:   tag.NewID(),
+		ItemID:   tag.NewID(),
 	}
 
 	encoded, err := SealToken(tok, epochKey)
@@ -50,10 +50,10 @@ func TestWrongKeyFails(t *testing.T) {
 	rand.Read(key2)
 
 	tok := LinkToken{
-		Version:   TokenVersion,
-		PlanetID:  tag.NewID(),
-		NodeID: tag.NewID(),
-		ItemID:    tag.NewID(),
+		Version:  TokenVersion,
+		PlanetID: tag.NewID(),
+		NodeID:   tag.NewID(),
+		ItemID:   tag.NewID(),
 	}
 
 	encoded, err := SealToken(tok, key1)
