@@ -133,10 +133,18 @@ type Session interface {
 
 	// Registers or updates a planet's epoch in this session.
 	// First call for a given planetID also joins the planet on the vault controller.
+	//
+	// Rotation-receipt atomicity contract — epoch installation MUST follow:
+	//   (a) EpochKeyStore.PutKey for the new epoch's keys
+	//   (b) Session.SetPlanet (this call)
+	//   (c) Session.OnEpochKeyArrived
+	// Any encrypted op dispatched after SetPlanet expects its key to already
+	// be resolvable; inverting (a)/(b) is a latent race even on synchronous paths.
 	SetPlanet(planetID tag.UID, epoch *PlanetEpoch)
 
-	// Called after a new epoch key has been stored in EpochKeyStore.
-	// Notifies the vault controller to re-verify pending journal entries for this epoch.
+	// Called after a new epoch key has been stored in EpochKeyStore.  Notifies
+	// the vault controller to re-verify pending journal entries for this epoch.
+	// See SetPlanet for the ordering contract this call closes.
 	OnEpochKeyArrived(epochID tag.UID)
 
 	// Processes a verified planet-public governance TxMsg (e.g. MemberEpoch distribution).
