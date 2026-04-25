@@ -125,6 +125,10 @@ func NonZeroUint32(val, fallback uint32) uint32 {
 // TxWithinGracePeriod returns true if a TxMsg authored under a previous epoch
 // is still within the acceptance window relative to this (newer) epoch.
 // txTimeID is the TxMsg's TxID; newEpochTimeID is this epoch's creation timestamp.
+//
+// Direction: tx is OLDER than the epoch — used to bound how much lag is
+// tolerated from a member operating on stale state.  See WithinRevocationCliff
+// for the symmetric direction (tx newer than a cut event).
 func (ep *PlanetEpoch) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) bool {
 	txUnix := txTimeID.Unix()
 	epochUnix := newEpochTimeID.Unix()
@@ -132,6 +136,26 @@ func (ep *PlanetEpoch) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) boo
 		return true // TxMsg is newer than or concurrent with the epoch — always accept
 	}
 	return (epochUnix - txUnix) <= ep.GracePeriod()
+}
+
+// WithinRevocationCliff returns true if a TxMsg authored at txTimeID is
+// still acceptable from a member who was revoked or suspended under the
+// MemberEpoch posted at cutTimeID.
+//
+// Accepts unconditionally if the tx predates the cut (legitimate in-flight
+// authoring under still-valid authority).  After the cut, accepts only
+// within MaxGracePeriod — past that threshold the revoked member's
+// signatures lose authority and TxMsgs are rejected.
+//
+// Direction: tx is NEWER than (or concurrent with) the cut event.  This is
+// the revocation cliff per amp.security PRD §G.6.
+func (ep *PlanetEpoch) WithinRevocationCliff(txTimeID, cutTimeID tag.UID) bool {
+	txUnix := txTimeID.Unix()
+	cutUnix := cutTimeID.Unix()
+	if txUnix <= cutUnix {
+		return true // tx authored at or before the cut — legitimate pre-cut authority
+	}
+	return (txUnix - cutUnix) <= ep.GracePeriod()
 }
 
 func TagFromName(name tag.Name) *Tag {
