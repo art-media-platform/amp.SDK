@@ -121,21 +121,17 @@ func TestExportSymmetricKey(t *testing.T) {
 
 	// Encrypt with Enclave, decrypt with exported key directly
 	testMsg := []byte("test payload for export verification")
-	encOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
-		Op:    safe.CryptOp_EncryptSym,
-		OpKey: ref,
-		Input: testMsg,
-	})
+	ciphertext, err := enc.EncryptSym(ref, testMsg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Symmetric AEAD is kit-agnostic; verify the exported key opens what the
 	// Enclave produced.  Wire format: nonce || cipherblob.
-	if len(encOut.Output) < safe.NonceSize {
+	if len(ciphertext) < safe.NonceSize {
 		t.Fatal("ciphertext shorter than nonce")
 	}
-	decrypted, err := safe.OpenAEAD(exported, encOut.Output[:safe.NonceSize], encOut.Output[safe.NonceSize:], nil)
+	decrypted, err := safe.OpenAEAD(exported, ciphertext[:safe.NonceSize], ciphertext[safe.NonceSize:], nil)
 	if err != nil {
 		t.Fatal("decrypt with exported key failed:", err)
 	}
@@ -185,15 +181,10 @@ func TestRoundTrip(t *testing.T) {
 	testMsg := make([]byte, 200)
 	rand.Read(testMsg)
 
-	encOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
-		Op:    safe.CryptOp_EncryptSym,
-		OpKey: &keyRef,
-		Input: testMsg,
-	})
+	ciphertext, err := enc.EncryptSym(&keyRef, testMsg)
 	if err != nil {
 		t.Fatalf("EncryptSym: %v", err)
 	}
-	ciphertext := encOut.Output
 
 	if err := enc.Close(ctx); err != nil {
 		t.Fatalf("Close (first): %v", err)
@@ -219,15 +210,11 @@ func TestRoundTrip(t *testing.T) {
 	}
 
 	// Decrypt the ciphertext
-	decOut, err := enc2.DoCryptOp(&safe.CryptOpArgs{
-		Op:    safe.CryptOp_DecryptSym,
-		OpKey: &keyRef,
-		Input: ciphertext,
-	})
+	plaintext, err := enc2.DecryptSym(&keyRef, ciphertext)
 	if err != nil {
 		t.Fatalf("DecryptSym: %v", err)
 	}
-	if !bytes.Equal(decOut.Output, testMsg) {
+	if !bytes.Equal(plaintext, testMsg) {
 		t.Fatal("decrypted message doesn't match original")
 	}
 
@@ -613,25 +600,17 @@ func TestEncryptDecryptVariousSizes(t *testing.T) {
 		testMsg := make([]byte, sz)
 		rand.Read(testMsg)
 
-		encOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
-			Op:    safe.CryptOp_EncryptSym,
-			OpKey: &keyRef,
-			Input: testMsg,
-		})
+		ciphertext, err := enc.EncryptSym(&keyRef, testMsg)
 		if err != nil {
 			t.Fatalf("EncryptSym (size=%d): %v", sz, err)
 		}
 
-		decOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
-			Op:    safe.CryptOp_DecryptSym,
-			OpKey: &keyRef,
-			Input: encOut.Output,
-		})
+		plaintext, err := enc.DecryptSym(&keyRef, ciphertext)
 		if err != nil {
 			t.Fatalf("DecryptSym (size=%d): %v", sz, err)
 		}
 
-		if !bytes.Equal(decOut.Output, testMsg) {
+		if !bytes.Equal(plaintext, testMsg) {
 			t.Fatalf("decrypt mismatch at size=%d", sz)
 		}
 	}
@@ -725,15 +704,11 @@ func TestDualKeyTypeStreams(t *testing.T) {
 	// Alice's SignKey continues to sign independently in Poly25519.
 	digest := make([]byte, 32)
 	rand.Read(digest)
-	sigOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
-		Op:    safe.CryptOp_Sign,
-		OpKey: signRef,
-		Input: digest,
-	})
+	sig, err := enc.Sign(signRef, digest)
 	if err != nil {
 		t.Fatalf("Sign with SignKey: %v", err)
 	}
-	if err := safe.VerifySignature(safe.CryptoKitID_Poly25519, sigOut.Output, digest, aliceSign.Bytes); err != nil {
+	if err := safe.VerifySignature(safe.CryptoKitID_Poly25519, sig, digest, aliceSign.Bytes); err != nil {
 		t.Fatalf("VerifySignature: %v", err)
 	}
 

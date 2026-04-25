@@ -104,36 +104,6 @@ enum KeyRole {
 }
 
 
-// CryptOp enumerates cryptographic operations performed via Enclave.DoCryptOp.
-// Asymmetric encryption uses safe.SealFor (package-level, no Enclave needed)
-// and Enclave.OpenFromPub instead — those operations are anonymous-sender and
-// don't fit the keyed-by-OpKey shape.
-enum CryptOp {
-
-    // Sign generates a signature for Input using the referenced signing key.
-    Sign                            = 0;
-
-    // EncryptSym encrypts Input using the symmetric key referenced by OpKey.
-    EncryptSym                      = 1;
-
-    // DecryptSym decrypts Input using the symmetric key referenced by OpKey (inverse of EncryptSym).
-    DecryptSym                      = 2;
-}
-
-
-message CryptOpArgs {
-    CryptOp     Op                  = 1;   // Which operation to invoke
-    CryptoKitID DefaultKit          = 2;   // Fallback CryptoKit when not determined by OpKey
-    bytes       Input               = 3;   // Input buffer (plaintext, ciphertext, or digest)
-    KeyRef      OpKey               = 4;   // References a key used in the enclave for this op
-}
-
-message CryptOpOut {
-    bytes       Output              = 1;    // Output buffer -- depends on the CryptOpArgs.Op
-    bytes       OpPubKey            = 2;    // Pub key used in the op (useful when OpKey.PubKey was empty)
-}
-
-
 // KeyRef references a specific key.  It serves both as an in-Enclave lookup
 // handle (resolving KeyringID + Type + optional PubKey prefix to a stored
 // record) and as a wire-format public-key descriptor (carrying Bytes + Kit +

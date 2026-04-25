@@ -212,78 +212,75 @@ func (enc *enclave) FetchPubKey(ref *KeyRef) (PubKey, error) {
 	return pubKeyFromRecord(rec), nil
 }
 
-// DoCryptOp performs signing, symmetric encryption/decryption, and asymmetric encryption/decryption.
-func (enc *enclave) DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error) {
+// fetchTypedRecord resolves ref, enforces enclave-not-closed, and verifies that
+// the resolved record's KeyType matches wantType.  Returns the record and its
+// kit on success.  Internal helper for the typed Enclave methods below.
+func (enc *enclave) fetchTypedRecord(ref *KeyRef, wantType KeyType, opLabel string) (*KeyPairRecord, *KitSpec, error) {
+	if enc.closed {
+		return nil, nil, fmt.Errorf("safe: enclave is closed")
+	}
+	if ref == nil {
+		return nil, nil, status.Code_BadRequest.Errorf("%s: ref is required", opLabel)
+	}
+	rec, err := enc.fetchRecord(ref)
+	if err != nil {
+		return nil, nil, err
+	}
+	if rec.KeyType != wantType {
+		return nil, nil, status.Code_BadKeyFormat.Errorf("%s requires %s, got %s", opLabel, wantType.String(), rec.KeyType.String())
+	}
+	kit, err := GetKit(rec.CryptoKitID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return rec, kit, nil
+}
+
+// Sign produces a cryptographic signature over digest using ref's SigningKey.
+func (enc *enclave) Sign(ref *KeyRef, digest []byte) ([]byte, error) {
 	enc.mu.RLock()
 	defer enc.mu.RUnlock()
 
-	if enc.closed {
-		return nil, fmt.Errorf("safe: enclave is closed")
-	}
-	if args.OpKey == nil {
-		return nil, status.Code_BadRequest.Error("CryptOpArgs.OpKey is required")
-	}
-
-	rec, err := enc.fetchRecord(args.OpKey)
+	rec, kit, err := enc.fetchTypedRecord(ref, KeyType_SigningKey, "Sign")
 	if err != nil {
 		return nil, err
 	}
+	if kit.Signing == nil || kit.Signing.Sign == nil {
+		return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support signing", kit.ID.String())
+	}
+	return kit.Signing.Sign(digest, rec.PrvKey)
+}
 
-	kit, err := GetKit(rec.CryptoKitID)
+// EncryptSym encrypts plaintext using ref's SymmetricKey.
+// Output: nonce (24) || ciphertext+tag.  XChaCha20-Poly1305 is kit-agnostic.
+func (enc *enclave) EncryptSym(ref *KeyRef, plaintext []byte) ([]byte, error) {
+	enc.mu.RLock()
+	defer enc.mu.RUnlock()
+
+	rec, _, err := enc.fetchTypedRecord(ref, KeyType_SymmetricKey, "EncryptSym")
 	if err != nil {
 		return nil, err
 	}
-
-	out := &CryptOpOut{
-		OpPubKey: rec.PubKey,
-	}
-
-	// Belt-and-suspenders: cross-check the resolved record's KeyType against the
-	// requested Op.  fetchRecord already honors KeyRef.Type, so a wrong-type
-	// record is normally unreachable — this catches future bugs that construct a
-	// KeyRef with a mismatched Type or skip the discriminator entirely.
-	switch args.Op {
-	case CryptOp_Sign:
-		if rec.KeyType != KeyType_SigningKey {
-			return nil, status.Code_BadKeyFormat.Errorf("Sign requires SigningKey, got %s", rec.KeyType.String())
-		}
-	case CryptOp_EncryptSym, CryptOp_DecryptSym:
-		if rec.KeyType != KeyType_SymmetricKey {
-			return nil, status.Code_BadKeyFormat.Errorf("symmetric op requires SymmetricKey, got %s", rec.KeyType.String())
-		}
-	}
-
-	switch args.Op {
-
-	case CryptOp_Sign:
-		if kit.Signing == nil || kit.Signing.Sign == nil {
-			return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support signing", kit.ID.String())
-		}
-		out.Output, err = kit.Signing.Sign(args.Input, rec.PrvKey)
-
-	case CryptOp_EncryptSym:
-		// Symmetric AEAD is kit-agnostic (XChaCha20-Poly1305 across all kits).
-		// Output: nonce || cipherblob.
-		nonce, ct, sealErr := SealAEAD(RandReader, rec.PrvKey, args.Input, nil)
-		if sealErr != nil {
-			return nil, sealErr
-		}
-		out.Output = append(nonce, ct...)
-
-	case CryptOp_DecryptSym:
-		if len(args.Input) < NonceSize {
-			return nil, status.Code_DecryptFailed.Error("ciphertext too short")
-		}
-		out.Output, err = OpenAEAD(rec.PrvKey, args.Input[:NonceSize], args.Input[NonceSize:], nil)
-
-	default:
-		return nil, status.Code_Unimplemented.Errorf("unsupported CryptOp via DoCryptOp: %v (asymmetric encryption uses safe.SealFor / Enclave.OpenFromPub)", args.Op)
-	}
-
+	nonce, ct, err := SealAEAD(RandReader, rec.PrvKey, plaintext, nil)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	return append(nonce, ct...), nil
+}
+
+// DecryptSym decrypts a buffer produced by EncryptSym using ref's SymmetricKey.
+func (enc *enclave) DecryptSym(ref *KeyRef, ciphertext []byte) ([]byte, error) {
+	enc.mu.RLock()
+	defer enc.mu.RUnlock()
+
+	rec, _, err := enc.fetchTypedRecord(ref, KeyType_SymmetricKey, "DecryptSym")
+	if err != nil {
+		return nil, err
+	}
+	if len(ciphertext) < NonceSize {
+		return nil, status.Code_DecryptFailed.Error("ciphertext too short")
+	}
+	return OpenAEAD(rec.PrvKey, ciphertext[:NonceSize], ciphertext[NonceSize:], nil)
 }
 
 // OpenFromPub decrypts a sealed-box ciphertext using the recipient's private

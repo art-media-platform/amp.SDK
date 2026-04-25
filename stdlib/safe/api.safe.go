@@ -87,14 +87,22 @@ type Enclave interface {
 	// If len(ref.PubKey) == 0, the newest key in the keyring is returned.
 	FetchPubKey(ref *KeyRef) (PubKey, error)
 
-	// DoCryptOp performs signing and symmetric encryption/decryption.
-	// Asymmetric encryption uses the anonymous-sender SealFor (package level)
-	// and OpenFromPub (Enclave method) rather than DoCryptOp.
-	DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error)
+	// Sign produces a cryptographic signature over digest using the SigningKey
+	// referenced by ref.  Returns the signature bytes.
+	Sign(ref *KeyRef, digest []byte) ([]byte, error)
+
+	// EncryptSym encrypts plaintext using the SymmetricKey referenced by ref
+	// (XChaCha20-Poly1305).  Output: nonce (24) || ciphertext+tag.
+	EncryptSym(ref *KeyRef, plaintext []byte) ([]byte, error)
+
+	// DecryptSym decrypts a buffer produced by EncryptSym using the same
+	// SymmetricKey reference.
+	DecryptSym(ref *KeyRef, ciphertext []byte) ([]byte, error)
 
 	// OpenFromPub decrypts a sealed-box ciphertext (produced by safe.SealFor
-	// or kit.Encrypt.Seal) using the recipient's private key.  The ephemeral
-	// sender pubkey is parsed from the front of msg per the kit's wire format.
+	// or kit.Encrypt.Seal) using the AsymmetricKey referenced by ref.  The
+	// ephemeral sender pubkey is parsed from the front of msg per the kit's
+	// wire format.
 	OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error)
 
 	// ExportSymmetricKey returns a copy of the raw symmetric key bytes for the referenced keyring.

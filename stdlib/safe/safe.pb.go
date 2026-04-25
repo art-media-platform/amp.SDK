@@ -290,62 +290,6 @@ func (KeyRole) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
 }
 
-// CryptOp enumerates cryptographic operations performed via Enclave.DoCryptOp.
-// Asymmetric encryption uses safe.SealFor (package-level, no Enclave needed)
-// and Enclave.OpenFromPub instead — those operations are anonymous-sender and
-// don't fit the keyed-by-OpKey shape.
-type CryptOp int32
-
-const (
-	// Sign generates a signature for Input using the referenced signing key.
-	CryptOp_Sign CryptOp = 0
-	// EncryptSym encrypts Input using the symmetric key referenced by OpKey.
-	CryptOp_EncryptSym CryptOp = 1
-	// DecryptSym decrypts Input using the symmetric key referenced by OpKey (inverse of EncryptSym).
-	CryptOp_DecryptSym CryptOp = 2
-)
-
-// Enum value maps for CryptOp.
-var (
-	CryptOp_name = map[int32]string{
-		0: "Sign",
-		1: "EncryptSym",
-		2: "DecryptSym",
-	}
-	CryptOp_value = map[string]int32{
-		"Sign":       0,
-		"EncryptSym": 1,
-		"DecryptSym": 2,
-	}
-)
-
-func (x CryptOp) Enum() *CryptOp {
-	p := new(CryptOp)
-	*p = x
-	return p
-}
-
-func (x CryptOp) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (CryptOp) Descriptor() protoreflect.EnumDescriptor {
-	return file_stdlib_safe_safe_proto_enumTypes[5].Descriptor()
-}
-
-func (CryptOp) Type() protoreflect.EnumType {
-	return &file_stdlib_safe_safe_proto_enumTypes[5]
-}
-
-func (x CryptOp) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use CryptOp.Descriptor instead.
-func (CryptOp) EnumDescriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
-}
-
 // GuardInfo describes a Guard's capabilities and identity.
 type GuardInfo struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -654,126 +598,6 @@ func (x *SealedTome) GetCipherblob() []byte {
 	return nil
 }
 
-type CryptOpArgs struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Op            CryptOp                `protobuf:"varint,1,opt,name=Op,proto3,enum=safe.CryptOp" json:"Op,omitempty"`                     // Which operation to invoke
-	DefaultKit    CryptoKitID            `protobuf:"varint,2,opt,name=DefaultKit,proto3,enum=safe.CryptoKitID" json:"DefaultKit,omitempty"` // Fallback CryptoKit when not determined by OpKey
-	Input         []byte                 `protobuf:"bytes,3,opt,name=Input,proto3" json:"Input,omitempty"`                                  // Input buffer (plaintext, ciphertext, or digest)
-	OpKey         *KeyRef                `protobuf:"bytes,4,opt,name=OpKey,proto3" json:"OpKey,omitempty"`                                  // References a key used in the enclave for this op
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CryptOpArgs) Reset() {
-	*x = CryptOpArgs{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CryptOpArgs) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CryptOpArgs) ProtoMessage() {}
-
-func (x *CryptOpArgs) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CryptOpArgs.ProtoReflect.Descriptor instead.
-func (*CryptOpArgs) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *CryptOpArgs) GetOp() CryptOp {
-	if x != nil {
-		return x.Op
-	}
-	return CryptOp_Sign
-}
-
-func (x *CryptOpArgs) GetDefaultKit() CryptoKitID {
-	if x != nil {
-		return x.DefaultKit
-	}
-	return CryptoKitID_UnspecifiedKit
-}
-
-func (x *CryptOpArgs) GetInput() []byte {
-	if x != nil {
-		return x.Input
-	}
-	return nil
-}
-
-func (x *CryptOpArgs) GetOpKey() *KeyRef {
-	if x != nil {
-		return x.OpKey
-	}
-	return nil
-}
-
-type CryptOpOut struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Output        []byte                 `protobuf:"bytes,1,opt,name=Output,proto3" json:"Output,omitempty"`     // Output buffer -- depends on the CryptOpArgs.Op
-	OpPubKey      []byte                 `protobuf:"bytes,2,opt,name=OpPubKey,proto3" json:"OpPubKey,omitempty"` // Pub key used in the op (useful when OpKey.PubKey was empty)
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CryptOpOut) Reset() {
-	*x = CryptOpOut{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CryptOpOut) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CryptOpOut) ProtoMessage() {}
-
-func (x *CryptOpOut) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CryptOpOut.ProtoReflect.Descriptor instead.
-func (*CryptOpOut) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *CryptOpOut) GetOutput() []byte {
-	if x != nil {
-		return x.Output
-	}
-	return nil
-}
-
-func (x *CryptOpOut) GetOpPubKey() []byte {
-	if x != nil {
-		return x.OpPubKey
-	}
-	return nil
-}
-
 // KeyRef references a specific key.  It serves both as an in-Enclave lookup
 // handle (resolving KeyringID + Type + optional PubKey prefix to a stored
 // record) and as a wire-format public-key descriptor (carrying Bytes + Kit +
@@ -799,7 +623,7 @@ type KeyRef struct {
 
 func (x *KeyRef) Reset() {
 	*x = KeyRef{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -811,7 +635,7 @@ func (x *KeyRef) String() string {
 func (*KeyRef) ProtoMessage() {}
 
 func (x *KeyRef) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -824,7 +648,7 @@ func (x *KeyRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyRef.ProtoReflect.Descriptor instead.
 func (*KeyRef) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *KeyRef) GetKeyringID_0() uint64 {
@@ -881,7 +705,7 @@ type KeyPairRecord struct {
 
 func (x *KeyPairRecord) Reset() {
 	*x = KeyPairRecord{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -893,7 +717,7 @@ func (x *KeyPairRecord) String() string {
 func (*KeyPairRecord) ProtoMessage() {}
 
 func (x *KeyPairRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -906,7 +730,7 @@ func (x *KeyPairRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyPairRecord.ProtoReflect.Descriptor instead.
 func (*KeyPairRecord) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{6}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *KeyPairRecord) GetKeyringID_0() uint64 {
@@ -977,7 +801,7 @@ type KeyTome struct {
 
 func (x *KeyTome) Reset() {
 	*x = KeyTome{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -989,7 +813,7 @@ func (x *KeyTome) String() string {
 func (*KeyTome) ProtoMessage() {}
 
 func (x *KeyTome) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1002,7 +826,7 @@ func (x *KeyTome) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeyTome.ProtoReflect.Descriptor instead.
 func (*KeyTome) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{7}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *KeyTome) GetRevision() int64 {
@@ -1039,7 +863,7 @@ type RoleKey struct {
 
 func (x *RoleKey) Reset() {
 	*x = RoleKey{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1051,7 +875,7 @@ func (x *RoleKey) String() string {
 func (*RoleKey) ProtoMessage() {}
 
 func (x *RoleKey) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1064,7 +888,7 @@ func (x *RoleKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoleKey.ProtoReflect.Descriptor instead.
 func (*RoleKey) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *RoleKey) GetRole() KeyRole {
@@ -1100,7 +924,7 @@ type EpochKeyEntry struct {
 
 func (x *EpochKeyEntry) Reset() {
 	*x = EpochKeyEntry{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1112,7 +936,7 @@ func (x *EpochKeyEntry) String() string {
 func (*EpochKeyEntry) ProtoMessage() {}
 
 func (x *EpochKeyEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1125,7 +949,7 @@ func (x *EpochKeyEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochKeyEntry.ProtoReflect.Descriptor instead.
 func (*EpochKeyEntry) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *EpochKeyEntry) GetContainerID_0() uint64 {
@@ -1182,7 +1006,7 @@ type EpochKeyTome struct {
 
 func (x *EpochKeyTome) Reset() {
 	*x = EpochKeyTome{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1194,7 +1018,7 @@ func (x *EpochKeyTome) String() string {
 func (*EpochKeyTome) ProtoMessage() {}
 
 func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1207,7 +1031,7 @@ func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochKeyTome.ProtoReflect.Descriptor instead.
 func (*EpochKeyTome) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *EpochKeyTome) GetRevision() int64 {
@@ -1249,7 +1073,7 @@ type EncryptedSymKey struct {
 
 func (x *EncryptedSymKey) Reset() {
 	*x = EncryptedSymKey{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1261,7 +1085,7 @@ func (x *EncryptedSymKey) String() string {
 func (*EncryptedSymKey) ProtoMessage() {}
 
 func (x *EncryptedSymKey) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1274,7 +1098,7 @@ func (x *EncryptedSymKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EncryptedSymKey.ProtoReflect.Descriptor instead.
 func (*EncryptedSymKey) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{11}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EncryptedSymKey) GetCryptoKitID() CryptoKitID {
@@ -1348,18 +1172,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\tTomeNonce\x18\x06 \x01(\fR\tTomeNonce\x12\x1e\n" +
 	"\n" +
 	"Cipherblob\x18\a \x01(\fR\n" +
-	"Cipherblob\"\x99\x01\n" +
-	"\vCryptOpArgs\x12\x1d\n" +
-	"\x02Op\x18\x01 \x01(\x0e2\r.safe.CryptOpR\x02Op\x121\n" +
-	"\n" +
-	"DefaultKit\x18\x02 \x01(\x0e2\x11.safe.CryptoKitIDR\n" +
-	"DefaultKit\x12\x14\n" +
-	"\x05Input\x18\x03 \x01(\fR\x05Input\x12\"\n" +
-	"\x05OpKey\x18\x04 \x01(\v2\f.safe.KeyRefR\x05OpKey\"@\n" +
-	"\n" +
-	"CryptOpOut\x12\x16\n" +
-	"\x06Output\x18\x01 \x01(\fR\x06Output\x12\x1a\n" +
-	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\xaa\x01\n" +
+	"Cipherblob\"\xaa\x01\n" +
 	"\x06KeyRef\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
@@ -1425,13 +1238,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"ContentKey\x10\x00\x12\r\n" +
 	"\tWriteSeed\x10\x01\x12\x11\n" +
 	"\rReservedRole2\x10\x02\x12\x11\n" +
-	"\rReservedRole3\x10\x03*3\n" +
-	"\aCryptOp\x12\b\n" +
-	"\x04Sign\x10\x00\x12\x0e\n" +
-	"\n" +
-	"EncryptSym\x10\x01\x12\x0e\n" +
-	"\n" +
-	"DecryptSym\x10\x02BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
+	"\rReservedRole3\x10\x03BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
 
 var (
 	file_stdlib_safe_safe_proto_rawDescOnce sync.Once
@@ -1445,48 +1252,42 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 	return file_stdlib_safe_safe_proto_rawDescData
 }
 
-var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),              // 0: safe.Const
 	(KeyType)(0),            // 1: safe.KeyType
 	(CryptoKitID)(0),        // 2: safe.CryptoKitID
 	(HashKitID)(0),          // 3: safe.HashKitID
 	(KeyRole)(0),            // 4: safe.KeyRole
-	(CryptOp)(0),            // 5: safe.CryptOp
-	(*GuardInfo)(nil),       // 6: safe.GuardInfo
-	(*WrappedDEK)(nil),      // 7: safe.WrappedDEK
-	(*SealedTome)(nil),      // 8: safe.SealedTome
-	(*CryptOpArgs)(nil),     // 9: safe.CryptOpArgs
-	(*CryptOpOut)(nil),      // 10: safe.CryptOpOut
-	(*KeyRef)(nil),          // 11: safe.KeyRef
-	(*KeyPairRecord)(nil),   // 12: safe.KeyPairRecord
-	(*KeyTome)(nil),         // 13: safe.KeyTome
-	(*RoleKey)(nil),         // 14: safe.RoleKey
-	(*EpochKeyEntry)(nil),   // 15: safe.EpochKeyEntry
-	(*EpochKeyTome)(nil),    // 16: safe.EpochKeyTome
-	(*EncryptedSymKey)(nil), // 17: safe.EncryptedSymKey
+	(*GuardInfo)(nil),       // 5: safe.GuardInfo
+	(*WrappedDEK)(nil),      // 6: safe.WrappedDEK
+	(*SealedTome)(nil),      // 7: safe.SealedTome
+	(*KeyRef)(nil),          // 8: safe.KeyRef
+	(*KeyPairRecord)(nil),   // 9: safe.KeyPairRecord
+	(*KeyTome)(nil),         // 10: safe.KeyTome
+	(*RoleKey)(nil),         // 11: safe.RoleKey
+	(*EpochKeyEntry)(nil),   // 12: safe.EpochKeyEntry
+	(*EpochKeyTome)(nil),    // 13: safe.EpochKeyTome
+	(*EncryptedSymKey)(nil), // 14: safe.EncryptedSymKey
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
-	7,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
-	5,  // 1: safe.CryptOpArgs.Op:type_name -> safe.CryptOp
-	2,  // 2: safe.CryptOpArgs.DefaultKit:type_name -> safe.CryptoKitID
-	11, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
-	2,  // 4: safe.KeyRef.Kit:type_name -> safe.CryptoKitID
-	1,  // 5: safe.KeyRef.Type:type_name -> safe.KeyType
-	2,  // 6: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
-	1,  // 7: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
-	12, // 8: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
-	4,  // 9: safe.RoleKey.Role:type_name -> safe.KeyRole
-	2,  // 10: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
-	14, // 11: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
-	15, // 12: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	2,  // 13: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	6,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
+	2,  // 1: safe.KeyRef.Kit:type_name -> safe.CryptoKitID
+	1,  // 2: safe.KeyRef.Type:type_name -> safe.KeyType
+	2,  // 3: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
+	1,  // 4: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
+	9,  // 5: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
+	4,  // 6: safe.RoleKey.Role:type_name -> safe.KeyRole
+	2,  // 7: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
+	11, // 8: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
+	12, // 9: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	2,  // 10: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1499,8 +1300,8 @@ func file_stdlib_safe_safe_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
-			NumEnums:      6,
-			NumMessages:   12,
+			NumEnums:      5,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
