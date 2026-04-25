@@ -87,9 +87,15 @@ type Enclave interface {
 	// If len(ref.PubKey) == 0, the newest key in the keyring is returned.
 	FetchPubKey(ref *KeyRef) (PubKey, error)
 
-	// DoCryptOp performs signing, symmetric encryption/decryption,
-	// and asymmetric encryption/decryption.
+	// DoCryptOp performs signing and symmetric encryption/decryption.
+	// Asymmetric encryption uses the anonymous-sender SealFor (package level)
+	// and OpenFromPub (Enclave method) rather than DoCryptOp.
 	DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error)
+
+	// OpenFromPub decrypts a sealed-box ciphertext (produced by safe.SealFor
+	// or kit.Encrypt.Seal) using the recipient's private key.  The ephemeral
+	// sender pubkey is parsed from the front of msg per the kit's wire format.
+	OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error)
 
 	// ExportSymmetricKey returns a copy of the raw symmetric key bytes for the referenced keyring.
 	// The caller is responsible for zeroing the returned slice after use.
@@ -175,21 +181,53 @@ type SigningOps struct {
 // EncryptOps bundles the asymmetric-encryption primitives of a KitSpec.
 // All non-nil functions must be threadsafe.
 //
-// The Seal/Open vocabulary mirrors safe.SealAEAD/OpenAEAD at the symmetric
-// layer and aligns with Go's cipher.AEAD.Seal/Open and libsodium's
-// crypto_box_seal — Seal produces an authenticated, peer-targeted ciphertext;
-// Open reverses it given the matching private key.
+// The Seal/Open shape is anonymous-sender (RFC 9180 HPKE base mode, libsodium
+// crypto_box_seal):  Seal generates a fresh ephemeral keypair in this kit per
+// call, performs ECDH against the recipient's pubkey, and embeds the ephemeral
+// pubkey in the output.  Open recovers the ephemeral pubkey from the front of
+// the ciphertext and ECDHs against the recipient's private key.  No sender
+// identity participates in the wrap; sender authentication is the surrounding
+// signed TxMsg's job.
+//
+// This shape eliminates the cross-kit ECDH constraint entirely: an admin in
+// kit A can wrap to a recipient in kit B by generating an ephemeral in kit B.
+// Admin doesn't need to maintain per-kit EncryptKeys; cross-kit rotation is
+// asynchronous and member-driven (members rotate their EncryptKey on their
+// own schedule; admin keeps wrapping in each member's current kit).
+//
+// Wire format (per kit):
+//
+//	eph_pub (kit-specific length) || nonce (24) || ciphertext+tag
 type EncryptOps struct {
 	// Generate populates kp.Pub.Bytes and kp.Prv with a fresh AsymmetricKey
 	// keypair in this kit. The caller sets kp.Pub.CryptoKitID and kp.Pub.KeyType.
 	Generate func(rng io.Reader, kp *KeyPair) error
 
-	// Seal encrypts msg for a peer using ECDH key agreement.
-	Seal func(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
+	// Seal encrypts msg for a peer using an ephemeral sender keypair generated
+	// in this kit.  No sender identity participates.
+	Seal func(rng io.Reader, msg, peerPubKey []byte) ([]byte, error)
 
-	// Open decrypts a buffer produced by Seal using the recipient's private
-	// key and the sender's public key.
-	Open func(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error)
+	// Open decrypts a buffer produced by Seal using only the recipient's
+	// private key.  The ephemeral sender pubkey is parsed from the front of msg.
+	Open func(msg, prvKey []byte) ([]byte, error)
+}
+
+// SealFor encrypts msg for a recipient's pubkey in the recipient's kit.
+// No Enclave required — the wrap is anonymous-sender (ephemeral keypair generated
+// per call inside the kit).  Returns ciphertext containing the ephemeral pubkey
+// embedded at the front per the kit's wire format.
+//
+// peerKit must match the kit that generated peerPubKey; the caller typically
+// reads it from MemberEpoch.EncryptCryptoKitID alongside MemberEpoch.EncryptPubKey.
+func SealFor(peerKit CryptoKitID, peerPubKey, msg []byte) ([]byte, error) {
+	kit, err := GetKit(peerKit)
+	if err != nil {
+		return nil, err
+	}
+	if kit.Encrypt == nil || kit.Encrypt.Seal == nil {
+		return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric encryption", peerKit.String())
+	}
+	return kit.Encrypt.Seal(RandReader, msg, peerPubKey)
 }
 
 /*****************************************************

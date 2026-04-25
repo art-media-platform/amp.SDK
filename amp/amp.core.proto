@@ -619,9 +619,10 @@ enum MemberStatus {
 }
 
 
-// WrappedKey carries one role-tagged symmetric key, encrypted to a specific member
-// via EncryptToPeer (X25519 ECDH + AEAD).  A MemberEpoch publishes one WrappedKey
-// per role the recipient is authorized for (up to 4 roles per epoch — see safe.KeyRole).
+// WrappedKey carries one role-tagged symmetric key, sealed to a specific member's
+// EncryptPubKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A MemberEpoch
+// publishes one WrappedKey per role the recipient is authorized for (up to 4
+// roles per epoch — see safe.KeyRole).
 //
 // Planet scope: one entry with Role=ContentKey (the planet content key).
 // Channel scope: one entry with Role=ContentKey (for ReadOnly+), and if ReadWrite+,
@@ -630,9 +631,13 @@ enum MemberStatus {
 // Invariant: symmetric key material only.  Asymmetric private keys never ride
 // this channel — they live in Enclave and are distributed (if at all) via
 // Enclave-to-Enclave transfer, not MemberEpoch.
+//
+// The wrap is anonymous-sender; the ephemeral sender pubkey is embedded in
+// Encrypted per the recipient kit's wire format.  Recipient decrypts with
+// safe.Enclave.OpenFromPub using only their EncryptKey.
 message WrappedKey {
     safe.KeyRole        Role      = 1;    // which role this key material serves
-    bytes               Encrypted = 2;    // ciphertext produced by EncryptToPeer(admin, recipient)
+    bytes               Encrypted = 2;    // ciphertext produced by safe.SealFor(member.EncryptCryptoKitID, member.EncryptPubKey, key)
 }
 
 // MemberEpoch delivers epoch-scoped key material and status for one member on one node.
@@ -664,27 +669,16 @@ message MemberEpoch {
     // Lifecycle state as of this MemberEpoch.  Meaningful at planet scope; reserved at channel scope.
     MemberStatus        Status = 8;
 
-    // Member's signing public key — used for signature verification.
-    // Lives in the member's chosen kit (CryptoKitID below); may be hardware-bound.
-    bytes               PubKey = 12;
+    // Member's identity SigningKey — pubkey + kit, used for signature
+    // verification.  Lives in the member's chosen kit (may be hardware-bound).
+    safe.KeyRef         SigningKey = 12;
 
-    // Crypto suite for this member's signing key.
-    // Typically matches the epoch's CryptoKitID but allows per-member override
-    // (e.g. a P-256 hardware identity on a Poly25519 planet).
-    safe.CryptoKitID    CryptoKitID = 15;
-
-    // Member's planet-encrypt public key — receives ECDH-wrapped epoch keys.
-    // Always lives in the planet's CryptoKit so admin and member share a curve.
-    // Decoupled from PubKey so hardware-bound signing identities don't have to do cross-kit ECDH.
-    bytes               EncryptPubKey = 32;
-
-    // Crypto suite for this member's planet-encrypt key. Matches the planet's kit
-    // at the time this MemberEpoch was issued.
-    safe.CryptoKitID    EncryptCryptoKitID = 33;
-
-    // Planet-encrypt public key of the admin who wrapped the WrappedKeys payload.
-    // The recipient uses this for DecryptFromPeer with their EncKey private.
-    bytes               EncryptorPubKey = 18;
+    // Member's planet-encrypt key — pubkey + kit, receives anonymous-sender
+    // wraps of epoch keys.  Lives in the member's chosen CryptoKit; the wrap
+    // generates an ephemeral keypair in this kit per call, so no kit
+    // coordination between admin and member is needed.  Members may rotate
+    // this key independently of any planet-wide cadence.
+    safe.KeyRef         EncryptKey = 32;
 
     // Citations referenced as the basis for this epoch.  For suspensions and
     // revocations, these point to ledger entries (strikes, audits, witness records)

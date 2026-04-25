@@ -63,33 +63,57 @@ func generateEncKey(rng io.Reader, kp *safe.KeyPair) error {
 	return nil
 }
 
-// seal encrypts msg for a peer via X25519 ECDH + HKDF + XChaCha20-Poly1305.
-// Both prvKey and peerPubKey must be 32-byte X25519 keys.
-// Output: nonce (24 bytes) || ciphertext+tag
-func seal(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	sharedKey, err := x25519DeriveKey(prvKey, peerPubKey)
+// X25519PubKeySize is the byte length of an X25519 public key.
+const X25519PubKeySize = 32
+
+// seal encrypts msg for a peer using an ephemeral X25519 sender keypair.
+// No sender identity participates; the wrap is anonymous-sender.
+// Output: eph_pub (32) || nonce (24) || ciphertext+tag
+func seal(rng io.Reader, msg, peerPubKey []byte) ([]byte, error) {
+	if len(peerPubKey) != X25519PubKeySize {
+		return nil, status.Code_BadKeyFormat.Errorf("X25519 public key must be %d bytes, got %d", X25519PubKeySize, len(peerPubKey))
+	}
+	eph, err := ecdh.X25519().GenerateKey(rng)
+	if err != nil {
+		return nil, status.Code_KeyGenerationFailed.Wrap(err)
+	}
+	ephPub := eph.PublicKey().Bytes()
+	ephPrv := eph.Bytes()
+	defer safe.Zero(ephPrv)
+
+	sharedKey, err := x25519DeriveKey(ephPrv, peerPubKey)
 	if err != nil {
 		return nil, err
 	}
 	defer safe.Zero(sharedKey)
+
 	nonce, ct, err := safe.SealAEAD(rng, sharedKey, msg, nil)
 	if err != nil {
 		return nil, err
 	}
-	return append(nonce, ct...), nil
+	out := make([]byte, 0, len(ephPub)+len(nonce)+len(ct))
+	out = append(out, ephPub...)
+	out = append(out, nonce...)
+	out = append(out, ct...)
+	return out, nil
 }
 
-// open decrypts a buffer produced by seal.
-func open(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	sharedKey, err := x25519DeriveKey(prvKey, peerPubKey)
+// open decrypts a buffer produced by seal using only the recipient's prv key.
+// The ephemeral sender pubkey is recovered from the front of msg.
+func open(msg, prvKey []byte) ([]byte, error) {
+	if len(msg) < X25519PubKeySize+safe.NonceSize {
+		return nil, status.Code_DecryptFailed.Error("ciphertext too short")
+	}
+	ephPub := msg[:X25519PubKeySize]
+	nonce := msg[X25519PubKeySize : X25519PubKeySize+safe.NonceSize]
+	ct := msg[X25519PubKeySize+safe.NonceSize:]
+
+	sharedKey, err := x25519DeriveKey(prvKey, ephPub)
 	if err != nil {
 		return nil, err
 	}
 	defer safe.Zero(sharedKey)
-	if len(msg) < safe.NonceSize {
-		return nil, status.Code_DecryptFailed.Error("ciphertext too short")
-	}
-	return safe.OpenAEAD(sharedKey, msg[:safe.NonceSize], msg[safe.NonceSize:], nil)
+	return safe.OpenAEAD(sharedKey, nonce, ct, nil)
 }
 
 // x25519DeriveKey computes an ECDH shared secret and derives a symmetric key via HKDF.

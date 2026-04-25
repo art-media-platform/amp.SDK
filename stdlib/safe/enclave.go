@@ -247,10 +247,6 @@ func (enc *enclave) DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error) {
 		if rec.KeyType != KeyType_SigningKey {
 			return nil, status.Code_BadKeyFormat.Errorf("Sign requires SigningKey, got %s", rec.KeyType.String())
 		}
-	case CryptOp_EncryptToPeer, CryptOp_DecryptFromPeer:
-		if rec.KeyType != KeyType_AsymmetricKey {
-			return nil, status.Code_BadKeyFormat.Errorf("ECDH requires AsymmetricKey, got %s", rec.KeyType.String())
-		}
 	case CryptOp_EncryptSym, CryptOp_DecryptSym:
 		if rec.KeyType != KeyType_SymmetricKey {
 			return nil, status.Code_BadKeyFormat.Errorf("symmetric op requires SymmetricKey, got %s", rec.KeyType.String())
@@ -280,26 +276,45 @@ func (enc *enclave) DoCryptOp(args *CryptOpArgs) (*CryptOpOut, error) {
 		}
 		out.Output, err = OpenAEAD(rec.PrvKey, args.Input[:NonceSize], args.Input[NonceSize:], nil)
 
-	case CryptOp_EncryptToPeer:
-		if kit.Encrypt == nil || kit.Encrypt.Seal == nil {
-			return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric encryption", kit.ID.String())
-		}
-		out.Output, err = kit.Encrypt.Seal(RandReader, args.Input, args.PeerKey, rec.PrvKey)
-
-	case CryptOp_DecryptFromPeer:
-		if kit.Encrypt == nil || kit.Encrypt.Open == nil {
-			return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric decryption", kit.ID.String())
-		}
-		out.Output, err = kit.Encrypt.Open(args.Input, args.PeerKey, rec.PrvKey)
-
 	default:
-		return nil, status.Code_Unimplemented.Errorf("unsupported CryptOp: %v", args.Op)
+		return nil, status.Code_Unimplemented.Errorf("unsupported CryptOp via DoCryptOp: %v (asymmetric encryption uses safe.SealFor / Enclave.OpenFromPub)", args.Op)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
+}
+
+// OpenFromPub decrypts a sealed-box ciphertext using the recipient's private
+// key referenced by ref.  The ephemeral sender pubkey is parsed from the front
+// of msg per the kit's wire format.  ref must reference an AsymmetricKey.
+func (enc *enclave) OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error) {
+	enc.mu.RLock()
+	defer enc.mu.RUnlock()
+
+	if enc.closed {
+		return nil, fmt.Errorf("safe: enclave is closed")
+	}
+	if ref == nil {
+		return nil, status.Code_BadRequest.Error("OpenFromPub: ref is required")
+	}
+
+	rec, err := enc.fetchRecord(ref)
+	if err != nil {
+		return nil, err
+	}
+	if rec.KeyType != KeyType_AsymmetricKey {
+		return nil, status.Code_BadKeyFormat.Errorf("OpenFromPub requires AsymmetricKey, got %s", rec.KeyType.String())
+	}
+	kit, err := GetKit(rec.CryptoKitID)
+	if err != nil {
+		return nil, err
+	}
+	if kit.Encrypt == nil || kit.Encrypt.Open == nil {
+		return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric decryption", kit.ID.String())
+	}
+	return kit.Encrypt.Open(msg, rec.PrvKey)
 }
 
 func (enc *enclave) ExportSymmetricKey(ref *KeyRef) ([]byte, error) {

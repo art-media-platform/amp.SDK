@@ -73,29 +73,52 @@ func generateP256Key(rng io.Reader, kp *safe.KeyPair) error {
 	return nil
 }
 
-func seal(rng io.Reader, msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	shared, err := ecdhDeriveKey(prvKey, peerPubKey)
+// seal encrypts msg for a peer using an ephemeral P-256 sender keypair.
+// No sender identity participates; the wrap is anonymous-sender.
+// Output: eph_pub (65) || nonce (24) || ciphertext+tag
+func seal(rng io.Reader, msg, peerPubKey []byte) ([]byte, error) {
+	if len(peerPubKey) != PubKeySize {
+		return nil, status.Code_BadKeyFormat.Errorf("P-256 public key must be %d bytes, got %d", PubKeySize, len(peerPubKey))
+	}
+	eph, err := ecdh.P256().GenerateKey(rng)
+	if err != nil {
+		return nil, status.Code_KeyGenerationFailed.Wrap(err)
+	}
+	ephPub := eph.PublicKey().Bytes()
+	ephPrv := eph.Bytes()
+	defer safe.Zero(ephPrv)
+
+	shared, err := ecdhDeriveKey(ephPrv, peerPubKey)
 	if err != nil {
 		return nil, err
 	}
 	defer safe.Zero(shared)
+
 	nonce, ct, err := safe.SealAEAD(rng, shared, msg, nil)
 	if err != nil {
 		return nil, err
 	}
-	return append(nonce, ct...), nil
+	out := make([]byte, 0, len(ephPub)+len(nonce)+len(ct))
+	out = append(out, ephPub...)
+	out = append(out, nonce...)
+	out = append(out, ct...)
+	return out, nil
 }
 
-func open(msg []byte, peerPubKey []byte, prvKey []byte) ([]byte, error) {
-	shared, err := ecdhDeriveKey(prvKey, peerPubKey)
+func open(msg, prvKey []byte) ([]byte, error) {
+	if len(msg) < PubKeySize+safe.NonceSize {
+		return nil, status.Code_DecryptFailed.Error("ciphertext too short")
+	}
+	ephPub := msg[:PubKeySize]
+	nonce := msg[PubKeySize : PubKeySize+safe.NonceSize]
+	ct := msg[PubKeySize+safe.NonceSize:]
+
+	shared, err := ecdhDeriveKey(prvKey, ephPub)
 	if err != nil {
 		return nil, err
 	}
 	defer safe.Zero(shared)
-	if len(msg) < safe.NonceSize {
-		return nil, status.Code_DecryptFailed.Error("ciphertext too short")
-	}
-	return safe.OpenAEAD(shared, msg[:safe.NonceSize], msg[safe.NonceSize:], nil)
+	return safe.OpenAEAD(shared, nonce, ct, nil)
 }
 
 // ecdhDeriveKey computes the ECDH shared secret and derives a symmetric key

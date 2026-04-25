@@ -115,38 +115,36 @@ func TestP256_SymmetricRoundtrip(t *testing.T) {
 	}
 }
 
-// TestP256_ECDH exercises the asymmetric encryption path — Alice encrypts to
-// Bob's public key using her private key, Bob decrypts using his private key
-// and Alice's public key.  This is how epoch keys are sealed to a new member
-// at invite time.
-func TestP256_ECDH(t *testing.T) {
+// TestP256_SealedBox exercises the anonymous-sender wrap (RFC 9180 base mode):
+// Seal generates an ephemeral keypair, ECDHs against the recipient's pubkey,
+// and embeds the ephemeral pubkey in the ciphertext.  Open uses only the
+// recipient's prv key.  This is how epoch keys are sealed to a new member at
+// invite time and during rotation.
+func TestP256_SealedBox(t *testing.T) {
 	kit, err := safe.GetKit(safe.CryptoKitID_P256)
 	if err != nil {
 		t.Fatalf("GetKit: %v", err)
 	}
 
-	alice := freshKeyPair(t, kit)
 	bob := freshKeyPair(t, kit)
 
 	secret := []byte("planet epoch key material")
-	sealed, err := kit.Encrypt.Seal(rand.Reader, secret, bob.Pub.Bytes, alice.Prv)
+	sealed, err := kit.Encrypt.Seal(rand.Reader, secret, bob.Pub.Bytes)
 	if err != nil {
-		t.Fatalf("EncryptFor: %v", err)
+		t.Fatalf("Seal: %v", err)
 	}
 
-	// Bob decrypts using his private key and Alice's public key.
-	opened, err := kit.Encrypt.Open(sealed, alice.Pub.Bytes, bob.Prv)
+	opened, err := kit.Encrypt.Open(sealed, bob.Prv)
 	if err != nil {
-		t.Fatalf("DecryptFrom: %v", err)
+		t.Fatalf("Open: %v", err)
 	}
 	if !bytes.Equal(secret, opened) {
-		t.Fatalf("ECDH roundtrip mismatch: got %q, want %q", opened, secret)
+		t.Fatalf("sealed-box roundtrip mismatch: got %q, want %q", opened, secret)
 	}
 
-	// Wrong recipient private key must fail.
 	eve := freshKeyPair(t, kit)
-	if _, err := kit.Encrypt.Open(sealed, alice.Pub.Bytes, eve.Prv); err == nil {
-		t.Fatal("DecryptFrom must fail with non-recipient private key")
+	if _, err := kit.Encrypt.Open(sealed, eve.Prv); err == nil {
+		t.Fatal("Open must fail with non-recipient private key")
 	}
 }
 

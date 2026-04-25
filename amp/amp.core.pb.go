@@ -2635,9 +2635,10 @@ func (x *CoSignature) GetSignature() []byte {
 	return nil
 }
 
-// WrappedKey carries one role-tagged symmetric key, encrypted to a specific member
-// via EncryptToPeer (X25519 ECDH + AEAD).  A MemberEpoch publishes one WrappedKey
-// per role the recipient is authorized for (up to 4 roles per epoch — see safe.KeyRole).
+// WrappedKey carries one role-tagged symmetric key, sealed to a specific member's
+// EncryptPubKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A MemberEpoch
+// publishes one WrappedKey per role the recipient is authorized for (up to 4
+// roles per epoch — see safe.KeyRole).
 //
 // Planet scope: one entry with Role=ContentKey (the planet content key).
 // Channel scope: one entry with Role=ContentKey (for ReadOnly+), and if ReadWrite+,
@@ -2646,10 +2647,14 @@ func (x *CoSignature) GetSignature() []byte {
 // Invariant: symmetric key material only.  Asymmetric private keys never ride
 // this channel — they live in Enclave and are distributed (if at all) via
 // Enclave-to-Enclave transfer, not MemberEpoch.
+//
+// The wrap is anonymous-sender; the ephemeral sender pubkey is embedded in
+// Encrypted per the recipient kit's wire format.  Recipient decrypts with
+// safe.Enclave.OpenFromPub using only their EncryptKey.
 type WrappedKey struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Role          safe.KeyRole           `protobuf:"varint,1,opt,name=Role,proto3,enum=safe.KeyRole" json:"Role,omitempty"` // which role this key material serves
-	Encrypted     []byte                 `protobuf:"bytes,2,opt,name=Encrypted,proto3" json:"Encrypted,omitempty"`          // ciphertext produced by EncryptToPeer(admin, recipient)
+	Encrypted     []byte                 `protobuf:"bytes,2,opt,name=Encrypted,proto3" json:"Encrypted,omitempty"`          // ciphertext produced by safe.SealFor(member.EncryptCryptoKitID, member.EncryptPubKey, key)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2722,23 +2727,15 @@ type MemberEpoch struct {
 	WrappedKeys []*WrappedKey `protobuf:"bytes,30,rep,name=WrappedKeys,proto3" json:"WrappedKeys,omitempty"`
 	// Lifecycle state as of this MemberEpoch.  Meaningful at planet scope; reserved at channel scope.
 	Status MemberStatus `protobuf:"varint,8,opt,name=Status,proto3,enum=amp.MemberStatus" json:"Status,omitempty"`
-	// Member's signing public key — used for signature verification.
-	// Lives in the member's chosen kit (CryptoKitID below); may be hardware-bound.
-	PubKey []byte `protobuf:"bytes,12,opt,name=PubKey,proto3" json:"PubKey,omitempty"`
-	// Crypto suite for this member's signing key.
-	// Typically matches the epoch's CryptoKitID but allows per-member override
-	// (e.g. a P-256 hardware identity on a Poly25519 planet).
-	CryptoKitID safe.CryptoKitID `protobuf:"varint,15,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
-	// Member's planet-encrypt public key — receives ECDH-wrapped epoch keys.
-	// Always lives in the planet's CryptoKit so admin and member share a curve.
-	// Decoupled from PubKey so hardware-bound signing identities don't have to do cross-kit ECDH.
-	EncryptPubKey []byte `protobuf:"bytes,32,opt,name=EncryptPubKey,proto3" json:"EncryptPubKey,omitempty"`
-	// Crypto suite for this member's planet-encrypt key. Matches the planet's kit
-	// at the time this MemberEpoch was issued.
-	EncryptCryptoKitID safe.CryptoKitID `protobuf:"varint,33,opt,name=EncryptCryptoKitID,proto3,enum=safe.CryptoKitID" json:"EncryptCryptoKitID,omitempty"`
-	// Planet-encrypt public key of the admin who wrapped the WrappedKeys payload.
-	// The recipient uses this for DecryptFromPeer with their EncKey private.
-	EncryptorPubKey []byte `protobuf:"bytes,18,opt,name=EncryptorPubKey,proto3" json:"EncryptorPubKey,omitempty"`
+	// Member's identity SigningKey — pubkey + kit, used for signature
+	// verification.  Lives in the member's chosen kit (may be hardware-bound).
+	SigningKey *safe.KeyRef `protobuf:"bytes,12,opt,name=SigningKey,proto3" json:"SigningKey,omitempty"`
+	// Member's planet-encrypt key — pubkey + kit, receives anonymous-sender
+	// wraps of epoch keys.  Lives in the member's chosen CryptoKit; the wrap
+	// generates an ephemeral keypair in this kit per call, so no kit
+	// coordination between admin and member is needed.  Members may rotate
+	// this key independently of any planet-wide cadence.
+	EncryptKey *safe.KeyRef `protobuf:"bytes,32,opt,name=EncryptKey,proto3" json:"EncryptKey,omitempty"`
 	// Citations referenced as the basis for this epoch.  For suspensions and
 	// revocations, these point to ledger entries (strikes, audits, witness records)
 	// that informed the decision — making every governance act reviewable and
@@ -2813,37 +2810,16 @@ func (x *MemberEpoch) GetStatus() MemberStatus {
 	return MemberStatus_Active
 }
 
-func (x *MemberEpoch) GetPubKey() []byte {
+func (x *MemberEpoch) GetSigningKey() *safe.KeyRef {
 	if x != nil {
-		return x.PubKey
+		return x.SigningKey
 	}
 	return nil
 }
 
-func (x *MemberEpoch) GetCryptoKitID() safe.CryptoKitID {
+func (x *MemberEpoch) GetEncryptKey() *safe.KeyRef {
 	if x != nil {
-		return x.CryptoKitID
-	}
-	return safe.CryptoKitID(0)
-}
-
-func (x *MemberEpoch) GetEncryptPubKey() []byte {
-	if x != nil {
-		return x.EncryptPubKey
-	}
-	return nil
-}
-
-func (x *MemberEpoch) GetEncryptCryptoKitID() safe.CryptoKitID {
-	if x != nil {
-		return x.EncryptCryptoKitID
-	}
-	return safe.CryptoKitID(0)
-}
-
-func (x *MemberEpoch) GetEncryptorPubKey() []byte {
-	if x != nil {
-		return x.EncryptorPubKey
+		return x.EncryptKey
 	}
 	return nil
 }
@@ -4763,18 +4739,19 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"WrappedKey\x12!\n" +
 	"\x04Role\x18\x01 \x01(\x0e2\r.safe.KeyRoleR\x04Role\x12\x1c\n" +
-	"\tEncrypted\x18\x02 \x01(\fR\tEncrypted\"\xd6\x03\n" +
+	"\tEncrypted\x18\x02 \x01(\fR\tEncrypted\"\xd2\x02\n" +
 	"\vMemberEpoch\x12&\n" +
 	"\tMemberTag\x18\x01 \x01(\v2\b.amp.TagR\tMemberTag\x12\x1c\n" +
 	"\x04Node\x18\x03 \x01(\v2\b.amp.TagR\x04Node\x12\x1e\n" +
 	"\x05Epoch\x18\x02 \x01(\v2\b.amp.TagR\x05Epoch\x121\n" +
 	"\vWrappedKeys\x18\x1e \x03(\v2\x0f.amp.WrappedKeyR\vWrappedKeys\x12)\n" +
-	"\x06Status\x18\b \x01(\x0e2\x11.amp.MemberStatusR\x06Status\x12\x16\n" +
-	"\x06PubKey\x18\f \x01(\fR\x06PubKey\x123\n" +
-	"\vCryptoKitID\x18\x0f \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12$\n" +
-	"\rEncryptPubKey\x18  \x01(\fR\rEncryptPubKey\x12A\n" +
-	"\x12EncryptCryptoKitID\x18! \x01(\x0e2\x11.safe.CryptoKitIDR\x12EncryptCryptoKitID\x12(\n" +
-	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\x12#\n" +
+	"\x06Status\x18\b \x01(\x0e2\x11.amp.MemberStatusR\x06Status\x12,\n" +
+	"\n" +
+	"SigningKey\x18\f \x01(\v2\f.safe.KeyRefR\n" +
+	"SigningKey\x12,\n" +
+	"\n" +
+	"EncryptKey\x18  \x01(\v2\f.safe.KeyRefR\n" +
+	"EncryptKey\x12#\n" +
 	"\x05Cites\x18\x14 \x03(\v2\r.amp.CitationR\x05Cites\"\xa9\x02\n" +
 	"\vAttestation\x12\"\n" +
 	"\aSubject\x18\x01 \x01(\v2\b.amp.TagR\aSubject\x12(\n" +
@@ -5124,8 +5101,9 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(safe.HashKitID)(0),             // 56: safe.HashKitID
 	(safe.CryptoKitID)(0),           // 57: safe.CryptoKitID
 	(safe.KeyRole)(0),               // 58: safe.KeyRole
-	(*safe.KeyPairRecord)(nil),      // 59: safe.KeyPairRecord
-	(*safe.EncryptedSymKey)(nil),    // 60: safe.EncryptedSymKey
+	(*safe.KeyRef)(nil),             // 59: safe.KeyRef
+	(*safe.KeyPairRecord)(nil),      // 60: safe.KeyPairRecord
+	(*safe.EncryptedSymKey)(nil),    // 61: safe.EncryptedSymKey
 }
 var file_amp_amp_core_proto_depIdxs = []int32{
 	22, // 0: amp.TxEnvelope.Planet:type_name -> amp.Tag
@@ -5171,8 +5149,8 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	22, // 40: amp.MemberEpoch.Epoch:type_name -> amp.Tag
 	33, // 41: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
 	10, // 42: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
-	57, // 43: amp.MemberEpoch.CryptoKitID:type_name -> safe.CryptoKitID
-	57, // 44: amp.MemberEpoch.EncryptCryptoKitID:type_name -> safe.CryptoKitID
+	59, // 43: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
+	59, // 44: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
 	36, // 45: amp.MemberEpoch.Cites:type_name -> amp.Citation
 	22, // 46: amp.Attestation.Subject:type_name -> amp.Tag
 	11, // 47: amp.Attestation.Type:type_name -> amp.AttestationType
@@ -5180,8 +5158,8 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	22, // 49: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
 	22, // 50: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
 	22, // 51: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	59, // 52: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	60, // 53: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	60, // 52: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	61, // 53: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
 	22, // 54: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
 	40, // 55: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
 	42, // 56: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer

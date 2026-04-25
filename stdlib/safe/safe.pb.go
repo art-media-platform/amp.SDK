@@ -290,7 +290,10 @@ func (KeyRole) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
 }
 
-// CryptOp enumerates cryptographic operations performed by an Enclave.
+// CryptOp enumerates cryptographic operations performed via Enclave.DoCryptOp.
+// Asymmetric encryption uses safe.SealFor (package-level, no Enclave needed)
+// and Enclave.OpenFromPub instead — those operations are anonymous-sender and
+// don't fit the keyed-by-OpKey shape.
 type CryptOp int32
 
 const (
@@ -300,10 +303,6 @@ const (
 	CryptOp_EncryptSym CryptOp = 1
 	// DecryptSym decrypts Input using the symmetric key referenced by OpKey (inverse of EncryptSym).
 	CryptOp_DecryptSym CryptOp = 2
-	// EncryptToPeer encrypts Input for a recipient identified by PeerKey using the asymmetric key referenced by OpKey.
-	CryptOp_EncryptToPeer CryptOp = 3
-	// DecryptFromPeer decrypts Input from a sender identified by PeerKey using the asymmetric key referenced by OpKey (inverse of EncryptToPeer).
-	CryptOp_DecryptFromPeer CryptOp = 4
 )
 
 // Enum value maps for CryptOp.
@@ -312,15 +311,11 @@ var (
 		0: "Sign",
 		1: "EncryptSym",
 		2: "DecryptSym",
-		3: "EncryptToPeer",
-		4: "DecryptFromPeer",
 	}
 	CryptOp_value = map[string]int32{
-		"Sign":            0,
-		"EncryptSym":      1,
-		"DecryptSym":      2,
-		"EncryptToPeer":   3,
-		"DecryptFromPeer": 4,
+		"Sign":       0,
+		"EncryptSym": 1,
+		"DecryptSym": 2,
 	}
 )
 
@@ -665,7 +660,6 @@ type CryptOpArgs struct {
 	DefaultKit    CryptoKitID            `protobuf:"varint,2,opt,name=DefaultKit,proto3,enum=safe.CryptoKitID" json:"DefaultKit,omitempty"` // Fallback CryptoKit when not determined by OpKey
 	Input         []byte                 `protobuf:"bytes,3,opt,name=Input,proto3" json:"Input,omitempty"`                                  // Input buffer (plaintext, ciphertext, or digest)
 	OpKey         *KeyRef                `protobuf:"bytes,4,opt,name=OpKey,proto3" json:"OpKey,omitempty"`                                  // References a key used in the enclave for this op
-	PeerKey       []byte                 `protobuf:"bytes,5,opt,name=PeerKey,proto3" json:"PeerKey,omitempty"`                              // Recipient/sender pub key for asymmetric ops
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -728,13 +722,6 @@ func (x *CryptOpArgs) GetOpKey() *KeyRef {
 	return nil
 }
 
-func (x *CryptOpArgs) GetPeerKey() []byte {
-	if x != nil {
-		return x.PeerKey
-	}
-	return nil
-}
-
 type CryptOpOut struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Output        []byte                 `protobuf:"bytes,1,opt,name=Output,proto3" json:"Output,omitempty"`     // Output buffer -- depends on the CryptOpArgs.Op
@@ -787,17 +774,25 @@ func (x *CryptOpOut) GetOpPubKey() []byte {
 	return nil
 }
 
-// KeyRef references a specific key within a KeyTome.
+// KeyRef references a specific key.  It serves both as an in-Enclave lookup
+// handle (resolving KeyringID + Type + optional PubKey prefix to a stored
+// record) and as a wire-format public-key descriptor (carrying Bytes + Kit +
+// Type for use inside MemberEpoch and similar messages).
 //
-// A keyring may hold multiple parallel key streams distinguished by KeyType.
-// When PubKey is empty, the newest key of the requested Type is returned.
-// When Type is Unspecified, lookup defaults to SigningKey for backward compatibility.
+// In lookup form:  KeyringID + Type + (optional PubKey prefix to pin a specific
+// historical key; empty = newest of Type in the keyring).
+//
+// In wire form:   PubKey contains the full materialized public key bytes; Kit
+// names the CryptoKit that produced them; Type names what the key is for.
+// KeyringID is typically the owning member's UID for traceability but is not
+// load-bearing for verification (the surrounding message provides the actor).
 type KeyRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"` // Keyring UID, bytes 0..7
 	KeyringID_1   uint64                 `protobuf:"fixed64,2,opt,name=KeyringID_1,json=KeyringID1,proto3" json:"KeyringID_1,omitempty"` // Keyring UID, bytes 8..15
-	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                             // Pub key prefix (empty => newest key of Type in the keyring)
-	Type          KeyType                `protobuf:"varint,5,opt,name=Type,proto3,enum=safe.KeyType" json:"Type,omitempty"`              // Which key stream to look up (Unspecified => SigningKey)
+	Kit           CryptoKitID            `protobuf:"varint,3,opt,name=Kit,proto3,enum=safe.CryptoKitID" json:"Kit,omitempty"`            // Which CryptoKit produced this key (wire-form only)
+	Type          KeyType                `protobuf:"varint,5,opt,name=Type,proto3,enum=safe.KeyType" json:"Type,omitempty"`              // SigningKey / AsymmetricKey / SymmetricKey
+	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                             // Pub key prefix (lookup) or full pub key bytes (wire)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -846,11 +841,11 @@ func (x *KeyRef) GetKeyringID_1() uint64 {
 	return 0
 }
 
-func (x *KeyRef) GetPubKey() []byte {
+func (x *KeyRef) GetKit() CryptoKitID {
 	if x != nil {
-		return x.PubKey
+		return x.Kit
 	}
-	return nil
+	return CryptoKitID_UnspecifiedKit
 }
 
 func (x *KeyRef) GetType() KeyType {
@@ -858,6 +853,13 @@ func (x *KeyRef) GetType() KeyType {
 		return x.Type
 	}
 	return KeyType_Unspecified
+}
+
+func (x *KeyRef) GetPubKey() []byte {
+	if x != nil {
+		return x.PubKey
+	}
+	return nil
 }
 
 // KeyPairRecord is the flat on-disk representation of a single key.
@@ -1222,21 +1224,25 @@ func (x *EpochKeyTome) GetKeys() []*EpochKeyEntry {
 	return nil
 }
 
-// EncryptedSymKey carries a symmetric key encrypted-to-peer for out-of-band delivery.
+// EncryptedSymKey carries a symmetric key sealed-to-peer for out-of-band delivery.
 //
 // Primary use cases:
-//   - PlanetInvite: admin encrypts current epoch key for a new member's temp pub key
-//   - Epoch rotation: current members receive the next epoch key encrypted to their pub key
-//   - Any "here's a symmetric key for you" handoff between two known parties
+//   - PlanetInvite: admin seals current epoch key to a new member's temp encrypt pubkey
+//   - Epoch rotation: members receive the next epoch key sealed to their EncryptPubKey
+//   - Any "here's a symmetric key for you" handoff to a known recipient pubkey
 //
-// The receiver uses DecryptFrom(Ciphertext, SenderPubKey, receiver_prv_key) to recover the key.
+// The wrap is anonymous-sender (RFC 9180 HPKE base mode): an ephemeral keypair
+// is generated per-call in the recipient's kit, ECDHs against the recipient's
+// pubkey, and is embedded in Ciphertext.  The recipient calls
+// safe.Enclave.OpenFromPub(ref, Ciphertext) using only their EncryptKey; no
+// sender identity participates in the wrap.  Sender authentication is the
+// surrounding signed TxMsg's responsibility.
 type EncryptedSymKey struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CryptoKitID   CryptoKitID            `protobuf:"varint,1,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"` // Suite that encrypted this key (and must decrypt it)
+	CryptoKitID   CryptoKitID            `protobuf:"varint,1,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"` // Recipient's CryptoKit (which curve the wrap is in)
 	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`            // Epoch UID this key belongs to, bytes 0..7 (zero if not epoch-bound)
 	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`            // Epoch UID this key belongs to, bytes 8..15
-	SenderPubKey  []byte                 `protobuf:"bytes,5,opt,name=SenderPubKey,proto3" json:"SenderPubKey,omitempty"`                      // Pub key of the encryptor (required for DecryptFrom)
-	Ciphertext    []byte                 `protobuf:"bytes,8,opt,name=Ciphertext,proto3" json:"Ciphertext,omitempty"`                          // Output of CryptoKit.EncryptFor(symmetric_key, receiver_pub, sender_prv)
+	Ciphertext    []byte                 `protobuf:"bytes,8,opt,name=Ciphertext,proto3" json:"Ciphertext,omitempty"`                          // Output of safe.SealFor(CryptoKitID, recipient_pub, symmetric_key)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1292,13 +1298,6 @@ func (x *EncryptedSymKey) GetEpochID_1() uint64 {
 	return 0
 }
 
-func (x *EncryptedSymKey) GetSenderPubKey() []byte {
-	if x != nil {
-		return x.SenderPubKey
-	}
-	return nil
-}
-
 func (x *EncryptedSymKey) GetCiphertext() []byte {
 	if x != nil {
 		return x.Ciphertext
@@ -1349,26 +1348,26 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\tTomeNonce\x18\x06 \x01(\fR\tTomeNonce\x12\x1e\n" +
 	"\n" +
 	"Cipherblob\x18\a \x01(\fR\n" +
-	"Cipherblob\"\xb3\x01\n" +
+	"Cipherblob\"\x99\x01\n" +
 	"\vCryptOpArgs\x12\x1d\n" +
 	"\x02Op\x18\x01 \x01(\x0e2\r.safe.CryptOpR\x02Op\x121\n" +
 	"\n" +
 	"DefaultKit\x18\x02 \x01(\x0e2\x11.safe.CryptoKitIDR\n" +
 	"DefaultKit\x12\x14\n" +
 	"\x05Input\x18\x03 \x01(\fR\x05Input\x12\"\n" +
-	"\x05OpKey\x18\x04 \x01(\v2\f.safe.KeyRefR\x05OpKey\x12\x18\n" +
-	"\aPeerKey\x18\x05 \x01(\fR\aPeerKey\"@\n" +
+	"\x05OpKey\x18\x04 \x01(\v2\f.safe.KeyRefR\x05OpKey\"@\n" +
 	"\n" +
 	"CryptOpOut\x12\x16\n" +
 	"\x06Output\x18\x01 \x01(\fR\x06Output\x12\x1a\n" +
-	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\x85\x01\n" +
+	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\xaa\x01\n" +
 	"\x06KeyRef\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
 	"\vKeyringID_1\x18\x02 \x01(\x06R\n" +
-	"KeyringID1\x12\x16\n" +
-	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\x12!\n" +
-	"\x04Type\x18\x05 \x01(\x0e2\r.safe.KeyTypeR\x04Type\"\x95\x02\n" +
+	"KeyringID1\x12#\n" +
+	"\x03Kit\x18\x03 \x01(\x0e2\x11.safe.CryptoKitIDR\x03Kit\x12!\n" +
+	"\x04Type\x18\x05 \x01(\x0e2\r.safe.KeyTypeR\x04Type\x12\x16\n" +
+	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"\x95\x02\n" +
 	"\rKeyPairRecord\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
@@ -1395,12 +1394,11 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\bRoleKeys\x18\b \x03(\v2\r.safe.RoleKeyR\bRoleKeys\"S\n" +
 	"\fEpochKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
-	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xc4\x01\n" +
+	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xa0\x01\n" +
 	"\x0fEncryptedSymKey\x123\n" +
 	"\vCryptoKitID\x18\x01 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x1b\n" +
 	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
-	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12\"\n" +
-	"\fSenderPubKey\x18\x05 \x01(\fR\fSenderPubKey\x12\x1e\n" +
+	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12\x1e\n" +
 	"\n" +
 	"Ciphertext\x18\b \x01(\fR\n" +
 	"Ciphertext*'\n" +
@@ -1427,15 +1425,13 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"ContentKey\x10\x00\x12\r\n" +
 	"\tWriteSeed\x10\x01\x12\x11\n" +
 	"\rReservedRole2\x10\x02\x12\x11\n" +
-	"\rReservedRole3\x10\x03*[\n" +
+	"\rReservedRole3\x10\x03*3\n" +
 	"\aCryptOp\x12\b\n" +
 	"\x04Sign\x10\x00\x12\x0e\n" +
 	"\n" +
 	"EncryptSym\x10\x01\x12\x0e\n" +
 	"\n" +
-	"DecryptSym\x10\x02\x12\x11\n" +
-	"\rEncryptToPeer\x10\x03\x12\x13\n" +
-	"\x0fDecryptFromPeer\x10\x04BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
+	"DecryptSym\x10\x02BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
 
 var (
 	file_stdlib_safe_safe_proto_rawDescOnce sync.Once
@@ -1476,20 +1472,21 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	5,  // 1: safe.CryptOpArgs.Op:type_name -> safe.CryptOp
 	2,  // 2: safe.CryptOpArgs.DefaultKit:type_name -> safe.CryptoKitID
 	11, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
-	1,  // 4: safe.KeyRef.Type:type_name -> safe.KeyType
-	2,  // 5: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
-	1,  // 6: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
-	12, // 7: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
-	4,  // 8: safe.RoleKey.Role:type_name -> safe.KeyRole
-	2,  // 9: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
-	14, // 10: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
-	15, // 11: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	2,  // 12: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	2,  // 4: safe.KeyRef.Kit:type_name -> safe.CryptoKitID
+	1,  // 5: safe.KeyRef.Type:type_name -> safe.KeyType
+	2,  // 6: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
+	1,  // 7: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
+	12, // 8: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
+	4,  // 9: safe.RoleKey.Role:type_name -> safe.KeyRole
+	2,  // 10: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
+	14, // 11: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
+	15, // 12: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	2,  // 13: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }

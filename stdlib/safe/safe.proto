@@ -104,7 +104,10 @@ enum KeyRole {
 }
 
 
-// CryptOp enumerates cryptographic operations performed by an Enclave.
+// CryptOp enumerates cryptographic operations performed via Enclave.DoCryptOp.
+// Asymmetric encryption uses safe.SealFor (package-level, no Enclave needed)
+// and Enclave.OpenFromPub instead — those operations are anonymous-sender and
+// don't fit the keyed-by-OpKey shape.
 enum CryptOp {
 
     // Sign generates a signature for Input using the referenced signing key.
@@ -115,12 +118,6 @@ enum CryptOp {
 
     // DecryptSym decrypts Input using the symmetric key referenced by OpKey (inverse of EncryptSym).
     DecryptSym                      = 2;
-
-    // EncryptToPeer encrypts Input for a recipient identified by PeerKey using the asymmetric key referenced by OpKey.
-    EncryptToPeer                   = 3;
-
-    // DecryptFromPeer decrypts Input from a sender identified by PeerKey using the asymmetric key referenced by OpKey (inverse of EncryptToPeer).
-    DecryptFromPeer                 = 4;
 }
 
 
@@ -129,7 +126,6 @@ message CryptOpArgs {
     CryptoKitID DefaultKit          = 2;   // Fallback CryptoKit when not determined by OpKey
     bytes       Input               = 3;   // Input buffer (plaintext, ciphertext, or digest)
     KeyRef      OpKey               = 4;   // References a key used in the enclave for this op
-    bytes       PeerKey             = 5;   // Recipient/sender pub key for asymmetric ops
 }
 
 message CryptOpOut {
@@ -138,16 +134,24 @@ message CryptOpOut {
 }
 
 
-// KeyRef references a specific key within a KeyTome.
+// KeyRef references a specific key.  It serves both as an in-Enclave lookup
+// handle (resolving KeyringID + Type + optional PubKey prefix to a stored
+// record) and as a wire-format public-key descriptor (carrying Bytes + Kit +
+// Type for use inside MemberEpoch and similar messages).
 //
-// A keyring may hold multiple parallel key streams distinguished by KeyType.
-// When PubKey is empty, the newest key of the requested Type is returned.
-// When Type is Unspecified, lookup defaults to SigningKey for backward compatibility.
+// In lookup form:  KeyringID + Type + (optional PubKey prefix to pin a specific
+// historical key; empty = newest of Type in the keyring).
+//
+// In wire form:   PubKey contains the full materialized public key bytes; Kit
+// names the CryptoKit that produced them; Type names what the key is for.
+// KeyringID is typically the owning member's UID for traceability but is not
+// load-bearing for verification (the surrounding message provides the actor).
 message KeyRef {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
     fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15
-    bytes       PubKey              = 4;    // Pub key prefix (empty => newest key of Type in the keyring)
-    KeyType     Type                = 5;    // Which key stream to look up (Unspecified => SigningKey)
+    CryptoKitID Kit                 = 3;    // Which CryptoKit produced this key (wire-form only)
+    KeyType     Type                = 5;    // SigningKey / AsymmetricKey / SymmetricKey
+    bytes       PubKey              = 4;    // Pub key prefix (lookup) or full pub key bytes (wire)
 }
 
 
@@ -211,18 +215,22 @@ message EpochKeyTome {
 }
 
 
-// EncryptedSymKey carries a symmetric key encrypted-to-peer for out-of-band delivery.
+// EncryptedSymKey carries a symmetric key sealed-to-peer for out-of-band delivery.
 //
 // Primary use cases:
-//   - PlanetInvite: admin encrypts current epoch key for a new member's temp pub key
-//   - Epoch rotation: current members receive the next epoch key encrypted to their pub key
-//   - Any "here's a symmetric key for you" handoff between two known parties
+//   - PlanetInvite: admin seals current epoch key to a new member's temp encrypt pubkey
+//   - Epoch rotation: members receive the next epoch key sealed to their EncryptPubKey
+//   - Any "here's a symmetric key for you" handoff to a known recipient pubkey
 //
-// The receiver uses DecryptFrom(Ciphertext, SenderPubKey, receiver_prv_key) to recover the key.
+// The wrap is anonymous-sender (RFC 9180 HPKE base mode): an ephemeral keypair
+// is generated per-call in the recipient's kit, ECDHs against the recipient's
+// pubkey, and is embedded in Ciphertext.  The recipient calls
+// safe.Enclave.OpenFromPub(ref, Ciphertext) using only their EncryptKey; no
+// sender identity participates in the wrap.  Sender authentication is the
+// surrounding signed TxMsg's responsibility.
 message EncryptedSymKey {
-    CryptoKitID CryptoKitID  = 1;    // Suite that encrypted this key (and must decrypt it)
+    CryptoKitID CryptoKitID  = 1;    // Recipient's CryptoKit (which curve the wrap is in)
     fixed64     EpochID_0    = 3;    // Epoch UID this key belongs to, bytes 0..7 (zero if not epoch-bound)
     fixed64     EpochID_1    = 4;    // Epoch UID this key belongs to, bytes 8..15
-    bytes       SenderPubKey = 5;    // Pub key of the encryptor (required for DecryptFrom)
-    bytes       Ciphertext   = 8;    // Output of CryptoKit.EncryptFor(symmetric_key, receiver_pub, sender_prv)
+    bytes       Ciphertext   = 8;    // Output of safe.SealFor(CryptoKitID, recipient_pub, symmetric_key)
 }

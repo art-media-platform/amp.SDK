@@ -88,21 +88,16 @@ func testKitWithSizes(kit *KitSpec, keyLen, msgLen int) {
 	}
 
 	/*****************************************************
-	** Asymmetric test (EncryptOps capability)
+	** Sealed-box test (EncryptOps capability — anonymous sender)
 	**/
 	if kit.Encrypt != nil && kit.Encrypt.Seal != nil && kit.Encrypt.Open != nil && kit.Encrypt.Generate != nil {
-		kp := KeyPair{Pub: PubKey{KeyType: KeyType_AsymmetricKey, CryptoKitID: kit.ID}}
-		if err := kit.Encrypt.Generate(reader, &kp); err != nil {
-			gTesting.Fatal(err)
-		}
-
 		recipient := KeyPair{Pub: PubKey{KeyType: KeyType_AsymmetricKey, CryptoKitID: kit.ID}}
 		if err := kit.Encrypt.Generate(reader, &recipient); err != nil {
 			gTesting.Fatal(err)
 		}
 
 		var err error
-		crypt, err = kit.Encrypt.Seal(reader, msgOrig, recipient.Pub.Bytes, kp.Prv)
+		crypt, err = kit.Encrypt.Seal(reader, msgOrig, recipient.Pub.Bytes)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -111,12 +106,12 @@ func testKitWithSizes(kit *KitSpec, keyLen, msgLen int) {
 			badMsg = make([]byte, len(crypt))
 		}
 
-		msg, err = kit.Encrypt.Open(crypt, kp.Pub.Bytes, recipient.Prv)
+		msg, err = kit.Encrypt.Open(crypt, recipient.Prv)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
 		if !bytes.Equal(msg, msgOrig) {
-			gTesting.Fatal("asymmetric decrypt failed check")
+			gTesting.Fatal("sealed-box roundtrip failed check")
 		}
 
 		for k := 0; k < 100; k++ {
@@ -125,7 +120,7 @@ func testKitWithSizes(kit *KitSpec, keyLen, msgLen int) {
 			copy(badMsg, crypt)
 			badMsg[rndPos] += rndAdj
 
-			_, err = kit.Encrypt.Open(badMsg, kp.Pub.Bytes, recipient.Prv)
+			_, err = kit.Encrypt.Open(badMsg, recipient.Prv)
 			if err == nil {
 				gTesting.Fatal("there should have been a decryption error!")
 			}

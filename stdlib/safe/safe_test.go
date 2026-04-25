@@ -297,31 +297,22 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	}
 	bobRef.PubKey = bob.Bytes
 
-	// Alice encrypts for Bob
-	testMsg := []byte("hello from alice to bob")
-	encOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
-		Op:      safe.CryptOp_EncryptToPeer,
-		OpKey:   &aliceRef,
-		PeerKey: bob.Bytes,
-		Input:   testMsg,
-	})
+	// Anyone can seal to Bob (sealed-box / anonymous sender).
+	_ = aliceRef
+	testMsg := []byte("hello to bob")
+	sealed, err := safe.SealFor(safe.CryptoKitID_Poly25519, bob.Bytes, testMsg)
 	if err != nil {
-		t.Fatalf("EncryptToPeer: %v", err)
+		t.Fatalf("SealFor: %v", err)
 	}
 
-	// Bob decrypts from Alice
-	decOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
-		Op:      safe.CryptOp_DecryptFromPeer,
-		OpKey:   &bobRef,
-		PeerKey: alice.Bytes,
-		Input:   encOut.Output,
-	})
+	// Bob opens with only his EncryptKey.
+	plaintext, err := enc.OpenFromPub(&bobRef, sealed)
 	if err != nil {
-		t.Fatalf("DecryptFromPeer: %v", err)
+		t.Fatalf("OpenFromPub: %v", err)
 	}
 
-	if !bytes.Equal(decOut.Output, testMsg) {
-		t.Fatal("asymmetric decrypt doesn't match original")
+	if !bytes.Equal(plaintext, testMsg) {
+		t.Fatal("sealed-box roundtrip doesn't match original")
 	}
 }
 
@@ -714,41 +705,20 @@ func TestDualKeyTypeStreams(t *testing.T) {
 		t.Fatal("FetchPubKey EncKey returned wrong bytes")
 	}
 
-	// Bob is a peer admin with a P-256 EncKey (planet's kit).
-	bobID := tag.NewID()
-	bobEnc, err := enc.GenerateKey(bobID, safe.KeySpec{
-		KeyType:     safe.KeyType_AsymmetricKey,
-		CryptoKitID: safe.CryptoKitID_P256,
-	})
+	// A sealed-box wrap to Alice's P-256 EncKey — anonymous sender (no caller
+	// identity participates), kit determined by recipient's pubkey kit.
+	payload := []byte("epoch-key-wrap")
+	wrapped, err := safe.SealFor(safe.CryptoKitID_P256, aliceEnc.Bytes, payload)
 	if err != nil {
-		t.Fatalf("GenerateKey bob EncKey: %v", err)
-	}
-	bobEncRef := &safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
-	bobEncRef.SetKeyringID(bobID)
-
-	// Bob wraps a payload for Alice's EncKey via ECDH-P256.
-	payload := []byte("epoch-key-wrap-from-bob")
-	wrapped, err := enc.DoCryptOp(&safe.CryptOpArgs{
-		Op:      safe.CryptOp_EncryptToPeer,
-		OpKey:   bobEncRef,
-		PeerKey: aliceEnc.Bytes,
-		Input:   payload,
-	})
-	if err != nil {
-		t.Fatalf("EncryptToPeer (bob → alice EncKey): %v", err)
+		t.Fatalf("SealFor (→ alice EncKey): %v", err)
 	}
 
 	// Alice unwraps with her EncKey — both sides P-256, ECDH succeeds.
-	unwrapped, err := enc.DoCryptOp(&safe.CryptOpArgs{
-		Op:      safe.CryptOp_DecryptFromPeer,
-		OpKey:   encRef,
-		PeerKey: bobEnc.Bytes,
-		Input:   wrapped.Output,
-	})
+	unwrapped, err := enc.OpenFromPub(encRef, wrapped)
 	if err != nil {
-		t.Fatalf("DecryptFromPeer (alice EncKey ← bob): %v", err)
+		t.Fatalf("OpenFromPub (alice EncKey): %v", err)
 	}
-	if !bytes.Equal(unwrapped.Output, payload) {
+	if !bytes.Equal(unwrapped, payload) {
 		t.Fatal("EncKey round-trip payload mismatch")
 	}
 
