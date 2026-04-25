@@ -42,9 +42,14 @@ type enclave struct {
 
 // ringIndex is the in-memory index for a single keyring.
 // Records are kept sorted by PubKey for O(log n) lookup.
+//
+// A keyring may hold multiple parallel key streams distinguished by KeyType
+// (e.g. a member's identity SigningKey alongside a planet-encrypt AsymmetricKey
+// in a different kit).  newestByType[t] is the pub-key of the record with the
+// largest TimeID among records with KeyType t.
 type ringIndex struct {
 	records      []*KeyPairRecord
-	newestPubKey []byte // pub key of the record with the largest TimeID
+	newestByType [KeyType_NumTypes][]byte
 }
 
 var _ Enclave = (*enclave)(nil)
@@ -382,17 +387,25 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 	copy(ring.records[pos+1:], ring.records[pos:])
 	ring.records[pos] = rec
 
-	newestTID := ringNewestTimeID(ring)
+	newestTID := ringNewestTimeID(ring, rec.KeyType)
 	recTID := recordTimeID(rec)
-	if ring.newestPubKey == nil || recTID[0] > newestTID[0] ||
+	if ring.newestByType[rec.KeyType] == nil || recTID[0] > newestTID[0] ||
 		(recTID[0] == newestTID[0] && recTID[1] >= newestTID[1]) {
-		ring.newestPubKey = rec.PubKey
+		ring.newestByType[rec.KeyType] = rec.PubKey
 	}
 	enc.revision++
 	return nil
 }
 
 // fetchRecord returns the record matched by ref, or an error if none.
+//
+// Resolution rules:
+//   - ref.Type explicit + PubKey empty: returns newest record of that type.
+//   - ref.Type explicit + PubKey set:   prefix lookup, type must match.
+//   - ref.Type Unspecified + PubKey empty: returns newest record across any type
+//     (backward-compatible default for single-stream rings).
+//   - ref.Type Unspecified + PubKey set:   prefix lookup, no type filter.
+//
 // Must be called with enc.mu held.
 func (enc *enclave) fetchRecord(ref *KeyRef) (*KeyPairRecord, error) {
 	ringID := ref.KeyringID()
@@ -401,16 +414,50 @@ func (enc *enclave) fetchRecord(ref *KeyRef) (*KeyPairRecord, error) {
 		return nil, status.Code_KeyringNotFound.Errorf("keyring %v not found", ringID)
 	}
 	if len(ref.PubKey) == 0 {
-		if len(ring.newestPubKey) == 0 {
+		if ref.Type != KeyType_Unspecified {
+			pub := ring.newestByType[ref.Type]
+			if len(pub) == 0 {
+				return nil, status.Code_KeyringNotFound.Errorf("keyring %v has no %s keys", ringID, ref.Type.String())
+			}
+			return ringLookup(ring, pub), nil
+		}
+		bestPub, _ := ringNewestAcrossTypes(ring)
+		if bestPub == nil {
 			return nil, status.Code_KeyringNotFound.Errorf("keyring %v has no keys", ringID)
 		}
-		return ringLookup(ring, ring.newestPubKey), nil
+		return ringLookup(ring, bestPub), nil
 	}
 	rec := ringLookupPrefix(ring, ref.PubKey)
 	if rec == nil {
 		return nil, status.Code_KeyringNotFound.Errorf("key not found in keyring %v (pubKey prefix: %x)", ringID, ref.PubKey)
 	}
+	if ref.Type != KeyType_Unspecified && rec.KeyType != ref.Type {
+		return nil, status.Code_KeyringNotFound.Errorf("key in keyring %v has type %s, want %s", ringID, rec.KeyType.String(), ref.Type.String())
+	}
 	return rec, nil
+}
+
+// ringNewestAcrossTypes returns the newest record's pub key across all KeyType
+// streams, plus its TimeID. Returns (nil, zero-UID) if the ring has no keys.
+func ringNewestAcrossTypes(ring *ringIndex) ([]byte, tag.UID) {
+	var bestPub []byte
+	var bestTID tag.UID
+	for kt := KeyType(0); kt < KeyType_NumTypes; kt++ {
+		pub := ring.newestByType[kt]
+		if len(pub) == 0 {
+			continue
+		}
+		rec := ringLookup(ring, pub)
+		if rec == nil {
+			continue
+		}
+		tid := recordTimeID(rec)
+		if bestPub == nil || tid[0] > bestTID[0] || (tid[0] == bestTID[0] && tid[1] > bestTID[1]) {
+			bestPub = pub
+			bestTID = tid
+		}
+	}
+	return bestPub, bestTID
 }
 
 // flattenRecords returns a sorted flat slice of all records for persistence.
@@ -487,11 +534,12 @@ func ringLookupPrefix(ring *ringIndex, prefix []byte) *KeyPairRecord {
 	return nil
 }
 
-func ringNewestTimeID(ring *ringIndex) tag.UID {
-	if len(ring.newestPubKey) == 0 {
+func ringNewestTimeID(ring *ringIndex, kt KeyType) tag.UID {
+	pub := ring.newestByType[kt]
+	if len(pub) == 0 {
 		return tag.UID{}
 	}
-	rec := ringLookup(ring, ring.newestPubKey)
+	rec := ringLookup(ring, pub)
 	if rec == nil {
 		return tag.UID{}
 	}

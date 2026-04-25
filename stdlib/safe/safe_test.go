@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
+	_ "github.com/art-media-platform/amp.SDK/stdlib/safe/p256"      // register P-256 CryptoKit
 	_ "github.com/art-media-platform/amp.SDK/stdlib/safe/poly25519" // register Poly25519 CryptoKit
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 
@@ -642,5 +643,135 @@ func TestEncryptDecryptVariousSizes(t *testing.T) {
 		if !bytes.Equal(decOut.Output, testMsg) {
 			t.Fatalf("decrypt mismatch at size=%d", sz)
 		}
+	}
+}
+
+// TestDualKeyTypeStreams exercises the dual-keypair-per-keyring substrate that
+// underpins ticket #91: a single keyring holds an identity SigningKey in one
+// CryptoKit alongside an asymmetric encrypt key in a different CryptoKit, and
+// the two streams are addressed via KeyRef.Type without colliding.
+//
+// Scenario: Alice holds a Poly25519 identity (signing) key and a P-256
+// planet-encrypt key under the same keyring. Bob (peer) wraps a payload to
+// Alice's P-256 EncKey using ECDH-P256 — both sides share a curve, the wrap
+// succeeds. Alice's Poly25519 identity is unaffected and continues to sign
+// independently.
+func TestDualKeyTypeStreams(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	store := safe.NewLocalTomeStore(filepath.Join(dir, "dualkey.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("id"))
+	defer guard.Close()
+
+	enc, err := safe.OpenEnclave(ctx, store, guard, []byte("dualkey-test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer enc.Close(ctx)
+
+	aliceID := tag.NewID()
+
+	aliceSign, err := enc.GenerateKey(aliceID, safe.KeySpec{
+		KeyType:     safe.KeyType_SigningKey,
+		CryptoKitID: safe.CryptoKitID_Poly25519,
+	})
+	if err != nil {
+		t.Fatalf("GenerateKey alice SignKey: %v", err)
+	}
+	if len(aliceSign.Bytes) != 32 {
+		t.Fatalf("Poly25519 signing pubkey expected 32 bytes, got %d", len(aliceSign.Bytes))
+	}
+
+	aliceEnc, err := enc.GenerateKey(aliceID, safe.KeySpec{
+		KeyType:     safe.KeyType_AsymmetricKey,
+		CryptoKitID: safe.CryptoKitID_P256,
+	})
+	if err != nil {
+		t.Fatalf("GenerateKey alice EncKey: %v", err)
+	}
+	if len(aliceEnc.Bytes) != 65 {
+		t.Fatalf("P-256 EncKey pubkey expected 65 bytes, got %d", len(aliceEnc.Bytes))
+	}
+
+	// Both streams independently fetchable via Type.
+	signRef := &safe.KeyRef{Type: safe.KeyType_SigningKey}
+	signRef.SetKeyringID(aliceID)
+	gotSign, err := enc.FetchPubKey(signRef)
+	if err != nil {
+		t.Fatalf("FetchPubKey SignKey: %v", err)
+	}
+	if !bytes.Equal(gotSign.Bytes, aliceSign.Bytes) {
+		t.Fatal("FetchPubKey SignKey returned wrong bytes")
+	}
+
+	encRef := &safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
+	encRef.SetKeyringID(aliceID)
+	gotEnc, err := enc.FetchPubKey(encRef)
+	if err != nil {
+		t.Fatalf("FetchPubKey EncKey: %v", err)
+	}
+	if !bytes.Equal(gotEnc.Bytes, aliceEnc.Bytes) {
+		t.Fatal("FetchPubKey EncKey returned wrong bytes")
+	}
+
+	// Bob is a peer admin with a P-256 EncKey (planet's kit).
+	bobID := tag.NewID()
+	bobEnc, err := enc.GenerateKey(bobID, safe.KeySpec{
+		KeyType:     safe.KeyType_AsymmetricKey,
+		CryptoKitID: safe.CryptoKitID_P256,
+	})
+	if err != nil {
+		t.Fatalf("GenerateKey bob EncKey: %v", err)
+	}
+	bobEncRef := &safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
+	bobEncRef.SetKeyringID(bobID)
+
+	// Bob wraps a payload for Alice's EncKey via ECDH-P256.
+	payload := []byte("epoch-key-wrap-from-bob")
+	wrapped, err := enc.DoCryptOp(&safe.CryptOpArgs{
+		Op:      safe.CryptOp_EncryptToPeer,
+		OpKey:   bobEncRef,
+		PeerKey: aliceEnc.Bytes,
+		Input:   payload,
+	})
+	if err != nil {
+		t.Fatalf("EncryptToPeer (bob → alice EncKey): %v", err)
+	}
+
+	// Alice unwraps with her EncKey — both sides P-256, ECDH succeeds.
+	unwrapped, err := enc.DoCryptOp(&safe.CryptOpArgs{
+		Op:      safe.CryptOp_DecryptFromPeer,
+		OpKey:   encRef,
+		PeerKey: bobEnc.Bytes,
+		Input:   wrapped.Output,
+	})
+	if err != nil {
+		t.Fatalf("DecryptFromPeer (alice EncKey ← bob): %v", err)
+	}
+	if !bytes.Equal(unwrapped.Output, payload) {
+		t.Fatal("EncKey round-trip payload mismatch")
+	}
+
+	// Alice's SignKey continues to sign independently in Poly25519.
+	digest := make([]byte, 32)
+	rand.Read(digest)
+	sigOut, err := enc.DoCryptOp(&safe.CryptOpArgs{
+		Op:    safe.CryptOp_Sign,
+		OpKey: signRef,
+		Input: digest,
+	})
+	if err != nil {
+		t.Fatalf("Sign with SignKey: %v", err)
+	}
+	if err := safe.VerifySignature(safe.CryptoKitID_Poly25519, sigOut.Output, digest, aliceSign.Bytes); err != nil {
+		t.Fatalf("VerifySignature: %v", err)
+	}
+
+	// Cross-stream type filter rejects mismatched lookups: asking for a
+	// SigningKey under Alice's EncKey pubkey prefix must error out.
+	rejected := &safe.KeyRef{Type: safe.KeyType_SigningKey, PubKey: aliceEnc.Bytes}
+	rejected.SetKeyringID(aliceID)
+	if _, err := enc.FetchPubKey(rejected); err == nil {
+		t.Fatal("FetchPubKey with mismatched Type should have failed")
 	}
 }

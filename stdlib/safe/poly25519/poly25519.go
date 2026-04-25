@@ -5,10 +5,11 @@
 //   - Asymmetric encryption: X25519 ECDH key agreement + HKDF + XChaCha20-Poly1305
 //   - Signing: Ed25519
 //
-// Signing keys (Ed25519) serve as the single identity key. X25519 asymmetric keys
-// are derived at runtime via the Edwards-to-Montgomery birational map (public)
-// and SHA-512 + RFC 7748 clamping (private). This derivation is entirely internal
-// to this kit, preserving CryptoKit compartmentalization.
+// Signing keys (KeyType_SigningKey) are Ed25519 keypairs; asymmetric encryption keys
+// (KeyType_AsymmetricKey) are X25519 keypairs generated independently. EncryptFor /
+// DecryptFrom also accept Ed25519 signing keys directly — they are converted on the
+// fly via the Edwards-to-Montgomery birational map for backward compatibility with
+// callers that derive ECDH from a single identity key.
 //
 // Import this package (typically via blank import) to register the kit:
 //
@@ -125,6 +126,14 @@ func generateKey(rng io.Reader, requestedSize int, kp *safe.KeyPair) error {
 		}
 		kp.Pub.Bytes = pub
 		kp.Prv = priv
+
+	case safe.KeyType_AsymmetricKey:
+		priv, err := ecdh.X25519().GenerateKey(rng)
+		if err != nil {
+			return status.Code_KeyGenerationFailed.Wrap(err)
+		}
+		kp.Prv = priv.Bytes()
+		kp.Pub.Bytes = priv.PublicKey().Bytes()
 
 	default:
 		return status.ErrUnimplemented

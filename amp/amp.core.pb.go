@@ -2722,14 +2722,22 @@ type MemberEpoch struct {
 	WrappedKeys []*WrappedKey `protobuf:"bytes,30,rep,name=WrappedKeys,proto3" json:"WrappedKeys,omitempty"`
 	// Lifecycle state as of this MemberEpoch.  Meaningful at planet scope; reserved at channel scope.
 	Status MemberStatus `protobuf:"varint,8,opt,name=Status,proto3,enum=amp.MemberStatus" json:"Status,omitempty"`
-	// Member's signing public key — used for signature verification and,
-	// via CryptoKit derivation, for asymmetric encryption (EncryptToPeer/DecryptFromPeer).
+	// Member's signing public key — used for signature verification.
+	// Lives in the member's chosen kit (CryptoKitID below); may be hardware-bound.
 	PubKey []byte `protobuf:"bytes,12,opt,name=PubKey,proto3" json:"PubKey,omitempty"`
-	// Crypto suite for this member's key material.
-	// Typically matches the epoch's CryptoKitID but allows per-member override.
+	// Crypto suite for this member's signing key.
+	// Typically matches the epoch's CryptoKitID but allows per-member override
+	// (e.g. a P-256 hardware identity on a Poly25519 planet).
 	CryptoKitID safe.CryptoKitID `protobuf:"varint,15,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
-	// Signing public key of the admin who wrapped the WrappedKeys payload.
-	// The recipient needs this for DecryptFromPeer (CryptoKit derives asymmetric key internally).
+	// Member's planet-encrypt public key — receives ECDH-wrapped epoch keys.
+	// Always lives in the planet's CryptoKit so admin and member share a curve.
+	// Decoupled from PubKey so hardware-bound signing identities don't have to do cross-kit ECDH.
+	EncryptPubKey []byte `protobuf:"bytes,32,opt,name=EncryptPubKey,proto3" json:"EncryptPubKey,omitempty"`
+	// Crypto suite for this member's planet-encrypt key. Matches the planet's kit
+	// at the time this MemberEpoch was issued.
+	EncryptCryptoKitID safe.CryptoKitID `protobuf:"varint,33,opt,name=EncryptCryptoKitID,proto3,enum=safe.CryptoKitID" json:"EncryptCryptoKitID,omitempty"`
+	// Planet-encrypt public key of the admin who wrapped the WrappedKeys payload.
+	// The recipient uses this for DecryptFromPeer with their EncKey private.
 	EncryptorPubKey []byte `protobuf:"bytes,18,opt,name=EncryptorPubKey,proto3" json:"EncryptorPubKey,omitempty"`
 	// Citations referenced as the basis for this epoch.  For suspensions and
 	// revocations, these point to ledger entries (strikes, audits, witness records)
@@ -2815,6 +2823,20 @@ func (x *MemberEpoch) GetPubKey() []byte {
 func (x *MemberEpoch) GetCryptoKitID() safe.CryptoKitID {
 	if x != nil {
 		return x.CryptoKitID
+	}
+	return safe.CryptoKitID(0)
+}
+
+func (x *MemberEpoch) GetEncryptPubKey() []byte {
+	if x != nil {
+		return x.EncryptPubKey
+	}
+	return nil
+}
+
+func (x *MemberEpoch) GetEncryptCryptoKitID() safe.CryptoKitID {
+	if x != nil {
+		return x.EncryptCryptoKitID
 	}
 	return safe.CryptoKitID(0)
 }
@@ -4741,7 +4763,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"WrappedKey\x12!\n" +
 	"\x04Role\x18\x01 \x01(\x0e2\r.safe.KeyRoleR\x04Role\x12\x1c\n" +
-	"\tEncrypted\x18\x02 \x01(\fR\tEncrypted\"\xed\x02\n" +
+	"\tEncrypted\x18\x02 \x01(\fR\tEncrypted\"\xd6\x03\n" +
 	"\vMemberEpoch\x12&\n" +
 	"\tMemberTag\x18\x01 \x01(\v2\b.amp.TagR\tMemberTag\x12\x1c\n" +
 	"\x04Node\x18\x03 \x01(\v2\b.amp.TagR\x04Node\x12\x1e\n" +
@@ -4749,7 +4771,9 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vWrappedKeys\x18\x1e \x03(\v2\x0f.amp.WrappedKeyR\vWrappedKeys\x12)\n" +
 	"\x06Status\x18\b \x01(\x0e2\x11.amp.MemberStatusR\x06Status\x12\x16\n" +
 	"\x06PubKey\x18\f \x01(\fR\x06PubKey\x123\n" +
-	"\vCryptoKitID\x18\x0f \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12(\n" +
+	"\vCryptoKitID\x18\x0f \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12$\n" +
+	"\rEncryptPubKey\x18  \x01(\fR\rEncryptPubKey\x12A\n" +
+	"\x12EncryptCryptoKitID\x18! \x01(\x0e2\x11.safe.CryptoKitIDR\x12EncryptCryptoKitID\x12(\n" +
 	"\x0fEncryptorPubKey\x18\x12 \x01(\fR\x0fEncryptorPubKey\x12#\n" +
 	"\x05Cites\x18\x14 \x03(\v2\r.amp.CitationR\x05Cites\"\xa9\x02\n" +
 	"\vAttestation\x12\"\n" +
@@ -5148,40 +5172,41 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	33, // 41: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
 	10, // 42: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
 	57, // 43: amp.MemberEpoch.CryptoKitID:type_name -> safe.CryptoKitID
-	36, // 44: amp.MemberEpoch.Cites:type_name -> amp.Citation
-	22, // 45: amp.Attestation.Subject:type_name -> amp.Tag
-	11, // 46: amp.Attestation.Type:type_name -> amp.AttestationType
-	22, // 47: amp.Attestation.ObserverID:type_name -> amp.Tag
-	22, // 48: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
-	22, // 49: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
-	22, // 50: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	59, // 51: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	60, // 52: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
-	22, // 53: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
-	40, // 54: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	42, // 55: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	43, // 56: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	41, // 57: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	12, // 58: amp.PeerAddr.Transport:type_name -> amp.TransportType
-	28, // 59: amp.Artifact.BlobValue:type_name -> amp.BlobRef
-	22, // 60: amp.PlanetAnchor.FromPlanet:type_name -> amp.Tag
-	22, // 61: amp.PlanetAnchor.FromEpoch:type_name -> amp.Tag
-	22, // 62: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
-	22, // 63: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
-	22, // 64: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
-	46, // 65: amp.CodexHeader.Anchor:type_name -> amp.PlanetAnchor
-	49, // 66: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
-	51, // 67: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
-	22, // 68: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
-	22, // 69: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
-	47, // 70: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
-	52, // 71: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
-	54, // 72: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
-	73, // [73:73] is the sub-list for method output_type
-	73, // [73:73] is the sub-list for method input_type
-	73, // [73:73] is the sub-list for extension type_name
-	73, // [73:73] is the sub-list for extension extendee
-	0,  // [0:73] is the sub-list for field type_name
+	57, // 44: amp.MemberEpoch.EncryptCryptoKitID:type_name -> safe.CryptoKitID
+	36, // 45: amp.MemberEpoch.Cites:type_name -> amp.Citation
+	22, // 46: amp.Attestation.Subject:type_name -> amp.Tag
+	11, // 47: amp.Attestation.Type:type_name -> amp.AttestationType
+	22, // 48: amp.Attestation.ObserverID:type_name -> amp.Tag
+	22, // 49: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
+	22, // 50: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
+	22, // 51: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
+	59, // 52: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	60, // 53: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	22, // 54: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	40, // 55: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	42, // 56: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	43, // 57: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	41, // 58: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	12, // 59: amp.PeerAddr.Transport:type_name -> amp.TransportType
+	28, // 60: amp.Artifact.BlobValue:type_name -> amp.BlobRef
+	22, // 61: amp.PlanetAnchor.FromPlanet:type_name -> amp.Tag
+	22, // 62: amp.PlanetAnchor.FromEpoch:type_name -> amp.Tag
+	22, // 63: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
+	22, // 64: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
+	22, // 65: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
+	46, // 66: amp.CodexHeader.Anchor:type_name -> amp.PlanetAnchor
+	49, // 67: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
+	51, // 68: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
+	22, // 69: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
+	22, // 70: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
+	47, // 71: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
+	52, // 72: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
+	54, // 73: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
+	74, // [74:74] is the sub-list for method output_type
+	74, // [74:74] is the sub-list for method input_type
+	74, // [74:74] is the sub-list for extension type_name
+	74, // [74:74] is the sub-list for extension extendee
+	0,  // [0:74] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }

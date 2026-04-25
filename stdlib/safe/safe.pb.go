@@ -788,11 +788,16 @@ func (x *CryptOpOut) GetOpPubKey() []byte {
 }
 
 // KeyRef references a specific key within a KeyTome.
+//
+// A keyring may hold multiple parallel key streams distinguished by KeyType.
+// When PubKey is empty, the newest key of the requested Type is returned.
+// When Type is Unspecified, lookup defaults to SigningKey for backward compatibility.
 type KeyRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"` // Keyring UID, bytes 0..7
 	KeyringID_1   uint64                 `protobuf:"fixed64,2,opt,name=KeyringID_1,json=KeyringID1,proto3" json:"KeyringID_1,omitempty"` // Keyring UID, bytes 8..15
-	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                             // Pub key prefix (empty => newest key in the keyring)
+	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                             // Pub key prefix (empty => newest key of Type in the keyring)
+	Type          KeyType                `protobuf:"varint,5,opt,name=Type,proto3,enum=safe.KeyType" json:"Type,omitempty"`              // Which key stream to look up (Unspecified => SigningKey)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -846,6 +851,13 @@ func (x *KeyRef) GetPubKey() []byte {
 		return x.PubKey
 	}
 	return nil
+}
+
+func (x *KeyRef) GetType() KeyType {
+	if x != nil {
+		return x.Type
+	}
+	return KeyType_Unspecified
 }
 
 // KeyPairRecord is the flat on-disk representation of a single key.
@@ -1349,13 +1361,14 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\n" +
 	"CryptOpOut\x12\x16\n" +
 	"\x06Output\x18\x01 \x01(\fR\x06Output\x12\x1a\n" +
-	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"b\n" +
+	"\bOpPubKey\x18\x02 \x01(\fR\bOpPubKey\"\x85\x01\n" +
 	"\x06KeyRef\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
 	"\vKeyringID_1\x18\x02 \x01(\x06R\n" +
 	"KeyringID1\x12\x16\n" +
-	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"\x95\x02\n" +
+	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\x12!\n" +
+	"\x04Type\x18\x05 \x01(\x0e2\r.safe.KeyTypeR\x04Type\"\x95\x02\n" +
 	"\rKeyPairRecord\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
@@ -1463,19 +1476,20 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	5,  // 1: safe.CryptOpArgs.Op:type_name -> safe.CryptOp
 	2,  // 2: safe.CryptOpArgs.DefaultKit:type_name -> safe.CryptoKitID
 	11, // 3: safe.CryptOpArgs.OpKey:type_name -> safe.KeyRef
-	2,  // 4: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
-	1,  // 5: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
-	12, // 6: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
-	4,  // 7: safe.RoleKey.Role:type_name -> safe.KeyRole
-	2,  // 8: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
-	14, // 9: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
-	15, // 10: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	2,  // 11: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
-	12, // [12:12] is the sub-list for method output_type
-	12, // [12:12] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	1,  // 4: safe.KeyRef.Type:type_name -> safe.KeyType
+	2,  // 5: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
+	1,  // 6: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
+	12, // 7: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
+	4,  // 8: safe.RoleKey.Role:type_name -> safe.KeyRole
+	2,  // 9: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
+	14, // 10: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
+	15, // 11: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	2,  // 12: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }

@@ -82,7 +82,7 @@ func generateKey(rng io.Reader, requestedSize int, kp *safe.KeyPair) error {
 			return status.Code_KeyGenerationFailed.Wrap(err)
 		}
 
-	case safe.KeyType_SigningKey:
+	case safe.KeyType_SigningKey, safe.KeyType_AsymmetricKey:
 		priv, err := ecdh.P256().GenerateKey(rng)
 		if err != nil {
 			return status.Code_KeyGenerationFailed.Wrap(err)

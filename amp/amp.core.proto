@@ -664,16 +664,26 @@ message MemberEpoch {
     // Lifecycle state as of this MemberEpoch.  Meaningful at planet scope; reserved at channel scope.
     MemberStatus        Status = 8;
 
-    // Member's signing public key — used for signature verification and,
-    // via CryptoKit derivation, for asymmetric encryption (EncryptToPeer/DecryptFromPeer).
+    // Member's signing public key — used for signature verification.
+    // Lives in the member's chosen kit (CryptoKitID below); may be hardware-bound.
     bytes               PubKey = 12;
 
-    // Crypto suite for this member's key material.
-    // Typically matches the epoch's CryptoKitID but allows per-member override.
+    // Crypto suite for this member's signing key.
+    // Typically matches the epoch's CryptoKitID but allows per-member override
+    // (e.g. a P-256 hardware identity on a Poly25519 planet).
     safe.CryptoKitID    CryptoKitID = 15;
 
-    // Signing public key of the admin who wrapped the WrappedKeys payload.
-    // The recipient needs this for DecryptFromPeer (CryptoKit derives asymmetric key internally).
+    // Member's planet-encrypt public key — receives ECDH-wrapped epoch keys.
+    // Always lives in the planet's CryptoKit so admin and member share a curve.
+    // Decoupled from PubKey so hardware-bound signing identities don't have to do cross-kit ECDH.
+    bytes               EncryptPubKey = 32;
+
+    // Crypto suite for this member's planet-encrypt key. Matches the planet's kit
+    // at the time this MemberEpoch was issued.
+    safe.CryptoKitID    EncryptCryptoKitID = 33;
+
+    // Planet-encrypt public key of the admin who wrapped the WrappedKeys payload.
+    // The recipient uses this for DecryptFromPeer with their EncKey private.
     bytes               EncryptorPubKey = 18;
 
     // Citations referenced as the basis for this epoch.  For suspensions and

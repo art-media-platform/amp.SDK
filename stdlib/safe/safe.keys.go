@@ -4,6 +4,10 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
+// KeyType_NumTypes bounds the per-keyring per-type indexing arrays.
+// Must be greater than the largest KeyType enum value.
+const KeyType_NumTypes = 4
+
 // PubKey is a runtime descriptor for a public key and the CryptoKit that produced it.
 // Bytes is the raw public key material (signing pub key; CryptoKit derives asymmetric
 // keys from it on demand).

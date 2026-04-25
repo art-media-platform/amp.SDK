@@ -139,10 +139,15 @@ message CryptOpOut {
 
 
 // KeyRef references a specific key within a KeyTome.
+//
+// A keyring may hold multiple parallel key streams distinguished by KeyType.
+// When PubKey is empty, the newest key of the requested Type is returned.
+// When Type is Unspecified, lookup defaults to SigningKey for backward compatibility.
 message KeyRef {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
     fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15
-    bytes       PubKey              = 4;    // Pub key prefix (empty => newest key in the keyring)
+    bytes       PubKey              = 4;    // Pub key prefix (empty => newest key of Type in the keyring)
+    KeyType     Type                = 5;    // Which key stream to look up (Unspecified => SigningKey)
 }
 
 
