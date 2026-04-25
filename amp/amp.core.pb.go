@@ -2258,8 +2258,14 @@ type VaultOpts struct {
 	// If 0, the DefaultMaxPendingPerEpoch / DefaultMaxPendingEpochs apply.
 	MaxPendingPerEpoch uint32 `protobuf:"varint,7,opt,name=MaxPendingPerEpoch,proto3" json:"MaxPendingPerEpoch,omitempty"`
 	MaxPendingEpochs   uint32 `protobuf:"varint,8,opt,name=MaxPendingEpochs,proto3" json:"MaxPendingEpochs,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// Bootstrap TTL for invite tokens, in seconds.  An invite created at time T is
+	// accepted only while time.Now().Unix() <= T + BootstrapTTLSecs.  Bounds the
+	// exposure window of a leaked invite token.  Enforced on accept; the issuing
+	// admin cannot retract early but may publish an explicit revocation op.
+	// If 0, DefaultBootstrapTTL applies (7 days).
+	BootstrapTTLSecs int64 `protobuf:"varint,9,opt,name=BootstrapTTLSecs,proto3" json:"BootstrapTTLSecs,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *VaultOpts) Reset() {
@@ -2344,6 +2350,13 @@ func (x *VaultOpts) GetMaxPendingPerEpoch() uint32 {
 func (x *VaultOpts) GetMaxPendingEpochs() uint32 {
 	if x != nil {
 		return x.MaxPendingEpochs
+	}
+	return 0
+}
+
+func (x *VaultOpts) GetBootstrapTTLSecs() int64 {
+	if x != nil {
+		return x.BootstrapTTLSecs
 	}
 	return 0
 }
@@ -3046,7 +3059,12 @@ type PlanetInvite struct {
 	// Planet epoch key encrypted for TempKey via CryptoKit.EncryptFor.
 	// InviteAccept decrypts this immediately so the member can participate in the epoch.
 	// SenderPubKey identifies the admin who encrypted it.
-	EpochKey      *safe.EncryptedSymKey `protobuf:"bytes,20,opt,name=EpochKey,proto3" json:"EpochKey,omitempty"`
+	EpochKey *safe.EncryptedSymKey `protobuf:"bytes,20,opt,name=EpochKey,proto3" json:"EpochKey,omitempty"`
+	// Bootstrap expiry, unix seconds.  The acceptor rejects on accept when
+	// time.Now().Unix() > ExpiresAt.  Stamped at issue using the planet's
+	// VaultOpts.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
+	// expiry (only accepted from issuers that intentionally opt out).
+	ExpiresAt     int64 `protobuf:"varint,25,opt,name=ExpiresAt,proto3" json:"ExpiresAt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3121,6 +3139,13 @@ func (x *PlanetInvite) GetEpochKey() *safe.EncryptedSymKey {
 		return x.EpochKey
 	}
 	return nil
+}
+
+func (x *PlanetInvite) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
 }
 
 // PlanetInviteOp is the client request to create or accept a member invite.
@@ -4702,7 +4727,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xfb\x02\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xa7\x03\n" +
 	"\tVaultOpts\x12\"\n" +
 	"\fMaxTxMsgSize\x18\x01 \x01(\x03R\fMaxTxMsgSize\x12,\n" +
 	"\x11MaxBytesPerWindow\x18\x02 \x01(\x03R\x11MaxBytesPerWindow\x12&\n" +
@@ -4711,7 +4736,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x17QuarantineRetentionSecs\x18\x05 \x01(\x03R\x17QuarantineRetentionSecs\x12,\n" +
 	"\x11MaxFutureSkewSecs\x18\x06 \x01(\x03R\x11MaxFutureSkewSecs\x12.\n" +
 	"\x12MaxPendingPerEpoch\x18\a \x01(\rR\x12MaxPendingPerEpoch\x12*\n" +
-	"\x10MaxPendingEpochs\x18\b \x01(\rR\x10MaxPendingEpochs\"\x9c\x05\n" +
+	"\x10MaxPendingEpochs\x18\b \x01(\rR\x10MaxPendingEpochs\x12*\n" +
+	"\x10BootstrapTTLSecs\x18\t \x01(\x03R\x10BootstrapTTLSecs\"\x9c\x05\n" +
 	"\vPlanetEpoch\x12$\n" +
 	"\bEpochTag\x18\x01 \x01(\v2\b.amp.TagR\bEpochTag\x12.\n" +
 	"\rPreviousEpoch\x18\x02 \x01(\v2\b.amp.TagR\rPreviousEpoch\x12\x14\n" +
@@ -4775,7 +4801,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vChannelID_1\x18\x02 \x01(\x06R\n" +
 	"ChannelID1\x12\x19\n" +
 	"\bItemID_0\x18\x04 \x01(\x06R\aItemID0\x12\x19\n" +
-	"\bItemID_1\x18\x05 \x01(\x06R\aItemID1\"\x86\x02\n" +
+	"\bItemID_1\x18\x05 \x01(\x06R\aItemID1\"\xa4\x02\n" +
 	"\fPlanetInvite\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12$\n" +
 	"\bEpochTag\x18\x02 \x01(\v2\b.amp.TagR\bEpochTag\x12&\n" +
@@ -4784,7 +4810,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"VaultAddrs\x18\x0f \x03(\tR\n" +
 	"VaultAddrs\x121\n" +
-	"\bEpochKey\x18\x14 \x01(\v2\x15.safe.EncryptedSymKeyR\bEpochKey\"|\n" +
+	"\bEpochKey\x18\x14 \x01(\v2\x15.safe.EncryptedSymKeyR\bEpochKey\x12\x1c\n" +
+	"\tExpiresAt\x18\x19 \x01(\x03R\tExpiresAt\"|\n" +
 	"\x0ePlanetInviteOp\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12\x1e\n" +
 	"\n" +

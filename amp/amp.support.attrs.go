@@ -49,6 +49,12 @@ const (
 
 	// DefaultMaxPendingEpochs caps the number of distinct epochs with pending entries.
 	DefaultMaxPendingEpochs uint32 = 100
+
+	// DefaultBootstrapTTL is the default invite-token validity window in seconds (7 days).
+	// PlanetInvite tokens expire after this duration unless the issuing planet's
+	// VaultOpts.BootstrapTTLSecs sets a per-planet override.  A leaked token is
+	// useless past expiry; bounds the exposure window of out-of-band invite delivery.
+	DefaultBootstrapTTL int64 = 7 * 24 * 60 * 60
 )
 
 // GracePeriod returns the effective grace period for this epoch.
@@ -103,6 +109,32 @@ func (opts *VaultOpts) RateLimitWindow() time.Duration {
 		secs = DefaultRateLimitWindow
 	}
 	return time.Duration(secs) * time.Second
+}
+
+// BootstrapTTL returns the effective invite-token validity window as a time.Duration.
+// Nil-safe: returns DefaultBootstrapTTL seconds when opts is nil or the field is zero.
+func (opts *VaultOpts) BootstrapTTL() time.Duration {
+	secs := int64(0)
+	if opts != nil {
+		secs = opts.BootstrapTTLSecs
+	}
+	if secs <= 0 {
+		secs = DefaultBootstrapTTL
+	}
+	return time.Duration(secs) * time.Second
+}
+
+// IsExpired reports whether the invite token has passed its bootstrap TTL
+// relative to now.  ExpiresAt of 0 means "no expiry" (issuer opted out) and
+// always returns false.  Nil-safe: a nil invite is treated as expired.
+func (invite *PlanetInvite) IsExpired(now time.Time) bool {
+	if invite == nil {
+		return true
+	}
+	if invite.ExpiresAt <= 0 {
+		return false
+	}
+	return now.Unix() > invite.ExpiresAt
 }
 
 // NonZeroInt64 returns val when non-zero, else fallback — typed default-resolver

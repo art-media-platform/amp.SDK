@@ -19,13 +19,13 @@ const (
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 	// oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
 	// now let us get to work!
-	Invocation = int32(3773)
+	Invocation         = int32(3773)
 )
 
 // ─── TxMsg wire framing ─────────────────────────────────────────
 const (
 	// TxPreamble layout (big endian):
-	//
+	// 
 	//    00:04  PreambleSignature ("AMP1")
 	//    04:08  PreambleSize + serialized(TxHeader) + serialized([]TxOp)
 	//    08:12  len(TxMsg.DataStore)
@@ -33,5 +33,5 @@ const (
 	//    14:16  Reserved
 	TxPreambleSignature = "AMP1"
 	// Fixed-size header that leads every TxMsg (see amp.consts.sdl for layout).
-	TxPreambleSize = int32(16)
+	TxPreambleSize      = int32(16)
 )

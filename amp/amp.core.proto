@@ -495,6 +495,13 @@ message VaultOpts {
     // If 0, the DefaultMaxPendingPerEpoch / DefaultMaxPendingEpochs apply.
     uint32  MaxPendingPerEpoch = 7;
     uint32  MaxPendingEpochs   = 8;
+
+    // Bootstrap TTL for invite tokens, in seconds.  An invite created at time T is
+    // accepted only while time.Now().Unix() <= T + BootstrapTTLSecs.  Bounds the
+    // exposure window of a leaked invite token.  Enforced on accept; the issuing
+    // admin cannot retract early but may publish an explicit revocation op.
+    // If 0, DefaultBootstrapTTL applies (7 days).
+    int64   BootstrapTTLSecs = 9;
 }
 
 
@@ -782,6 +789,12 @@ message PlanetInvite {
     // InviteAccept decrypts this immediately so the member can participate in the epoch.
     // SenderPubKey identifies the admin who encrypted it.
     safe.EncryptedSymKey    EpochKey = 20;
+
+    // Bootstrap expiry, unix seconds.  The acceptor rejects on accept when
+    // time.Now().Unix() > ExpiresAt.  Stamped at issue using the planet's
+    // VaultOpts.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
+    // expiry (only accepted from issuers that intentionally opt out).
+    int64                   ExpiresAt = 25;
 }
 
 
