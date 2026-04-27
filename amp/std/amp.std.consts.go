@@ -20,6 +20,7 @@ var Attr = struct {
 	LaunchOAuth                        tag.Name
 	ItemAttr                           tag.Name
 	ChildLink                          tag.Name
+	ItemLabels                         tag.Name
 	ItemTextTag                        tag.Name
 	ItemLabel                          tag.Name
 	ItemCaption                        tag.Name
@@ -151,6 +152,7 @@ var Attr = struct {
 	ItemAttr                          : tag.Name{ID: tag.UID{0xE8D8BECA5B3BBEB3, 0x1308458DB27C3504}, Canonic: "item"},                        // 78V2ZDNQTVRUTJ6225JQT7SE84
 
 	ChildLink                         : tag.Name{ID: tag.UID{0x2D735092B82E842E, 0x21828D8F03504377}, Canonic: "item.child.link.ID"},          // 1EFE895F1FHHR230NEJW1P0HVR
+	ItemLabels                        : tag.Name{ID: tag.UID{0x8ACF0BC462FB41EF, 0x5E50CA5871F68AB2}, Canonic: "item.labels"},                 // 4BTW5W8SRV87RPWN6BC1SZE2PK
 	ItemTextTag                       : tag.Name{ID: tag.UID{0xB10AEF4A2C321925, 0x62BA4D85883B7B0C}, Canonic: "item.text.tag"},               // 5J1CRNNC1K34KQ5FKEHQ43QYSD
 
 	ItemLabel                         : tag.Name{ID: tag.UID{0xB7D436AE92C4484B, 0x12CE5D2E1E2D3486}, Canonic: "item.text.tag.label"},         // 5RUHVBX4Q4915J5MKX5SG2UE46

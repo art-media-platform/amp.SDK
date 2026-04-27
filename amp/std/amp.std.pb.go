@@ -1251,10 +1251,22 @@ func (x *Report) GetDebug() []*TextItem {
 	return nil
 }
 
+// Labels is the bundled label struct for "described items" — media tracks,
+// catalog entries, planet-level items, anything with a name + a 1-line
+// subtitle + an optional grouping name + an optional long-form description.
+//
+// Use std.Attr.ItemLabels (this struct, flat per-item) for self-described
+// items.  Use std.Attr.SeriesLabels (series of these structs keyed by item ID)
+// when a parent channel maintains a series of described children.
+//
+// For raw single-text containers (messages, plain notes) prefer dedicated
+// text attrs instead of Labels.
 type Labels struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`
-	About         string                 `protobuf:"bytes,4,opt,name=About,proto3" json:"About,omitempty"`
+	Title         string                 `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`           // primary name
+	Caption       string                 `protobuf:"bytes,2,opt,name=Caption,proto3" json:"Caption,omitempty"`       // 1-line subtitle (e.g. artist line)
+	Collection    string                 `protobuf:"bytes,3,opt,name=Collection,proto3" json:"Collection,omitempty"` // grouping label (e.g. album / playlist)
+	About         string                 `protobuf:"bytes,4,opt,name=About,proto3" json:"About,omitempty"`           // long-form description / synopsis
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1292,6 +1304,20 @@ func (*Labels) Descriptor() ([]byte, []int) {
 func (x *Labels) GetTitle() string {
 	if x != nil {
 		return x.Title
+	}
+	return ""
+}
+
+func (x *Labels) GetCaption() string {
+	if x != nil {
+		return x.Caption
+	}
+	return ""
+}
+
+func (x *Labels) GetCollection() string {
+	if x != nil {
+		return x.Collection
 	}
 	return ""
 }
@@ -1817,9 +1843,13 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x06Errors\x18\x03 \x03(\v2\r.std.TextItemR\x06Errors\x12)\n" +
 	"\bWarnings\x18\x04 \x03(\v2\r.std.TextItemR\bWarnings\x12)\n" +
 	"\bMessages\x18\x05 \x03(\v2\r.std.TextItemR\bMessages\x12#\n" +
-	"\x05Debug\x18\x0f \x03(\v2\r.std.TextItemR\x05Debug\"4\n" +
+	"\x05Debug\x18\x0f \x03(\v2\r.std.TextItemR\x05Debug\"n\n" +
 	"\x06Labels\x12\x14\n" +
-	"\x05Title\x18\x01 \x01(\tR\x05Title\x12\x14\n" +
+	"\x05Title\x18\x01 \x01(\tR\x05Title\x12\x18\n" +
+	"\aCaption\x18\x02 \x01(\tR\aCaption\x12\x1e\n" +
+	"\n" +
+	"Collection\x18\x03 \x01(\tR\n" +
+	"Collection\x12\x14\n" +
 	"\x05About\x18\x04 \x01(\tR\x05About\"\xae\x01\n" +
 	"\x04Rect\x12(\n" +
 	"\x06Format\x18\x01 \x01(\x0e2\x10.std.PointFormatR\x06Format\x12\x16\n" +

@@ -31,6 +31,7 @@ tags Attr {
     // Item attributes
     ItemAttr "item" {
         ChildLink          "child.link.ID"
+        ItemLabels         "Labels"
         ItemTextTag "text.Tag" {
             ItemLabel        "label"
             ItemCaption      "caption"

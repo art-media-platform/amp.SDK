@@ -141,9 +141,21 @@ message Report {
     repeated TextItem Debug    = 15;
 }
 
+// Labels is the bundled label struct for "described items" — media tracks,
+// catalog entries, planet-level items, anything with a name + a 1-line
+// subtitle + an optional grouping name + an optional long-form description.
+//
+// Use std.Attr.ItemLabels (this struct, flat per-item) for self-described
+// items.  Use std.Attr.SeriesLabels (series of these structs keyed by item ID)
+// when a parent channel maintains a series of described children.
+//
+// For raw single-text containers (messages, plain notes) prefer dedicated
+// text attrs instead of Labels.
 message Labels {
-    string        Title       = 1;
-    string        About       = 4;
+    string        Title       = 1;  // primary name
+    string        Caption     = 2;  // 1-line subtitle (e.g. artist line)
+    string        Collection  = 3;  // grouping label (e.g. album / playlist)
+    string        About       = 4;  // long-form description / synopsis
 }
 
 // General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
