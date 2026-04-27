@@ -547,12 +547,12 @@ message PlanetEpoch {
     // Points to a Node whose attrs enumerate discoverable channels and content.
     Tag                 Index = 31;
 
-    // Planet glyph — a Tags tree of visual variants (size, theme, density,
+    // Planet glyphs — a Tags tree of visual variants (size, theme, density,
     // content-type).  Consumers (WebRect / Vuplex / native UI / terminal)
     // walk SubTags and pick the variant best suited to the rendering surface.
     // Same shape as the HTML <picture> element: Head describes the family;
     // each SubTag carries a URI + ContentType + I,J,K dimensions + Units.
-    Tags                Glyph = 32;
+    Tags                Glyphs = 32;
 
     // Human-readable description of this planet.
     string              About = 33;

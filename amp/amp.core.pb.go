@@ -2394,12 +2394,12 @@ type PlanetEpoch struct {
 	// Courtesy listing of public-facing nodes on this planet.
 	// Points to a Node whose attrs enumerate discoverable channels and content.
 	Index *Tag `protobuf:"bytes,31,opt,name=Index,proto3" json:"Index,omitempty"`
-	// Planet glyph — a Tags tree of visual variants (size, theme, density,
+	// Planet glyphs — a Tags tree of visual variants (size, theme, density,
 	// content-type).  Consumers (WebRect / Vuplex / native UI / terminal)
 	// walk SubTags and pick the variant best suited to the rendering surface.
 	// Same shape as the HTML <picture> element: Head describes the family;
 	// each SubTag carries a URI + ContentType + I,J,K dimensions + Units.
-	Glyph *Tags `protobuf:"bytes,32,opt,name=Glyph,proto3" json:"Glyph,omitempty"`
+	Glyphs *Tags `protobuf:"bytes,32,opt,name=Glyphs,proto3" json:"Glyphs,omitempty"`
 	// Human-readable description of this planet.
 	About string `protobuf:"bytes,33,opt,name=About,proto3" json:"About,omitempty"`
 	// Human-readable declaration of intent, signed into canonical bytes.
@@ -2539,9 +2539,9 @@ func (x *PlanetEpoch) GetIndex() *Tag {
 	return nil
 }
 
-func (x *PlanetEpoch) GetGlyph() *Tags {
+func (x *PlanetEpoch) GetGlyphs() *Tags {
 	if x != nil {
-		return x.Glyph
+		return x.Glyphs
 	}
 	return nil
 }
@@ -4969,7 +4969,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11MaxFutureSkewSecs\x18\x06 \x01(\x03R\x11MaxFutureSkewSecs\x12.\n" +
 	"\x12MaxPendingPerEpoch\x18\a \x01(\rR\x12MaxPendingPerEpoch\x12*\n" +
 	"\x10MaxPendingEpochs\x18\b \x01(\rR\x10MaxPendingEpochs\x12*\n" +
-	"\x10BootstrapTTLSecs\x18\t \x01(\x03R\x10BootstrapTTLSecs\"\x9d\x05\n" +
+	"\x10BootstrapTTLSecs\x18\t \x01(\x03R\x10BootstrapTTLSecs\"\x9f\x05\n" +
 	"\vPlanetEpoch\x12$\n" +
 	"\bEpochTag\x18\x01 \x01(\v2\b.amp.TagR\bEpochTag\x12.\n" +
 	"\rPreviousEpoch\x18\x02 \x01(\v2\b.amp.TagR\rPreviousEpoch\x12\x14\n" +
@@ -4980,8 +4980,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tVaultOpts\x18\x14 \x01(\v2\x0e.amp.VaultOptsR\tVaultOpts\x12&\n" +
 	"\x0eMaxGracePeriod\x18\x19 \x01(\x03R\x0eMaxGracePeriod\x12\x1e\n" +
 	"\x05Foyer\x18\x1e \x01(\v2\b.amp.TagR\x05Foyer\x12\x1e\n" +
-	"\x05Index\x18\x1f \x01(\v2\b.amp.TagR\x05Index\x12\x1f\n" +
-	"\x05Glyph\x18  \x01(\v2\t.amp.TagsR\x05Glyph\x12\x14\n" +
+	"\x05Index\x18\x1f \x01(\v2\b.amp.TagR\x05Index\x12!\n" +
+	"\x06Glyphs\x18  \x01(\v2\t.amp.TagsR\x06Glyphs\x12\x14\n" +
 	"\x05About\x18! \x01(\tR\x05About\x12 \n" +
 	"\vDeclaration\x18( \x01(\tR\vDeclaration\x122\n" +
 	"\x0fGovernanceGroup\x18* \x01(\v2\b.amp.TagR\x0fGovernanceGroup\x12.\n" +
@@ -5417,7 +5417,7 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	30, // 29: amp.PlanetEpoch.VaultOpts:type_name -> amp.VaultOpts
 	22, // 30: amp.PlanetEpoch.Foyer:type_name -> amp.Tag
 	22, // 31: amp.PlanetEpoch.Index:type_name -> amp.Tag
-	23, // 32: amp.PlanetEpoch.Glyph:type_name -> amp.Tags
+	23, // 32: amp.PlanetEpoch.Glyphs:type_name -> amp.Tags
 	22, // 33: amp.PlanetEpoch.GovernanceGroup:type_name -> amp.Tag
 	32, // 34: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
 	32, // 35: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature

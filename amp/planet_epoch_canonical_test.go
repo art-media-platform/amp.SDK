@@ -73,7 +73,7 @@ func TestPlanetEpoch_CanonicalBytes_AllKnobs(t *testing.T) {
 		MaxGracePeriod:     90 * 86400,
 		Foyer:              tagWithUID(0x10, 0x20),
 		Index:              tagWithUID(0x30, 0x40),
-		Glyph: &amp.Tags{
+		Glyphs: &amp.Tags{
 			Head: tagWithUID(0x50, 0x60),
 		},
 		About:              "Founders' communion planet.",
