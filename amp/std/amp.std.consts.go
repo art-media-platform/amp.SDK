@@ -66,12 +66,14 @@ var Attr = struct {
 	ChannelTypeNotes                   tag.Name
 	ChannelTypeMap                     tag.Name
 	ChannelTypeGlobe                   tag.Name
+	ChannelTypeManifold                tag.Name
 	ChannelTypeSpace                   tag.Name
 	ChannelTypeLinks                   tag.Name
 	ChannelTypeRegistry                tag.Name
 	ChannelTypeSystem                  tag.Name
 	ChannelTypeWeb                     tag.Name
 	ChannelTypeCrateManager            tag.Name
+	ChannelTypePlaylist                tag.Name
 	LawAttr                            tag.Name
 	LawPlanetEpoch                     tag.Name
 	LawMemberEpoch                     tag.Name
@@ -206,12 +208,14 @@ var Attr = struct {
 	ChannelTypeNotes                  : tag.Name{ID: tag.UID{0x87B28C91CDD87392, 0x8FF395356265BBC8}, Canonic: "channel.type.notes"},                             // 47QB693MFSFF98ZWWP6PJ6CFY8
 	ChannelTypeMap                    : tag.Name{ID: tag.UID{0xFFAF9D773BB404F0, 0x3229E8568C22B702}, Canonic: "channel.type.map"},                               // 7ZPYFRFFXN0MS34BG8BU625ES2
 	ChannelTypeGlobe                  : tag.Name{ID: tag.UID{0x789C644DD7FC7430, 0xFFF9BBE430617537}, Canonic: "channel.type.globe"},                             // 3SMJK4VPZWFHSGZYEVWHS62X9R
+	ChannelTypeManifold               : tag.Name{ID: tag.UID{0xA6B385E8BD68AE2E, 0xD3559473E879A52F}, Canonic: "channel.type.manifold"},                          // 56QF2YJGC8PSRE6PDNFGN7M99G
 	ChannelTypeSpace                  : tag.Name{ID: tag.UID{0x4CB63CE1018B6ADE, 0x1CD807A033ECBB00}, Canonic: "channel.type.space"},                             // 2DQSYF20DCECG1TQ07N0TYTFS0
 	ChannelTypeLinks                  : tag.Name{ID: tag.UID{0x0952F17FC464ADB0, 0x4987D7AF8C3F6322}, Canonic: "channel.type.links"},                             // 09BCSRZJ34PQS4M1YRPY63YST2
 	ChannelTypeRegistry               : tag.Name{ID: tag.UID{0xF608438E07EB0A75, 0xEC102C71CEE83823}, Canonic: "channel.type.registry"},                          // 7Q111SW1ZC19UYS41DF77FHF13
 	ChannelTypeSystem                 : tag.Name{ID: tag.UID{0x7C01FAB066510CCC, 0xB5894A7ED360CA26}, Canonic: "channel.type.system"},                            // 3W07XC0TKJ1M6CC2BBGV9Q1KJ6
 	ChannelTypeWeb                    : tag.Name{ID: tag.UID{0x2A643F1C3CCD963B, 0x59D9F3468B72F446}, Canonic: "channel.type.web"},                               // 1BDHZJSG6EKSXPMQGM8U5R5X26
 	ChannelTypeCrateManager           : tag.Name{ID: tag.UID{0x5D245D81FEB5590D, 0x26DE9A083BD0A9A4}, Canonic: "channel.type.cratemanager"},                      // 2X4JFS3ZPPC46KERNU10XX1BE4
+	ChannelTypePlaylist               : tag.Name{ID: tag.UID{0xE0310CEA1AAEFE3D, 0xBD63DBCEACEB59F5}, Canonic: "channel.type.playlist"},                          // 70646FN6PFZSYVUSYVTUQFQQGP
 
 	// ─── Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate). ───
 	// "Law" names the role concretely: this channel grants, revises, and revokes

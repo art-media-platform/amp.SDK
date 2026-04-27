@@ -86,12 +86,14 @@ tags Attr {
             ChannelTypeNotes        "Notes"
             ChannelTypeMap          "Map"
             ChannelTypeGlobe        "Globe"
+            ChannelTypeManifold     "Manifold"
             ChannelTypeSpace        "Space"
             ChannelTypeLinks        "Links"
             ChannelTypeRegistry     "Registry"
             ChannelTypeSystem       "System"
             ChannelTypeWeb          "Web"
             ChannelTypeCrateManager "CrateManager"
+            ChannelTypePlaylist     "Playlist"
         }
     }
 
