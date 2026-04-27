@@ -547,8 +547,12 @@ message PlanetEpoch {
     // Points to a Node whose attrs enumerate discoverable channels and content.
     Tag                 Index = 31;
 
-    // Planet glyph or icon reference (e.g. asset URI, emoji, or content-type tag).
-    Tag                 Glyph = 32;
+    // Planet glyph — a Tags tree of visual variants (size, theme, density,
+    // content-type).  Consumers (WebRect / Vuplex / native UI / terminal)
+    // walk SubTags and pick the variant best suited to the rendering surface.
+    // Same shape as the HTML <picture> element: Head describes the family;
+    // each SubTag carries a URI + ContentType + I,J,K dimensions + Units.
+    Tags                Glyph = 32;
 
     // Human-readable description of this planet.
     string              About = 33;
@@ -692,6 +696,22 @@ message MemberEpoch {
     // that informed the decision — making every governance act reviewable and
     // appealable.  Empty for routine epochs (e.g. initial Active, key rotation).
     repeated Citation Cites = 20;
+
+    // Substrate-agnostic Kind, addressed by Tag.  The Tag's UID resolves to a
+    // LawMemberKind_* definition in amp.consts.sdl (or any community/app's
+    // consts).  Zero UID = unspecified.  Protocol does not gate behavior on
+    // Kind — it is a label for downstream readers (UI, governance, ledger
+    // filters), not a privilege class.  See PRD §5 (Membership).
+    Tag                 Kind = 33;
+
+    // Self-signed claim of identity continuation from prior identities.
+    // Cross-planet Citations supported (and typical) — a being's lineage
+    // often spans planets (personal → family-of-origin → cultural → spiritual).
+    // The claim is the member's own; the protocol records, communities decide
+    // what weight to honor.  Multiple cites express composite lineage
+    // (ensembles descending from multiple prior identities; AI agents trained
+    // on multiple ancestor chronicles; reconstituted backups).
+    repeated Citation   ContinuesFrom = 34;
 }
 
 
@@ -744,22 +764,110 @@ message Attestation {
 
     // Optional free-text rationale.  Not cryptographic; for human review.
     string              Rationale = 15;
+
+    // Modality of the claim, addressed by Tag.  The Tag's UID resolves to a
+    // LawAttestationModality_* definition in amp.consts.sdl (or any
+    // community/app's consts).  Zero UID = unspecified.  Modality is
+    // categorical (what kind of utterance), not gradational (how confident).
+    // See PRD §6 / DESIGN-13 for the canonical modalities.
+    Tag                 Modality = 16;
 }
 
 
-// Citation points to a specific Attestation from within a decision record.
-// Decisions (MemberEpoch suspensions, ChannelEpoch closures, etc.) embed
-// citations to make their basis auditable.  Readers resolve (ChannelID, ItemID)
-// to the original Attestation and independently verify the cited evidence.
+// Citation points to a specific item — typically an Attestation, but any
+// addressable record — by its (PlanetID, NodeID, ItemID) triple.  Readers
+// resolve and independently verify the cited evidence.
+//
+// Cross-planet citations are first-class: PlanetID = zero UID is the
+// convention for "this planet" (the planet of the TxMsg containing the
+// Citation), preserving the common case where citations refer to local
+// records.  Non-zero PlanetID addresses any planet a reader can reach.
+//
+// NodeID is general — a channel UID, the planet head, or any node in the
+// CRDT tree.  Channels are nodes; the planet's amp.ledger is a node.
 message Citation {
 
-    // Channel the cited Attestation lives in (typically the planet's amp.ledger).
-    fixed64             ChannelID_0 = 1;
-    fixed64             ChannelID_1 = 2;
+    // Node containing the cited record.
+    fixed64             NodeID_0 = 1;
+    fixed64             NodeID_1 = 2;
 
-    // CRDT item ID of the cited Attestation within that channel.
+    // CRDT item ID of the cited record within that node.
     fixed64             ItemID_0 = 4;
     fixed64             ItemID_1 = 5;
+
+    // Planet the cited record lives in.  Zero UID = "this planet"
+    // (the planet of the TxMsg containing this Citation).  Non-zero
+    // addresses any reachable planet for cross-planet composition.
+    fixed64             PlanetID_0 = 6;
+    fixed64             PlanetID_1 = 7;
+}
+
+
+// Equivalence is a self-attested claim that two addresses refer to the same
+// underlying thing in a stated context.  Non-collapsing: addresses remain
+// distinct; readers compose equivalence chains and decide what to honor.
+//
+// Use cases: translations of the same text, cultural-frame mappings of the
+// same role/rite, substrate migration (biological → upload), bridging amp
+// MemberIDs to external identity spaces (e.g. Stripe customer IDs).  See
+// DESIGN-14.
+message Equivalence {
+
+    // The two addresses being equated.  Order is insignificant — the relation
+    // is symmetric (A ≈ B iff B ≈ A); canonical encoding sorts before hashing.
+    Tag                 LeftAddress = 1;
+    Tag                 RightAddress = 2;
+
+    // Context of equivalence.  Free-form Tag identifying the frame.  Examples:
+    // a translation tag, a cultural-frame tag, a substrate-mapping tag, a
+    // software-migration tag.  Zero UID = "in general" (strongest claim).
+    Tag                 Context = 5;
+
+    // Strength of the equivalence claim, addressed by Tag.  Resolves to a
+    // LawEquivalenceStrength_* definition (Identity / Translation /
+    // Approximate / Analogous).  Zero UID = unspecified.
+    Tag                 Strength = 8;
+
+    // Free-text rationale for human / future-being readers.
+    string              Rationale = 15;
+}
+
+
+// Withdraw is a self-signed claim that the signer no longer consents to the
+// cited records being treated as authoritative representations of them.
+//
+// NON-ENFORCING: chronicles are immutable; the original records remain
+// signed and present.  Withdraw is a parallel signed signal that readers
+// MUST surface alongside the original record.  Whether to honor the
+// withdrawal — by suppression, redaction, or recontextualization — is a
+// per-app, per-community, per-jurisdiction choice the protocol does not
+// adjudicate.  See DESIGN-15.
+//
+// Authority: Subject MUST equal the signer of the containing TxMsg, OR be
+// a member who has explicitly delegated withdrawal authority to the signer
+// (Memorial speaking for deceased predecessor, etc.) — proven via the
+// Delegation citation.
+message Withdraw {
+
+    // Subject — the entity whose consent is being withdrawn.
+    Tag                 Subject = 1;
+
+    // Citations of the records consent is being withdrawn from.  Cross-planet
+    // citations supported.
+    repeated Citation   Withdrawn = 4;
+
+    // Reason for withdrawal, addressed by Tag.  Resolves to a LawWithdrawReason_*
+    // definition (Consent / Inaccuracy / Outdated / Coerced / Forgotten /
+    // Departed / InviteRecall / Retracted).  Zero UID = unspecified.
+    Tag                 Reason = 6;
+
+    // Optional delegation citation — proves the signer's authority to withdraw
+    // on behalf of Subject when Subject != signer.  Zero (no Citation set)
+    // when Subject == signer.
+    Citation            Delegation = 8;
+
+    // Free-text rationale.
+    string              Rationale = 15;
 }
 
 
@@ -816,13 +924,17 @@ message PlanetInviteOp {
 
 
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
-// Exactly one of the oneof fields is set per message.
+// Exactly one of the body fields is set per message — peers detect by nil pointer.
+//
+// amp protos forbid `oneof` (see PRD-guidelines.md): variant ordering / encoding
+// has subtle implementation differences across protobuf libraries, and removing
+// the construct keeps proto.Marshal{Deterministic} bit-stable across impls.
+// The discriminator-by-presence pattern below has the same wire shape benefit
+// (only the populated field is serialized) without the oneof's downsides.
 message SyncMsg {
-    oneof Body {
-        SyncWatchList    WatchList    = 1;
-        SyncRangeOffer   RangeOffer   = 2;
-        SyncRangeRequest RangeRequest = 3;
-    }
+    SyncWatchList    WatchList    = 1;
+    SyncRangeOffer   RangeOffer   = 2;
+    SyncRangeRequest RangeRequest = 3;
 }
 
 // SyncWatchList announces which planets a peer has data for, with high-water marks.

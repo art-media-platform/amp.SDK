@@ -102,6 +102,59 @@ tags Attr {
         LawMemberEpoch  "MemberEpoch"
         LawChannelEpoch "ChannelEpoch"
         LawPlanetAnchor "PlanetAnchor"
+        LawEquivalence  "Equivalence"
+        LawWithdraw     "Withdraw"
+
+        // Substrate-agnostic Member Kind (DESIGN-11).  MemberEpoch.Kind is a Tag
+        // resolving to one of these UIDs.  Communities + apps may register
+        // additional Kinds in their own consts.sdl.  Zero UID = unspecified.
+        LawMemberKind "MemberKind" {
+            LawMemberKind_Person     "Person"
+            LawMemberKind_Group      "Group"
+            LawMemberKind_Agent      "Agent"
+            LawMemberKind_Instance   "Instance"
+            LawMemberKind_Successor  "Successor"
+            LawMemberKind_Memorial   "Memorial"
+            LawMemberKind_Process    "Process"
+        }
+
+        // Modal Attestation modalities (DESIGN-13).  Attestation.Modality is a
+        // Tag resolving to one of these UIDs.  Communities + apps may register
+        // additional modalities.  Zero UID = unspecified.
+        LawAttestationModality "AttestationModality" {
+            LawAttestationModality_Asserted    "Asserted"
+            LawAttestationModality_Witnessed   "Witnessed"
+            LawAttestationModality_Reported    "Reported"
+            LawAttestationModality_Inferred    "Inferred"
+            LawAttestationModality_Speculated  "Speculated"
+            LawAttestationModality_Dreamed     "Dreamed"
+            LawAttestationModality_Liturgical  "Liturgical"
+            LawAttestationModality_Conditional "Conditional"
+            LawAttestationModality_Contested   "Contested"
+            LawAttestationModality_Retracted   "Retracted"
+        }
+
+        // Equivalence strengths (DESIGN-14).  Equivalence.Strength is a Tag
+        // resolving to one of these UIDs.  Zero UID = unspecified.
+        LawEquivalenceStrength "EquivalenceStrength" {
+            LawEquivalenceStrength_Identity    "Identity"
+            LawEquivalenceStrength_Translation "Translation"
+            LawEquivalenceStrength_Approximate "Approximate"
+            LawEquivalenceStrength_Analogous   "Analogous"
+        }
+
+        // Withdrawal reasons (DESIGN-15).  Withdraw.Reason is a Tag resolving
+        // to one of these UIDs.  Zero UID = unspecified.
+        LawWithdrawReason "WithdrawReason" {
+            LawWithdrawReason_Consent      "Consent"
+            LawWithdrawReason_Inaccuracy   "Inaccuracy"
+            LawWithdrawReason_Outdated     "Outdated"
+            LawWithdrawReason_Coerced      "Coerced"
+            LawWithdrawReason_Forgotten    "Forgotten"
+            LawWithdrawReason_Departed     "Departed"
+            LawWithdrawReason_InviteRecall "InviteRecall"
+            LawWithdrawReason_Retracted    "Retracted"
+        }
     }
 
     // Planet ledger — durable record of observations and citations.

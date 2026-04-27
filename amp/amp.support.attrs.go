@@ -214,21 +214,24 @@ func (epoch *PlanetEpoch) EffectiveCryptoKit() safe.CryptoKitID {
 	return epoch.CryptoKitID
 }
 
-// CanonicalBytes returns the deterministic wire encoding of this PlanetEpoch
-// with the Signatures and Witnesses fields cleared. This is the exact payload
-// that each co-signer (and each witness) passes to CryptoKit.Sign and that
-// verifiers pass to CryptoKit.Verify.
+// CanonicalBytes returns the deterministic canonical encoding of this PlanetEpoch
+// with Signatures and Witnesses excluded.  This is the exact payload each
+// co-signer (and each witness) passes to CryptoKit.Sign and that verifiers
+// pass to CryptoKit.Verify.
 //
-// Signatures are excluded so quorum members can add their signatures
-// incrementally without invalidating earlier ones.  Witnesses are excluded so
-// attestors can be appended after-the-fact without re-signing the quorum.
-// Declaration, GovernanceGroup, RequiredSignatures, and all governance fields
-// ARE included — those are the founding terms under which everyone commits.
+// Cross-implementation stability: amp protos forbid `map<>` and `oneof` (see
+// PRD-guidelines.md).  Under that constraint, proto.MarshalOptions{Deterministic}
+// produces bit-identical output across every major protobuf implementation —
+// the issues that motivate hand-rolled canonical encoders (map iteration order,
+// oneof variant ambiguity, unknown-field passthrough) cannot occur.  The golden-
+// hex fixture test in planet_epoch_canonical_test.go locks the byte layout for
+// regression purposes; any encoding change fails the fixture and forces review.
 //
-// Each CryptoKit handles its own hashing convention (e.g. Ed25519 uses HashEdDSA;
-// ECDSA kits hash internally with their suite's hash; Ethereum secp256k1 adds the
-// EIP-191 prefix). The canonical byte sequence is identical across suites, which
-// is what enables mixed-suite quorums.
+// Signatures are excluded so quorum members can add signatures incrementally
+// without invalidating earlier ones.  Witnesses are excluded so attestors can be
+// appended after-the-fact without re-signing the quorum.  Declaration,
+// GovernanceGroup, RequiredSignatures, and all governance fields ARE included —
+// those are the founding terms under which everyone commits.
 func (epoch *PlanetEpoch) CanonicalBytes() ([]byte, error) {
 	if epoch == nil {
 		return nil, status.Code_BadRequest.Error("amp: nil PlanetEpoch")
@@ -236,8 +239,7 @@ func (epoch *PlanetEpoch) CanonicalBytes() ([]byte, error) {
 	clone := proto.Clone(epoch).(*PlanetEpoch)
 	clone.Signatures = nil
 	clone.Witnesses = nil
-	marshalOpts := proto.MarshalOptions{Deterministic: true}
-	return marshalOpts.Marshal(clone)
+	return proto.MarshalOptions{Deterministic: true}.Marshal(clone)
 }
 
 // VerifyCoSignature checks that cosig is a valid signature over this epoch's
