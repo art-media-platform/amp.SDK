@@ -1,5 +1,5 @@
-                               amp.tags.v500  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  6T5WC3FJN230786XR4C7ZZTFPR   amp.tags.v500.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                               amp.tags.v220  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+  3X7GFHVUP88CGWHJ97ZUY4PDH3   amp.tags.v220.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                Hello World!
   7K4XGBQ7879D4F228U0CU1N627   hello.world
@@ -99,14 +99,18 @@
                                plan.tools.spaces
   6489TXSFTM8BVH9ZRXS81D9URV   plan.tools.spaces
 
-                               Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is.
-  38V9J7V8KCBVNV1MJ99FFGW1QN   tag.names.have.two.halves.left.of.the.first/, :, or \ is the "name" part — cleaned up into canonic dotted form.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is.
+                               Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form, with all-caps preservation dropped because URL schemes are case-insensitive per RFC 3986 §3.1.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
+  3JRH3CWBHU0F9WGM0XT7PUUEES   tag.names.have.two.halves.left.of.the.first/, :, or \ is the "name" part — cleaned up into canonic dotted form, with all-caps preservation dropped because URL schemes are case-insensitive per RFC 3986 §3.1.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
 
                                https://example.com/path
   6Z5W459BQ5920KPEK38029800H   https://example.com/path
-                               HTTPS://Example.com/Path
-  6PKZW229X5Z6376XQM4B020K3N   HTTPS://Example.com/Path
+                               HTTPS://example.com/path
+  6Z5W459BQ5920KPEK38029800H   https://example.com/path
                                amp://planet/home
+  4VJUYXH6QFNPUF6CKPR8UN2B0M   amp://planet/home
+                               Amp://planet/home
+  4VJUYXH6QFNPUF6CKPR8UN2B0M   amp://planet/home
+                               AMP://planet/home
   4VJUYXH6QFNPUF6CKPR8UN2B0M   amp://planet/home
                                file:///var/log/app.log
   7497KU7GU6N9HZ8FXRD6XV1PJ5   file:///var/log/app.log
@@ -125,5 +129,23 @@
   47G6T4CFKP3F6W038UZP0140GY   my.app.amp://planet/home
                                  trimmed  amp://x
   30B2K165HPSTQMT4KQGG6006SH   trimmed.amp://x
+
+                               Identity-from-canonical-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
+  72ZD0YE2S62PPNKB2WM6T9TJEK   identity.from.canonical.text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
+                               eth:0xabcdef1234567890abcdef1234567890abcdef12
+  18GU1XEBFP8B7ETR7NU4RCCBJ4   eth:0xabcdef1234567890abcdef1234567890abcdef12
+                               Eth:0xabcdef1234567890abcdef1234567890abcdef12
+  18GU1XEBFP8B7ETR7NU4RCCBJ4   eth:0xabcdef1234567890abcdef1234567890abcdef12
+                               ETH:0xabcdef1234567890abcdef1234567890abcdef12
+  18GU1XEBFP8B7ETR7NU4RCCBJ4   eth:0xabcdef1234567890abcdef1234567890abcdef12
+
+                               Mixed-case input becomes a different UID unless lowercased — the URL part is exact-as-is by design.  Lowercase the identifier before parsing:
+  0K0YJDNFU9EEBT41FEQH9F112K   mixed.case.input.becomes.a.different.uid.unless.lowercased.—.the.url.part.is.exact.as.is.by.design.lowercase.the.identifier.before.parsing:
+                               eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+  52PVDWU39P1R6KM27N5C48NK76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+                               Eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+  52PVDWU39P1R6KM27N5C48NK76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+                               ETH:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+  52PVDWU39P1R6KM27N5C48NK76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
 
 

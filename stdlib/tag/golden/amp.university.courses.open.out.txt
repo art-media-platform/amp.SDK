@@ -1,5 +1,5 @@
-                               amp.tags.v500  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  6T5WC3FJN230786XR4C7ZZTFPR   amp.tags.v500.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                               amp.tags.v220  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+  3X7GFHVUP88CGWHJ97ZUY4PDH3   amp.tags.v220.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                amp.university.open.courses
   2PSQUSVECVUMHCJSFMS43TQYTX   amp.university.open.courses
@@ -15,17 +15,17 @@
                                	L02.Planetary Motion and Numerical Computation & Modeling
   5EB8QTXS9M93MHR80EBF09F683   L02.planetary.motion.and.numerical.computation.modeling
                                	L03.A New Science 1: Introduction to cryptography, code breaking, and war fighting
-  00X03ZN90B077HRD685N7RZK0D   L03.a.new.science.1: Introduction to cryptography, code breaking, and war fighting
+  4G26R5WJ0UYTXCHRZZRBVQ63MP   l03.a.new.science.1: Introduction to cryptography, code breaking, and war fighting
                                	L04.A New Science 2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
-  43KSRFRTEKS9MPRZTQKXM8JNHY   L04.a.new.science.2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
+  0YT5F9MHVT363T89D10M6GV39F   l04.a.new.science.2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
                                	L05.A New Science 3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
-  0VFEEQ0EDGUJC84F6RYSJMY124   L05.a.new.science.3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
+  79YKBZ1V1M100K8NXQJB6XC7UG   l05.a.new.science.3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
                                	L06.A New Science 4: Community-Centric systems
-  5UBWVDUQ6TCEUQH398V6VQ344R   L06.a.new.science.4: Community-Centric systems
+  12W3H77P7Z3ME5UE2NM14K4F3C   l06.a.new.science.4: Community-Centric systems
                                	L07.Physics Unbound 1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
-  37GSUWRWPEDPG3R26KPBEEZ71S   L07.physics.unbound.1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
+  13EEY6PWDU397GBKE0WCX555ZJ   l07.physics.unbound.1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
                                	L08.Physics Unbound 2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
-  0UQGV6NH419S8G2T3TM57UH6CD   L08.physics.unbound.2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
+  5ZWE8TFP316ZZFN6PR2JP8CFCC   l08.physics.unbound.2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
 
 
 

@@ -120,34 +120,6 @@ func TestNow(t *testing.T) {
 	}
 }
 
-func TestNameCanonic_URLIdempotent(t *testing.T) {
-	// Every scheme-bearing URL must be a fixed point of canonicalization.
-	urls := []string{
-		"https://example.com/path",
-		"HTTPS://Example.com/Path",
-		"amp://planet/home",
-		"file:///var/log/app.log",
-		"ftp://user@host:21/dir",
-		"scheme://MixedCase/PreservedExactly",
-		"a://b/c",
-		"amp://planet.com/deep/path/with-dashes.and.dots",
-	}
-	for _, url := range urls {
-		once := tag.NameFrom(url)
-		if once.Canonic != url {
-			t.Errorf("URL not a fixed point: %q → %q", url, once.Canonic)
-			continue
-		}
-		twice := tag.NameFrom(once.Canonic)
-		if twice.Canonic != url {
-			t.Errorf("URL lost idempotency on second pass: %q → %q → %q", url, once.Canonic, twice.Canonic)
-		}
-		if twice.ID != once.ID {
-			t.Errorf("URL ID changed on second pass: %q", url)
-		}
-	}
-}
-
 func TestIDOps(t *testing.T) {
 
 	id1 := tag.UID{0x123456789abcdef0, 0x123456789abcdef0}

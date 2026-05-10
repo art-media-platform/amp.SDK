@@ -57,11 +57,13 @@ said a drill, is this not Yoda?
 spaces.plan.tools
 plan.tools.spaces
 
-Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is.
+Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form, with all-caps preservation dropped because URL schemes are case-insensitive per RFC 3986 §3.1.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
 
 https://example.com/path
-HTTPS://Example.com/Path
+HTTPS://example.com/path
 amp://planet/home
+Amp://planet/home
+AMP://planet/home
 file:///var/log/app.log
 ftp://user@host:21/dir
 scheme://MixedCase/PreservedExactly
@@ -71,4 +73,14 @@ Words left of the URL get canonized; the URL stays exact.
 hello world https://foo.com
 My App amp://planet/home
   trimmed  amp://x
+
+Identity-from-canonical-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
+eth:0xabcdef1234567890abcdef1234567890abcdef12
+Eth:0xabcdef1234567890abcdef1234567890abcdef12
+ETH:0xabcdef1234567890abcdef1234567890abcdef12
+
+Mixed-case input becomes a different UID unless lowercased — the URL part is exact-as-is by design.  Lowercase the identifier before parsing:
+eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+Eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+ETH:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
 

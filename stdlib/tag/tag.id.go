@@ -66,14 +66,23 @@ func (name Name) IsWildcard() bool {
 // Canonicalization rule — the two halves:
 //
 //  1. Left of the first `/`, `:`, or `\` is the *name* part: split into words
-//     by whitespace and punctuation, lowercased (unless fully uppercase like
-//     USA), joined with `.`.  Each word hashes into the ID commutatively.
+//     by whitespace and punctuation, lowercased, joined with `.`.  Each word
+//     hashes into the ID commutatively.  In *natural-text* mode (no URL
+//     trigger char anywhere), fully uppercase tokens like USA / NBA / YMCA
+//     are preserved as-is so spoken acronyms keep their identity.  In *URL*
+//     mode (the expression contains `:` / `/` / `\`), the all-caps
+//     preservation is dropped — every name-part word lowercases.  This
+//     matches RFC 3986 §3.1: URL schemes are case-insensitive, canonical
+//     form is lowercase, so `HTTP://x` ≡ `http://x` and `ETH:0xabc` ≡
+//     `eth:0xabc`.
 //
 //  2. From the first `/`, `:`, or `\` onward is the *URL* part: kept exactly
-//     as-is, hashed as a single atomic literal.
+//     as-is, hashed as a single atomic literal.  RFC 3986 leaves path/query
+//     case-sensitivity to the scheme owner, so we preserve verbatim.
 //
 // Property: any string containing a URL-trigger char is a fixed point of
-// canonicalization — `NameFrom(s).Canonic == s` for scheme-bearing URLs.
+// canonicalization — `NameFrom(s).Canonic == s` for scheme-bearing URLs
+// whose scheme is already lowercase.
 //
 // Note: if name.Canonic already ends in a URL part, calling .With() with more
 // words produces a canonic string that does not round-trip through NameFrom.
@@ -121,9 +130,12 @@ func (name Name) With(expr string) Name {
 			end += i
 		}
 
-		// fully capitalized literals remain upper case, e.g. USA, YMCA
+		// In natural-text mode, fully capitalized literals remain upper case
+		// (USA, YMCA) so spoken acronyms keep identity.  In URL mode every
+		// name-part word lowercases — URL schemes are case-insensitive per
+		// RFC 3986 §3.1, canonical form is lowercase.
 		term := namePart[i:end]
-		if utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
+		if urlPart != "" || utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
 			term = strings.ToLower(term)
 		}
 
@@ -212,12 +224,14 @@ func UID_FromUUID(uuid uuid.UUID) UID {
 	return id
 }
 
-// Returns the tag.UID formed by the hash the given string as a byte array.
-func UID_HashString(literal string) UID {
-	return UID_HashLiteral([]byte(literal))
-}
-
 // Returns the tag.UID formed by the hash of the given byte string exactly.
+//
+// Hashes the literal as a single atomic value — no canonicalization, no
+// commutative fold.  Use for opaque-bytes identity (content hashes, raw
+// blob digests, fixed-format binary tokens).  For human-readable text or
+// scheme:identifier expressions where canonicalization is the point, use
+// tag.NameFrom — it routes through the same hash but applies the canonic
+// word fold (and the URL-part rule when the expression contains :, /, \).
 func UID_HashLiteral(literal []byte) UID {
 
 	// hardwire {} / "" / {}byte / null / nil => (0,0,0)
