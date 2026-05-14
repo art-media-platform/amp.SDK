@@ -527,6 +527,42 @@ func (id UID) GoString() string {
 	return id.Base32()
 }
 
+// MarshalJSON encodes a UID as a quoted base32 string.  The zero UID
+// marshals as the empty string, NOT JSON null — preserves round-trip
+// equality and avoids forcing every wire-side struct field to be a
+// pointer.
+func (id UID) MarshalJSON() ([]byte, error) {
+	if id.IsNil() {
+		return []byte(`""`), nil
+	}
+	out := make([]byte, 0, UID_Base32Length+2)
+	out = append(out, '"')
+	out = append(out, id.Base32()...)
+	out = append(out, '"')
+	return out, nil
+}
+
+// UnmarshalJSON decodes a quoted base32 (or canonic name expression) into
+// a UID via Parse — so an inbound base32 UID round-trips intact instead of
+// being re-hashed by NameFrom-style canonicalization.  null and "" both
+// decode to the zero UID.
+func (id *UID) UnmarshalJSON(b []byte) error {
+	if len(b) == 0 || string(b) == "null" {
+		*id = UID{}
+		return nil
+	}
+	if len(b) < 2 || b[0] != '"' || b[len(b)-1] != '"' {
+		return fmt.Errorf("tag.UID: expected quoted string, got %q", b)
+	}
+	s := string(b[1 : len(b)-1])
+	if s == "" {
+		*id = UID{}
+		return nil
+	}
+	*id = ParseUID(s)
+	return nil
+}
+
 func (id UID) Unix() int64 {
 	return int64(id[0] >> 16) // drop 16 bits of fixed precision
 }
@@ -563,8 +599,7 @@ func (id UID) IsWildcard() bool {
 
 // Returns true if this UID is non-nil and valid and less than UID.MaxID()
 func (id UID) IsSet() bool {
-	return (id[0] != 0 || id[1] != 0) &&
-		(id[0] < UID_0_Max || id[1] <= UID_1_Max)
+	return (id[0] != 0 || id[1] != 0) && (id[0] < UID_0_Max || id[1] <= UID_1_Max)
 }
 
 func (id UID) IsNil() bool {
