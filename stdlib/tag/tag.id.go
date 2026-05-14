@@ -21,25 +21,44 @@ var (
 	sSeparatorRegex = regexp.MustCompile(SeparatorRegex) // regex for tag processing
 )
 
-// Parses the given tag name or expression into its canonic form. canonic
-func NameFrom(tagName string) Name {
-	return Name{}.With(tagName)
+// Parse resolves any string into a Name, auto-detecting the format.  Use
+// this for ANY string that came from outside the program — wire, file,
+// CLI flag, user input — so an inbound base32 UID round-trips intact
+// instead of being re-hashed.
+//
+// Precedence:
+//  1. URL trigger (`:` / `/` / `\`) or canonic separator (`.`) → canonicalize.
+//  2. 26-char base32 → decode as UID.
+//  3. Anything else (bare single-word names) → canonicalize.
+//
+// Always succeeds; the error return is retained for signature stability.
+// Mirrors the C# TagName.Parse helper.
+func Parse(s string) (Name, error) {
+	if strings.IndexByte(s, CanonicSeparatorChar) >= 0 || PathStart(s) >= 0 {
+		return Name{}.With(s), nil
+	}
+	if id, err := UID_ParseBase32(s); err == nil {
+		return Name{ID: id}, nil
+	}
+	return Name{}.With(s), nil
 }
 
-// Parses the given string the best possible.
-func NameParse(tagName string) (name Name, err error) {
-	// If it contains a canonic separator or a URL-trigger char (:, /, \),
-	// interpret it as a tag name expression; otherwise try base32-UID.
-	if strings.IndexByte(tagName, CanonicSeparatorChar) >= 0 || PathStart(tagName) >= 0 {
-		name = Name{}.With(tagName)
-		return
-	}
+// ParseUID is Parse followed by .ID — for callers that only want the UID
+// and never the canonic string.
+func ParseUID(s string) UID {
+	name, _ := Parse(s)
+	return name.ID
+}
 
-	name.ID, err = UID_ParseBase32(tagName)
-	if err != nil {
-		return
-	}
-	return name, nil
+// NameFrom canonicalizes s as a tag-name expression, ALWAYS hashing — even
+// a 26-char base32 string the caller may have meant as a UID.  Use only on
+// hardcoded canonic expressions you constructed yourself (`"eth:" + addr`,
+// `"amp.member.profile"`).
+//
+// For ANY wire / file / user-input string use Parse instead — NameFrom
+// re-hashes inbound UIDs into different UIDs and the failure is silent.
+func NameFrom(s string) Name {
+	return Name{}.With(s)
 }
 
 // Returns the filename representation of the tag.

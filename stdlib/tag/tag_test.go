@@ -25,7 +25,7 @@ func TestTag(t *testing.T) {
 	if base32 != "0GDTKNTPPYH4CR023GB3GWUPZC" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
-	parsed, err := tag.NameParse(base32)
+	parsed, err := tag.Parse(base32)
 	if err != nil || parsed.ID != name.ID {
 		t.Fatalf("UID_Parse(Base32) failed: got %v, err=%v", parsed, err)
 	}

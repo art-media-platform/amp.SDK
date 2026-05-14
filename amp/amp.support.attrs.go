@@ -434,7 +434,7 @@ func (req *Request) ParseAsAddressURL() error {
 	IDs := make([]tag.UID, 0, 4)
 	for i := 1; i < len(parts); i++ { // skip verb
 		part := parts[i]
-		name, err := tag.NameParse(part)
+		name, err := tag.Parse(part)
 		if err != nil {
 			return err
 		}
