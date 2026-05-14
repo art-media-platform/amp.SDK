@@ -1016,11 +1016,11 @@ message Artifact {
     BlobRef             BlobValue = 11;
 }
 
-// PlanetAnchor is a forward-only provenance pointer recording that this planet
+// PlanetOrigin is a forward-only provenance pointer recording that this planet
 // was forked from another.  Carries no authority over this planet; the origin
 // is informational.  Stored as a planet-public attribute
-// (HeadNodeID / std.Attr.PlanetAnchor / fromPlanetID) on the fork's genesis epoch.
-message PlanetAnchor {
+// (HeadNodeID / std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
+message PlanetOrigin {
 
     // The planet this fork came from.
     Tag                 FromPlanet = 1;
@@ -1100,9 +1100,9 @@ message CodexHeader {
     // Wall-clock time of export (UTC seconds since epoch).
     int64               CodexTime = 3;
 
-    // Provenance pointer to materialize as PlanetAnchor on the importing planet's
+    // Provenance pointer to materialize as PlanetOrigin on the importing planet's
     // genesis.  Nil for external-source imports with no amp origin.
-    PlanetAnchor        Anchor = 4;
+    PlanetOrigin        Origin = 4;
 
     // Summary for pre-flight validation.
     CodexManifest       Manifest = 5;

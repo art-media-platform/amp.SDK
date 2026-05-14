@@ -78,7 +78,7 @@ var Attr = struct {
 	LawPlanetEpoch                     tag.Name
 	LawMemberEpoch                     tag.Name
 	LawChannelEpoch                    tag.Name
-	LawPlanetAnchor                    tag.Name
+	LawPlanetOrigin                    tag.Name
 	LawEquivalence                     tag.Name
 	LawWithdraw                        tag.Name
 	LawMemberKind                      tag.Name
@@ -225,7 +225,7 @@ var Attr = struct {
 	LawPlanetEpoch                    : tag.Name{ID: tag.UID{0x1F67C9B597E414E8, 0xCEAE92B0564C39A1}, Canonic: "amp.law.planetepoch"},                      // 0ZDZ4VC5Z42MNDXCNKQ1C4SFE1
 	LawMemberEpoch                    : tag.Name{ID: tag.UID{0x96B7D6C54AE02FFF, 0x56CE2364C1EA2A97}, Canonic: "amp.law.memberepoch"},                      // 4QQZCDBKR05ZZPEMJ3DM0YNBNR
 	LawChannelEpoch                   : tag.Name{ID: tag.UID{0x4C93CBA8ACCFFA49, 0xB2D812294EFA8719}, Canonic: "amp.law.channelepoch"},                     // 2DKG5UJC6GZ94V5Q0K557GP1ST
-	LawPlanetAnchor                   : tag.Name{ID: tag.UID{0x16E23CE313AB5C5C, 0x21E8028EBF86EA61}, Canonic: "amp.law.planetanchor"},                     // 0QW8YF64XCCJF23U02JUZSEUM1
+	LawPlanetOrigin                   : tag.Name{ID: tag.UID{0xA2719A97FD44184D, 0x3C7C0A96E3AE19C4}, Canonic: "amp.law.planetorigin"},                     // 52F6E9GZB4316MSZ0BKVJUW6F4
 	LawEquivalence                    : tag.Name{ID: tag.UID{0x5B3A403415CF9D8A, 0x5A9DE58F26B43783}, Canonic: "amp.law.equivalence"},                      // 2V790385FGMQ55P7G5JWMC8EW3
 	LawWithdraw                       : tag.Name{ID: tag.UID{0x29E5A9FB53899CA0, 0xC11BE5588C2AB183}, Canonic: "amp.law.withdraw"},                         // 19WQNZQNW9MKHD26Z5C262PDD3
 	// Substrate-agnostic Member Kind (DESIGN-11).  MemberEpoch.Kind is a Tag

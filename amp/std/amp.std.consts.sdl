@@ -104,7 +104,7 @@ tags Attr {
         LawPlanetEpoch  "PlanetEpoch"
         LawMemberEpoch  "MemberEpoch"
         LawChannelEpoch "ChannelEpoch"
-        LawPlanetAnchor "PlanetAnchor"
+        LawPlanetOrigin "PlanetOrigin"
         LawEquivalence  "Equivalence"
         LawWithdraw     "Withdraw"
 

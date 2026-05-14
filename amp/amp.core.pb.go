@@ -4010,11 +4010,11 @@ func (x *Artifact) GetBlobValue() *BlobRef {
 	return nil
 }
 
-// PlanetAnchor is a forward-only provenance pointer recording that this planet
+// PlanetOrigin is a forward-only provenance pointer recording that this planet
 // was forked from another.  Carries no authority over this planet; the origin
 // is informational.  Stored as a planet-public attribute
-// (HeadNodeID / std.Attr.PlanetAnchor / fromPlanetID) on the fork's genesis epoch.
-type PlanetAnchor struct {
+// (HeadNodeID / std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
+type PlanetOrigin struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The planet this fork came from.
 	FromPlanet *Tag `protobuf:"bytes,1,opt,name=FromPlanet,proto3" json:"FromPlanet,omitempty"`
@@ -4034,20 +4034,20 @@ type PlanetAnchor struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *PlanetAnchor) Reset() {
-	*x = PlanetAnchor{}
+func (x *PlanetOrigin) Reset() {
+	*x = PlanetOrigin{}
 	mi := &file_amp_amp_core_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *PlanetAnchor) String() string {
+func (x *PlanetOrigin) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PlanetAnchor) ProtoMessage() {}
+func (*PlanetOrigin) ProtoMessage() {}
 
-func (x *PlanetAnchor) ProtoReflect() protoreflect.Message {
+func (x *PlanetOrigin) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_amp_core_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4059,54 +4059,54 @@ func (x *PlanetAnchor) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PlanetAnchor.ProtoReflect.Descriptor instead.
-func (*PlanetAnchor) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanetOrigin.ProtoReflect.Descriptor instead.
+func (*PlanetOrigin) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *PlanetAnchor) GetFromPlanet() *Tag {
+func (x *PlanetOrigin) GetFromPlanet() *Tag {
 	if x != nil {
 		return x.FromPlanet
 	}
 	return nil
 }
 
-func (x *PlanetAnchor) GetFromEpoch() *Tag {
+func (x *PlanetOrigin) GetFromEpoch() *Tag {
 	if x != nil {
 		return x.FromEpoch
 	}
 	return nil
 }
 
-func (x *PlanetAnchor) GetFromChronicleHead_0() uint64 {
+func (x *PlanetOrigin) GetFromChronicleHead_0() uint64 {
 	if x != nil {
 		return x.FromChronicleHead_0
 	}
 	return 0
 }
 
-func (x *PlanetAnchor) GetFromChronicleHead_1() uint64 {
+func (x *PlanetOrigin) GetFromChronicleHead_1() uint64 {
 	if x != nil {
 		return x.FromChronicleHead_1
 	}
 	return 0
 }
 
-func (x *PlanetAnchor) GetForkTime() int64 {
+func (x *PlanetOrigin) GetForkTime() int64 {
 	if x != nil {
 		return x.ForkTime
 	}
 	return 0
 }
 
-func (x *PlanetAnchor) GetLabel() string {
+func (x *PlanetOrigin) GetLabel() string {
 	if x != nil {
 		return x.Label
 	}
 	return ""
 }
 
-func (x *PlanetAnchor) GetVersion() int32 {
+func (x *PlanetOrigin) GetVersion() int32 {
 	if x != nil {
 		return x.Version
 	}
@@ -4347,9 +4347,9 @@ type CodexHeader struct {
 	SourceEpoch *Tag `protobuf:"bytes,2,opt,name=SourceEpoch,proto3" json:"SourceEpoch,omitempty"`
 	// Wall-clock time of export (UTC seconds since epoch).
 	CodexTime int64 `protobuf:"varint,3,opt,name=CodexTime,proto3" json:"CodexTime,omitempty"`
-	// Provenance pointer to materialize as PlanetAnchor on the importing planet's
+	// Provenance pointer to materialize as PlanetOrigin on the importing planet's
 	// genesis.  Nil for external-source imports with no amp origin.
-	Anchor *PlanetAnchor `protobuf:"bytes,4,opt,name=Anchor,proto3" json:"Anchor,omitempty"`
+	Origin *PlanetOrigin `protobuf:"bytes,4,opt,name=Origin,proto3" json:"Origin,omitempty"`
 	// Summary for pre-flight validation.
 	Manifest *CodexManifest `protobuf:"bytes,5,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
 	// Optional exporter-provided label.
@@ -4409,9 +4409,9 @@ func (x *CodexHeader) GetCodexTime() int64 {
 	return 0
 }
 
-func (x *CodexHeader) GetAnchor() *PlanetAnchor {
+func (x *CodexHeader) GetOrigin() *PlanetOrigin {
 	if x != nil {
-		return x.Anchor
+		return x.Origin
 	}
 	return nil
 }
@@ -5121,7 +5121,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vInlineValue\x18\n" +
 	" \x01(\fR\vInlineValue\x12*\n" +
 	"\tBlobValue\x18\v \x01(\v2\f.amp.BlobRefR\tBlobValue\"\x8e\x02\n" +
-	"\fPlanetAnchor\x12(\n" +
+	"\fPlanetOrigin\x12(\n" +
 	"\n" +
 	"FromPlanet\x18\x01 \x01(\v2\b.amp.TagR\n" +
 	"FromPlanet\x12&\n" +
@@ -5153,7 +5153,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\fSourcePlanet\x18\x01 \x01(\v2\b.amp.TagR\fSourcePlanet\x12*\n" +
 	"\vSourceEpoch\x18\x02 \x01(\v2\b.amp.TagR\vSourceEpoch\x12\x1c\n" +
 	"\tCodexTime\x18\x03 \x01(\x03R\tCodexTime\x12)\n" +
-	"\x06Anchor\x18\x04 \x01(\v2\x11.amp.PlanetAnchorR\x06Anchor\x12.\n" +
+	"\x06Origin\x18\x04 \x01(\v2\x11.amp.PlanetOriginR\x06Origin\x12.\n" +
 	"\bManifest\x18\x05 \x01(\v2\x12.amp.CodexManifestR\bManifest\x12\x14\n" +
 	"\x05Label\x18\x06 \x01(\tR\x05Label\"\xeb\x01\n" +
 	"\x15ChronicleCompactPoint\x12\x1d\n" +
@@ -5367,7 +5367,7 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(*SyncRangeRequest)(nil),        // 45: amp.SyncRangeRequest
 	(*PeerAddr)(nil),                // 46: amp.PeerAddr
 	(*Artifact)(nil),                // 47: amp.Artifact
-	(*PlanetAnchor)(nil),            // 48: amp.PlanetAnchor
+	(*PlanetOrigin)(nil),            // 48: amp.PlanetOrigin
 	(*UIDRange)(nil),                // 49: amp.UIDRange
 	(*BlobManifestEntry)(nil),       // 50: amp.BlobManifestEntry
 	(*CodexManifest)(nil),           // 51: amp.CodexManifest
@@ -5457,12 +5457,12 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	43, // 69: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
 	12, // 70: amp.PeerAddr.Transport:type_name -> amp.TransportType
 	28, // 71: amp.Artifact.BlobValue:type_name -> amp.BlobRef
-	22, // 72: amp.PlanetAnchor.FromPlanet:type_name -> amp.Tag
-	22, // 73: amp.PlanetAnchor.FromEpoch:type_name -> amp.Tag
+	22, // 72: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
+	22, // 73: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
 	22, // 74: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
 	22, // 75: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
 	22, // 76: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
-	48, // 77: amp.CodexHeader.Anchor:type_name -> amp.PlanetAnchor
+	48, // 77: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
 	51, // 78: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
 	53, // 79: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
 	22, // 80: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
