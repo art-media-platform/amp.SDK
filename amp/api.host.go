@@ -23,6 +23,11 @@ type Host interface {
 
 	// StartNewSession creates a new host session, binding the specified Transport to it.
 	StartNewSession(parent HostService, via Transport) (Session, error)
+
+	// TxJournal returns the host's chronicle storage.  Wire-side endpoints
+	// that surface raw chronicle replays (e.g. /api/v1/.../edits) read from
+	// here; sealed planet-public TxMsgs decode via amp.OpenTx with nil crypto.
+	TxJournal() TxJournal
 }
 
 // TransportInfo describes capabilities and requirements of a Transport.
