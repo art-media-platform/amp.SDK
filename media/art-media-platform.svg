@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 134" role="img" aria-label="art.media.platform">
+  <title>art.media.platform — vertical lockup</title>
+  <g fill="currentColor">
+    <g transform="translate(140,90)">
+      <path d="M 0,-80 A 40,40 0 1,1 0,0 A 40,40 0 1,1 0,-80 Z M 0,-53.333 A 26.667,26.667 0 1,1 0,0 A 26.667,26.667 0 1,1 0,-53.333 Z" fill-rule="evenodd"/>
+      <circle cx="0" cy="-13.333" r="13.333"/>
+    </g>
+    <text x="140" y="120" text-anchor="middle" font-family="Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" font-size="16" font-weight="500" letter-spacing="-0.1">art.media.platform</text>
+  </g>
+</svg>
