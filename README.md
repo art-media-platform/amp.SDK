@@ -23,7 +23,7 @@ Your data lives on someone else's servers, encrypted with someone else's keys, s
 In crisis scenarios — natural disasters, infrastructure collapse, conflict zones — centralized platforms fail precisely when communication matters most.  Cell towers go down, internet links sever, and the tools people depend on become unreachable.
 
 
-## Planets
+## Planet
 
 The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices and any relay nodes they choose to trust.
 
@@ -45,11 +45,11 @@ Identity and key-receipt have opposing rotation needs, so AMP splits them:
 - **EncryptKey** — software-resident, cheap to rotate.  Receives sealed-box wraps of new epoch keys.  Rotated whenever the planet rotates.
 
 
-### [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) addressing
+### [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) Addressing
 
 Every piece of state has a unique [`amp.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go#L27): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is guaranteed by the [data model](https://crdt.tech/).
 
-### Epoch rotation
+### Epoch Rotation
 
 A planet's encryption key changes over time through **epoch rotation**.  When an admin rotates the epoch — to revoke a member, respond to a compromise, or as routine hygiene — a new symmetric key is generated and sealed-box-wrapped to each active member's EncryptKey.  Revoked members never receive the new key.  Historical content remains readable with old epoch keys; new content is sealed under the new epoch.  Private-channel keys derive from `HKDF(channel_epoch || planet_epoch)`, so rotating the planet implicitly invalidates all channel keys without per-channel rotation.
 
@@ -64,7 +64,7 @@ Relay nodes ("vaults") store and forward encrypted TxMsgs.  A vault verifies tha
 A planet has two portable forms with sharply different jobs:
 
 - **Chronicle** — every signed TxMsg, verbatim.  Source authority preserved.  Used for backup, offline SSD transport (hand-carry 10TB across a denied environment), and history compaction.  A new vault can replay a Chronicle and re-verify every signature with zero trust in the carrier.
-- **Codex** — resolved CRDT state, history discarded.  Authority resets on import.  Used for **Fork** (a new planet inherits state from a parent, records a `PlanetOrigin` pointer, and proceeds under its own governance) and for importing data from non-AMP sources.
+- **Codex** — resolved CRDT state, history discarded.  Authority resets on import.  Used for a **Fork** (a new planet inherits state from a parent, records a [`PlanetOrigin`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/amp.core.proto#L1023) pointer, and proceeds under its own governance) and for importing data from non-AMP sources.
 
 Forks are morally neutral — the same primitive serves a community pruning bad-faith members and a dissident escaping a captured custodian.  The protocol does not encode legitimacy.
 
@@ -117,19 +117,19 @@ Federal contractors, regulated verticals, and supply-chain-conscious vendors do 
 
 ```
 amp.Host
-  ├── vault.Controller        # journal, outbox, sync engine
-  │     └── vault.Transport   # Reticulum, TCP, UDP, ...
-  ├── vault.BlobStore         # content-addressed encrypted blobs
-  └── amp.Session             # one per connected client
-       ├── safe.Enclave       # identity keys, never leaves device
-       ├── EpochKeyStore      # symmetric epoch keys, per planet epoch
+  ├── vault.Controller         # journal, outbox, sync engine
+  │     └── vault.Transport    # Reticulum, TCP, UDP, ...
+  ├── vault.BlobStore          # content-addressed encrypted blobs
+  └── amp.Session              # one per connected client
+       ├── safe.Enclave        # identity keys, never leaves device
+       ├── safe.EpochKeyStore  # symmetric epoch keys, per planet epoch
        └── AppInstances
-            ├── app.home      # member identity, planet subscriptions
-            ├── app.members   # epoch key extraction, governance
-            ├── app.cabinets  # persistent key-value storage
-            ├── app.www       # REST / WebSocket / asset streaming
-            ├── app.codex     # Chronicle / Codex export + restore
-            └── your.app      # custom functionality
+            ├── app.home       # member identity, planet subscriptions
+            ├── app.members    # epoch key extraction, governance
+            ├── app.cabinets   # persistent key-value storage
+            ├── app.www        # REST / WebSocket / asset streaming
+            ├── app.codex      # Chronicle / Codex export + restore
+            └── your.app       # custom functionality
 ```
 
 Every long-lived object is a node in a [`task.Context`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go#L59) tree.  Closing a parent closes all children.  The host operates fully offline — sync happens opportunistically when connectivity is available.
