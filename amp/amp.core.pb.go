@@ -4183,9 +4183,9 @@ func (x *UIDRange) GetEnd_1() uint64 {
 	return 0
 }
 
-// BlobManifestEntry describes one blob in a sibling content-addressed store.
+// BlobEntry describes one blob in a sibling content-addressed store.
 // Shared between Chronicle and Codex manifests — same shape, same semantics.
-type BlobManifestEntry struct {
+type BlobEntry struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Blob identity (leading 16 bytes of plaintext hash).
 	BlobID_0 uint64 `protobuf:"fixed64,1,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
@@ -4201,20 +4201,20 @@ type BlobManifestEntry struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *BlobManifestEntry) Reset() {
-	*x = BlobManifestEntry{}
+func (x *BlobEntry) Reset() {
+	*x = BlobEntry{}
 	mi := &file_amp_amp_core_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *BlobManifestEntry) String() string {
+func (x *BlobEntry) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*BlobManifestEntry) ProtoMessage() {}
+func (*BlobEntry) ProtoMessage() {}
 
-func (x *BlobManifestEntry) ProtoReflect() protoreflect.Message {
+func (x *BlobEntry) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_amp_core_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4226,40 +4226,40 @@ func (x *BlobManifestEntry) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use BlobManifestEntry.ProtoReflect.Descriptor instead.
-func (*BlobManifestEntry) Descriptor() ([]byte, []int) {
+// Deprecated: Use BlobEntry.ProtoReflect.Descriptor instead.
+func (*BlobEntry) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{37}
 }
 
-func (x *BlobManifestEntry) GetBlobID_0() uint64 {
+func (x *BlobEntry) GetBlobID_0() uint64 {
 	if x != nil {
 		return x.BlobID_0
 	}
 	return 0
 }
 
-func (x *BlobManifestEntry) GetBlobID_1() uint64 {
+func (x *BlobEntry) GetBlobID_1() uint64 {
 	if x != nil {
 		return x.BlobID_1
 	}
 	return 0
 }
 
-func (x *BlobManifestEntry) GetSize() int64 {
+func (x *BlobEntry) GetSize() int64 {
 	if x != nil {
 		return x.Size
 	}
 	return 0
 }
 
-func (x *BlobManifestEntry) GetContentType() string {
+func (x *BlobEntry) GetContentType() string {
 	if x != nil {
 		return x.ContentType
 	}
 	return ""
 }
 
-func (x *BlobManifestEntry) GetRelativePath() string {
+func (x *BlobEntry) GetRelativePath() string {
 	if x != nil {
 		return x.RelativePath
 	}
@@ -5135,8 +5135,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\aStart_0\x18\x01 \x01(\x06R\x06Start0\x12\x17\n" +
 	"\aStart_1\x18\x02 \x01(\x06R\x06Start1\x12\x13\n" +
 	"\x05End_0\x18\x03 \x01(\x06R\x04End0\x12\x13\n" +
-	"\x05End_1\x18\x04 \x01(\x06R\x04End1\"\xa3\x01\n" +
-	"\x11BlobManifestEntry\x12\x19\n" +
+	"\x05End_1\x18\x04 \x01(\x06R\x04End1\"\x9b\x01\n" +
+	"\tBlobEntry\x12\x19\n" +
 	"\bBlobID_0\x18\x01 \x01(\x06R\aBlobID0\x12\x19\n" +
 	"\bBlobID_1\x18\x02 \x01(\x06R\aBlobID1\x12\x12\n" +
 	"\x04Size\x18\x03 \x01(\x03R\x04Size\x12 \n" +
@@ -5369,7 +5369,7 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(*Artifact)(nil),                // 47: amp.Artifact
 	(*PlanetOrigin)(nil),            // 48: amp.PlanetOrigin
 	(*UIDRange)(nil),                // 49: amp.UIDRange
-	(*BlobManifestEntry)(nil),       // 50: amp.BlobManifestEntry
+	(*BlobEntry)(nil),               // 50: amp.BlobEntry
 	(*CodexManifest)(nil),           // 51: amp.CodexManifest
 	(*CodexHeader)(nil),             // 52: amp.CodexHeader
 	(*ChronicleCompactPoint)(nil),   // 53: amp.ChronicleCompactPoint

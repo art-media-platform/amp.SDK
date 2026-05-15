@@ -1052,9 +1052,9 @@ message UIDRange {
     fixed64             End_1 = 4;
 }
 
-// BlobManifestEntry describes one blob in a sibling content-addressed store.
+// BlobEntry describes one blob in a sibling content-addressed store.
 // Shared between Chronicle and Codex manifests — same shape, same semantics.
-message BlobManifestEntry {
+message BlobEntry {
 
     // Blob identity (leading 16 bytes of plaintext hash).
     fixed64             BlobID_0 = 1;
