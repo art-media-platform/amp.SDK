@@ -74,6 +74,8 @@ var Attr = struct {
 	ChannelTypeWeb                     tag.Name
 	ChannelTypeCrateManager            tag.Name
 	ChannelTypePlaylist                tag.Name
+	ChannelTypePicker                  tag.Name
+	ChannelTypePlanetPicker            tag.Name
 	LawAttr                            tag.Name
 	LawPlanetEpoch                     tag.Name
 	LawMemberEpoch                     tag.Name
@@ -130,6 +132,8 @@ var Attr = struct {
 	BlobAttr                           tag.Name
 	BlobRef                            tag.Name
 	NodeBlobs                          tag.Name
+	TileServerAttr                     tag.Name
+	TileServer                         tag.Name
 }{
 
 	// ─── App-centric tags ───────────────────────────────────────────
@@ -216,6 +220,8 @@ var Attr = struct {
 	ChannelTypeWeb                    : tag.Name{ID: tag.UID{0x2A643F1C3CCD963B, 0x59D9F3468B72F446}, Canonic: "channel.type.web"},                               // 1BDHZJSG6EKSXPMQGM8U5R5X26
 	ChannelTypeCrateManager           : tag.Name{ID: tag.UID{0x5D245D81FEB5590D, 0x26DE9A083BD0A9A4}, Canonic: "channel.type.cratemanager"},                      // 2X4JFS3ZPPC46KERNU10XX1BE4
 	ChannelTypePlaylist               : tag.Name{ID: tag.UID{0xE0310CEA1AAEFE3D, 0xBD63DBCEACEB59F5}, Canonic: "channel.type.playlist"},                          // 70646FN6PFZSYVUSYVTUQFQQGP
+	ChannelTypePicker                 : tag.Name{ID: tag.UID{0x388DFC1023B91851, 0x586B87B08486784D}, Canonic: "channel.type.picker"},                            // 1SJRY108XT318PHUW7Q228DY2E
+	ChannelTypePlanetPicker           : tag.Name{ID: tag.UID{0x1EE0F834385DDF4E, 0xF4435CC53B1A5A11}, Canonic: "channel.type.planetpicker"},                      // 0YW3W38F2XVX7G8HUWSNXJNQHJ
 
 	// ─── Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate). ───
 	// "Law" names the role concretely: this channel grants, revises, and revokes
@@ -309,6 +315,14 @@ var Attr = struct {
 
 	BlobRef                           : tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},            // 2D3SVVXWMD9PMGN098CHYJ0Z5S
 	NodeBlobs                         : tag.Name{ID: tag.UID{0x47539BDD1AB3229D, 0xF4090FADFB02BF0B}, Canonic: "amp.blob.node.blobrefs"},  // 27BFEXU6PM4BFZ828GPRXH5GSC
+
+	// ─── Tile-server registry — list of available raster / terrain / vector ───
+	// tile backends.  Each entry is a TileServer proto stored as one item
+	// under TileServer; consumers (TileService, manifold compositor) filter
+	// by Kind / Projection / region tags to assemble a layer stack.
+	TileServerAttr                    : tag.Name{ID: tag.UID{0x77636D4C74B07A5C, 0x4E706C9C313654B1}, Canonic: "tile.server"},             // 3RDEQNSX5HG9F4WW3DMHSMDP5J
+
+	TileServer                        : tag.Name{ID: tag.UID{0xF096875D4AC9D6F1, 0x374FA1610FA629BB}, Canonic: "tile.server.tileserver"},  // 7HKU3PUKQ9UVSMFMX1D47UDBEV
 }
 
 const (
@@ -336,6 +350,20 @@ const (
 	GlyphDefaultNode   = "asset:glyph/default.node"
 	GlyphAssetNotFound = "asset:glyph/asset.not.found"
 	GlyphNewLocation   = "asset:glyph/new-location"
+)
+
+// ─── Manifold (3D globe / sphere channel) — modding override points. ───
+// Each URI resolves through the crate / asset system; a mod can register
+// an override at the same key to swap implementations without touching code.
+// 
+// TileLayers ship as prefab GameObjects (TileLayer MonoBehaviour attached);
+// loaders Instantiate as a child of GlobeInstance to enable the layer.  Mods
+// register their own layer prefab at the same URI to swap layers without
+// touching core code.
+const (
+	ManifoldDefaultTileMaterial = "asset:manifold/tile.material.default"
+	ManifoldDefaultVolumePrefab = "asset:manifold/volume.prefab.default"
+	ManifoldDebugGridTileLayer  = "asset:manifold/tile.layer.debug-grid"
 )
 
 // ─── Locus spatial binding ──────────────────────────────────────

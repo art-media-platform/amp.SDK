@@ -94,6 +94,8 @@ tags Attr {
             ChannelTypeWeb          "Web"
             ChannelTypeCrateManager "CrateManager"
             ChannelTypePlaylist     "Playlist"
+            ChannelTypePicker       "Picker"
+            ChannelTypePlanetPicker "PlanetPicker"
         }
     }
 
@@ -194,6 +196,14 @@ tags Attr {
         NodeBlobs  "node.BlobRefs"
     }
 
+    // Tile-server registry — list of available raster / terrain / vector
+    // tile backends.  Each entry is a TileServer proto stored as one item
+    // under TileServer; consumers (TileService, manifold compositor) filter
+    // by Kind / Projection / region tags to assemble a layer stack.
+    TileServerAttr "tile.server" {
+        TileServer "TileServer"
+    }
+
 }
 
 // Session-scope well-known IDs.
@@ -219,6 +229,20 @@ const Glyph {
     string DefaultNode   = "asset:glyph/default.node";
     string AssetNotFound = "asset:glyph/asset.not.found";
     string NewLocation   = "asset:glyph/new-location";
+}
+
+// Manifold (3D globe / sphere channel) — modding override points.
+// Each URI resolves through the crate / asset system; a mod can register
+// an override at the same key to swap implementations without touching code.
+//
+// TileLayers ship as prefab GameObjects (TileLayer MonoBehaviour attached);
+// loaders Instantiate as a child of GlobeInstance to enable the layer.  Mods
+// register their own layer prefab at the same URI to swap layers without
+// touching core code.
+const Manifold {
+    string DefaultTileMaterial = "asset:manifold/tile.material.default";
+    string DefaultVolumePrefab = "asset:manifold/volume.prefab.default";
+    string DebugGridTileLayer  = "asset:manifold/tile.layer.debug-grid";
 }
 
 // Locus spatial binding
