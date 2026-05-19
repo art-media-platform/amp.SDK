@@ -394,6 +394,232 @@ func (AudioFlags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{6}
 }
 
+// TileServerKind narrows what a tile backend serves so consumers can compose
+// stacks (base imagery + labels + hillshade + weather + terrain) without
+// guessing from URL strings.
+type TileServerKind int32
+
+const (
+	TileServerKind_TileServerKind_Unspecified      TileServerKind = 0
+	TileServerKind_TileServerKind_RasterImagery    TileServerKind = 1  // base map raster (e.g. OSM, satellite)
+	TileServerKind_TileServerKind_RasterLabels     TileServerKind = 2  // labels-only overlay
+	TileServerKind_TileServerKind_RasterHillshade  TileServerKind = 3  // hillshade overlay
+	TileServerKind_TileServerKind_RasterContours   TileServerKind = 4  // contour-line overlay
+	TileServerKind_TileServerKind_RasterWeather    TileServerKind = 5  // radar / clouds / precipitation
+	TileServerKind_TileServerKind_RasterTerrainRGB TileServerKind = 10 // elevation encoded into RGB (Mapbox, Terrarium)
+	TileServerKind_TileServerKind_TerrainQuantized TileServerKind = 11 // Cesium quantized-mesh terrain
+	TileServerKind_TileServerKind_VectorMVT        TileServerKind = 20 // Mapbox Vector Tiles
+)
+
+// Enum value maps for TileServerKind.
+var (
+	TileServerKind_name = map[int32]string{
+		0:  "TileServerKind_Unspecified",
+		1:  "TileServerKind_RasterImagery",
+		2:  "TileServerKind_RasterLabels",
+		3:  "TileServerKind_RasterHillshade",
+		4:  "TileServerKind_RasterContours",
+		5:  "TileServerKind_RasterWeather",
+		10: "TileServerKind_RasterTerrainRGB",
+		11: "TileServerKind_TerrainQuantized",
+		20: "TileServerKind_VectorMVT",
+	}
+	TileServerKind_value = map[string]int32{
+		"TileServerKind_Unspecified":      0,
+		"TileServerKind_RasterImagery":    1,
+		"TileServerKind_RasterLabels":     2,
+		"TileServerKind_RasterHillshade":  3,
+		"TileServerKind_RasterContours":   4,
+		"TileServerKind_RasterWeather":    5,
+		"TileServerKind_RasterTerrainRGB": 10,
+		"TileServerKind_TerrainQuantized": 11,
+		"TileServerKind_VectorMVT":        20,
+	}
+)
+
+func (x TileServerKind) Enum() *TileServerKind {
+	p := new(TileServerKind)
+	*p = x
+	return p
+}
+
+func (x TileServerKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TileServerKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[7].Descriptor()
+}
+
+func (TileServerKind) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[7]
+}
+
+func (x TileServerKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TileServerKind.Descriptor instead.
+func (TileServerKind) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{7}
+}
+
+// TileProjection identifies the cartographic projection of the tile pyramid.
+type TileProjection int32
+
+const (
+	TileProjection_TileProjection_Unspecified TileProjection = 0
+	TileProjection_TileProjection_WebMercator TileProjection = 1 // EPSG:3857 — universal slippy raster
+	TileProjection_TileProjection_Geodetic    TileProjection = 2 // EPSG:4326 (lat/lng equirect)
+)
+
+// Enum value maps for TileProjection.
+var (
+	TileProjection_name = map[int32]string{
+		0: "TileProjection_Unspecified",
+		1: "TileProjection_WebMercator",
+		2: "TileProjection_Geodetic",
+	}
+	TileProjection_value = map[string]int32{
+		"TileProjection_Unspecified": 0,
+		"TileProjection_WebMercator": 1,
+		"TileProjection_Geodetic":    2,
+	}
+)
+
+func (x TileProjection) Enum() *TileProjection {
+	p := new(TileProjection)
+	*p = x
+	return p
+}
+
+func (x TileProjection) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TileProjection) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[8].Descriptor()
+}
+
+func (TileProjection) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[8]
+}
+
+func (x TileProjection) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TileProjection.Descriptor instead.
+func (TileProjection) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{8}
+}
+
+// TileServerScheme identifies the (z, x, y) tile addressing convention.
+type TileServerScheme int32
+
+const (
+	TileServerScheme_TileServerScheme_Unspecified TileServerScheme = 0
+	TileServerScheme_TileServerScheme_XYZ_Slippy  TileServerScheme = 1 // {z}/{x}/{y}, Y from north (slippy / OSM)
+	TileServerScheme_TileServerScheme_TMS         TileServerScheme = 2 // {z}/{x}/{y}, Y from south (TMS)
+	TileServerScheme_TileServerScheme_QuadKey     TileServerScheme = 3 // Bing-style quadkey
+)
+
+// Enum value maps for TileServerScheme.
+var (
+	TileServerScheme_name = map[int32]string{
+		0: "TileServerScheme_Unspecified",
+		1: "TileServerScheme_XYZ_Slippy",
+		2: "TileServerScheme_TMS",
+		3: "TileServerScheme_QuadKey",
+	}
+	TileServerScheme_value = map[string]int32{
+		"TileServerScheme_Unspecified": 0,
+		"TileServerScheme_XYZ_Slippy":  1,
+		"TileServerScheme_TMS":         2,
+		"TileServerScheme_QuadKey":     3,
+	}
+)
+
+func (x TileServerScheme) Enum() *TileServerScheme {
+	p := new(TileServerScheme)
+	*p = x
+	return p
+}
+
+func (x TileServerScheme) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TileServerScheme) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[9].Descriptor()
+}
+
+func (TileServerScheme) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[9]
+}
+
+func (x TileServerScheme) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TileServerScheme.Descriptor instead.
+func (TileServerScheme) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{9}
+}
+
+// TileServerAuth describes how a per-tile API key is delivered.
+type TileServerAuth int32
+
+const (
+	TileServerAuth_TileServerAuth_None      TileServerAuth = 0
+	TileServerAuth_TileServerAuth_QueryKey  TileServerAuth = 1 // appended as ?<APIKeyToken>=<key>
+	TileServerAuth_TileServerAuth_HeaderKey TileServerAuth = 2 // sent in <AuthHeader>
+	TileServerAuth_TileServerAuth_Cookie    TileServerAuth = 3
+)
+
+// Enum value maps for TileServerAuth.
+var (
+	TileServerAuth_name = map[int32]string{
+		0: "TileServerAuth_None",
+		1: "TileServerAuth_QueryKey",
+		2: "TileServerAuth_HeaderKey",
+		3: "TileServerAuth_Cookie",
+	}
+	TileServerAuth_value = map[string]int32{
+		"TileServerAuth_None":      0,
+		"TileServerAuth_QueryKey":  1,
+		"TileServerAuth_HeaderKey": 2,
+		"TileServerAuth_Cookie":    3,
+	}
+)
+
+func (x TileServerAuth) Enum() *TileServerAuth {
+	p := new(TileServerAuth)
+	*p = x
+	return p
+}
+
+func (x TileServerAuth) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TileServerAuth) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[10].Descriptor()
+}
+
+func (TileServerAuth) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[10]
+}
+
+func (x TileServerAuth) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TileServerAuth.Descriptor instead.
+func (TileServerAuth) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10}
+}
+
 type GeoPath_RenderType int32
 
 const (
@@ -427,11 +653,11 @@ func (x GeoPath_RenderType) String() string {
 }
 
 func (GeoPath_RenderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[7].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[11].Descriptor()
 }
 
 func (GeoPath_RenderType) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[7]
+	return &file_amp_std_amp_std_proto_enumTypes[11]
 }
 
 func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
@@ -1762,6 +1988,202 @@ func (x *VisPreset) GetArgs() []*Arg {
 	return nil
 }
 
+// TileServer describes a Web-Mercator (or projection-tagged) tile backend.
+// Consumers (TileService and friends) use this exclusively — no provider
+// strings, no hard-coded catalogs, no custom code per provider.  Stored
+// as repeated items under std.Attr.TileServer; channel selectors filter
+// by Kind / Projection / region tags.
+type TileServer struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Stable identifier (e.g. "osm", "mapbox.streets", "stamen.toner").
+	ID string `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	// Human-readable display name.
+	Name string `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
+	// Attribution string shown on the rendered map per provider terms.
+	Attribution string `protobuf:"bytes,3,opt,name=Attribution,proto3" json:"Attribution,omitempty"`
+	// What this backend serves — drives stack composition + shader pick.
+	Kind TileServerKind `protobuf:"varint,4,opt,name=Kind,proto3,enum=std.TileServerKind" json:"Kind,omitempty"`
+	// Projection of the tile pyramid (almost always WebMercator).
+	Projection TileProjection `protobuf:"varint,5,opt,name=Projection,proto3,enum=std.TileProjection" json:"Projection,omitempty"`
+	// Y-axis convention + addressing scheme.
+	Scheme TileServerScheme `protobuf:"varint,6,opt,name=Scheme,proto3,enum=std.TileServerScheme" json:"Scheme,omitempty"`
+	// URL template; supports {z} {x} {y} {s} {access_token} {key}
+	// e.g. "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" or
+	URLTemplate string `protobuf:"bytes,10,opt,name=URLTemplate,proto3" json:"URLTemplate,omitempty"`
+	// Subdomains for {s} substitution (e.g. ["a","b","c"]).
+	Subdomains []string `protobuf:"bytes,11,rep,name=Subdomains,proto3" json:"Subdomains,omitempty"`
+	// Name of the auth-token placeholder in URLTemplate (e.g. "access_token"
+	// for "...?{access_token}").  Empty for no-auth providers.
+	APIKeyToken string `protobuf:"bytes,12,opt,name=APIKeyToken,proto3" json:"APIKeyToken,omitempty"`
+	// How the API key is delivered.
+	AuthMethod TileServerAuth `protobuf:"varint,13,opt,name=AuthMethod,proto3,enum=std.TileServerAuth" json:"AuthMethod,omitempty"`
+	// Header name when AuthMethod = HeaderKey (e.g. "Authorization", "X-API-Key").
+	AuthHeader string `protobuf:"bytes,14,opt,name=AuthHeader,proto3" json:"AuthHeader,omitempty"`
+	// Zoom range supported by the provider.
+	MinZoom int32 `protobuf:"varint,20,opt,name=MinZoom,proto3" json:"MinZoom,omitempty"`
+	MaxZoom int32 `protobuf:"varint,21,opt,name=MaxZoom,proto3" json:"MaxZoom,omitempty"`
+	// Tile pixel dimension (typically 256 or 512).  0 = unspecified, treat as 256.
+	TileSizePx int32 `protobuf:"varint,22,opt,name=TileSizePx,proto3" json:"TileSizePx,omitempty"`
+	// Per-host minimum interval between requests (provider politeness hint).
+	// 0 = unspecified.  OSM ≈ 500.
+	MinIntervalMs int32 `protobuf:"varint,23,opt,name=MinIntervalMs,proto3" json:"MinIntervalMs,omitempty"`
+	// MIME content type of returned tiles ("image/png", "image/jpeg", "application/x-protobuf").
+	ContentType string `protobuf:"bytes,30,opt,name=ContentType,proto3" json:"ContentType,omitempty"`
+	// For terrain kinds, the elevation encoding scheme ("mapbox-rgb", "terrarium").
+	ElevationEncoding string `protobuf:"bytes,31,opt,name=ElevationEncoding,proto3" json:"ElevationEncoding,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *TileServer) Reset() {
+	*x = TileServer{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TileServer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TileServer) ProtoMessage() {}
+
+func (x *TileServer) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TileServer.ProtoReflect.Descriptor instead.
+func (*TileServer) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *TileServer) GetID() string {
+	if x != nil {
+		return x.ID
+	}
+	return ""
+}
+
+func (x *TileServer) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *TileServer) GetAttribution() string {
+	if x != nil {
+		return x.Attribution
+	}
+	return ""
+}
+
+func (x *TileServer) GetKind() TileServerKind {
+	if x != nil {
+		return x.Kind
+	}
+	return TileServerKind_TileServerKind_Unspecified
+}
+
+func (x *TileServer) GetProjection() TileProjection {
+	if x != nil {
+		return x.Projection
+	}
+	return TileProjection_TileProjection_Unspecified
+}
+
+func (x *TileServer) GetScheme() TileServerScheme {
+	if x != nil {
+		return x.Scheme
+	}
+	return TileServerScheme_TileServerScheme_Unspecified
+}
+
+func (x *TileServer) GetURLTemplate() string {
+	if x != nil {
+		return x.URLTemplate
+	}
+	return ""
+}
+
+func (x *TileServer) GetSubdomains() []string {
+	if x != nil {
+		return x.Subdomains
+	}
+	return nil
+}
+
+func (x *TileServer) GetAPIKeyToken() string {
+	if x != nil {
+		return x.APIKeyToken
+	}
+	return ""
+}
+
+func (x *TileServer) GetAuthMethod() TileServerAuth {
+	if x != nil {
+		return x.AuthMethod
+	}
+	return TileServerAuth_TileServerAuth_None
+}
+
+func (x *TileServer) GetAuthHeader() string {
+	if x != nil {
+		return x.AuthHeader
+	}
+	return ""
+}
+
+func (x *TileServer) GetMinZoom() int32 {
+	if x != nil {
+		return x.MinZoom
+	}
+	return 0
+}
+
+func (x *TileServer) GetMaxZoom() int32 {
+	if x != nil {
+		return x.MaxZoom
+	}
+	return 0
+}
+
+func (x *TileServer) GetTileSizePx() int32 {
+	if x != nil {
+		return x.TileSizePx
+	}
+	return 0
+}
+
+func (x *TileServer) GetMinIntervalMs() int32 {
+	if x != nil {
+		return x.MinIntervalMs
+	}
+	return 0
+}
+
+func (x *TileServer) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *TileServer) GetElevationEncoding() string {
+	if x != nil {
+		return x.ElevationEncoding
+	}
+	return ""
+}
+
 var File_amp_std_amp_std_proto protoreflect.FileDescriptor
 
 const file_amp_std_amp_std_proto_rawDesc = "" +
@@ -1899,7 +2321,37 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	" \x01(\x02R\tAspectMin\x12\x1c\n" +
 	"\tAspectMax\x18\v \x01(\x02R\tAspectMax\x12\x1a\n" +
 	"\bAssetURI\x18\x14 \x01(\tR\bAssetURI\x12\x1c\n" +
-	"\x04Args\x18\x15 \x03(\v2\b.std.ArgR\x04Args**\n" +
+	"\x04Args\x18\x15 \x03(\v2\b.std.ArgR\x04Args\"\xe2\x04\n" +
+	"\n" +
+	"TileServer\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x12\n" +
+	"\x04Name\x18\x02 \x01(\tR\x04Name\x12 \n" +
+	"\vAttribution\x18\x03 \x01(\tR\vAttribution\x12'\n" +
+	"\x04Kind\x18\x04 \x01(\x0e2\x13.std.TileServerKindR\x04Kind\x123\n" +
+	"\n" +
+	"Projection\x18\x05 \x01(\x0e2\x13.std.TileProjectionR\n" +
+	"Projection\x12-\n" +
+	"\x06Scheme\x18\x06 \x01(\x0e2\x15.std.TileServerSchemeR\x06Scheme\x12 \n" +
+	"\vURLTemplate\x18\n" +
+	" \x01(\tR\vURLTemplate\x12\x1e\n" +
+	"\n" +
+	"Subdomains\x18\v \x03(\tR\n" +
+	"Subdomains\x12 \n" +
+	"\vAPIKeyToken\x18\f \x01(\tR\vAPIKeyToken\x123\n" +
+	"\n" +
+	"AuthMethod\x18\r \x01(\x0e2\x13.std.TileServerAuthR\n" +
+	"AuthMethod\x12\x1e\n" +
+	"\n" +
+	"AuthHeader\x18\x0e \x01(\tR\n" +
+	"AuthHeader\x12\x18\n" +
+	"\aMinZoom\x18\x14 \x01(\x05R\aMinZoom\x12\x18\n" +
+	"\aMaxZoom\x18\x15 \x01(\x05R\aMaxZoom\x12\x1e\n" +
+	"\n" +
+	"TileSizePx\x18\x16 \x01(\x05R\n" +
+	"TileSizePx\x12$\n" +
+	"\rMinIntervalMs\x18\x17 \x01(\x05R\rMinIntervalMs\x12 \n" +
+	"\vContentType\x18\x1e \x01(\tR\vContentType\x12,\n" +
+	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding**\n" +
 	"\tTRS_Flags\x12\x0e\n" +
 	"\n" +
 	"FixedScale\x10\x00\x12\r\n" +
@@ -1945,7 +2397,32 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
 	"AudioFlags\x12\x13\n" +
 	"\x0fAudioFlags_None\x10\x00\x12\x12\n" +
-	"\x0eAudioFlags_FFT\x10\x01BHZ-github.com/art-media-platform/amp.SDK/amp/std\xaa\x02\x16art.media.platform.stdb\x06proto3"
+	"\x0eAudioFlags_FFT\x10\x01*\xc4\x02\n" +
+	"\x0eTileServerKind\x12\x1e\n" +
+	"\x1aTileServerKind_Unspecified\x10\x00\x12 \n" +
+	"\x1cTileServerKind_RasterImagery\x10\x01\x12\x1f\n" +
+	"\x1bTileServerKind_RasterLabels\x10\x02\x12\"\n" +
+	"\x1eTileServerKind_RasterHillshade\x10\x03\x12!\n" +
+	"\x1dTileServerKind_RasterContours\x10\x04\x12 \n" +
+	"\x1cTileServerKind_RasterWeather\x10\x05\x12#\n" +
+	"\x1fTileServerKind_RasterTerrainRGB\x10\n" +
+	"\x12#\n" +
+	"\x1fTileServerKind_TerrainQuantized\x10\v\x12\x1c\n" +
+	"\x18TileServerKind_VectorMVT\x10\x14*m\n" +
+	"\x0eTileProjection\x12\x1e\n" +
+	"\x1aTileProjection_Unspecified\x10\x00\x12\x1e\n" +
+	"\x1aTileProjection_WebMercator\x10\x01\x12\x1b\n" +
+	"\x17TileProjection_Geodetic\x10\x02*\x8d\x01\n" +
+	"\x10TileServerScheme\x12 \n" +
+	"\x1cTileServerScheme_Unspecified\x10\x00\x12\x1f\n" +
+	"\x1bTileServerScheme_XYZ_Slippy\x10\x01\x12\x18\n" +
+	"\x14TileServerScheme_TMS\x10\x02\x12\x1c\n" +
+	"\x18TileServerScheme_QuadKey\x10\x03*\x7f\n" +
+	"\x0eTileServerAuth\x12\x17\n" +
+	"\x13TileServerAuth_None\x10\x00\x12\x1b\n" +
+	"\x17TileServerAuth_QueryKey\x10\x01\x12\x1c\n" +
+	"\x18TileServerAuth_HeaderKey\x10\x02\x12\x19\n" +
+	"\x15TileServerAuth_Cookie\x10\x03BHZ-github.com/art-media-platform/amp.SDK/amp/std\xaa\x02\x16art.media.platform.stdb\x06proto3"
 
 var (
 	file_amp_std_amp_std_proto_rawDescOnce sync.Once
@@ -1959,8 +2436,8 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 	return file_amp_std_amp_std_proto_rawDescData
 }
 
-var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 8)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),          // 0: std.TRS_Flags
 	(ValueKind)(0),          // 1: std.ValueKind
@@ -1969,53 +2446,62 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(ColormapFlags)(0),      // 4: std.ColormapFlags
 	(SensorFlags)(0),        // 5: std.SensorFlags
 	(AudioFlags)(0),         // 6: std.AudioFlags
-	(GeoPath_RenderType)(0), // 7: std.GeoPath.RenderType
-	(*TRS)(nil),             // 8: std.TRS
-	(*Matrix4X4)(nil),       // 9: std.Matrix4x4
-	(*CameraState)(nil),     // 10: std.CameraState
-	(*CameraOptions)(nil),   // 11: std.CameraOptions
-	(*FileInfo)(nil),        // 12: std.FileInfo
-	(*TextItem)(nil),        // 13: std.TextItem
-	(*JsonValue)(nil),       // 14: std.JsonValue
-	(*Report)(nil),          // 15: std.Report
-	(*Labels)(nil),          // 16: std.Labels
-	(*Rect)(nil),            // 17: std.Rect
-	(*GeoPath)(nil),         // 18: std.GeoPath
-	(*MediaItem)(nil),       // 19: std.MediaItem
-	(*Arg)(nil),             // 20: std.Arg
-	(*VisPreset)(nil),       // 21: std.VisPreset
-	(*amp.Tags)(nil),        // 22: amp.Tags
-	(*amp.Tag)(nil),         // 23: amp.Tag
+	(TileServerKind)(0),     // 7: std.TileServerKind
+	(TileProjection)(0),     // 8: std.TileProjection
+	(TileServerScheme)(0),   // 9: std.TileServerScheme
+	(TileServerAuth)(0),     // 10: std.TileServerAuth
+	(GeoPath_RenderType)(0), // 11: std.GeoPath.RenderType
+	(*TRS)(nil),             // 12: std.TRS
+	(*Matrix4X4)(nil),       // 13: std.Matrix4x4
+	(*CameraState)(nil),     // 14: std.CameraState
+	(*CameraOptions)(nil),   // 15: std.CameraOptions
+	(*FileInfo)(nil),        // 16: std.FileInfo
+	(*TextItem)(nil),        // 17: std.TextItem
+	(*JsonValue)(nil),       // 18: std.JsonValue
+	(*Report)(nil),          // 19: std.Report
+	(*Labels)(nil),          // 20: std.Labels
+	(*Rect)(nil),            // 21: std.Rect
+	(*GeoPath)(nil),         // 22: std.GeoPath
+	(*MediaItem)(nil),       // 23: std.MediaItem
+	(*Arg)(nil),             // 24: std.Arg
+	(*VisPreset)(nil),       // 25: std.VisPreset
+	(*TileServer)(nil),      // 26: std.TileServer
+	(*amp.Tags)(nil),        // 27: amp.Tags
+	(*amp.Tag)(nil),         // 28: amp.Tag
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
-	8,  // 1: std.CameraState.Placement:type_name -> std.TRS
-	22, // 2: std.TextItem.Tags:type_name -> amp.Tags
+	12, // 1: std.CameraState.Placement:type_name -> std.TRS
+	27, // 2: std.TextItem.Tags:type_name -> amp.Tags
 	1,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
-	14, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	13, // 5: std.Report.Title:type_name -> std.TextItem
-	13, // 6: std.Report.Caption:type_name -> std.TextItem
-	13, // 7: std.Report.Errors:type_name -> std.TextItem
-	13, // 8: std.Report.Warnings:type_name -> std.TextItem
-	13, // 9: std.Report.Messages:type_name -> std.TextItem
-	13, // 10: std.Report.Debug:type_name -> std.TextItem
+	18, // 4: std.JsonValue.Array:type_name -> std.JsonValue
+	17, // 5: std.Report.Title:type_name -> std.TextItem
+	17, // 6: std.Report.Caption:type_name -> std.TextItem
+	17, // 7: std.Report.Errors:type_name -> std.TextItem
+	17, // 8: std.Report.Warnings:type_name -> std.TextItem
+	17, // 9: std.Report.Messages:type_name -> std.TextItem
+	17, // 10: std.Report.Debug:type_name -> std.TextItem
 	2,  // 11: std.Rect.Format:type_name -> std.PointFormat
-	7,  // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	11, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	2,  // 13: std.GeoPath.Format:type_name -> std.PointFormat
 	3,  // 14: std.MediaItem.Flags:type_name -> std.MediaFlags
-	23, // 15: std.MediaItem.Tag:type_name -> amp.Tag
-	13, // 16: std.VisPreset.Title:type_name -> std.TextItem
-	13, // 17: std.VisPreset.Collection:type_name -> std.TextItem
-	13, // 18: std.VisPreset.Credits:type_name -> std.TextItem
+	28, // 15: std.MediaItem.Tag:type_name -> amp.Tag
+	17, // 16: std.VisPreset.Title:type_name -> std.TextItem
+	17, // 17: std.VisPreset.Collection:type_name -> std.TextItem
+	17, // 18: std.VisPreset.Credits:type_name -> std.TextItem
 	4,  // 19: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
 	5,  // 20: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
 	6,  // 21: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	20, // 22: std.VisPreset.Args:type_name -> std.Arg
-	23, // [23:23] is the sub-list for method output_type
-	23, // [23:23] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	24, // 22: std.VisPreset.Args:type_name -> std.Arg
+	7,  // 23: std.TileServer.Kind:type_name -> std.TileServerKind
+	8,  // 24: std.TileServer.Projection:type_name -> std.TileProjection
+	9,  // 25: std.TileServer.Scheme:type_name -> std.TileServerScheme
+	10, // 26: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -2028,8 +2514,8 @@ func file_amp_std_amp_std_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
-			NumEnums:      8,
-			NumMessages:   14,
+			NumEnums:      12,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

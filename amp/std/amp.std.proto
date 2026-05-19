@@ -279,3 +279,103 @@ message VisPreset {
     repeated Arg    Args     = 21; // free use arguments passed to the asset
 }
 
+
+// TileServerKind narrows what a tile backend serves so consumers can compose
+// stacks (base imagery + labels + hillshade + weather + terrain) without
+// guessing from URL strings.
+enum TileServerKind {
+    TileServerKind_Unspecified      = 0;
+    TileServerKind_RasterImagery    = 1;   // base map raster (e.g. OSM, satellite)
+    TileServerKind_RasterLabels     = 2;   // labels-only overlay
+    TileServerKind_RasterHillshade  = 3;   // hillshade overlay
+    TileServerKind_RasterContours   = 4;   // contour-line overlay
+    TileServerKind_RasterWeather    = 5;   // radar / clouds / precipitation
+    TileServerKind_RasterTerrainRGB = 10;  // elevation encoded into RGB (Mapbox, Terrarium)
+    TileServerKind_TerrainQuantized = 11;  // Cesium quantized-mesh terrain
+    TileServerKind_VectorMVT        = 20;  // Mapbox Vector Tiles
+}
+
+// TileProjection identifies the cartographic projection of the tile pyramid.
+enum TileProjection {
+    TileProjection_Unspecified = 0;
+    TileProjection_WebMercator = 1;  // EPSG:3857 — universal slippy raster
+    TileProjection_Geodetic    = 2;  // EPSG:4326 (lat/lng equirect)
+}
+
+// TileServerScheme identifies the (z, x, y) tile addressing convention.
+enum TileServerScheme {
+    TileServerScheme_Unspecified = 0;
+    TileServerScheme_XYZ_Slippy  = 1;  // {z}/{x}/{y}, Y from north (slippy / OSM)
+    TileServerScheme_TMS         = 2;  // {z}/{x}/{y}, Y from south (TMS)
+    TileServerScheme_QuadKey     = 3;  // Bing-style quadkey
+}
+
+// TileServerAuth describes how a per-tile API key is delivered.
+enum TileServerAuth {
+    TileServerAuth_None      = 0;
+    TileServerAuth_QueryKey  = 1;  // appended as ?<APIKeyToken>=<key>
+    TileServerAuth_HeaderKey = 2;  // sent in <AuthHeader>
+    TileServerAuth_Cookie    = 3;
+}
+
+// TileServer describes a Web-Mercator (or projection-tagged) tile backend.
+// Consumers (TileService and friends) use this exclusively — no provider
+// strings, no hard-coded catalogs, no custom code per provider.  Stored
+// as repeated items under std.Attr.TileServer; channel selectors filter
+// by Kind / Projection / region tags.
+message TileServer {
+
+    // Stable identifier (e.g. "osm", "mapbox.streets", "stamen.toner").
+    string              ID            = 1;
+
+    // Human-readable display name.
+    string              Name          = 2;
+
+    // Attribution string shown on the rendered map per provider terms.
+    string              Attribution   = 3;
+
+    // What this backend serves — drives stack composition + shader pick.
+    TileServerKind      Kind          = 4;
+
+    // Projection of the tile pyramid (almost always WebMercator).
+    TileProjection      Projection    = 5;
+
+    // Y-axis convention + addressing scheme.
+    TileServerScheme    Scheme        = 6;
+
+    // URL template; supports {z} {x} {y} {s} {access_token} {key}
+    // e.g. "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" or
+    string              URLTemplate   = 10;
+
+    // Subdomains for {s} substitution (e.g. ["a","b","c"]).
+    repeated string     Subdomains    = 11;
+
+    // Name of the auth-token placeholder in URLTemplate (e.g. "access_token"
+    // for "...?{access_token}").  Empty for no-auth providers.
+    string              APIKeyToken   = 12;
+
+    // How the API key is delivered.
+    TileServerAuth      AuthMethod    = 13;
+
+    // Header name when AuthMethod = HeaderKey (e.g. "Authorization", "X-API-Key").
+    string              AuthHeader    = 14;
+
+    // Zoom range supported by the provider.
+    int32               MinZoom       = 20;
+    int32               MaxZoom       = 21;
+
+    // Tile pixel dimension (typically 256 or 512).  0 = unspecified, treat as 256.
+    int32               TileSizePx    = 22;
+
+    // Per-host minimum interval between requests (provider politeness hint).
+    // 0 = unspecified.  OSM ≈ 500.
+    int32               MinIntervalMs = 23;
+
+    // MIME content type of returned tiles ("image/png", "image/jpeg", "application/x-protobuf").
+    string              ContentType   = 30;
+
+    // For terrain kinds, the elevation encoding scheme ("mapbox-rgb", "terrarium").
+    string              ElevationEncoding = 31;
+
+}
+
