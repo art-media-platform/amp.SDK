@@ -2,13 +2,11 @@
   <img src="media/art-media-platform.svg" alt="art.media.platform" width="280">
 </p>
 
-#
-
-**_art.media.platform_** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Every participant holds their own keys.  Every device is a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
+**art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Every participant holds their own keys.  Every device is a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
 
 This repository is the **SDK**: a dependency-light Go library defining the wire format, CRDT addressing model, key/identity primitives, and `AppModule` interface.  Pair it with [amp.planet](https://github.com/art-media-platform/amp.planet) to produce:
 
-- `amp.exe` — standalone server / vault binary (Linux, macOS, Windows, Raspberry Pi)
+- `amp.exe` — standalone server / vault (macOS, Windows, Linux, Raspberry Pi, Android, Graphene)
 - `amp.lib` — embeddable C library for Unity and Unreal clients
 - [`@amp/client`](https://github.com/art-media-platform/amp.planet/tree/main/amp-client) — TypeScript SDK with React hooks for web apps
 - Reticulum gateway for transport over LoRa / packet radio / I2P
@@ -99,14 +97,14 @@ Reticulum and AMP are architecturally aligned:
 
 The future of computing is spatial.  AR/VR headsets, digital twins, geospatial logistics, immersive collaboration — these are active markets with real deployments today.  But spatial platforms have been a walled garden: Meta's Horizon, Apple's visionOS, Google's ARCore.
 
-art.media.platform provides the security and communication layer that spatial applications need without corporate lock-in.  It ships as an embeddable C library for [Unity](https://unity.com) and [Unreal](https://unrealengine.com), or as a standalone server binary (`amp.exe`) for headless operation.
+AMP provides the security and communication layer that spatial applications need without corporate lock-in.  It ships as an embeddable C library for [Unity](https://unity.com) and [Unreal](https://unrealengine.com), or as a standalone server binary (`amp.exe`) for headless operation.
 
 A Unity app with AMP embedded has end-to-end encrypted federated communication, offline-capable CRDT state, authenticated media streaming, and mesh networking — all without a single line of server code or a single dependency on a cloud provider.
 
 **Platforms:** Windows, macOS, Linux, iOS, Android, XR headsets (Meta Quest, Apple Vision).  The same binary that runs a headless vault on a Raspberry Pi serves a VR collaboration space.
 
 
-## Every planet ships with a Bill of Materials
+## Asset Security
 
 A planet's root carries `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.
 
@@ -144,7 +142,7 @@ Every long-lived object is a node in a [`task.Context`](https://github.com/art-m
 | [`stdlib/task/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/task) | Goroutine lifecycle management (parent-child process model) |
 
 
-## Integration Flow
+### Integration Flow
 
 This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go project.
 
@@ -153,12 +151,6 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 3. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) and register your module
 4. `make build` produces `amp.exe` (standalone server) and `amp.lib` (embeddable C library)
 5. For web apps, use the [`@amp/client`](https://github.com/art-media-platform/amp.planet/tree/main/amp-client) TypeScript SDK with React hooks
-
-## Lineage
-
-- **[PLAN Proof of Correctness](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md)** (2017) — the formal [security architecture](https://github.com/plan-systems/design-docs) that AMP inherits.
-- **[PLAN](https://plan-systems.org/plan-technology-components/)** (2017-) — the first generation, shipped as [plan-go](https://github.com/plan-systems/plan-go/tags).  Established the core security model: nested cryptographic containers, epoch-based key rotation, zero-knowledge relay nodes.
-- **art.media.platform** (2022-present) — third generation.  Modernized for native 3D runtimes, mesh networking ([Reticulum](https://reticulum.network/)), and pluggable cryptography ([`KitSpec`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go#L165) abstraction for future post-quantum suites).
 
 ---
 
