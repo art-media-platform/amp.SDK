@@ -13,7 +13,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/encode"
-	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/blake2s"
 )
 
@@ -234,13 +233,6 @@ func Wildcard() Name {
 		ID:      WildcardID(),
 		Canonic: "*",
 	}
-}
-
-func UID_FromUUID(uuid uuid.UUID) UID {
-	var id UID
-	id[0] = binary.BigEndian.Uint64(uuid[0:8])
-	id[1] = binary.BigEndian.Uint64(uuid[8:16])
-	return id
 }
 
 // Returns the tag.UID formed by the hash of the given byte string exactly.
@@ -475,13 +467,6 @@ func (id UID) AsLabel() string {
 		return full
 	}
 	return full[:2] + ".." + full[len(full)-4:]
-}
-
-func (id UID) UUID() uuid.UUID {
-	var buf [16]byte
-	encode := id.AppendTo(buf[:])
-	alt, _ := uuid.FromBytes(encode)
-	return alt
 }
 
 // Converts this tag.UID to a 63-bit composite integer (i.e. always positive).
