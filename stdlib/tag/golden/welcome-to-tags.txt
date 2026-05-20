@@ -14,7 +14,7 @@ UTF8 whitespace, commas, periods, and other common punctuation separate tag lite
 
 12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
 
-We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestors.
+We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestry.
 
 Expressing 061HTS096CDKX7F7GWDB9GKJ3K with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
 
@@ -61,18 +61,22 @@ Tag names have two halves.  Left of the first /, :, or \ is the "name" part — 
 
 https://example.com/path
 HTTPS://example.com/path
-amp://planet/home
-Amp://planet/home
-AMP://planet/home
+link another amp://planet/Home
+another link Amp://planet/Home
+another link AMP://planet/Home
 file:///var/log/app.log
 ftp://user@host:21/dir
 scheme://MixedCase/PreservedExactly
 amp://planet.com/deep/path/with-dashes.and.dots
+your-custom-scheme://preserved-url.com:23382/path?query=string#fragment
+Your-Custom-Scheme://preserved-url.com:23382/path?query=string#fragment
+git+ssh://user@Host/repo.git
+GIT+SSH://user@Host/repo.git
 
-Words left of the URL get canonized; the URL stays exact.
+Test left of a URL get canonized; the URL stays exact.
 hello world https://foo.com
-My App amp://planet/home
-  trimmed  amp://x
+prefix is parsed normally  HTTPS://x-y.com
+Prefix is Parsed normally.  https://x-y.com
 
 Identity-from-canonical-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
 eth:0xabcdef1234567890abcdef1234567890abcdef12

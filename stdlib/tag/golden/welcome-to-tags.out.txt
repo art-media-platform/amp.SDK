@@ -1,5 +1,5 @@
-                               amp.tags.v220  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  3X7GFHVUP88CGWHJ97ZUY4PDH3   amp.tags.v220.✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                               . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+  1MD8BENPJ66B840XZ6UF6C6Z7U   ✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                Hello World!
   7K4XGBQ7879D4F228U0CU1N627   hello.world
@@ -27,8 +27,8 @@
                                12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
   12VWSDH3ZB4W0ZY5RHVM9ZZGHP   12.words.randomly.chosen.from.but.not.limited.to.the.english.dictionary.exceeds.10^56.possible.combinations.for.reference.that's.over.10.million.times.the.number.of.possible.bitcoin.public.addresses.2^160
 
-                               We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestors.
-  061HTS096CDKX7F7GWDB9GKJ3K   we.can.cite.12VWSDH3ZB4W0ZY5RHVM9ZZGHP.and.4VKB1MHN9J4YTYZPQ7HRZT5TBT.as.literals.demonstrating.a.convenient.way.to.cryptographically.chain.and.validate.tags.allowing.us.to.validate.ancestors
+                               We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestry.
+  7JG9KD52C8ZH3E0WMVS336KY4U   we.can.cite.12VWSDH3ZB4W0ZY5RHVM9ZZGHP.and.4VKB1MHN9J4YTYZPQ7HRZT5TBT.as.literals.demonstrating.a.convenient.way.to.cryptographically.chain.and.validate.tags.allowing.us.to.validate.ancestry
 
                                Expressing 061HTS096CDKX7F7GWDB9GKJ3K with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
   1UZ66RR7CKRNNT0D3DKG8NWHZM   expressing.061HTS096CDKX7F7GWDB9GKJ3K.with.S2.geo.tiles.8D489E34600637F.and.872AA845ADF325.demonstrates.how.locations.can.be.also.be.bound.and.chained.together.in.this.system.this.offers.easy.DIY.layering.of.security.and.permissions
@@ -106,12 +106,12 @@
   6Z5W459BQ5920KPEK38029800H   https://example.com/path
                                HTTPS://example.com/path
   6Z5W459BQ5920KPEK38029800H   https://example.com/path
-                               amp://planet/home
-  4VJUYXH6QFNPUF6CKPR8UN2B0M   amp://planet/home
-                               Amp://planet/home
-  4VJUYXH6QFNPUF6CKPR8UN2B0M   amp://planet/home
-                               AMP://planet/home
-  4VJUYXH6QFNPUF6CKPR8UN2B0M   amp://planet/home
+                               link another amp://planet/Home
+  267DZ7Y1P511BEPH34HSMPFF0F   link.another.amp://planet/Home
+                               another link Amp://planet/Home
+  267DZ7Y1P511BEPH34HSMPFF0F   another.link.amp://planet/Home
+                               another link AMP://planet/Home
+  267DZ7Y1P511BEPH34HSMPFF0F   another.link.amp://planet/Home
                                file:///var/log/app.log
   7497KU7GU6N9HZ8FXRD6XV1PJ5   file:///var/log/app.log
                                ftp://user@host:21/dir
@@ -120,18 +120,26 @@
   329RVU0HUK804CR0GMKHQJNW8M   scheme://MixedCase/PreservedExactly
                                amp://planet.com/deep/path/with-dashes.and.dots
   1PTFURKT5NFSMD8GMDCT3NK7D0   amp://planet.com/deep/path/with-dashes.and.dots
+                               your-custom-scheme://preserved-url.com:23382/path?query=string#fragment
+  299VN5X39VTCBS6P3VXG2B2UEF   your-custom-scheme://preserved-url.com:23382/path?query=string#fragment
+                               Your-Custom-Scheme://preserved-url.com:23382/path?query=string#fragment
+  299VN5X39VTCBS6P3VXG2B2UEF   your-custom-scheme://preserved-url.com:23382/path?query=string#fragment
+                               git+ssh://user@Host/repo.git
+  4QJFCSC5ST4RE8BC1HS4U7WYXU   git+ssh://user@Host/repo.git
+                               GIT+SSH://user@Host/repo.git
+  4QJFCSC5ST4RE8BC1HS4U7WYXU   git+ssh://user@Host/repo.git
 
-                               Words left of the URL get canonized; the URL stays exact.
-  2BEJYV4B5199VQFBKN8G7V4KNQ   words.left.of.the.URL.get.canonized;.the.URL.stays.exact
+                               Test left of a URL get canonized; the URL stays exact.
+  522GTZEN3FBY4NVY3CSXWQNGDD   test.left.of.a.URL.get.canonized;.the.URL.stays.exact
                                hello world https://foo.com
   2XWZ8HF2PW74TU1NBN8P7ZK0TM   hello.world.https://foo.com
-                               My App amp://planet/home
-  47G6T4CFKP3F6W038UZP0140GY   my.app.amp://planet/home
-                                 trimmed  amp://x
-  30B2K165HPSTQMT4KQGG6006SH   trimmed.amp://x
+                               prefix is parsed normally  HTTPS://x-y.com
+  2CH64JHUZ5YQXY1F80N9B5TP72   prefix.is.parsed.normally.https://x-y.com
+                               Prefix is Parsed normally.  https://x-y.com
+  2CH64JHUZ5YQXY1F80N9B5TP72   prefix.is.parsed.normally.https://x-y.com
 
                                Identity-from-canonical-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
-  72ZD0YE2S62PPNKB2WM6T9TJEK   identity.from.canonical.text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
+  014D79W5WJ2P3MPQMYZR7CCVW1   identity-from-canonical-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
                                eth:0xabcdef1234567890abcdef1234567890abcdef12
   18GU1XEBFP8B7ETR7NU4RCCBJ4   eth:0xabcdef1234567890abcdef1234567890abcdef12
                                Eth:0xabcdef1234567890abcdef1234567890abcdef12

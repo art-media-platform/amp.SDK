@@ -21,17 +21,12 @@ var (
 )
 
 // Parse resolves any string into a Name, auto-detecting the format.  Use
-// this for ANY string that came from outside the program — wire, file,
-// CLI flag, user input — so an inbound base32 UID round-trips intact
+// this for ANY string that came from outside the program (wire, file,
+// CLI flag, user input) so an inbound base32 UID round-trips intact
 // instead of being re-hashed.
 //
-// Precedence:
-//  1. URL trigger (`:` / `/` / `\`) or canonic separator (`.`) → canonicalize.
-//  2. 26-char base32 → decode as UID.
-//  3. Anything else (bare single-word names) → canonicalize.
-//
-// Always succeeds; the error return is retained for signature stability.
-// Mirrors the C# TagName.Parse helper.
+// See the package README for the Parse vs NameFrom distinction and the
+// silent-failure footgun if you pick wrong.  Mirrors C# TagName.Parse.
 func Parse(s string) (Name, error) {
 	if strings.IndexByte(s, CanonicSeparatorChar) >= 0 || PathStart(s) >= 0 {
 		return Name{}.With(s), nil
@@ -54,8 +49,9 @@ func ParseUID(s string) UID {
 // hardcoded canonic expressions you constructed yourself (`"eth:" + addr`,
 // `"amp.member.profile"`).
 //
-// For ANY wire / file / user-input string use Parse instead — NameFrom
-// re-hashes inbound UIDs into different UIDs and the failure is silent.
+// For ANY wire / file / user-input string use Parse — NameFrom on an
+// inbound base32 UID re-hashes the string and silently produces the wrong
+// UID.  See the package README.
 func NameFrom(s string) Name {
 	return Name{}.With(s)
 }
@@ -81,39 +77,22 @@ func (name Name) IsWildcard() bool {
 
 // With folds expr into this tag.Name, returning a new canonic Name.
 //
-// Canonicalization rule — the two halves:
+// Splits expr at the first URL-trigger char (`:`, `/`, `\`) into a name part
+// (canonized) and a URL part (verbatim).  If the name part is itself a valid
+// RFC 3986 scheme, it is lowercased atomically — dashes / dots / plus signs
+// inside it are preserved as scheme characters.  Otherwise it is word-folded.
 //
-//  1. Left of the first `/`, `:`, or `\` is the *name* part: split into words
-//     by whitespace and punctuation, lowercased, joined with `.`.  Each word
-//     hashes into the ID commutatively.  In *natural-text* mode (no URL
-//     trigger char anywhere), fully uppercase tokens like USA / NBA / YMCA
-//     are preserved as-is so spoken acronyms keep their identity.  In *URL*
-//     mode (the expression contains `:` / `/` / `\`), the all-caps
-//     preservation is dropped — every name-part word lowercases.  This
-//     matches RFC 3986 §3.1: URL schemes are case-insensitive, canonical
-//     form is lowercase, so `HTTP://x` ≡ `http://x` and `ETH:0xabc` ≡
-//     `eth:0xabc`.
-//
-//  2. From the first `/`, `:`, or `\` onward is the *URL* part: kept exactly
-//     as-is, hashed as a single atomic literal.  RFC 3986 leaves path/query
-//     case-sensitivity to the scheme owner, so we preserve verbatim.
-//
-// Property: any string containing a URL-trigger char is a fixed point of
-// canonicalization — `NameFrom(s).Canonic == s` for scheme-bearing URLs
-// whose scheme is already lowercase.
-//
-// Note: if name.Canonic already ends in a URL part, calling .With() with more
-// words produces a canonic string that does not round-trip through NameFrom.
-// URL-terminated names are effectively leaves — don't append to them.
+// See the package README for the complete canonicalization rules,
+// examples, and rationale (acronym preservation, homophone fold,
+// URL/name split, scheme grammar per RFC 3986 §3.1).
 func (name Name) With(expr string) Name {
-
-	if expr == CanonicWildcard {
-		return Wildcard()
-	}
 
 	expr = strings.TrimSpace(expr)
 	if expr == "" {
 		return name
+	}
+	if expr == CanonicWildcard {
+		return Wildcard()
 	}
 
 	// Split expr into name-part (canonized) and URL-part (verbatim).
@@ -124,52 +103,63 @@ func (name Name) With(expr string) Name {
 		urlPart = expr[split:]
 	}
 
-	namePart = sSeparatorRegex.ReplaceAllString(namePart, string(CanonicSeparatorChar))
-
 	var body strings.Builder
 	body.Grow(len(name.Canonic) + len(namePart) + len(urlPart) + 1)
 	body.WriteString(name.Canonic)
 	exprID := name.ID
 
-	namePartLen := len(namePart)
-	for i := 0; i < namePartLen; {
-
-		// skip leading delimiters
-		for ; i < namePartLen && namePart[i] == CanonicSeparatorChar; i++ {
-		}
-		if i >= namePartLen {
-			break
-		}
-
-		end := strings.IndexByte(namePart[i:], CanonicSeparatorChar)
-		if end < 0 {
-			end = namePartLen
-		} else {
-			end += i
-		}
-
-		// In natural-text mode, fully capitalized literals remain upper case
-		// (USA, YMCA) so spoken acronyms keep identity.  In URL mode every
-		// name-part word lowercases — URL schemes are case-insensitive per
-		// RFC 3986 §3.1, canonical form is lowercase.
-		term := namePart[i:end]
-		if urlPart != "" || utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
-			term = strings.ToLower(term)
-		}
-
-		termID := UID_HashLiteral([]byte(term))
-		exprID = exprID.With(termID)
-
+	// Scheme-only name part: when the URL trigger is present and the name part
+	// matches the RFC 3986 scheme grammar (ALPHA *(ALPHA / DIGIT / "+" / "-"
+	// / ".")), preserve it atomically.  Lowercases per §3.1 but keeps
+	// internal +, -, . as scheme characters rather than word separators.
+	if urlPart != "" && isScheme(namePart) {
+		scheme := strings.ToLower(namePart)
+		exprID = exprID.With(UID_HashLiteral([]byte(scheme)))
 		if body.Len() > 0 {
 			body.WriteByte(CanonicSeparatorChar)
 		}
-		body.WriteString(term)
+		body.WriteString(scheme)
+	} else {
+		namePart = sSeparatorRegex.ReplaceAllString(namePart, string(CanonicSeparatorChar))
 
-		i = end + 1
+		namePartLen := len(namePart)
+		for i := 0; i < namePartLen; {
+
+			// skip leading delimiters
+			for ; i < namePartLen && namePart[i] == CanonicSeparatorChar; i++ {
+			}
+			if i >= namePartLen {
+				break
+			}
+
+			end := strings.IndexByte(namePart[i:], CanonicSeparatorChar)
+			if end < 0 {
+				end = namePartLen
+			} else {
+				end += i
+			}
+
+			// In natural-text mode, fully capitalized literals remain upper case
+			// (USA, YMCA) so spoken acronyms keep identity.  In URL mode every
+			// name-part word lowercases per RFC 3986 §3.1.
+			term := namePart[i:end]
+			if urlPart != "" || utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
+				term = strings.ToLower(term)
+			}
+
+			exprID = exprID.With(UID_HashLiteral([]byte(term)))
+
+			if body.Len() > 0 {
+				body.WriteByte(CanonicSeparatorChar)
+			}
+			body.WriteString(term)
+
+			i = end + 1
+		}
 	}
 
-	// URL part is atomic: one literal hash, appended verbatim with no
-	// separator (the URL-trigger char itself is the delimiter).
+	// URL part is atomic: one literal hash, appended verbatim (the URL-trigger
+	// char itself is the delimiter — no '.' inserted).
 	if urlPart != "" {
 		exprID = exprID.With(UID_HashLiteral([]byte(urlPart)))
 		body.WriteString(urlPart)
@@ -179,6 +169,32 @@ func (name Name) With(expr string) Name {
 		ID:      exprID,
 		Canonic: body.String(),
 	}
+}
+
+// isScheme reports whether s matches the RFC 3986 §3.1 scheme grammar:
+// ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ).  Used by With() to detect
+// when a name part should be preserved atomically (lowercased only) rather
+// than word-folded.
+func isScheme(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	c0 := s[0]
+	if !((c0 >= 'a' && c0 <= 'z') || (c0 >= 'A' && c0 <= 'Z')) {
+		return false
+	}
+	for i := 1; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case c >= 'a' && c <= 'z':
+		case c >= 'A' && c <= 'Z':
+		case c >= '0' && c <= '9':
+		case c == '+', c == '-', c == '.':
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 // LeafTags splits the tag spec the given number of tags for the right.
@@ -235,14 +251,12 @@ func Wildcard() Name {
 	}
 }
 
-// Returns the tag.UID formed by the hash of the given byte string exactly.
-//
-// Hashes the literal as a single atomic value — no canonicalization, no
-// commutative fold.  Use for opaque-bytes identity (content hashes, raw
-// blob digests, fixed-format binary tokens).  For human-readable text or
-// scheme:identifier expressions where canonicalization is the point, use
-// tag.NameFrom — it routes through the same hash but applies the canonic
-// word fold (and the URL-part rule when the expression contains :, /, \).
+// UID_HashLiteral returns the tag.UID hash of the literal byte string — no
+// canonicalization, no commutative fold.  Use for opaque-bytes identity
+// (content hashes, raw blob digests, fixed-format binary tokens).  For
+// human-readable text or scheme:identifier expressions where
+// canonicalization is the point, use [NameFrom] (or [Parse] for
+// outside-the-program inputs).
 func UID_HashLiteral(literal []byte) UID {
 
 	// hardwire {} / "" / {}byte / null / nil => (0,0,0)
@@ -265,7 +279,9 @@ func UID_FromName(tagsExpr string) UID {
 	return spec.ID
 }
 
-// Now returns the current local time that is statiscially universally unique.
+// NowID returns a time-based UID with entropy mixed into the low bits,
+// making the result statistically universally unique while preserving
+// wall-clock ordering in the high bits.
 func NowID() UID {
 	uid := UID_FromTime(time.Now())
 

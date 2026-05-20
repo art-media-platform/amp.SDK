@@ -72,7 +72,7 @@ func processTags(pathIn, pathOut string) {
 	b := strings.Builder{}
 
 	{
-		echoLine(&b, tag.PackageTags+"  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .")
+		echoLine(&b, ". ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .")
 		fileOut.Write([]byte(b.String()))
 	}
 
