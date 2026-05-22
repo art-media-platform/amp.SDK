@@ -245,6 +245,14 @@ const Manifold {
     string DebugGridTileLayer  = "asset:manifold/tile.layer.debug-grid";
 }
 
+// Actor — in-world actor skins resolve through the crate / asset
+// system; a mod registers an override at the same key to ship a custom
+// actor without touching code.  An unresolved URI falls back to a
+// primitive so a ManifoldActor is always visible.
+const Actor {
+    string DefaultSkin = "asset:actor/skin.default";
+}
+
 // Locus spatial binding
 const Locus {
     uint32 Bits         = 6;    // cell index bit width

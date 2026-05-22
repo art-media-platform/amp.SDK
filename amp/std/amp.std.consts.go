@@ -135,7 +135,6 @@ var Attr = struct {
 	TileServerAttr                     tag.Name
 	TileServer                         tag.Name
 }{
-
 	// ─── App-centric tags ───────────────────────────────────────────
 	App                               : tag.Name{ID: tag.UID{0x9FC2012FD63F847A, 0x51AA55A31D90CD25}, Canonic: "app"},        // 4ZS80KZPJZHJX53BKPNDFT1M95
 
@@ -364,6 +363,14 @@ const (
 	ManifoldDefaultTileMaterial = "asset:manifold/tile.material.default"
 	ManifoldDefaultVolumePrefab = "asset:manifold/volume.prefab.default"
 	ManifoldDebugGridTileLayer  = "asset:manifold/tile.layer.debug-grid"
+)
+
+// ─── Actor — in-world actor skins resolve through the crate / asset ───
+// system; a mod registers an override at the same key to ship a custom
+// actor without touching code.  An unresolved URI falls back to a
+// primitive so a ManifoldActor is always visible.
+const (
+	ActorDefaultSkin = "asset:actor/skin.default"
 )
 
 // ─── Locus spatial binding ──────────────────────────────────────
