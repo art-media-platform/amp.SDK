@@ -213,6 +213,8 @@ const (
 	CrateSchema_UndefinedSchema CrateSchema = 0
 	// v100 (April 2020) should be used for CrateInfo.CrateSchema
 	CrateSchema_v100 CrateSchema = 100
+	// v300 (2026) — unified LiveCrate/LiveAsset authoring, tag.UID asset identity, content-addressed bundles.
+	CrateSchema_v300 CrateSchema = 300
 )
 
 // Enum value maps for CrateSchema.
@@ -220,10 +222,12 @@ var (
 	CrateSchema_name = map[int32]string{
 		0:   "UndefinedSchema",
 		100: "v100",
+		300: "v300",
 	}
 	CrateSchema_value = map[string]int32{
 		"UndefinedSchema": 0,
 		"v100":            100,
+		"v300":            300,
 	}
 )
 
@@ -290,7 +294,18 @@ type AssetEntry struct {
 	//	"A leading U.S. naval ship-based helicopter"
 	//	"The Texas capitol building located in Austin"
 	//	"An animated scared-geometry inspired flat seal"
-	ShortDesc     string `protobuf:"bytes,32,opt,name=ShortDesc,proto3" json:"ShortDesc,omitempty"`
+	ShortDesc string `protobuf:"bytes,32,opt,name=ShortDesc,proto3" json:"ShortDesc,omitempty"`
+	// Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI leaf).
+	// Survives re-tagging and rebuilds, letting references resolve by UID independent of path.
+	UID_0 uint64 `protobuf:"fixed64,33,opt,name=UID_0,json=UID0,proto3" json:"UID_0,omitempty"`
+	UID_1 uint64 `protobuf:"fixed64,34,opt,name=UID_1,json=UID1,proto3" json:"UID_1,omitempty"`
+	// Content-addressing handle for the built asset: leading 16 bytes of the plaintext hash
+	// (a BlobID), for dedup and AMP p2p blob-store retrieval.  Zero = not built / unknown.
+	BlobID_0 uint64 `protobuf:"fixed64,35,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
+	BlobID_1 uint64 `protobuf:"fixed64,36,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
+	// Alternate URIs that also resolve to this asset (e.g. legacy gen2 paths).  Each is matched
+	// verbatim against an inbound EntryURI.
+	Aliases       []string `protobuf:"bytes,37,rep,name=Aliases,proto3" json:"Aliases,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -444,6 +459,41 @@ func (x *AssetEntry) GetShortDesc() string {
 	return ""
 }
 
+func (x *AssetEntry) GetUID_0() uint64 {
+	if x != nil {
+		return x.UID_0
+	}
+	return 0
+}
+
+func (x *AssetEntry) GetUID_1() uint64 {
+	if x != nil {
+		return x.UID_1
+	}
+	return 0
+}
+
+func (x *AssetEntry) GetBlobID_0() uint64 {
+	if x != nil {
+		return x.BlobID_0
+	}
+	return 0
+}
+
+func (x *AssetEntry) GetBlobID_1() uint64 {
+	if x != nil {
+		return x.BlobID_1
+	}
+	return 0
+}
+
+func (x *AssetEntry) GetAliases() []string {
+	if x != nil {
+		return x.Aliases
+	}
+	return nil
+}
+
 type BundleManifest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// BundleTitle is how the outside world sees this bundle and has no other impact.
@@ -451,9 +501,13 @@ type BundleManifest struct {
 	BundleTitle string `protobuf:"bytes,2,opt,name=BundleTitle,proto3" json:"BundleTitle,omitempty"`
 	// BundleNameID is how this bundle is internally identified and expressed as the filename of this bundle.
 	// This is case sensitive, contains only path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or whitespace.
-	BundleNameID  string        `protobuf:"bytes,3,opt,name=BundleNameID,proto3" json:"BundleNameID,omitempty"`
-	Assets        []*AssetEntry `protobuf:"bytes,10,rep,name=Assets,proto3" json:"Assets,omitempty"`
-	LoadAllHint   bool          `protobuf:"varint,20,opt,name=LoadAllHint,proto3" json:"LoadAllHint,omitempty"`
+	BundleNameID string        `protobuf:"bytes,3,opt,name=BundleNameID,proto3" json:"BundleNameID,omitempty"`
+	Assets       []*AssetEntry `protobuf:"bytes,10,rep,name=Assets,proto3" json:"Assets,omitempty"`
+	LoadAllHint  bool          `protobuf:"varint,20,opt,name=LoadAllHint,proto3" json:"LoadAllHint,omitempty"`
+	// Content-addressing handle for the built bundle file: leading 16 bytes of its plaintext
+	// hash (a BlobID).  Zero = not built / unknown.
+	BlobID_0      uint64 `protobuf:"fixed64,30,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
+	BlobID_1      uint64 `protobuf:"fixed64,31,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -516,6 +570,20 @@ func (x *BundleManifest) GetLoadAllHint() bool {
 	return false
 }
 
+func (x *BundleManifest) GetBlobID_0() uint64 {
+	if x != nil {
+		return x.BlobID_0
+	}
+	return 0
+}
+
+func (x *BundleManifest) GetBlobID_1() uint64 {
+	if x != nil {
+		return x.BlobID_1
+	}
+	return 0
+}
+
 // CrateInfo represents a Crate, the fundamental unit of amp's asset/package manager.
 type CrateInfo struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -549,7 +617,7 @@ type CrateInfo struct {
 	// TimeBuilt is the UTC value (in seconds) when this crate was built.
 	TimeBuilt int64 `protobuf:"varint,31,opt,name=TimeBuilt,proto3" json:"TimeBuilt,omitempty"`
 	// VersionID uniquely identifies this build and has the form "v{MajorNum}.{MinorNum}.{BuildNum}"
-	// e.g. "v1.11.201"
+	// e.g. "v0.700.0"
 	MajorVersion int32 `protobuf:"varint,40,opt,name=MajorVersion,proto3" json:"MajorVersion,omitempty"`
 	MinorVersion int32 `protobuf:"varint,41,opt,name=MinorVersion,proto3" json:"MinorVersion,omitempty"`
 	BuildNumber  int32 `protobuf:"varint,42,opt,name=BuildNumber,proto3" json:"BuildNumber,omitempty"`
@@ -1108,7 +1176,7 @@ var File_amp_crates_amp_crates_proto protoreflect.FileDescriptor
 
 const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\n" +
-	"\x1bamp/crates/amp.crates.proto\x12\x06crates\"\xf7\x03\n" +
+	"\x1bamp/crates/amp.crates.proto\x12\x06crates\"\xf1\x04\n" +
 	"\n" +
 	"AssetEntry\x12%\n" +
 	"\x04Kind\x18\x01 \x01(\x0e2\x11.crates.AssetKindR\x04Kind\x12\x1a\n" +
@@ -1128,13 +1196,20 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\bExtentsZ\x18\x11 \x01(\x02R\bExtentsZ\x12\x1a\n" +
 	"\bLocalURI\x18\x1e \x01(\tR\bLocalURI\x12\x12\n" +
 	"\x04Tags\x18\x1f \x01(\tR\x04Tags\x12\x1c\n" +
-	"\tShortDesc\x18  \x01(\tR\tShortDesc\"\xa4\x01\n" +
+	"\tShortDesc\x18  \x01(\tR\tShortDesc\x12\x13\n" +
+	"\x05UID_0\x18! \x01(\x06R\x04UID0\x12\x13\n" +
+	"\x05UID_1\x18\" \x01(\x06R\x04UID1\x12\x19\n" +
+	"\bBlobID_0\x18# \x01(\x06R\aBlobID0\x12\x19\n" +
+	"\bBlobID_1\x18$ \x01(\x06R\aBlobID1\x12\x18\n" +
+	"\aAliases\x18% \x03(\tR\aAliases\"\xda\x01\n" +
 	"\x0eBundleManifest\x12 \n" +
 	"\vBundleTitle\x18\x02 \x01(\tR\vBundleTitle\x12\"\n" +
 	"\fBundleNameID\x18\x03 \x01(\tR\fBundleNameID\x12*\n" +
 	"\x06Assets\x18\n" +
 	" \x03(\v2\x12.crates.AssetEntryR\x06Assets\x12 \n" +
-	"\vLoadAllHint\x18\x14 \x01(\bR\vLoadAllHint\"\xe7\x03\n" +
+	"\vLoadAllHint\x18\x14 \x01(\bR\vLoadAllHint\x12\x19\n" +
+	"\bBlobID_0\x18\x1e \x01(\x06R\aBlobID0\x12\x19\n" +
+	"\bBlobID_1\x18\x1f \x01(\x06R\aBlobID1\"\xe7\x03\n" +
 	"\tCrateInfo\x12 \n" +
 	"\vCrateSchema\x18\x01 \x01(\x05R\vCrateSchema\x12\x16\n" +
 	"\x06InstID\x18\x02 \x01(\rR\x06InstID\x12\x1a\n" +
@@ -1217,10 +1292,11 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x06Skybox\x10\x05\x12\v\n" +
 	"\aSurface\x10\x06\x12\x0f\n" +
 	"\vVisualLayer\x10\a\x12\x0f\n" +
-	"\vVisualScope\x10\b*,\n" +
+	"\vVisualScope\x10\b*7\n" +
 	"\vCrateSchema\x12\x13\n" +
 	"\x0fUndefinedSchema\x10\x00\x12\b\n" +
-	"\x04v100\x10dBGZ0github.com/art-media-platform/amp.SDK/amp/crates\xaa\x02\x12art.media.platformb\x06proto3"
+	"\x04v100\x10d\x12\t\n" +
+	"\x04v300\x10\xac\x02BGZ0github.com/art-media-platform/amp.SDK/amp/crates\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_crates_amp_crates_proto_rawDescOnce sync.Once

@@ -86,6 +86,20 @@ message AssetEntry {
     //      "The Texas capitol building located in Austin"
     //      "An animated scared-geometry inspired flat seal"
     string                  ShortDesc = 32;
+
+    // Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI leaf).
+    // Survives re-tagging and rebuilds, letting references resolve by UID independent of path.
+    fixed64                 UID_0 = 33;
+    fixed64                 UID_1 = 34;
+
+    // Content-addressing handle for the built asset: leading 16 bytes of the plaintext hash
+    // (a BlobID), for dedup and AMP p2p blob-store retrieval.  Zero = not built / unknown.
+    fixed64                 BlobID_0 = 35;
+    fixed64                 BlobID_1 = 36;
+
+    // Alternate URIs that also resolve to this asset (e.g. legacy gen2 paths).  Each is matched
+    // verbatim against an inbound EntryURI.
+    repeated string         Aliases = 37;
 }
 
 message BundleManifest {
@@ -101,6 +115,11 @@ message BundleManifest {
     repeated AssetEntry     Assets = 10;
 
     bool                    LoadAllHint = 20;
+
+    // Content-addressing handle for the built bundle file: leading 16 bytes of its plaintext
+    // hash (a BlobID).  Zero = not built / unknown.
+    fixed64                 BlobID_0 = 30;
+    fixed64                 BlobID_1 = 31;
 }
 
 
@@ -145,7 +164,7 @@ message CrateInfo {
     int64                   TimeBuilt    = 31;
 
     // VersionID uniquely identifies this build and has the form "v{MajorNum}.{MinorNum}.{BuildNum}"
-    // e.g. "v1.11.201"
+    // e.g. "v0.700.0"
     int32                   MajorVersion = 40;
     int32                   MinorVersion = 41;
     int32                   BuildNumber  = 42;
@@ -253,4 +272,7 @@ enum CrateSchema {
 
     // v100 (April 2020) should be used for CrateInfo.CrateSchema
     v100                    = 100;
+
+    // v300 (2026) — unified LiveCrate/LiveAsset authoring, tag.UID asset identity, content-addressed bundles.
+    v300                    = 300;
 }
