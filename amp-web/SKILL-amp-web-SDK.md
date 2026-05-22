@@ -433,35 +433,43 @@ POST /api/v1/tag/resolve   Body: { exprs: [...] }   → { results: [{ expr, cano
 
 User-supplied API keys (Cesium Ion, OpenRouter, Mapbox, etc.) **must not** land in plaintext channel items. Channel items are readable by every member of the planet who holds the planet epoch key, and a memory scrape of the local epoch key cache exposes them post-hoc. The right pattern:
 
+Channel item values are JSON, so the sealed bytes go on the wire as a base64
+string (a raw `Uint8Array` does not survive `JSON.stringify`).  Use the
+`bytesToBase64` / `base64ToBytes` helpers on the way in and out.
+
 ```tsx
-import { useAmpMutation, useAmpCrypto } from '@art-media-platform/web';
+import { useAmpMutation, useAmpCrypto, bytesToBase64 } from '@art-media-platform/web';
 
 function ApiKeysForm() {
   const { upsert } = useAmpMutation();
   const { seal } = useAmpCrypto();
 
   async function saveKey(slot: 'cesium' | 'openrouter' | 'mapbox', plaintext: string) {
-    const sealedBytes = await seal(new TextEncoder().encode(plaintext));
+    const sealed = bytesToBase64(await seal(new TextEncoder().encode(plaintext)));
     // Read-modify-write: each slot is sealed independently
-    const current = await getApiKeysItem();          // returns Record<slot, sealedBytes>
-    const next = { ...current, [slot]: sealedBytes };
+    const current = await getApiKeysItem();          // returns Record<slot, base64 string>
+    const next = { ...current, [slot]: sealed };
     await upsert('users', 'api_keys_overrides', member.id, next);
   }
 }
 ```
 
 ```tsx
+import { useAmpCrypto, base64ToBytes } from '@art-media-platform/web';
+
 async function useCesiumIonToken() {
   const { open } = useAmpCrypto();
   const item = await client.query({ channel: 'users', attr: 'api_keys_overrides', itemID: member.id });
   if (!item.cesium) return null;
-  const plaintext = new TextDecoder().decode(await open(item.cesium));
+  const plaintext = new TextDecoder().decode(await open(base64ToBytes(item.cesium)));
   // Use it for one outbound request; don't persist outside this scope.
   return plaintext;
 }
 ```
 
 The `seal/open` primitives wrap `safe.Encrypt.Seal` / `safe.Encrypt.Open` against the session member's `EncryptKey` — anonymous-sender HPKE base mode. The sealed bytes are opaque to anyone but the sealing member, including admins, vault relays, other planet members, and even a future memory snapshot of `eks.keys`.
+
+That `EncryptKey` is **device-local and auto-managed**: the adapter generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-SDK.md`.
 
 The default kit is **Poly25519** (X25519 + XChaCha20-Poly1305 + HKDF-SHA256) — pure JS via `@noble/curves` + `@noble/ciphers` + `@noble/hashes`, no WASM (per AUDIT §2.10). P-256 (YubiKey-attached members) and secp256k1 (crypto-wallet members) are lazy-loaded — they don't enter the default bundle, so cards/widgets that only seal BYOK stay under ~50 KB.
 
@@ -471,15 +479,16 @@ Envelope layout, byte-compatible with `safe.KeySpec.Encrypt.Seal/Open` Go-side:
 seal output = eph_pub (32) || nonce (24) || ciphertext+tag   // Poly25519
 ```
 
-A payload sealed in TS opens cleanly Go-side and vice versa; the round-trip is locked in `amp-client/src/crypto/poly25519.test.ts` and cross-checked against `safe.GetKit(Poly25519).Encrypt.Open`.
+A payload sealed in TS opens cleanly Go-side and vice versa. The local round-trip is locked in `src/crypto/poly25519.test.ts`; byte-level interop is locked bidirectionally in `src/crypto/interop.test.ts` and `stdlib/safe/poly25519/poly25519_interop_test.go`, which open the same Go-sealed and TS-sealed vectors on both sides.
 
 For vanilla-JS consumers without React, the same surface is reachable as adapter methods:
 
 ```ts
 const adapter = new AmpVaultAdapter({ vaultUrl, planetTag });
 await adapter.login({ memberToken });
-// adapter.setEncryptKey(...) — installed by the adapter when the login
-// response carries the EncryptKey; null on logout.
+// login() auto-installs the member's device-local EncryptKey, so seal/open
+// are ready here.  Call adapter.setEncryptKey(...) only to override with a key
+// sourced elsewhere; null on logout.
 
 const sealed = await adapter.seal(new TextEncoder().encode(plaintext));
 const plain  = await adapter.open(sealed);

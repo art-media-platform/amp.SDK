@@ -50,5 +50,14 @@ export { useAmpMedia } from './hooks/useAmpMedia';
 export { useAmpCrypto } from './hooks/useAmpCrypto';
 
 // Sealed-box BYOK
-export { CryptoKitID, createAmpCrypto, getKit, open, registerKit, seal } from './crypto';
+export { CryptoKitID, base64ToBytes, bytesToBase64, createAmpCrypto, getKit, open, registerKit, seal } from './crypto';
 export type { AmpCrypto, KeyPair, KitOps, PubKeyRef } from './crypto';
+
+// Device-local EncryptKey storage (auto-managed on login; override to customize)
+export {
+  IndexedDBKeyStorage,
+  MemoryKeyStorage,
+  defaultEncryptKeyStorage,
+  resolveDeviceEncryptKey,
+} from './crypto/keystore';
+export type { EncryptKeyStorage } from './crypto/keystore';

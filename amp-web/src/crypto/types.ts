@@ -59,10 +59,11 @@ export interface KitOps {
  * `await client.seal(plaintext)` / `await client.open(sealed)` against the
  * session member's EncryptKey.
  *
- * Per project_dual_keypair, each member holds an independent EncryptKey
- * alongside the SigningKey from their auth scheme (wallet / email / yubikey).
- * The EncryptKey prv reaches the client through the login response or a
- * subsequent unlock — installed via setEncryptKey before seal/open will work.
+ * The session member's EncryptKey is a device-local keypair the adapter
+ * resolves and installs on login (generated and persisted on first use; see
+ * crypto/keystore.ts).  seal/open work immediately after login without an
+ * out-of-band install.  setEncryptKey remains for overriding with a key
+ * sourced elsewhere, and for clearing on logout.
  */
 export interface AmpCrypto {
   /** Install the session member's EncryptKey.  Clears on logout. */

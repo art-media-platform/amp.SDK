@@ -60,7 +60,9 @@ readable by *every member* of the planet who holds the epoch key, and a memory
 scrape of the local key cache exposes it after the fact.
 
 ```ts
-const sealed = await adapter.seal(new TextEncoder().encode(plaintext));
+// Channel items are JSON — base64-encode the sealed bytes (a raw Uint8Array
+// does not survive JSON.stringify).  Decode with base64ToBytes before open().
+const sealed = bytesToBase64(await adapter.seal(new TextEncoder().encode(plaintext)));
 await adapter.upsert('users', 'api_keys_overrides', member.id, { cesium: sealed });
 ```
 
@@ -68,11 +70,30 @@ await adapter.upsert('users', 'api_keys_overrides', member.id, { cesium: sealed 
 byte-compatible with the Go side. **Plaintext API keys in a channel item are the
 single most common security mistake — never do it.**
 
-> **Beta gap:** the `seal`/`open` primitives are complete and cross-checked against
-> Go, but the wire does not yet deliver a member's persistent **EncryptKey** to the
-> browser. Until that lands, install the key explicitly via
-> `adapter.setEncryptKey(...)`; cross-device "seal on phone, open on laptop" is not
-> yet guaranteed. Track this before relying on BYOK in production.
+**The EncryptKey is device-local.** The adapter generates a per-member EncryptKey
+on first login and persists it in the browser (IndexedDB), reinstalling it on every
+later login — so `seal`/`open` work for any logged-in member with no out-of-band
+setup. The private key never reaches the host or any other member, so a sealed
+secret stays opaque to admins, vault operators, other planet members, and a
+cold-store/DESIGN-9 forensic adversary holding the planet epoch key. That is the
+property the planet epoch key alone cannot give you.
+
+Two consequences to design around:
+
+- **At rest.** The private key sits in IndexedDB as raw bytes. A local-device
+  compromise (disk forensics, a hostile extension) can read it — the same exposure
+  class as the "local key cache scrape" noted above. Treat the device as part of
+  the BYOK trust boundary; BYOK protects against the *host* and *other members*, not
+  against a compromised client device.
+- **Scope is same-device.** Because the key is device-local, "seal on phone, open on
+  laptop" does **not** work: a member who clears storage or signs in on a second
+  device gets a fresh key there and re-enters their (re-enterable) BYOK secrets.
+  Cross-device recovery would require the host to carry a key wrapped under a secret
+  it never sees (a client-derived KDF key) — a separate mechanism, deliberately not
+  built, until a use case needs it.
+
+To override the auto-installed key (e.g. derive it from a wallet), call
+`adapter.setEncryptKey(...)` after login.
 
 ---
 

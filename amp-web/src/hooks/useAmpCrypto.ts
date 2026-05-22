@@ -6,8 +6,10 @@ import { useAmpContext } from '../provider';
  *
  * `seal(plaintext)` returns anonymous-sender HPKE bytes safe to upsert into a
  * channel item; `open(sealed)` recovers plaintext using the session's
- * EncryptKey.  Throws if no session is installed.  See SKILL-amp-web-SDK.md
- * §"Storing user-supplied secrets (BYOK)" for the canonical usage pattern.
+ * EncryptKey.  The adapter installs that key on login (device-local, generated
+ * on first use), so seal/open work for any logged-in member; both throw if
+ * there is no active session.  See SKILL-amp-web-SDK.md §"Storing
+ * user-supplied secrets (BYOK)" for the canonical usage pattern.
  */
 export function useAmpCrypto(): {
   seal: (plaintext: Uint8Array) => Promise<Uint8Array>;

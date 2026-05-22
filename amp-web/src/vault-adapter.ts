@@ -11,6 +11,11 @@
 
 import type { AmpAdapter } from './adapter';
 import { createAmpCrypto } from './crypto';
+import {
+  type EncryptKeyStorage,
+  defaultEncryptKeyStorage,
+  resolveDeviceEncryptKey,
+} from './crypto/keystore';
 import type { AmpCrypto, KeyPair } from './crypto/types';
 import type {
   AmpItemMeta,
@@ -32,6 +37,13 @@ import type {
 export interface AmpVaultAdapterOpts {
   vaultUrl: string;       // e.g. https://my-amp-node:5193
   planetTag: string;      // the planet this client reads/writes by default
+
+  /**
+   * Where the member's device-local EncryptKey is held for BYOK seal/open.
+   * Defaults to IndexedDB in the browser and an in-memory store elsewhere.
+   * Inject a custom store (e.g. an OS keychain bridge) to override.
+   */
+  encryptKeyStorage?: EncryptKeyStorage;
 }
 
 /** The wire Item shape returned by list/read endpoints (webapi.Item). */
@@ -49,10 +61,12 @@ export class AmpVaultAdapter implements AmpAdapter {
   private authListeners: Set<(member: AmpMember | null) => void> = new Set();
   private wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private crypto: AmpCrypto = createAmpCrypto();
+  private keyStorage: EncryptKeyStorage;
 
   constructor(opts: AmpVaultAdapterOpts) {
     this.vaultUrl = opts.vaultUrl.replace(/\/$/, '');
     this.planetTag = opts.planetTag;
+    this.keyStorage = opts.encryptKeyStorage ?? defaultEncryptKeyStorage();
   }
 
   // ── Internal helpers ─────────────────────────────────────────────
@@ -133,9 +147,34 @@ export class AmpVaultAdapter implements AmpAdapter {
       ...data.member,
       planetID: data.member.planetID || this.planetTag,
     };
+
+    // Install the member's device-local EncryptKey so seal/open work without
+    // an out-of-band setEncryptKey call.  Best-effort: a storage failure leaves
+    // BYOK uninstalled (seal/open then throw a clear "no EncryptKey" error)
+    // rather than failing the login itself.
+    await this.installDeviceEncryptKey(this.member.id);
+
     this.authListeners.forEach(cb => cb(this.member));
     this.connectWs();
     return this.member;
+  }
+
+  /**
+   * installDeviceEncryptKey resolves (or generates) the member's device-local
+   * EncryptKey and installs it on the crypto surface.  A caller that wants to
+   * supply its own key (e.g. derived from a wallet) can override afterwards via
+   * setEncryptKey.
+   */
+  private async installDeviceEncryptKey(memberID: string): Promise<void> {
+    if (!memberID) {
+      return;
+    }
+    try {
+      const keyPair = await resolveDeviceEncryptKey(this.keyStorage, memberID);
+      this.crypto.setEncryptKey(keyPair);
+    } catch {
+      // Leave BYOK uninstalled — seal/open surface the actionable error.
+    }
   }
 
   async logout(): Promise<void> {
@@ -311,6 +350,9 @@ export class AmpVaultAdapter implements AmpAdapter {
 
   private connectWs(): void {
     if (this.ws) return;
+    // No WebSocket in SSR / non-browser hosts — REST stays usable; live
+    // subscriptions resume on a client that has one.
+    if (typeof WebSocket === 'undefined') return;
 
     const protocol = this.vaultUrl.startsWith('https') ? 'wss' : 'ws';
     const host = this.vaultUrl.replace(/^https?:\/\//, '');
@@ -382,6 +424,9 @@ export class AmpVaultAdapter implements AmpAdapter {
 
   // ── Sealed-box BYOK ───────────────────────────────────────────────
 
+  // login() auto-installs the member's device-local EncryptKey, so seal/open
+  // work without calling this.  Use it only to override with a key sourced
+  // elsewhere (e.g. derived from a wallet), or pass null to clear.
   setEncryptKey(keyPair: KeyPair | null): void {
     this.crypto.setEncryptKey(keyPair);
   }

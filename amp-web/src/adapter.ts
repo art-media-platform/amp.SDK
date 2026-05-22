@@ -82,7 +82,10 @@ export interface AmpAdapter {
 
   // ── Sealed-box BYOK ───────────────────────────────────────────────
 
-  /** Install the session member's EncryptKey for seal/open; null on logout. */
+  /**
+   * Override the auto-installed device EncryptKey (login installs one), or
+   * pass null to clear.  seal/open work after login without calling this.
+   */
   setEncryptKey(keyPair: KeyPair | null): void;
 
   /** Seal plaintext to the session member (anonymous-sender HPKE base mode). */

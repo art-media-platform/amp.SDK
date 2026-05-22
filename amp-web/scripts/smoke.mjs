@@ -9,7 +9,7 @@
 import { secp256k1 } from '@noble/curves/secp256k1';
 import { keccak_256 } from '@noble/hashes/sha3';
 import { bytesToHex } from '@noble/hashes/utils';
-import { AmpVaultAdapter } from '../dist/index.js';
+import { AmpVaultAdapter, base64ToBytes, bytesToBase64 } from '../dist/index.js';
 
 const VAULT = process.env.VAULT_URL || 'http://127.0.0.1:5193';
 const PLANET = process.env.SMOKE_PLANET || 'smoke-planet';
@@ -19,6 +19,28 @@ let fail = 0;
 function check(name, cond, extra = '') {
   if (cond) { pass++; console.log(`  ✓ ${name}`); }
   else { fail++; console.error(`  ✗ ${name} ${extra}`); }
+}
+
+const dec = (bytes) => new TextDecoder().decode(bytes);
+
+function byteEq(a, b) {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
+// True if `needle` appears as a contiguous run in `haystack` — used to assert a
+// sealed blob never embeds the plaintext it wraps.
+function contains(haystack, needle) {
+  if (needle.length === 0) return true;
+  for (let i = 0; i + needle.length <= haystack.length; i++) {
+    let hit = true;
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) { hit = false; break; }
+    }
+    if (hit) return true;
+  }
+  return false;
 }
 
 function ethAddress(pubUncompressed) {
@@ -105,6 +127,24 @@ async function main() {
   check('upload returns blob id', !!blob.id, JSON.stringify(blob));
   const resolved = await amp.resolveMedia({ id: blob.id, contentType: blob.contentType, byteSize: blob.byteSize });
   check('resolveMedia fills streamURL', !!resolved.streamURL, JSON.stringify(resolved));
+
+  // ── Sealed-box BYOK round-trip (device EncryptKey auto-installed at login) ──
+  // No setEncryptKey: seal-to-self uses the per-member key the adapter resolved
+  // on login.  The sealed bytes ride a channel item as base64 and must come
+  // back byte-identical (the host stores them opaque), then reopen on the
+  // same device.
+  const secret = new TextEncoder().encode('CESIUM-ION-LIVE-' + Math.random().toString(36).slice(2));
+  const sealed = await amp.seal(secret);
+  check('seal produces opaque bytes (no plaintext substring)', !contains(sealed, secret));
+  const sealedB64 = bytesToBase64(sealed);
+  const [keyRes] = await amp.tx([
+    { kind: 'create', channel: 'users', attr: 'api_keys_overrides', value: { cesium: sealedB64 } },
+  ]);
+  const back = await amp.query('users', 'api_keys_overrides', { itemID: keyRes.itemID });
+  const storedB64 = back.data[0]?.cesium;
+  check('sealed bytes survive the wire round-trip unchanged', storedB64 === sealedB64);
+  const opened = await amp.open(base64ToBytes(storedB64));
+  check('open recovers the BYOK secret (same device)', byteEq(opened, secret), dec(opened));
 
   await amp.logout();
 

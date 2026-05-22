@@ -81,3 +81,4 @@ export function createAmpCrypto(): AmpCrypto {
 
 export { CryptoKitID } from './types';
 export type { AmpCrypto, KeyPair, KitOps, PubKeyRef } from './types';
+export { base64ToBytes, bytesToBase64 } from './base64';
