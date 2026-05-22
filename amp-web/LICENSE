@@ -1,0 +1,52 @@
+amp-web-SDK — Beta Evaluation License
+Copyright (c) 2026 art.media.platform. All rights reserved.
+
+This is PRE-RELEASE (beta) software. It is made available to a limited set of
+evaluators and partners under the terms below. It is NOT yet open-source.
+
+1. GRANT
+   Subject to these terms, art.media.platform ("AMP") grants you a limited,
+   non-exclusive, non-transferable, revocable license to use this SDK (the
+   "Software") to evaluate it and to build and operate applications that
+   interoperate with art.media.platform services.
+
+2. PRE-RELEASE STATUS
+   The Software is provided for evaluation during AMP's beta period. APIs, wire
+   formats, and behavior may change before general availability. AMP has no
+   obligation to provide support, updates, or backward compatibility during beta.
+
+3. RESTRICTIONS
+   You may not:
+   (a) redistribute, sublicense, sell, or publish the Software itself, except for
+       the copies embedded in and required to run your own application;
+   (b) publicly benchmark, review, or publish performance or evaluation results of
+       the beta Software without AMP's prior written consent;
+   (c) remove or alter any copyright, license, or attribution notices.
+   Connecting to AMP-operated infrastructure may additionally require accepting a
+   separate developer agreement and identifying yourself to AMP.
+
+4. RESERVATION OF RIGHTS
+   All rights not expressly granted are reserved by AMP. No rights are granted by
+   implication or estoppel.
+
+5. PATH TO OPEN SOURCE
+   AMP intends to release this SDK under a permissive open-source license
+   (e.g., Apache-2.0) at general availability (target: the v400 milestone). Until
+   then, these beta terms govern.
+
+6. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+7. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL AMP BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
+   IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+8. TERMINATION
+   This license terminates automatically if you breach it, or upon notice from AMP.
+   On termination you must stop using and destroy your copies of the Software,
+   except as embedded in already-deployed applications.
+
+Contact: licensing@art.media.platform

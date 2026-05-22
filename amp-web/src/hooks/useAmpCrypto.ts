@@ -1,0 +1,22 @@
+import { useCallback } from 'react';
+import { useAmpContext } from '../provider';
+
+/**
+ * useAmpCrypto — sealed-box BYOK helpers bound to the session member.
+ *
+ * `seal(plaintext)` returns anonymous-sender HPKE bytes safe to upsert into a
+ * channel item; `open(sealed)` recovers plaintext using the session's
+ * EncryptKey.  Throws if no session is installed.  See SKILL-amp-web-SDK.md
+ * §"Storing user-supplied secrets (BYOK)" for the canonical usage pattern.
+ */
+export function useAmpCrypto(): {
+  seal: (plaintext: Uint8Array) => Promise<Uint8Array>;
+  open: (sealed: Uint8Array) => Promise<Uint8Array>;
+} {
+  const { adapter } = useAmpContext();
+
+  const seal = useCallback((plaintext: Uint8Array) => adapter.seal(plaintext), [adapter]);
+  const open = useCallback((sealed: Uint8Array) => adapter.open(sealed), [adapter]);
+
+  return { seal, open };
+}

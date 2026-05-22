@@ -19,3 +19,7 @@
 go.work
 
 .claude/settings.local.json
+
+# amp-web-SDK build outputs
+/dist/
+/build/

@@ -1,0 +1,46 @@
+name: amp-web-SDK
+
+# Builds the amp-web-SDK bundle from an amp.SDK release tag (e.g. v0.232.0) —
+# the SDK ships in lockstep with amp.SDK, and the tag must match the
+# @art-media-platform/web package version.  During beta this produces a build
+# artifact only; the public Release attach is enabled at v400 (see LICENSE).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The release tag (e.g. v0.232.0) must equal amp-web/package.json version,
+      # so the bundle's stamped version always matches the amp.SDK release.
+      - name: Verify tag matches package version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./amp-web/package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag $GITHUB_REF_NAME ($tag) != amp-web/package.json ($pkg)"
+            exit 1
+          fi
+
+      - name: Build amp-web-SDK bundle
+        run: bash amp-web/pack.sh
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amp-web-SDK
+          path: dist/amp-web-SDK-*.zip
+
+      # Public Release attach is enabled at v400 (TRL "Production Ready"),
+      # alongside flipping the LICENSE open + the service-boundary access gate.
+      # During beta (TRL 2xx) the bundle is distributed to partners directly —
+      # build locally with `make amp-web-SDK`, or pull the artifact above.

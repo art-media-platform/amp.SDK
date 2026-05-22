@@ -1,0 +1,41 @@
+{
+  "name": "@art-media-platform/web",
+  "version": "0.232.0",
+  "description": "amp-web-SDK — TypeScript client (React hooks + adapter) for art.media.platform web apps over the amp.exe app.www wire contract",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE",
+    "SKILL-amp-web-SDK.md",
+    "SECURITY-amp-web-SDK.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@noble/ciphers": "^1.0.0",
+    "@noble/curves": "^1.6.0",
+    "@noble/hashes": "^1.5.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "react": "^18.3.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/art-media-platform/amp.SDK",
+    "directory": "amp-web"
+  }
+}

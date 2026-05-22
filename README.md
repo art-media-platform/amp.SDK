@@ -4,11 +4,11 @@
 
 **art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Every participant holds their own keys.  Every device can be a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
 
-This repository is the **SDK**: a dependency-light Go library defining the wire format, CRDT addressing model, key/identity primitives, and `AppModule` interface.  Pair it with [amp.planet](https://github.com/art-media-platform/amp.planet) to produce:
+This repository is the **SDK**: a dependency-light Go library defining the wire format, CRDT addressing model, key/identity primitives, and `AppModule` interface.  Pair it with amp.planet to produce:
 
 - `amp.exe` — standalone server / vault (macOS, Windows, Linux, Raspberry Pi, Android, Graphene)
 - `amp.lib` — embeddable C library for Unity and Unreal clients
-- [`@amp/client`](https://github.com/art-media-platform/amp.planet/tree/main/amp-client) — TypeScript SDK with React hooks for web apps
+- [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks) for web apps
 - Reticulum gateway for transport over LoRa / packet radio / I2P
 
 Born from [PLAN](https://plan-systems.org/plan-technology-components/) (2017) and its cryptographic [proof of correctness](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md), AMP is the third generation of this architecture.
@@ -90,7 +90,7 @@ Reticulum and AMP are architecturally aligned:
   - both handle intermittent connectivity gracefully.
   - both are complementary: AMP encrypts at the application layer while Reticulum encrypts at the transport layer.
 
-[`vault.Transport`](https://github.com/art-media-platform/amp.planet/blob/main/amp/vault/api.vault.go#L23) makes AMP fully transport-agnostic.  Reticulum over LoRa gives AMP nodes mesh federation without internet, cell towers, or any centralized infrastructure — disaster response teams, rural classrooms, field teams in denied environments, all running encrypted CRDT channels over radio, offering [3D spatial collaboration](https://plan-systems.org/2025/04/17/25-use-cases-for-a-spatial-os-created-with-plan-3d/).
+`vault.Transport` makes AMP fully transport-agnostic.  Reticulum over LoRa gives AMP nodes mesh federation without internet, cell towers, or any centralized infrastructure — disaster response teams, rural classrooms, field teams in denied environments, all running encrypted CRDT channels over radio, offering [3D spatial collaboration](https://plan-systems.org/2025/04/17/25-use-cases-for-a-spatial-os-created-with-plan-3d/).
 
 
 ## Why a 3D Runtime?
@@ -140,6 +140,8 @@ Every long-lived object is a node in a [`task.Context`](https://github.com/art-m
 | [`stdlib/safe/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/safe) | [`Enclave`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go#L74), [`KitSpec`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go#L165), key management, AEAD, HKDF |
 | [`stdlib/tag/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/tag) | Universal tagging and addressing |
 | [`stdlib/task/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/task) | Goroutine lifecycle management (parent-child process model) |
+| [`amp/webapi/`](amp/webapi/) | HTTP/JSON wire contract for the web SDK — the `/api/v1/*` shapes |
+| [`amp-web/`](amp-web/) | [`@art-media-platform/web`](amp-web/) — the **amp-web-SDK** TypeScript client (React hooks); contract in [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) |
 
 
 ### Integration Flow
@@ -148,9 +150,9 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project
 2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L31) for your functionality
-3. Clone [amp.planet](https://github.com/art-media-platform/amp.planet) and register your module
+3. Clone amp.planet and register your module
 4. `make build` produces `amp.exe` (standalone server) and `amp.lib` (embeddable C library)
-5. For web apps, use the [`@amp/client`](https://github.com/art-media-platform/amp.planet/tree/main/amp-client) TypeScript SDK with React hooks
+5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
 
 ---
 
