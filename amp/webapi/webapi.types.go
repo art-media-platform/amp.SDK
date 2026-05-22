@@ -1,0 +1,378 @@
+// Package webapi defines the wire-level JSON shapes for the amp /api/v1/*
+// surface — the contract between the amp web SDK (@amp/web and other language
+// bindings) and an amp host (amp.exe).
+//
+// Field names MUST match the wire shape one-to-one — every external SDK
+// (TypeScript, C#, Swift, future Python) reflects against these names.  Do not
+// rename without version-bumping the API surface.
+//
+// Field-type discipline:
+//   - tag.UID for fields that are ALWAYS UIDs (member IDs, item/edit/from
+//     IDs, citation triples, blob IDs).  The custom MarshalJSON /
+//     UnmarshalJSON on tag.UID encodes/decodes via base32 — wire shape is
+//     exactly the same string the previous string-typed surface produced.
+//   - string for fields that may carry a canonic name OR a UID (channel,
+//     attr, planetTag, withdrawal subject before resolution) and for fields
+//     that are not UIDs at all (Bearer tokens, ISO timestamps, Eth
+//     addresses, free text).
+//   - omitzero (Go 1.24+) on optional tag.UID fields so a zero-UID
+//     suppresses the JSON entry, matching the previous omitempty behaviour
+//     of "" strings.
+package webapi
+
+import (
+	"encoding/json"
+
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+)
+
+// LoginRequest is the body of POST /api/v1/login.
+//
+// Scheme dispatches the credential parse — only one of the per-scheme fields
+// will be populated.  This mirrors the discriminated union in
+// `LoginCredentials` on the SDK side.
+type LoginRequest struct {
+	Scheme string `json:"scheme"`
+
+	// scheme = "wallet"  (Ethereum personal-sign / MetaMask)
+	Address   string `json:"address,omitempty"`
+	Signature string `json:"signature,omitempty"`
+	Nonce     string `json:"nonce,omitempty"`
+
+	// scheme = "email"
+	Email    string `json:"email,omitempty"`
+	Password string `json:"password,omitempty"`
+
+	// scheme = "memberToken"
+	MemberToken string `json:"memberToken,omitempty"`
+
+	// scheme = "yubikey"
+	ChallengeResponse string `json:"challengeResponse,omitempty"`
+
+	// Optional planet binding requested by the caller.  Accepts a canonic
+	// tag.Name expression OR a base32 UID.  Empty = the host's home planet.
+	PlanetTag string `json:"planetTag,omitempty"`
+}
+
+// LoginResponse is the body of a successful POST /api/v1/login.
+//
+// SessionToken stays as string — it's a 32-byte random Bearer, not a UID.
+type LoginResponse struct {
+	SessionToken string    `json:"sessionToken"`
+	ExpiresAt    int64     `json:"expiresAt"` // unix seconds
+	Member       AmpMember `json:"member"`
+}
+
+// AmpMember describes the authenticated identity on the wire.  `Kind` is a
+// human-readable label (e.g. "Person") sourced from a `LawMemberKind_*`
+// definition (DESIGN-11); apps surface it but do not gate behavior on it.
+type AmpMember struct {
+	ID          tag.UID `json:"id"`
+	DisplayName string  `json:"displayName,omitempty"`
+	Email       string  `json:"email,omitempty"`
+	PlanetID    tag.UID `json:"planetID"`
+	Kind        string  `json:"kind,omitempty"`
+	Address     string  `json:"address,omitempty"` // populated for wallet-scheme members
+}
+
+// SessionResponse is the body of GET /api/v1/session.
+type SessionResponse struct {
+	Member    AmpMember `json:"member"`
+	ExpiresAt int64     `json:"expiresAt"`
+}
+
+// EmailIssueRequest is the body of POST /api/v1/admin/credentials/email/issue.
+//
+// Bearer-authenticated; signup is admin-gated to keep the wire surface
+// invite-only by default.  Open signup would expose the host to bulk-
+// fingerprint enumeration (verify-by-timing); the SS launch flow seeds
+// credentials through this endpoint from app.home-trusted source data.
+//
+// Email is the wire-form address (UTF-8 string, validated at the boundary).
+// The server canonicalises to MemberID via tag.NameFrom("email:lc(addr)").
+type EmailIssueRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// EmailIssueResponse echoes the seeded MemberID so the caller (admin tool /
+// migration script) can record the wallet→email mapping without re-hashing.
+type EmailIssueResponse struct {
+	MemberID tag.UID `json:"memberID"`
+	Email    string  `json:"email"`
+}
+
+// EmailRecoverRequest is the body of POST /api/v1/login/email/recover.
+//
+// Anonymous endpoint (no Bearer required) — the customer cannot present
+// the credential they're trying to recover.  The response is uniform 202
+// regardless of whether the email is bound to a member; the magic-link
+// transport is the only side-channel that signals existence.
+type EmailRecoverRequest struct {
+	Email string `json:"email"`
+}
+
+// EmailRedeemRequest is the body of POST /api/v1/login/email/redeem.
+//
+// Anonymous endpoint.  On success, the recovery token is consumed
+// (single-use) and the password is swapped; the caller receives a
+// LoginResponse Bearer envelope so they can drop straight into the
+// authenticated surface without a follow-up /api/v1/login round-trip.
+type EmailRedeemRequest struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"newPassword"`
+	PlanetTag   string `json:"planetTag,omitempty"`
+}
+
+// TxOpKind enumerates the verbs accepted in a /api/v1/tx batch.
+type TxOpKind string
+
+const (
+	TxOpCreate   TxOpKind = "create"
+	TxOpUpsert   TxOpKind = "upsert"
+	TxOpRemove   TxOpKind = "remove"
+	TxOpWithdraw TxOpKind = "withdraw"
+)
+
+// WithdrawReason mirrors the DESIGN-15 reason taxonomy.
+type WithdrawReason string
+
+const (
+	WithdrawConsent     WithdrawReason = "Consent"
+	WithdrawInaccuracy  WithdrawReason = "Inaccuracy"
+	WithdrawOutdated    WithdrawReason = "Outdated"
+	WithdrawCoerced     WithdrawReason = "Coerced"
+	WithdrawForgotten   WithdrawReason = "Forgotten"
+	WithdrawDeparted    WithdrawReason = "Departed"
+	WithdrawInviteRecal WithdrawReason = "InviteRecall"
+	WithdrawRetracted   WithdrawReason = "Retracted"
+)
+
+// TxOp is one CRDT operation inside a /api/v1/tx batch.
+//
+// Channel/Attr/ItemID stay as string because callers may pass either the
+// canonic name OR a pre-resolved base32 UID (the server runs them through
+// tag.Parse).  Subject + Delegation use tag.UID where they're known to be
+// UIDs.
+//
+// `Value` is held as raw JSON until the backend marshals it to the
+// registered proto for the (channel, attr) pair — late binding lets
+// unfamiliar attrs still round-trip through the wire layer without
+// server-side schema knowledge.
+//
+// Subject + Delegation are DESIGN-15 fields used by `withdraw` ops:
+//   - Subject names the entity whose consent is being withdrawn.  Zero
+//     UID = the signer is the implicit subject (the common case).
+//   - Delegation cites the record proving the signer's authority to
+//     withdraw on behalf of Subject when Subject != signer (Memorial
+//     speaking for a deceased member, GDPR delegation per DESIGN-14, etc.).
+//     Nil when Subject == signer.
+//
+// Both fields are ignored on non-withdraw ops.
+type TxOp struct {
+	Kind       TxOpKind        `json:"kind"`
+	Channel    string          `json:"channel"`
+	Attr       string          `json:"attr"`
+	ItemID     string          `json:"itemID,omitempty"`
+	Value      json.RawMessage `json:"value,omitempty"`
+	Reason     WithdrawReason  `json:"reason,omitempty"`
+	Rationale  string          `json:"rationale,omitempty"`
+	Subject    tag.UID         `json:"subject,omitzero"`
+	Delegation *CitationRef    `json:"delegation,omitempty"`
+}
+
+// CitationRef is the wire representation of an amp.Citation: a
+// (planetID, nodeID, itemID) triple addressing a CRDT record.  PlanetID is
+// the zero UID when the citation refers to the same planet as the
+// carrying request — same convention as the proto's "Zero UID = this
+// planet" rule.
+type CitationRef struct {
+	PlanetID tag.UID `json:"planetID,omitzero"`
+	NodeID   tag.UID `json:"nodeID,omitzero"`
+	ItemID   tag.UID `json:"itemID,omitzero"`
+}
+
+// TxRequest is the body of POST /api/v1/tx.
+type TxRequest struct {
+	Ops []TxOp `json:"ops"`
+
+	// PlanetTag is optional; defaults to the session's bound planet.  Lets a
+	// caller direct a write at the deploy's share planet without
+	// instantiating a second client.  Accepts canonic name or base32 UID.
+	PlanetTag string `json:"planetTag,omitempty"`
+}
+
+// TxOpResult is the per-op outcome inside a TxResponse.
+type TxOpResult struct {
+	ItemID tag.UID `json:"itemID"`
+	EditID tag.UID `json:"editID"`
+	Error  string  `json:"error,omitempty"`
+}
+
+// TxResponse is the body of POST /api/v1/tx on success.
+type TxResponse struct {
+	TxID    tag.UID      `json:"txID"`
+	Results []TxOpResult `json:"results"`
+}
+
+// Item is one CRDT entry on the wire.  Underscore-prefixed fields surface the
+// protocol's metadata (item / edit / from IDs, server-stamp time) alongside
+// the application value.
+type Item struct {
+	ItemID    tag.UID         `json:"_itemID"`
+	EditID    tag.UID         `json:"_editID"`
+	FromID    tag.UID         `json:"_fromID"`
+	UpdatedAt string          `json:"_updatedAt"` // ISO-8601, derived from ItemID's tag.UID
+	Value     json.RawMessage `json:"value"`
+	Withdrawn *WithdrawNote   `json:"_withdrawn,omitempty"`
+}
+
+// WithdrawNote rides alongside an Item when a Withdraw has been recorded
+// against it (DESIGN-15).  The original value persists; consumers decide
+// honoring policy.
+//
+// WithdrawnBy is the TxMsg signer (the member who authored the withdrawal).
+// Subject names whose consent is being withdrawn — equal to WithdrawnBy in
+// the common case (signer is the subject), distinct when an authorized
+// delegate (Memorial, GDPR delegation) speaks on the subject's behalf.
+// Delegation, if present, cites the record proving that authority.
+type WithdrawNote struct {
+	Reason      WithdrawReason `json:"reason"`
+	Rationale   string         `json:"rationale,omitempty"`
+	WithdrawnAt string         `json:"withdrawnAt"`
+	WithdrawnBy tag.UID        `json:"withdrawnBy"`
+	Subject     tag.UID        `json:"subject,omitzero"`
+	Delegation  *CitationRef   `json:"delegation,omitempty"`
+}
+
+// ListResponse is the body of GET /api/v1/channels/:ch/attrs/:attr/items.
+//
+// Next is a cursor (the last item's base32 UID, or empty when no more
+// pages); kept as string because the cursor is opaque from the client's
+// point of view — callers pass it back verbatim via the `?after=` query.
+type ListResponse struct {
+	Items   []Item `json:"items"`
+	HasMore bool   `json:"hasMore"`
+	Next    string `json:"next,omitempty"`
+}
+
+// EditOp names what a chronicle entry did to its item.  Distinct from
+// TxOpKind because the chronicle view collapses Create+Upsert into a single
+// observed semantic (a record either appeared or was updated; the wire
+// caller does not need to know whether the client called create vs upsert).
+type EditOp string
+
+const (
+	EditOpUpsert   EditOp = "upsert"
+	EditOpDelete   EditOp = "delete"
+	EditOpWithdraw EditOp = "withdraw"
+)
+
+// EditEntry is one record in the chronicle replay of an item.
+//
+// Body carries the op's payload bytes (post-extraction; for upserts this is
+// the marshaled std.TextItem with the JSON body, for withdraws this is the
+// marshaled amp.Withdraw companion).  Kept opaque on the wire layer per the
+// thin-wire posture — the caller decodes against the registered proto
+// for the addressed attr.
+type EditEntry struct {
+	EditID      tag.UID         `json:"editID"`
+	CommitTx    tag.UID         `json:"commitTx"`
+	Author      tag.UID         `json:"author"`
+	CommittedAt string          `json:"committedAt"` // ISO-8601, derived from CommitTx UID
+	Op          EditOp          `json:"op"`
+	Reason      WithdrawReason  `json:"reason,omitempty"`    // withdraw entries only
+	Rationale   string          `json:"rationale,omitempty"` // withdraw entries only
+	Subject     tag.UID         `json:"subject,omitzero"`    // withdraw entries only
+	Delegation  *CitationRef    `json:"delegation,omitempty"`
+	Body        json.RawMessage `json:"body,omitempty"`
+}
+
+// EditChainResponse is the body of GET /api/v1/channels/:ch/attrs/:attr/items/:itemID/edits.
+//
+// Original is the first chronicled record on the item (the Add).  Edits is
+// the full replay in commit order, INCLUDING the original entry as its
+// first element, so an auditor can iterate one slice.  Sealed in for the
+// v300 wire freeze; new entry kinds extend EditOp without a shape change.
+type EditChainResponse struct {
+	Original *Item       `json:"original,omitempty"`
+	Edits    []EditEntry `json:"edits"`
+}
+
+// BlobTag is the wire view of the substrate's amp.BlobRef.BlobTag envelope:
+// (UID, URI, ContentType, I) → (ID, StreamURL, ContentType, ByteSize).
+//
+// It rides two surfaces:
+//   - POST /api/v1/upload response — server fills every field
+//   - POST /api/v1/media/resolve request body — caller fills ID +
+//     ContentType + ByteSize from their cabinet read; server returns the
+//     same shape with StreamURL populated by the local asset publisher.
+//
+// Caller-carries-the-Tag posture: blob metadata lives in the cabinet,
+// not in any wire-side persistent store.  The publisher is in-memory and
+// idempotent — the same BlobTag always resolves to the same StreamURL on
+// a given host, and a vault outage is recoverable by republishing on
+// whichever host the SDK reaches next.
+type BlobTag struct {
+	ID          tag.UID `json:"id"`
+	StreamURL   string  `json:"streamURL,omitempty"`
+	ContentType string  `json:"contentType,omitempty"`
+	ByteSize    int64   `json:"byteSize,omitempty"`
+}
+
+// MediaResolveRequest is the body of POST /api/v1/media/resolve.
+type MediaResolveRequest struct {
+	PlanetTag string  `json:"planetTag,omitempty"`
+	Blob      BlobTag `json:"blob"`
+}
+
+// SubscribeFrame is the WebSocket fan-out shape for /ws.  Clients send
+// {type:"subscribe"|"unsubscribe", channel, attr}; the server pushes
+// {type:"update"|"delete"|"withdraw", channel, attr, itemID, value?, editID?, fromID?}.
+//
+// Channel + Attr stay as string for the same canonic-or-UID reason as TxOp.
+// ItemID/EditID/FromID/Subject are typed UIDs.
+//
+// Withdraw frames additionally carry the DESIGN-15 surface — Reason,
+// Rationale, Subject, Delegation — so subscribers can reconstruct the full
+// withdrawal record without a follow-up read.  FromID is the signer;
+// Subject (when distinct from FromID) names the entity whose consent is
+// being withdrawn via the cited Delegation.
+type SubscribeFrame struct {
+	Type       string          `json:"type"`
+	Channel    string          `json:"channel,omitempty"`
+	Attr       string          `json:"attr,omitempty"`
+	ItemID     tag.UID         `json:"itemID,omitzero"`
+	EditID     tag.UID         `json:"editID,omitzero"`
+	FromID     tag.UID         `json:"fromID,omitzero"`
+	Value      json.RawMessage `json:"value,omitempty"`
+	UpdatedAt  string          `json:"updatedAt,omitempty"`
+	Reason     WithdrawReason  `json:"reason,omitempty"`
+	Rationale  string          `json:"rationale,omitempty"`
+	Subject    tag.UID         `json:"subject,omitzero"`
+	Delegation *CitationRef    `json:"delegation,omitempty"`
+	Error      string          `json:"error,omitempty"`
+}
+
+// ErrorResponse is the body of every non-2xx /api/v1/* response.
+type ErrorResponse struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// Error code names mirror status.Code constants where possible — reuse them in
+// SDKs to map cleanly to client-side typed errors.
+const (
+	ErrBadRequest        = "BadRequest"
+	ErrAuthRequired      = "AuthRequired"
+	ErrAuthFailed        = "AuthFailed"
+	ErrForbidden         = "Forbidden"
+	ErrNotFound          = "NotFound"
+	ErrConflict          = "Conflict"
+	ErrSchemeUnsupported = "SchemeUnsupported"
+	ErrPlanetUnknown     = "PlanetUnknown"
+	ErrTxRejected        = "TxRejected"
+	ErrPayloadTooLarge   = "PayloadTooLarge"
+	ErrInternal          = "Internal"
+	ErrNotImplemented    = "NotImplemented"
+)
