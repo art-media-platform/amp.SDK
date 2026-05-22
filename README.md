@@ -2,7 +2,7 @@
   <img src="media/art-media-platform.svg" alt="art.media.platform" width="280">
 </p>
 
-**art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Every participant holds their own keys.  Every device is a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
+**art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Every participant holds their own keys.  Every device can be a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
 
 This repository is the **SDK**: a dependency-light Go library defining the wire format, CRDT addressing model, key/identity primitives, and `AppModule` interface.  Pair it with [amp.planet](https://github.com/art-media-platform/amp.planet) to produce:
 
@@ -25,7 +25,7 @@ In crisis scenarios — natural disasters, infrastructure collapse, conflict zon
 
 The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices and any relay nodes they choose to trust.
 
-A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L94)) that propagate through whatever network links are available — TCP, UDP, USB stick, or your favorite cutting-edge mesh-networking transport.  Every TxMsg is signed by its author and optionally encrypted with the planet's current epoch key.
+A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L94)) that propagate through whatever transports are available — TCP, UDP, USB stick, or mesh-networking.  Every `TxMsg` is signed by its author and optionally encrypted with the planet's current epoch key.
 
 | Mode | Signed | Encrypted | Who Can Read (Decrypt) | Who Can Write |
 |------|--------|-----------|--------------|---------------|
@@ -45,11 +45,11 @@ Identity and key-receipt have opposing rotation needs, so AMP splits them:
 
 ### [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) Addressing
 
-Every piece of state has a unique [`amp.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go#L27): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is guaranteed by the [data model](https://crdt.tech/).
+Every piece of state has a unique [`amp.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go#L27): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is [guaranteed](https://crdt.tech/).  The [`amp.Tag` system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/README.md) provides UID derivation from strings.
 
 ### Epoch Rotation
 
-A planet's encryption key changes over time through **epoch rotation**.  When an admin rotates the epoch — to revoke a member, respond to a compromise, or as routine hygiene — a new symmetric key is generated and sealed-box-wrapped to each active member's EncryptKey.  Revoked members never receive the new key.  Historical content remains readable with old epoch keys; new content is sealed under the new epoch.  Private-channel keys derive from `HKDF(channel_epoch || planet_epoch)`, so rotating the planet implicitly invalidates all channel keys without per-channel rotation.
+A planet's encryption changes over time through **epoch rotation**.  When an admin rotates the epoch — to revoke a member, respond to a compromise, or as routine hygiene — a new symmetric key is generated and sealed-box-wrapped to each active member's [EncryptKey](#member-keypairs).  Revoked members never receive the new key.  Historical content remains readable with old epoch keys; new content is sealed under the new epoch.  Private-channel keys derive from `HKDF(channel_epoch || planet_epoch)`, so rotating the planet implicitly invalidates all channel keys without per-channel rotation.
 
 ### Zero-Knowledge Relay
 
@@ -104,7 +104,7 @@ A Unity app with AMP embedded has end-to-end encrypted federated communication, 
 **Platforms:** Windows, macOS, Linux, iOS, Android, XR headsets (Meta Quest, Apple Vision).  The same binary that runs a headless vault on a Raspberry Pi serves a VR collaboration space.
 
 
-## Asset Security
+## Package Management
 
 A planet's root carries `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.
 
