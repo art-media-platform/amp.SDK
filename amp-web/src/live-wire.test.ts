@@ -15,8 +15,8 @@ import { secp256k1 } from '@noble/curves/secp256k1';
 import { keccak_256 } from '@noble/hashes/sha3';
 import { bytesToHex } from '@noble/hashes/utils';
 
-import { AmpVaultAdapter } from './vault-adapter';
-import { base64ToBytes, bytesToBase64 } from './crypto/base64';
+import { AmpWebClient } from './web-client.js';
+import { base64ToBytes, bytesToBase64 } from './crypto/base64.js';
 
 // Read env without @types/node — the SDK stays browser-typed.
 const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
@@ -46,7 +46,7 @@ run('live BYOK over app.www', () => {
   it('auto-installs the device key on login and round-trips a sealed secret', async () => {
     const priv = secp256k1.utils.randomPrivateKey();
     const address = ethAddress(secp256k1.getPublicKey(priv, false));
-    const amp = new AmpVaultAdapter({ vaultUrl: VAULT, planetTag: PLANET });
+    const amp = new AmpWebClient({ vaultUrl: VAULT, planetTag: PLANET });
 
     const ch = await amp.getWalletChallenge();
     await amp.login({ scheme: 'wallet', address, signature: personalSign(ch.message, priv), nonce: ch.nonce });

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useAmpContext } from '../provider';
+import { useAmpContext } from '../provider.js';
 
 /**
  * useAmpCrypto — sealed-box BYOK helpers bound to the session member.

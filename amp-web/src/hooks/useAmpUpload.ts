@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useAmpContext } from '../provider';
-import type { AmpUploadResult, BlobRef, UploadOpts } from '../types';
+import { useAmpContext } from '../provider.js';
+import type { AmpUploadResult, BlobRef, UploadOpts } from '../types.js';
 
 export function useAmpUpload(): AmpUploadResult {
   const { adapter } = useAmpContext();

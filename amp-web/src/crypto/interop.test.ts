@@ -11,8 +11,8 @@
 import { describe, expect, it } from 'vitest';
 import { hexToBytes } from '@noble/hashes/utils';
 
-import { open } from './index';
-import { CryptoKitID, type KeyPair } from './types';
+import { open } from './index.js';
+import { CryptoKitID, type KeyPair } from './types.js';
 
 const dec = new TextDecoder();
 

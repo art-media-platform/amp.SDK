@@ -1,5 +1,5 @@
 /**
- * AmpVaultAdapter — talks the amp.exe `app.www` wire contract.
+ * AmpWebClient — talks the amp.exe `app.www` wire contract.
  *
  * REST:      {vaultUrl}/api/v1/...           (amp.SDK/amp/webapi)
  * WebSocket: {vaultUrl}/ws                   (flat SubscribeFrame fan-out)
@@ -9,14 +9,15 @@
  * Native fetch + WebSocket — no external dependencies.
  */
 
-import type { AmpAdapter } from './adapter';
-import { createAmpCrypto } from './crypto';
+import type { AmpAdapter } from './adapter.js';
+import { createAmpCrypto } from './crypto/index.js';
+import { ampErrorFromResponse } from './errors.js';
 import {
   type EncryptKeyStorage,
   defaultEncryptKeyStorage,
   resolveDeviceEncryptKey,
-} from './crypto/keystore';
-import type { AmpCrypto, KeyPair } from './crypto/types';
+} from './crypto/keystore.js';
+import type { AmpCrypto, KeyPair } from './crypto/types.js';
 import type {
   AmpItemMeta,
   AmpMember,
@@ -32,9 +33,9 @@ import type {
   WalletChallenge,
   WithdrawOpts,
   WithdrawReason,
-} from './types';
+} from './types.js';
 
-export interface AmpVaultAdapterOpts {
+export interface AmpWebClientOpts {
   vaultUrl: string;       // e.g. https://my-amp-node:5193
   planetTag: string;      // the planet this client reads/writes by default
 
@@ -51,7 +52,7 @@ interface WireItem extends AmpItemMeta {
   value: Record<string, unknown>;
 }
 
-export class AmpVaultAdapter implements AmpAdapter {
+export class AmpWebClient implements AmpAdapter {
   private vaultUrl: string;
   private planetTag: string;
   private sessionToken: string | null = null;
@@ -63,7 +64,7 @@ export class AmpVaultAdapter implements AmpAdapter {
   private crypto: AmpCrypto = createAmpCrypto();
   private keyStorage: EncryptKeyStorage;
 
-  constructor(opts: AmpVaultAdapterOpts) {
+  constructor(opts: AmpWebClientOpts) {
     this.vaultUrl = opts.vaultUrl.replace(/\/$/, '');
     this.planetTag = opts.planetTag;
     this.keyStorage = opts.encryptKeyStorage ?? defaultEncryptKeyStorage();
@@ -89,8 +90,7 @@ export class AmpVaultAdapter implements AmpAdapter {
       headers: { ...this.headers(), ...(init?.headers as Record<string, string> ?? {}) },
     });
     if (!resp.ok) {
-      const body = await resp.text().catch(() => '');
-      throw new Error(`vault ${resp.status}: ${body || resp.statusText}`);
+      throw await ampErrorFromResponse(resp);
     }
     if (resp.status === 204) return undefined as T;
     return resp.json();
@@ -128,7 +128,7 @@ export class AmpVaultAdapter implements AmpAdapter {
 
   async getWalletChallenge(): Promise<WalletChallenge> {
     const resp = await fetch(`${this.vaultUrl}/api/v1/login/metamask/challenge`);
-    if (!resp.ok) throw new Error(`challenge ${resp.status}: ${resp.statusText}`);
+    if (!resp.ok) throw await ampErrorFromResponse(resp);
     return resp.json();
   }
 
@@ -297,8 +297,7 @@ export class AmpVaultAdapter implements AmpAdapter {
 
     const resp = await fetch(this.apiUrl('/upload'), { method: 'POST', headers: hdrs, body: form });
     if (!resp.ok) {
-      const body = await resp.text().catch(() => '');
-      throw new Error(`upload ${resp.status}: ${body || resp.statusText}`);
+      throw await ampErrorFromResponse(resp);
     }
     opts?.onProgress?.(100);
     return resp.json();

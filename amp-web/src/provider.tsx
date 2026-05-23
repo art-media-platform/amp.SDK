@@ -1,10 +1,11 @@
 /**
- * AmpProvider — React context provider with adapter injection.
+ * AmpProvider — React context provider; inject your AmpWebClient (or any
+ * AmpAdapter) via the `client` prop.
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { AmpAdapter } from './adapter';
-import type { AmpMember } from './types';
+import type { AmpAdapter } from './adapter.js';
+import type { AmpMember } from './types.js';
 
 interface AmpContextValue {
   adapter: AmpAdapter;
@@ -15,19 +16,19 @@ interface AmpContextValue {
 const AmpContext = createContext<AmpContextValue | null>(null);
 
 export interface AmpProviderProps {
-  adapter: AmpAdapter;
+  client: AmpAdapter;
   children: React.ReactNode;
 }
 
-export function AmpProvider({ adapter, children }: AmpProviderProps) {
-  const [member, setMember] = useState<AmpMember | null>(() => adapter.getSession());
+export function AmpProvider({ client, children }: AmpProviderProps) {
+  const [member, setMember] = useState<AmpMember | null>(() => client.getSession());
 
   useEffect(() => {
-    return adapter.onAuthChange(setMember);
-  }, [adapter]);
+    return client.onAuthChange(setMember);
+  }, [client]);
 
   return (
-    <AmpContext.Provider value={{ adapter, member, setMember }}>
+    <AmpContext.Provider value={{ adapter: client, member, setMember }}>
       {children}
     </AmpContext.Provider>
   );

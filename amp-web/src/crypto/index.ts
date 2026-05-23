@@ -6,14 +6,14 @@
  * the default bundle so cards/widgets that only need BYOK stay small.
  */
 
-import { poly25519KitOps } from './poly25519';
+import { poly25519KitOps } from './poly25519.js';
 import {
   type AmpCrypto,
   CryptoKitID,
   type KeyPair,
   type KitOps,
   type PubKeyRef,
-} from './types';
+} from './types.js';
 
 const kits = new Map<CryptoKitID, KitOps>([[CryptoKitID.Poly25519, poly25519KitOps]]);
 
@@ -79,6 +79,6 @@ export function createAmpCrypto(): AmpCrypto {
   };
 }
 
-export { CryptoKitID } from './types';
-export type { AmpCrypto, KeyPair, KitOps, PubKeyRef } from './types';
-export { base64ToBytes, bytesToBase64 } from './base64';
+export { CryptoKitID } from './types.js';
+export type { AmpCrypto, KeyPair, KitOps, PubKeyRef } from './types.js';
+export { base64ToBytes, bytesToBase64 } from './base64.js';

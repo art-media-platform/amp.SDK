@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useAmpContext } from '../provider';
-import type { AmpMutationResult, TxOp, TxResult, WithdrawOpts } from '../types';
+import { useAmpContext } from '../provider.js';
+import type { AmpMutationResult, TxOp, TxResult, WithdrawOpts } from '../types.js';
 
 export function useAmpMutation(): AmpMutationResult {
   const { adapter } = useAmpContext();

@@ -8,13 +8,13 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { open, seal } from './index';
+import { open, seal } from './index.js';
 import {
   MemoryKeyStorage,
   defaultEncryptKeyStorage,
   resolveDeviceEncryptKey,
-} from './keystore';
-import { CryptoKitID } from './types';
+} from './keystore.js';
+import { CryptoKitID } from './types.js';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useAmpContext } from '../provider';
-import type { AmpMediaResult } from '../types';
+import { useAmpContext } from '../provider.js';
+import type { AmpMediaResult } from '../types.js';
 
 /**
  * useAmpMedia resolves a blob ID to a streamable URL via the caller-carries-the-

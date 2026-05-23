@@ -15,14 +15,14 @@
  * and is intentionally not built here.
  */
 
-import { getKit } from './index';
-import { CryptoKitID, type KeyPair } from './types';
+import { getKit } from './index.js';
+import { CryptoKitID, type KeyPair } from './types.js';
 
 /**
  * EncryptKeyStorage persists one keypair per member.  The default browser
  * implementation is IndexedDB-backed; Node / SSR contexts fall back to an
  * in-memory store.  Consumers may inject their own (e.g. an OS keychain
- * bridge) via AmpVaultAdapterOpts.encryptKeyStorage.
+ * bridge) via AmpWebClientOpts.encryptKeyStorage.
  */
 export interface EncryptKeyStorage {
   /** Return the member's stored keypair, or null if none is held yet. */

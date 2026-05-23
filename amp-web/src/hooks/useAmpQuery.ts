@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAmpContext } from '../provider';
-import type { AmpItemMeta, AmpQueryOpts, AmpQueryResult, SubscriptionEvent } from '../types';
+import { useAmpContext } from '../provider.js';
+import type { AmpItemMeta, AmpQueryOpts, AmpQueryResult, SubscriptionEvent } from '../types.js';
 
 export function useAmpQuery<T>(
   channel: string,

@@ -62,15 +62,15 @@ scrape of the local key cache exposes it after the fact.
 ```ts
 // Channel items are JSON — base64-encode the sealed bytes (a raw Uint8Array
 // does not survive JSON.stringify).  Decode with base64ToBytes before open().
-const sealed = bytesToBase64(await adapter.seal(new TextEncoder().encode(plaintext)));
-await adapter.upsert('users', 'api_keys_overrides', member.id, { cesium: sealed });
+const sealed = bytesToBase64(await client.seal(new TextEncoder().encode(plaintext)));
+await client.upsert('users', 'api_keys_overrides', member.id, { cesium: sealed });
 ```
 
 `seal`/`open` wrap anonymous-sender HPKE (default kit Poly25519, pure JS) and are
 byte-compatible with the Go side. **Plaintext API keys in a channel item are the
 single most common security mistake — never do it.**
 
-**The EncryptKey is device-local.** The adapter generates a per-member EncryptKey
+**The EncryptKey is device-local.** The client generates a per-member EncryptKey
 on first login and persists it in the browser (IndexedDB), reinstalling it on every
 later login — so `seal`/`open` work for any logged-in member with no out-of-band
 setup. The private key never reaches the host or any other member, so a sealed
@@ -93,7 +93,7 @@ Two consequences to design around:
   built, until a use case needs it.
 
 To override the auto-installed key (e.g. derive it from a wallet), call
-`adapter.setEncryptKey(...)` after login.
+`client.setEncryptKey(...)` after login.
 
 ---
 

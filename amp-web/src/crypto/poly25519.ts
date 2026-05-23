@@ -11,8 +11,8 @@
 import { x25519 } from '@noble/curves/ed25519';
 import { randomBytes } from '@noble/ciphers/webcrypto';
 
-import { CryptoKitID, type KeyPair, type KitOps } from './types';
-import { NonceSize, bytesCompare, concat, deriveKey, openAEAD, sealAEAD } from './aead';
+import { CryptoKitID, type KeyPair, type KitOps } from './types.js';
+import { NonceSize, bytesCompare, concat, deriveKey, openAEAD, sealAEAD } from './aead.js';
 
 /** X25519 public key size (also private key size). */
 export const X25519KeySize = 32;

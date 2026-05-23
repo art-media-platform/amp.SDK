@@ -9,10 +9,10 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { NonceSize } from './aead';
-import { createAmpCrypto, getKit, open, seal } from './index';
-import { X25519KeySize, poly25519KitOps } from './poly25519';
-import { CryptoKitID, type KeyPair } from './types';
+import { NonceSize } from './aead.js';
+import { createAmpCrypto, getKit, open, seal } from './index.js';
+import { X25519KeySize, poly25519KitOps } from './poly25519.js';
+import { CryptoKitID, type KeyPair } from './types.js';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();

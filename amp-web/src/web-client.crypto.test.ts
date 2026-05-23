@@ -8,8 +8,8 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { MemoryKeyStorage } from './crypto/keystore';
-import { AmpVaultAdapter } from './vault-adapter';
+import { MemoryKeyStorage } from './crypto/keystore.js';
+import { AmpWebClient } from './web-client.js';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -53,11 +53,11 @@ afterEach(() => {
   (globalThis as { WebSocket?: unknown }).WebSocket = realWebSocket;
 });
 
-function newAdapter(storage: MemoryKeyStorage): AmpVaultAdapter {
-  return new AmpVaultAdapter({ vaultUrl: 'http://127.0.0.1:5193', planetTag: 'planet', encryptKeyStorage: storage });
+function newAdapter(storage: MemoryKeyStorage): AmpWebClient {
+  return new AmpWebClient({ vaultUrl: 'http://127.0.0.1:5193', planetTag: 'planet', encryptKeyStorage: storage });
 }
 
-describe('AmpVaultAdapter BYOK auto-install', () => {
+describe('AmpWebClient BYOK auto-install', () => {
   it('seals/opens after login without an explicit setEncryptKey', async () => {
     const amp = newAdapter(new MemoryKeyStorage());
     await amp.login({ scheme: 'memberToken', memberToken: 'whatever' });

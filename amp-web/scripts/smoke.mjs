@@ -1,6 +1,6 @@
 // End-to-end smoke test for @amp/web against a live amp.exe app.www portal.
 //
-// Drives the compiled AmpVaultAdapter (../dist) through the full wire surface:
+// Drives the compiled AmpWebClient (../dist) through the full wire surface:
 // wallet login → tx batch → list/read → upsert → subscribe → withdraw →
 // tag resolve → upload → media resolve.  Run against `cmd/www-smoke`.
 //
@@ -9,7 +9,7 @@
 import { secp256k1 } from '@noble/curves/secp256k1';
 import { keccak_256 } from '@noble/hashes/sha3';
 import { bytesToHex } from '@noble/hashes/utils';
-import { AmpVaultAdapter, base64ToBytes, bytesToBase64 } from '../dist/index.js';
+import { AmpWebClient, base64ToBytes, bytesToBase64 } from '../dist/index.js';
 
 const VAULT = process.env.VAULT_URL || 'http://127.0.0.1:5193';
 const PLANET = process.env.SMOKE_PLANET || 'smoke-planet';
@@ -67,7 +67,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 async function main() {
   const priv = secp256k1.utils.randomPrivateKey();
   const address = ethAddress(secp256k1.getPublicKey(priv, false));
-  const amp = new AmpVaultAdapter({ vaultUrl: VAULT, planetTag: PLANET });
+  const amp = new AmpWebClient({ vaultUrl: VAULT, planetTag: PLANET });
 
   // ── Identity ──
   const ch = await amp.getWalletChallenge();

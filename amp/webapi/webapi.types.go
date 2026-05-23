@@ -360,19 +360,21 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-// Error code names mirror status.Code constants where possible — reuse them in
-// SDKs to map cleanly to client-side typed errors.
+// Error codes are the client-facing error vocabulary carried on the
+// ErrorResponse envelope; the HTTP status rides the response itself.  They are
+// an HTTP-boundary projection of the transport-agnostic status.Code, not a
+// mirror of it — the substrate keeps its granular diagnostic codes; this set is
+// what an HTTP/SDK consumer dispatches on.
 const (
-	ErrBadRequest        = "BadRequest"
-	ErrAuthRequired      = "AuthRequired"
-	ErrAuthFailed        = "AuthFailed"
-	ErrForbidden         = "Forbidden"
-	ErrNotFound          = "NotFound"
-	ErrConflict          = "Conflict"
-	ErrSchemeUnsupported = "SchemeUnsupported"
-	ErrPlanetUnknown     = "PlanetUnknown"
-	ErrTxRejected        = "TxRejected"
-	ErrPayloadTooLarge   = "PayloadTooLarge"
-	ErrInternal          = "Internal"
-	ErrNotImplemented    = "NotImplemented"
+	ErrBadRequest      = "BadRequest"
+	ErrAuthRequired    = "AuthRequired"
+	ErrAuthFailed      = "AuthFailed"
+	ErrForbidden       = "Forbidden"
+	ErrNotFound        = "NotFound"
+	ErrConflict        = "Conflict"
+	ErrUnsupported     = "Unsupported"
+	ErrTxRejected      = "TxRejected"
+	ErrPayloadTooLarge = "PayloadTooLarge"
+	ErrInternal        = "Internal"
+	ErrUnimplemented   = "Unimplemented"
 )

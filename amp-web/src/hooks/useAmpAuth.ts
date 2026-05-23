@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useAmpContext } from '../provider';
-import type { AmpAuth, LoginCredentials } from '../types';
+import { useAmpContext } from '../provider.js';
+import type { AmpAuth, LoginCredentials } from '../types.js';
 
 export function useAmpAuth(): AmpAuth {
   const { adapter, member, setMember } = useAmpContext();

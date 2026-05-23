@@ -1,11 +1,11 @@
 /**
  * AmpAdapter is the interface the hooks call — never `fetch` directly.
  *
- * AmpVaultAdapter is the one shipped implementation: it speaks the amp.exe
+ * AmpWebClient is the one shipped implementation: it speaks the amp.exe
  * `app.www` wire contract (amp.SDK/amp/webapi).
  */
 
-import type { KeyPair } from './crypto/types';
+import type { KeyPair } from './crypto/types.js';
 import type {
   AmpItemMeta,
   AmpMember,
@@ -20,7 +20,7 @@ import type {
   UploadOpts,
   WalletChallenge,
   WithdrawOpts,
-} from './types';
+} from './types.js';
 
 export interface AmpAdapter {
   // ── Auth ──────────────────────────────────────────────────────────

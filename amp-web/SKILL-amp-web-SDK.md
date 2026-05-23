@@ -58,9 +58,9 @@ npm install @art-media-platform/web
 ### Provider Configuration
 
 ```tsx
-import { AmpProvider, AmpClient } from '@art-media-platform/web';
+import { AmpProvider, AmpWebClient } from '@art-media-platform/web';
 
-const client = new AmpClient({
+const client = new AmpWebClient({
   vaultUrl: import.meta.env.VITE_AMP_VAULT_URL,    // e.g. https://my-amp-node:5193
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG,  // the planet your app reads/writes
 });
@@ -122,7 +122,7 @@ type LoginCredentials =
   | { scheme: 'wallet';     address: string; signature: string; nonce: string };
 ```
 
-The unified `/api/v1/login` is **shipped**: `wallet` and `email` are fully wired and Bearer-issuing at v230; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "SchemeUnsupported"` until M3+ — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change. The cookie-bound legacy path at `/api/v1/login/metamask/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
+The unified `/api/v1/login` is **shipped**: `wallet` and `email` are fully wired and Bearer-issuing at v230; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "Unsupported"` until M3+ — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `code` (e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/metamask/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
 
 **Email scheme additionally exposes recovery + admin-issue endpoints:**
 
@@ -208,7 +208,7 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 ```
 POST   /api/v1/upload
        Content-Type: multipart/form-data
-       Fields: file (required), planetTag (optional)
+       Fields: file (required), channel, attr, planetTag (optional)
        Response: BlobTag
 
 POST   /api/v1/media/resolve
@@ -272,7 +272,7 @@ The server NEVER pushes telemetry frames (failed-login, rate-limit, audit) over 
 
 ## 5. `@art-media-platform/web` — React API Reference
 
-Thin wrappers over §4. Hooks share a single `AmpClient` via `<AmpProvider>`.
+Thin wrappers over §4. Hooks share a single `AmpWebClient` via `<AmpProvider>`.
 
 ### 5.1 `useAmpAuth()`
 
@@ -302,7 +302,7 @@ The hook subscribes via WebSocket automatically and re-renders on updates. `data
 const { tx, create, upsert, remove, withdraw, loading } = useAmpMutation();
 
 // One TxMsg, many ops — atomic, single signature, single MemberProof:
-const { txID, results } = await tx([
+const results = await tx([
   { kind: 'upsert', channel: 'projects', attr: 'labels',   itemID: l1, value: lv1 },
   { kind: 'upsert', channel: 'projects', attr: 'labels',   itemID: l2, value: lv2 },
   { kind: 'upsert', channel: 'projects', attr: 'articles', itemID: a1, value: av1 },
@@ -314,7 +314,7 @@ const itemID = await create('projects', 'snapshot', value);
 await upsert('users', 'profile', member.id, patch);
 await remove('projects', 'snapshot', itemID);
 await withdraw('shares', 'link', itemID, {
-  reason: 'WithdrawReason_Departed',
+  reason: 'Departed',
   rationale: 'left the team',
   // subject + delegation are optional — omit when the signer is the subject:
   subject: deceasedMember.id,                            // DESIGN-15 delegated path
@@ -325,7 +325,7 @@ await withdraw('shares', 'link', itemID, {
 
 `tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg, sealed under a single encryption context, with one signature and one MemberProof. A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
 
-`upsert` accepts any client-supplied `tag.UID` for the item. For singleton items, derive a stable UID from a well-known name — generate it at build time with `forge` or resolve it once via `adapter.resolveTag('settings:theme-preference')` (§5.8) — or reuse the member's own UID directly. The `scheme:identifier` form matches CAIP-10 / DID conventions.
+`upsert` accepts any client-supplied `tag.UID` for the item. For singleton items, derive a stable UID from a well-known name — generate it at build time with `forge` or resolve it once via `client.resolveTag('settings:theme-preference')` (§5.8) — or reuse the member's own UID directly. The `scheme:identifier` form matches CAIP-10 / DID conventions.
 
 ### 5.4 `useAmpUpload()`
 
@@ -362,10 +362,14 @@ const plaintext   = await open(sealedBytes);
 ### 5.7 Cross-planet citation
 
 ```tsx
-const { citation, resolve } = useAmpCitation();
+// citation() is a client method (a pure builder — no hook wrapper needed) that
+// assembles a (planetID, nodeID, itemID) triple for shares and withdraw delegations:
+const cite = client.citation({ planetID, nodeID, itemID });   // tag.UID triple
 
-const cite = citation({ planetID, nodeID, itemID });   // tag.UID triple
-const item = await resolve(cite);                       // fetches across planets if reader has reach
+// Reading a planet you can reach (a public share, or a cross-planet record) is a
+// planet-scoped query today — pass planetTag to query.  The one-call
+// resolve(citation) REST primitive lands at M5 (PRD-app-www §8):
+const { data } = await client.query(channel, attr, { itemID, planetTag: planetID });
 ```
 
 ### 5.8 Deterministic UIDs — names → `tag.UID`
@@ -387,7 +391,7 @@ For names you only learn at runtime — or to warm a cache from the deploy's pub
 
 ```tsx
 // Bootstrap: resolve every well-known name your app uses once, then cache.
-const named = await adapter.resolveTags([
+const named = await client.resolveTags([
   'projects.labels',
   'projects.polygons',
   'users.profile',
@@ -459,8 +463,9 @@ import { useAmpCrypto, base64ToBytes } from '@art-media-platform/web';
 
 async function useCesiumIonToken() {
   const { open } = useAmpCrypto();
-  const item = await client.query({ channel: 'users', attr: 'api_keys_overrides', itemID: member.id });
-  if (!item.cesium) return null;
+  const { data } = await client.query<{ cesium?: string }>('users', 'api_keys_overrides', { itemID: member.id });
+  const item = data[0];
+  if (!item?.cesium) return null;
   const plaintext = new TextDecoder().decode(await open(base64ToBytes(item.cesium)));
   // Use it for one outbound request; don't persist outside this scope.
   return plaintext;
@@ -469,7 +474,7 @@ async function useCesiumIonToken() {
 
 The `seal/open` primitives wrap `safe.Encrypt.Seal` / `safe.Encrypt.Open` against the session member's `EncryptKey` — anonymous-sender HPKE base mode. The sealed bytes are opaque to anyone but the sealing member, including admins, vault relays, other planet members, and even a future memory snapshot of `eks.keys`.
 
-That `EncryptKey` is **device-local and auto-managed**: the adapter generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-SDK.md`.
+That `EncryptKey` is **device-local and auto-managed**: the client generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-SDK.md`.
 
 The default kit is **Poly25519** (X25519 + XChaCha20-Poly1305 + HKDF-SHA256) — pure JS via `@noble/curves` + `@noble/ciphers` + `@noble/hashes`, no WASM (per AUDIT §2.10). P-256 (YubiKey-attached members) and secp256k1 (crypto-wallet members) are lazy-loaded — they don't enter the default bundle, so cards/widgets that only seal BYOK stay under ~50 KB.
 
@@ -481,17 +486,17 @@ seal output = eph_pub (32) || nonce (24) || ciphertext+tag   // Poly25519
 
 A payload sealed in TS opens cleanly Go-side and vice versa. The local round-trip is locked in `src/crypto/poly25519.test.ts`; byte-level interop is locked bidirectionally in `src/crypto/interop.test.ts` and `stdlib/safe/poly25519/poly25519_interop_test.go`, which open the same Go-sealed and TS-sealed vectors on both sides.
 
-For vanilla-JS consumers without React, the same surface is reachable as adapter methods:
+For vanilla-JS consumers without React, the same surface is reachable as client methods:
 
 ```ts
-const adapter = new AmpVaultAdapter({ vaultUrl, planetTag });
-await adapter.login({ memberToken });
+const client = new AmpWebClient({ vaultUrl, planetTag });
+await client.login({ scheme: 'email', email, password });
 // login() auto-installs the member's device-local EncryptKey, so seal/open
-// are ready here.  Call adapter.setEncryptKey(...) only to override with a key
+// are ready here.  Call client.setEncryptKey(...) only to override with a key
 // sourced elsewhere; null on logout.
 
-const sealed = await adapter.seal(new TextEncoder().encode(plaintext));
-const plain  = await adapter.open(sealed);
+const sealed = await client.seal(new TextEncoder().encode(plaintext));
+const plain  = await client.open(sealed);
 ```
 
 The lower-level `seal(plaintext, recipientPubKey)` / `open(sealed, recipientKeyPair)` exports cover the case where the consumer sealed for another member (e.g. a citation handoff).
@@ -549,7 +554,7 @@ Either form (canonic name or base32 UID) resolves to the same planet via `tag.Pa
 3. Anonymous viewers read the share planet via the channels-prefixed path above without `Authorization`. Only the share planet allows anonymous reads — the owner's main planet still requires auth.
 4. To unshare, the owner posts a `Withdraw` against the share planet's snapshot item; the public bytes survive in the share planet's journal but the consumer sees both the original and the withdrawal — see §7.
 
-A whitelabel deploy registers two planet tags in its config: the owner planet and the share planet. The `@art-media-platform/web` constructor accepts both; reads of cross-planet citations resolve transparently.
+A whitelabel deploy registers two planet tags in its config: the owner planet and the share planet. Each `AmpWebClient` binds one default `planetTag`; read another reachable planet by passing `planetTag` to `query` — anonymous against a registered share planet, authenticated otherwise.
 
 ### 6.5 Identity & member shape
 
@@ -568,7 +573,7 @@ A given human can have many `MemberTag`s — one per planet they belong to. Cros
 
 The chronicle is immutable. `DELETE /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}` writes a tombstone — a TxOp that the resolved-state view interprets as "no longer authoritative." Bytes survive in the journal bound by retention.
 
-For records about a member that the member wants disowned (a project shared on a public planet, a profile attribution), the right primitive is **DESIGN-15 Withdraw** — a parallel signed signal. `withdraw('shares', 'link', itemID, { reason, rationale })` writes a Withdraw record. The original item stays signed and visible; consumers see both the original and the withdrawal, and choose honoring policy (suppress, redact, recontextualize). Withdraw reasons (`WithdrawReason_*`) include `Consent`, `Inaccuracy`, `Outdated`, `Coerced`, `Forgotten`, `Departed`, `InviteRecall`, `Retracted`.
+For records about a member that the member wants disowned (a project shared on a public planet, a profile attribution), the right primitive is **DESIGN-15 Withdraw** — a parallel signed signal. `withdraw('shares', 'link', itemID, { reason, rationale })` writes a Withdraw record. The original item stays signed and visible; consumers see both the original and the withdrawal, and choose honoring policy (suppress, redact, recontextualize). Withdraw reasons (the `WithdrawReason` union — the wire value is the bare string) are `Consent`, `Inaccuracy`, `Outdated`, `Coerced`, `Forgotten`, `Departed`, `InviteRecall`, `Retracted`.
 
 ### 7.1 Wire surface
 
@@ -576,7 +581,7 @@ A `withdraw` op carries the full DESIGN-15 information set:
 
 ```typescript
 interface WithdrawOp {
-  reason:     WithdrawReason;     // one of the WithdrawReason_* codes
+  reason:     WithdrawReason;     // one of the WithdrawReason values (bare string)
   rationale?: string;             // free-text; for human / future-being readers
   subject?:   string;             // base32 UID — defaults to signer if omitted
   delegation?: CitationRef;       // proves authority when subject != signer
@@ -674,7 +679,8 @@ interface AmpBridge {
   // ── Data ──
   read(channel: string, attr: string, itemID: string): Promise<any>;
   list(channel: string, attr: string, opts?: ListOpts): Promise<any[]>;
-  tx(ops: TxOp[]): Promise<TxResult>;          // canonical batched write — one TxMsg, N ops
+  tx(ops: TxOp[]): Promise<TxReceipt>;         // batched write — one TxMsg, N ops
+  // TxReceipt = { txID: string; accepted: boolean } — "transmission received; queued for delivery + processing"
   write(channel: string, attr: string, itemID: string, value: any): Promise<void>;  // sugar: tx with one upsert
   remove(channel: string, attr: string, itemID: string): Promise<void>;             // sugar: tx with one remove
   withdraw(channel: string, attr: string, itemID: string, opts: WithdrawOpts): Promise<void>;
@@ -835,8 +841,10 @@ const cite = client.citation({
   itemID:   '<item-tag.UID>',
 });
 
-// Resolve across planets if the reader has reach:
-const item = await client.resolve(cite);
+// Embed `cite` in a share link or a withdraw delegation.  Reading the cited record
+// today is a planet-scoped query against its planet (anonymous if that planet is a
+// registered public share); the one-call resolve(citation) REST primitive lands at
+// M5 — PRD-app-www §8.
 ```
 
 Cross-planet citation is the substrate for shareable links: the share URL embeds the full triple, and the public viewer's `@art-media-platform/web` resolves it via the public planet without auth. Cross-planet equivalence claims (DESIGN-14) sit on top: a member who exists on multiple planets can publish an Equivalence asserting that two `MemberTag`s refer to the same self.
@@ -923,10 +931,12 @@ async function handleFile(file) {
 ### Anonymous public-share read
 
 ```tsx
-// Constructed without a session — sharePlanet is open-read.
-const shareClient = new AmpClient({ vaultUrl, planetTag: import.meta.env.VITE_AMP_PUBLIC_SHARE_PLANET_TAG });
-const link = await shareClient.query({ channel: 'shares', attr: 'link', itemID: slug });
-const snapshot = await shareClient.resolve(link.snapshotCitation);
+// Constructed without a session — the share planet is open-read.
+const shareClient = new AmpWebClient({ vaultUrl, planetTag: import.meta.env.VITE_AMP_PUBLIC_SHARE_PLANET_TAG });
+const { data } = await shareClient.query<{ snapshotChannel: string; snapshotAttr: string; snapshotItemID: string }>('shares', 'link', { itemID: slug });
+const link = data[0];
+// Follow the pointer with a planet-scoped read on the same public planet:
+const { data: snap } = await shareClient.query(link.snapshotChannel, link.snapshotAttr, { itemID: link.snapshotItemID });
 ```
 
 ### Cross-device subscribe for widget instance

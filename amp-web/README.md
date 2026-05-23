@@ -3,7 +3,7 @@
 The **amp-web-SDK** TypeScript client — React hooks + a backend adapter for
 building web apps on [art.media.platform](https://github.com/art-media-platform).
 Talks the `amp.exe` `app.www` wire contract (defined in
-[`amp.SDK/amp/webapi`](../amp/webapi)).
+[`amp.SDK/amp/webapi`](https://github.com/art-media-platform/amp.SDK/tree/main/amp/webapi)).
 
 > **Beta (pre-v400).** Distributed in the `amp-web-SDK` bundle — not yet on npm.
 > Get the latest by building it (`make amp-web-SDK`) or from your amp contact. At
@@ -30,10 +30,10 @@ is pure JS (`@noble/*`); networking is native `fetch` + `WebSocket`.
 ## Quick Start
 
 ```tsx
-import { AmpProvider, AmpVaultAdapter, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
+import { AmpProvider, AmpWebClient, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
 
-// 1. Point the adapter at your amp node + planet.
-const adapter = new AmpVaultAdapter({
+// 1. Point the client at your amp node + planet.
+const client = new AmpWebClient({
   vaultUrl:  import.meta.env.VITE_AMP_VAULT_URL,   // e.g. https://my-amp-node:5193
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG,  // the planet your app reads/writes
 });
@@ -41,7 +41,7 @@ const adapter = new AmpVaultAdapter({
 // 2. Wrap your app.
 function App() {
   return (
-    <AmpProvider adapter={adapter}>
+    <AmpProvider client={client}>
       <Labels />
     </AmpProvider>
   );
@@ -68,7 +68,7 @@ function Labels() {
 const { login } = useAmpAuth();
 
 // Wallet (MetaMask personal-sign): fetch a challenge, sign it, submit.
-const challenge = await adapter.getWalletChallenge();          // { nonce, message }
+const challenge = await client.getWalletChallenge();          // { nonce, message }
 const signature = await signWithWallet(challenge.message);     // your wallet integration
 await login({ scheme: 'wallet', address, signature, nonce: challenge.nonce });
 
@@ -98,7 +98,7 @@ non-trivial canonicalization. Don't reimplement it — two supported paths:
 - **Build-time:** generate canonic `TagName`/`TagUID` constants with
   [`forge`](https://github.com/art-media-platform/forge) from your `.sdl` keys, so
   your app never registers known keys at runtime.
-- **Runtime:** `adapter.resolveTag(expr)` / `adapter.resolveTags(exprs)` resolve
+- **Runtime:** `client.resolveTag(expr)` / `client.resolveTags(exprs)` resolve
   names server-side (anonymous, long-cacheable) — cache the results.
 
 ## Full API reference

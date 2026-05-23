@@ -8,9 +8,9 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { base64ToBytes, bytesToBase64 } from './base64';
-import { open, seal } from './index';
-import { poly25519KitOps } from './poly25519';
+import { base64ToBytes, bytesToBase64 } from './base64.js';
+import { open, seal } from './index.js';
+import { poly25519KitOps } from './poly25519.js';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
