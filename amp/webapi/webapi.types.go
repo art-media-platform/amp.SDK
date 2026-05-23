@@ -49,6 +49,12 @@ type LoginRequest struct {
 	// scheme = "yubikey"
 	ChallengeResponse string `json:"challengeResponse,omitempty"`
 
+	// scheme = "did"  (W3C DID 1.0 — did:key / did:pkh).  DID carries the full
+	// URI; the signature over the server-issued challenge reuses Signature +
+	// Nonce.  The challenge itself is server-stored keyed by Nonce (never on
+	// the wire), exactly like the wallet flow.
+	DID string `json:"did,omitempty"`
+
 	// Optional planet binding requested by the caller.  Accepts a canonic
 	// tag.Name expression OR a base32 UID.  Empty = the host's home planet.
 	PlanetTag string `json:"planetTag,omitempty"`

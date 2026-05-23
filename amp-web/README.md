@@ -74,9 +74,16 @@ const challenge = await client.getWalletChallenge(address);    // { nonce, messa
 const signature = await signWithWallet(challenge.message);     // wallet personal_sign
 await login({ scheme: 'wallet', address, signature, nonce: challenge.nonce });
 
+// W3C DID sign-in (login-only): did:key (Ed25519) or did:pkh:eip155 (EVM wallet).
+const ch  = await client.getDIDChallenge(did);                 // { nonce, message }
+const sig = await signChallenge(did, ch.message);              // ed25519, or wallet personal_sign for did:pkh:eip155
+await login({ scheme: 'did', did, signature: sig, nonce: ch.nonce });
+
 // Email / password:
 await login({ scheme: 'email', email, password });
 ```
+
+> A `did:pkh:eip155` login resolves to the **same member** as a `wallet` login over that address. DID here is authentication only — not Verifiable Credentials.
 
 ## Hooks
 

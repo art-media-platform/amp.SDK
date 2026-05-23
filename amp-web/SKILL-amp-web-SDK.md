@@ -119,10 +119,13 @@ type LoginCredentials =
   | { scheme: 'email';      email: string; password: string }
   | { scheme: 'memberToken'; memberToken: string }
   | { scheme: 'yubikey';    challengeResponse: string }
-  | { scheme: 'wallet';     address: string; signature: string; nonce: string };
+  | { scheme: 'wallet';     address: string; signature: string; nonce: string }
+  | { scheme: 'did';        did: string; signature: string; nonce: string };
 ```
 
-The unified `/api/v1/login` is **shipped**: `wallet` and `email` are fully wired and Bearer-issuing at v230; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "Unsupported"` until M3+ — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `code` (e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/wallet/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
+The unified `/api/v1/login` is **shipped**: `wallet`, `email`, and `did` are fully wired and Bearer-issuing; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "Unsupported"` until they land — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `code` (e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/wallet/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
+
+**DID scheme (W3C DID 1.0 — login only).** `did` proves control of the key a DID URI names: fetch a challenge with `?did=<uri>`, sign it, and submit `{ scheme: 'did', did, signature, nonce }`.  Shipped methods: **`did:key`** (Ed25519) and **`did:pkh:eip155`** (Ethereum wallet).  A `did:pkh:eip155:*:0x…` login folds to the *same* MemberID as a `wallet` login over that address (`eth:lc(addr)`) — two URI spellings of one key, one member.  A DID whose method/curve isn't wired yet (e.g. `did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) returns the same 501 `Unsupported`.  This is DID-Auth — Verifiable Credentials (issuer-signed claims) are out of scope.
 
 **Email scheme additionally exposes recovery + admin-issue endpoints:**
 
@@ -281,6 +284,7 @@ const { member, login, logout, isAuthenticated, loading } = useAmpAuth();
 
 await login({ scheme: 'email', email, password });
 await login({ scheme: 'wallet', address, signature, nonce });
+await login({ scheme: 'did', did, signature, nonce });
 ```
 
 **Wallet sign-in (SIWE + multi-wallet).** The `'wallet'` scheme is **EIP-4361 (Sign-In with Ethereum)** over any EVM wallet. Discover the user's wallet(s) with **EIP-6963** so the picker shows each by name + icon — the brand lives in the UI, never on the wire (MetaMask, Coinbase, Rainbow, … all flow through the same `personal_sign`):
@@ -298,6 +302,16 @@ await login({ scheme: 'wallet', address, signature, nonce: challenge.nonce });
 ```
 
 The host renders the EIP-4361 message bound to its own domain (anti-phishing); `getWalletChallenge` takes the address so the canonical SIWE serialization stays server-side.
+
+**DID sign-in (`did:key` Ed25519 / `did:pkh:eip155`).** Same challenge → sign → submit shape, requesting the challenge by DID instead of address:
+
+```tsx
+const challenge = await client.getDIDChallenge(did);   // GET …/login/wallet/challenge?did=<uri>
+const signature = await signChallenge(did, challenge.message);  // ed25519 for did:key; personal_sign for did:pkh:eip155
+await login({ scheme: 'did', did, signature, nonce: challenge.nonce });
+```
+
+For `did:pkh:eip155` the signer is the same EVM-wallet `personal_sign` as above (the DID just carries the address), and the resulting member is identical to the `wallet` path. For `did:key` the signer is whatever holds the Ed25519 private key (client-custody is an open UX question — see PRD-did-identity §9).
 
 ### 5.2 `useAmpQuery<T>()`
 

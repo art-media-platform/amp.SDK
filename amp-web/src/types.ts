@@ -22,7 +22,8 @@ export type LoginCredentials =
   | { scheme: 'wallet'; address: string; signature: string; nonce: string }
   | { scheme: 'email'; email: string; password: string }
   | { scheme: 'memberToken'; memberToken: string }
-  | { scheme: 'yubikey'; challengeResponse: string };
+  | { scheme: 'yubikey'; challengeResponse: string }
+  | { scheme: 'did'; did: string; signature: string; nonce: string };
 
 /** The personal-sign challenge a wallet scheme signs before login. */
 export interface WalletChallenge {
