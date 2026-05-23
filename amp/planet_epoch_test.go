@@ -105,7 +105,7 @@ func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 // This is the proof that PlanetEpoch.VerifyCoSignature is per-signer by design.
 //
 // The three-kit version (adding secp256k1 / wallet interop) lives in amp.planet
-// where the secp256k1 kit is registered — see amp/apps/app.metamask.
+// where the secp256k1 kit is registered — see amp/apps/app.evmwallet.
 func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	epoch := makeTestEpoch(t)
 

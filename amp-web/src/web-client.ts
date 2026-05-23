@@ -127,16 +127,17 @@ export class AmpWebClient implements AmpAdapter {
   // ── Auth ──────────────────────────────────────────────────────────
 
   async getWalletChallenge(address: string): Promise<WalletChallenge> {
-    const resp = await fetch(`${this.vaultUrl}/api/v1/login/wallet/challenge?address=${encodeURIComponent(address)}`);
+    const resp = await fetch(`${this.vaultUrl}/api/v1/login/challenge?address=${encodeURIComponent(address)}`);
     if (!resp.ok) throw await ampErrorFromResponse(resp);
     return resp.json();
   }
 
   // getDIDChallenge fetches a challenge bound to a DID URI (did:key / did:pkh)
-  // for the scheme="did" login path.  Same single-use nonce store + endpoint as
-  // the wallet challenge; the server returns a generic domain-bound message.
+  // for the scheme="did" login path.  Shares the single-use nonce store with the
+  // wallet challenge; a did:pkh:eip155 DID gets the SIWE message, did:key a
+  // generic domain-bound one.
   async getDIDChallenge(did: string): Promise<WalletChallenge> {
-    const resp = await fetch(`${this.vaultUrl}/api/v1/login/wallet/challenge?did=${encodeURIComponent(did)}`);
+    const resp = await fetch(`${this.vaultUrl}/api/v1/login/challenge?did=${encodeURIComponent(did)}`);
     if (!resp.ok) throw await ampErrorFromResponse(resp);
     return resp.json();
   }

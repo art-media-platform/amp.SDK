@@ -306,7 +306,7 @@ The host renders the EIP-4361 message bound to its own domain (anti-phishing); `
 **DID sign-in (`did:key` Ed25519 / `did:pkh:eip155`).** Same challenge → sign → submit shape, requesting the challenge by DID instead of address:
 
 ```tsx
-const challenge = await client.getDIDChallenge(did);   // GET …/login/wallet/challenge?did=<uri>
+const challenge = await client.getDIDChallenge(did);   // GET …/login/challenge?did=<uri>
 const signature = await signChallenge(did, challenge.message);  // ed25519 for did:key; personal_sign for did:pkh:eip155
 await login({ scheme: 'did', did, signature, nonce: challenge.nonce });
 ```
