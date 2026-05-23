@@ -68,7 +68,7 @@ Forks are morally neutral — the same primitive serves a community pruning bad-
 
 ## Identity
 
-Members are identified by a `MemberID` derived from a canonic identity URI (`tag.NameFrom("eth:0xabc…").ID` and similar).  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `KitSpec` the URI resolves to.  Shipped login flows: MetaMask wallet (SIWE), email/password.  Hardware-token (YubiKey) and W3C [DID](https://www.w3.org/TR/did-1.0/) URIs (`did:key`, `did:pkh`) are on the v300 trajectory — the kit registry already supports them; only the URI-parsing surface remains.
+Members are identified by a `MemberID` derived from a canonic identity URI (`tag.NameFrom("eth:0xabc…").ID` and similar).  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `KitSpec` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password.  Hardware-token (YubiKey) and W3C [DID](https://www.w3.org/TR/did-1.0/) URIs (`did:key`, `did:pkh`) are on the v300 trajectory — the kit registry already supports them; only the URI-parsing surface remains.
 
 
 ## AI

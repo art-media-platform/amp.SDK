@@ -126,8 +126,8 @@ export class AmpWebClient implements AmpAdapter {
 
   // ── Auth ──────────────────────────────────────────────────────────
 
-  async getWalletChallenge(): Promise<WalletChallenge> {
-    const resp = await fetch(`${this.vaultUrl}/api/v1/login/metamask/challenge`);
+  async getWalletChallenge(address: string): Promise<WalletChallenge> {
+    const resp = await fetch(`${this.vaultUrl}/api/v1/login/wallet/challenge?address=${encodeURIComponent(address)}`);
     if (!resp.ok) throw await ampErrorFromResponse(resp);
     return resp.json();
   }

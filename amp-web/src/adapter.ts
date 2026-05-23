@@ -32,8 +32,8 @@ export interface AmpAdapter {
   /** Subscribe to auth state changes; returns unsubscribe function. */
   onAuthChange(callback: (member: AmpMember | null) => void): () => void;
 
-  /** Fetch a wallet personal-sign challenge to sign before login(scheme:'wallet'). */
-  getWalletChallenge(): Promise<WalletChallenge>;
+  /** Fetch the EIP-4361 (SIWE) challenge for `address` to sign before login(scheme:'wallet'). */
+  getWalletChallenge(address: string): Promise<WalletChallenge>;
 
   // ── CRUD ──────────────────────────────────────────────────────────
 

@@ -68,9 +68,10 @@ function Labels() {
 ```tsx
 const { login } = useAmpAuth();
 
-// Wallet (MetaMask personal-sign): fetch a challenge, sign it, submit.
-const challenge = await client.getWalletChallenge();          // { nonce, message }
-const signature = await signWithWallet(challenge.message);     // your wallet integration
+// Wallet sign-in (EIP-4361 / SIWE — any EVM wallet): connect, fetch challenge, sign, submit.
+const address   = await connectWallet();                       // your wallet picker (e.g. EIP-6963)
+const challenge = await client.getWalletChallenge(address);    // { nonce, message }
+const signature = await signWithWallet(challenge.message);     // wallet personal_sign
 await login({ scheme: 'wallet', address, signature, nonce: challenge.nonce });
 
 // Email / password:

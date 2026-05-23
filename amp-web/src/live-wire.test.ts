@@ -48,7 +48,7 @@ run('live BYOK over app.www', () => {
     const address = ethAddress(secp256k1.getPublicKey(priv, false));
     const amp = new AmpWebClient({ vaultUrl: VAULT, planetTag: PLANET });
 
-    const ch = await amp.getWalletChallenge();
+    const ch = await amp.getWalletChallenge(address);
     await amp.login({ scheme: 'wallet', address, signature: personalSign(ch.message, priv), nonce: ch.nonce });
 
     // No setEncryptKey: seal-to-self uses the auto-installed device key.

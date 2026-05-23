@@ -122,7 +122,7 @@ type LoginCredentials =
   | { scheme: 'wallet';     address: string; signature: string; nonce: string };
 ```
 
-The unified `/api/v1/login` is **shipped**: `wallet` and `email` are fully wired and Bearer-issuing at v230; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "Unsupported"` until M3+ — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `code` (e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/metamask/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
+The unified `/api/v1/login` is **shipped**: `wallet` and `email` are fully wired and Bearer-issuing at v230; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "Unsupported"` until M3+ — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `code` (e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/wallet/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
 
 **Email scheme additionally exposes recovery + admin-issue endpoints:**
 
@@ -282,6 +282,22 @@ const { member, login, logout, isAuthenticated, loading } = useAmpAuth();
 await login({ scheme: 'email', email, password });
 await login({ scheme: 'wallet', address, signature, nonce });
 ```
+
+**Wallet sign-in (SIWE + multi-wallet).** The `'wallet'` scheme is **EIP-4361 (Sign-In with Ethereum)** over any EVM wallet. Discover the user's wallet(s) with **EIP-6963** so the picker shows each by name + icon — the brand lives in the UI, never on the wire (MetaMask, Coinbase, Rainbow, … all flow through the same `personal_sign`):
+
+```tsx
+const providers = new Map();
+window.addEventListener('eip6963:announceProvider', (e) => providers.set(e.detail.info.rdns, e.detail));
+window.dispatchEvent(new Event('eip6963:requestProvider'));   // each wallet announces { info: { name, icon, rdns }, provider }
+
+// user picks `provider` from the list (render info.name + info.icon), then:
+const [address] = await provider.request({ method: 'eth_requestAccounts' });
+const challenge = await client.getWalletChallenge(address);   // server builds the domain-bound SIWE message
+const signature = await provider.request({ method: 'personal_sign', params: [challenge.message, address] });
+await login({ scheme: 'wallet', address, signature, nonce: challenge.nonce });
+```
+
+The host renders the EIP-4361 message bound to its own domain (anti-phishing); `getWalletChallenge` takes the address so the canonical SIWE serialization stays server-side.
 
 ### 5.2 `useAmpQuery<T>()`
 

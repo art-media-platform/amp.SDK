@@ -70,7 +70,7 @@ async function main() {
   const amp = new AmpWebClient({ vaultUrl: VAULT, planetTag: PLANET });
 
   // ── Identity ──
-  const ch = await amp.getWalletChallenge();
+  const ch = await amp.getWalletChallenge(address);
   check('challenge has nonce + message', !!ch.nonce && !!ch.message);
   const member = await amp.login({
     scheme: 'wallet',
