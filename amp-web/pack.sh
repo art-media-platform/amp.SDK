@@ -28,7 +28,7 @@ npm run build
 
 # 2. Stage the bundle.
 rm -rf "$STAGE"
-mkdir -p "$STAGE/wire"
+mkdir -p "$STAGE/webapi"
 cp README.md SKILL-amp-web-SDK.md SECURITY-amp-web-SDK.md LICENSE \
    package.json package-lock.json tsconfig.json "$STAGE/"
 cp -R src     "$STAGE/src"
@@ -36,7 +36,7 @@ cp -R dist    "$STAGE/dist"
 cp -R scripts "$STAGE/scripts"
 
 # 3. Copy the canonical wire contract (the public source of truth).
-cp "$SDK/amp/webapi/webapi.types.go" "$STAGE/wire/webapi.types.go"
+cp "$SDK/amp/webapi/webapi.types.go" "$STAGE/webapi/webapi.types.go"
 
 # 4. Strip cruft.
 find "$STAGE" -name '.DS_Store' -delete 2>/dev/null || true

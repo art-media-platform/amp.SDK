@@ -2,8 +2,9 @@
 
 The **amp-web-SDK** TypeScript client — React hooks + a backend adapter for
 building web apps on [art.media.platform](https://github.com/art-media-platform).
-Talks the `amp.exe` `app.www` wire contract (defined in
-[`amp.SDK/amp/webapi`](https://github.com/art-media-platform/amp.SDK/tree/main/amp/webapi)).
+Talks the `amp.exe` `app.www` wire contract — defined in
+[`amp.SDK/amp/webapi`](https://github.com/art-media-platform/amp.SDK/tree/main/amp/webapi),
+and copied into this SDK bundle at [`webapi/webapi.types.go`](webapi/webapi.types.go).
 
 > **Beta (pre-v400).** Distributed in the `amp-web-SDK` bundle — not yet on npm.
 > Get the latest by building it (`make amp-web-SDK`) or from your amp contact. At

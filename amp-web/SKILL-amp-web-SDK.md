@@ -27,7 +27,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 |---|---|---|
 | **This SKILL** | AI-agent instructions, API reference, data model conventions, WebRect bridge IDL | Always |
 | **`@art-media-platform/web`** (the client package in this bundle) | TypeScript reference client — React hooks, sealed-box helpers, citation helper | At `npm install` time |
-| **`wire/webapi.types.go`** (canonical source: `amp.SDK/amp/webapi`) | The wire contract verbatim — Go structs + JSON tags for every `/api/v1/*` shape. Mirror these field names one-to-one in any language. | Implementing a non-TS client |
+| **`webapi/webapi.types.go`** (canonical source: `amp.SDK/amp/webapi`) | The wire contract verbatim — Go structs + JSON tags for every `/api/v1/*` shape. Mirror these field names one-to-one in any language. | Implementing a non-TS client |
 | **[`SECURITY-amp-web-SDK.md`](SECURITY-amp-web-SDK.md)** | The security model a consumer relies on — encryption, identity, what a vault can and cannot see | Auditing security claims |
 
 ---
