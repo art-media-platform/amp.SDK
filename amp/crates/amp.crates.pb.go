@@ -148,23 +148,28 @@ const (
 	AssetKind_Material        AssetKind = 3
 	AssetKind_Scene           AssetKind = 4
 	AssetKind_Skybox          AssetKind = 5
-	AssetKind_Surface         AssetKind = 6 // terrain-like / opaque collider (buildings, walls, terrain)
-	AssetKind_VisualLayer     AssetKind = 7
-	AssetKind_VisualScope     AssetKind = 8
+	// Deprecated: Marked as deprecated in amp/crates/amp.crates.proto.
+	AssetKind_Surface     AssetKind = 6  // superseded by AssetEntry.IsSurface; retained for legacy parsing only
+	AssetKind_VisualLayer AssetKind = 7  // self-contained visual effect layer (mirrors runtime VisualLayer)
+	AssetKind_VisualScope AssetKind = 8  // self-contained visual effect scope (mirrors runtime VisualScope)
+	AssetKind_Model       AssetKind = 9  // placeable prefab / mesh (the common case)
+	AssetKind_Audio       AssetKind = 10 // amp.av sound asset
 )
 
 // Enum value maps for AssetKind.
 var (
 	AssetKind_name = map[int32]string{
-		0: "UnspecifiedKind",
-		1: "Texture",
-		2: "Sprite",
-		3: "Material",
-		4: "Scene",
-		5: "Skybox",
-		6: "Surface",
-		7: "VisualLayer",
-		8: "VisualScope",
+		0:  "UnspecifiedKind",
+		1:  "Texture",
+		2:  "Sprite",
+		3:  "Material",
+		4:  "Scene",
+		5:  "Skybox",
+		6:  "Surface",
+		7:  "VisualLayer",
+		8:  "VisualScope",
+		9:  "Model",
+		10: "Audio",
 	}
 	AssetKind_value = map[string]int32{
 		"UnspecifiedKind": 0,
@@ -176,6 +181,8 @@ var (
 		"Surface":         6,
 		"VisualLayer":     7,
 		"VisualScope":     8,
+		"Model":           9,
+		"Audio":           10,
 	}
 )
 
@@ -274,6 +281,7 @@ type AssetEntry struct {
 	HasIcon         bool `protobuf:"varint,7,opt,name=HasIcon,proto3" json:"HasIcon,omitempty"`                 // ships with a matching icon asset
 	IsPrivate       bool `protobuf:"varint,8,opt,name=IsPrivate,proto3" json:"IsPrivate,omitempty"`             // not normally visible to end users
 	AutoScale       bool `protobuf:"varint,9,opt,name=AutoScale,proto3" json:"AutoScale,omitempty"`             // place with auto-scale enabled by default
+	IsSurface       bool `protobuf:"varint,13,opt,name=IsSurface,proto3" json:"IsSurface,omitempty"`            // self-collidable world surface (nav/raycast target; skips proxy collider)
 	// CenterX and CenterZ specify the positional center of this asset (and are typically 0).
 	// CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
 	// Y is considered to be the *vertical* (up) direction and by convention rests on the plane y=0.
@@ -392,6 +400,13 @@ func (x *AssetEntry) GetIsPrivate() bool {
 func (x *AssetEntry) GetAutoScale() bool {
 	if x != nil {
 		return x.AutoScale
+	}
+	return false
+}
+
+func (x *AssetEntry) GetIsSurface() bool {
+	if x != nil {
+		return x.IsSurface
 	}
 	return false
 }
@@ -1176,7 +1191,7 @@ var File_amp_crates_amp_crates_proto protoreflect.FileDescriptor
 
 const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\n" +
-	"\x1bamp/crates/amp.crates.proto\x12\x06crates\"\xf1\x04\n" +
+	"\x1bamp/crates/amp.crates.proto\x12\x06crates\"\x8f\x05\n" +
 	"\n" +
 	"AssetEntry\x12%\n" +
 	"\x04Kind\x18\x01 \x01(\x0e2\x11.crates.AssetKindR\x04Kind\x12\x1a\n" +
@@ -1186,7 +1201,8 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x0fIsRectTransform\x18\x06 \x01(\bR\x0fIsRectTransform\x12\x18\n" +
 	"\aHasIcon\x18\a \x01(\bR\aHasIcon\x12\x1c\n" +
 	"\tIsPrivate\x18\b \x01(\bR\tIsPrivate\x12\x1c\n" +
-	"\tAutoScale\x18\t \x01(\bR\tAutoScale\x12\x18\n" +
+	"\tAutoScale\x18\t \x01(\bR\tAutoScale\x12\x1c\n" +
+	"\tIsSurface\x18\r \x01(\bR\tIsSurface\x12\x18\n" +
 	"\aCenterX\x18\n" +
 	" \x01(\x02R\aCenterX\x12\x18\n" +
 	"\aCenterY\x18\v \x01(\x02R\aCenterY\x12\x18\n" +
@@ -1280,7 +1296,7 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\n" +
 	"GrapheneOS\x10\x01\x12\v\n" +
 	"\aCalyxOS\x10\x02\x12\r\n" +
-	"\tLineageOS\x10\x03*\x8d\x01\n" +
+	"\tLineageOS\x10\x03*\xa7\x01\n" +
 	"\tAssetKind\x12\x13\n" +
 	"\x0fUnspecifiedKind\x10\x00\x12\v\n" +
 	"\aTexture\x10\x01\x12\n" +
@@ -1289,10 +1305,13 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\bMaterial\x10\x03\x12\t\n" +
 	"\x05Scene\x10\x04\x12\n" +
 	"\n" +
-	"\x06Skybox\x10\x05\x12\v\n" +
-	"\aSurface\x10\x06\x12\x0f\n" +
+	"\x06Skybox\x10\x05\x12\x0f\n" +
+	"\aSurface\x10\x06\x1a\x02\b\x01\x12\x0f\n" +
 	"\vVisualLayer\x10\a\x12\x0f\n" +
-	"\vVisualScope\x10\b*7\n" +
+	"\vVisualScope\x10\b\x12\t\n" +
+	"\x05Model\x10\t\x12\t\n" +
+	"\x05Audio\x10\n" +
+	"*7\n" +
 	"\vCrateSchema\x12\x13\n" +
 	"\x0fUndefinedSchema\x10\x00\x12\b\n" +
 	"\x04v100\x10d\x12\t\n" +

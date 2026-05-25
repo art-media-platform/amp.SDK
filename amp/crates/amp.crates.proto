@@ -36,9 +36,11 @@ enum AssetKind {
     Material            = 3;
     Scene               = 4;
     Skybox              = 5;
-    Surface             = 6;    // terrain-like / opaque collider (buildings, walls, terrain)
-    VisualLayer         = 7;
-    VisualScope         = 8;
+    Surface             = 6 [deprecated = true];    // superseded by AssetEntry.IsSurface; retained for legacy parsing only
+    VisualLayer         = 7;    // self-contained visual effect layer (mirrors runtime VisualLayer)
+    VisualScope         = 8;    // self-contained visual effect scope (mirrors runtime VisualScope)
+    Model               = 9;    // placeable prefab / mesh (the common case)
+    Audio               = 10;   // amp.av sound asset
 }
 
 
@@ -61,6 +63,7 @@ message AssetEntry {
     bool                    HasIcon         = 7;    // ships with a matching icon asset
     bool                    IsPrivate       = 8;    // not normally visible to end users
     bool                    AutoScale       = 9;    // place with auto-scale enabled by default
+    bool                    IsSurface       = 13;   // self-collidable world surface (nav/raycast target; skips proxy collider)
 
     // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
     // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
