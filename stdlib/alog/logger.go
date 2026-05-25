@@ -1,7 +1,14 @@
 // Package alog is amp's built-in logging primitive — a lean, dependency-free
-// tag-scoped logger.  Every log line carries a [Label] prefix (right-padded for
-// alignment across the process) and a single-char severity tag.  Optional ANSI
-// color on TTY stderr; plain text when tee'd to a file.
+// tag-scoped logger.  Each log line is a single-char severity tag, a timestamp,
+// a bracketed source token "[file:line label]", then the message, all
+// space-separated and vertically aligned:
+//
+//	I 2026-05-24 15:04:05.123 [logger.go:175 app.www] some message
+//
+// The interior is right-padded to a running max so the closing bracket and the
+// message column stay put.  That max resets every few dozen lines so one wide
+// entry can't permanently inflate the gutter.  Optional ANSI color on TTY stderr;
+// plain text when tee'd to a file.
 //
 // Verbosity: Info(n, …) / Infof(n, …) only print when n == 0 (unconditional)
 // or n ≤ the global verbosity set via the -v flag.  This matches the pattern
@@ -19,11 +26,13 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"syscall"
 	"time"
+	"unicode/utf8"
 )
 
 // Logger abstracts basic logging functions.  Levels follow Go's slog convention:
@@ -68,17 +77,44 @@ func SetColor(on bool) { gUseColor.Store(on) }
 // ────────────────────────── globals ──────────────────────────
 
 var (
-	gVLevel       atomic.Int32
-	gUseColor     atomic.Bool
-	gLogFilePath  string
-	gLogFile      *os.File
-	gFileOnce     sync.Once
-	gLongestLabel atomic.Int32
-	gOutMu        sync.Mutex
-	gDefault      = logger{}
+	gVLevel      atomic.Int32
+	gUseColor    atomic.Bool
+	gLogFilePath string
+	gLogFile     *os.File
+	gFileOnce    sync.Once
+	gOutMu       sync.Mutex
+	gWidths      columnWidths
+	gDefault     = logger{}
 )
 
-const logLineSpacer = "                                                                "
+// columnWidths tracks the running max width of the source column interior
+// (file:line plus label, inside the brackets).  The max zeroes out every
+// widthResetLines lines so a past burst of wide entries can't keep the gutter
+// inflated.  All fields are read and mutated only under gOutMu, which emit
+// already holds for the write — no extra lock, atomic, or goroutine is introduced.
+type columnWidths struct {
+	source     int // current running max for the [file:line label] column
+	sinceReset int // emitted lines since the last reset
+}
+
+const (
+	// columnHardCap bounds a single value's contribution to a column.  It is set
+	// wide enough that real file:line and label values rarely reach it; a longer
+	// value is truncated with an ellipsis so one pathological entry can't blow
+	// out the line.
+	columnHardCap = 48
+
+	// widthResetLines is the decay window: the running column maxes zero out
+	// after this many emitted lines, so a past burst of wide entries can't keep
+	// the gutter inflated.  Small enough that the columns re-tighten promptly.
+	widthResetLines = 10
+)
+
+// spacer supplies right-padding without per-line allocation; writePad repeats it
+// for pads wider than its length.
+const spacer = "                                "
+
+const ellipsis = "…"
 
 func init() {
 	gUseColor.Store(isTTY(os.Stderr))
@@ -132,80 +168,113 @@ func (l *logger) SetLogLabel(label string) {
 		return
 	}
 	l.prefix = "[" + label + "]"
-	current := int32(len(l.prefix))
-	for {
-		prev := gLongestLabel.Load()
-		if current <= prev || gLongestLabel.CompareAndSwap(prev, current) {
-			break
-		}
-	}
 }
 
 func (l *logger) GetLogLabel() string  { return l.label }
 func (l *logger) GetLogPrefix() string { return l.prefix }
 
-func (l *logger) padding() string {
-	target := int(gLongestLabel.Load())
-	have := len(l.prefix)
-	if target <= have || target > len(logLineSpacer) {
-		return " "
-	}
-	return logLineSpacer[:target-have+1]
-}
-
 // ────────────────────────── emit ──────────────────────────
 
-// emit writes one log line.  depth controls how many stack frames to skip for
-// file:line resolution: 0 = emit's caller (Debug/Info/...), 1 = that caller's
-// caller (used when a wrapper like Debugw forwards through another method).
+// emit writes one log line.  depth selects which stack frame the file:line names:
+// the public entry methods (Debug/Info/...) pass 1 to name their caller; a
+// wrapper that forwards through another method passes 2.
 func (l *logger) emit(sev severity, depth int, msg string) {
 	file, line := callerFileLine(depth + 2)
 
-	var sb strings.Builder
-	sb.Grow(96 + len(msg) + len(l.prefix))
+	// Build the source content "file:line label" (just "file:line" when
+	// unlabeled), capping its parts, before taking the lock; its width drives
+	// alignment under gOutMu.  The padding goes inside the brackets so the
+	// closing ']' right-justifies against the message column.
+	source := capColumn(file + ":" + strconv.Itoa(line))
+	if l.label != "" {
+		source += " " + capColumn(l.label)
+	}
 
 	entry := sevTable[sev]
 	useColor := gUseColor.Load()
+	now := time.Now()
+
+	var sb strings.Builder
+	sb.Grow(96 + len(msg) + len(source))
+
+	gOutMu.Lock()
+
+	sourceWidth := gWidths.observe(len(source))
 
 	if useColor && entry.ansi != "" {
 		sb.WriteString(entry.ansi)
 	}
 	sb.WriteByte(entry.tag)
 	sb.WriteByte(' ')
-	sb.WriteString(time.Now().Format("15:04:05.000"))
+	sb.WriteString(now.Format("2006-01-02 15:04:05.000"))
 	sb.WriteByte(' ')
-	sb.WriteString(file)
-	sb.WriteByte(':')
-	fmt.Fprintf(&sb, "%d", line)
+	sb.WriteByte('[')
+	sb.WriteString(source)
+	writePad(&sb, sourceWidth-len(source))
+	sb.WriteByte(']')
 	if useColor && entry.ansi != "" {
 		sb.WriteString(ansiReset)
 	}
 	sb.WriteByte(' ')
-	if l.prefix != "" {
-		sb.WriteString(l.prefix)
-		sb.WriteString(l.padding())
-	} else {
-		sb.WriteByte(' ')
-	}
 	sb.WriteString(msg)
 	if !strings.HasSuffix(msg, "\n") {
 		sb.WriteByte('\n')
 	}
 
-	line_bytes := []byte(sb.String())
-	gOutMu.Lock()
-	os.Stderr.Write(line_bytes)
+	lineBytes := []byte(sb.String())
+	os.Stderr.Write(lineBytes)
 	if f := openFileLogger(); f != nil {
 		// Strip ANSI codes for file output.  The only codes we insert are
 		// sevTable[*].ansi and ansiReset — a simple strip is sufficient.
 		if useColor && entry.ansi != "" {
-			plain := stripANSI(line_bytes)
-			f.Write(plain)
+			f.Write(stripANSI(lineBytes))
 		} else {
-			f.Write(line_bytes)
+			f.Write(lineBytes)
 		}
 	}
 	gOutMu.Unlock()
+}
+
+// observe folds one line's source-column length into the running max and returns
+// the width to pad to.  Every widthResetLines lines it first zeroes the max so a
+// past burst of wide entries can't keep the gutter inflated.  Callers must hold
+// gOutMu.
+func (w *columnWidths) observe(sourceLen int) (sourceWidth int) {
+	w.sinceReset++
+	if w.sinceReset >= widthResetLines {
+		w.source = 0
+		w.sinceReset = 0
+	}
+	if sourceLen > w.source {
+		w.source = sourceLen
+	}
+	return w.source
+}
+
+// capColumn bounds a column value to columnHardCap bytes, replacing the overflow
+// tail with an ellipsis so a single huge value can't widen the gutter past the
+// cap.  The cut backs off any partial trailing rune to keep output valid UTF-8.
+func capColumn(value string) string {
+	if len(value) <= columnHardCap {
+		return value
+	}
+	cut := columnHardCap - len(ellipsis)
+	for cut > 0 && !utf8.RuneStart(value[cut]) {
+		cut--
+	}
+	return value[:cut] + ellipsis
+}
+
+// writePad appends n spaces (clamped to the spacer's length) to sb.
+func writePad(sb *strings.Builder, n int) {
+	if n <= 0 {
+		return
+	}
+	for n > len(spacer) {
+		sb.WriteString(spacer)
+		n -= len(spacer)
+	}
+	sb.WriteString(spacer[:n])
 }
 
 func callerFileLine(skip int) (string, int) {
@@ -266,22 +335,22 @@ func (verbosityFlag) IsBoolFlag() bool { return false }
 
 func (l *logger) LogV(level int32) bool { return level == 0 || level <= gVLevel.Load() }
 
-func (l *logger) Debug(args ...any)         { l.emit(sevDebug, 0, fmt.Sprint(args...)) }
-func (l *logger) Debugf(f string, a ...any) { l.emit(sevDebug, 0, fmt.Sprintf(f, a...)) }
-func (l *logger) Warn(args ...any)          { l.emit(sevWarn, 0, fmt.Sprint(args...)) }
-func (l *logger) Warnf(f string, a ...any)  { l.emit(sevWarn, 0, fmt.Sprintf(f, a...)) }
-func (l *logger) Error(args ...any)         { l.emit(sevError, 0, fmt.Sprint(args...)) }
-func (l *logger) Errorf(f string, a ...any) { l.emit(sevError, 0, fmt.Sprintf(f, a...)) }
+func (l *logger) Debug(args ...any)         { l.emit(sevDebug, 1, fmt.Sprint(args...)) }
+func (l *logger) Debugf(f string, a ...any) { l.emit(sevDebug, 1, fmt.Sprintf(f, a...)) }
+func (l *logger) Warn(args ...any)          { l.emit(sevWarn, 1, fmt.Sprint(args...)) }
+func (l *logger) Warnf(f string, a ...any)  { l.emit(sevWarn, 1, fmt.Sprintf(f, a...)) }
+func (l *logger) Error(args ...any)         { l.emit(sevError, 1, fmt.Sprint(args...)) }
+func (l *logger) Errorf(f string, a ...any) { l.emit(sevError, 1, fmt.Sprintf(f, a...)) }
 
 func (l *logger) Info(level int32, args ...any) {
 	if l.LogV(level) {
-		l.emit(sevInfo, 0, fmt.Sprint(args...))
+		l.emit(sevInfo, 1, fmt.Sprint(args...))
 	}
 }
 
 func (l *logger) Infof(level int32, f string, a ...any) {
 	if l.LogV(level) {
-		l.emit(sevInfo, 0, fmt.Sprintf(f, a...))
+		l.emit(sevInfo, 1, fmt.Sprintf(f, a...))
 	}
 }
 
