@@ -394,6 +394,56 @@ func (AudioFlags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{6}
 }
 
+// TileEase controls how a TileBand's profile transitions from its inner to outer radius.
+type TileEase int32
+
+const (
+	TileEase_TileEase_Linear   TileEase = 0
+	TileEase_TileEase_Circular TileEase = 1 // 90-degree arc, normals trending up
+	TileEase_TileEase_Cubic    TileEase = 2
+)
+
+// Enum value maps for TileEase.
+var (
+	TileEase_name = map[int32]string{
+		0: "TileEase_Linear",
+		1: "TileEase_Circular",
+		2: "TileEase_Cubic",
+	}
+	TileEase_value = map[string]int32{
+		"TileEase_Linear":   0,
+		"TileEase_Circular": 1,
+		"TileEase_Cubic":    2,
+	}
+)
+
+func (x TileEase) Enum() *TileEase {
+	p := new(TileEase)
+	*p = x
+	return p
+}
+
+func (x TileEase) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TileEase) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[7].Descriptor()
+}
+
+func (TileEase) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[7]
+}
+
+func (x TileEase) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TileEase.Descriptor instead.
+func (TileEase) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{7}
+}
+
 // TileServerKind narrows what a tile backend serves so consumers can compose
 // stacks (base imagery + labels + hillshade + weather + terrain) without
 // guessing from URL strings.
@@ -448,11 +498,11 @@ func (x TileServerKind) String() string {
 }
 
 func (TileServerKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[7].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[8].Descriptor()
 }
 
 func (TileServerKind) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[7]
+	return &file_amp_std_amp_std_proto_enumTypes[8]
 }
 
 func (x TileServerKind) Number() protoreflect.EnumNumber {
@@ -461,7 +511,7 @@ func (x TileServerKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileServerKind.Descriptor instead.
 func (TileServerKind) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{7}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{8}
 }
 
 // TileProjection identifies the cartographic projection of the tile pyramid.
@@ -498,11 +548,11 @@ func (x TileProjection) String() string {
 }
 
 func (TileProjection) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[8].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[9].Descriptor()
 }
 
 func (TileProjection) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[8]
+	return &file_amp_std_amp_std_proto_enumTypes[9]
 }
 
 func (x TileProjection) Number() protoreflect.EnumNumber {
@@ -511,7 +561,7 @@ func (x TileProjection) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileProjection.Descriptor instead.
 func (TileProjection) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{8}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{9}
 }
 
 // TileServerScheme identifies the (z, x, y) tile addressing convention.
@@ -551,11 +601,11 @@ func (x TileServerScheme) String() string {
 }
 
 func (TileServerScheme) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[9].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[10].Descriptor()
 }
 
 func (TileServerScheme) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[9]
+	return &file_amp_std_amp_std_proto_enumTypes[10]
 }
 
 func (x TileServerScheme) Number() protoreflect.EnumNumber {
@@ -564,7 +614,7 @@ func (x TileServerScheme) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileServerScheme.Descriptor instead.
 func (TileServerScheme) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{9}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10}
 }
 
 // TileServerAuth describes how a per-tile API key is delivered.
@@ -604,11 +654,11 @@ func (x TileServerAuth) String() string {
 }
 
 func (TileServerAuth) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[10].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[11].Descriptor()
 }
 
 func (TileServerAuth) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[10]
+	return &file_amp_std_amp_std_proto_enumTypes[11]
 }
 
 func (x TileServerAuth) Number() protoreflect.EnumNumber {
@@ -617,7 +667,7 @@ func (x TileServerAuth) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileServerAuth.Descriptor instead.
 func (TileServerAuth) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11}
 }
 
 type GeoPath_RenderType int32
@@ -653,11 +703,11 @@ func (x GeoPath_RenderType) String() string {
 }
 
 func (GeoPath_RenderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[11].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[12].Descriptor()
 }
 
 func (GeoPath_RenderType) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[11]
+	return &file_amp_std_amp_std_proto_enumTypes[12]
 }
 
 func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
@@ -1882,7 +1932,7 @@ type VisPreset struct {
 	AudioFlags    AudioFlags             `protobuf:"varint,8,opt,name=AudioFlags,proto3,enum=std.AudioFlags" json:"AudioFlags,omitempty"`
 	AspectMin     float32                `protobuf:"fixed32,10,opt,name=AspectMin,proto3" json:"AspectMin,omitempty"` // y/x lower peg; 0 denotes no min
 	AspectMax     float32                `protobuf:"fixed32,11,opt,name=AspectMax,proto3" json:"AspectMax,omitempty"` // y/x upper peg; 0 denotes no max
-	AssetURI      string                 `protobuf:"bytes,20,opt,name=AssetURI,proto3" json:"AssetURI,omitempty"`     // VisShader asset URI
+	AssetURI      string                 `protobuf:"bytes,20,opt,name=AssetURI,proto3" json:"AssetURI,omitempty"`     // VisualLayer asset URI (VisShader / VisPlexus / GForce / …)
 	Args          []*Arg                 `protobuf:"bytes,21,rep,name=Args,proto3" json:"Args,omitempty"`             // free use arguments passed to the asset
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1988,6 +2038,355 @@ func (x *VisPreset) GetArgs() []*Arg {
 	return nil
 }
 
+// TileBand is the profile of one beveled ring of a tiled polygon mesh — the shareable, data
+// form of the Unity authoring struct.  Bands stack back-to-front in array order.
+// +X is 3 o'clock on the tile, +Y is up (outward), +Z is 12 o'clock.
+type TileBand struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Label          string                 `protobuf:"bytes,1,opt,name=Label,proto3" json:"Label,omitempty"` // authoring label (cosmetic)
+	Enabled        bool                   `protobuf:"varint,2,opt,name=Enabled,proto3" json:"Enabled,omitempty"`
+	AlphaMin       float32                `protobuf:"fixed32,3,opt,name=AlphaMin,proto3" json:"AlphaMin,omitempty"` // transparency range (propagates to position.w)
+	AlphaMax       float32                `protobuf:"fixed32,4,opt,name=AlphaMax,proto3" json:"AlphaMax,omitempty"`
+	RadiusMin      float32                `protobuf:"fixed32,5,opt,name=RadiusMin,proto3" json:"RadiusMin,omitempty"` // ring radius range from tile center (1 = polygon edge)
+	RadiusMax      float32                `protobuf:"fixed32,6,opt,name=RadiusMax,proto3" json:"RadiusMax,omitempty"`
+	YMin           float32                `protobuf:"fixed32,7,opt,name=YMin,proto3" json:"YMin,omitempty"` // altitude range above the tile plane (y=0)
+	YMax           float32                `protobuf:"fixed32,8,opt,name=YMax,proto3" json:"YMax,omitempty"`
+	YEase          TileEase               `protobuf:"varint,9,opt,name=YEase,proto3,enum=std.TileEase" json:"YEase,omitempty"`  // inner→outer thickness transition
+	RadialSegments int32                  `protobuf:"varint,10,opt,name=RadialSegments,proto3" json:"RadialSegments,omitempty"` // radial sections from RadiusMin to RadiusMax
+	EdgeSections   int32                  `protobuf:"varint,11,opt,name=EdgeSections,proto3" json:"EdgeSections,omitempty"`     // sections per polygon edge (excluding corners)
+	SegmentsPer360 int32                  `protobuf:"varint,12,opt,name=SegmentsPer360,proto3" json:"SegmentsPer360,omitempty"` // corner sections per 360 degrees
+	CornerRadius   float32                `protobuf:"fixed32,13,opt,name=CornerRadius,proto3" json:"CornerRadius,omitempty"`    // corner bevel radius (0 = sharp)
+	Underside      bool                   `protobuf:"varint,14,opt,name=Underside,proto3" json:"Underside,omitempty"`           // band forms the tile underside (flips normals)
+	TextureOffsetX float32                `protobuf:"fixed32,15,opt,name=TextureOffsetX,proto3" json:"TextureOffsetX,omitempty"`
+	TextureOffsetY float32                `protobuf:"fixed32,16,opt,name=TextureOffsetY,proto3" json:"TextureOffsetY,omitempty"`
+	TextureOffsetZ float32                `protobuf:"fixed32,17,opt,name=TextureOffsetZ,proto3" json:"TextureOffsetZ,omitempty"`
+	TextureOffsetW float32                `protobuf:"fixed32,18,opt,name=TextureOffsetW,proto3" json:"TextureOffsetW,omitempty"`
+	TextureScaleX  float32                `protobuf:"fixed32,19,opt,name=TextureScaleX,proto3" json:"TextureScaleX,omitempty"`
+	TextureScaleY  float32                `protobuf:"fixed32,20,opt,name=TextureScaleY,proto3" json:"TextureScaleY,omitempty"`
+	TextureScaleZ  float32                `protobuf:"fixed32,21,opt,name=TextureScaleZ,proto3" json:"TextureScaleZ,omitempty"`
+	TextureScaleW  float32                `protobuf:"fixed32,22,opt,name=TextureScaleW,proto3" json:"TextureScaleW,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *TileBand) Reset() {
+	*x = TileBand{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TileBand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TileBand) ProtoMessage() {}
+
+func (x *TileBand) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TileBand.ProtoReflect.Descriptor instead.
+func (*TileBand) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *TileBand) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *TileBand) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+func (x *TileBand) GetAlphaMin() float32 {
+	if x != nil {
+		return x.AlphaMin
+	}
+	return 0
+}
+
+func (x *TileBand) GetAlphaMax() float32 {
+	if x != nil {
+		return x.AlphaMax
+	}
+	return 0
+}
+
+func (x *TileBand) GetRadiusMin() float32 {
+	if x != nil {
+		return x.RadiusMin
+	}
+	return 0
+}
+
+func (x *TileBand) GetRadiusMax() float32 {
+	if x != nil {
+		return x.RadiusMax
+	}
+	return 0
+}
+
+func (x *TileBand) GetYMin() float32 {
+	if x != nil {
+		return x.YMin
+	}
+	return 0
+}
+
+func (x *TileBand) GetYMax() float32 {
+	if x != nil {
+		return x.YMax
+	}
+	return 0
+}
+
+func (x *TileBand) GetYEase() TileEase {
+	if x != nil {
+		return x.YEase
+	}
+	return TileEase_TileEase_Linear
+}
+
+func (x *TileBand) GetRadialSegments() int32 {
+	if x != nil {
+		return x.RadialSegments
+	}
+	return 0
+}
+
+func (x *TileBand) GetEdgeSections() int32 {
+	if x != nil {
+		return x.EdgeSections
+	}
+	return 0
+}
+
+func (x *TileBand) GetSegmentsPer360() int32 {
+	if x != nil {
+		return x.SegmentsPer360
+	}
+	return 0
+}
+
+func (x *TileBand) GetCornerRadius() float32 {
+	if x != nil {
+		return x.CornerRadius
+	}
+	return 0
+}
+
+func (x *TileBand) GetUnderside() bool {
+	if x != nil {
+		return x.Underside
+	}
+	return false
+}
+
+func (x *TileBand) GetTextureOffsetX() float32 {
+	if x != nil {
+		return x.TextureOffsetX
+	}
+	return 0
+}
+
+func (x *TileBand) GetTextureOffsetY() float32 {
+	if x != nil {
+		return x.TextureOffsetY
+	}
+	return 0
+}
+
+func (x *TileBand) GetTextureOffsetZ() float32 {
+	if x != nil {
+		return x.TextureOffsetZ
+	}
+	return 0
+}
+
+func (x *TileBand) GetTextureOffsetW() float32 {
+	if x != nil {
+		return x.TextureOffsetW
+	}
+	return 0
+}
+
+func (x *TileBand) GetTextureScaleX() float32 {
+	if x != nil {
+		return x.TextureScaleX
+	}
+	return 0
+}
+
+func (x *TileBand) GetTextureScaleY() float32 {
+	if x != nil {
+		return x.TextureScaleY
+	}
+	return 0
+}
+
+func (x *TileBand) GetTextureScaleZ() float32 {
+	if x != nil {
+		return x.TextureScaleZ
+	}
+	return 0
+}
+
+func (x *TileBand) GetTextureScaleW() float32 {
+	if x != nil {
+		return x.TextureScaleW
+	}
+	return 0
+}
+
+// TileMeshSpec is a procedural tile-mesh recipe: a polygon swept into beveled bands.
+// The geometry-side analog of VisPreset; consumed by the runtime tile mesher.
+type TileMeshSpec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Bands         []*TileBand            `protobuf:"bytes,1,rep,name=Bands,proto3" json:"Bands,omitempty"`
+	Thickness     float32                `protobuf:"fixed32,2,opt,name=Thickness,proto3" json:"Thickness,omitempty"` // thickness as a ratio of the tile's smaller dimension
+	Sides         int32                  `protobuf:"varint,3,opt,name=Sides,proto3" json:"Sides,omitempty"`          // polygon sides (e.g. 0, 6 = pointy-top hex)
+	Rotate        float32                `protobuf:"fixed32,4,opt,name=Rotate,proto3" json:"Rotate,omitempty"`       // degrees to rotate the base polygon about up (e.g. 30 = flat-top hex)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TileMeshSpec) Reset() {
+	*x = TileMeshSpec{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TileMeshSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TileMeshSpec) ProtoMessage() {}
+
+func (x *TileMeshSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TileMeshSpec.ProtoReflect.Descriptor instead.
+func (*TileMeshSpec) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *TileMeshSpec) GetBands() []*TileBand {
+	if x != nil {
+		return x.Bands
+	}
+	return nil
+}
+
+func (x *TileMeshSpec) GetThickness() float32 {
+	if x != nil {
+		return x.Thickness
+	}
+	return 0
+}
+
+func (x *TileMeshSpec) GetSides() int32 {
+	if x != nil {
+		return x.Sides
+	}
+	return 0
+}
+
+func (x *TileMeshSpec) GetRotate() float32 {
+	if x != nil {
+		return x.Rotate
+	}
+	return 0
+}
+
+// SkinSpec is the shareable unit of a visual mod: a geometry source composed with an ordered
+// stack of VisualLayers (skins / effects).  Geometry is TileMesh (procedural recipe) when its
+// Bands are set, else the built asset at MeshAssetURI.  Layers apply back-to-front; each
+// VisPreset.AssetURI names a VisualLayer (VisShader / VisPlexus / GForce / …).
+type SkinSpec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MeshAssetURI  string                 `protobuf:"bytes,1,opt,name=MeshAssetURI,proto3" json:"MeshAssetURI,omitempty"` // built mesh / Model / VisualScope prototype
+	TileMesh      *TileMeshSpec          `protobuf:"bytes,2,opt,name=TileMesh,proto3" json:"TileMesh,omitempty"`         // OR a procedural tile recipe (precedence when Bands set)
+	Layers        []*VisPreset           `protobuf:"bytes,3,rep,name=Layers,proto3" json:"Layers,omitempty"`             // ordered VisualLayers
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SkinSpec) Reset() {
+	*x = SkinSpec{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SkinSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SkinSpec) ProtoMessage() {}
+
+func (x *SkinSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SkinSpec.ProtoReflect.Descriptor instead.
+func (*SkinSpec) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *SkinSpec) GetMeshAssetURI() string {
+	if x != nil {
+		return x.MeshAssetURI
+	}
+	return ""
+}
+
+func (x *SkinSpec) GetTileMesh() *TileMeshSpec {
+	if x != nil {
+		return x.TileMesh
+	}
+	return nil
+}
+
+func (x *SkinSpec) GetLayers() []*VisPreset {
+	if x != nil {
+		return x.Layers
+	}
+	return nil
+}
+
 // TileServer describes a Web-Mercator (or projection-tagged) tile backend.
 // Consumers (TileService and friends) use this exclusively — no provider
 // strings, no hard-coded catalogs, no custom code per provider.  Stored
@@ -2037,7 +2436,7 @@ type TileServer struct {
 
 func (x *TileServer) Reset() {
 	*x = TileServer{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2049,7 +2448,7 @@ func (x *TileServer) String() string {
 func (*TileServer) ProtoMessage() {}
 
 func (x *TileServer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2062,7 +2461,7 @@ func (x *TileServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TileServer.ProtoReflect.Descriptor instead.
 func (*TileServer) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *TileServer) GetID() string {
@@ -2321,7 +2720,40 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	" \x01(\x02R\tAspectMin\x12\x1c\n" +
 	"\tAspectMax\x18\v \x01(\x02R\tAspectMax\x12\x1a\n" +
 	"\bAssetURI\x18\x14 \x01(\tR\bAssetURI\x12\x1c\n" +
-	"\x04Args\x18\x15 \x03(\v2\b.std.ArgR\x04Args\"\xe2\x04\n" +
+	"\x04Args\x18\x15 \x03(\v2\b.std.ArgR\x04Args\"\xe9\x05\n" +
+	"\bTileBand\x12\x14\n" +
+	"\x05Label\x18\x01 \x01(\tR\x05Label\x12\x18\n" +
+	"\aEnabled\x18\x02 \x01(\bR\aEnabled\x12\x1a\n" +
+	"\bAlphaMin\x18\x03 \x01(\x02R\bAlphaMin\x12\x1a\n" +
+	"\bAlphaMax\x18\x04 \x01(\x02R\bAlphaMax\x12\x1c\n" +
+	"\tRadiusMin\x18\x05 \x01(\x02R\tRadiusMin\x12\x1c\n" +
+	"\tRadiusMax\x18\x06 \x01(\x02R\tRadiusMax\x12\x12\n" +
+	"\x04YMin\x18\a \x01(\x02R\x04YMin\x12\x12\n" +
+	"\x04YMax\x18\b \x01(\x02R\x04YMax\x12#\n" +
+	"\x05YEase\x18\t \x01(\x0e2\r.std.TileEaseR\x05YEase\x12&\n" +
+	"\x0eRadialSegments\x18\n" +
+	" \x01(\x05R\x0eRadialSegments\x12\"\n" +
+	"\fEdgeSections\x18\v \x01(\x05R\fEdgeSections\x12&\n" +
+	"\x0eSegmentsPer360\x18\f \x01(\x05R\x0eSegmentsPer360\x12\"\n" +
+	"\fCornerRadius\x18\r \x01(\x02R\fCornerRadius\x12\x1c\n" +
+	"\tUnderside\x18\x0e \x01(\bR\tUnderside\x12&\n" +
+	"\x0eTextureOffsetX\x18\x0f \x01(\x02R\x0eTextureOffsetX\x12&\n" +
+	"\x0eTextureOffsetY\x18\x10 \x01(\x02R\x0eTextureOffsetY\x12&\n" +
+	"\x0eTextureOffsetZ\x18\x11 \x01(\x02R\x0eTextureOffsetZ\x12&\n" +
+	"\x0eTextureOffsetW\x18\x12 \x01(\x02R\x0eTextureOffsetW\x12$\n" +
+	"\rTextureScaleX\x18\x13 \x01(\x02R\rTextureScaleX\x12$\n" +
+	"\rTextureScaleY\x18\x14 \x01(\x02R\rTextureScaleY\x12$\n" +
+	"\rTextureScaleZ\x18\x15 \x01(\x02R\rTextureScaleZ\x12$\n" +
+	"\rTextureScaleW\x18\x16 \x01(\x02R\rTextureScaleW\"\x7f\n" +
+	"\fTileMeshSpec\x12#\n" +
+	"\x05Bands\x18\x01 \x03(\v2\r.std.TileBandR\x05Bands\x12\x1c\n" +
+	"\tThickness\x18\x02 \x01(\x02R\tThickness\x12\x14\n" +
+	"\x05Sides\x18\x03 \x01(\x05R\x05Sides\x12\x16\n" +
+	"\x06Rotate\x18\x04 \x01(\x02R\x06Rotate\"\x85\x01\n" +
+	"\bSkinSpec\x12\"\n" +
+	"\fMeshAssetURI\x18\x01 \x01(\tR\fMeshAssetURI\x12-\n" +
+	"\bTileMesh\x18\x02 \x01(\v2\x11.std.TileMeshSpecR\bTileMesh\x12&\n" +
+	"\x06Layers\x18\x03 \x03(\v2\x0e.std.VisPresetR\x06Layers\"\xe2\x04\n" +
 	"\n" +
 	"TileServer\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x12\n" +
@@ -2397,7 +2829,11 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
 	"AudioFlags\x12\x13\n" +
 	"\x0fAudioFlags_None\x10\x00\x12\x12\n" +
-	"\x0eAudioFlags_FFT\x10\x01*\xc4\x02\n" +
+	"\x0eAudioFlags_FFT\x10\x01*J\n" +
+	"\bTileEase\x12\x13\n" +
+	"\x0fTileEase_Linear\x10\x00\x12\x15\n" +
+	"\x11TileEase_Circular\x10\x01\x12\x12\n" +
+	"\x0eTileEase_Cubic\x10\x02*\xc4\x02\n" +
 	"\x0eTileServerKind\x12\x1e\n" +
 	"\x1aTileServerKind_Unspecified\x10\x00\x12 \n" +
 	"\x1cTileServerKind_RasterImagery\x10\x01\x12\x1f\n" +
@@ -2436,8 +2872,8 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 	return file_amp_std_amp_std_proto_rawDescData
 }
 
-var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),          // 0: std.TRS_Flags
 	(ValueKind)(0),          // 1: std.ValueKind
@@ -2446,62 +2882,70 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(ColormapFlags)(0),      // 4: std.ColormapFlags
 	(SensorFlags)(0),        // 5: std.SensorFlags
 	(AudioFlags)(0),         // 6: std.AudioFlags
-	(TileServerKind)(0),     // 7: std.TileServerKind
-	(TileProjection)(0),     // 8: std.TileProjection
-	(TileServerScheme)(0),   // 9: std.TileServerScheme
-	(TileServerAuth)(0),     // 10: std.TileServerAuth
-	(GeoPath_RenderType)(0), // 11: std.GeoPath.RenderType
-	(*TRS)(nil),             // 12: std.TRS
-	(*Matrix4X4)(nil),       // 13: std.Matrix4x4
-	(*CameraState)(nil),     // 14: std.CameraState
-	(*CameraOptions)(nil),   // 15: std.CameraOptions
-	(*FileInfo)(nil),        // 16: std.FileInfo
-	(*TextItem)(nil),        // 17: std.TextItem
-	(*JsonValue)(nil),       // 18: std.JsonValue
-	(*Report)(nil),          // 19: std.Report
-	(*Labels)(nil),          // 20: std.Labels
-	(*Rect)(nil),            // 21: std.Rect
-	(*GeoPath)(nil),         // 22: std.GeoPath
-	(*MediaItem)(nil),       // 23: std.MediaItem
-	(*Arg)(nil),             // 24: std.Arg
-	(*VisPreset)(nil),       // 25: std.VisPreset
-	(*TileServer)(nil),      // 26: std.TileServer
-	(*amp.Tags)(nil),        // 27: amp.Tags
-	(*amp.Tag)(nil),         // 28: amp.Tag
+	(TileEase)(0),           // 7: std.TileEase
+	(TileServerKind)(0),     // 8: std.TileServerKind
+	(TileProjection)(0),     // 9: std.TileProjection
+	(TileServerScheme)(0),   // 10: std.TileServerScheme
+	(TileServerAuth)(0),     // 11: std.TileServerAuth
+	(GeoPath_RenderType)(0), // 12: std.GeoPath.RenderType
+	(*TRS)(nil),             // 13: std.TRS
+	(*Matrix4X4)(nil),       // 14: std.Matrix4x4
+	(*CameraState)(nil),     // 15: std.CameraState
+	(*CameraOptions)(nil),   // 16: std.CameraOptions
+	(*FileInfo)(nil),        // 17: std.FileInfo
+	(*TextItem)(nil),        // 18: std.TextItem
+	(*JsonValue)(nil),       // 19: std.JsonValue
+	(*Report)(nil),          // 20: std.Report
+	(*Labels)(nil),          // 21: std.Labels
+	(*Rect)(nil),            // 22: std.Rect
+	(*GeoPath)(nil),         // 23: std.GeoPath
+	(*MediaItem)(nil),       // 24: std.MediaItem
+	(*Arg)(nil),             // 25: std.Arg
+	(*VisPreset)(nil),       // 26: std.VisPreset
+	(*TileBand)(nil),        // 27: std.TileBand
+	(*TileMeshSpec)(nil),    // 28: std.TileMeshSpec
+	(*SkinSpec)(nil),        // 29: std.SkinSpec
+	(*TileServer)(nil),      // 30: std.TileServer
+	(*amp.Tags)(nil),        // 31: amp.Tags
+	(*amp.Tag)(nil),         // 32: amp.Tag
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
-	12, // 1: std.CameraState.Placement:type_name -> std.TRS
-	27, // 2: std.TextItem.Tags:type_name -> amp.Tags
+	13, // 1: std.CameraState.Placement:type_name -> std.TRS
+	31, // 2: std.TextItem.Tags:type_name -> amp.Tags
 	1,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
-	18, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	17, // 5: std.Report.Title:type_name -> std.TextItem
-	17, // 6: std.Report.Caption:type_name -> std.TextItem
-	17, // 7: std.Report.Errors:type_name -> std.TextItem
-	17, // 8: std.Report.Warnings:type_name -> std.TextItem
-	17, // 9: std.Report.Messages:type_name -> std.TextItem
-	17, // 10: std.Report.Debug:type_name -> std.TextItem
+	19, // 4: std.JsonValue.Array:type_name -> std.JsonValue
+	18, // 5: std.Report.Title:type_name -> std.TextItem
+	18, // 6: std.Report.Caption:type_name -> std.TextItem
+	18, // 7: std.Report.Errors:type_name -> std.TextItem
+	18, // 8: std.Report.Warnings:type_name -> std.TextItem
+	18, // 9: std.Report.Messages:type_name -> std.TextItem
+	18, // 10: std.Report.Debug:type_name -> std.TextItem
 	2,  // 11: std.Rect.Format:type_name -> std.PointFormat
-	11, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	12, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	2,  // 13: std.GeoPath.Format:type_name -> std.PointFormat
 	3,  // 14: std.MediaItem.Flags:type_name -> std.MediaFlags
-	28, // 15: std.MediaItem.Tag:type_name -> amp.Tag
-	17, // 16: std.VisPreset.Title:type_name -> std.TextItem
-	17, // 17: std.VisPreset.Collection:type_name -> std.TextItem
-	17, // 18: std.VisPreset.Credits:type_name -> std.TextItem
+	32, // 15: std.MediaItem.Tag:type_name -> amp.Tag
+	18, // 16: std.VisPreset.Title:type_name -> std.TextItem
+	18, // 17: std.VisPreset.Collection:type_name -> std.TextItem
+	18, // 18: std.VisPreset.Credits:type_name -> std.TextItem
 	4,  // 19: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
 	5,  // 20: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
 	6,  // 21: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	24, // 22: std.VisPreset.Args:type_name -> std.Arg
-	7,  // 23: std.TileServer.Kind:type_name -> std.TileServerKind
-	8,  // 24: std.TileServer.Projection:type_name -> std.TileProjection
-	9,  // 25: std.TileServer.Scheme:type_name -> std.TileServerScheme
-	10, // 26: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
-	27, // [27:27] is the sub-list for method output_type
-	27, // [27:27] is the sub-list for method input_type
-	27, // [27:27] is the sub-list for extension type_name
-	27, // [27:27] is the sub-list for extension extendee
-	0,  // [0:27] is the sub-list for field type_name
+	25, // 22: std.VisPreset.Args:type_name -> std.Arg
+	7,  // 23: std.TileBand.YEase:type_name -> std.TileEase
+	27, // 24: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	28, // 25: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	26, // 26: std.SkinSpec.Layers:type_name -> std.VisPreset
+	8,  // 27: std.TileServer.Kind:type_name -> std.TileServerKind
+	9,  // 28: std.TileServer.Projection:type_name -> std.TileProjection
+	10, // 29: std.TileServer.Scheme:type_name -> std.TileServerScheme
+	11, // 30: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
+	31, // [31:31] is the sub-list for method output_type
+	31, // [31:31] is the sub-list for method input_type
+	31, // [31:31] is the sub-list for extension type_name
+	31, // [31:31] is the sub-list for extension extendee
+	0,  // [0:31] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -2514,8 +2958,8 @@ func file_amp_std_amp_std_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
-			NumEnums:      12,
-			NumMessages:   15,
+			NumEnums:      13,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

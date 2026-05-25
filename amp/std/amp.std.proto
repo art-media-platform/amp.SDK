@@ -275,8 +275,63 @@ message VisPreset {
     float           AspectMin = 10; // y/x lower peg; 0 denotes no min
     float           AspectMax = 11; // y/x upper peg; 0 denotes no max
 
-    string          AssetURI = 20; // VisShader asset URI
+    string          AssetURI = 20; // VisualLayer asset URI (VisShader / VisPlexus / GForce / …)
     repeated Arg    Args     = 21; // free use arguments passed to the asset
+}
+
+
+// TileEase controls how a TileBand's profile transitions from its inner to outer radius.
+enum TileEase {
+    TileEase_Linear   = 0;
+    TileEase_Circular = 1;   // 90-degree arc, normals trending up
+    TileEase_Cubic    = 2;
+}
+
+// TileBand is the profile of one beveled ring of a tiled polygon mesh — the shareable, data
+// form of the Unity authoring struct.  Bands stack back-to-front in array order.
+// +X is 3 o'clock on the tile, +Y is up (outward), +Z is 12 o'clock.
+message TileBand {
+    string          Label          = 1;    // authoring label (cosmetic)
+    bool            Enabled        = 2;
+    float           AlphaMin       = 3;     // transparency range (propagates to position.w)
+    float           AlphaMax       = 4;
+    float           RadiusMin      = 5;     // ring radius range from tile center (1 = polygon edge)
+    float           RadiusMax      = 6;
+    float           YMin           = 7;     // altitude range above the tile plane (y=0)
+    float           YMax           = 8;
+    TileEase        YEase          = 9;     // inner→outer thickness transition
+    int32           RadialSegments = 10;    // radial sections from RadiusMin to RadiusMax
+    int32           EdgeSections   = 11;    // sections per polygon edge (excluding corners)
+    int32           SegmentsPer360 = 12;    // corner sections per 360 degrees
+    float           CornerRadius   = 13;    // corner bevel radius (0 = sharp)
+    bool            Underside      = 14;    // band forms the tile underside (flips normals)
+    float           TextureOffsetX = 15;
+    float           TextureOffsetY = 16;
+    float           TextureOffsetZ = 17;
+    float           TextureOffsetW = 18;
+    float           TextureScaleX  = 19;
+    float           TextureScaleY  = 20;
+    float           TextureScaleZ  = 21;
+    float           TextureScaleW  = 22;
+}
+
+// TileMeshSpec is a procedural tile-mesh recipe: a polygon swept into beveled bands.
+// The geometry-side analog of VisPreset; consumed by the runtime tile mesher.
+message TileMeshSpec {
+    repeated TileBand   Bands         = 1;
+    float               Thickness     = 2;  // thickness as a ratio of the tile's smaller dimension
+    int32               Sides         = 3;  // polygon sides (e.g. 0, 6 = pointy-top hex)
+    float               Rotate        = 4;  // degrees to rotate the base polygon about up (e.g. 30 = flat-top hex)
+}
+
+// SkinSpec is the shareable unit of a visual mod: a geometry source composed with an ordered
+// stack of VisualLayers (skins / effects).  Geometry is TileMesh (procedural recipe) when its
+// Bands are set, else the built asset at MeshAssetURI.  Layers apply back-to-front; each
+// VisPreset.AssetURI names a VisualLayer (VisShader / VisPlexus / GForce / …).
+message SkinSpec {
+    string              MeshAssetURI = 1;   // built mesh / Model / VisualScope prototype
+    TileMeshSpec        TileMesh     = 2;   // OR a procedural tile recipe (precedence when Bands set)
+    repeated VisPreset  Layers       = 3;   // ordered VisualLayers
 }
 
 
