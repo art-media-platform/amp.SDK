@@ -47,6 +47,7 @@ tags Attr {
         ItemLinks        "Tags.links"
         ItemCameraState    "CameraState"
         ItemCameraOptions  "CameraOptions"
+        ItemAtmosphere     "AtmosphereSpec"   // 4-category atmosphere composition (sky/sun/night/fog)
         ItemFSInfo         "FSInfo"
         GlyphTag           "glyph.Tag"
         TileAttr "tile" {
@@ -245,12 +246,30 @@ const Manifold {
     string DebugGridTileLayer  = "asset:manifold/tile.layer.debug-grid";
 }
 
+// Atmosphere — stock URIs for the four-category atmosphere composition.
+// Each URI resolves through a built-in param-bundle switch today and an
+// AssetRequest pipeline later (the moddable path: a planet ships a
+// custom sky / sun / night / fog effect under its own URI).  Empty
+// string on an AtmosphereSpec field disables that category.
+const Atmosphere {
+    string SkyEarth     = "asset:atmosphere/sky/earth";        // blue zenith → soft white horizon + limb sheen
+    string SkyMars      = "asset:atmosphere/sky/mars";         // dusty pink zenith, ochre horizon
+    string SkyNoir      = "asset:atmosphere/sky/noir";         // monochrome cool blue
+    string SunStandard  = "asset:atmosphere/sun/standard";     // sunset / terminator / HG forward scatter (legibility-cost)
+    string NightStandard = "asset:atmosphere/night/standard";  // night-side dim + cool tint
+    string FogExponential = "asset:atmosphere/fog/exponential"; // exponential aerial perspective; seam-hider, on by default
+}
+
 // Actor — in-world actor skins resolve through the crate / asset
 // system; a mod registers an override at the same key to ship a custom
 // actor without touching code.  An unresolved URI falls back to a
 // primitive so a ManifoldActor is always visible.
 const Actor {
-    string DefaultSkin = "asset:actor/skin.default";
+    string DefaultSkin             = "asset:actor/skin.default";
+    float  DefaultBodyHeightMeters = 1.6;   // composed-body height (m)   when the field is 0
+    int32  DefaultBodySides        = 6;     // composed-body facets       when the field is 0
+    double DefaultEyeHeightMeters  = 1.7;   // eye reference (m)          when the field is 0
+    float  DefaultOrbitDegPerSec   = 8;     // signature orbit rate (deg/s) when the field is 0
 }
 
 // Locus spatial binding

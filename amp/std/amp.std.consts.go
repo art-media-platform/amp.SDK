@@ -34,6 +34,7 @@ var Attr = struct {
 	ItemLinks                          tag.Name
 	ItemCameraState                    tag.Name
 	ItemCameraOptions                  tag.Name
+	ItemAtmosphere                     tag.Name
 	ItemFSInfo                         tag.Name
 	GlyphTag                           tag.Name
 	TileAttr                           tag.Name
@@ -172,6 +173,7 @@ var Attr = struct {
 	ItemLinks:         tag.Name{ID: tag.UID{0x21358693EEC1C45B, 0x539D5528D6128B99}, Canonic: "item.tags.links"},          // 116Q397VQ1SJEP77BP53C152WT
 	ItemCameraState:   tag.Name{ID: tag.UID{0x95846345795A4B31, 0xC8DB9685F70EF7FC}, Canonic: "item.camerastate"},         // 4PHJJNBYBU9DSWJQWQHRVHXXZW
 	ItemCameraOptions: tag.Name{ID: tag.UID{0x56A37CE3EFA9DD30, 0xD7E2C63A6CEF1107}, Canonic: "item.cameraoptions"},       // 2QNEYF7VX9VNSEGSQ679QFY487
+	ItemAtmosphere:    tag.Name{ID: tag.UID{0x0EE841076E6B23A2, 0xDBB24357661E76A6}, Canonic: "item.atmospherespec"},      // 0FX10HFVMC4FJERDK3BXM1WXP6
 	ItemFSInfo:        tag.Name{ID: tag.UID{0x711AD8ED3AB7DFAA, 0x3B78AA6CB3B35B98}, Canonic: "item.fsinfo"},              // 3J3CDFUFPRVYP3QY5BEKTV6QWS
 	GlyphTag:          tag.Name{ID: tag.UID{0x49A583D517A3B95D, 0xBB0D08F7F6616802}, Canonic: "item.glyph.tag"},           // 29NQ1XB5X3R5FVQ388YZV62U02
 	TileAttr:          tag.Name{ID: tag.UID{0x6D2B5356E31F08DE, 0xA16F8C22497BF9CC}, Canonic: "item.tile"},                // 3E5E9PESSZ13GB2VWD494RRYFD
@@ -365,12 +367,30 @@ const (
 	ManifoldDebugGridTileLayer  = "asset:manifold/tile.layer.debug-grid"
 )
 
+// ─── Atmosphere — stock URIs for the four-category atmosphere composition. ───
+// Each URI resolves through a built-in param-bundle switch today and an
+// AssetRequest pipeline later (the moddable path: a planet ships a
+// custom sky / sun / night / fog effect under its own URI).  Empty
+// string on an AtmosphereSpec field disables that category.
+const (
+	AtmosphereSkyEarth       = "asset:atmosphere/sky/earth"       // blue zenith → soft white horizon + limb sheen
+	AtmosphereSkyMars        = "asset:atmosphere/sky/mars"        // dusty pink zenith, ochre horizon
+	AtmosphereSkyNoir        = "asset:atmosphere/sky/noir"        // monochrome cool blue
+	AtmosphereSunStandard    = "asset:atmosphere/sun/standard"    // sunset / terminator / HG forward scatter (legibility-cost)
+	AtmosphereNightStandard  = "asset:atmosphere/night/standard"  // night-side dim + cool tint
+	AtmosphereFogExponential = "asset:atmosphere/fog/exponential" // exponential aerial perspective; seam-hider, on by default
+)
+
 // ─── Actor — in-world actor skins resolve through the crate / asset ───
 // system; a mod registers an override at the same key to ship a custom
 // actor without touching code.  An unresolved URI falls back to a
 // primitive so a ManifoldActor is always visible.
 const (
-	ActorDefaultSkin = "asset:actor/skin.default"
+	ActorDefaultSkin             = "asset:actor/skin.default"
+	ActorDefaultBodyHeightMeters = float32(1.6) // composed-body height (m)   when the field is 0
+	ActorDefaultBodySides        = int32(6)     // composed-body facets       when the field is 0
+	ActorDefaultEyeHeightMeters  = 1.7          // eye reference (m)          when the field is 0
+	ActorDefaultOrbitDegPerSec   = float32(8)   // signature orbit rate (deg/s) when the field is 0
 )
 
 // ─── Locus spatial binding ──────────────────────────────────────

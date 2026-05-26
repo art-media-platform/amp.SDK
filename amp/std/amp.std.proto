@@ -334,6 +334,25 @@ message SkinSpec {
     repeated VisPreset  Layers       = 3;   // ordered VisualLayers
 }
 
+// AtmosphereSpec composes a manifold's atmosphere from four orthogonal effect categories.
+// Each field is an asset URI; empty disables that category (the param-driven no-op).  The
+// resolver (built-in switch today; AssetRequest later) maps each URI to the shader params
+// and keyword bundle that effect uses.  A planet author can ship a full set, a partial
+// override (e.g., a custom Sky on top of stock Fog), or none at all.
+//
+// Category split is functional, not visual:
+//   Sky — the always-on base aesthetic (zenith / horizon shell, limb sheen at the edge).
+//   Sun — the time-of-day phenomena that get in the way of legibility during map work
+//         (sunset glow, terminator color, Henyey-Greenstein forward scatter).
+//   Night — night-side dim and cool tinting; off → uniform daylight everywhere.
+//   Fog — exponential aerial perspective on tiles; seam-hider for distant edges.  Usually on.
+message AtmosphereSpec {
+    string  SkyURI   = 1;   // base sky shell;        empty → no shell rendered
+    string  SunURI   = 2;   // sunset / terminator;   empty → no sun-side tinting
+    string  NightURI = 3;   // night-side dim;        empty → no night-side dim
+    string  FogURI   = 4;   // distance fog on tiles; empty → no atmospheric perspective
+}
+
 
 // TileServerKind narrows what a tile backend serves so consumers can compose
 // stacks (base imagery + labels + hillshade + weather + terrain) without

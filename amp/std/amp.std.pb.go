@@ -2387,6 +2387,87 @@ func (x *SkinSpec) GetLayers() []*VisPreset {
 	return nil
 }
 
+// AtmosphereSpec composes a manifold's atmosphere from four orthogonal effect categories.
+// Each field is an asset URI; empty disables that category (the param-driven no-op).  The
+// resolver (built-in switch today; AssetRequest later) maps each URI to the shader params
+// and keyword bundle that effect uses.  A planet author can ship a full set, a partial
+// override (e.g., a custom Sky on top of stock Fog), or none at all.
+//
+// Category split is functional, not visual:
+//
+//	Sky — the always-on base aesthetic (zenith / horizon shell, limb sheen at the edge).
+//	Sun — the time-of-day phenomena that get in the way of legibility during map work
+//	      (sunset glow, terminator color, Henyey-Greenstein forward scatter).
+//	Night — night-side dim and cool tinting; off → uniform daylight everywhere.
+//	Fog — exponential aerial perspective on tiles; seam-hider for distant edges.  Usually on.
+type AtmosphereSpec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SkyURI        string                 `protobuf:"bytes,1,opt,name=SkyURI,proto3" json:"SkyURI,omitempty"`     // base sky shell;        empty → no shell rendered
+	SunURI        string                 `protobuf:"bytes,2,opt,name=SunURI,proto3" json:"SunURI,omitempty"`     // sunset / terminator;   empty → no sun-side tinting
+	NightURI      string                 `protobuf:"bytes,3,opt,name=NightURI,proto3" json:"NightURI,omitempty"` // night-side dim;        empty → no night-side dim
+	FogURI        string                 `protobuf:"bytes,4,opt,name=FogURI,proto3" json:"FogURI,omitempty"`     // distance fog on tiles; empty → no atmospheric perspective
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AtmosphereSpec) Reset() {
+	*x = AtmosphereSpec{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AtmosphereSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AtmosphereSpec) ProtoMessage() {}
+
+func (x *AtmosphereSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AtmosphereSpec.ProtoReflect.Descriptor instead.
+func (*AtmosphereSpec) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AtmosphereSpec) GetSkyURI() string {
+	if x != nil {
+		return x.SkyURI
+	}
+	return ""
+}
+
+func (x *AtmosphereSpec) GetSunURI() string {
+	if x != nil {
+		return x.SunURI
+	}
+	return ""
+}
+
+func (x *AtmosphereSpec) GetNightURI() string {
+	if x != nil {
+		return x.NightURI
+	}
+	return ""
+}
+
+func (x *AtmosphereSpec) GetFogURI() string {
+	if x != nil {
+		return x.FogURI
+	}
+	return ""
+}
+
 // TileServer describes a Web-Mercator (or projection-tagged) tile backend.
 // Consumers (TileService and friends) use this exclusively — no provider
 // strings, no hard-coded catalogs, no custom code per provider.  Stored
@@ -2436,7 +2517,7 @@ type TileServer struct {
 
 func (x *TileServer) Reset() {
 	*x = TileServer{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	mi := &file_amp_std_amp_std_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2448,7 +2529,7 @@ func (x *TileServer) String() string {
 func (*TileServer) ProtoMessage() {}
 
 func (x *TileServer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	mi := &file_amp_std_amp_std_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2461,7 +2542,7 @@ func (x *TileServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TileServer.ProtoReflect.Descriptor instead.
 func (*TileServer) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *TileServer) GetID() string {
@@ -2753,7 +2834,12 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\bSkinSpec\x12\"\n" +
 	"\fMeshAssetURI\x18\x01 \x01(\tR\fMeshAssetURI\x12-\n" +
 	"\bTileMesh\x18\x02 \x01(\v2\x11.std.TileMeshSpecR\bTileMesh\x12&\n" +
-	"\x06Layers\x18\x03 \x03(\v2\x0e.std.VisPresetR\x06Layers\"\xe2\x04\n" +
+	"\x06Layers\x18\x03 \x03(\v2\x0e.std.VisPresetR\x06Layers\"t\n" +
+	"\x0eAtmosphereSpec\x12\x16\n" +
+	"\x06SkyURI\x18\x01 \x01(\tR\x06SkyURI\x12\x16\n" +
+	"\x06SunURI\x18\x02 \x01(\tR\x06SunURI\x12\x1a\n" +
+	"\bNightURI\x18\x03 \x01(\tR\bNightURI\x12\x16\n" +
+	"\x06FogURI\x18\x04 \x01(\tR\x06FogURI\"\xe2\x04\n" +
 	"\n" +
 	"TileServer\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x12\n" +
@@ -2873,7 +2959,7 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 }
 
 var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),          // 0: std.TRS_Flags
 	(ValueKind)(0),          // 1: std.ValueKind
@@ -2905,14 +2991,15 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(*TileBand)(nil),        // 27: std.TileBand
 	(*TileMeshSpec)(nil),    // 28: std.TileMeshSpec
 	(*SkinSpec)(nil),        // 29: std.SkinSpec
-	(*TileServer)(nil),      // 30: std.TileServer
-	(*amp.Tags)(nil),        // 31: amp.Tags
-	(*amp.Tag)(nil),         // 32: amp.Tag
+	(*AtmosphereSpec)(nil),  // 30: std.AtmosphereSpec
+	(*TileServer)(nil),      // 31: std.TileServer
+	(*amp.Tags)(nil),        // 32: amp.Tags
+	(*amp.Tag)(nil),         // 33: amp.Tag
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
 	13, // 1: std.CameraState.Placement:type_name -> std.TRS
-	31, // 2: std.TextItem.Tags:type_name -> amp.Tags
+	32, // 2: std.TextItem.Tags:type_name -> amp.Tags
 	1,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
 	19, // 4: std.JsonValue.Array:type_name -> std.JsonValue
 	18, // 5: std.Report.Title:type_name -> std.TextItem
@@ -2925,7 +3012,7 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	12, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	2,  // 13: std.GeoPath.Format:type_name -> std.PointFormat
 	3,  // 14: std.MediaItem.Flags:type_name -> std.MediaFlags
-	32, // 15: std.MediaItem.Tag:type_name -> amp.Tag
+	33, // 15: std.MediaItem.Tag:type_name -> amp.Tag
 	18, // 16: std.VisPreset.Title:type_name -> std.TextItem
 	18, // 17: std.VisPreset.Collection:type_name -> std.TextItem
 	18, // 18: std.VisPreset.Credits:type_name -> std.TextItem
@@ -2959,7 +3046,7 @@ func file_amp_std_amp_std_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
 			NumEnums:      13,
-			NumMessages:   18,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
