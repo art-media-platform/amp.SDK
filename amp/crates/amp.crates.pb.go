@@ -608,16 +608,17 @@ type CrateInfo struct {
 	// InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
 	// If non-zero, it will not change and no other instance will have the same value.
 	InstID uint32 `protobuf:"varint,2,opt,name=InstID,proto3" json:"InstID,omitempty"`
-	// CrateURI takes the form "{PublisherID}/{CrateID}" and is used to globally reference assets in this crate.
-	// This URI string can only contain chars in [A-Za-z0-9_.-] (other than the separating '/' char).
+	// CrateURI takes the form "asset:{PublisherID}/{CrateID}" per the wire scheme declared in
+	// amp.core.proto:UriScheme.Asset; an asset within the crate is "asset:{PublisherID}/{CrateID}/{EntryURI}".
+	// The {PublisherID}/{CrateID} segment can only contain chars in [A-Za-z0-9_.-] (other than the separating '/' char).
 	// PublisherID uniquely identifies the author/owner/publisher of this crate (and potentially other crates).
 	// CrateID uniquely identifies this crate for the given publisher and all subsequent revisions.
 	//
-	//	"plan-systems.org/plan.app.ui"
-	//	"plan-systems.org/about-plan-systems"
-	//	"themushroom.farm/land"
-	//	"themushroom.farm/mycology-201"
-	//	"the-smiths.family/123-Maple"
+	//	"asset:plan-systems.org/plan.app.ui"
+	//	"asset:plan-systems.org/about-plan-systems"
+	//	"asset:themushroom.farm/land"
+	//	"asset:themushroom.farm/mycology-201"
+	//	"asset:the-smiths.family/123-Maple"
 	CrateURI string `protobuf:"bytes,4,opt,name=CrateURI,proto3" json:"CrateURI,omitempty"`
 	// PublisherName is a human-readable name of the author/owner/publisher of this crate and can change without repercussions (i.e. is purely optical).
 	PublisherName string `protobuf:"bytes,6,opt,name=PublisherName,proto3" json:"PublisherName,omitempty"`

@@ -342,6 +342,11 @@ var (
 )
 
 const (
+	// Canonic URI scheme prefix for amp asset references (matches UriScheme.Asset).
+	AssetScheme = "asset:"
+)
+
+const (
 	PlanetInviteFileExt = ".planet-invite"
 )
 
@@ -396,6 +401,16 @@ const (
 	AtmosphereDefaultFogSunWarmth   = float32(2)      // sun-aligned warm sharpness on the fog mix (pow exponent)
 	AtmosphereDefaultMieG           = float32(0.76)   // HG asymmetry; typical Mie aerosol forward peak
 	AtmosphereDefaultMieStrength    = float32(0.5)    // HG glow amplitude on the outer shell sunset
+)
+
+// ─── Bundled crate URIs — the standard crate set apps register at boot via ───
+// CrateConfig.Register.  Each URI is asset:PublisherID/CrateID per the wire
+// scheme declared in amp.core.proto:Asset; the build pipeline stages matching
+// .crate files under StreamingAssets/Bundled/CrateDepot.
+const (
+	CratesBaseAssets = "asset:crates.planet.tools/amp.3D.base.assets"
+	CratesHelloWorld = "asset:crates.planet.tools/amp.3D.hello.world"
+	CratesVisAssets  = "asset:soundspectrum.com/amp.3D.vis.assets"
 )
 
 // ─── Actor — in-world actor skins resolve through the crate / asset ───
