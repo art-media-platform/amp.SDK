@@ -203,28 +203,29 @@ func (Code) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_status_status_proto_rawDescGZIP(), []int{0}
 }
 
+// Severity expresses the severity of a status message for logging and alerting purposes.
 type Severity int32
 
 const (
-	Severity_Error   Severity = 0
-	Severity_Warning Severity = 1
-	Severity_Info    Severity = 2
-	Severity_Debug   Severity = 3
+	Severity_Debug   Severity = 0
+	Severity_Info    Severity = 1
+	Severity_Warning Severity = 2
+	Severity_Error   Severity = 3
 )
 
 // Enum value maps for Severity.
 var (
 	Severity_name = map[int32]string{
-		0: "Error",
-		1: "Warning",
-		2: "Info",
-		3: "Debug",
+		0: "Debug",
+		1: "Info",
+		2: "Warning",
+		3: "Error",
 	}
 	Severity_value = map[string]int32{
-		"Error":   0,
-		"Warning": 1,
-		"Info":    2,
-		"Debug":   3,
+		"Debug":   0,
+		"Info":    1,
+		"Warning": 2,
+		"Error":   3,
 	}
 )
 
@@ -309,7 +310,7 @@ func (x *Status) GetSeverity() Severity {
 	if x != nil {
 		return x.Severity
 	}
-	return Severity_Error
+	return Severity_Debug
 }
 
 func (x *Status) GetLevel() int32 {
@@ -404,10 +405,10 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\rMarshalFailed\x10\xb9\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
 	"\x0fUnmarshalFailed\x10\xb8\xcb\xfe\xff\xff\xff\xff\xff\xff\x01*7\n" +
 	"\bSeverity\x12\t\n" +
-	"\x05Error\x10\x00\x12\v\n" +
-	"\aWarning\x10\x01\x12\b\n" +
-	"\x04Info\x10\x02\x12\t\n" +
-	"\x05Debug\x10\x03BQZ3github.com/art-media-platform/amp.SDK/stdlib/status\xaa\x02\x19art.media.platform.statusb\x06proto3"
+	"\x05Debug\x10\x00\x12\b\n" +
+	"\x04Info\x10\x01\x12\v\n" +
+	"\aWarning\x10\x02\x12\t\n" +
+	"\x05Error\x10\x03BQZ3github.com/art-media-platform/amp.SDK/stdlib/status\xaa\x02\x19art.media.platform.statusb\x06proto3"
 
 var (
 	file_stdlib_status_status_proto_rawDescOnce sync.Once
