@@ -2387,32 +2387,100 @@ func (x *SkinSpec) GetLayers() []*VisPreset {
 	return nil
 }
 
-// AtmosphereSpec composes a manifold's atmosphere from four orthogonal effect categories.
-// Each field is an asset URI; empty disables that category (the param-driven no-op).  The
-// resolver (built-in switch today; AssetRequest later) maps each URI to the shader params
-// and keyword bundle that effect uses.  A planet author can ship a full set, a partial
-// override (e.g., a custom Sky on top of stock Fog), or none at all.
+// AtmosphereEffect is one tagged entry in an AtmosphereSpec.  Label identifies the
+// category the entry contributes to (Sky / Sun / Night / Fog — see std.Atmosphere.Label*
+// for canonical strings); URI selects the variant within that category.
 //
-// Category split is functional, not visual:
+// URI semantics, when Enabled = true:
+//
+//	non-empty → the named effect asset (resolved via AssetRequest / built-in switch)
+//	empty     → use the category default (std.Atmosphere.SkyEarth / SunStandard / ...)
+//
+// Enabled = false disables the effect entirely; URI is retained so toggling on
+// restores the previous selection without round-trip loss.
+type AtmosphereEffect struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Label         string                 `protobuf:"bytes,1,opt,name=Label,proto3" json:"Label,omitempty"`      // category id; canonical values in std.Atmosphere.Label*
+	URI           string                 `protobuf:"bytes,2,opt,name=URI,proto3" json:"URI,omitempty"`          // effect asset URI; empty + Enabled = true → category default
+	Enabled       bool                   `protobuf:"varint,3,opt,name=Enabled,proto3" json:"Enabled,omitempty"` // off-switch independent of URI presence
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AtmosphereEffect) Reset() {
+	*x = AtmosphereEffect{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AtmosphereEffect) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AtmosphereEffect) ProtoMessage() {}
+
+func (x *AtmosphereEffect) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AtmosphereEffect.ProtoReflect.Descriptor instead.
+func (*AtmosphereEffect) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AtmosphereEffect) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *AtmosphereEffect) GetURI() string {
+	if x != nil {
+		return x.URI
+	}
+	return ""
+}
+
+func (x *AtmosphereEffect) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+// AtmosphereSpec composes a manifold's atmosphere from tagged effect entries.  Each
+// category (Sky / Sun / Night / Fog) is independently overridable; a planet author can
+// ship a partial set and inherit the rest.  Multiple entries with the same Label are
+// reserved for future stacking (e.g., two compatible Sky layers); v240 honors the first
+// entry per category.
+//
+// Category functional split:
 //
 //	Sky — the always-on base aesthetic (zenith / horizon shell, limb sheen at the edge).
-//	Sun — the time-of-day phenomena that get in the way of legibility during map work
+//	Sun — time-of-day phenomena that get in the way of legibility during map work
 //	      (sunset glow, terminator color, Henyey-Greenstein forward scatter).
 //	Night — night-side dim and cool tinting; off → uniform daylight everywhere.
 //	Fog — exponential aerial perspective on tiles; seam-hider for distant edges.  Usually on.
 type AtmosphereSpec struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	SkyURI        string                 `protobuf:"bytes,1,opt,name=SkyURI,proto3" json:"SkyURI,omitempty"`     // base sky shell;        empty → no shell rendered
-	SunURI        string                 `protobuf:"bytes,2,opt,name=SunURI,proto3" json:"SunURI,omitempty"`     // sunset / terminator;   empty → no sun-side tinting
-	NightURI      string                 `protobuf:"bytes,3,opt,name=NightURI,proto3" json:"NightURI,omitempty"` // night-side dim;        empty → no night-side dim
-	FogURI        string                 `protobuf:"bytes,4,opt,name=FogURI,proto3" json:"FogURI,omitempty"`     // distance fog on tiles; empty → no atmospheric perspective
+	Effects       []*AtmosphereEffect    `protobuf:"bytes,1,rep,name=Effects,proto3" json:"Effects,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AtmosphereSpec) Reset() {
 	*x = AtmosphereSpec{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	mi := &file_amp_std_amp_std_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2424,7 +2492,7 @@ func (x *AtmosphereSpec) String() string {
 func (*AtmosphereSpec) ProtoMessage() {}
 
 func (x *AtmosphereSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	mi := &file_amp_std_amp_std_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2437,35 +2505,14 @@ func (x *AtmosphereSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AtmosphereSpec.ProtoReflect.Descriptor instead.
 func (*AtmosphereSpec) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *AtmosphereSpec) GetSkyURI() string {
+func (x *AtmosphereSpec) GetEffects() []*AtmosphereEffect {
 	if x != nil {
-		return x.SkyURI
+		return x.Effects
 	}
-	return ""
-}
-
-func (x *AtmosphereSpec) GetSunURI() string {
-	if x != nil {
-		return x.SunURI
-	}
-	return ""
-}
-
-func (x *AtmosphereSpec) GetNightURI() string {
-	if x != nil {
-		return x.NightURI
-	}
-	return ""
-}
-
-func (x *AtmosphereSpec) GetFogURI() string {
-	if x != nil {
-		return x.FogURI
-	}
-	return ""
+	return nil
 }
 
 // TileServer describes a Web-Mercator (or projection-tagged) tile backend.
@@ -2517,7 +2564,7 @@ type TileServer struct {
 
 func (x *TileServer) Reset() {
 	*x = TileServer{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[18]
+	mi := &file_amp_std_amp_std_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2529,7 +2576,7 @@ func (x *TileServer) String() string {
 func (*TileServer) ProtoMessage() {}
 
 func (x *TileServer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[18]
+	mi := &file_amp_std_amp_std_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2542,7 +2589,7 @@ func (x *TileServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TileServer.ProtoReflect.Descriptor instead.
 func (*TileServer) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{18}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *TileServer) GetID() string {
@@ -2834,12 +2881,13 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\bSkinSpec\x12\"\n" +
 	"\fMeshAssetURI\x18\x01 \x01(\tR\fMeshAssetURI\x12-\n" +
 	"\bTileMesh\x18\x02 \x01(\v2\x11.std.TileMeshSpecR\bTileMesh\x12&\n" +
-	"\x06Layers\x18\x03 \x03(\v2\x0e.std.VisPresetR\x06Layers\"t\n" +
-	"\x0eAtmosphereSpec\x12\x16\n" +
-	"\x06SkyURI\x18\x01 \x01(\tR\x06SkyURI\x12\x16\n" +
-	"\x06SunURI\x18\x02 \x01(\tR\x06SunURI\x12\x1a\n" +
-	"\bNightURI\x18\x03 \x01(\tR\bNightURI\x12\x16\n" +
-	"\x06FogURI\x18\x04 \x01(\tR\x06FogURI\"\xe2\x04\n" +
+	"\x06Layers\x18\x03 \x03(\v2\x0e.std.VisPresetR\x06Layers\"T\n" +
+	"\x10AtmosphereEffect\x12\x14\n" +
+	"\x05Label\x18\x01 \x01(\tR\x05Label\x12\x10\n" +
+	"\x03URI\x18\x02 \x01(\tR\x03URI\x12\x18\n" +
+	"\aEnabled\x18\x03 \x01(\bR\aEnabled\"A\n" +
+	"\x0eAtmosphereSpec\x12/\n" +
+	"\aEffects\x18\x01 \x03(\v2\x15.std.AtmosphereEffectR\aEffects\"\xe2\x04\n" +
 	"\n" +
 	"TileServer\x12\x0e\n" +
 	"\x02ID\x18\x01 \x01(\tR\x02ID\x12\x12\n" +
@@ -2959,47 +3007,48 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 }
 
 var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_amp_std_amp_std_proto_goTypes = []any{
-	(TRS_Flags)(0),          // 0: std.TRS_Flags
-	(ValueKind)(0),          // 1: std.ValueKind
-	(PointFormat)(0),        // 2: std.PointFormat
-	(MediaFlags)(0),         // 3: std.MediaFlags
-	(ColormapFlags)(0),      // 4: std.ColormapFlags
-	(SensorFlags)(0),        // 5: std.SensorFlags
-	(AudioFlags)(0),         // 6: std.AudioFlags
-	(TileEase)(0),           // 7: std.TileEase
-	(TileServerKind)(0),     // 8: std.TileServerKind
-	(TileProjection)(0),     // 9: std.TileProjection
-	(TileServerScheme)(0),   // 10: std.TileServerScheme
-	(TileServerAuth)(0),     // 11: std.TileServerAuth
-	(GeoPath_RenderType)(0), // 12: std.GeoPath.RenderType
-	(*TRS)(nil),             // 13: std.TRS
-	(*Matrix4X4)(nil),       // 14: std.Matrix4x4
-	(*CameraState)(nil),     // 15: std.CameraState
-	(*CameraOptions)(nil),   // 16: std.CameraOptions
-	(*FileInfo)(nil),        // 17: std.FileInfo
-	(*TextItem)(nil),        // 18: std.TextItem
-	(*JsonValue)(nil),       // 19: std.JsonValue
-	(*Report)(nil),          // 20: std.Report
-	(*Labels)(nil),          // 21: std.Labels
-	(*Rect)(nil),            // 22: std.Rect
-	(*GeoPath)(nil),         // 23: std.GeoPath
-	(*MediaItem)(nil),       // 24: std.MediaItem
-	(*Arg)(nil),             // 25: std.Arg
-	(*VisPreset)(nil),       // 26: std.VisPreset
-	(*TileBand)(nil),        // 27: std.TileBand
-	(*TileMeshSpec)(nil),    // 28: std.TileMeshSpec
-	(*SkinSpec)(nil),        // 29: std.SkinSpec
-	(*AtmosphereSpec)(nil),  // 30: std.AtmosphereSpec
-	(*TileServer)(nil),      // 31: std.TileServer
-	(*amp.Tags)(nil),        // 32: amp.Tags
-	(*amp.Tag)(nil),         // 33: amp.Tag
+	(TRS_Flags)(0),           // 0: std.TRS_Flags
+	(ValueKind)(0),           // 1: std.ValueKind
+	(PointFormat)(0),         // 2: std.PointFormat
+	(MediaFlags)(0),          // 3: std.MediaFlags
+	(ColormapFlags)(0),       // 4: std.ColormapFlags
+	(SensorFlags)(0),         // 5: std.SensorFlags
+	(AudioFlags)(0),          // 6: std.AudioFlags
+	(TileEase)(0),            // 7: std.TileEase
+	(TileServerKind)(0),      // 8: std.TileServerKind
+	(TileProjection)(0),      // 9: std.TileProjection
+	(TileServerScheme)(0),    // 10: std.TileServerScheme
+	(TileServerAuth)(0),      // 11: std.TileServerAuth
+	(GeoPath_RenderType)(0),  // 12: std.GeoPath.RenderType
+	(*TRS)(nil),              // 13: std.TRS
+	(*Matrix4X4)(nil),        // 14: std.Matrix4x4
+	(*CameraState)(nil),      // 15: std.CameraState
+	(*CameraOptions)(nil),    // 16: std.CameraOptions
+	(*FileInfo)(nil),         // 17: std.FileInfo
+	(*TextItem)(nil),         // 18: std.TextItem
+	(*JsonValue)(nil),        // 19: std.JsonValue
+	(*Report)(nil),           // 20: std.Report
+	(*Labels)(nil),           // 21: std.Labels
+	(*Rect)(nil),             // 22: std.Rect
+	(*GeoPath)(nil),          // 23: std.GeoPath
+	(*MediaItem)(nil),        // 24: std.MediaItem
+	(*Arg)(nil),              // 25: std.Arg
+	(*VisPreset)(nil),        // 26: std.VisPreset
+	(*TileBand)(nil),         // 27: std.TileBand
+	(*TileMeshSpec)(nil),     // 28: std.TileMeshSpec
+	(*SkinSpec)(nil),         // 29: std.SkinSpec
+	(*AtmosphereEffect)(nil), // 30: std.AtmosphereEffect
+	(*AtmosphereSpec)(nil),   // 31: std.AtmosphereSpec
+	(*TileServer)(nil),       // 32: std.TileServer
+	(*amp.Tags)(nil),         // 33: amp.Tags
+	(*amp.Tag)(nil),          // 34: amp.Tag
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
 	13, // 1: std.CameraState.Placement:type_name -> std.TRS
-	32, // 2: std.TextItem.Tags:type_name -> amp.Tags
+	33, // 2: std.TextItem.Tags:type_name -> amp.Tags
 	1,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
 	19, // 4: std.JsonValue.Array:type_name -> std.JsonValue
 	18, // 5: std.Report.Title:type_name -> std.TextItem
@@ -3012,7 +3061,7 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	12, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	2,  // 13: std.GeoPath.Format:type_name -> std.PointFormat
 	3,  // 14: std.MediaItem.Flags:type_name -> std.MediaFlags
-	33, // 15: std.MediaItem.Tag:type_name -> amp.Tag
+	34, // 15: std.MediaItem.Tag:type_name -> amp.Tag
 	18, // 16: std.VisPreset.Title:type_name -> std.TextItem
 	18, // 17: std.VisPreset.Collection:type_name -> std.TextItem
 	18, // 18: std.VisPreset.Credits:type_name -> std.TextItem
@@ -3024,15 +3073,16 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	27, // 24: std.TileMeshSpec.Bands:type_name -> std.TileBand
 	28, // 25: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
 	26, // 26: std.SkinSpec.Layers:type_name -> std.VisPreset
-	8,  // 27: std.TileServer.Kind:type_name -> std.TileServerKind
-	9,  // 28: std.TileServer.Projection:type_name -> std.TileProjection
-	10, // 29: std.TileServer.Scheme:type_name -> std.TileServerScheme
-	11, // 30: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
-	31, // [31:31] is the sub-list for method output_type
-	31, // [31:31] is the sub-list for method input_type
-	31, // [31:31] is the sub-list for extension type_name
-	31, // [31:31] is the sub-list for extension extendee
-	0,  // [0:31] is the sub-list for field type_name
+	30, // 27: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	8,  // 28: std.TileServer.Kind:type_name -> std.TileServerKind
+	9,  // 29: std.TileServer.Projection:type_name -> std.TileProjection
+	10, // 30: std.TileServer.Scheme:type_name -> std.TileServerScheme
+	11, // 31: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
+	32, // [32:32] is the sub-list for method output_type
+	32, // [32:32] is the sub-list for method input_type
+	32, // [32:32] is the sub-list for extension type_name
+	32, // [32:32] is the sub-list for extension extendee
+	0,  // [0:32] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -3046,7 +3096,7 @@ func file_amp_std_amp_std_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
 			NumEnums:      13,
-			NumMessages:   19,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

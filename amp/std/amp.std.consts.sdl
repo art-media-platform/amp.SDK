@@ -252,12 +252,31 @@ const Manifold {
 // custom sky / sun / night / fog effect under its own URI).  Empty
 // string on an AtmosphereSpec field disables that category.
 const Atmosphere {
-    string SkyEarth     = "asset:atmosphere/sky/earth";        // blue zenith → soft white horizon + limb sheen
-    string SkyMars      = "asset:atmosphere/sky/mars";         // dusty pink zenith, ochre horizon
-    string SkyNoir      = "asset:atmosphere/sky/noir";         // monochrome cool blue
-    string SunStandard  = "asset:atmosphere/sun/standard";     // sunset / terminator / HG forward scatter (legibility-cost)
-    string NightStandard = "asset:atmosphere/night/standard";  // night-side dim + cool tint
+    // Category labels — AtmosphereEffect.Label values that identify which of
+    // the four functional axes an entry contributes to.  Mods may register
+    // additional labels in their own consts.sdl, but the v240 renderer only
+    // honors the four canonical categories.
+    string LabelSky   = "Sky";
+    string LabelSun   = "Sun";
+    string LabelNight = "Night";
+    string LabelFog   = "Fog";
+
+    // Category defaults — picked when an AtmosphereEffect has Enabled = true
+    // and URI is empty.  Empty URI in an enabled entry means "use whatever
+    // ships as the default for this category"; this is where they live.
+    string SkyEarth      = "asset:atmosphere/sky/earth";        // blue zenith → soft white horizon + limb sheen
+    string SkyMars       = "asset:atmosphere/sky/mars";         // dusty pink zenith, ochre horizon
+    string SkyNoir       = "asset:atmosphere/sky/noir";         // monochrome cool blue
+    string SunStandard   = "asset:atmosphere/sun/standard";     // sunset / terminator / HG forward scatter (legibility-cost)
+    string NightStandard = "asset:atmosphere/night/standard";   // night-side dim + cool tint
     string FogExponential = "asset:atmosphere/fog/exponential"; // exponential aerial perspective; seam-hider, on by default
+
+    // Inspector defaults — 0 on the serialized field means "unset, use this".
+    float  DefaultNightDimmer     = 0.30;   // 0 = pitch black night limb; default reaches 70% dim
+    float  DefaultFogScaleMeters  = 100000; // e-folding distance; ~63% opacity at this distance, asymptotes
+    float  DefaultFogSunWarmth    = 2.0;    // sun-aligned warm sharpness on the fog mix (pow exponent)
+    float  DefaultMieG            = 0.76;   // HG asymmetry; typical Mie aerosol forward peak
+    float  DefaultMieStrength     = 0.5;    // HG glow amplitude on the outer shell sunset
 }
 
 // Actor — in-world actor skins resolve through the crate / asset

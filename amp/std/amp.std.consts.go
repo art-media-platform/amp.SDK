@@ -373,12 +373,29 @@ const (
 // custom sky / sun / night / fog effect under its own URI).  Empty
 // string on an AtmosphereSpec field disables that category.
 const (
+	// Category labels — AtmosphereEffect.Label values that identify which of
+	// the four functional axes an entry contributes to.  Mods may register
+	// additional labels in their own consts.sdl, but the v240 renderer only
+	// honors the four canonical categories.
+	AtmosphereLabelSky   = "Sky"
+	AtmosphereLabelSun   = "Sun"
+	AtmosphereLabelNight = "Night"
+	AtmosphereLabelFog   = "Fog"
+	// Category defaults — picked when an AtmosphereEffect has Enabled = true
+	// and URI is empty.  Empty URI in an enabled entry means "use whatever
+	// ships as the default for this category"; this is where they live.
 	AtmosphereSkyEarth       = "asset:atmosphere/sky/earth"       // blue zenith → soft white horizon + limb sheen
 	AtmosphereSkyMars        = "asset:atmosphere/sky/mars"        // dusty pink zenith, ochre horizon
 	AtmosphereSkyNoir        = "asset:atmosphere/sky/noir"        // monochrome cool blue
 	AtmosphereSunStandard    = "asset:atmosphere/sun/standard"    // sunset / terminator / HG forward scatter (legibility-cost)
 	AtmosphereNightStandard  = "asset:atmosphere/night/standard"  // night-side dim + cool tint
 	AtmosphereFogExponential = "asset:atmosphere/fog/exponential" // exponential aerial perspective; seam-hider, on by default
+	// Inspector defaults — 0 on the serialized field means "unset, use this".
+	AtmosphereDefaultNightDimmer    = float32(0.3)    // 0 = pitch black night limb; default reaches 70% dim
+	AtmosphereDefaultFogScaleMeters = float32(100000) // e-folding distance; ~63% opacity at this distance, asymptotes
+	AtmosphereDefaultFogSunWarmth   = float32(2)      // sun-aligned warm sharpness on the fog mix (pow exponent)
+	AtmosphereDefaultMieG           = float32(0.76)   // HG asymmetry; typical Mie aerosol forward peak
+	AtmosphereDefaultMieStrength    = float32(0.5)    // HG glow amplitude on the outer shell sunset
 )
 
 // ─── Actor — in-world actor skins resolve through the crate / asset ───
