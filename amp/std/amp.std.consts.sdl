@@ -97,8 +97,26 @@ tags Attr {
             ChannelTypePlaylist     "Playlist"
             ChannelTypePicker       "Picker"
             ChannelTypePlanetPicker "PlanetPicker"
+            ChannelTypeBrand             "Brand"
+            ChannelTypePlanetNameService "name.service"
         }
     }
+
+    // Brand — substrate-native planet identity (PRD-name-service.md §2).
+    // Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
+    // TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
+    Brand "amp.brand"
+
+    // PlanetNameService — substrate-native naming primitive (PRD-name-service.md §3).
+    // A channel any planet may host; records map FQDN → PlanetID with bootstrap metadata.
+    // Federations propagate their channel to members via normal CRDT sync.
+    PlanetNameService "amp.name.service" {
+        PlanetNameServiceRecord "record"
+    }
+
+    // Federation directory — peer / parent federation pointers (PRD-name-service.md §4.3).
+    // NS-record-style cross-federation forwarding without DNS dependency.
+    FederationDirectory "amp.federation.directory"
 
     // Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate).
     // "Law" names the role concretely: this channel grants, revises, and revokes

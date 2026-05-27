@@ -77,6 +77,12 @@ var Attr = struct {
 	ChannelTypePlaylist                tag.Name
 	ChannelTypePicker                  tag.Name
 	ChannelTypePlanetPicker            tag.Name
+	ChannelTypeBrand                   tag.Name
+	ChannelTypePlanetNameService       tag.Name
+	Brand                              tag.Name
+	PlanetNameService                  tag.Name
+	PlanetNameServiceRecord            tag.Name
+	FederationDirectory                tag.Name
 	LawAttr                            tag.Name
 	LawPlanetEpoch                     tag.Name
 	LawMemberEpoch                     tag.Name
@@ -207,22 +213,40 @@ var Attr = struct {
 	ChannelPropertyGrid:        tag.Name{ID: tag.UID{0x97131E90B0C4B56F, 0x2CA352BE9A2B4562}, Canonic: "channel.property.series.jsonvalue.grid"},        // 4R2DG91D64QPRKT8UKRUE2QJC2
 	ChannelType:                tag.Name{ID: tag.UID{0x258F081F8D32C47D, 0x982AB82172174131}, Canonic: "channel.type"},                                  // 15JW41Z39KSJYTHBPS45T1FH9J
 
-	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x6FF61C88C70345A6, 0x12794EACEC8B6D9D}, Canonic: "channel.type.spreadsheet"},  // 3GYSF8JJS38QM14YBFPMQ8QVDX
-	ChannelTypeMessages:     tag.Name{ID: tag.UID{0xD7A9AC3744832441, 0x9D1AA5DB36E3CC0F}, Canonic: "channel.type.messages"},     // 6RP6Q3FJ434J0TU6P5VDVF7M0G
-	ChannelTypeTimeline:     tag.Name{ID: tag.UID{0xD688B61DD97CF742, 0x28DC7437A9A79B21}, Canonic: "channel.type.timeline"},     // 6QJ2V1VQCWYX12JR3N6YNUG6T1
-	ChannelTypeNotes:        tag.Name{ID: tag.UID{0x87B28C91CDD87392, 0x8FF395356265BBC8}, Canonic: "channel.type.notes"},        // 47QB693MFSFF98ZWWP6PJ6CFY8
-	ChannelTypeMap:          tag.Name{ID: tag.UID{0xFFAF9D773BB404F0, 0x3229E8568C22B702}, Canonic: "channel.type.map"},          // 7ZPYFRFFXN0MS34BG8BU625ES2
-	ChannelTypeGlobe:        tag.Name{ID: tag.UID{0x789C644DD7FC7430, 0xFFF9BBE430617537}, Canonic: "channel.type.globe"},        // 3SMJK4VPZWFHSGZYEVWHS62X9R
-	ChannelTypeManifold:     tag.Name{ID: tag.UID{0xA6B385E8BD68AE2E, 0xD3559473E879A52F}, Canonic: "channel.type.manifold"},     // 56QF2YJGC8PSRE6PDNFGN7M99G
-	ChannelTypeSpace:        tag.Name{ID: tag.UID{0x4CB63CE1018B6ADE, 0x1CD807A033ECBB00}, Canonic: "channel.type.space"},        // 2DQSYF20DCECG1TQ07N0TYTFS0
-	ChannelTypeLinks:        tag.Name{ID: tag.UID{0x0952F17FC464ADB0, 0x4987D7AF8C3F6322}, Canonic: "channel.type.links"},        // 09BCSRZJ34PQS4M1YRPY63YST2
-	ChannelTypeRegistry:     tag.Name{ID: tag.UID{0xF608438E07EB0A75, 0xEC102C71CEE83823}, Canonic: "channel.type.registry"},     // 7Q111SW1ZC19UYS41DF77FHF13
-	ChannelTypeSystem:       tag.Name{ID: tag.UID{0x7C01FAB066510CCC, 0xB5894A7ED360CA26}, Canonic: "channel.type.system"},       // 3W07XC0TKJ1M6CC2BBGV9Q1KJ6
-	ChannelTypeWeb:          tag.Name{ID: tag.UID{0x2A643F1C3CCD963B, 0x59D9F3468B72F446}, Canonic: "channel.type.web"},          // 1BDHZJSG6EKSXPMQGM8U5R5X26
-	ChannelTypeCrateManager: tag.Name{ID: tag.UID{0x5D245D81FEB5590D, 0x26DE9A083BD0A9A4}, Canonic: "channel.type.cratemanager"}, // 2X4JFS3ZPPC46KERNU10XX1BE4
-	ChannelTypePlaylist:     tag.Name{ID: tag.UID{0xE0310CEA1AAEFE3D, 0xBD63DBCEACEB59F5}, Canonic: "channel.type.playlist"},     // 70646FN6PFZSYVUSYVTUQFQQGP
-	ChannelTypePicker:       tag.Name{ID: tag.UID{0x388DFC1023B91851, 0x586B87B08486784D}, Canonic: "channel.type.picker"},       // 1SJRY108XT318PHUW7Q228DY2E
-	ChannelTypePlanetPicker: tag.Name{ID: tag.UID{0x1EE0F834385DDF4E, 0xF4435CC53B1A5A11}, Canonic: "channel.type.planetpicker"}, // 0YW3W38F2XVX7G8HUWSNXJNQHJ
+	ChannelTypeSpreadsheet:       tag.Name{ID: tag.UID{0x6FF61C88C70345A6, 0x12794EACEC8B6D9D}, Canonic: "channel.type.spreadsheet"},  // 3GYSF8JJS38QM14YBFPMQ8QVDX
+	ChannelTypeMessages:          tag.Name{ID: tag.UID{0xD7A9AC3744832441, 0x9D1AA5DB36E3CC0F}, Canonic: "channel.type.messages"},     // 6RP6Q3FJ434J0TU6P5VDVF7M0G
+	ChannelTypeTimeline:          tag.Name{ID: tag.UID{0xD688B61DD97CF742, 0x28DC7437A9A79B21}, Canonic: "channel.type.timeline"},     // 6QJ2V1VQCWYX12JR3N6YNUG6T1
+	ChannelTypeNotes:             tag.Name{ID: tag.UID{0x87B28C91CDD87392, 0x8FF395356265BBC8}, Canonic: "channel.type.notes"},        // 47QB693MFSFF98ZWWP6PJ6CFY8
+	ChannelTypeMap:               tag.Name{ID: tag.UID{0xFFAF9D773BB404F0, 0x3229E8568C22B702}, Canonic: "channel.type.map"},          // 7ZPYFRFFXN0MS34BG8BU625ES2
+	ChannelTypeGlobe:             tag.Name{ID: tag.UID{0x789C644DD7FC7430, 0xFFF9BBE430617537}, Canonic: "channel.type.globe"},        // 3SMJK4VPZWFHSGZYEVWHS62X9R
+	ChannelTypeManifold:          tag.Name{ID: tag.UID{0xA6B385E8BD68AE2E, 0xD3559473E879A52F}, Canonic: "channel.type.manifold"},     // 56QF2YJGC8PSRE6PDNFGN7M99G
+	ChannelTypeSpace:             tag.Name{ID: tag.UID{0x4CB63CE1018B6ADE, 0x1CD807A033ECBB00}, Canonic: "channel.type.space"},        // 2DQSYF20DCECG1TQ07N0TYTFS0
+	ChannelTypeLinks:             tag.Name{ID: tag.UID{0x0952F17FC464ADB0, 0x4987D7AF8C3F6322}, Canonic: "channel.type.links"},        // 09BCSRZJ34PQS4M1YRPY63YST2
+	ChannelTypeRegistry:          tag.Name{ID: tag.UID{0xF608438E07EB0A75, 0xEC102C71CEE83823}, Canonic: "channel.type.registry"},     // 7Q111SW1ZC19UYS41DF77FHF13
+	ChannelTypeSystem:            tag.Name{ID: tag.UID{0x7C01FAB066510CCC, 0xB5894A7ED360CA26}, Canonic: "channel.type.system"},       // 3W07XC0TKJ1M6CC2BBGV9Q1KJ6
+	ChannelTypeWeb:               tag.Name{ID: tag.UID{0x2A643F1C3CCD963B, 0x59D9F3468B72F446}, Canonic: "channel.type.web"},          // 1BDHZJSG6EKSXPMQGM8U5R5X26
+	ChannelTypeCrateManager:      tag.Name{ID: tag.UID{0x5D245D81FEB5590D, 0x26DE9A083BD0A9A4}, Canonic: "channel.type.cratemanager"}, // 2X4JFS3ZPPC46KERNU10XX1BE4
+	ChannelTypePlaylist:          tag.Name{ID: tag.UID{0xE0310CEA1AAEFE3D, 0xBD63DBCEACEB59F5}, Canonic: "channel.type.playlist"},     // 70646FN6PFZSYVUSYVTUQFQQGP
+	ChannelTypePicker:            tag.Name{ID: tag.UID{0x388DFC1023B91851, 0x586B87B08486784D}, Canonic: "channel.type.picker"},       // 1SJRY108XT318PHUW7Q228DY2E
+	ChannelTypePlanetPicker:      tag.Name{ID: tag.UID{0x1EE0F834385DDF4E, 0xF4435CC53B1A5A11}, Canonic: "channel.type.planetpicker"}, // 0YW3W38F2XVX7G8HUWSNXJNQHJ
+	ChannelTypeBrand:             tag.Name{ID: tag.UID{0x933397D212929AB0, 0x949CA2E5F90187BC}, Canonic: "channel.type.brand"},        // 4M6FCX44NKMBS99752WRWH31XW
+	ChannelTypePlanetNameService: tag.Name{ID: tag.UID{0xDE17FCCA49DC5B18, 0xCFB51E16200214B1}, Canonic: "channel.type.name.service"}, // 6Y2ZYDNKFWCDDDZE8Y2SH0455J
+
+	// ─── Brand — substrate-native planet identity (PRD-name-service.md §2). ───
+	// Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
+	// TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
+	Brand: tag.Name{ID: tag.UID{0x50E9E52D1E992C02, 0x9F481861817D6603}, Canonic: "amp.brand"}, // 2HX7KKU7NT5H19YK0SD60RUTH3
+
+	// ─── PlanetNameService — substrate-native naming primitive (PRD-name-service.md §3). ───
+	// A channel any planet may host; records map FQDN → PlanetID with bootstrap metadata.
+	// Federations propagate their channel to members via normal CRDT sync.
+	PlanetNameService: tag.Name{ID: tag.UID{0x9BCE4A2555E2EC6A, 0xDA609391A87DF2F8}, Canonic: "amp.name.service"}, // 4VTT52BPG2XJPENS4MK6N7VWRS
+
+	PlanetNameServiceRecord: tag.Name{ID: tag.UID{0x30E80AC62B93E415, 0xDF1E601BACAF61CC}, Canonic: "amp.name.service.record"}, // 1HX05DDBWMWHBXY7M03FQBYSFD
+
+	// ─── Federation directory — peer / parent federation pointers (PRD-name-service.md §4.3). ───
+	// NS-record-style cross-federation forwarding without DNS dependency.
+	FederationDirectory: tag.Name{ID: tag.UID{0x95811726969FEF00, 0xEC5E2EEB6E0E3681}, Canonic: "amp.federation.directory"}, // 4PH4CKE5NZXW0FSRJFXER0WEN1
 
 	// ─── Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate). ───
 	// "Law" names the role concretely: this channel grants, revises, and revokes
