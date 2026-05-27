@@ -221,6 +221,16 @@ message CrateSnapshot {
 }
 
 
+// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
+// Used wherever a brand or manifest needs to *cite* a crate without embedding its full CrateInfo
+// (e.g. AppBrand.BundledCrates).  BlobID is the leading 16 bytes of the built crate's plaintext
+// hash, matching the AssetEntry/BundleManifest convention; zero = unknown / not pinned.
+message CrateRef {
+    string                  CrateURI = 1;     // "asset:{PublisherID}/{CrateID}"
+    fixed64                 BlobID_0 = 2;
+    fixed64                 BlobID_1 = 3;
+}
+
 // AppBrand is the whitelabel skin and install manifest for an amp-built app.
 //
 // Shipped bundled with the app (factory copy) and refreshable over the air via
@@ -252,6 +262,9 @@ message AppBrand {
 
     // Curated deep links: featured planets, support channel, onboarding, etc.
     repeated AppLink        Links            = 25;
+
+    // Crates the app imports at boot, in addition to platform-wide base/vis crates.
+    repeated CrateRef       BundledCrates    = 26;
 }
 
 // AppTarget describes where to obtain the app for one (PlatformID, OSVariant) pair.

@@ -928,6 +928,70 @@ func (x *CrateSnapshot) GetCrates() []*CrateInfo {
 	return nil
 }
 
+// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
+// Used wherever a brand or manifest needs to *cite* a crate without embedding its full CrateInfo
+// (e.g. AppBrand.BundledCrates).  BlobID is the leading 16 bytes of the built crate's plaintext
+// hash, matching the AssetEntry/BundleManifest convention; zero = unknown / not pinned.
+type CrateRef struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CrateURI      string                 `protobuf:"bytes,1,opt,name=CrateURI,proto3" json:"CrateURI,omitempty"` // "asset:{PublisherID}/{CrateID}"
+	BlobID_0      uint64                 `protobuf:"fixed64,2,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
+	BlobID_1      uint64                 `protobuf:"fixed64,3,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CrateRef) Reset() {
+	*x = CrateRef{}
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CrateRef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CrateRef) ProtoMessage() {}
+
+func (x *CrateRef) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CrateRef.ProtoReflect.Descriptor instead.
+func (*CrateRef) Descriptor() ([]byte, []int) {
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CrateRef) GetCrateURI() string {
+	if x != nil {
+		return x.CrateURI
+	}
+	return ""
+}
+
+func (x *CrateRef) GetBlobID_0() uint64 {
+	if x != nil {
+		return x.BlobID_0
+	}
+	return 0
+}
+
+func (x *CrateRef) GetBlobID_1() uint64 {
+	if x != nil {
+		return x.BlobID_1
+	}
+	return 0
+}
+
 // AppBrand is the whitelabel skin and install manifest for an amp-built app.
 //
 // Shipped bundled with the app (factory copy) and refreshable over the air via
@@ -953,14 +1017,16 @@ type AppBrand struct {
 	// CrateSnapshot feed this brand consumes for content updates.
 	CrateSnapshotURL string `protobuf:"bytes,20,opt,name=CrateSnapshotURL,proto3" json:"CrateSnapshotURL,omitempty"`
 	// Curated deep links: featured planets, support channel, onboarding, etc.
-	Links         []*AppLink `protobuf:"bytes,25,rep,name=Links,proto3" json:"Links,omitempty"`
+	Links []*AppLink `protobuf:"bytes,25,rep,name=Links,proto3" json:"Links,omitempty"`
+	// Crates the app imports at boot, in addition to platform-wide base/vis crates.
+	BundledCrates []*CrateRef `protobuf:"bytes,26,rep,name=BundledCrates,proto3" json:"BundledCrates,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AppBrand) Reset() {
 	*x = AppBrand{}
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -972,7 +1038,7 @@ func (x *AppBrand) String() string {
 func (*AppBrand) ProtoMessage() {}
 
 func (x *AppBrand) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -985,7 +1051,7 @@ func (x *AppBrand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppBrand.ProtoReflect.Descriptor instead.
 func (*AppBrand) Descriptor() ([]byte, []int) {
-	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{5}
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *AppBrand) GetAppName() string {
@@ -1058,6 +1124,13 @@ func (x *AppBrand) GetLinks() []*AppLink {
 	return nil
 }
 
+func (x *AppBrand) GetBundledCrates() []*CrateRef {
+	if x != nil {
+		return x.BundledCrates
+	}
+	return nil
+}
+
 // AppTarget describes where to obtain the app for one (PlatformID, OSVariant) pair.
 type AppTarget struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1072,7 +1145,7 @@ type AppTarget struct {
 
 func (x *AppTarget) Reset() {
 	*x = AppTarget{}
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[6]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1084,7 +1157,7 @@ func (x *AppTarget) String() string {
 func (*AppTarget) ProtoMessage() {}
 
 func (x *AppTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[6]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1097,7 +1170,7 @@ func (x *AppTarget) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppTarget.ProtoReflect.Descriptor instead.
 func (*AppTarget) Descriptor() ([]byte, []int) {
-	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{6}
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *AppTarget) GetPlatform() PlatformID {
@@ -1146,7 +1219,7 @@ type AppLink struct {
 
 func (x *AppLink) Reset() {
 	*x = AppLink{}
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[7]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1158,7 +1231,7 @@ func (x *AppLink) String() string {
 func (*AppLink) ProtoMessage() {}
 
 func (x *AppLink) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[7]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1171,7 +1244,7 @@ func (x *AppLink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppLink.ProtoReflect.Descriptor instead.
 func (*AppLink) Descriptor() ([]byte, []int) {
-	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{7}
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AppLink) GetLabel() string {
@@ -1256,7 +1329,11 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x05RevID\x18\x01 \x01(\x03R\x05RevID\x12 \n" +
 	"\vDownloadURL\x18\x03 \x01(\tR\vDownloadURL\x12)\n" +
 	"\x06Crates\x18\n" +
-	" \x03(\v2\x11.crates.CrateInfoR\x06Crates\"\xd6\x02\n" +
+	" \x03(\v2\x11.crates.CrateInfoR\x06Crates\"\\\n" +
+	"\bCrateRef\x12\x1a\n" +
+	"\bCrateURI\x18\x01 \x01(\tR\bCrateURI\x12\x19\n" +
+	"\bBlobID_0\x18\x02 \x01(\x06R\aBlobID0\x12\x19\n" +
+	"\bBlobID_1\x18\x03 \x01(\x06R\aBlobID1\"\x8e\x03\n" +
 	"\bAppBrand\x12\x18\n" +
 	"\aAppName\x18\x01 \x01(\tR\aAppName\x12\x1c\n" +
 	"\tAppDomain\x18\x02 \x01(\tR\tAppDomain\x12\x18\n" +
@@ -1274,7 +1351,8 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"URLSchemes\x12+\n" +
 	"\aTargets\x18\x0f \x03(\v2\x11.crates.AppTargetR\aTargets\x12*\n" +
 	"\x10CrateSnapshotURL\x18\x14 \x01(\tR\x10CrateSnapshotURL\x12%\n" +
-	"\x05Links\x18\x19 \x03(\v2\x0f.crates.AppLinkR\x05Links\"\xce\x01\n" +
+	"\x05Links\x18\x19 \x03(\v2\x0f.crates.AppLinkR\x05Links\x126\n" +
+	"\rBundledCrates\x18\x1a \x03(\v2\x10.crates.CrateRefR\rBundledCrates\"\xce\x01\n" +
 	"\tAppTarget\x12.\n" +
 	"\bPlatform\x18\x01 \x01(\x0e2\x12.crates.PlatformIDR\bPlatform\x12/\n" +
 	"\tOSVariant\x18\x02 \x01(\x0e2\x11.crates.OSVariantR\tOSVariant\x12 \n" +
@@ -1331,7 +1409,7 @@ func file_amp_crates_amp_crates_proto_rawDescGZIP() []byte {
 }
 
 var file_amp_crates_amp_crates_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_amp_crates_amp_crates_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_amp_crates_amp_crates_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_amp_crates_amp_crates_proto_goTypes = []any{
 	(PlatformID)(0),        // 0: crates.PlatformID
 	(OSVariant)(0),         // 1: crates.OSVariant
@@ -1342,9 +1420,10 @@ var file_amp_crates_amp_crates_proto_goTypes = []any{
 	(*CrateInfo)(nil),      // 6: crates.CrateInfo
 	(*CrateManifest)(nil),  // 7: crates.CrateManifest
 	(*CrateSnapshot)(nil),  // 8: crates.CrateSnapshot
-	(*AppBrand)(nil),       // 9: crates.AppBrand
-	(*AppTarget)(nil),      // 10: crates.AppTarget
-	(*AppLink)(nil),        // 11: crates.AppLink
+	(*CrateRef)(nil),       // 9: crates.CrateRef
+	(*AppBrand)(nil),       // 10: crates.AppBrand
+	(*AppTarget)(nil),      // 11: crates.AppTarget
+	(*AppLink)(nil),        // 12: crates.AppLink
 }
 var file_amp_crates_amp_crates_proto_depIdxs = []int32{
 	2,  // 0: crates.AssetEntry.Kind:type_name -> crates.AssetKind
@@ -1352,15 +1431,16 @@ var file_amp_crates_amp_crates_proto_depIdxs = []int32{
 	6,  // 2: crates.CrateManifest.Info:type_name -> crates.CrateInfo
 	5,  // 3: crates.CrateManifest.Bundles:type_name -> crates.BundleManifest
 	6,  // 4: crates.CrateSnapshot.Crates:type_name -> crates.CrateInfo
-	10, // 5: crates.AppBrand.Targets:type_name -> crates.AppTarget
-	11, // 6: crates.AppBrand.Links:type_name -> crates.AppLink
-	0,  // 7: crates.AppTarget.Platform:type_name -> crates.PlatformID
-	1,  // 8: crates.AppTarget.OSVariant:type_name -> crates.OSVariant
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	11, // 5: crates.AppBrand.Targets:type_name -> crates.AppTarget
+	12, // 6: crates.AppBrand.Links:type_name -> crates.AppLink
+	9,  // 7: crates.AppBrand.BundledCrates:type_name -> crates.CrateRef
+	0,  // 8: crates.AppTarget.Platform:type_name -> crates.PlatformID
+	1,  // 9: crates.AppTarget.OSVariant:type_name -> crates.OSVariant
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_amp_crates_amp_crates_proto_init() }
@@ -1374,7 +1454,7 @@ func file_amp_crates_amp_crates_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_crates_amp_crates_proto_rawDesc), len(file_amp_crates_amp_crates_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   8,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
