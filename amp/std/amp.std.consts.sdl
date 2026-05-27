@@ -97,8 +97,8 @@ tags Attr {
             ChannelTypePlaylist     "Playlist"
             ChannelTypePicker       "Picker"
             ChannelTypePlanetPicker "PlanetPicker"
-            ChannelTypeBrand             "Brand"
-            ChannelTypePlanetNameService "name.service"
+            ChannelTypeBrand        "Brand"
+            ChannelTypeNameService  "name.service"
         }
     }
 
@@ -107,11 +107,12 @@ tags Attr {
     // TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
     Brand "amp.brand"
 
-    // PlanetNameService — substrate-native naming primitive (PRD-name-service.md §3).
-    // A channel any planet may host; records map FQDN → PlanetID with bootstrap metadata.
+    // NameService — substrate-native naming primitive (PRD-name-service.md §3).
+    // A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.
     // Federations propagate their channel to members via normal CRDT sync.
-    PlanetNameService "amp.name.service" {
-        PlanetNameServiceRecord "record"
+    // Generalized beyond planet naming — any UID-bearing entity is namable.
+    NameService "amp.name.service" {
+        NameServiceRecord "record"
     }
 
     // Federation directory — peer / parent federation pointers (PRD-name-service.md §4.3).
