@@ -403,10 +403,11 @@ const (
 	AtmosphereDefaultMieStrength    = float32(0.5)    // HG glow amplitude on the outer shell sunset
 )
 
-// ─── Bundled crate URIs — the standard crate set apps register at boot via ───
-// CrateConfig.Register.  Each URI is asset:PublisherID/CrateID per the wire
-// scheme declared in amp.core.proto:Asset; the build pipeline stages matching
-// .crate files under StreamingAssets/Bundled/CrateDepot.
+// ─── Bundled crate URIs — platform-wide crates every amp client imports at boot. ───
+// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live in
+// AppBrand.BundledCrates (loaded from app.brand.json).  Each URI is
+// asset:PublisherID/CrateID per the wire scheme declared in amp.core.proto:Asset;
+// the build pipeline stages matching .crate files under StreamingAssets/Bundled/CrateDepot.
 const (
 	CratesBaseAssets = "asset:crates.planet.tools/amp.3D.base.assets"
 	CratesHelloWorld = "asset:crates.planet.tools/amp.3D.hello.world"
