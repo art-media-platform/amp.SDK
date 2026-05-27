@@ -695,7 +695,9 @@ message MemberEpoch {
     // revocations, these point to ledger entries (strikes, audits, witness records)
     // that informed the decision — making every governance act reviewable and
     // appealable.  Empty for routine epochs (e.g. initial Active, key rotation).
-    repeated Citation Cites = 20;
+    // AttrID and EditID may be left zero when citing an item rather than a
+    // specific edit (the common case).
+    repeated Address    Cites = 20;
 
     // Substrate-agnostic Kind, addressed by Tag.  The Tag's UID resolves to a
     // LawMemberKind_* definition in amp.consts.sdl (or any community/app's
@@ -705,13 +707,13 @@ message MemberEpoch {
     Tag                 Kind = 33;
 
     // Self-signed claim of identity continuation from prior identities.
-    // Cross-planet Citations supported (and typical) — a being's lineage
+    // Cross-planet citations supported (and typical) — a being's lineage
     // often spans planets (personal → family-of-origin → cultural → spiritual).
     // The claim is the member's own; the protocol records, communities decide
     // what weight to honor.  Multiple cites express composite lineage
     // (ensembles descending from multiple prior identities; AI agents trained
     // on multiple ancestor chronicles; reconstituted backups).
-    repeated Citation   ContinuesFrom = 34;
+    repeated Address    ContinuesFrom = 34;
 }
 
 
@@ -774,35 +776,6 @@ message Attestation {
 }
 
 
-// Citation points to a specific item — typically an Attestation, but any
-// addressable record — by its (PlanetID, NodeID, ItemID) triple.  Readers
-// resolve and independently verify the cited evidence.
-//
-// Cross-planet citations are first-class: PlanetID = zero UID is the
-// convention for "this planet" (the planet of the TxMsg containing the
-// Citation), preserving the common case where citations refer to local
-// records.  Non-zero PlanetID addresses any planet a reader can reach.
-//
-// NodeID is general — a channel UID, the planet head, or any node in the
-// CRDT tree.  Channels are nodes; the planet's amp.ledger is a node.
-message Citation {
-
-    // Node containing the cited record.
-    fixed64             NodeID_0 = 1;
-    fixed64             NodeID_1 = 2;
-
-    // CRDT item ID of the cited record within that node.
-    fixed64             ItemID_0 = 4;
-    fixed64             ItemID_1 = 5;
-
-    // Planet the cited record lives in.  Zero UID = "this planet"
-    // (the planet of the TxMsg containing this Citation).  Non-zero
-    // addresses any reachable planet for cross-planet composition.
-    fixed64             PlanetID_0 = 6;
-    fixed64             PlanetID_1 = 7;
-}
-
-
 // Equivalence is a self-attested claim that two addresses refer to the same
 // underlying thing in a stated context.  Non-collapsing: addresses remain
 // distinct; readers compose equivalence chains and decide what to honor.
@@ -852,19 +825,20 @@ message Withdraw {
     // Subject — the entity whose consent is being withdrawn.
     Tag                 Subject = 1;
 
-    // Citations of the records consent is being withdrawn from.  Cross-planet
-    // citations supported.
-    repeated Citation   Withdrawn = 4;
+    // Addresses of the records consent is being withdrawn from.  Cross-planet
+    // addresses supported.  AttrID and EditID typically zero (citing an item
+    // rather than a specific edit).
+    repeated Address    Withdrawn = 4;
 
     // Reason for withdrawal, addressed by Tag.  Resolves to a LawWithdrawReason_*
     // definition (Consent / Inaccuracy / Outdated / Coerced / Forgotten /
     // Departed / InviteRecall / Retracted).  Zero UID = unspecified.
     Tag                 Reason = 6;
 
-    // Optional delegation citation — proves the signer's authority to withdraw
-    // on behalf of Subject when Subject != signer.  Zero (no Citation set)
+    // Optional delegation address — proves the signer's authority to withdraw
+    // on behalf of Subject when Subject != signer.  Zero (no Address set)
     // when Subject == signer.
-    Citation            Delegation = 8;
+    Address             Delegation = 8;
 
     // Free-text rationale.
     string              Rationale = 15;
@@ -1206,6 +1180,164 @@ message ChronicleHeader {
 
     // Optional exporter-provided label ("nightly-backup 2026-04-23").
     string                  Label = 21;
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// Brand & planet metadata — PRD-name-service.md §2
+// ══════════════════════════════════════════════════════════════════════
+
+// PlatformID identifies a build/install target.  Values mirror Unity's
+// RuntimePlatform enum directly so amp ↔ Unity conversion is a cast.  Values
+// >= 100 are amp-specific variants Unity doesn't enumerate (e.g. de-Googled
+// Android forks — same APK as stock Android, different install channel).
+enum PlatformID {
+    UnspecifiedPlatform = 0;    // proto3 default (Unity's OSXEditor=0 not surfaced)
+    OSX                 = 1;    // Unity RuntimePlatform.OSXPlayer
+    Windows             = 2;    // Unity RuntimePlatform.WindowsPlayer
+    iOS                 = 8;    // Unity RuntimePlatform.IPhonePlayer
+    Android             = 11;   // Unity RuntimePlatform.Android (stock)
+    Linux               = 13;   // Unity RuntimePlatform.LinuxPlayer
+
+    AndroidGraphene     = 100;
+    AndroidCalyx        = 101;
+    AndroidLineage      = 102;
+}
+
+// AppTarget describes where to obtain the app for one PlatformID.
+message AppTarget {
+    PlatformID          Platform     = 1;
+    string              DownloadURL  = 3;    // store URL, HTTPS download, magnet link, etc.
+    string              BundleID     = 4;    // "org.plan.tunr" (iOS/Android bundle ID)
+    string              MinOSVersion = 5;    // minimum OS version, e.g. "14.0"
+}
+
+// AppLink is one curated entry point — typically an amp:// or https:// URL with a label.
+message AppLink {
+    string              Label = 1;
+    string              URL   = 2;
+}
+
+// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
+// Used wherever a brand or manifest needs to cite a crate without embedding its full
+// CrateInfo (e.g. Brand.BundledCrates).  BlobID is the leading 16 bytes of the built
+// crate's plaintext hash, matching the AssetEntry/BundleManifest convention; zero =
+// unknown / not pinned.
+message CrateRef {
+    string              CrateURI = 1;    // "asset:{PublisherID}/{CrateID}"
+    fixed64             BlobID_0 = 2;
+    fixed64             BlobID_1 = 3;
+}
+
+// Brand is a planet's identity record: name, domain, schemes, install targets,
+// curated entry points, the per-planet bundled crate set, and the publishing
+// federation.  Lives at a single CRDT address per planet
+//   (PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=*)
+// All fields admin-signable; founders may include a Brand TxOp in the genesis
+// envelope as the first record (EditID=0) or defer to a later admin-signed
+// channel write.  PRD-name-service.md §2.
+message Brand {
+    string              AppName          = 1;     // "Tunr"
+    string              AppDomain        = 2;     // "spaces.soundspectrum.com"
+    string              AppDesc          = 3;
+    string              OrgName          = 5;     // "SoundSpectrum"
+    string              OrgHomeURL       = 6;
+    string              AppHomeURL       = 7;
+    repeated string     URLSchemes       = 10;    // ["soundspectrum", "tunr"]
+    repeated AppTarget  Targets          = 15;
+    string              CrateSnapshotURL = 20;
+    repeated AppLink    Links            = 25;
+    repeated CrateRef   BundledCrates    = 26;
+
+    // Federation back-pointer: the planet's currently-publishing federation.
+    // Single-valued — a planet publishes through one federation at a time but
+    // may roam.  Read by NameService consumers to enforce the canonic-binding
+    // invariant of PRD-name-service §3.3.
+    Tag                 Federation       = 30;
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// NameService & federation — PRD-name-service.md
+// ══════════════════════════════════════════════════════════════════════
+
+// Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID, ItemID, EditID)
+// tuple addressing a single CRDT cell across any planet.  PlanetID = 0 means
+// "this planet" (the planet of the containing TxMsg), matching Citation's convention.
+// Used to cite a specific TxOp address across planets without dereferencing.
+message Address {
+    fixed64             PlanetID_0 = 1;
+    fixed64             PlanetID_1 = 2;
+
+    fixed64             NodeID_0 = 3;
+    fixed64             NodeID_1 = 4;
+
+    fixed64             AttrID_0 = 5;
+    fixed64             AttrID_1 = 6;
+
+    fixed64             ItemID_0 = 7;
+    fixed64             ItemID_1 = 8;
+
+    fixed64             EditID_0 = 9;
+    fixed64             EditID_1 = 10;
+}
+
+
+// VaultAddr is a transport-tagged vault endpoint.  Used by NameService records
+// and federation pointers to hint where a planet can be pinned.  Reuses the
+// envelope shape of PRD-amp-security-sync §7.2 VaultAddresses; transports
+// advertise themselves via the TransportTag string so future kits land without
+// proto changes.
+message VaultAddr {
+    string              TransportTag = 1;    // "tcp", "udp", "reticulum", etc.
+    bytes               Address      = 2;    // transport-specific encoding
+}
+
+
+// NameServiceRecord — one FQDN → PlanetID record published by a federation.
+// Lives in a NameService channel at
+//   (NodeID = channel_node, AttrID = amp.name.service.record, ItemID = hash(fqdn)).
+// Signed under the publishing federation's epoch admin.  PRD-name-service §3.1.
+message NameServiceRecord {
+
+    string              FQDN          = 1;    // "spaces.plan.tools" — exact-match key for Resolve
+    Tag                 PlanetID      = 2;    // target planet UID
+
+    // First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=0).
+    // Consumers may dereference this to read the founders-signed first Brand
+    // record when one was published in the genesis envelope; absent that, the
+    // first admin-signed Brand edit fills this slot.
+    Address             BrandAddr     = 3;
+
+    // Full Brand snapshot for offline Search ranking — copy of the latest
+    // Brand at the time the record was registered.  A federation refreshes
+    // this when the target planet's Brand operationally updates.
+    Brand               BrandSnapshot = 4;
+
+    // Where the target planet can be pinned for bootstrap.
+    repeated VaultAddr  VaultAddrs    = 7;
+
+    Tag                 RegisteredAt  = 8;    // TxID of registering TxMsg (initial Upsert)
+    Tag                 RegisteredBy  = 9;    // signing member's MemberID (federation admin)
+}
+
+
+// FederationRef — one peer / parent federation in a FederationDirectory.
+// PRD-name-service §4.4.
+message FederationRef {
+    Tag                 FederationID = 1;    // peer federation's PlanetID
+    repeated VaultAddr  VaultAddrs   = 2;    // where peer federation is pinnable
+    string              Label        = 3;    // human-readable, informational
+}
+
+
+// FederationDirectory — federation peer pointers, NS-record style cross-federation
+// forwarding (PRD-name-service §4.4).  Lives at
+//   (HeadNodeID, amp.federation.directory, amp.federation.directory.UID)
+// on a federation planet.  Single CRDT item per federation; admin-signed like
+// any governance change.  Analogous to DNS NS records — bounded, opt-in.
+message FederationDirectory {
+    repeated FederationRef Peers     = 1;
 }
 
 

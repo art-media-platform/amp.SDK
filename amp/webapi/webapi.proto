@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+// Package webapi defines the wire-level shapes for the amp /api/v1/* surface —
+// the contract between amp web/native SDKs and an amp host (amp.exe).
+//
+// Field names MUST match the wire shape one-to-one — every external SDK
+// (TypeScript, C#, Swift, future Python) reflects against these names.  JSON
+// is encoded/decoded via protojson, which projects each proto field name to
+// lowerCamelCase on the wire (Tag → "tag", BrandSnapshot → "brandSnapshot").
+package webapi;
+
+option csharp_namespace = "art.media.platform.webapi";
+option go_package = "github.com/art-media-platform/amp.SDK/amp/webapi";
+
+import "amp/amp.core.proto";
+
+
+// PlanetCreateRequest is the body of POST /api/v1/admin/planet/create.
+//
+// Tag carries the planet's human-readable label — typically with Text set to
+// a tag.Name expression ("tunr", "spaces.soundspectrum.com"), or with UID_0/1
+// set for raw-UID input.  The endpoint creates planets with
+// PlanetEpoch.IsPublic=true; per-member private planets are auto-genesisd by
+// app.home on first login and don't need this surface.
+//
+// Brand is the founding Brand (PRD-name-service §2).  Optional — when omitted,
+// the server synthesizes a minimal Brand{AppName: derived from Tag}.
+message PlanetCreateRequest {
+    amp.Tag             Tag   = 1;
+    amp.Brand           Brand = 2;
+}
+
+
+// PlanetCreateResponse is the body of a successful planet create.
+//
+// PlanetID is the base32 UID of the new planet.  Tag mirrors the canonicalized
+// form of the request's Tag so operators can verify the canonic / UID pair
+// matches before persisting elsewhere.
+message PlanetCreateResponse {
+    string              PlanetID = 1;
+    string              Tag      = 2;
+    bool                Public   = 3;
+}

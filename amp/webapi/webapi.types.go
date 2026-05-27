@@ -23,6 +23,7 @@ package webapi
 import (
 	"encoding/json"
 
+	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -184,18 +185,7 @@ type TxOp struct {
 	Reason     WithdrawReason  `json:"reason,omitempty"`
 	Rationale  string          `json:"rationale,omitempty"`
 	Subject    tag.UID         `json:"subject,omitzero"`
-	Delegation *CitationRef    `json:"delegation,omitempty"`
-}
-
-// CitationRef is the wire representation of an amp.Citation: a
-// (planetID, nodeID, itemID) triple addressing a CRDT record.  PlanetID is
-// the zero UID when the citation refers to the same planet as the
-// carrying request — same convention as the proto's "Zero UID = this
-// planet" rule.
-type CitationRef struct {
-	PlanetID tag.UID `json:"planetID,omitzero"`
-	NodeID   tag.UID `json:"nodeID,omitzero"`
-	ItemID   tag.UID `json:"itemID,omitzero"`
+	Delegation *amp.Address    `json:"delegation,omitempty"`
 }
 
 // TxRequest is the body of POST /api/v1/tx.
@@ -248,7 +238,7 @@ type WithdrawNote struct {
 	WithdrawnAt string         `json:"withdrawnAt"`
 	WithdrawnBy tag.UID        `json:"withdrawnBy"`
 	Subject     tag.UID        `json:"subject,omitzero"`
-	Delegation  *CitationRef   `json:"delegation,omitempty"`
+	Delegation  *amp.Address   `json:"delegation,omitempty"`
 }
 
 // ListResponse is the body of GET /api/v1/channels/:ch/attrs/:attr/items.
@@ -290,7 +280,7 @@ type EditEntry struct {
 	Reason      WithdrawReason  `json:"reason,omitempty"`    // withdraw entries only
 	Rationale   string          `json:"rationale,omitempty"` // withdraw entries only
 	Subject     tag.UID         `json:"subject,omitzero"`    // withdraw entries only
-	Delegation  *CitationRef    `json:"delegation,omitempty"`
+	Delegation  *amp.Address    `json:"delegation,omitempty"`
 	Body        json.RawMessage `json:"body,omitempty"`
 }
 
@@ -356,7 +346,7 @@ type SubscribeFrame struct {
 	Reason     WithdrawReason  `json:"reason,omitempty"`
 	Rationale  string          `json:"rationale,omitempty"`
 	Subject    tag.UID         `json:"subject,omitzero"`
-	Delegation *CitationRef    `json:"delegation,omitempty"`
+	Delegation *amp.Address    `json:"delegation,omitempty"`
 	Error      string          `json:"error,omitempty"`
 }
 

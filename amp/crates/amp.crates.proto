@@ -7,25 +7,6 @@ option csharp_namespace = "art.media.platform";
 option go_package = "github.com/art-media-platform/amp.SDK/amp/crates";
 
 
-// PlatformID identifies a build target.  Orthogonal to OSVariant (same APK covers
-// multiple Android variants, for example).
-enum PlatformID {
-    UnspecifiedPlatform = 0;
-    macOS               = 1;
-    Windows             = 2;
-    Linux               = 3;
-    Android             = 4;
-    iOS                 = 5;
-}
-
-// OSVariant distinguishes privacy/de-Googled forks sharing a PlatformID's binary.
-enum OSVariant {
-    Stock               = 0;    // default stock OS (Apple, Microsoft, Google, Ubuntu, etc.)
-    GrapheneOS          = 1;
-    CalyxOS             = 2;
-    LineageOS           = 3;
-}
-
 // AssetKind identifies what an asset *is* — exactly one kind per AssetEntry.
 // Orthogonal properties (placeable, private, auto-scale, etc.) live as explicit
 // bool fields on AssetEntry.
@@ -218,68 +199,6 @@ message CrateSnapshot {
     string                  DownloadURL = 3;
 
     repeated CrateInfo      Crates = 10;
-}
-
-
-// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
-// Used wherever a brand or manifest needs to *cite* a crate without embedding its full CrateInfo
-// (e.g. AppBrand.BundledCrates).  BlobID is the leading 16 bytes of the built crate's plaintext
-// hash, matching the AssetEntry/BundleManifest convention; zero = unknown / not pinned.
-message CrateRef {
-    string                  CrateURI = 1;     // "asset:{PublisherID}/{CrateID}"
-    fixed64                 BlobID_0 = 2;
-    fixed64                 BlobID_1 = 3;
-}
-
-// AppBrand is the whitelabel skin and install manifest for an amp-built app.
-//
-// Shipped bundled with the app (factory copy) and refreshable over the air via
-// {AppDomain}/.well-known/app.brand.json.  A single AppBrand covers one app's
-// identity, its deep-link schemes, per-platform install targets, and curated
-// entry points — enough for any landing page or planet invite to route a new
-// user to the correct store link for their device.
-message AppBrand {
-
-    // Identity
-    string                  AppName          = 1;     // "Tunr"
-    string                  AppDomain        = 2;     // "tunr.plan.tools"  (also used for well-known fetches)
-    string                  AppDesc          = 3;     // short one-liner
-
-    string                  OrgName          = 5;     // "PLAN Systems"
-    string                  OrgHomeURL       = 6;     // "https://plan-systems.org"
-    string                  AppHomeURL       = 7;     // "https://tunr.plan.tools"
-
-    // Native URL schemes this app registers (first is primary).
-    // Incoming URLs on these schemes are rewritten to "amp://" internally.
-    repeated string         URLSchemes       = 10;
-
-    // Platform install targets — the portal and onboarding pages choose the
-    // matching AppTarget for the visitor's device.
-    repeated AppTarget      Targets          = 15;
-
-    // CrateSnapshot feed this brand consumes for content updates.
-    string                  CrateSnapshotURL = 20;
-
-    // Curated deep links: featured planets, support channel, onboarding, etc.
-    repeated AppLink        Links            = 25;
-
-    // Crates the app imports at boot, in addition to platform-wide base/vis crates.
-    repeated CrateRef       BundledCrates    = 26;
-}
-
-// AppTarget describes where to obtain the app for one (PlatformID, OSVariant) pair.
-message AppTarget {
-    PlatformID              Platform     = 1;
-    OSVariant               OSVariant    = 2;    // 0 = Stock; set for de-Googled variants
-    string                  DownloadURL  = 3;    // store URL, HTTPS download, magnet link, etc.
-    string                  BundleID     = 4;    // "org.plan.tunr" (iOS/Android bundle ID)
-    string                  MinOSVersion = 5;    // minimum OS version, e.g. "14.0"
-}
-
-// AppLink is one curated entry point — typically an amp:// or https:// URL with a label.
-message AppLink {
-    string                  Label = 1;
-    string                  URL   = 2;
 }
 
 
