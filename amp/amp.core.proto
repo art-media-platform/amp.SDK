@@ -806,6 +806,25 @@ message Equivalence {
 }
 
 
+// WithdrawReason categorizes a withdrawal per DESIGN-15.  Used by both
+// amp.Withdraw (substrate-side TxMsg payload) and webapi.WithdrawNote
+// (REST/WebSocket wire shape).
+//
+// Go const names are emitted by protoc-gen-go as `WithdrawReason_<Value>`
+// (e.g. WithdrawReason_Consent).
+enum WithdrawReason {
+    NoReason     = 0;    // proto3 default; not a valid withdrawal
+    Consent      = 1;
+    Inaccuracy   = 2;
+    Outdated     = 3;
+    Coerced      = 4;
+    Forgotten    = 5;
+    Departed     = 6;
+    InviteRecall = 7;
+    Retracted    = 8;
+}
+
+
 // Withdraw is a self-signed claim that the signer no longer consents to the
 // cited records being treated as authoritative representations of them.
 //
@@ -830,10 +849,9 @@ message Withdraw {
     // rather than a specific edit).
     repeated Address    Withdrawn = 4;
 
-    // Reason for withdrawal, addressed by Tag.  Resolves to a LawWithdrawReason_*
-    // definition (Consent / Inaccuracy / Outdated / Coerced / Forgotten /
-    // Departed / InviteRecall / Retracted).  Zero UID = unspecified.
-    Tag                 Reason = 6;
+    // Reason for withdrawal, per DESIGN-15.  Same enum used substrate +
+    // wire; webapi.WithdrawNote.Reason is the same type.
+    WithdrawReason      Reason = 6;
 
     // Optional delegation address — proves the signer's authority to withdraw
     // on behalf of Subject when Subject != signer.  Zero (no Address set)

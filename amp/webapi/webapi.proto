@@ -41,3 +41,40 @@ message PlanetCreateResponse {
     string              Tag      = 2;
     bool                Public   = 3;
 }
+
+
+// EmailCredential is the consolidated request body for the email-credential
+// endpoints.  One shape, three endpoints — each consumes a subset of fields
+// and ignores the rest.
+//
+//   POST /api/v1/admin/credentials/email/issue   Email + Password required
+//   POST /api/v1/login/email/recover             Email required
+//   POST /api/v1/login/email/redeem              Token + NewPassword required;
+//                                                PlanetTag optional
+//
+// The endpoint validates field presence per its scheme.
+message EmailCredential {
+    string              Email       = 1;
+    string              Password    = 2;
+    string              Token       = 3;
+    string              NewPassword = 4;
+    string              PlanetTag   = 5;
+}
+
+
+// WithdrawNote is the wire-shape carrier for DESIGN-15 withdrawal facts.
+// Used both in request-side TxOp (sender sets Reason/Rationale/Subject/
+// Delegation; server fills WithdrawnAt/WithdrawnBy) and response-side
+// alongside read Items / EditEntries (server populates all fields from the
+// recorded withdrawal).
+//
+// Non-nil in a carrying message (TxOp.Withdraw, EditEntry.Withdraw, Item.
+// Withdrawn, SubscribeFrame.Withdraw) marks the op/record as a withdrawal.
+message WithdrawNote {
+    amp.WithdrawReason  Reason       = 1;
+    string              Rationale    = 2;
+    amp.Tag             Subject      = 3;    // signer is implicit subject when nil
+    amp.Address         Delegation   = 4;    // nil when Subject == signer
+    string              WithdrawnAt  = 5;    // ISO-8601 (response-side; sender leaves empty)
+    amp.Tag             WithdrawnBy  = 6;    // response-side; sender leaves empty
+}

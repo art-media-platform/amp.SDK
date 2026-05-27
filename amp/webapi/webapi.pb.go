@@ -157,6 +157,184 @@ func (x *PlanetCreateResponse) GetPublic() bool {
 	return false
 }
 
+// EmailCredential is the consolidated request body for the email-credential
+// endpoints.  One shape, three endpoints — each consumes a subset of fields
+// and ignores the rest.
+//
+//	POST /api/v1/admin/credentials/email/issue   Email + Password required
+//	POST /api/v1/login/email/recover             Email required
+//	POST /api/v1/login/email/redeem              Token + NewPassword required;
+//	                                             PlanetTag optional
+//
+// The endpoint validates field presence per its scheme.
+type EmailCredential struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Email         string                 `protobuf:"bytes,1,opt,name=Email,proto3" json:"Email,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=Password,proto3" json:"Password,omitempty"`
+	Token         string                 `protobuf:"bytes,3,opt,name=Token,proto3" json:"Token,omitempty"`
+	NewPassword   string                 `protobuf:"bytes,4,opt,name=NewPassword,proto3" json:"NewPassword,omitempty"`
+	PlanetTag     string                 `protobuf:"bytes,5,opt,name=PlanetTag,proto3" json:"PlanetTag,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EmailCredential) Reset() {
+	*x = EmailCredential{}
+	mi := &file_amp_webapi_webapi_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EmailCredential) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EmailCredential) ProtoMessage() {}
+
+func (x *EmailCredential) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_webapi_webapi_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EmailCredential.ProtoReflect.Descriptor instead.
+func (*EmailCredential) Descriptor() ([]byte, []int) {
+	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *EmailCredential) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *EmailCredential) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *EmailCredential) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+func (x *EmailCredential) GetNewPassword() string {
+	if x != nil {
+		return x.NewPassword
+	}
+	return ""
+}
+
+func (x *EmailCredential) GetPlanetTag() string {
+	if x != nil {
+		return x.PlanetTag
+	}
+	return ""
+}
+
+// WithdrawNote is the wire-shape carrier for DESIGN-15 withdrawal facts.
+// Used both in request-side TxOp (sender sets Reason/Rationale/Subject/
+// Delegation; server fills WithdrawnAt/WithdrawnBy) and response-side
+// alongside read Items / EditEntries (server populates all fields from the
+// recorded withdrawal).
+//
+// Non-nil in a carrying message (TxOp.Withdraw, EditEntry.Withdraw, Item.
+// Withdrawn, SubscribeFrame.Withdraw) marks the op/record as a withdrawal.
+type WithdrawNote struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Reason        amp.WithdrawReason     `protobuf:"varint,1,opt,name=Reason,proto3,enum=amp.WithdrawReason" json:"Reason,omitempty"`
+	Rationale     string                 `protobuf:"bytes,2,opt,name=Rationale,proto3" json:"Rationale,omitempty"`
+	Subject       *amp.Tag               `protobuf:"bytes,3,opt,name=Subject,proto3" json:"Subject,omitempty"`         // signer is implicit subject when nil
+	Delegation    *amp.Address           `protobuf:"bytes,4,opt,name=Delegation,proto3" json:"Delegation,omitempty"`   // nil when Subject == signer
+	WithdrawnAt   string                 `protobuf:"bytes,5,opt,name=WithdrawnAt,proto3" json:"WithdrawnAt,omitempty"` // ISO-8601 (response-side; sender leaves empty)
+	WithdrawnBy   *amp.Tag               `protobuf:"bytes,6,opt,name=WithdrawnBy,proto3" json:"WithdrawnBy,omitempty"` // response-side; sender leaves empty
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WithdrawNote) Reset() {
+	*x = WithdrawNote{}
+	mi := &file_amp_webapi_webapi_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WithdrawNote) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WithdrawNote) ProtoMessage() {}
+
+func (x *WithdrawNote) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_webapi_webapi_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WithdrawNote.ProtoReflect.Descriptor instead.
+func (*WithdrawNote) Descriptor() ([]byte, []int) {
+	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *WithdrawNote) GetReason() amp.WithdrawReason {
+	if x != nil {
+		return x.Reason
+	}
+	return amp.WithdrawReason(0)
+}
+
+func (x *WithdrawNote) GetRationale() string {
+	if x != nil {
+		return x.Rationale
+	}
+	return ""
+}
+
+func (x *WithdrawNote) GetSubject() *amp.Tag {
+	if x != nil {
+		return x.Subject
+	}
+	return nil
+}
+
+func (x *WithdrawNote) GetDelegation() *amp.Address {
+	if x != nil {
+		return x.Delegation
+	}
+	return nil
+}
+
+func (x *WithdrawNote) GetWithdrawnAt() string {
+	if x != nil {
+		return x.WithdrawnAt
+	}
+	return ""
+}
+
+func (x *WithdrawNote) GetWithdrawnBy() *amp.Tag {
+	if x != nil {
+		return x.WithdrawnBy
+	}
+	return nil
+}
+
 var File_amp_webapi_webapi_proto protoreflect.FileDescriptor
 
 const file_amp_webapi_webapi_proto_rawDesc = "" +
@@ -169,7 +347,22 @@ const file_amp_webapi_webapi_proto_rawDesc = "" +
 	"\x14PlanetCreateResponse\x12\x1a\n" +
 	"\bPlanetID\x18\x01 \x01(\tR\bPlanetID\x12\x10\n" +
 	"\x03Tag\x18\x02 \x01(\tR\x03Tag\x12\x16\n" +
-	"\x06Public\x18\x03 \x01(\bR\x06PublicBNZ0github.com/art-media-platform/amp.SDK/amp/webapi\xaa\x02\x19art.media.platform.webapib\x06proto3"
+	"\x06Public\x18\x03 \x01(\bR\x06Public\"\x99\x01\n" +
+	"\x0fEmailCredential\x12\x14\n" +
+	"\x05Email\x18\x01 \x01(\tR\x05Email\x12\x1a\n" +
+	"\bPassword\x18\x02 \x01(\tR\bPassword\x12\x14\n" +
+	"\x05Token\x18\x03 \x01(\tR\x05Token\x12 \n" +
+	"\vNewPassword\x18\x04 \x01(\tR\vNewPassword\x12\x1c\n" +
+	"\tPlanetTag\x18\x05 \x01(\tR\tPlanetTag\"\xf9\x01\n" +
+	"\fWithdrawNote\x12+\n" +
+	"\x06Reason\x18\x01 \x01(\x0e2\x13.amp.WithdrawReasonR\x06Reason\x12\x1c\n" +
+	"\tRationale\x18\x02 \x01(\tR\tRationale\x12\"\n" +
+	"\aSubject\x18\x03 \x01(\v2\b.amp.TagR\aSubject\x12,\n" +
+	"\n" +
+	"Delegation\x18\x04 \x01(\v2\f.amp.AddressR\n" +
+	"Delegation\x12 \n" +
+	"\vWithdrawnAt\x18\x05 \x01(\tR\vWithdrawnAt\x12*\n" +
+	"\vWithdrawnBy\x18\x06 \x01(\v2\b.amp.TagR\vWithdrawnByBNZ0github.com/art-media-platform/amp.SDK/amp/webapi\xaa\x02\x19art.media.platform.webapib\x06proto3"
 
 var (
 	file_amp_webapi_webapi_proto_rawDescOnce sync.Once
@@ -183,21 +376,29 @@ func file_amp_webapi_webapi_proto_rawDescGZIP() []byte {
 	return file_amp_webapi_webapi_proto_rawDescData
 }
 
-var file_amp_webapi_webapi_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_amp_webapi_webapi_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_amp_webapi_webapi_proto_goTypes = []any{
 	(*PlanetCreateRequest)(nil),  // 0: webapi.PlanetCreateRequest
 	(*PlanetCreateResponse)(nil), // 1: webapi.PlanetCreateResponse
-	(*amp.Tag)(nil),              // 2: amp.Tag
-	(*amp.Brand)(nil),            // 3: amp.Brand
+	(*EmailCredential)(nil),      // 2: webapi.EmailCredential
+	(*WithdrawNote)(nil),         // 3: webapi.WithdrawNote
+	(*amp.Tag)(nil),              // 4: amp.Tag
+	(*amp.Brand)(nil),            // 5: amp.Brand
+	(amp.WithdrawReason)(0),      // 6: amp.WithdrawReason
+	(*amp.Address)(nil),          // 7: amp.Address
 }
 var file_amp_webapi_webapi_proto_depIdxs = []int32{
-	2, // 0: webapi.PlanetCreateRequest.Tag:type_name -> amp.Tag
-	3, // 1: webapi.PlanetCreateRequest.Brand:type_name -> amp.Brand
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 0: webapi.PlanetCreateRequest.Tag:type_name -> amp.Tag
+	5, // 1: webapi.PlanetCreateRequest.Brand:type_name -> amp.Brand
+	6, // 2: webapi.WithdrawNote.Reason:type_name -> amp.WithdrawReason
+	4, // 3: webapi.WithdrawNote.Subject:type_name -> amp.Tag
+	7, // 4: webapi.WithdrawNote.Delegation:type_name -> amp.Address
+	4, // 5: webapi.WithdrawNote.WithdrawnBy:type_name -> amp.Tag
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_amp_webapi_webapi_proto_init() }
@@ -211,7 +412,7 @@ func file_amp_webapi_webapi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_webapi_webapi_proto_rawDesc), len(file_amp_webapi_webapi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
