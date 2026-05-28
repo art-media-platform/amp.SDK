@@ -106,7 +106,6 @@ func (name Name) With(expr string) Name {
 	var body strings.Builder
 	body.Grow(len(name.Canonic) + len(namePart) + len(urlPart) + 1)
 	body.WriteString(name.Canonic)
-	exprID := name.ID
 
 	// Scheme-only name part: when the URL trigger is present and the name part
 	// matches the RFC 3986 scheme grammar (ALPHA *(ALPHA / DIGIT / "+" / "-"
@@ -114,7 +113,6 @@ func (name Name) With(expr string) Name {
 	// internal +, -, . as scheme characters rather than word separators.
 	if urlPart != "" && isScheme(namePart) {
 		scheme := strings.ToLower(namePart)
-		exprID = exprID.With(UID_HashLiteral([]byte(scheme)))
 		if body.Len() > 0 {
 			body.WriteByte(CanonicSeparatorChar)
 		}
@@ -147,8 +145,6 @@ func (name Name) With(expr string) Name {
 				term = strings.ToLower(term)
 			}
 
-			exprID = exprID.With(UID_HashLiteral([]byte(term)))
-
 			if body.Len() > 0 {
 				body.WriteByte(CanonicSeparatorChar)
 			}
@@ -158,17 +154,33 @@ func (name Name) With(expr string) Name {
 		}
 	}
 
-	// URL part is atomic: one literal hash, appended verbatim (the URL-trigger
-	// char itself is the delimiter — no '.' inserted).
+	// URL part appended verbatim (the URL-trigger char itself is the
+	// delimiter — no '.' inserted).
 	if urlPart != "" {
-		exprID = exprID.With(UID_HashLiteral([]byte(urlPart)))
 		body.WriteString(urlPart)
 	}
 
+	// The name part hashes atomically, so word order is significant (reordered
+	// words yield distinct UIDs; no commutative literal fold).  See canonicID.
+	canonic := body.String()
 	return Name{
-		ID:      exprID,
-		Canonic: body.String(),
+		ID:      canonicID(canonic),
+		Canonic: canonic,
 	}
+}
+
+// canonicID derives the UID of an already-canonic tag string.  The name part
+// (left of the first URL-trigger char) hashes as one atomic literal, so word
+// order within a name is significant.  Any URL / scheme:identifier part (RFC
+// 3986, from the trigger onward) hashes separately and combines, keeping
+// scheme:identifier identities (eth:, did:, CAIP-10) stable and matching the
+// "hash the identifier atomically" rule in the package README.
+func canonicID(canonic string) UID {
+	if split := PathStart(canonic); split >= 0 {
+		nameID := UID_HashLiteral([]byte(canonic[:split]))
+		return nameID.With(UID_HashLiteral([]byte(canonic[split:])))
+	}
+	return UID_HashLiteral([]byte(canonic))
 }
 
 // isScheme reports whether s matches the RFC 3986 §3.1 scheme grammar:
@@ -379,8 +391,12 @@ func (id UID) Midpoint(oth UID) UID {
 	return UID{m0, m1}
 }
 
-// This operator is commutative and associative, and is used to generate a new ID from two existing ones.
-// Since this is commutative, it is reversible, and means tag literals are order independent.
+// Commutative, associative UID combine — generates a new ID from two existing
+// ones.  Canonization no longer folds NAME literals through this (a name part's
+// UID is the atomic hash of its canonic string — order significant); canonicID
+// still uses it to combine the name part with a scheme:identifier part, and its
+// commutativity there is what keeps scheme:identifier UIDs (eth:, did:) stable.
+// Also the UID-arithmetic chaining primitive behind WithName/WithLiteral.
 func (id UID) With(other UID) UID {
 	return id.Add(other)
 }
@@ -390,7 +406,8 @@ func (id UID) Then(other UID) UID {
 	return id.Subtract(other)
 }
 
-// Since this operator is commutative, tag literals are order independent.
+// Commutative 128-bit modular add.  See [UID.With] for the order-independence
+// caveat — this is UID arithmetic, not the tag canonization path.
 func (id UID) Add(oth UID) (out UID) {
 	carry := uint64(0)
 	out[1], carry = bits.Add64(id[1], oth[1], 0)
@@ -439,16 +456,26 @@ func (id *UID) Decrement() bool {
 	return false
 }
 
+// WithName derives a child UID by atomically hashing this UID's bytes
+// followed by the canonized name's UID bytes.  Order-preserving — parent
+// then child — and collision-resistant (full hash, no commutative fold).
 func (id UID) WithName(name string) UID {
-	return id.With(UID_FromName(name))
+	return id.WithLiteral(UID_FromName(name).AppendTo(nil))
 }
 
+// WithString derives a child UID from this UID + a literal token, atomically.
 func (id UID) WithString(tagToken string) UID {
 	return id.WithLiteral([]byte(tagToken))
 }
 
+// WithLiteral derives a child UID by atomically hashing this UID's 16 bytes
+// followed by the literal — order-significant (parent precedes literal) and
+// collision-resistant.  Use for hierarchical derivation (parent UID + name →
+// child UID), e.g. filesystem item IDs.  No commutative fold.
 func (id UID) WithLiteral(tagLiteral []byte) UID {
-	return id.With(UID_HashLiteral(tagLiteral))
+	buf := id.AppendTo(make([]byte, 0, 2*8+len(tagLiteral)))
+	buf = append(buf, tagLiteral...)
+	return UID_HashLiteral(buf)
 }
 
 // Returns this tag.UID in canonic Base32 form

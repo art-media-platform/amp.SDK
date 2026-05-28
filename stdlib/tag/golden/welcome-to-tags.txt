@@ -2,83 +2,66 @@
 Hello World!
 Hello, World!
 hello  world
-world  hello
-World, hello.
 
 Hello and welcome to tags!
 hello, and welcome to tags!
 hello, and Welcome to tags!!
 hello, and..welcome to... tags.
 
-UTF8 whitespace, commas, periods, and other common punctuation separate tag literals.   Each literal is hashed and is summed with the other literals.  Because addition is commutative, the final hash is not dependent on the *order* of the literals.
+UTF-8 whitespace, commas, periods, and other common punctuation separate tag literals.  The canonic form of a tag string is its literals separated by a period ('.').
 
-12 words randomly chosen from, but not limited to, the English dictionary exceeds 10^56 possible combinations.  For reference, that's over 10 million times the number of possible Bitcoin public addresses (2^160).
+10 words randomly chosen from the English dictionary, taken in order, exceeds 10^52 possible sequences.  That's 15,000 times the number of possible Bitcoin public addresses (2^160).
 
-We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestry.
+We can cite 70NWJFD6VQFM2YX1D21YFC3SBS and 2P4V7Z6MV6HR94KFUX3HVT0GUP as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestry.
 
-Expressing 061HTS096CDKX7F7GWDB9GKJ3K with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can be also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
+Expressing 77FCRJPYQPY0V6NDWE49VX4PFT with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
 
 Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
 
-The words Center, center, centre, and Centre are homophonic.
-The words center, Center, Centre, and centre are homophonic.
-The words Centre, centre, center, and Center are homophonic.
+Since we want canonic string forms to be invariant under omitted or additional punctuation, <>, (), {}, "" [] are dropped:
 
-This has helpful implications for those with sight or hearing impairments, or in search result ranking since the query word order is usually less important the presence of particular words, especially once there are dozen words or more.
+This means we match proper nouns and titles easily, such as A Game Of Thrones
+This means we match proper nouns and titles easily, such as "A Game of Thrones".
+This means we match proper nouns and titles easily, such as a game of thrones.
 
-Most punctuation is dropped since we want searches to degrade with leading or trailing closures or quotes (<>, (), {}, "" [])
-
-Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.
-
-Words that are not upper case, are considered spoken (phonetic).
-
-This also means we can communicate proper nouns and titles easily, such as A Game Of Thrones
-This also means we can communicate proper nouns and titles easily, such as Game of Thrones, A.
-This also means we can communicate proper nouns and titles easily, such as a game of thrones.
+Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.  Literals that are not upper case, are considered spoken (phonetic).
 
 Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL CAPS should be used intentionally.
 
+This has helpful implications for those with sight or hearing impairments..
+
 ADA is an acronym for the Americans with Disabilities Act, Ms. Ada is a computer programmer.
 ADA is an acronym for the Americans with Disabilities Act. ms ada is a computer programmer!
-ADA is an acronym for the Americans with Disabilities Act. Ada is a computer programmer, Ms!
-ADA is an acronym for the Americans With Disabilities Act, A computer programmer, Ms. ada is.
 
 Get the amp SDK today
 Get the amp.SDK today.
 Get the Amp SDK today!!
 
-Yoda said this is not a drill.
-Yoda said, a drill this is not.
-Yoda said, a drill this is not!
-a drill this is not, Yoda said!
-said a drill, this is not Yoda.
-said a drill, is this not Yoda?
-
-spaces.plan.tools
-plan.tools.spaces
-
 Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form, with all-caps preservation dropped because URL schemes are case-insensitive per RFC 3986 §3.1.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
 
 https://example.com/path
 HTTPS://example.com/path
-link another amp://planet/Home
-another link Amp://planet/Home
-another link AMP://planet/Home
-file:///var/log/app.log
-ftp://user@host:21/dir
-scheme://MixedCase/PreservedExactly
-amp://planet.com/deep/path/with-dashes.and.dots
-your-custom-scheme://preserved-url.com:23382/path?query=string#fragment
-Your-Custom-Scheme://preserved-url.com:23382/path?query=string#fragment
+
+Another link amp://planet.com/deep/path/with-Dashes.and.dots
+another link Amp://planet.com/deep/path/with-Dashes.and.dots
+another link AMP://planet.com/deep/path/with-Dashes.and.dots
+
+File:///var/log/app.log
+FTP://user@host:21/dir
+Any-scheme://MixedCase/PreservedExactly
+
+your-custom-scheme://preserved-url.com:23382/path?Query=string#fragment
+Your-Custom-Scheme://preserved-url.com:23382/path?Query=string#fragment
+
 git+ssh://user@Host/repo.git
 GIT+SSH://user@Host/repo.git
 
-Test left of a URL get canonized; the URL stays exact.
-hello world https://foo.com
+
+Text left of a URL gets canonized; the URL stays exact.
 prefix is parsed normally  HTTPS://x-y.com
 Prefix is Parsed normally.  https://x-y.com
 
-Identity-from-canonical-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
+Identity-from-canonic-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
 eth:0xabcdef1234567890abcdef1234567890abcdef12
 Eth:0xabcdef1234567890abcdef1234567890abcdef12
 ETH:0xabcdef1234567890abcdef1234567890abcdef12

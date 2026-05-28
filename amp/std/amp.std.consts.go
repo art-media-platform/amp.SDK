@@ -144,209 +144,209 @@ var Attr = struct {
 	// ─── App-centric tags ───────────────────────────────────────────
 	App: tag.Name{ID: tag.UID{0x9FC2012FD63F847A, 0x51AA55A31D90CD25}, Canonic: "app"}, // 4ZS80KZPJZHJX53BKPNDFT1M95
 
-	AppState: tag.Name{ID: tag.UID{0xB0E0A1DFE9CF1CE2, 0x6D372EA4CD284F8D}, Canonic: "app.state"}, // 5HW2HXZUFG3MJ6UETFNM6KHMWE
+	AppState: tag.Name{ID: tag.UID{0xFAA5BBA978628672, 0x22BC2C65BFDD460C}, Canonic: "app.state"}, // 7UNQXUKY32HTT25G1DDQZXUJHD
 
 	// ─── Session management ─────────────────────────────────────────
 	SessionAttr: tag.Name{ID: tag.UID{0x5948CA6969CBDF2F, 0x01C92A44FA60AB24}, Canonic: "session"}, // 2T9356KUFCVWRH3K9B8MX61BT4
 
-	Login:           tag.Name{ID: tag.UID{0xCC1664C727510447, 0xFBE5F2B6BC492F9D}, Canonic: "session.login"},           // 6D2TKDF9UJ0J3ZRTGKQUY4KCWX
-	LoginChallenge:  tag.Name{ID: tag.UID{0xBCD0150E75CEFB7F, 0xAF8FC91BF858E127}, Canonic: "session.loginchallenge"},  // 5WU0BHWXFFZEZUZ3Y93GW5JS97
-	LoginResponse:   tag.Name{ID: tag.UID{0x37039CF25A152FA3, 0xB20E12186CE4FFAD}, Canonic: "session.loginresponse"},   // 1R0FFG4QHP5YJV43HK31QF9ZXE
-	LoginCheckpoint: tag.Name{ID: tag.UID{0x693196FD23B6C9EE, 0x2F8AB57313F17EDE}, Canonic: "session.logincheckpoint"}, // 3966CGU8XQT7R2Z2PPFD9Z2ZQY
-	SessionStatus:   tag.Name{ID: tag.UID{0xED2A77DDC9761B51, 0x631F56CFFABCC246}, Canonic: "session.status"},          // 7E59VXVKCQ3E8Q67UQTZXCTHK6
-	SessionTag:      tag.Name{ID: tag.UID{0x0F2E0253AA120335, 0x4355B536D92A8B5A}, Canonic: "session.tag"},             // 0G5S157BHK0DUN6PEP6VDKP2UU
+	Login:           tag.Name{ID: tag.UID{0x761CD041F19A871E, 0x588D714F3B7C0369}, Canonic: "session.login"},           // 3Q3M843WDUHWG5J3CJ9WXRS0V9
+	LoginChallenge:  tag.Name{ID: tag.UID{0x4CDE92F1C346D9A6, 0x3DBC5E21F58B7690}, Canonic: "session.loginchallenge"},  // 2DVU9G3HU6V6M3VG2Y47USQXNH
+	LoginResponse:   tag.Name{ID: tag.UID{0xD5D931DCBF32B11B, 0x845B0B9940F8F258}, Canonic: "session.loginresponse"},   // 6PV4SXTGTKQ4ES8QSCM50GJWKS
+	LoginCheckpoint: tag.Name{ID: tag.UID{0xD1FD78AD2D86A001, 0x89D5922FF13EB7CE}, Canonic: "session.logincheckpoint"}, // 6JZPWBUCD6N00SMPDK5ZSMXEYF
+	SessionStatus:   tag.Name{ID: tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, Canonic: "session.status"},          // 3ZQF0VT3EJMDNF7V345GUQ2P9C
+	SessionTag:      tag.Name{ID: tag.UID{0xCCE00314A1263502, 0x7A38CD68C10DC759}, Canonic: "session.tag"},             // 6DW01J98966N17NF6EE30HVJUT
 
-	LaunchWeb:   tag.Name{ID: tag.UID{0x972CEB01661BA7F5, 0xC8E19B9BC9291F22}, Canonic: "session.tag.www"},   // 4R5MPH2THVNZUWJSDVMG4KK7T2
-	LaunchOAuth: tag.Name{ID: tag.UID{0x65BFAF3765DBCB98, 0xFEB4D151B4324347}, Canonic: "session.tag.oauth"}, // 35RYRMFTFVTFDGXE6JB6U34HU7
+	LaunchWeb:   tag.Name{ID: tag.UID{0x7900A4A514A3C61B, 0x69753310BD7BA8BB}, Canonic: "session.tag.www"},   // 3T02KBB553SSEQKX9M22YRRB5V
+	LaunchOAuth: tag.Name{ID: tag.UID{0x230B9C43F0F6149B, 0xF1FD67764E068928}, Canonic: "session.tag.oauth"}, // 131FF47W7Q2KEZ3ZC7FT70E298
 
 	// ─── Item attributes ────────────────────────────────────────────
 	ItemAttr: tag.Name{ID: tag.UID{0xE8D8BECA5B3BBEB3, 0x1308458DB27C3504}, Canonic: "item"}, // 78V2ZDNQTVRUTJ6225JQT7SE84
 
-	ChildLink:   tag.Name{ID: tag.UID{0x2D735092B82E842E, 0x21828D8F03504377}, Canonic: "item.child.link.ID"}, // 1EFE895F1FHHR230NEJW1P0HVR
-	ItemLabels:  tag.Name{ID: tag.UID{0x8ACF0BC462FB41EF, 0x5E50CA5871F68AB2}, Canonic: "item.labels"},        // 4BTW5W8SRV87RPWN6BC1SZE2PK
-	ItemTextTag: tag.Name{ID: tag.UID{0xB10AEF4A2C321925, 0x62BA4D85883B7B0C}, Canonic: "item.text.tag"},      // 5J1CRNNC1K34KQ5FKEHQ43QYSD
+	ChildLink:   tag.Name{ID: tag.UID{0x95D3A6EF1C535313, 0x7D09B00E54481F34}, Canonic: "item.child.link.ID"}, // 4PUFMFY72MBD9RU2EH1TB4H7TN
+	ItemLabels:  tag.Name{ID: tag.UID{0x89DC7C30D083C0B7, 0xCCB62B4FAAB34B4D}, Canonic: "item.labels"},        // 49VJY31N43S2VWTEJC9YPC6KUE
+	ItemTextTag: tag.Name{ID: tag.UID{0xF2CECA12B7434121, 0x9CB04C216D399967}, Canonic: "item.text.tag"},      // 7KTV515EU384HTTD2D45QMM6C7
 
-	ItemLabel:         tag.Name{ID: tag.UID{0xB7D436AE92C4484B, 0x12CE5D2E1E2D3486}, Canonic: "item.text.tag.label"},      // 5RUHVBX4Q4915J5MKX5SG2UE46
-	ItemCaption:       tag.Name{ID: tag.UID{0x4EB0A7282413FFA9, 0x64A5C363FA1D4294}, Canonic: "item.text.tag.caption"},    // 2FQ2MKH90MZYNQ99F3DGX1UHNN
-	ItemCollection:    tag.Name{ID: tag.UID{0x0185DB9A5B4BBD42, 0xBE7ADB39B0856E5F}, Canonic: "item.text.tag.collection"}, // 01HRETNQUCRP1CWYQV76S8BVKZ
-	ItemSynopsis:      tag.Name{ID: tag.UID{0x60BAA931B4EC8A92, 0x4F0C0470BADCB3DB}, Canonic: "item.text.tag.synopsis"},   // 30RBNM3E7DJB94Y304F2XETDYV
-	ItemFileInfo:      tag.Name{ID: tag.UID{0x443E00F0824435FA, 0x95B225062522B97A}, Canonic: "item.fileinfo"},            // 247S0G10K46RX9CDJ50SKK5FCU
-	MainLink:          tag.Name{ID: tag.UID{0x0A979BA5B0B0A9DC, 0xA516A3D8CD838F3F}, Canonic: "item.tag.link.main"},       // 0BKYEUCD5HP7FBB5P3V36S73TZ
-	ItemVis:           tag.Name{ID: tag.UID{0x8CC1C6C462081A51, 0x143BFD54F16F7A1A}, Canonic: "item.tag.vis"},             // 4DS73D8SH8398J8FZXBMSQYYHU
-	ItemBehaviors:     tag.Name{ID: tag.UID{0xA44262A014669D59, 0x6994FD602370F2F5}, Canonic: "item.tags.behaviors"},      // 5489JB0536MPDQM57XD0JR1WRP
-	ItemGlyphs:        tag.Name{ID: tag.UID{0x070F13C15CCD8B52, 0xB39F56E6A7877C83}, Canonic: "item.tags.glyphs"},         // 071W9W2R6EJE9C77UQWUMSFZ43
-	ItemLinks:         tag.Name{ID: tag.UID{0x21358693EEC1C45B, 0x539D5528D6128B99}, Canonic: "item.tags.links"},          // 116Q397VQ1SJEP77BP53C152WT
-	ItemCameraState:   tag.Name{ID: tag.UID{0x95846345795A4B31, 0xC8DB9685F70EF7FC}, Canonic: "item.camerastate"},         // 4PHJJNBYBU9DSWJQWQHRVHXXZW
-	ItemCameraOptions: tag.Name{ID: tag.UID{0x56A37CE3EFA9DD30, 0xD7E2C63A6CEF1107}, Canonic: "item.cameraoptions"},       // 2QNEYF7VX9VNSEGSQ679QFY487
-	ItemAtmosphere:    tag.Name{ID: tag.UID{0x0EE841076E6B23A2, 0xDBB24357661E76A6}, Canonic: "item.atmospherespec"},      // 0FX10HFVMC4FJERDK3BXM1WXP6
-	ItemFSInfo:        tag.Name{ID: tag.UID{0x711AD8ED3AB7DFAA, 0x3B78AA6CB3B35B98}, Canonic: "item.fsinfo"},              // 3J3CDFUFPRVYP3QY5BEKTV6QWS
-	GlyphTag:          tag.Name{ID: tag.UID{0x49A583D517A3B95D, 0xBB0D08F7F6616802}, Canonic: "item.glyph.tag"},           // 29NQ1XB5X3R5FVQ388YZV62U02
-	TileAttr:          tag.Name{ID: tag.UID{0x6D2B5356E31F08DE, 0xA16F8C22497BF9CC}, Canonic: "item.tile"},                // 3E5E9PESSZ13GB2VWD494RRYFD
+	ItemLabel:         tag.Name{ID: tag.UID{0x75508F13447213B1, 0x8AA3D9367709DC8D}, Canonic: "item.text.tag.label"},      // 3PB27J6J3K2FSSP8YT6TVHMR4E
+	ItemCaption:       tag.Name{ID: tag.UID{0x3B12033B6C89B7E1, 0x60495EEB57BA257B}, Canonic: "item.text.tag.caption"},    // 1V281MQV49QZHQ0KBYXECVN9CV
+	ItemCollection:    tag.Name{ID: tag.UID{0xC2D5B84FCDB6AC3C, 0x2A31CC7CB71E75FB}, Canonic: "item.text.tag.collection"}, // 62UQW4ZMEQPHY2NDFDGKVJWXGV
+	ItemSynopsis:      tag.Name{ID: tag.UID{0xEA2B06C4B8C0A28E, 0xD3824B8511203663}, Canonic: "item.text.tag.synopsis"},   // 7B5D3D9F60NB7E70KCHN8K0EM3
+	ItemFileInfo:      tag.Name{ID: tag.UID{0x37F1C92B7B61AFDE, 0x319025BC546E254F}, Canonic: "item.fileinfo"},            // 1RY74KQYV1PZG33415RJB6W9BG
+	MainLink:          tag.Name{ID: tag.UID{0x37B0FE6AE6B37D2A, 0xC3CE3A24E57524FC}, Canonic: "item.tag.link.main"},       // 1RQ3Z6PTPMGNPD7MJU4MKRB97W
+	ItemVis:           tag.Name{ID: tag.UID{0x5B54B02DB28E8EF9, 0x0AE7886178A1CA4E}, Canonic: "item.tag.vis"},             // 2VBKS2VDNFJVWHPTW8D5WB3KKF
+	ItemBehaviors:     tag.Name{ID: tag.UID{0xB75CB32EA769E591, 0x0021078330DAE19E}, Canonic: "item.tags.behaviors"},      // 5RCKTKX9V9WQ8H0887HDSEPSDY
+	ItemGlyphs:        tag.Name{ID: tag.UID{0xEE43A6D5936D0774, 0x688B4FDE07BA993C}, Canonic: "item.tags.glyphs"},         // 7F8FMEC4VE0XU6J2UGVS3VP69W
+	ItemLinks:         tag.Name{ID: tag.UID{0xE89203E570B3684E, 0xC9088CEB810A9572}, Canonic: "item.tags.links"},          // 78K81YBW5ME17DK24DXF0HP5CK
+	ItemCameraState:   tag.Name{ID: tag.UID{0x18E764034A5B20FD, 0x53FEC933E18782D4}, Canonic: "item.camerastate"},         // 0SWXK06KKV43YP7ZQ96GHSG0QN
+	ItemCameraOptions: tag.Name{ID: tag.UID{0xEF9DCA7B29C45C47, 0xBB03A56AA33F6432}, Canonic: "item.cameraoptions"},       // 7GMR57QBF4CJ3VQ0X5EBJMYT1K
+	ItemAtmosphere:    tag.Name{ID: tag.UID{0x8718C93E8B1E2B4C, 0xB09A9629ED2B9B9B}, Canonic: "item.atmospherespec"},      // 47334MX2SY5E6C16NQ57QKR6WV
+	ItemFSInfo:        tag.Name{ID: tag.UID{0xA1E0C4997B686974, 0x8D3FE7CCD220FE74}, Canonic: "item.fsinfo"},              // 51W329KYV8E5U8UGZ7TM921ZMN
+	GlyphTag:          tag.Name{ID: tag.UID{0x1D8CBE271B52879E, 0x85F5B26AEA77F435}, Canonic: "item.glyph.tag"},           // 0XJKZ2F6UKHYG8CXEKECP7GX1P
+	TileAttr:          tag.Name{ID: tag.UID{0xBF3216B40F0EE8E3, 0x9E0C1A4B0E2789C8}, Canonic: "item.tile"},                // 5Z68CC83SFX3JTW30U9D72G2F8
 
-	TileLayout: tag.Name{ID: tag.UID{0x0B7882675395041D, 0xD7E6EE5B29399EAB}, Canonic: "item.tile.tag.layout"}, // 0CG216FNWP0HFXGTRFCDNMM7PC
-	ItemSeries: tag.Name{ID: tag.UID{0x594EAF43499616D5, 0xD94E17BDE44E95F3}, Canonic: "item.series"},          // 2T9URN6KDQ2VBXKMHRRRK4X5GM
+	TileLayout: tag.Name{ID: tag.UID{0x0D7B88E4A44AC047, 0xABD63B92B2AB46D7}, Canonic: "item.tile.tag.layout"}, // 0EGF4F992BS13URPJVKBTBQJQR
+	ItemSeries: tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Canonic: "item.series"},          // 34GDQG3RWS34EGZ178N0BWGH5V
 
-	SeriesTRS:      tag.Name{ID: tag.UID{0x19EE72532268FEC3, 0x3401B24861AC33BE}, Canonic: "item.series.TRS"},            // 0TXTT568M8ZV1M80EK91HUSDXY
-	SeriesLabels:   tag.Name{ID: tag.UID{0xFB44FC3D51559A12, 0x24969C88A3C8EBA1}, Canonic: "item.series.labels"},         // 7V8MY3UNBPM89295NWJ2JWJUX1
-	SeriesAssetTag: tag.Name{ID: tag.UID{0xB051D91C5D16C1F3, 0xC36F96055B8C09F4}, Canonic: "item.series.tag.asset"},      // 5HB7DJSR8QS7TW6VWQ0PESS2GN
-	SeriesHeadLink: tag.Name{ID: tag.UID{0x1674C1931B58B51F, 0x2DE392F56ACC19D8}, Canonic: "item.series.tag.link"},       // 0QFM0T66USQNGKVSWKYPPDS6FS
-	SeriesLinkTree: tag.Name{ID: tag.UID{0x5780CF88F22CD13E, 0x9C415E06ED2A9D38}, Canonic: "item.series.tags.link.tree"}, // 2RH37SJWJDU4Z9SHBY0VQKP79S
-	SeriesS2R:      tag.Name{ID: tag.UID{0x038BBDCA472172FD, 0xA8527AABD9BAA395}, Canonic: "item.series.S2.r.mm"},        // 03JFYWNJT1FCYUHNMUPGDVP8WP
-	SeriesS2T:      tag.Name{ID: tag.UID{0x01C42DAF2253491E, 0xBF989314881BD0ED}, Canonic: "item.series.S2.UTC64"},       // 01SHQUY8KM94GCZ64M2K41RN7E
-	MediaLink:      tag.Name{ID: tag.UID{0xFE5B070D8C2A52A7, 0x41FA32246C8EE052}, Canonic: "item.media.link.tag"},        // 7YCD3HV31BBBMN3YJK4JQ8XS2K
-	MediaRelease:   tag.Name{ID: tag.UID{0x994921062972C11A, 0xD7C7369D12DA9E88}, Canonic: "item.media.release"},         // 4T94HHDBCKS4EEGJTQMN9EP7N8
-	MediaItem:      tag.Name{ID: tag.UID{0xB6D41BDD8474CC6D, 0x22C218BEF11931E2}, Canonic: "item.mediaitem"},             // 5QUHEXV13NTJQK5HHSRVSJKDG2
-	MediaPlaylist:  tag.Name{ID: tag.UID{0xFBE5767CEB43AAAB, 0x503A4AB58E770A32}, Canonic: "item.mediaplaylist"},         // 7VWPV7TUU3PBPP0FKBQQ77F2JK
+	SeriesTRS:      tag.Name{ID: tag.UID{0xE9D0FE9CBE647199, 0x63524D7EB6E49423}, Canonic: "item.series.TRS"},            // 79U3Z9TGM4F6DQ6NKEGUVF9513
+	SeriesLabels:   tag.Name{ID: tag.UID{0x64DF54E7607F2F0E, 0xE02A46D568115245}, Canonic: "item.series.labels"},         // 34VXBFFS3Z5W7F0BK6UPN12NK5
+	SeriesAssetTag: tag.Name{ID: tag.UID{0x6A38B0B69A67BFE2, 0x046DD022E5743226}, Canonic: "item.series.tag.asset"},      // 3B72SCE6M7RZJ08VFH4CKR8DJ6
+	SeriesHeadLink: tag.Name{ID: tag.UID{0xB53FF14221D2395A, 0x13E86D2EBB019E3F}, Canonic: "item.series.tag.link"},       // 5P7ZSN48FK75E17U3E5UXH37JZ
+	SeriesLinkTree: tag.Name{ID: tag.UID{0xDB22686C45264AF3, 0x33E6E69F1A5D9E7C}, Canonic: "item.series.tags.link.tree"}, // 6V49N6SJ969CTM7TR6MWE5V7MW
+	SeriesS2R:      tag.Name{ID: tag.UID{0x01F3B6F1011A3461, 0xB95F3BAC5E740555}, Canonic: "item.series.S2.r.mm"},        // 01YFVG208U6JHVKRTVPJG781BP
+	SeriesS2T:      tag.Name{ID: tag.UID{0xF312A66F7997D4DF, 0xA939F8D7E498ED62}, Canonic: "item.series.S2.UTC64"},       // 7M2BM6YYDRUMGUKFGSUZK9JVC2
+	MediaLink:      tag.Name{ID: tag.UID{0x4DED4FC2D91C296A, 0x44D348001E677047}, Canonic: "item.media.link.tag"},        // 2EXP7W5Q8W55P49NU800G6FW27
+	MediaRelease:   tag.Name{ID: tag.UID{0x6C5BC935E454FEC6, 0x6F4F5F1B04975D0E}, Canonic: "item.media.release"},         // 3DCG4MCT2NZV36YMUZ3D29FR8F
+	MediaItem:      tag.Name{ID: tag.UID{0xF8CF20D20A67B40F, 0x9D8F1F0071CDFBF5}, Canonic: "item.mediaitem"},             // 7STWHE42M7QH7TV3SZ01SWVYZP
+	MediaPlaylist:  tag.Name{ID: tag.UID{0x3DAB9BFD75B29097, 0x7EE88C07BE024476}, Canonic: "item.mediaplaylist"},         // 1XPFEZUXEKK2CRXU4D0YZ04J3Q
 
 	// ─── Channel metadata and catalog ───────────────────────────────
 	ChannelAttr: tag.Name{ID: tag.UID{0x3C0BCCB260A85864, 0xC4DF8E1CD985DD60}, Canonic: "channel"}, // 1W1G6C4S58C1KD9RWF3MDSCRC0
 
-	ChannelCatalog:        tag.Name{ID: tag.UID{0xC044F34D0E1861A4, 0xA1FFCE3732855410}, Canonic: "channel.catalog.channelepoch"},      // 608MTNU3HSD6KB3ZYF6WT8BP0H
-	ChannelEpochs:         tag.Name{ID: tag.UID{0xA33354C0F654F1CB, 0x51DA2C1B495FA13D}, Canonic: "channel.channelepoch"},              // 536EBD1XKNY75P3QJD3E4PZ89X
-	ChannelPropertySeries: tag.Name{ID: tag.UID{0x36D889E837486E2F, 0xFA0ECC028017A351}, Canonic: "channel.property.series.jsonvalue"}, // 1QV24YHEU8ESRZN3QD0B01G8UJ
+	ChannelCatalog:        tag.Name{ID: tag.UID{0x2677628531BECA52, 0x034FC22E4BB05B8C}, Canonic: "channel.catalog.channelepoch"},      // 16FXJ8BDEYT9906MY25T5V0QWD
+	ChannelEpochs:         tag.Name{ID: tag.UID{0x46671B0AF50329A0, 0x6C63540862D1B521}, Canonic: "channel.channelepoch"},              // 26DWEHPX8356H6SSUN11JE3E91
+	ChannelPropertySeries: tag.Name{ID: tag.UID{0x35C4FC8DB15756BE, 0x94B84BDA369A0177}, Canonic: "channel.property.series.jsonvalue"}, // 1PSMY8VDBRBUZ99F2CV8V9N0CR
 
-	ChannelPropertyLabel:       tag.Name{ID: tag.UID{0x3DA1D14C9DDA9D55, 0xAA22DBAB16095CCB}, Canonic: "channel.property.series.jsonvalue.label"},       // 1XN78NT7FUMPBUN8QVPDC0KR6C
-	ChannelPropertyDescription: tag.Name{ID: tag.UID{0x743F9F54C8608792, 0xA6F0D7909F3A930D}, Canonic: "channel.property.series.jsonvalue.description"}, // 3N7YGP9K30HY9BEW6RK2GMP4SE
-	ChannelPropertyGlyph:       tag.Name{ID: tag.UID{0xE1C01708B36A44D4, 0x6087047AE532F619}, Canonic: "channel.property.series.jsonvalue.glyph"},       // 71S0CHJDVB8MB611S4GCKM5XHT
-	ChannelPropertySkybox:      tag.Name{ID: tag.UID{0xC76B23E06862BD44, 0xE9939C25722842AB}, Canonic: "channel.property.series.jsonvalue.skybox"},      // 67EDJY0U32RP2FM4WW4PT2HHPC
-	ChannelPropertyGrid:        tag.Name{ID: tag.UID{0x97131E90B0C4B56F, 0x2CA352BE9A2B4562}, Canonic: "channel.property.series.jsonvalue.grid"},        // 4R2DG91D64QPRKT8UKRUE2QJC2
-	ChannelType:                tag.Name{ID: tag.UID{0x258F081F8D32C47D, 0x982AB82172174131}, Canonic: "channel.type"},                                  // 15JW41Z39KSJYTHBPS45T1FH9J
+	ChannelPropertyLabel:       tag.Name{ID: tag.UID{0xF7C87A5DC3025A6B, 0x62451D178A230942}, Canonic: "channel.property.series.jsonvalue.label"},       // 7RT1X5VHS2C9PQ4J8X2Y5262B2
+	ChannelPropertyDescription: tag.Name{ID: tag.UID{0xD26B185D4D0E180D, 0x10CC7625CBD6B999}, Canonic: "channel.property.series.jsonvalue.description"}, // 6KEDD5UM8F306J1M3Q4R5XEFDT
+	ChannelPropertyGlyph:       tag.Name{ID: tag.UID{0xAE095B7DD0477B81, 0x9D2209318CB11B4A}, Canonic: "channel.property.series.jsonvalue.glyph"},       // 5F15ERVN27GF0TU8H9666C26UB
+	ChannelPropertySkybox:      tag.Name{ID: tag.UID{0xFBDB14B7FE48F62B, 0x902F51D9718AF1C0}, Canonic: "channel.property.series.jsonvalue.skybox"},      // 7VVDBCGZK8YSPT0CUJV5SSPWF0
+	ChannelPropertyGrid:        tag.Name{ID: tag.UID{0x4128F9AAC9CC12E3, 0xFEDEA64C3C3FDF40}, Canonic: "channel.property.series.jsonvalue.grid"},        // 2153WUPKFD2CJZXRP69HY3ZRU0
+	ChannelType:                tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Canonic: "channel.type"},                                  // 71EVHNQJ9KWY382TPE69352TEH
 
-	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x6FF61C88C70345A6, 0x12794EACEC8B6D9D}, Canonic: "channel.type.spreadsheet"},  // 3GYSF8JJS38QM14YBFPMQ8QVDX
-	ChannelTypeMessages:     tag.Name{ID: tag.UID{0xD7A9AC3744832441, 0x9D1AA5DB36E3CC0F}, Canonic: "channel.type.messages"},     // 6RP6Q3FJ434J0TU6P5VDVF7M0G
-	ChannelTypeTimeline:     tag.Name{ID: tag.UID{0xD688B61DD97CF742, 0x28DC7437A9A79B21}, Canonic: "channel.type.timeline"},     // 6QJ2V1VQCWYX12JR3N6YNUG6T1
-	ChannelTypeNotes:        tag.Name{ID: tag.UID{0x87B28C91CDD87392, 0x8FF395356265BBC8}, Canonic: "channel.type.notes"},        // 47QB693MFSFF98ZWWP6PJ6CFY8
-	ChannelTypeMap:          tag.Name{ID: tag.UID{0xFFAF9D773BB404F0, 0x3229E8568C22B702}, Canonic: "channel.type.map"},          // 7ZPYFRFFXN0MS34BG8BU625ES2
-	ChannelTypeGlobe:        tag.Name{ID: tag.UID{0x789C644DD7FC7430, 0xFFF9BBE430617537}, Canonic: "channel.type.globe"},        // 3SMJK4VPZWFHSGZYEVWHS62X9R
-	ChannelTypeManifold:     tag.Name{ID: tag.UID{0xA6B385E8BD68AE2E, 0xD3559473E879A52F}, Canonic: "channel.type.manifold"},     // 56QF2YJGC8PSRE6PDNFGN7M99G
-	ChannelTypeSpace:        tag.Name{ID: tag.UID{0x4CB63CE1018B6ADE, 0x1CD807A033ECBB00}, Canonic: "channel.type.space"},        // 2DQSYF20DCECG1TQ07N0TYTFS0
-	ChannelTypeLinks:        tag.Name{ID: tag.UID{0x0952F17FC464ADB0, 0x4987D7AF8C3F6322}, Canonic: "channel.type.links"},        // 09BCSRZJ34PQS4M1YRPY63YST2
-	ChannelTypeRegistry:     tag.Name{ID: tag.UID{0xF608438E07EB0A75, 0xEC102C71CEE83823}, Canonic: "channel.type.registry"},     // 7Q111SW1ZC19UYS41DF77FHF13
-	ChannelTypeSystem:       tag.Name{ID: tag.UID{0x7C01FAB066510CCC, 0xB5894A7ED360CA26}, Canonic: "channel.type.system"},       // 3W07XC0TKJ1M6CC2BBGV9Q1KJ6
-	ChannelTypeWeb:          tag.Name{ID: tag.UID{0x2A643F1C3CCD963B, 0x59D9F3468B72F446}, Canonic: "channel.type.web"},          // 1BDHZJSG6EKSXPMQGM8U5R5X26
-	ChannelTypeCrateManager: tag.Name{ID: tag.UID{0x5D245D81FEB5590D, 0x26DE9A083BD0A9A4}, Canonic: "channel.type.cratemanager"}, // 2X4JFS3ZPPC46KERNU10XX1BE4
-	ChannelTypePlaylist:     tag.Name{ID: tag.UID{0xE0310CEA1AAEFE3D, 0xBD63DBCEACEB59F5}, Canonic: "channel.type.playlist"},     // 70646FN6PFZSYVUSYVTUQFQQGP
-	ChannelTypePicker:       tag.Name{ID: tag.UID{0x388DFC1023B91851, 0x586B87B08486784D}, Canonic: "channel.type.picker"},       // 1SJRY108XT318PHUW7Q228DY2E
-	ChannelTypePlanetPicker: tag.Name{ID: tag.UID{0x1EE0F834385DDF4E, 0xF4435CC53B1A5A11}, Canonic: "channel.type.planetpicker"}, // 0YW3W38F2XVX7G8HUWSNXJNQHJ
-	ChannelTypeBrand:        tag.Name{ID: tag.UID{0x933397D212929AB0, 0x949CA2E5F90187BC}, Canonic: "channel.type.brand"},        // 4M6FCX44NKMBS99752WRWH31XW
-	ChannelTypeNameService:  tag.Name{ID: tag.UID{0xDE17FCCA49DC5B18, 0xCFB51E16200214B1}, Canonic: "channel.type.name.service"}, // 6Y2ZYDNKFWCDDDZE8Y2SH0455J
+	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x1C0062A36805F2FB, 0xC37F9A8B51C0A909}, Canonic: "channel.type.spreadsheet"},  // 0W01JB6U05YCXW6ZWUJE8W1B89
+	ChannelTypeMessages:     tag.Name{ID: tag.UID{0x0B6D6A2421321CA6, 0xFBA2073C02B917A6}, Canonic: "channel.type.messages"},     // 0CEPP2889K3KMGR8H77H1CK5X6
+	ChannelTypeTimeline:     tag.Name{ID: tag.UID{0xCAA590A1B24C80D3, 0xF0D695C6FDB81BC9}, Canonic: "channel.type.timeline"},     // 6BNQ8B3DKDH39Z1PNPSVYVH6Y9
+	ChannelTypeNotes:        tag.Name{ID: tag.UID{0x7F066E7E15634C8E, 0x2B42527E940C4785}, Canonic: "channel.type.notes"},        // 3Z0TR7W5C39K72QHKKGUB0SJW5
+	ChannelTypeMap:          tag.Name{ID: tag.UID{0x461600979AF3D842, 0x5A0DB0A3BDCC6D2C}, Canonic: "channel.type.map"},          // 262S09G6RMV115N3EHNFYWSV9D
+	ChannelTypeGlobe:        tag.Name{ID: tag.UID{0x5AE48F27C6756F95, 0xD710170F8601E1CA}, Canonic: "channel.type.globe"},        // 2UWK7KGJMPEYBXF40R1Y303SFB
+	ChannelTypeManifold:     tag.Name{ID: tag.UID{0x4CBB7B8671F99205, 0xF3E8260DB0811029}, Canonic: "channel.type.manifold"},     // 2DREXSDWGTK82Z7U161QS82419
+	ChannelTypeSpace:        tag.Name{ID: tag.UID{0x7A73CEC90BFC9F74, 0x5A5DE66730642BD4}, Canonic: "channel.type.space"},        // 3UFG7DK2ZWMXU5NRG6DWS68BYN
+	ChannelTypeLinks:        tag.Name{ID: tag.UID{0x0F753C0ED5870184, 0x1FC3120334FEC794}, Canonic: "channel.type.links"},        // 0GFNY0XPD70621ZHSK0DUGXJWN
+	ChannelTypeRegistry:     tag.Name{ID: tag.UID{0xB9BF3D6330F504B7, 0xE0B97F3A75A18971}, Canonic: "channel.type.registry"},     // 5TRWYQ6D7P0KVY1FCZ79UU32CJ
+	ChannelTypeSystem:       tag.Name{ID: tag.UID{0xBAAE45A1E50DB5D6, 0xA110D0DF2A2A8A6B}, Canonic: "channel.type.system"},       // 5UPT2U3T8EQRCB246HVWP2P2MC
+	ChannelTypeWeb:          tag.Name{ID: tag.UID{0x0E85824C4CAE1CCD, 0x03B61877597F1503}, Canonic: "channel.type.web"},          // 0FHQ14SM5F3M6H7EHSFXDRY583
+	ChannelTypeCrateManager: tag.Name{ID: tag.UID{0x9E74B4232D25A550, 0x3FAB0CD74C29B100}, Canonic: "channel.type.cratemanager"}, // 4YFKU26C95NP83ZBSDUX62MD80
+	ChannelTypePlaylist:     tag.Name{ID: tag.UID{0x13359329BB89DC00, 0x0A5737DF5CC11363}, Canonic: "channel.type.playlist"},     // 0M6Q9KMFW9VH00NPTRVXFD24V3
+	ChannelTypePicker:       tag.Name{ID: tag.UID{0xD2EBF18403D0BFF7, 0x94A830AA64236EE9}, Canonic: "channel.type.picker"},       // 6KXGSS80YHRZVT9B1HP9K26VR9
+	ChannelTypePlanetPicker: tag.Name{ID: tag.UID{0x235A1464B1A9B829, 0xA3F82B96FE207780}, Canonic: "channel.type.planetpicker"}, // 13C8B69DE9R0NU7Y1CKVZ20XW0
+	ChannelTypeBrand:        tag.Name{ID: tag.UID{0xB65147BCC3C55E4C, 0x9BE811A46788AFF8}, Canonic: "channel.type.brand"},        // 5QB53VTHY5CT69RU0JNJMSJCZS
+	ChannelTypeNameService:  tag.Name{ID: tag.UID{0xE2BA6A5DBCA4EC87, 0x3B64FA486677CFBA}, Canonic: "channel.type.name.service"}, // 72R9P5VG54XK3MQT7U91M7GMXU
 
 	// ─── Brand — substrate-native planet identity (PRD-name-service.md §2). ───
 	// Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
 	// TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
-	Brand: tag.Name{ID: tag.UID{0x50E9E52D1E992C02, 0x9F481861817D6603}, Canonic: "amp.brand"}, // 2HX7KKU7NT5H19YK0SD60RUTH3
+	Brand: tag.Name{ID: tag.UID{0xB70889689791764B, 0xB554FC786AE221AE}, Canonic: "amp.brand"}, // 5R124QJ5WJFT5VBP7WG1PF48EF
 
 	// ─── NameService — substrate-native naming primitive (PRD-name-service.md §3). ───
 	// A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.
 	// Federations propagate their channel to members via normal CRDT sync.
 	// Generalized beyond planet naming — any UID-bearing entity is namable.
-	NameService: tag.Name{ID: tag.UID{0x9BCE4A2555E2EC6A, 0xDA609391A87DF2F8}, Canonic: "amp.name.service"}, // 4VTT52BPG2XJPENS4MK6N7VWRS
+	NameService: tag.Name{ID: tag.UID{0xB363152A99B543E3, 0x44B6A07DD731D29D}, Canonic: "amp.name.service"}, // 5MDDBKP6EP8GJN9EP0GRCM3NNX
 
-	NameServiceRecord: tag.Name{ID: tag.UID{0x30E80AC62B93E415, 0xDF1E601BACAF61CC}, Canonic: "amp.name.service.record"}, // 1HX05DDBWMWHBXY7M03FQBYSFD
+	NameServiceRecord: tag.Name{ID: tag.UID{0x46F3C16F52B61C22, 0x7C5C870E89180A36}, Canonic: "amp.name.service.record"}, // 26YG0QYNPQ3HJ7SR471U4JH2JQ
 
 	// ─── Federation directory — peer / parent federation pointers (PRD-name-service.md §4.3). ───
 	// NS-record-style cross-federation forwarding without DNS dependency.
-	FederationDirectory: tag.Name{ID: tag.UID{0x95811726969FEF00, 0xEC5E2EEB6E0E3681}, Canonic: "amp.federation.directory"}, // 4PH4CKE5NZXW0FSRJFXER0WEN1
+	FederationDirectory: tag.Name{ID: tag.UID{0x9D75EA0B352ABCF1, 0xE8235D89C9A7D3F9}, Canonic: "amp.federation.directory"}, // 4XFRP0QE9BRMSYH8UXJ74UGNZT
 
 	// ─── Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate). ───
 	// "Law" names the role concretely: this channel grants, revises, and revokes
 	// the permissions other channels inherit.
-	LawAttr: tag.Name{ID: tag.UID{0xE56C439A172360E3, 0x25DD742ADF20C33C}, Canonic: "amp.law"}, // 75EJ1TN5T3D3JKCRCN5CGK1HTW
+	LawAttr: tag.Name{ID: tag.UID{0xB8D21569231305B8, 0xF74881C639EB11E5}, Canonic: "amp.law"}, // 5SU8BQK8SM0QWGFK41SSWYQ4G5
 
-	LawPlanetEpoch:  tag.Name{ID: tag.UID{0x1F67C9B597E414E8, 0xCEAE92B0564C39A1}, Canonic: "amp.law.planetepoch"},  // 0ZDZ4VC5Z42MNDXCNKQ1C4SFE1
-	LawMemberEpoch:  tag.Name{ID: tag.UID{0x96B7D6C54AE02FFF, 0x56CE2364C1EA2A97}, Canonic: "amp.law.memberepoch"},  // 4QQZCDBKR05ZZPEMJ3DM0YNBNR
-	LawChannelEpoch: tag.Name{ID: tag.UID{0x4C93CBA8ACCFFA49, 0xB2D812294EFA8719}, Canonic: "amp.law.channelepoch"}, // 2DKG5UJC6GZ94V5Q0K557GP1ST
-	LawPlanetOrigin: tag.Name{ID: tag.UID{0xA2719A97FD44184D, 0x3C7C0A96E3AE19C4}, Canonic: "amp.law.planetorigin"}, // 52F6E9GZB4316MSZ0BKVJUW6F4
-	LawEquivalence:  tag.Name{ID: tag.UID{0x5B3A403415CF9D8A, 0x5A9DE58F26B43783}, Canonic: "amp.law.equivalence"},  // 2V790385FGMQ55P7G5JWMC8EW3
-	LawWithdraw:     tag.Name{ID: tag.UID{0x29E5A9FB53899CA0, 0xC11BE5588C2AB183}, Canonic: "amp.law.withdraw"},     // 19WQNZQNW9MKHD26Z5C262PDD3
+	LawPlanetEpoch:  tag.Name{ID: tag.UID{0x62F9D4DD32683CE3, 0x1D28B3308B06594F}, Canonic: "amp.law.planetepoch"},  // 32Z7BEUDM87MJJUB5M625HDQBG
+	LawMemberEpoch:  tag.Name{ID: tag.UID{0xD4D5E6BE48B6D994, 0x19B1DB5E98597C29}, Canonic: "amp.law.memberepoch"},  // 6NURMCWK5QV6B1MDFVCUD5KZ19
+	LawChannelEpoch: tag.Name{ID: tag.UID{0xC49076CDFEB23BBF, 0xAD7271CB90287F97}, Canonic: "amp.law.channelepoch"}, // 64K1VDVZPK7FZUUWMJTF82HZWR
+	LawPlanetOrigin: tag.Name{ID: tag.UID{0x6C8CDF082B47A29E, 0xCC572ADCF4282E79}, Canonic: "amp.law.planetorigin"}, // 3DJMGHHBU7NBGDSPTBVMU2HCMT
+	LawEquivalence:  tag.Name{ID: tag.UID{0x99F3808D1F407BE6, 0x2E656BA55F1738FE}, Canonic: "amp.law.equivalence"},  // 4TYF08U7U0GGM2WTCCNPGJFF7Y
+	LawWithdraw:     tag.Name{ID: tag.UID{0x850B8DAE8EC87EF2, 0x228AC81879D663ED}, Canonic: "amp.law.withdraw"},     // 451F6UX3Q8GVT252Q831WXDSZE
 	// Substrate-agnostic Member Kind (DESIGN-11).  MemberEpoch.Kind is a Tag
 	// resolving to one of these UIDs.  Communities + apps may register
 	// additional Kinds in their own consts.sdl.  Zero UID = unspecified.
-	LawMemberKind: tag.Name{ID: tag.UID{0xD5F414CD849B4BBC, 0x63D94010BDF4B418}, Canonic: "amp.law.memberkind"}, // 6PYHBDV14V9FY67QB022YZ9E0S
+	LawMemberKind: tag.Name{ID: tag.UID{0x102047CBC77F0A3E, 0x5C2BBD3DA4EA137C}, Canonic: "amp.law.memberkind"}, // 0H413WRJVZ18Z5SBXX7QKFN4VW
 
-	LawMemberKind_Person:    tag.Name{ID: tag.UID{0x23B8EC41939D6171, 0x47B4289D120910F7}, Canonic: "amp.law.memberkind.person"},    // 13R3Q434WXD5SNGE18MN90K47R
-	LawMemberKind_Group:     tag.Name{ID: tag.UID{0x3D141FA9B803E5FB, 0x65B8B8151082A27F}, Canonic: "amp.law.memberkind.group"},     // 1X2HGUMF03WRXQCF5S2N8858MZ
-	LawMemberKind_Agent:     tag.Name{ID: tag.UID{0x90385DD96A59F6BB, 0x3F67C2EB3296A660}, Canonic: "amp.law.memberkind.agent"},     // 4H71FXKUKTYUXMYTY2XDT9E9M0
-	LawMemberKind_Instance:  tag.Name{ID: tag.UID{0x363BA5724D52FC74, 0xE10351DAB8F4C088}, Canonic: "amp.law.memberkind.instance"},  // 1Q7FKR4MBKZJUF20UJVBWG9H48
-	LawMemberKind_Successor: tag.Name{ID: tag.UID{0x2C50BB0056BC8D22, 0x65009288ABE3E5CC}, Canonic: "amp.law.memberkind.successor"}, // 1DB2XH0PPWJNJ6B04KJ2PY7TFD
-	LawMemberKind_Memorial:  tag.Name{ID: tag.UID{0x4CEB46132B51348C, 0x7C822FF17DD2DE75}, Canonic: "amp.law.memberkind.memorial"},  // 2DXE316BUJ6K67T0JGY5YX5RMP
-	LawMemberKind_Process:   tag.Name{ID: tag.UID{0x2A3F20D3879BC8E7, 0x11515A055D872623}, Canonic: "amp.law.memberkind.process"},   // 1B7WHE71WVT3MJ2NBU0PFSF9J3
+	LawMemberKind_Person:    tag.Name{ID: tag.UID{0x9066A58EE8084472, 0x7ECCB4DC966DA647}, Canonic: "amp.law.memberkind.person"},    // 4HDUKSXU088JT7XM5NVKC6V9K7
+	LawMemberKind_Group:     tag.Name{ID: tag.UID{0xEF2C5586176DEED8, 0x5B05F595BBE5600D}, Canonic: "amp.law.memberkind.group"},     // 7G5JBSD5VEXVD5Q1GPKQXYBS0E
+	LawMemberKind_Agent:     tag.Name{ID: tag.UID{0x749E0C48FD2107B3, 0x929ECFA81FC32124}, Canonic: "amp.law.memberkind.agent"},     // 3NMS64JZ910YTT57QGP0GW6894
+	LawMemberKind_Instance:  tag.Name{ID: tag.UID{0xB7889D1CF912DC06, 0xFDF984BBDFA0D5BB}, Canonic: "amp.law.memberkind.instance"},  // 5RJ2FJTY8KVH3GVYD4RGGU1PEV
+	LawMemberKind_Successor: tag.Name{ID: tag.UID{0x627C11221E4584F9, 0xCD00ACCD3211B4F9}, Canonic: "amp.law.memberkind.successor"}, // 32GH8K47K5HMWWU05DTNT13E7T
+	LawMemberKind_Memorial:  tag.Name{ID: tag.UID{0xBA335B3927C0252B, 0xB791D002F55B477F}, Canonic: "amp.law.memberkind.memorial"},  // 5U6EEMK9Y04NPVG4FH0CUPQJVZ
+	LawMemberKind_Process:   tag.Name{ID: tag.UID{0x98ECE8E691BE5BD5, 0x7E0A29F6F4393466}, Canonic: "amp.law.memberkind.process"},   // 4SXMNFE4EYCGBRW2J9YVU3KE36
 	// Modal Attestation modalities (DESIGN-13).  Attestation.Modality is a
 	// Tag resolving to one of these UIDs.  Communities + apps may register
 	// additional modalities.  Zero UID = unspecified.
-	LawAttestationModality: tag.Name{ID: tag.UID{0x61BC2CECF9957F4C, 0xACB0C150BC7E4DB9}, Canonic: "amp.law.attestationmodality"}, // 31RHQFTYDPGX6BTD61B2Y7WMET
+	LawAttestationModality: tag.Name{ID: tag.UID{0x9F5377F513757A9F, 0x74B304390F47261B}, Canonic: "amp.law.attestationmodality"}, // 4ZBEVZB4VPGBGR9DS4747NF9HV
 
-	LawAttestationModality_Asserted:    tag.Name{ID: tag.UID{0x5CF46F971D94C225, 0x196F3718BCA1B3EA}, Canonic: "amp.law.attestationmodality.asserted"},    // 2WYJRTF7DNS8KJKVTR32YB3DZB
-	LawAttestationModality_Witnessed:   tag.Name{ID: tag.UID{0x5218F1174F28043A, 0xF452EE6F2F8EF082}, Canonic: "amp.law.attestationmodality.witnessed"},   // 2K33SJFMT80HXG8NRFEWRSXW42
-	LawAttestationModality_Reported:    tag.Name{ID: tag.UID{0x96D4B1AEFD679625, 0x480CC2FD8B5D2C9C}, Canonic: "amp.law.attestationmodality.reported"},    // 4QUKSUXZC7KSKNH362ZQ5PUC4W
-	LawAttestationModality_Inferred:    tag.Name{ID: tag.UID{0x28A7C8D4F50B9AEA, 0x64157E91933A1085}, Canonic: "amp.law.attestationmodality.inferred"},    // 18NZ4E9X8CMCP685CYK69MN445
-	LawAttestationModality_Speculated:  tag.Name{ID: tag.UID{0x4497583BA00640A9, 0x3E75EAEB179BF07D}, Canonic: "amp.law.attestationmodality.speculated"},  // 24KXD3R80682NMWXGBXDCTRW3X
-	LawAttestationModality_Dreamed:     tag.Name{ID: tag.UID{0x28D00E52E86F6296, 0x0318219BE83440FC}, Canonic: "amp.law.attestationmodality.dreamed"},     // 18U0755U3GDBC06611MGN38H7W
-	LawAttestationModality_Liturgical:  tag.Name{ID: tag.UID{0x6EACD5D51D22A544, 0x26E5069B2AE4AFA1}, Canonic: "amp.law.attestationmodality.liturgical"},  // 3FPMBXB792NP22ET86MDPF9CX1
-	LawAttestationModality_Conditional: tag.Name{ID: tag.UID{0x47EC9D6491C61272, 0x5293048DC61A697B}, Canonic: "amp.law.attestationmodality.conditional"}, // 27XKFQ94F629T554S4JR31NUCV
-	LawAttestationModality_Contested:   tag.Name{ID: tag.UID{0x2C19BE85738E945D, 0xC2DE763F20653D8B}, Canonic: "amp.law.attestationmodality.contested"},   // 1D36Z8BWWFKJFW5RMQ7WH6BGDC
-	LawAttestationModality_Retracted:   tag.Name{ID: tag.UID{0xF5B3B3F97A5FFE24, 0xEBA5E90906A84DB2}, Canonic: "amp.law.attestationmodality.retracted"},   // 7PQFTZKYKZZSKFR9G9143BHMEK
+	LawAttestationModality_Asserted:    tag.Name{ID: tag.UID{0x75C91DBFE351CFA4, 0xBDF0BBC9911BA504}, Canonic: "amp.law.attestationmodality.asserted"},    // 3PT4FVZSUJTYKCVW5VT68JR984
+	LawAttestationModality_Witnessed:   tag.Name{ID: tag.UID{0xEDF2976BE9E0FC72, 0xA1AA047BE5D91C2F}, Canonic: "amp.law.attestationmodality.witnessed"},   // 7EYBCQRUG0ZJTB3BH4GGKXK71G
+	LawAttestationModality_Reported:    tag.Name{ID: tag.UID{0x01ABA5357F784D15, 0x96F49237F6805E56}, Canonic: "amp.law.attestationmodality.reported"},    // 01PFKMBZVS9NBTEX4K6ZV80RKQ
+	LawAttestationModality_Inferred:    tag.Name{ID: tag.UID{0x586F8C9352B3899C, 0x8F41E2BF1D0BB521}, Canonic: "amp.law.attestationmodality.inferred"},    // 2SEY696NPMJ6F8YHG2RWFHRE91
+	LawAttestationModality_Speculated:  tag.Name{ID: tag.UID{0xB39330159C4E87E1, 0xF842FF134BF859C2}, Canonic: "amp.law.attestationmodality.speculated"},  // 5MKDS1C72FHZHZHHRZ2E5ZHQF2
+	LawAttestationModality_Dreamed:     tag.Name{ID: tag.UID{0xAC2C17267CD4DF9B, 0x94DD976E325E51B4}, Canonic: "amp.law.attestationmodality.dreamed"},     // 5D5HCKDZ6NVYET9RDREST5WNEN
+	LawAttestationModality_Liturgical:  tag.Name{ID: tag.UID{0x801C1A7DF12F7128, 0xFA0D77ADD9E695AB}, Canonic: "amp.law.attestationmodality.liturgical"},  // 403HE7VW9GF4NGN3CRPRDYE5EC
+	LawAttestationModality_Conditional: tag.Name{ID: tag.UID{0x84466F1352512715, 0x29E493F726901576}, Canonic: "amp.law.attestationmodality.conditional"}, // 448TRJ6NKJ4WBKMT4MYWM905CQ
+	LawAttestationModality_Contested:   tag.Name{ID: tag.UID{0x0502182AD6D3BDB4, 0xC9F14651631969E3}, Canonic: "amp.law.attestationmodality.contested"},   // 0508D2PPQMRQUDMWB6B5JJKUG3
+	LawAttestationModality_Retracted:   tag.Name{ID: tag.UID{0xCA955565A08728E6, 0x4FCC6CCB72D595CB}, Canonic: "amp.law.attestationmodality.retracted"},   // 6BKPBQC84753M4ZM3DTETEC5FC
 	// Equivalence strengths (DESIGN-14).  Equivalence.Strength is a Tag
 	// resolving to one of these UIDs.  Zero UID = unspecified.
-	LawEquivalenceStrength: tag.Name{ID: tag.UID{0x90C2FF27D8ABEC0A, 0xFBA206D068E44C15}, Canonic: "amp.law.equivalencestrength"}, // 4HSCZKGQ5CXH5GR8H6U1NF8M0P
+	LawEquivalenceStrength: tag.Name{ID: tag.UID{0x17501E56DC9B1A5D, 0x19F49F4EF6B49F84}, Canonic: "amp.law.equivalencestrength"}, // 0RB0G5ER4V39FJMX4Z9VVC97W4
 
-	LawEquivalenceStrength_Identity:    tag.Name{ID: tag.UID{0xD33A03A3D3B814E0, 0xF9AB82D4A3F486FC}, Canonic: "amp.law.equivalencestrength.identity"},    // 6M781U7NXS2MHGMBW2UKJZ91RW
-	LawEquivalenceStrength_Translation: tag.Name{ID: tag.UID{0xD26988572159ACCD, 0xB5FFADDD9EAB108C}, Canonic: "amp.law.equivalencestrength.translation"}, // 6KE645F8BTPM6VCZXEVQGBQ44D
-	LawEquivalenceStrength_Approximate: tag.Name{ID: tag.UID{0x4E7905A786F406E5, 0xA258357A2D855769}, Canonic: "amp.law.equivalencestrength.approximate"}, // 2FG42UG1RN0VKU4Q1PG8QSBPV9
-	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x11C1A4F9070F88EF, 0x711604BFBA8A0AC1}, Canonic: "amp.law.equivalencestrength.analogous"},   // 0JS6KGK1SGJ3RR25H4RYX8N2Q1
+	LawEquivalenceStrength_Identity:    tag.Name{ID: tag.UID{0x7A180A04688254AF, 0xEDCDADDC2F98FC54}, Canonic: "amp.law.equivalencestrength.identity"},    // 3U30508U42BKRYVMEEVHRTJZ2N
+	LawEquivalenceStrength_Translation: tag.Name{ID: tag.UID{0x8D295A1372FA2C5D, 0x10798077BE8E1B1A}, Canonic: "amp.law.equivalencestrength.translation"}, // 4E55E16WRU5JFJ0YD0FYZ8W6SU
+	LawEquivalenceStrength_Approximate: tag.Name{ID: tag.UID{0x90E61D55697A0D3C, 0xA6613FC42F78EF78}, Canonic: "amp.law.equivalencestrength.approximate"}, // 4HWSFPBUCU1NYBDS9ZSHRRJVVS
+	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x112A5CA73BB8C091, 0x8A80533CC1EC7186}, Canonic: "amp.law.equivalencestrength.analogous"},   // 0J59FBFFXSS28SP02M7M0YSWD6
 	// Withdrawal reasons (DESIGN-15).  Withdraw.Reason is a Tag resolving
 	// to one of these UIDs.  Zero UID = unspecified.
-	LawWithdrawReason: tag.Name{ID: tag.UID{0xC811A5893B232F8B, 0x8B66465B9FEC4C7D}, Canonic: "amp.law.withdrawreason"}, // 6826KSKFT35Y5SQTK6CFGYSM3X
+	LawWithdrawReason: tag.Name{ID: tag.UID{0x72FDAD1F33EAB71A, 0x6643A4A97C032829}, Canonic: "amp.law.withdrawreason"}, // 3KZQQJYDZBQWE6DHX4P5Y06B19
 
-	LawWithdrawReason_Consent:      tag.Name{ID: tag.UID{0x42143E77A172189A, 0x46BF88C0A6C13EB3}, Canonic: "amp.law.withdrawreason.consent"},      // 222HZ7G8CK32E4EGW8S2MD2GPM
-	LawWithdrawReason_Inaccuracy:   tag.Name{ID: tag.UID{0xD05F9B88E7E2A805, 0xC7D5C866D7194A71}, Canonic: "amp.law.withdrawreason.inaccuracy"},   // 6HCYESJTZ2P02WGPF8DVCJKKMJ
-	LawWithdrawReason_Outdated:     tag.Name{ID: tag.UID{0x4D56BEEC52BC0CED, 0xFD2D6DDB8806CB05}, Canonic: "amp.law.withdrawreason.outdated"},     // 2EBUZFSNPW1MQZUCCEVF40EKS5
-	LawWithdrawReason_Coerced:      tag.Name{ID: tag.UID{0x7F25E5BB05ADA92F, 0x49BA46DA7425B481}, Canonic: "amp.law.withdrawreason.coerced"},      // 3Z4RKVQ1EEP4RNMFK6V9U2CE41
-	LawWithdrawReason_Forgotten:    tag.Name{ID: tag.UID{0x3B150293C843A942, 0xA5B54680C7D3A669}, Canonic: "amp.law.withdrawreason.forgotten"},    // 1V2N197K23P51BCEB6H33X79M9
-	LawWithdrawReason_Departed:     tag.Name{ID: tag.UID{0x6694E8C393875AE3, 0x3CD4965DF0F46485}, Canonic: "amp.law.withdrawreason.departed"},     // 36KMND74W7CCJMTP4QCRSG8T45
-	LawWithdrawReason_InviteRecall: tag.Name{ID: tag.UID{0x9A4AA950193B9A17, 0xB1DD878C188A9708}, Canonic: "amp.law.withdrawreason.inviterecall"}, // 4U9BNP069VM8CV3RD7JHD8P5S8
-	LawWithdrawReason_Retracted:    tag.Name{ID: tag.UID{0x5C092C95BBEDAE63, 0xCA5B6E13EA164C76}, Canonic: "amp.law.withdrawreason.retracted"},    // 2W14Q9CFZEPTJWNQVF2GP1DM3Q
+	LawWithdrawReason_Consent:      tag.Name{ID: tag.UID{0x4AD66B3839C79795, 0x6DD78A8C11DC59F0}, Canonic: "amp.law.withdrawreason.consent"},      // 2BUTPMHFF7KYBQVPWBJH8XSQGH
+	LawWithdrawReason_Inaccuracy:   tag.Name{ID: tag.UID{0x17501A166D3A425C, 0xA91DD4F561E2CB93}, Canonic: "amp.law.withdrawreason.inaccuracy"},   // 0RB0E1DV9U89FBK7FNYPHY5KWM
+	LawWithdrawReason_Outdated:     tag.Name{ID: tag.UID{0xAAC00FC9DDCE0FCB, 0xE6859461FE7A1D4F}, Canonic: "amp.law.withdrawreason.outdated"},     // 5BS07WMRFF1Z5YE1DND7Z7N7BG
+	LawWithdrawReason_Coerced:      tag.Name{ID: tag.UID{0xF49C167CF4CAFF70, 0xEB1DCBB71E6D98A1}, Canonic: "amp.law.withdrawreason.coerced"},      // 7NMHC7TX6BZXSFQ7FCQWG6V651
+	LawWithdrawReason_Forgotten:    tag.Name{ID: tag.UID{0x8E3232ED30CC6260, 0x0BE1A6A4E66AEE93}, Canonic: "amp.law.withdrawreason.forgotten"},    // 4F68TFUD6DD9H0RSE6NMM6PVNM
+	LawWithdrawReason_Departed:     tag.Name{ID: tag.UID{0x13C1FB18E732E44E, 0x5EE266E36A490A3A}, Canonic: "amp.law.withdrawreason.departed"},     // 0MS7XJJTTKWJ75XSM6WEP4K2JU
+	LawWithdrawReason_InviteRecall: tag.Name{ID: tag.UID{0x1E4FCBCAB504D83C, 0xF6B5D654AF78F091}, Canonic: "amp.law.withdrawreason.inviterecall"}, // 0Y9Z5WPE84V0YGEEFQBKRRJW4J
+	LawWithdrawReason_Retracted:    tag.Name{ID: tag.UID{0xD9CBFFFA74C3D8E7, 0x77AC984C332610A6}, Canonic: "amp.law.withdrawreason.retracted"},    // 6TTGZZNX63V3MRGC4S9HTKD456
 
 	// ─── Planet ledger — durable record of observations and citations. ───
 	// Attestations (strikes, endorsements, witness records, audits, amnesties)
 	// live here as convergent TxOps.  Admin acts in the ACC cite entries from
 	// the ledger via AttestationRef, making every governance decision auditable.
-	LedgerAttr: tag.Name{ID: tag.UID{0x4C04FA3F6AB87E3F, 0x119C1851084D9F1B}, Canonic: "amp.ledger"}, // 2D0MX3YUPSGSZJ370SB444V7SV
+	LedgerAttr: tag.Name{ID: tag.UID{0x82BC4E1F6FB05241, 0x03CA388E1C44C848}, Canonic: "amp.ledger"}, // 42RJ71YVXHB90H7KJSJSF49K28
 
-	LedgerAttestation: tag.Name{ID: tag.UID{0x911C12A6BD403FC5, 0xD634D7C4340FBF7B}, Canonic: "amp.ledger.attestation"}, // 4J3H9BEGB07Z2XDE6RSHU0ZGVV
+	LedgerAttestation: tag.Name{ID: tag.UID{0x3C774A8A36241368, 0x2074703AFA0EF846}, Canonic: "amp.ledger.attestation"}, // 1WFX58NEJ42EN20X3H7CX0XY26
 
 	// ─── Member lifecycle ───────────────────────────────────────────
-	MemberAttr: tag.Name{ID: tag.UID{0xA59C8C2D8598D764, 0x7383D4962E7A19D3}, Canonic: "amp.member"}, // 55MK62V1DSUXK770YNKSR7N6FM
+	MemberAttr: tag.Name{ID: tag.UID{0x4CCC7C4A23169DBF, 0x2EC0059288020E9F}, Canonic: "amp.member"}, // 2DTJY4N8SQMQZKXH05KB4043NZ
 
-	PlanetInvite:   tag.Name{ID: tag.UID{0x2A800266234FA739, 0x8A16051EBF01FDCA}, Canonic: "amp.member.planetinvite"},   // 1BH016D8UGNWWSN5H53UZH3ZFB
-	PlanetInviteOp: tag.Name{ID: tag.UID{0xD7A4CDB2B0EB7F7A, 0x788C02AB30E8B195}, Canonic: "amp.member.planetinviteop"}, // 6RNM6V5D7CGXX7J302PDSFJDDP
+	PlanetInvite:   tag.Name{ID: tag.UID{0x6FEE6335FCDBCE81, 0x4BA0971C012DEF93}, Canonic: "amp.member.planetinvite"},   // 3GXTJMCZ6VTU0NR84R3H0KVVWM
+	PlanetInviteOp: tag.Name{ID: tag.UID{0x282E9002D3DEC1D9, 0x4E7FE61F5118FF87}, Canonic: "amp.member.planetinviteop"}, // 185U805NYYS7DNWZZ63X8JJZW7
 
 	// ─── Home planet attributes ─────────────────────────────────────
-	HomeAttr: tag.Name{ID: tag.UID{0x92330C2085FE2E8D, 0xCAB8728DBB4B9FDC}, Canonic: "amp.home"}, // 4K6D6211GY5U6WPF3KJQXNR7YW
+	HomeAttr: tag.Name{ID: tag.UID{0x45A5C59F62D1113F, 0x73AEED98C41EFBFA}, Canonic: "amp.home"}, // 25NR2TYSQJ24ZR7CREM321XYZU
 
-	PlanetBinding:     tag.Name{ID: tag.UID{0x45F2F73219F58825, 0x90DC421D14D18395}, Canonic: "amp.home.planet.binding.tag"},               // 25YCVM46GPJ0KT1R223NBE30WP
-	PlanetStorageOpts: tag.Name{ID: tag.UID{0x9E17382947669A37, 0x07DC97D0A95DE3F2}, Canonic: "amp.home.planet.storage.planetstorageopts"}, // 4Y2WW2KJV6M8VHGR4RU2NPVSZK
+	PlanetBinding:     tag.Name{ID: tag.UID{0xD1107652908E11D6, 0x1B2B3BC082553787}, Canonic: "amp.home.planet.binding.tag"},               // 6J21V5544F27C1QBTVS215BEW7
+	PlanetStorageOpts: tag.Name{ID: tag.UID{0x69BFD182C13A9A31, 0xF66973A8296693D5}, Canonic: "amp.home.planet.storage.planetstorageopts"}, // 39RZ8S5H9UM8SZDUCMP0NQE4YP
 
 	// ─── System properties ──────────────────────────────────────────
-	SystemPropertyAttr: tag.Name{ID: tag.UID{0x630F4A145BAB11F9, 0xE8ED5B4238E5B2DE}, Canonic: "system.property"}, // 331X518QXC27WYJVBV88WFCDQY
+	SystemPropertyAttr: tag.Name{ID: tag.UID{0x2BA3C11AEAB12331, 0xCAFD58A215C24C83}, Canonic: "system.property"}, // 1CNG0JPUPJ4DSWPZBSN8BW4M43
 
-	SpaceReticleStyle:   tag.Name{ID: tag.UID{0x18E4F63E67E422D6, 0x17F08B25DE492E7D}, Canonic: "system.property.reticle.style"},   // 0SWMV3WTZ44CC1GW4C4RG4KCMX
-	SpaceReticleOverlay: tag.Name{ID: tag.UID{0xCF01C223372A95A2, 0x8A3210FCEDC27B00}, Canonic: "system.property.reticle.overlay"}, // 6G07126ETBKQJ8NDHHZMQW4YS0
-	SpaceSkybox:         tag.Name{ID: tag.UID{0x1AC918CE011E076F, 0x5D1F7AE3ECCBCC07}, Canonic: "system.property.skybox.space"},    // 0UT4DDW08Y0XRPU7VUWGQDRM07
+	SpaceReticleStyle:   tag.Name{ID: tag.UID{0x898D209EB3284EB4, 0x6854FCADE835E46C}, Canonic: "system.property.reticle.style"},   // 49JNH9XDT89UU6HP7WPRN3CT3D
+	SpaceReticleOverlay: tag.Name{ID: tag.UID{0x31C05BF7F1CE5245, 0x3A9ECBD90E6673D1}, Canonic: "system.property.reticle.overlay"}, // 1JS1EZGWFFB92MP7QCV476DWYJ
+	SpaceSkybox:         tag.Name{ID: tag.UID{0x101BF55A052215FA, 0x8E0BC10873E916AC}, Canonic: "system.property.skybox.space"},    // 0H3GUPN1922RX8W2Y111TYK5PD
 
 	// ─── Blob storage ───────────────────────────────────────────────
-	BlobAttr: tag.Name{ID: tag.UID{0x4A915C500F2D3874, 0xB31931484DA5C826}, Canonic: "amp.blob"}, // 2BK5F503TE71UC669J916UCK16
+	BlobAttr: tag.Name{ID: tag.UID{0x43839888952F19F9, 0xB576A64453AD2634}, Canonic: "amp.blob"}, // 23HFD8J59G37WVBXP68J9UU9JN
 
-	BlobRef:   tag.Name{ID: tag.UID{0x4C1E37BEF26C4D66, 0xFA01285C3D107CB8}, Canonic: "amp.blob.ref"},           // 2D3SVVXWMD9PMGN098CHYJ0Z5S
-	NodeBlobs: tag.Name{ID: tag.UID{0x47539BDD1AB3229D, 0xF4090FADFB02BF0B}, Canonic: "amp.blob.node.blobrefs"}, // 27BFEXU6PM4BFZ828GPRXH5GSC
+	BlobRef:   tag.Name{ID: tag.UID{0xAEE1E83EB38BBF5D, 0x17C1EF094E5F4850}, Canonic: "amp.blob.ref"},           // 5FW7N3XDWCRXFJGHGG1575YK2H
+	NodeBlobs: tag.Name{ID: tag.UID{0x306CC090FC4E717C, 0xFECED441B9B156B5}, Canonic: "amp.blob.node.blobrefs"}, // 1HEM091Z2FF5YGXMQN86WV2PPP
 
 	// ─── Tile-server registry — list of available raster / terrain / vector ───
 	// tile backends.  Each entry is a TileServer proto stored as one item
 	// under TileServer; consumers (TileService, manifold compositor) filter
 	// by Kind / Projection / region tags to assemble a layer stack.
-	TileServerAttr: tag.Name{ID: tag.UID{0x77636D4C74B07A5C, 0x4E706C9C313654B1}, Canonic: "tile.server"}, // 3RDEQNSX5HG9F4WW3DMHSMDP5J
+	TileServerAttr: tag.Name{ID: tag.UID{0xD5FC9ECEE1CD0384, 0xDD46B5FC1E37D2F4}, Canonic: "tile.server"}, // 6PZKGDXSFE0F2EUJPPZHG3GNRN
 
-	TileServer: tag.Name{ID: tag.UID{0xF096875D4AC9D6F1, 0x374FA1610FA629BB}, Canonic: "tile.server.tileserver"}, // 7HKU3PUKQ9UVSMFMX1D47UDBEV
+	TileServer: tag.Name{ID: tag.UID{0xE33FC73D7E59EC57, 0x935C14FC5D1E29A2}, Canonic: "tile.server.tileserver"}, // 737Z3MUZKTXJCT6R0NZJFJWBE2
 }
 
 const (

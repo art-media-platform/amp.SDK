@@ -34,24 +34,30 @@ func TestRegistry(t *testing.T) {
 		}
 	}
 
-	if spec.ID != (tag.Name{}.With("hello.sailor.World.Tag.Hello.av")).ID {
+	// Order is significant now (atomic hash of the canonic string): the same
+	// literals in the same order reproduce the UID; the invariant ties ID to
+	// the canonic string.
+	if spec.ID != (tag.Name{}.With("hello.sailor.av.Hello.World.Tag")).ID {
 		t.Fatalf("tag.With failed")
 	}
-	alias := someAttr.With("av").With("World.Hello.Tag")
+	if spec.ID != tag.UID_HashLiteral([]byte(spec.Canonic)) {
+		t.Fatalf("spec.ID != HashLiteral(Canonic)")
+	}
+	alias := someAttr.With("av").With("Hello.World.Tag")
 	if spec.ID != alias.ID {
 		t.Fatalf("tag.With failed")
 	}
-	if str := spec.ID.AsLabel(); str != "5D..XMVB" {
+	if str := spec.ID.AsLabel(); str != "2U..XHJF" {
 		t.Fatalf("unexpected spec.ID: %v", str)
 	}
 	if (tag.UID{}).Base32() != "0" {
 		t.Fatalf("tag.Name{}.Base32() failed")
 	}
 	base32 := spec.ID.Base32()
-	if base32 != "5D687SMNV09U54X4WVRST4XMVB" {
+	if base32 != "2UE627EB7UT34RQH99825EXHJF" {
 		t.Errorf("tag.UID.Base32() failed: %v", base32)
 	}
-	if str := spec.ID.Base16(); str != "0xAC320F89D3604E8A4E939BBE324ECF6A" {
+	if str := spec.ID.Base16(); str != "0x5A698476A8FAC8C97B4129408ADEC22E" {
 		t.Errorf("tag.UID.Base16() failed: %v", str)
 	}
 

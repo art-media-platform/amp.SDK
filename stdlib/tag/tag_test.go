@@ -11,25 +11,30 @@ import (
 
 func TestTag(t *testing.T) {
 	ampTags := tag.Name{}.With("..amp+.app.")
-	if ampTags.ID != tag.UID_FromName(".amp...").WithString("app") {
-		t.Fatalf("tag.Name{}.With().ID failed: %v", ampTags.ID)
+	if ampTags.Canonic != "amp.app" {
+		t.Fatalf("With() canonic failed: got %q", ampTags.Canonic)
+	}
+	// Invariant: a tag's UID is the atomic hash of its canonic string
+	// (order significant — no commutative literal fold).
+	if ampTags.ID != tag.UID_HashLiteral([]byte(ampTags.Canonic)) {
+		t.Fatalf("ID != HashLiteral(Canonic): %v", ampTags.ID)
 	}
 	name := ampTags.With("some-tag+thing")
-	if name.Canonic == "amp.app.some-tag.thing" {
+	if name.Canonic != "amp.app.some.tag.thing" {
 		t.Errorf("With() failed: got %q", name.Canonic)
 	}
-	if name.ID != ampTags.ID.WithName("some-tag").WithString("thing") {
-		t.Fatalf("WithExpr/WithToken failed: %v", name.ID)
+	if name.ID != tag.UID_HashLiteral([]byte(name.Canonic)) {
+		t.Fatalf("chained ID != HashLiteral(Canonic): %v", name.ID)
 	}
 	base32 := name.ID.Base32()
-	if base32 != "0GDTKNTPPYH4CR023GB3GWUPZC" {
+	if base32 != "5EEZ7JTVNT1D42251GSU28MQY9" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	parsed, err := tag.Parse(base32)
 	if err != nil || parsed.ID != name.ID {
 		t.Fatalf("UID_Parse(Base32) failed: got %v, err=%v", parsed, err)
 	}
-	if base16 := name.ID.Base16(); base16 != "0xF66654CD6BE811770086F50DFCD57EB" {
+	if base16 := name.ID.Base16(); base16 != "0xAD6FCF1CEE990B0821142FC68489DBC9" {
 		t.Fatalf("tag.UID.Base16() failed: got %v", base16)
 	}
 	if prefix, suffix := name.LeafTags(2); prefix != "amp.app.some" || suffix != "tag.thing" {
@@ -38,10 +43,13 @@ func TestTag(t *testing.T) {
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
 		holyExpr := tag.NameFrom(Genesis)
-		if holyExpr.ID.Base32() != "4B3NUTV61FST5RMSQT5159ZY0F" {
+		if holyExpr.ID.Base32() != "3EVFMJWNBJ2WG7QB93XK3ZYR2B" {
 			t.Fatalf("tag.NameFrom() failed: got %v", holyExpr.ID.Base32())
 		}
 
+		// Order is significant: reordered literals yield a DISTINCT UID (the
+		// commutative fold is removed).  Only an identity permutation — a
+		// shuffle that happens to reproduce the canonic order — preserves it.
 		parts := strings.Split(holyExpr.Canonic, ".")
 		for range 3773 {
 			rand.Shuffle(len(parts), func(i, j int) {
@@ -49,8 +57,12 @@ func TestTag(t *testing.T) {
 			})
 			tryExpr := strings.Join(parts, ".")
 			try := tag.NameFrom(tryExpr)
-			if try.ID[0] != 0x8a1d359d982ec64b || try.ID[1] != 0x79e2d9284a9ff80e {
-				t.Fatalf("tag literals commutation test failed: got %v", try)
+			if tryExpr == holyExpr.Canonic {
+				if try.ID != holyExpr.ID {
+					t.Fatalf("identity permutation changed UID: got %v", try)
+				}
+			} else if try.ID == holyExpr.ID {
+				t.Fatalf("reordered literals collided with canonic UID (commutativity not removed): %q", tryExpr)
 			}
 		}
 	}
@@ -73,6 +85,45 @@ func TestTag(t *testing.T) {
 	}
 	if b16 := tid.Base16(); b16 != "0xF777777777777777123456789ABCDEF0" {
 		t.Errorf("tag.UID.Base16() failed: got %v", b16)
+	}
+}
+
+func TestNameOrderAndIdentity(t *testing.T) {
+	// Plain multi-word names are order-significant (no commutative fold).
+	if tag.NameFrom("spaces.plan.tools").ID == tag.NameFrom("tools.plan.spaces").ID {
+		t.Fatal("plain-name UID must depend on word order")
+	}
+	if tag.NameFrom("hello world").ID == tag.NameFrom("world hello").ID {
+		t.Fatal("plain-name UID must depend on word order")
+	}
+
+	// A single literal hashes atomically — identity unchanged.
+	if tag.NameFrom("hello").ID != tag.UID_HashLiteral([]byte("hello")) {
+		t.Fatal("single-literal name must equal HashLiteral(word)")
+	}
+
+	// scheme:identifier names keep the name part and the identifier part
+	// SEPARATE — hash(name) combined with hash(:identifier).  This must never
+	// collapse into one atomic hash of the whole canonic string, or persisted
+	// wallet / DID identities orphan.
+	for _, expr := range []string{
+		"eth:0xabcdef1234567890abcdef1234567890abcdef12",
+		"did:key:z6MkExample",
+		"did:pkh:eip155:1:0xabcdef1234567890abcdef1234567890abcdef12",
+		"https://example.com/path",
+	} {
+		name := tag.NameFrom(expr)
+		split := tag.PathStart(name.Canonic)
+		if split < 0 {
+			t.Fatalf("%q: expected a URL split in canonic %q", expr, name.Canonic)
+		}
+		want := tag.UID_HashLiteral([]byte(name.Canonic[:split])).With(tag.UID_HashLiteral([]byte(name.Canonic[split:])))
+		if name.ID != want {
+			t.Fatalf("%q: scheme:identifier UID is not name+identifier combine", expr)
+		}
+		if name.ID == tag.UID_HashLiteral([]byte(name.Canonic)) {
+			t.Fatalf("%q: scheme:identifier UID collapsed to whole-string hash (regression)", expr)
+		}
 	}
 }
 

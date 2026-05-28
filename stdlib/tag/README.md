@@ -65,18 +65,22 @@ Warning: calling `NameFrom` on an inbound Base32 string re-hashes the *string* i
 
 ## Canonic Forms
 
-Tag literals are extracted from input text, folded to a canonic dotted form, and hashed. The fold is designed so a human typing the same idea in different shapes lands on the same hash:
+Tag literals are extracted from input text, reduced to a canonic dotted form, and finally hashed using Blake2S. The reduction is designed so a human typing the same words in different shapes lands on the same hash:
 
 ```
-"Hello World!"      → hello.world                    → 7K4XGBQ7879D4F228U0CU1N627
-"Hello, World!"     → hello.world                    → 7K4XGBQ7879D4F228U0CU1N627
-"hello  world"      → hello.world                    → 7K4XGBQ7879D4F228U0CU1N627
-"World, hello."     → world.hello                    → 7K4XGBQ7879D4F228U0CU1N627
+"Hello World!"      → hello.world                    (same UID)
+"Hello, World!"     → hello.world                    (same UID)
+"hello  world"      → hello.world                    (same UID)
+"world  hello"      → world.hello                    (DIFFERENT UID)
 ```
 
-Notice the fourth line: **word order doesn't change the hash**. Tag literals are summed commutatively, so a search for "hello world" and a search for "world hello" find the same content. This is helpful for search-result ranking — when there are a dozen words or more, the *presence* of particular words matters more than their order.
+The first three lines fold to the same canonic string (`hello.world`) and therefore the same UID — case, punctuation, and whitespace differences wash out.
 
-Most punctuation is dropped so searches degrade gracefully with leading/trailing brackets, quotes, and other syntactic noise (`<>`, `()`, `{}`, `""`, `[]`).
+Punctuation and other syntactic noise also washes out, except for URLs, described below.
+
+For worked examples — various inputs run through the fold alongside their canonic forms and UIDs — see [`golden/welcome-to-tags.out.txt`](golden/welcome-to-tags.out.txt).
+
+**Invariant:** for a plain name (no `/`, `:`, or `\`), a `tag.Name`'s `ID` is `UID_HashLiteral(Canonic)` — hash the canonic string, get the UID. When a name carries a URL / identifier part, the name part and the URL part hash separately and combine, so scheme:identifier UIDs stay stable (see *URLs Preserved* and *Identity Preserved* below).
 
 ## Acronyms Preserved
 
@@ -136,8 +140,6 @@ Tag UIDs can be cited as literals inside other tag expressions, allowing a tag's
 ```
 
 The cited UIDs become part of the new tag's content hash — a lightweight, cryptographically verifiable provenance chain. Geospatial tiles ([S2 cell IDs](https://s2geometry.io/)) can be cited the same way to bind tags to locations.
-
-Because literal combination is commutative, it also sketches a poor-man's secret split: several parties each hold one word, and only the *full* set combines to the unlocking UID — order-independent and all-or-nothing (unlike threshold schemes such as [Shamir's Secret Sharing](https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing), there is no partial recovery from a subset).
 
 ## JSON Support
 
