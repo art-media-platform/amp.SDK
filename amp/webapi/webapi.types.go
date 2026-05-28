@@ -4,20 +4,21 @@
 //
 // Field names MUST match the wire shape one-to-one — every external SDK
 // (TypeScript, C#, Swift, future Python) reflects against these names.  Do not
-// rename without version-bumping the API surface.
+// rename without version-bumping the API surface.  JSON keys are PascalCase,
+// matching the Go (and C#) identifiers — one identifier set across all
+// platforms.
 //
 // Field-type discipline:
 //   - tag.UID for fields that are ALWAYS UIDs (member IDs, item/edit/from
 //     IDs, citation triples, blob IDs).  The custom MarshalJSON /
-//     UnmarshalJSON on tag.UID encodes/decodes via base32 — wire shape is
-//     exactly the same string the previous string-typed surface produced.
+//     UnmarshalJSON on tag.UID encodes/decodes via base32 — string transport
+//     carries UIDs as base32, binary transport carries the fixed64 pair.
 //   - string for fields that may carry a canonic name OR a UID (channel,
-//     attr, planetTag, withdrawal subject before resolution) and for fields
+//     attr, PlanetTag, withdrawal subject before resolution) and for fields
 //     that are not UIDs at all (Bearer tokens, ISO timestamps, Eth
 //     addresses, free text).
 //   - omitzero (Go 1.24+) on optional tag.UID fields so a zero-UID
-//     suppresses the JSON entry, matching the previous omitempty behaviour
-//     of "" strings.
+//     suppresses the JSON entry, matching the omitempty behaviour of "".
 package webapi
 
 import (
@@ -33,71 +34,89 @@ import (
 // will be populated.  This mirrors the discriminated union in
 // `LoginCredentials` on the SDK side.
 type LoginRequest struct {
-	Scheme string `json:"scheme"`
+	Scheme string `json:"Scheme"`
 
 	// scheme = "wallet"  (Ethereum personal-sign / MetaMask)
-	Address   string `json:"address,omitempty"`
-	Signature string `json:"signature,omitempty"`
-	Nonce     string `json:"nonce,omitempty"`
+	Address   string `json:"Address,omitempty"`
+	Signature string `json:"Signature,omitempty"`
+	Nonce     string `json:"Nonce,omitempty"`
 
 	// scheme = "email"
-	Email    string `json:"email,omitempty"`
-	Password string `json:"password,omitempty"`
+	Email    string `json:"Email,omitempty"`
+	Password string `json:"Password,omitempty"`
 
 	// scheme = "memberToken"
-	MemberToken string `json:"memberToken,omitempty"`
+	MemberToken string `json:"MemberToken,omitempty"`
 
 	// scheme = "yubikey"
-	ChallengeResponse string `json:"challengeResponse,omitempty"`
+	ChallengeResponse string `json:"ChallengeResponse,omitempty"`
 
 	// scheme = "did"  (W3C DID 1.0 — did:key / did:pkh).  DID carries the full
 	// URI; the signature over the server-issued challenge reuses Signature +
 	// Nonce.  The challenge itself is server-stored keyed by Nonce (never on
 	// the wire), exactly like the wallet flow.
-	DID string `json:"did,omitempty"`
+	DID string `json:"DID,omitempty"`
 
 	// Optional planet binding requested by the caller.  Accepts a canonic
 	// tag.Name expression OR a base32 UID.  Empty = the host's home planet.
-	PlanetTag string `json:"planetTag,omitempty"`
+	PlanetTag string `json:"PlanetTag,omitempty"`
 }
 
 // LoginResponse is the body of a successful POST /api/v1/login.
 //
 // SessionToken stays as string — it's a 32-byte random Bearer, not a UID.
 type LoginResponse struct {
-	SessionToken string    `json:"sessionToken"`
-	ExpiresAt    int64     `json:"expiresAt"` // unix seconds
-	Member       AmpMember `json:"member"`
+	SessionToken string    `json:"SessionToken"`
+	ExpiresAt    int64     `json:"ExpiresAt"` // unix seconds
+	Member       AmpMember `json:"Member"`
 }
 
 // AmpMember describes the authenticated identity on the wire.  `Kind` is a
 // human-readable label (e.g. "Person") sourced from a `LawMemberKind_*`
 // definition (DESIGN-11); apps surface it but do not gate behavior on it.
 type AmpMember struct {
-	ID          tag.UID `json:"id"`
-	DisplayName string  `json:"displayName,omitempty"`
-	Email       string  `json:"email,omitempty"`
-	PlanetID    tag.UID `json:"planetID"`
-	Kind        string  `json:"kind,omitempty"`
-	Address     string  `json:"address,omitempty"` // populated for wallet-scheme members
+	ID          tag.UID `json:"ID"`
+	DisplayName string  `json:"DisplayName,omitempty"`
+	Email       string  `json:"Email,omitempty"`
+	PlanetID    tag.UID `json:"PlanetID"`
+	Kind        string  `json:"Kind,omitempty"`
+	Address     string  `json:"Address,omitempty"` // populated for wallet-scheme members
 }
 
 // SessionResponse is the body of GET /api/v1/session.
 type SessionResponse struct {
-	Member    AmpMember `json:"member"`
-	ExpiresAt int64     `json:"expiresAt"`
+	Member    AmpMember `json:"Member"`
+	ExpiresAt int64     `json:"ExpiresAt"`
 }
 
 // Email credential request/response shapes:
 //   - Request body for all three endpoints is the proto webapi.EmailCredential
-//     (defined in webapi.proto; decoded via protojson).
+//     (defined in webapi.proto; decoded via encoding/json).
 //   - EmailIssueResponse below echoes the seeded MemberID on /issue success.
 
 // EmailIssueResponse echoes the seeded MemberID so the caller (admin tool /
 // migration script) can record the wallet→email mapping without re-hashing.
 type EmailIssueResponse struct {
-	MemberID tag.UID `json:"memberID"`
-	Email    string  `json:"email"`
+	MemberID tag.UID `json:"MemberID"`
+	Email    string  `json:"Email"`
+}
+
+// WithdrawNote is the wire-shape carrier for DESIGN-15 withdrawal facts,
+// carried in TxOp.Withdraw / EditEntry.Withdraw / Item.Withdrawn /
+// SubscribeFrame.Withdraw.  It is never marshaled to binary, so its UID
+// fields are typed tag.UID / amp.Address and ride the JSON wire as base32
+// strings — consistent with every other webapi shape.
+//
+// Sender sets Reason/Rationale/Subject/Delegation; the server fills
+// WithdrawnAt/WithdrawnBy on the response side.  Reason rides as its enum
+// name ("Consent", …) via amp.WithdrawReason's marshaler.
+type WithdrawNote struct {
+	Reason      amp.WithdrawReason `json:"Reason"`
+	Rationale   string             `json:"Rationale,omitempty"`
+	Subject     tag.UID            `json:"Subject,omitzero"`      // signer is the implicit subject when zero
+	Delegation  *amp.Address       `json:"Delegation,omitempty"`  // nil when Subject == signer
+	WithdrawnAt string             `json:"WithdrawnAt,omitempty"` // ISO-8601 (response-side; sender leaves empty)
+	WithdrawnBy tag.UID            `json:"WithdrawnBy,omitzero"`  // response-side; sender leaves empty
 }
 
 // TxOpKind enumerates the verbs accepted in a /api/v1/tx batch.
@@ -125,47 +144,47 @@ const (
 // the DESIGN-15 facts (Reason/Rationale/Subject/Delegation).  Non-nil on a
 // non-withdraw op is ignored.
 type TxOp struct {
-	Kind     TxOpKind        `json:"kind"`
-	Channel  string          `json:"channel"`
-	Attr     string          `json:"attr"`
-	ItemID   string          `json:"itemID,omitempty"`
-	Value    json.RawMessage `json:"value,omitempty"`
-	Withdraw *WithdrawNote   `json:"withdraw,omitempty"`
+	Kind     TxOpKind        `json:"Kind"`
+	Channel  string          `json:"Channel"`
+	Attr     string          `json:"Attr"`
+	ItemID   string          `json:"ItemID,omitempty"`
+	Value    json.RawMessage `json:"Value,omitempty"`
+	Withdraw *WithdrawNote   `json:"Withdraw,omitempty"`
 }
 
 // TxRequest is the body of POST /api/v1/tx.
 type TxRequest struct {
-	Ops []TxOp `json:"ops"`
+	Ops []TxOp `json:"Ops"`
 
 	// PlanetTag is optional; defaults to the session's bound planet.  Lets a
 	// caller direct a write at the deploy's share planet without
 	// instantiating a second client.  Accepts canonic name or base32 UID.
-	PlanetTag string `json:"planetTag,omitempty"`
+	PlanetTag string `json:"PlanetTag,omitempty"`
 }
 
 // TxOpResult is the per-op outcome inside a TxResponse.
 type TxOpResult struct {
-	ItemID tag.UID `json:"itemID"`
-	EditID tag.UID `json:"editID"`
-	Error  string  `json:"error,omitempty"`
+	ItemID tag.UID `json:"ItemID"`
+	EditID tag.UID `json:"EditID"`
+	Error  string  `json:"Error,omitempty"`
 }
 
 // TxResponse is the body of POST /api/v1/tx on success.
 type TxResponse struct {
-	TxID    tag.UID      `json:"txID"`
-	Results []TxOpResult `json:"results"`
+	TxID    tag.UID      `json:"TxID"`
+	Results []TxOpResult `json:"Results"`
 }
 
 // Item is one CRDT entry on the wire.  Underscore-prefixed fields surface the
 // protocol's metadata (item / edit / from IDs, server-stamp time) alongside
-// the application value.
+// the application value — the `_` sigil keeps them clear of app data keys.
 type Item struct {
-	ItemID    tag.UID         `json:"_itemID"`
-	EditID    tag.UID         `json:"_editID"`
-	FromID    tag.UID         `json:"_fromID"`
-	UpdatedAt string          `json:"_updatedAt"` // ISO-8601, derived from ItemID's tag.UID
-	Value     json.RawMessage `json:"value"`
-	Withdrawn *WithdrawNote   `json:"_withdrawn,omitempty"`
+	ItemID    tag.UID         `json:"_ItemID"`
+	EditID    tag.UID         `json:"_EditID"`
+	FromID    tag.UID         `json:"_FromID"`
+	UpdatedAt string          `json:"_UpdatedAt"` // ISO-8601, derived from ItemID's tag.UID
+	Value     json.RawMessage `json:"Value"`
+	Withdrawn *WithdrawNote   `json:"_Withdrawn,omitempty"`
 }
 
 // ListResponse is the body of GET /api/v1/channels/:ch/attrs/:attr/items.
@@ -174,9 +193,9 @@ type Item struct {
 // pages); kept as string because the cursor is opaque from the client's
 // point of view — callers pass it back verbatim via the `?after=` query.
 type ListResponse struct {
-	Items   []Item `json:"items"`
-	HasMore bool   `json:"hasMore"`
-	Next    string `json:"next,omitempty"`
+	Items   []Item `json:"Items"`
+	HasMore bool   `json:"HasMore"`
+	Next    string `json:"Next,omitempty"`
 }
 
 // EditOp names what a chronicle entry did to its item.  Distinct from
@@ -201,13 +220,13 @@ const (
 //
 // Withdraw is non-nil only on withdraw entries (Op = EditOpWithdraw).
 type EditEntry struct {
-	EditID      tag.UID         `json:"editID"`
-	CommitTx    tag.UID         `json:"commitTx"`
-	Author      tag.UID         `json:"author"`
-	CommittedAt string          `json:"committedAt"` // ISO-8601, derived from CommitTx UID
-	Op          EditOp          `json:"op"`
-	Withdraw    *WithdrawNote   `json:"withdraw,omitempty"`
-	Body        json.RawMessage `json:"body,omitempty"`
+	EditID      tag.UID         `json:"EditID"`
+	CommitTx    tag.UID         `json:"CommitTx"`
+	Author      tag.UID         `json:"Author"`
+	CommittedAt string          `json:"CommittedAt"` // ISO-8601, derived from CommitTx UID
+	Op          EditOp          `json:"Op"`
+	Withdraw    *WithdrawNote   `json:"Withdraw,omitempty"`
+	Body        json.RawMessage `json:"Body,omitempty"`
 }
 
 // EditChainResponse is the body of GET /api/v1/channels/:ch/attrs/:attr/items/:itemID/edits.
@@ -217,14 +236,14 @@ type EditEntry struct {
 // first element, so an auditor can iterate one slice.  Sealed in for the
 // v300 wire freeze; new entry kinds extend EditOp without a shape change.
 type EditChainResponse struct {
-	Original *Item       `json:"original,omitempty"`
-	Edits    []EditEntry `json:"edits"`
+	Original *Item       `json:"Original,omitempty"`
+	Edits    []EditEntry `json:"Edits"`
 }
 
 // MediaResolveRequest is the body of POST /api/v1/media/resolve.
 //
 // Blob is an amp.Tag carrying the blob's identity + metadata:
-//   - Tag.UID_0/UID_1: blob ID (leading 16 bytes of plaintext hash)
+//   - Tag.UID: blob ID (leading 16 bytes of plaintext hash), base32
 //   - Tag.ContentType: MIME type
 //   - Tag.I + Tag.Units (= Bytes): plaintext byte length
 //   - Tag.URI: server-populated stream URL on response; ignored on request
@@ -235,13 +254,13 @@ type EditChainResponse struct {
 // host, and a vault outage is recoverable by republishing on whichever
 // host the SDK reaches next.
 type MediaResolveRequest struct {
-	PlanetTag string   `json:"planetTag,omitempty"`
-	Blob      *amp.Tag `json:"blob"`
+	PlanetTag string   `json:"PlanetTag,omitempty"`
+	Blob      *amp.Tag `json:"Blob"`
 }
 
 // SubscribeFrame is the WebSocket fan-out shape for /ws.  Clients send
-// {type:"subscribe"|"unsubscribe", channel, attr}; the server pushes
-// {type:"update"|"delete"|"withdraw", channel, attr, itemID, value?, editID?, fromID?}.
+// {Type:"subscribe"|"unsubscribe", Channel, Attr}; the server pushes
+// {Type:"update"|"delete"|"withdraw", Channel, Attr, ItemID, Value?, EditID?, FromID?}.
 //
 // Channel + Attr stay as string for the same canonic-or-UID reason as TxOp.
 // ItemID/EditID/FromID are typed UIDs.
@@ -250,22 +269,22 @@ type MediaResolveRequest struct {
 // full DESIGN-15 record so subscribers can reconstruct it without a
 // follow-up read.
 type SubscribeFrame struct {
-	Type      string          `json:"type"`
-	Channel   string          `json:"channel,omitempty"`
-	Attr      string          `json:"attr,omitempty"`
-	ItemID    tag.UID         `json:"itemID,omitzero"`
-	EditID    tag.UID         `json:"editID,omitzero"`
-	FromID    tag.UID         `json:"fromID,omitzero"`
-	Value     json.RawMessage `json:"value,omitempty"`
-	UpdatedAt string          `json:"updatedAt,omitempty"`
-	Withdraw  *WithdrawNote   `json:"withdraw,omitempty"`
-	Error     string          `json:"error,omitempty"`
+	Type      string          `json:"Type"`
+	Channel   string          `json:"Channel,omitempty"`
+	Attr      string          `json:"Attr,omitempty"`
+	ItemID    tag.UID         `json:"ItemID,omitzero"`
+	EditID    tag.UID         `json:"EditID,omitzero"`
+	FromID    tag.UID         `json:"FromID,omitzero"`
+	Value     json.RawMessage `json:"Value,omitempty"`
+	UpdatedAt string          `json:"UpdatedAt,omitempty"`
+	Withdraw  *WithdrawNote   `json:"Withdraw,omitempty"`
+	Error     string          `json:"Error,omitempty"`
 }
 
 // ErrorResponse is the body of every non-2xx /api/v1/* response.
 type ErrorResponse struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	Code    string `json:"Code"`
+	Message string `json:"Message"`
 }
 
 // Error codes are the client-facing error vocabulary carried on the

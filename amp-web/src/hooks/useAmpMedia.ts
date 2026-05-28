@@ -3,11 +3,11 @@ import { useAmpContext } from '../provider.js';
 import type { AmpMediaResult } from '../types.js';
 
 /**
- * useAmpMedia resolves a blob ID to a streamable URL via the caller-carries-the-
- * Tag path (POST /api/v1/media/resolve), falling back to the direct /www/{id}
+ * useAmpMedia resolves a blob UID to a streamable URL via the caller-carries-the-
+ * Tag path (POST /api/v1/media/resolve), falling back to the direct /www/{UID}
  * URL if resolve is unavailable.  Pass the result `url` to <img>/<video>/<audio>.
  */
-export function useAmpMedia(blobRefID: string): AmpMediaResult {
+export function useAmpMedia(blobUID: string): AmpMediaResult {
   const { adapter } = useAmpContext();
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +16,7 @@ export function useAmpMedia(blobRefID: string): AmpMediaResult {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!blobRefID) {
+    if (!blobUID) {
       setUrl(null);
       setLoading(false);
       return;
@@ -26,19 +26,19 @@ export function useAmpMedia(blobRefID: string): AmpMediaResult {
     setLoading(true);
     setError(null);
 
-    adapter.resolveMedia({ id: blobRefID })
+    adapter.resolveMedia({ UID: blobUID })
       .then(async (blob) => {
         if (cancelled) return;
-        setUrl(blob.streamURL ?? await adapter.mediaUrl(blobRefID));
-        setContentType(blob.contentType ?? null);
-        setByteSize(blob.byteSize ?? null);
+        setUrl(blob.URI ?? await adapter.mediaUrl(blobUID));
+        setContentType(blob.ContentType ?? null);
+        setByteSize(blob.I ?? null);
         setLoading(false);
       })
       .catch(async () => {
         // Resolve unavailable — fall back to the direct stream URL.
         if (cancelled) return;
         try {
-          setUrl(await adapter.mediaUrl(blobRefID));
+          setUrl(await adapter.mediaUrl(blobUID));
         } catch (err) {
           setError(err instanceof Error ? err : new Error(String(err)));
         }
@@ -46,7 +46,7 @@ export function useAmpMedia(blobRefID: string): AmpMediaResult {
       });
 
     return () => { cancelled = true; };
-  }, [adapter, blobRefID]);
+  }, [adapter, blobUID]);
 
   return { url, loading, contentType, byteSize, error };
 }

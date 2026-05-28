@@ -3,10 +3,12 @@
  *
  * REST:      {vaultUrl}/api/v1/...           (amp.SDK/amp/webapi)
  * WebSocket: {vaultUrl}/ws                   (flat SubscribeFrame fan-out)
- * Media:     {vaultUrl}/www/{id}
+ * Media:     {vaultUrl}/www/{UID}
  * Auth:      Authorization: Bearer {sessionToken}
  *
- * Native fetch + WebSocket — no external dependencies.
+ * Wire JSON keys are PascalCase and UIDs are base32 strings — the SDK passes
+ * UID strings straight through (no fixed64 codec).  Native fetch + WebSocket,
+ * no external dependencies.
  */
 
 import type { AmpAdapter } from './adapter.js';
@@ -19,11 +21,11 @@ import {
 } from './crypto/keystore.js';
 import type { AmpCrypto, KeyPair } from './crypto/types.js';
 import type {
+  Address,
   AmpItemMeta,
   AmpMember,
   AmpQueryOpts,
   BlobRef,
-  CitationRef,
   LoginCredentials,
   SubscriptionEvent,
   TagResolution,
@@ -31,6 +33,7 @@ import type {
   TxResult,
   UploadOpts,
   WalletChallenge,
+  WithdrawNote,
   WithdrawOpts,
   WithdrawReason,
 } from './types.js';
@@ -48,8 +51,13 @@ export interface AmpWebClientOpts {
 }
 
 /** The wire Item shape returned by list/read endpoints (webapi.Item). */
-interface WireItem extends AmpItemMeta {
-  value: Record<string, unknown>;
+interface WireItem {
+  _ItemID: string;
+  _EditID: string;
+  _FromID: string;
+  _UpdatedAt: string;
+  Value: Record<string, unknown>;
+  _Withdrawn?: WireWithdrawNote;
 }
 
 export class AmpWebClient implements AmpAdapter {
@@ -115,12 +123,12 @@ export class AmpWebClient implements AmpAdapter {
 
   private mapItem<T>(item: WireItem): T & AmpItemMeta {
     return {
-      ...(item.value as Record<string, unknown>),
-      _itemID: item._itemID,
-      _editID: item._editID,
-      _fromID: item._fromID,
-      _updatedAt: item._updatedAt,
-      _withdrawn: item._withdrawn,
+      ...(item.Value as Record<string, unknown>),
+      _ItemID: item._ItemID,
+      _EditID: item._EditID,
+      _FromID: item._FromID,
+      _UpdatedAt: item._UpdatedAt,
+      _Withdrawn: item._Withdrawn ? wireToWithdrawNote(item._Withdrawn) : undefined,
     } as T & AmpItemMeta;
   }
 
@@ -133,7 +141,7 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   // getDIDChallenge fetches a challenge bound to a DID URI (did:key / did:pkh)
-  // for the scheme="did" login path.  Shares the single-use nonce store with the
+  // for the Scheme="did" login path.  Shares the single-use nonce store with the
   // wallet challenge; a did:pkh:eip155 DID gets the SIWE message, did:key a
   // generic domain-bound one.
   async getDIDChallenge(did: string): Promise<WalletChallenge> {
@@ -144,25 +152,25 @@ export class AmpWebClient implements AmpAdapter {
 
   async login(credentials: LoginCredentials): Promise<AmpMember> {
     const data = await this.apiFetch<{
-      sessionToken: string;
-      expiresAt: number;
-      member: AmpMember;
+      SessionToken: string;
+      ExpiresAt: number;
+      Member: AmpMember;
     }>('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
 
-    this.sessionToken = data.sessionToken;
+    this.sessionToken = data.SessionToken;
     this.member = {
-      ...data.member,
-      planetID: data.member.planetID || this.planetTag,
+      ...data.Member,
+      PlanetID: data.Member.PlanetID || this.planetTag,
     };
 
     // Install the member's device-local EncryptKey so seal/open work without
     // an out-of-band setEncryptKey call.  Best-effort: a storage failure leaves
     // BYOK uninstalled (seal/open then throw a clear "no EncryptKey" error)
     // rather than failing the login itself.
-    await this.installDeviceEncryptKey(this.member.id);
+    await this.installDeviceEncryptKey(this.member.ID);
 
     this.authListeners.forEach(cb => cb(this.member));
     this.connectWs();
@@ -231,30 +239,33 @@ export class AmpWebClient implements AmpAdapter {
     if (opts?.after) params.set('after', opts.after);
     if (opts?.planetTag) params.set('planetTag', opts.planetTag);
     const qs = params.toString();
-    const out = await this.apiFetch<{ items: WireItem[]; hasMore: boolean; next?: string }>(
+    const out = await this.apiFetch<{ Items: WireItem[]; HasMore: boolean; Next?: string }>(
       this.itemsPath(channel, attr) + (qs ? `?${qs}` : ''),
     );
     return {
-      data: (out.items ?? []).map(item => this.mapItem<T>(item)),
-      hasMore: out.hasMore,
-      next: out.next,
+      data: (out.Items ?? []).map(item => this.mapItem<T>(item)),
+      hasMore: out.HasMore,
+      next: out.Next,
     };
   }
 
   async tx(ops: TxOp[], planetTag?: string): Promise<TxResult[]> {
-    const out = await this.apiFetch<{ txID: string; results: TxResult[] }>('/tx', {
+    const wireOps = ops.map(op =>
+      op.Withdraw ? { ...op, Withdraw: withdrawNoteToWire(op.Withdraw) } : op,
+    );
+    const out = await this.apiFetch<{ TxID: string; Results: TxResult[] }>('/tx', {
       method: 'POST',
-      body: JSON.stringify({ ops, planetTag }),
+      body: JSON.stringify({ Ops: wireOps, PlanetTag: planetTag }),
     });
-    return out.results ?? [];
+    return out.Results ?? [];
   }
 
   async create(channel: string, attr: string, value: Record<string, unknown>): Promise<string> {
-    const out = await this.apiFetch<{ results: TxResult[] }>(
+    const out = await this.apiFetch<{ Results: TxResult[] }>(
       this.itemsPath(channel, attr),
       { method: 'POST', body: JSON.stringify(value) },
     );
-    return out.results?.[0]?.itemID ?? '';
+    return out.Results?.[0]?.ItemID ?? '';
   }
 
   async upsert(channel: string, attr: string, itemID: string, value: Record<string, unknown>): Promise<void> {
@@ -269,9 +280,15 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   async withdraw(channel: string, attr: string, itemID: string, opts: WithdrawOpts): Promise<void> {
+    const body = withdrawNoteToWire({
+      Reason: opts.reason,
+      Rationale: opts.rationale,
+      Subject: opts.subject,
+      Delegation: opts.delegation,
+    });
     await this.apiFetch(this.itemsPath(channel, attr, itemID, 'withdraw'), {
       method: 'POST',
-      body: JSON.stringify(opts),
+      body: JSON.stringify(body),
     });
   }
 
@@ -282,11 +299,11 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   async resolveTags(exprs: string[]): Promise<TagResolution[]> {
-    const out = await this.apiFetch<{ results: TagResolution[] }>('/tag/resolve', {
+    const out = await this.apiFetch<{ Results: TagResolution[] }>('/tag/resolve', {
       method: 'POST',
-      body: JSON.stringify({ exprs }),
+      body: JSON.stringify({ Exprs: exprs }),
     });
-    return out.results ?? [];
+    return out.Results ?? [];
   }
 
   // ── Media ─────────────────────────────────────────────────────────
@@ -316,18 +333,21 @@ export class AmpWebClient implements AmpAdapter {
   async resolveMedia(blob: BlobRef): Promise<BlobRef> {
     return this.apiFetch<BlobRef>('/media/resolve', {
       method: 'POST',
-      body: JSON.stringify({ blob }),
+      body: JSON.stringify({ Blob: blob }),
     });
   }
 
-  async mediaUrl(blobRefID: string): Promise<string> {
-    return `${this.vaultUrl}/www/${encodeURIComponent(blobRefID)}`;
+  async mediaUrl(blobUID: string): Promise<string> {
+    return `${this.vaultUrl}/www/${encodeURIComponent(blobUID)}`;
   }
 
-  // ── Citations ─────────────────────────────────────────────────────
+  // ── Addresses (cross-planet CRDT-cell references) ─────────────────
+  //
+  // An Address is an opaque base32 string on the wire; the SDK passes it
+  // through unchanged.
 
-  citation(ref: CitationRef): CitationRef {
-    return { ...ref };
+  address(ref: Address): Address {
+    return ref;
   }
 
   // ── WebSocket subscriptions ───────────────────────────────────────
@@ -344,13 +364,13 @@ export class AmpWebClient implements AmpAdapter {
       this.wsSubscriptions.set(key, subs);
     }
     subs.add(callback);
-    this.wsSend({ type: 'subscribe', channel, attr });
+    this.wsSend({ Type: 'subscribe', Channel: channel, Attr: attr });
 
     return () => {
       subs!.delete(callback);
       if (subs!.size === 0) {
         this.wsSubscriptions.delete(key);
-        this.wsSend({ type: 'unsubscribe', channel, attr });
+        this.wsSend({ Type: 'unsubscribe', Channel: channel, Attr: attr });
       }
     };
   }
@@ -372,25 +392,12 @@ export class AmpWebClient implements AmpAdapter {
     this.ws.onopen = () => {
       for (const key of this.wsSubscriptions.keys()) {
         const [channel, attr] = key.split(':');
-        this.wsSend({ type: 'subscribe', channel, attr });
+        this.wsSend({ Type: 'subscribe', Channel: channel, Attr: attr });
       }
     };
 
     this.ws.onmessage = (evt) => {
-      let frame: {
-        type: string;
-        channel?: string;
-        attr?: string;
-        itemID?: string;
-        editID?: string;
-        fromID?: string;
-        value?: Record<string, unknown>;
-        updatedAt?: string;
-        reason?: string;
-        rationale?: string;
-        subject?: string;
-        delegation?: CitationRef;
-      };
+      let frame: WireSubscribeFrame;
       try {
         frame = JSON.parse(evt.data as string);
       } catch {
@@ -398,7 +405,7 @@ export class AmpWebClient implements AmpAdapter {
       }
       const event = frameToEvent(frame);
       if (!event) return;
-      const subs = this.wsSubscriptions.get(`${frame.channel}:${frame.attr}`);
+      const subs = this.wsSubscriptions.get(`${frame.Channel}:${frame.Attr}`);
       if (subs) subs.forEach(cb => cb(event));
     };
 
@@ -449,44 +456,74 @@ export class AmpWebClient implements AmpAdapter {
   }
 }
 
+/** Wire-shape WithdrawNote (PascalCase; base32 UID strings). */
+interface WireWithdrawNote {
+  Reason?: WithdrawReason;
+  Rationale?: string;
+  WithdrawnAt?: string;
+  WithdrawnBy?: string;  // base32 member UID
+  Subject?: string;      // base32 member UID
+  Delegation?: string;   // amp.Address packed base32
+}
+
+/** Wire-shape SubscribeFrame (PascalCase). */
+interface WireSubscribeFrame {
+  Type: string;
+  Channel?: string;
+  Attr?: string;
+  ItemID?: string;
+  EditID?: string;
+  FromID?: string;
+  Value?: Record<string, unknown>;
+  UpdatedAt?: string;
+  Withdraw?: WireWithdrawNote;
+}
+
 /** Decode a flat webapi.SubscribeFrame into a typed SubscriptionEvent. */
-function frameToEvent(frame: {
-  type: string;
-  itemID?: string;
-  editID?: string;
-  fromID?: string;
-  value?: Record<string, unknown>;
-  updatedAt?: string;
-  reason?: string;
-  rationale?: string;
-  subject?: string;
-  delegation?: CitationRef;
-}): SubscriptionEvent | null {
-  if (!frame.itemID) return null;
-  switch (frame.type) {
+function frameToEvent(frame: WireSubscribeFrame): SubscriptionEvent | null {
+  if (!frame.ItemID) return null;
+  switch (frame.Type) {
     case 'update':
       return {
         type: 'update',
-        itemID: frame.itemID,
-        value: frame.value ?? {},
-        editID: frame.editID ?? '',
-        fromID: frame.fromID ?? '',
-        updatedAt: frame.updatedAt,
+        ItemID: frame.ItemID,
+        Value: frame.Value ?? {},
+        EditID: frame.EditID ?? '',
+        FromID: frame.FromID ?? '',
+        UpdatedAt: frame.UpdatedAt,
       };
     case 'delete':
-      return { type: 'delete', itemID: frame.itemID, editID: frame.editID, fromID: frame.fromID };
+      return { type: 'delete', ItemID: frame.ItemID, EditID: frame.EditID, FromID: frame.FromID };
     case 'withdraw':
       return {
         type: 'withdraw',
-        itemID: frame.itemID,
-        editID: frame.editID,
-        fromID: frame.fromID,
-        reason: (frame.reason ?? 'Retracted') as WithdrawReason,
-        rationale: frame.rationale,
-        subject: frame.subject,
-        delegation: frame.delegation,
+        ItemID: frame.ItemID,
+        EditID: frame.EditID,
+        FromID: frame.FromID,
+        Withdraw: wireToWithdrawNote(frame.Withdraw),
       };
     default:
       return null;
   }
+}
+
+/** Translate a wire WithdrawNote into the SDK shape (base32 UID strings). */
+function wireToWithdrawNote(w: WireWithdrawNote | undefined): WithdrawNote {
+  return {
+    Reason: w?.Reason ?? 'Retracted',
+    Rationale: w?.Rationale,
+    WithdrawnAt: w?.WithdrawnAt,
+    WithdrawnBy: w?.WithdrawnBy || undefined,
+    Subject: w?.Subject || undefined,
+    Delegation: w?.Delegation || undefined,
+  };
+}
+
+/** Translate an SDK WithdrawNote into the wire shape. */
+function withdrawNoteToWire(note: WithdrawNote): Record<string, unknown> {
+  const out: Record<string, unknown> = { Reason: note.Reason };
+  if (note.Rationale) out.Rationale = note.Rationale;
+  if (note.Subject) out.Subject = note.Subject;
+  if (note.Delegation) out.Delegation = note.Delegation;
+  return out;
 }

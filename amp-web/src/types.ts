@@ -1,34 +1,56 @@
 /**
  * Core types for @art-media-platform/web.
  *
- * These mirror the canonical wire contract in amp.SDK/amp/webapi
- * (webapi.types.go) in web-friendly JSON form.  Field names and JSON tags
- * match the Go structs one-to-one — the Go side is the spec.
+ * Two casing conventions, by design:
+ *   - WIRE DATA types (serialized to/from the /api/v1/* JSON) use PascalCase
+ *     keys — one identifier set across Go, C#, and TypeScript (the Go side is
+ *     the spec, amp.SDK/amp/webapi).  UIDs ride as base32 strings.
+ *   - SDK ERGONOMIC types (option bags, hook return shapes, callbacks) use
+ *     camelCase — they never serialize; this keeps the React surface idiomatic.
  */
 
 // ── Authentication ──────────────────────────────────────────────────
 
 export interface AmpMember {
-  id: string;            // member tag.UID, base32
-  displayName: string;
-  email?: string;        // present when the auth scheme exposes it
-  planetID: string;      // planet tag.UID, base32
-  kind?: string;         // tag.UID resolving to a LawMemberKind_* (DESIGN-11)
-  address?: string;      // 0x-prefixed; present for wallet-scheme members
+  ID: string;            // member tag.UID, base32
+  DisplayName: string;
+  Email?: string;        // present when the auth scheme exposes it
+  PlanetID: string;      // planet tag.UID, base32
+  Kind?: string;         // tag.UID resolving to a LawMemberKind_* (DESIGN-11)
+  Address?: string;      // 0x-prefixed; present for wallet-scheme members
 }
 
-/** Discriminated union mirroring webapi.LoginRequest (the `scheme` field). */
+/**
+ * Discriminated union mirroring webapi.LoginRequest.  The `Scheme` key is
+ * PascalCase like every wire field; the scheme VALUES ('wallet', 'email', …)
+ * stay lowercase — the server dispatches on them verbatim.
+ */
 export type LoginCredentials =
-  | { scheme: 'wallet'; address: string; signature: string; nonce: string }
-  | { scheme: 'email'; email: string; password: string }
-  | { scheme: 'memberToken'; memberToken: string }
-  | { scheme: 'yubikey'; challengeResponse: string }
-  | { scheme: 'did'; did: string; signature: string; nonce: string };
+  | { Scheme: 'wallet'; Address: string; Signature: string; Nonce: string }
+  | { Scheme: 'email'; Email: string; Password: string }
+  | { Scheme: 'memberToken'; MemberToken: string }
+  | { Scheme: 'yubikey'; ChallengeResponse: string }
+  | { Scheme: 'did'; DID: string; Signature: string; Nonce: string };
 
-/** The personal-sign challenge a wallet scheme signs before login. */
+/**
+ * EmailCredential is the shared request body for the email-credential
+ * endpoints — one shape, three endpoints, each consumes a subset:
+ *   - POST /api/v1/admin/credentials/email/issue   Email + Password
+ *   - POST /api/v1/login/email/recover             Email
+ *   - POST /api/v1/login/email/redeem              Token + NewPassword (+ PlanetTag)
+ */
+export interface EmailCredential {
+  Email?: string;
+  Password?: string;
+  Token?: string;
+  NewPassword?: string;
+  PlanetTag?: string;
+}
+
+/** The personal-sign challenge a wallet/DID scheme signs before login. */
 export interface WalletChallenge {
-  nonce: string;
-  message: string;
+  Nonce: string;
+  Message: string;
 }
 
 export interface AmpAuth {
@@ -42,41 +64,42 @@ export interface AmpAuth {
 // ── Tag resolution (server canonicalization) ────────────────────────
 
 export interface TagResolution {
-  expr: string;
-  canonic: string;
-  id: string;            // base32 tag.UID
+  Expr: string;
+  Canonic: string;
+  ID: string;            // base32 tag.UID
 }
 
-// ── Withdrawal & citations (DESIGN-15 / DESIGN-12) ──────────────────
+// ── Withdrawal & addresses (DESIGN-15 / DESIGN-12) ──────────────────
 
 export type WithdrawReason =
-  | 'Consent' | 'Inaccuracy' | 'Outdated' | 'Coerced'
+  | 'NoReason' | 'Consent' | 'Inaccuracy' | 'Outdated' | 'Coerced'
   | 'Forgotten' | 'Departed' | 'InviteRecall' | 'Retracted';
 
-/** A (planetID, nodeID, itemID) triple addressing a record across planets. */
-export interface CitationRef {
-  planetID?: string;     // omitted = same planet as the request
-  nodeID?: string;
-  itemID?: string;
-}
+/**
+ * An Address points at a CRDT cell, optionally across planets.  On the wire
+ * it is a single base32 string packing 3–5 UIDs (element / address / +planet)
+ * — one token, one decode.  Treat it as opaque: the SDK passes through the
+ * string the server produced.
+ */
+export type Address = string;
 
 export interface WithdrawNote {
-  reason: WithdrawReason;
-  rationale?: string;
-  withdrawnAt: string;   // ISO-8601, server-observed
-  withdrawnBy: string;   // signer's member UID
-  subject?: string;      // whose consent is withdrawn (omitted = signer)
-  delegation?: CitationRef;
+  Reason: WithdrawReason;
+  Rationale?: string;
+  WithdrawnAt?: string;  // ISO-8601, server-observed (response only)
+  WithdrawnBy?: string;  // signer's member UID, base32 (response only)
+  Subject?: string;      // whose consent is withdrawn, base32 (omitted = signer)
+  Delegation?: Address;  // base32 packed Address proving delegated authority
 }
 
 // ── CRDT item metadata ──────────────────────────────────────────────
 
 export interface AmpItemMeta {
-  _itemID: string;
-  _editID: string;
-  _fromID: string;
-  _updatedAt: string;        // ISO-8601, derived from the item's tag.UID
-  _withdrawn?: WithdrawNote;  // present when a Withdraw cites this item
+  _ItemID: string;
+  _EditID: string;
+  _FromID: string;
+  _UpdatedAt: string;         // ISO-8601, derived from the item's tag.UID
+  _Withdrawn?: WithdrawNote;  // present when a Withdraw cites this item
 }
 
 // ── Query ───────────────────────────────────────────────────────────
@@ -103,30 +126,32 @@ export interface AmpQueryResult<T> {
 
 export type TxOpKind = 'create' | 'upsert' | 'remove' | 'withdraw';
 
-/** One CRDT op inside a /api/v1/tx batch. */
+/**
+ * One CRDT op inside a /api/v1/tx batch (wire shape, PascalCase).
+ *
+ * For withdraw ops, populate `Withdraw` (a WithdrawNote sub-object) with
+ * Reason/Rationale/Subject/Delegation.  Non-nil = active variant.
+ */
 export interface TxOp {
-  kind: TxOpKind;
-  channel: string;
-  attr: string;
-  itemID?: string;
-  value?: Record<string, unknown>;
-  reason?: WithdrawReason;     // withdraw ops only
-  rationale?: string;         // withdraw ops only
-  subject?: string;           // withdraw ops only
-  delegation?: CitationRef;   // withdraw ops only
+  Kind: TxOpKind;
+  Channel: string;
+  Attr: string;
+  ItemID?: string;
+  Value?: Record<string, unknown>;
+  Withdraw?: WithdrawNote;     // withdraw ops only
 }
 
 export interface TxResult {
-  itemID: string;
-  editID: string;
-  error?: string;
+  ItemID: string;
+  EditID: string;
+  Error?: string;
 }
 
 export interface WithdrawOpts {
   reason: WithdrawReason;
   rationale?: string;
-  subject?: string;           // defaults to the signer when omitted
-  delegation?: CitationRef;   // cites the record proving delegated authority
+  subject?: string;           // base32 member UID; defaults to the signer when omitted
+  delegation?: Address;       // base32 Address of the record proving delegated authority
 }
 
 export interface AmpMutationResult {
@@ -142,11 +167,18 @@ export interface AmpMutationResult {
 
 // ── Media / Blobs ───────────────────────────────────────────────────
 
+/**
+ * BlobRef mirrors the amp.Tag the server returns from /upload and
+ * /media/resolve.  UID is the blob's base32 tag.UID; URI is the stream URL
+ * (server-populated on resolve); I carries the plaintext byte length when
+ * Units = Bytes.
+ */
 export interface BlobRef {
-  id: string;              // blob tag.UID, base32
-  streamURL?: string;      // /www/{id} on the vault — set by upload + resolve
-  contentType?: string;
-  byteSize?: number;
+  UID: string;             // blob tag.UID, base32
+  URI?: string;            // /www/{UID} stream URL — set by upload + resolve
+  ContentType?: string;
+  I?: number;              // plaintext byte length (when Units = Bytes)
+  Units?: number;
 }
 
 export interface UploadOpts {
@@ -174,17 +206,16 @@ export interface AmpMediaResult {
 // ── Subscription events ─────────────────────────────────────────────
 //
 // Decoded from the flat webapi.SubscribeFrame the server pushes over /ws.
+// Data identifiers stay PascalCase (wire-derived); `type` is the union
+// discriminant.
 
 export type SubscriptionEvent =
-  | { type: 'update'; itemID: string; value: Record<string, unknown>; editID: string; fromID: string; updatedAt?: string }
-  | { type: 'delete'; itemID: string; editID?: string; fromID?: string }
+  | { type: 'update'; ItemID: string; Value: Record<string, unknown>; EditID: string; FromID: string; UpdatedAt?: string }
+  | { type: 'delete'; ItemID: string; EditID?: string; FromID?: string }
   | {
       type: 'withdraw';
-      itemID: string;
-      editID?: string;
-      fromID?: string;
-      reason: WithdrawReason;
-      rationale?: string;
-      subject?: string;
-      delegation?: CitationRef;
+      ItemID: string;
+      EditID?: string;
+      FromID?: string;
+      Withdraw: WithdrawNote;
     };

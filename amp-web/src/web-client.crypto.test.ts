@@ -36,7 +36,7 @@ beforeEach(() => {
     const url = String(input);
     if (url.endsWith('/api/v1/login')) {
       return new Response(
-        JSON.stringify({ sessionToken: 'tok', expiresAt: 0, member: { id: MEMBER, planetID: 'planet' } }),
+        JSON.stringify({ SessionToken: 'tok', ExpiresAt: 0, Member: { ID: MEMBER, PlanetID: 'planet' } }),
         { status: 200, headers: { 'content-type': 'application/json' } },
       );
     }
@@ -60,7 +60,7 @@ function newAdapter(storage: MemoryKeyStorage): AmpWebClient {
 describe('AmpWebClient BYOK auto-install', () => {
   it('seals/opens after login without an explicit setEncryptKey', async () => {
     const amp = newAdapter(new MemoryKeyStorage());
-    await amp.login({ scheme: 'memberToken', memberToken: 'whatever' });
+    await amp.login({ Scheme: 'memberToken', MemberToken: 'whatever' });
 
     const sealed = await amp.seal(enc.encode('OPENROUTER-LIVE'));
     const opened = await amp.open(sealed);
@@ -72,12 +72,12 @@ describe('AmpWebClient BYOK auto-install', () => {
     const storage = new MemoryKeyStorage();
 
     const first = newAdapter(storage);
-    await first.login({ scheme: 'memberToken', memberToken: 'whatever' });
+    await first.login({ Scheme: 'memberToken', MemberToken: 'whatever' });
     const sealed = await first.seal(enc.encode('CESIUM-ION-LIVE'));
     await first.logout();
 
     const second = newAdapter(storage);
-    await second.login({ scheme: 'memberToken', memberToken: 'whatever' });
+    await second.login({ Scheme: 'memberToken', MemberToken: 'whatever' });
     const opened = await second.open(sealed);
 
     expect(dec.decode(opened)).toBe('CESIUM-ION-LIVE');
@@ -85,7 +85,7 @@ describe('AmpWebClient BYOK auto-install', () => {
 
   it('clears the key on logout — seal then throws', async () => {
     const amp = newAdapter(new MemoryKeyStorage());
-    await amp.login({ scheme: 'memberToken', memberToken: 'whatever' });
+    await amp.login({ Scheme: 'memberToken', MemberToken: 'whatever' });
     await amp.logout();
 
     await expect(amp.seal(enc.encode('after logout'))).rejects.toThrow(/no EncryptKey/);

@@ -40,13 +40,13 @@ export function useAmpQuery<T>(
     return adapter.subscribe(channel, attr, (event: SubscriptionEvent) => {
       if (event.type === 'update') {
         setData(prev => {
-          const idx = prev.findIndex(row => row._itemID === event.itemID);
+          const idx = prev.findIndex(row => row._ItemID === event.ItemID);
           const updated = {
-            ...event.value,
-            _itemID: event.itemID,
-            _editID: event.editID,
-            _fromID: event.fromID,
-            _updatedAt: new Date().toISOString(),
+            ...event.Value,
+            _ItemID: event.ItemID,
+            _EditID: event.EditID,
+            _FromID: event.FromID,
+            _UpdatedAt: new Date().toISOString(),
           } as Row;
           if (idx >= 0) {
             const next = [...prev];
@@ -56,17 +56,14 @@ export function useAmpQuery<T>(
           return [...prev, updated];
         });
       } else if (event.type === 'delete') {
-        setData(prev => prev.filter(row => row._itemID !== event.itemID));
+        setData(prev => prev.filter(row => row._ItemID !== event.ItemID));
       } else if (event.type === 'withdraw') {
         // The original item stays visible; surface the withdrawal companion.
-        setData(prev => prev.map(row => row._itemID === event.itemID
-          ? { ...row, _withdrawn: {
-              reason: event.reason,
-              rationale: event.rationale,
-              withdrawnAt: new Date().toISOString(),
-              withdrawnBy: event.fromID ?? '',
-              subject: event.subject,
-              delegation: event.delegation,
+        setData(prev => prev.map(row => row._ItemID === event.ItemID
+          ? { ...row, _Withdrawn: {
+              ...event.Withdraw,
+              WithdrawnAt: event.Withdraw.WithdrawnAt ?? new Date().toISOString(),
+              WithdrawnBy: event.Withdraw.WithdrawnBy ?? event.FromID ?? '',
             } }
           : row));
       }
@@ -75,7 +72,7 @@ export function useAmpQuery<T>(
 
   const loadMore = useCallback(async () => {
     if (!hasMore || data.length === 0) return;
-    const lastID = data[data.length - 1]._itemID;
+    const lastID = data[data.length - 1]._ItemID;
     setLoading(true);
     try {
       const result = await adapter.query<T>(channel, attr, {

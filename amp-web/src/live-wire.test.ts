@@ -49,16 +49,16 @@ run('live BYOK over app.www', () => {
     const amp = new AmpWebClient({ vaultUrl: VAULT, planetTag: PLANET });
 
     const ch = await amp.getWalletChallenge(address);
-    await amp.login({ scheme: 'wallet', address, signature: personalSign(ch.message, priv), nonce: ch.nonce });
+    await amp.login({ Scheme: 'wallet', Address: address, Signature: personalSign(ch.Message, priv), Nonce: ch.Nonce });
 
     // No setEncryptKey: seal-to-self uses the auto-installed device key.
     const secret = new TextEncoder().encode('CESIUM-ION-LIVE-' + Math.random().toString(36).slice(2));
     const sealedB64 = bytesToBase64(await amp.seal(secret));
 
     const [res] = await amp.tx([
-      { kind: 'create', channel: 'users', attr: 'api_keys_overrides', value: { cesium: sealedB64 } },
+      { Kind: 'create', Channel: 'users', Attr: 'api_keys_overrides', Value: { cesium: sealedB64 } },
     ]);
-    const back = await amp.query<{ cesium: string }>('users', 'api_keys_overrides', { itemID: res.itemID });
+    const back = await amp.query<{ cesium: string }>('users', 'api_keys_overrides', { itemID: res.ItemID });
     expect(back.data[0]?.cesium).toBe(sealedB64); // host stored the bytes opaque
 
     const opened = await amp.open(base64ToBytes(back.data[0]!.cesium));

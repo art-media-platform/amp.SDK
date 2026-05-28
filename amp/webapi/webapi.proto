@@ -4,9 +4,10 @@ syntax = "proto3";
 // the contract between amp web/native SDKs and an amp host (amp.exe).
 //
 // Field names MUST match the wire shape one-to-one — every external SDK
-// (TypeScript, C#, Swift, future Python) reflects against these names.  JSON
-// is encoded/decoded via protojson, which projects each proto field name to
-// lowerCamelCase on the wire (Tag → "tag", BrandSnapshot → "brandSnapshot").
+// (TypeScript, C#, Swift, future Python) reflects against these names.  These
+// messages are encoded/decoded via encoding/json (not protojson) so the
+// base32 UID marshalers in amp.support.json.go apply: JSON keys are PascalCase
+// and UIDs ride as base32 strings.
 package webapi;
 
 option csharp_namespace = "art.media.platform.webapi";
@@ -61,20 +62,8 @@ message EmailCredential {
     string              PlanetTag   = 5;
 }
 
-
-// WithdrawNote is the wire-shape carrier for DESIGN-15 withdrawal facts.
-// Used both in request-side TxOp (sender sets Reason/Rationale/Subject/
-// Delegation; server fills WithdrawnAt/WithdrawnBy) and response-side
-// alongside read Items / EditEntries (server populates all fields from the
-// recorded withdrawal).
-//
-// Non-nil in a carrying message (TxOp.Withdraw, EditEntry.Withdraw, Item.
-// Withdrawn, SubscribeFrame.Withdraw) marks the op/record as a withdrawal.
-message WithdrawNote {
-    amp.WithdrawReason  Reason       = 1;
-    string              Rationale    = 2;
-    amp.Tag             Subject      = 3;    // signer is implicit subject when nil
-    amp.Address         Delegation   = 4;    // nil when Subject == signer
-    string              WithdrawnAt  = 5;    // ISO-8601 (response-side; sender leaves empty)
-    amp.Tag             WithdrawnBy  = 6;    // response-side; sender leaves empty
-}
+// WithdrawNote (the wire-shape carrier for DESIGN-15 withdrawal facts) is a
+// hand-written Go struct in webapi.types.go, not a proto message: it is never
+// marshaled to binary, and as a struct its UID fields are typed tag.UID /
+// amp.Address so they ride the JSON wire as base32 strings — consistent with
+// every other webapi shape.

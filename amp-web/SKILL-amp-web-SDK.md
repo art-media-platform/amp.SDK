@@ -102,30 +102,32 @@ Without one of these, anonymous reads against the planet tag fall through to the
 ```
 POST /api/v1/login
   Body: LoginCredentials
-  Response: { sessionToken: string, expiresAt: number, member: AmpMember }
+  Response: { SessionToken: string, ExpiresAt: number, Member: AmpMember }
 
 POST /api/v1/logout
   Header: Authorization: Bearer <token>
 
 GET  /api/v1/session
   Header: Authorization: Bearer <token>
-  Response: { member: AmpMember, expiresAt: number }
+  Response: { Member: AmpMember, ExpiresAt: number }
 ```
 
-`LoginCredentials` is a discriminated union:
+`LoginCredentials` is a discriminated union.  Keys are PascalCase like every
+wire field; the `Scheme` *values* stay lowercase (the server dispatches on
+them verbatim):
 
 ```typescript
 type LoginCredentials =
-  | { scheme: 'email';      email: string; password: string }
-  | { scheme: 'memberToken'; memberToken: string }
-  | { scheme: 'yubikey';    challengeResponse: string }
-  | { scheme: 'wallet';     address: string; signature: string; nonce: string }
-  | { scheme: 'did';        did: string; signature: string; nonce: string };
+  | { Scheme: 'email';      Email: string; Password: string }
+  | { Scheme: 'memberToken'; MemberToken: string }
+  | { Scheme: 'yubikey';    ChallengeResponse: string }
+  | { Scheme: 'wallet';     Address: string; Signature: string; Nonce: string }
+  | { Scheme: 'did';        DID: string; Signature: string; Nonce: string };
 ```
 
 The unified `/api/v1/login` is **shipped**: `wallet`, `email`, and `did` are fully wired and Bearer-issuing; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "Unsupported"` until they land — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `code` (e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/wallet/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
 
-**DID scheme (W3C DID 1.0 — login only).** `did` proves control of the key a DID URI names: fetch a challenge with `?did=<uri>`, sign it, and submit `{ scheme: 'did', did, signature, nonce }`.  Shipped methods: **`did:key`** (Ed25519) and **`did:pkh:eip155`** (Ethereum wallet).  A `did:pkh:eip155:*:0x…` login folds to the *same* MemberID as a `wallet` login over that address (`eth:lc(addr)`) — two URI spellings of one key, one member.  A DID whose method/curve isn't wired yet (e.g. `did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) returns the same 501 `Unsupported`.  This is DID-Auth — Verifiable Credentials (issuer-signed claims) are out of scope.
+**DID scheme (W3C DID 1.0 — login only).** `did` proves control of the key a DID URI names: fetch a challenge with `?did=<uri>`, sign it, and submit `{ Scheme: 'did', DID, Signature, Nonce }`.  Shipped methods: **`did:key`** (Ed25519) and **`did:pkh:eip155`** (Ethereum wallet).  A `did:pkh:eip155:*:0x…` login folds to the *same* MemberID as a `wallet` login over that address (`eth:lc(addr)`) — two URI spellings of one key, one member.  A DID whose method/curve isn't wired yet (e.g. `did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) returns the same 501 `Unsupported`.  This is DID-Auth — Verifiable Credentials (issuer-signed claims) are out of scope.
 
 **Email scheme additionally exposes recovery + admin-issue endpoints:**
 
@@ -139,11 +141,11 @@ MemberID for the email scheme = `tag.NameFrom("email:lc(addr)").ID` — mirror o
 
 ```typescript
 interface AmpMember {
-  id: string;                  // member tag.UID, base32
-  displayName: string;
-  email?: string;
-  planetID: string;            // planet tag.UID, base32
-  kind?: string;               // tag.UID resolving to a LawMemberKind_* (DESIGN-11). Default: Person.
+  ID: string;                  // member tag.UID, base32
+  DisplayName: string;
+  Email?: string;
+  PlanetID: string;            // planet tag.UID, base32
+  Kind?: string;               // tag.UID resolving to a LawMemberKind_* (DESIGN-11). Default: Person.
 }
 ```
 
@@ -152,27 +154,30 @@ interface AmpMember {
 ```
 GET  /api/v1/channels/{channel}/attrs/{attr}/items
      ?after=<itemID>&limit=<n>&planetTag=<canonic|UID>
-     Response: { items: Item[], hasMore: boolean, next?: string }
+     Response: { Items: Item[], HasMore: boolean, Next?: string }
 
 GET  /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}
      ?planetTag=<canonic|UID>
      Response: Item
 ```
 
+URL query params (`?after=`, `?limit=`, `?planetTag=`) stay lowerCamelCase —
+they are URL params, not JSON body fields.
+
 `channel` and `attr` in the URL path can be either canonic names (`projects`, `labels`) or pre-resolved base32 UIDs — the server parses through `tag.Parse` so both forms work. `planetTag` defaults to the session's bound planet; pass it explicitly to read from the deploy's share planet (anonymous reads — see §6.4) or any other reachable planet.
 
 ```typescript
 interface Item {
-  _itemID:    string;           // tag.UID, base32
-  _editID:    string;           // latest edit's tag.UID
-  _fromID:    string;           // author member ID (only present if reader has access)
-  _updatedAt: string;           // ISO-8601 — derived from item's tag.UID
-  value:      any;              // the application payload
-  _withdrawn?: WithdrawNote;    // present if a Withdraw cites this item — see §7
+  _ItemID:    string;           // tag.UID, base32
+  _EditID:    string;           // latest edit's tag.UID
+  _FromID:    string;           // author member ID (only present if reader has access)
+  _UpdatedAt: string;           // ISO-8601 — derived from item's tag.UID
+  Value:      any;              // the application payload
+  _Withdrawn?: WithdrawNote;    // present if a Withdraw cites this item — see §7
 }
 ```
 
-`_updatedAt` is `tag.UID`-ordered, not strictly clock-monotonic across hosts. Two writers on different hosts may produce items with identical `_updatedAt` strings; LWW tiebreak is by lexicographic compare of `_itemID`. The list endpoint returns items sorted by `_itemID` (tag.UID byte order); paginate with `?after=<last-itemID>`.
+`_UpdatedAt` is `tag.UID`-ordered, not strictly clock-monotonic across hosts. Two writers on different hosts may produce items with identical `_UpdatedAt` strings; LWW tiebreak is by lexicographic compare of `_ItemID`. The list endpoint returns items sorted by `_ItemID` (tag.UID byte order); paginate with `?after=<last-itemID>`.
 
 Cross-planet reads ride the same path with `?planetTag=<other-planet>`; the server resolves the canonic name via `tag.Parse` (decodes base32 UIDs verbatim instead of re-hashing them).
 
@@ -182,15 +187,14 @@ Cross-planet reads ride the same path with `?planetTag=<other-planet>`; the serv
 
 ```
 POST   /api/v1/tx
-       Body: { ops: TxOp[], planetTag?: string }
-       Response: { txID, results: Array<{ itemID, editID }> }
+       Body: { Ops: TxOp[], PlanetTag?: string }
+       Response: { TxID, Results: Array<{ ItemID, EditID }> }
 
-TxOp =
-  | { kind: 'create',   channel, attr, value, itemID? }
-  | { kind: 'upsert',   channel, attr, itemID, value }
-  | { kind: 'remove',   channel, attr, itemID }
-  | { kind: 'withdraw', channel, attr, itemID, reason, rationale?,
-                        subject?, delegation? }   // see §7 + DESIGN-15
+TxOp =                                                          // Kind values stay lowercase
+  | { Kind: 'create',   Channel, Attr, Value, ItemID? }
+  | { Kind: 'upsert',   Channel, Attr, ItemID, Value }
+  | { Kind: 'remove',   Channel, Attr, ItemID }
+  | { Kind: 'withdraw', Channel, Attr, ItemID, Withdraw: WithdrawNote }   // see §7 + DESIGN-15
 
 POST   /api/v1/channels/{channel}/attrs/{attr}/items                       ─ sugar: tx with one create op
 PUT    /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}              ─ sugar: tx with one upsert op
@@ -212,28 +216,31 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 POST   /api/v1/upload
        Content-Type: multipart/form-data
        Fields: file (required), channel, attr, planetTag (optional)
-       Response: BlobTag
+       Response: amp.Tag (UID + URI + ContentType + I/Units=Bytes)
 
 POST   /api/v1/media/resolve
-       Body: { planetTag?, blob: BlobTag }
-       Response: BlobTag (with streamURL filled by the host's asset publisher)
+       Body: { planetTag?, blob: amp.Tag }
+       Response: amp.Tag (with URI filled by the host's asset publisher)
 
-GET    /www/{id}
+GET    /www/{UID}
        Response: media stream with Range support, conditional GET, long-cache headers
 ```
 
 ```typescript
-interface BlobTag {
-  id: string;              // blob tag.UID
-  streamURL?: string;      // /www/{id} on the vault — set by upload + resolve
-  contentType?: string;
-  byteSize?: number;
+// BlobRef mirrors the amp.Tag the server returns (the substrate's universal
+// address+meta carrier).  PascalCase keys, base32 UID — one identifier set:
+interface BlobRef {
+  UID: string;             // blob content hash (leading 16 bytes), base32
+  URI?: string;            // server-populated stream URL (/www/{UID})
+  ContentType?: string;    // MIME type
+  I?: number;              // plaintext byte length (when Units = Bytes)
+  Units?: number;
 }
 ```
 
-**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the `BlobTag` you read from the cabinet to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{id}` URL.  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No DESIGN-9 cold-store window for filenames or ContentType; no persistent publisher state to migrate.
+**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}` URL.  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No DESIGN-9 cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
-After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobTag.id, { blobTag, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them.
+After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them.
 
 Encrypted blobs are decrypted on demand by `app.www` using the session's epoch key store; the served bytes are plaintext over the (TLS-protected) wire to the client. Plaintext is never persisted on the vault disk.
 
@@ -246,26 +253,27 @@ WS  /ws?token=<sessionToken>
 Frame format (JSON):
 
 ```json
-// Client → Server
-{"type": "subscribe",   "channel": "<id>", "attr": "<id>"}
-{"type": "unsubscribe", "channel": "<id>", "attr": "<id>"}
+// Client → Server  (Type values stay lowercase)
+{"Type": "subscribe",   "Channel": "<id>", "Attr": "<id>"}
+{"Type": "unsubscribe", "Channel": "<id>", "Attr": "<id>"}
 
 // Server → Client
-{"type": "update", "channel": "<id>", "attr": "<id>",
- "itemID": "<id>", "value": {...},
- "editID": "<id>", "fromID": "<id>", "updatedAt": "..."}
-{"type": "delete",  "channel": "<id>", "attr": "<id>", "itemID": "<id>",
- "editID": "<id>", "fromID": "<id>"}
-{"type": "withdraw","channel": "<id>", "attr": "<id>", "itemID": "<id>",
- "editID": "<id>", "fromID": "<id>",
- "reason": "<WithdrawReason>", "rationale": "...",
- "subject": "<member-UID>",            // omitted when subject == fromID
- "delegation": { "planetID": "...", "nodeID": "...", "itemID": "..." }
-                                       // omitted when subject == fromID
+{"Type": "update", "Channel": "<id>", "Attr": "<id>",
+ "ItemID": "<id>", "Value": {...},
+ "EditID": "<id>", "FromID": "<id>", "UpdatedAt": "..."}
+{"Type": "delete",  "Channel": "<id>", "Attr": "<id>", "ItemID": "<id>",
+ "EditID": "<id>", "FromID": "<id>"}
+{"Type": "withdraw","Channel": "<id>", "Attr": "<id>", "ItemID": "<id>",
+ "EditID": "<id>", "FromID": "<id>",
+ "Withdraw": {                         // WithdrawNote sub-object
+   "Reason": "<WithdrawReason>", "Rationale": "...",
+   "Subject": "<base32 UID>",                         // omitted when subject == FromID
+   "Delegation": "<base32 Address>"                   // omitted when subject == FromID
+ }
 }
 ```
 
-`fromID` is always the TxMsg signer (the member who authored the op). On a `withdraw` frame, `subject` names whose consent is being withdrawn — equal to `fromID` in the common case (signer is the subject), distinct when an authorized delegate (Memorial, GDPR delegation per DESIGN-14) speaks on the subject's behalf. `delegation` cites the record proving that authority. See §7 + DESIGN-15.
+`FromID` is always the TxMsg signer (the member who authored the op). On a `withdraw` frame, `Withdraw.Subject` names whose consent is being withdrawn — equal to `FromID` in the common case (signer is the subject), distinct when an authorized delegate (Memorial, GDPR delegation per DESIGN-14) speaks on the subject's behalf. `Withdraw.Delegation` is a base32-packed `amp.Address` citing the record proving that authority. `Subject`/`WithdrawnBy` are plain base32 UID strings. See §7 + DESIGN-15.
 
 Subscriptions are per-`(channel, attr)` and deliver every item event on that attr. To scope subscribe by item, partition the data into per-scope attrs at write time (e.g., `widgets/instance.{memberID}` rather than `widgets/instance` filtered by ownerID).
 
@@ -282,9 +290,9 @@ Thin wrappers over §4. Hooks share a single `AmpWebClient` via `<AmpProvider>`.
 ```tsx
 const { member, login, logout, isAuthenticated, loading } = useAmpAuth();
 
-await login({ scheme: 'email', email, password });
-await login({ scheme: 'wallet', address, signature, nonce });
-await login({ scheme: 'did', did, signature, nonce });
+await login({ Scheme: 'email', Email: email, Password: password });
+await login({ Scheme: 'wallet', Address: address, Signature: signature, Nonce: nonce });
+await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: nonce });
 ```
 
 **Wallet sign-in (SIWE + multi-wallet).** The `'wallet'` scheme is **EIP-4361 (Sign-In with Ethereum)** over any EVM wallet. Discover the user's wallet(s) with **EIP-6963** so the picker shows each by name + icon — the brand lives in the UI, never on the wire (MetaMask, Coinbase, Rainbow, … all flow through the same `personal_sign`):
@@ -297,8 +305,8 @@ window.dispatchEvent(new Event('eip6963:requestProvider'));   // each wallet ann
 // user picks `provider` from the list (render info.name + info.icon), then:
 const [address] = await provider.request({ method: 'eth_requestAccounts' });
 const challenge = await client.getWalletChallenge(address);   // server builds the domain-bound SIWE message
-const signature = await provider.request({ method: 'personal_sign', params: [challenge.message, address] });
-await login({ scheme: 'wallet', address, signature, nonce: challenge.nonce });
+const signature = await provider.request({ method: 'personal_sign', params: [challenge.Message, address] });
+await login({ Scheme: 'wallet', Address: address, Signature: signature, Nonce: challenge.Nonce });
 ```
 
 The host renders the EIP-4361 message bound to its own domain (anti-phishing); `getWalletChallenge` takes the address so the canonical SIWE serialization stays server-side.
@@ -307,8 +315,8 @@ The host renders the EIP-4361 message bound to its own domain (anti-phishing); `
 
 ```tsx
 const challenge = await client.getDIDChallenge(did);   // GET …/login/challenge?did=<uri>
-const signature = await signChallenge(did, challenge.message);  // ed25519 for did:key; personal_sign for did:pkh:eip155
-await login({ scheme: 'did', did, signature, nonce: challenge.nonce });
+const signature = await signChallenge(did, challenge.Message);  // ed25519 for did:key; personal_sign for did:pkh:eip155
+await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: challenge.Nonce });
 ```
 
 For `did:pkh:eip155` the signer is the same EVM-wallet `personal_sign` as above (the DID just carries the address), and the resulting member is identical to the `wallet` path. For `did:key` the signer is whatever holds the Ed25519 private key (client-custody is an open UX question — see PRD-did-identity §9).
@@ -319,8 +327,8 @@ For `did:pkh:eip155` the signer is the same EVM-wallet `personal_sign` as above 
 const { data, loading, hasMore, loadMore, refetch } =
   useAmpQuery<ProjectSnapshot>('projects', 'snapshot', {
     limit: 50,
-    orderBy: '_updatedAt',
-    filter: { ownerId: member.id },
+    orderBy: '_UpdatedAt',
+    filter: { ownerId: member.ID },
   });
 ```
 
@@ -333,23 +341,23 @@ const { tx, create, upsert, remove, withdraw, loading } = useAmpMutation();
 
 // One TxMsg, many ops — atomic, single signature, single MemberProof:
 const results = await tx([
-  { kind: 'upsert', channel: 'projects', attr: 'labels',   itemID: l1, value: lv1 },
-  { kind: 'upsert', channel: 'projects', attr: 'labels',   itemID: l2, value: lv2 },
-  { kind: 'upsert', channel: 'projects', attr: 'articles', itemID: a1, value: av1 },
-  { kind: 'remove', channel: 'projects', attr: 'circles',  itemID: c1 },
+  { Kind: 'upsert', Channel: 'projects', Attr: 'labels',   ItemID: l1, Value: lv1 },
+  { Kind: 'upsert', Channel: 'projects', Attr: 'labels',   ItemID: l2, Value: lv2 },
+  { Kind: 'upsert', Channel: 'projects', Attr: 'articles', ItemID: a1, Value: av1 },
+  { Kind: 'remove', Channel: 'projects', Attr: 'circles',  ItemID: c1 },
 ]);
 
 // Single-op convenience wrappers (each is one one-op tx under the hood):
 const itemID = await create('projects', 'snapshot', value);
-await upsert('users', 'profile', member.id, patch);
+await upsert('users', 'profile', member.ID, patch);
 await remove('projects', 'snapshot', itemID);
 await withdraw('shares', 'link', itemID, {
   reason: 'Departed',
   rationale: 'left the team',
-  // subject + delegation are optional — omit when the signer is the subject:
-  subject: deceasedMember.id,                            // DESIGN-15 delegated path
-  delegation: { nodeID: '<delegation-channel>',
-                itemID: '<delegation-record-itemID>' },
+  // subject + delegation are optional — omit when the signer is the subject.
+  // (WithdrawOpts keys are camelCase — an SDK option bag, never serialized.)
+  subject: deceasedMember.ID,                            // DESIGN-15 delegated path
+  delegation: delegationAddress,                         // base32-packed amp.Address
 });
 ```
 
@@ -366,8 +374,8 @@ const blobRef = await upload(file, 'projects', {
   attr: 'media',
   metadata: { caption, tags: ['vacation'] },
 });
-// store blobRef.id inside an item:
-await upsert('projects', 'media', blobRef.id, {
+// store blobRef.UID inside an item:
+await upsert('projects', 'media', blobRef.UID, {
   blobRef,
   filename: file.name,
 });
@@ -376,8 +384,8 @@ await upsert('projects', 'media', blobRef.id, {
 ### 5.5 `useAmpMedia()`
 
 ```tsx
-const { url, loading, contentType, byteSize } = useAmpMedia(blobRefID);
-// url is /www/{id}; pass to <img>, <video>, <audio>, or download <a>
+const { url, loading, contentType, byteSize } = useAmpMedia(blobUID);
+// url is /www/{UID}; pass to <img>, <video>, <audio>, or download <a>
 ```
 
 ### 5.6 Sealed-box helpers (§6.2)
@@ -389,22 +397,24 @@ const sealedBytes = await seal(plaintext);            // anonymous-sender to sel
 const plaintext   = await open(sealedBytes);
 ```
 
-### 5.7 Cross-planet citation
+### 5.7 Cross-planet Address
 
 ```tsx
-// citation() is a client method (a pure builder — no hook wrapper needed) that
-// assembles a (planetID, nodeID, itemID) triple for shares and withdraw delegations:
-const cite = client.citation({ planetID, nodeID, itemID });   // tag.UID triple
+// An amp.Address rides the wire as a single opaque base32 string packing 3–5
+// UIDs (element / address / +planet) — superset of the substrate's Citation.
+// The SDK treats it as opaque: pass through the string the server produced.
+// client.address() is an identity passthrough kept for symmetry.
+const addr = client.address(addressFromServer);   // base32 string in, string out
 
 // Reading a planet you can reach (a public share, or a cross-planet record) is a
 // planet-scoped query today — pass planetTag to query.  The one-call
-// resolve(citation) REST primitive lands at M5 (PRD-app-www §8):
+// resolve(address) REST primitive lands at M5 (PRD-app-www §8):
 const { data } = await client.query(channel, attr, { itemID, planetTag: planetID });
 ```
 
 ### 5.8 Deterministic UIDs — names → `tag.UID`
 
-`(channel, attr, itemID)` are `tag.UID`s derived from string names by amp's `tag.Name` canonicalization — a regex split on whitespace + punctuation, a lowercase rule with all-caps preservation, URL-trigger-char (`:` / `/` / `\`) handling, and a commutative word fold. **Don't reimplement this in JS / Swift / C#** — a subtly-wrong port yields UIDs that 404 on attrs that "should exist," and the failure stays invisible until a write lands in the wrong place. Two first-class ways get the right UID without porting the algorithm:
+`(channel, attr, itemID)` are `tag.UID`s derived from string names by amp's `tag.Name` canonicalization — a regex split on whitespace + punctuation, a lowercase rule with all-caps preservation, URL-trigger-char (`:` / `/` / `\`) handling, and an atomic word fold (word order is significant). **Don't reimplement this in JS / Swift / C#** — a subtly-wrong port yields UIDs that 404 on attrs that "should exist," and the failure stays invisible until a write lands in the wrong place. Two first-class ways get the right UID without porting the algorithm:
 
 #### Build-time — `forge` codegen (preferred for well-known names)
 
@@ -437,7 +447,7 @@ GET  /api/v1/tag/resolve?expr=amp.member.profile   → { expr, canonic, id }
 POST /api/v1/tag/resolve   Body: { exprs: [...] }   → { results: [{ expr, canonic, id }, ...] }
 ```
 
-**Already holding a UID?** A 26-char base32 `tag.UID` (e.g. `member.id`, or an `itemID` from a read) is already in wire form — pass it straight through. `resolveTag` round-trips a UID back to the same UID rather than re-hashing it, so mixing names and UIDs in one `resolveTags` batch is safe.
+**Already holding a UID?** A 26-char base32 `tag.UID` (e.g. `member.ID`, or an `itemID` from a read) is already in wire form — pass it straight through. `resolveTag` round-trips a UID back to the same UID rather than re-hashing it, so mixing names and UIDs in one `resolveTags` batch is safe.
 
 ---
 
@@ -454,7 +464,7 @@ POST /api/v1/tag/resolve   Body: { exprs: [...] }   → { results: [{ expr, cano
 | Maplable concept | channel | attr | itemID convention | Notes |
 |---|---|---|---|---|
 | Project full state | `projects` | `snapshot` | server project UID | Per-entity item split recommended; see §6.3 |
-| Project listing metadata | `projects` | `meta` | same as snapshot itemID | `{ name, thumbnail, _updatedAt, ownerId, templatePlanet }` |
+| Project listing metadata | `projects` | `meta` | same as snapshot itemID | `{ name, thumbnail, _UpdatedAt, ownerId, templatePlanet }` |
 | Project share state | `projects` | `share` | same itemID | `{ isPublic, shareUrl, sharedAt, viewCount }` |
 | User profile | `users` | `profile` | member UID | `{ displayName, firstName, lastName, theme, accentColor }` |
 | User defaults | `users` | `defaults` | member UID | per-field `{value, ts}` for LWW |
@@ -483,7 +493,7 @@ function ApiKeysForm() {
     // Read-modify-write: each slot is sealed independently
     const current = await getApiKeysItem();          // returns Record<slot, base64 string>
     const next = { ...current, [slot]: sealed };
-    await upsert('users', 'api_keys_overrides', member.id, next);
+    await upsert('users', 'api_keys_overrides', member.ID, next);
   }
 }
 ```
@@ -493,7 +503,7 @@ import { useAmpCrypto, base64ToBytes } from '@art-media-platform/web';
 
 async function useCesiumIonToken() {
   const { open } = useAmpCrypto();
-  const { data } = await client.query<{ cesium?: string }>('users', 'api_keys_overrides', { itemID: member.id });
+  const { data } = await client.query<{ cesium?: string }>('users', 'api_keys_overrides', { itemID: member.ID });
   const item = data[0];
   if (!item?.cesium) return null;
   const plaintext = new TextDecoder().decode(await open(base64ToBytes(item.cesium)));
@@ -520,7 +530,7 @@ For vanilla-JS consumers without React, the same surface is reachable as client 
 
 ```ts
 const client = new AmpWebClient({ vaultUrl, planetTag });
-await client.login({ scheme: 'email', email, password });
+await client.login({ Scheme: 'email', Email: email, Password: password });
 // login() auto-installs the member's device-local EncryptKey, so seal/open
 // are ready here.  Call client.setEncryptKey(...) only to override with a key
 // sourced elsewhere; null on logout.
@@ -538,7 +548,7 @@ Where the third-party API supports it (OpenRouter scoped tokens, Stripe Connect 
 `PlanetEpoch.MaxTxMsgSize` defaults to 4 MB. Large monolithic JSON values (a multi-megabyte project snapshot blob) replicate the entire payload on every save and burn quota fast. Two corrections:
 
 - **Split by entity bucket.** Prefer `projects/labels/{itemID}`, `projects/articles/{itemID}`, etc., over a single `projects/snapshot/{itemID}` blob. The CRDT-merge surface narrows to the changed entities; cross-device subscribe fires per change.
-- **Move binaries to BlobRef.** Anything larger than ~64 KB belongs on the BlobRef path (§4.3), not inline JSON. The item references `blobRef.id` and the blob streams via `/www/{id}`.
+- **Move binaries to BlobRef.** Anything larger than ~64 KB belongs on the BlobRef path (§4.3), not inline JSON. The item references `blobRef.UID` and the blob streams via `/www/{UID}`.
 
 ### 6.4 Public reads & sharing
 
@@ -564,7 +574,7 @@ AMP_TOKEN=<bearer> amp.exe planet create --tag <name>
 }
 ```
 
-The portal validates `tag.Parse(Name).id == UID` at boot — refuses to start with a mismatched pair so silent drift between brand JSON and the planet-genesis ceremony surfaces immediately.
+The portal validates `tag.Parse(Name).ID == UID` at boot — refuses to start with a mismatched pair so silent drift between brand JSON and the planet-genesis ceremony surfaces immediately.
 
 #### Anonymous read URL shape
 
@@ -603,41 +613,38 @@ A given human can have many `MemberTag`s — one per planet they belong to. Cros
 
 The chronicle is immutable. `DELETE /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}` writes a tombstone — a TxOp that the resolved-state view interprets as "no longer authoritative." Bytes survive in the journal bound by retention.
 
-For records about a member that the member wants disowned (a project shared on a public planet, a profile attribution), the right primitive is **DESIGN-15 Withdraw** — a parallel signed signal. `withdraw('shares', 'link', itemID, { reason, rationale })` writes a Withdraw record. The original item stays signed and visible; consumers see both the original and the withdrawal, and choose honoring policy (suppress, redact, recontextualize). Withdraw reasons (the `WithdrawReason` union — the wire value is the bare string) are `Consent`, `Inaccuracy`, `Outdated`, `Coerced`, `Forgotten`, `Departed`, `InviteRecall`, `Retracted`.
+For records about a member that the member wants disowned (a project shared on a public planet, a profile attribution), the right primitive is **DESIGN-15 Withdraw** — a parallel signed signal. `withdraw('shares', 'link', itemID, { reason, rationale })` writes a Withdraw record. The original item stays signed and visible; consumers see both the original and the withdrawal, and choose honoring policy (suppress, redact, recontextualize). Withdraw reasons (the `WithdrawReason` union — the wire value is the bare enum name) are `Consent`, `Inaccuracy`, `Outdated`, `Coerced`, `Forgotten`, `Departed`, `InviteRecall`, `Retracted` (plus `NoReason` = zero sentinel).
 
 ### 7.1 Wire surface
 
 A `withdraw` op carries the full DESIGN-15 information set:
 
 ```typescript
-interface WithdrawOp {
+// WithdrawOpts is the SDK option bag (camelCase — never serialized directly;
+// the client maps it to the wire shape):
+interface WithdrawOpts {
   reason:     WithdrawReason;     // one of the WithdrawReason values (bare string)
   rationale?: string;             // free-text; for human / future-being readers
-  subject?:   string;             // base32 UID — defaults to signer if omitted
-  delegation?: CitationRef;       // proves authority when subject != signer
-}
-
-interface CitationRef {
-  planetID?: string;              // omitted = same planet as the request
-  nodeID?:   string;              // base32 UID
-  itemID?:   string;              // base32 UID
+  subject?:   string;             // base32 member UID — defaults to signer if omitted
+  delegation?: string;            // base32-packed amp.Address; proves authority when subject != signer
 }
 ```
 
-On reads, the same shape comes back as the `_withdrawn` companion alongside the original Item:
+On reads, the withdrawal comes back as the `_Withdrawn` companion alongside the
+original Item — wire shape, PascalCase:
 
 ```typescript
 interface WithdrawNote {
-  reason:      WithdrawReason;
-  rationale?:  string;
-  withdrawnAt: string;            // ISO-8601 — server-observed timestamp
-  withdrawnBy: string;            // signer's member UID
-  subject?:    string;            // who the withdrawal speaks for
-  delegation?: CitationRef;       // record proving signer's authority
+  Reason:      WithdrawReason;
+  Rationale?:  string;
+  WithdrawnAt?: string;           // ISO-8601 — server-observed timestamp
+  WithdrawnBy?: string;           // signer's member UID, base32
+  Subject?:    string;            // who the withdrawal speaks for, base32
+  Delegation?: string;            // base32-packed amp.Address proving authority
 }
 ```
 
-`subject == withdrawnBy` is the common case — the signer is the subject. They differ only when an authorized delegate (Memorial speaking for a deceased member, GDPR delegation per DESIGN-14, etc.) issues the withdrawal on the subject's behalf; then `delegation` cites the record that grants that authority.
+`Subject == WithdrawnBy` is the common case — the signer is the subject. They differ only when an authorized delegate (Memorial speaking for a deceased member, GDPR delegation per DESIGN-14, etc.) issues the withdrawal on the subject's behalf; then `delegation` cites the record that grants that authority.
 
 ### 7.2 UX distinctions
 
@@ -704,7 +711,7 @@ The Pane introspects these on load. Manifests survive AI generation because they
 ```typescript
 interface AmpBridge {
   // ── Identity ──
-  member: { id: string; displayName: string; planetID: string; kind?: string } | null;
+  member: { ID: string; DisplayName: string; PlanetID: string; Kind?: string } | null;
 
   // ── Data ──
   read(channel: string, attr: string, itemID: string): Promise<any>;
@@ -717,8 +724,8 @@ interface AmpBridge {
   subscribe(channel: string, attr: string, cb: (event: SubscribeEvent) => void): () => void;
 
   // ── Media ──
-  upload(channel: string, opts?: UploadOpts): Promise<BlobTag>;
-  resolveMedia(blob: BlobTag): Promise<BlobTag>;     // returns blob with streamURL set
+  upload(channel: string, opts?: UploadOpts): Promise<BlobRef>;
+  resolveMedia(blob: BlobRef): Promise<BlobRef>;     // returns blob with URI (stream URL) set
 
   // ── Sealed secrets ──
   seal(plaintext: Uint8Array): Promise<Uint8Array>;
@@ -822,7 +829,7 @@ cards/settings/
 const amp = window.amp;
 
 async function load() {
-  const profile = await amp.read('users', 'profile', amp.member.id);
+  const profile = await amp.read('users', 'profile', amp.member.ID);
   if (profile) {
     document.getElementById('name').value  = profile.displayName || '';
     document.getElementById('theme').value = profile.theme || 'dark';
@@ -831,7 +838,7 @@ async function load() {
 async function save() {
   const result = await amp.submit({
     intent:  'updateProfile',
-    channel: 'users', attr: 'profile', itemID: amp.member.id,
+    channel: 'users', attr: 'profile', itemID: amp.member.ID,
     values: {
       displayName: document.getElementById('name').value,
       theme:       document.getElementById('theme').value,
@@ -862,22 +869,21 @@ Inline `<style>` blocks are permitted (the served CSP allows `'unsafe-inline'` f
 
 ## 9. Cross-planet citations
 
-Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. To address an item across planets, use a `Citation`:
+Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / address / +planet):
 
 ```tsx
-const cite = client.citation({
-  planetID: '<other-planet-tag.UID>',
-  nodeID:   '<channel-tag.UID>',
-  itemID:   '<item-tag.UID>',
-});
+// An Address arrives from the server (e.g. on a read or a share); the SDK
+// treats it as opaque and passes it through.  client.address() is an identity
+// passthrough kept for symmetry.
+const addr = client.address(addressFromServer);
 
-// Embed `cite` in a share link or a withdraw delegation.  Reading the cited record
+// Embed `addr` in a share link or a withdraw delegation.  Reading the cited record
 // today is a planet-scoped query against its planet (anonymous if that planet is a
-// registered public share); the one-call resolve(citation) REST primitive lands at
+// registered public share); the one-call resolve(address) REST primitive lands at
 // M5 — PRD-app-www §8.
 ```
 
-Cross-planet citation is the substrate for shareable links: the share URL embeds the full triple, and the public viewer's `@art-media-platform/web` resolves it via the public planet without auth. Cross-planet equivalence claims (DESIGN-14) sit on top: a member who exists on multiple planets can publish an Equivalence asserting that two `MemberTag`s refer to the same self.
+Cross-planet addressing is the substrate for shareable links: the share URL embeds the packed Address string, and the public viewer's `@art-media-platform/web` resolves it via the public planet without auth. Cross-planet equivalence claims (DESIGN-14) sit on top: a member who exists on multiple planets can publish an Equivalence asserting that two `MemberTag`s refer to the same self.
 
 ---
 
@@ -911,7 +917,7 @@ A single `amp.exe` instance can serve many orgs, each with its own SPA and own p
 }
 ```
 
-`SharePlanet` is optional — orgs without a share planet get the standard Bearer-only posture. When present, both `Name` (canonic tag.Name) and `UID` (base32 PlanetEpoch UID) are required and must agree (`tag.Parse(Name).id == UID`); the portal refuses to boot a mismatched pair so a deploy can't accidentally point at the wrong planet.
+`SharePlanet` is optional — orgs without a share planet get the standard Bearer-only posture. When present, both `Name` (canonic tag.Name) and `UID` (base32 PlanetEpoch UID) are required and must agree (`tag.Parse(Name).ID == UID`); the portal refuses to boot a mismatched pair so a deploy can't accidentally point at the wrong planet.
 
 ---
 
@@ -922,13 +928,13 @@ A single `amp.exe` instance can serve many orgs, each with its own SPA and own p
 ```tsx
 const { data, hasMore, loadMore, loading } = useAmpQuery<ProjectMeta>('projects', 'meta', {
   limit: 20,
-  orderBy: '_updatedAt',
-  filter: { ownerId: member.id },
+  orderBy: '_UpdatedAt',
+  filter: { ownerId: member.ID },
 });
 
 return (
   <>
-    {data.map(p => <ProjectCard key={p._itemID} project={p} />)}
+    {data.map(p => <ProjectCard key={p._ItemID} project={p} />)}
     {hasMore && <button onClick={loadMore} disabled={loading}>Load More</button>}
   </>
 );
@@ -953,8 +959,8 @@ const [preview, setPreview] = useState(null);
 async function handleFile(file) {
   setPreview(URL.createObjectURL(file));
   const blobRef = await upload(file, 'projects', { attr: 'media' });
-  setPreview(blobRef.streamURL);
-  await upsert('projects', 'media', blobRef.id, { blobRef, filename: file.name });
+  setPreview(blobRef.URI);
+  await upsert('projects', 'media', blobRef.UID, { blobRef, filename: file.name });
 }
 ```
 
@@ -972,7 +978,7 @@ const { data: snap } = await shareClient.query(link.snapshotChannel, link.snapsh
 ### Cross-device subscribe for widget instance
 
 ```tsx
-const { data } = useAmpQuery('widgets', `instance.${member.id}`, {});
+const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 // fires on every cross-device edit by this member; per-member partition makes the
 // subscribe naturally scoped without a filter predicate.
 ```

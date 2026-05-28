@@ -11,7 +11,7 @@ import type {
   AmpMember,
   AmpQueryOpts,
   BlobRef,
-  CitationRef,
+  Address,
   LoginCredentials,
   SubscriptionEvent,
   TagResolution,
@@ -60,16 +60,16 @@ export interface AmpAdapter {
 
   upload(file: File, channel: string, opts?: UploadOpts): Promise<BlobRef>;
 
-  /** Caller-carries-the-Tag resolve: BlobRef → BlobRef with streamURL set. */
+  /** Caller-carries-the-Tag resolve: BlobRef → BlobRef with URI (stream URL) set. */
   resolveMedia(blob: BlobRef): Promise<BlobRef>;
 
-  /** Direct /www/{id} URL for an already-published blob. */
-  mediaUrl(blobRefID: string): Promise<string>;
+  /** Direct /www/{UID} URL for an already-published blob. */
+  mediaUrl(blobUID: string): Promise<string>;
 
-  // ── Citations (cross-planet addressing, DESIGN-12) ────────────────
+  // ── Addresses (cross-planet CRDT-cell references, DESIGN-12) ──────
 
-  /** Build a citation triple for embedding in shares / withdraw delegations. */
-  citation(ref: CitationRef): CitationRef;
+  /** Build an Address for embedding in shares / withdraw delegations. */
+  address(ref: Address): Address;
 
   // ── Subscriptions ─────────────────────────────────────────────────
 
