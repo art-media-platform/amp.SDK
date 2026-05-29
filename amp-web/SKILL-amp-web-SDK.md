@@ -26,7 +26,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 | Item | What It Is | When You Need It |
 |---|---|---|
 | **This SKILL** | AI-agent instructions, API reference, data model conventions, WebRect bridge IDL | Always |
-| **`@art-media-platform/web`** (the client package in this bundle) | TypeScript reference client — React hooks, sealed-box helpers, citation helper | At `npm install` time |
+| **`@art-media-platform/web`** (the client package in this bundle) | TypeScript reference client — React hooks, sealed-box helpers, cross-planet address helper | At `npm install` time |
 | **`webapi/webapi.types.go`** (canonical source: `amp.SDK/amp/webapi`) | The wire contract verbatim — Go structs + JSON tags for every `/api/v1/*` shape. Mirror these field names one-to-one in any language. | Implementing a non-TS client |
 | **[`SECURITY-amp-web-SDK.md`](SECURITY-amp-web-SDK.md)** | The security model a consumer relies on — encryption, identity, what a vault can and cannot see | Auditing security claims |
 
@@ -402,7 +402,7 @@ const plaintext   = await open(sealedBytes);
 
 ```tsx
 // An amp.Address rides the wire as a single opaque base32 string packing 3–5
-// UIDs (element / address / +planet) — superset of the substrate's Citation.
+// UIDs (element / +edit / +planet).
 // The SDK treats it as opaque: pass through the string the server produced.
 // client.address() is an identity passthrough kept for symmetry.
 const addr = client.address(addressFromServer);   // base32 string in, string out
@@ -515,9 +515,9 @@ async function useCesiumIonToken() {
 
 The `seal/open` primitives wrap `safe.Encrypt.Seal` / `safe.Encrypt.Open` against the session member's `EncryptKey` — anonymous-sender HPKE base mode. The sealed bytes are opaque to anyone but the sealing member, including admins, vault relays, other planet members, and even a future memory snapshot of `eks.keys`.
 
-That `EncryptKey` is **device-local and auto-managed**: the client generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-SDK.md`.
+That `EncryptKey` is **device-local and auto-managed**: the client generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-SDK.md`. Surface the trade-off in your UI so it isn't a surprise — e.g. label a BYOK field *"Stored on this device only — re-enter it when you sign in elsewhere."*
 
-The default kit is **Poly25519** (X25519 + XChaCha20-Poly1305 + HKDF-SHA256) — pure JS via `@noble/curves` + `@noble/ciphers` + `@noble/hashes`, no WASM (per AUDIT §2.10). P-256 (YubiKey-attached members) and secp256k1 (crypto-wallet members) are lazy-loaded — they don't enter the default bundle, so cards/widgets that only seal BYOK stay under ~50 KB.
+The default kit is **Poly25519** (X25519 + XChaCha20-Poly1305 + HKDF-SHA256) — pure JS via `@noble/curves` + `@noble/ciphers` + `@noble/hashes` (the SDK's only runtime dependencies), no WASM. It is the **only kit in the default bundle**; P-256 (YubiKey-attached members) and secp256k1 (crypto-wallet members) register when their auth schemes ship and are absent until then. Bundle-minimization is **transparent** — there is no separate entry point or build flag to set: importing `@art-media-platform/web` and sealing BYOK pulls Poly25519 plus the three `@noble/*` packages and nothing more, so a card or widget that only seals secrets stays small.
 
 Envelope layout, byte-compatible with `safe.KeySpec.Encrypt.Seal/Open` Go-side:
 
@@ -540,7 +540,7 @@ const sealed = await client.seal(new TextEncoder().encode(plaintext));
 const plain  = await client.open(sealed);
 ```
 
-The lower-level `seal(plaintext, recipientPubKey)` / `open(sealed, recipientKeyPair)` exports cover the case where the consumer sealed for another member (e.g. a citation handoff).
+The lower-level `seal(plaintext, recipientPubKey)` / `open(sealed, recipientKeyPair)` exports cover the case where the consumer sealed for another member (e.g. an address handoff).
 
 Where the third-party API supports it (OpenRouter scoped tokens, Stripe Connect customer-scoped keys), prefer split-capability shape: the secret stays on the device, the device exchanges it for a derived per-call capability, and only the capability rides the wire.
 
@@ -678,7 +678,9 @@ This keeps the card pattern viable on phones, XR headsets, and embedded surfaces
 - AI agents generate cards in seconds; native UI takes weeks.
 - Forms, inputs, file pickers, and Stripe checkout work natively in HTML.
 - A card deployed once renders identically on phone, tablet, desktop, and XR.
-- Maplable widget cards, Tunr-2 playlist cards, and third-party partner cards all sit inside the same Pane mechanism with the same affordances.
+- Maplable widget cards, Tunr playlist cards, and third-party partner cards all sit inside the same Pane mechanism with the same affordances.
+
+> **Tunr** is a separate amp app — a music / playlist surface — that happens to render its UI as cards. It is **not** the WebRTC **TURN** relay protocol; the names collide but are unrelated. Your app's own WebRTC/TURN usage is independent of anything in this SDK.
 
 ### 8.3 Card lifecycle
 
@@ -869,9 +871,9 @@ Inline `<style>` blocks are permitted (the served CSP allows `'unsafe-inline'` f
 
 ---
 
-## 9. Cross-planet citations
+## 9. Cross-planet addresses
 
-Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / address / +planet):
+Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / address / +planet). (`Address` is the cross-planet addressing token throughout the SDK and wire; it carries the DESIGN-12 element/planet identity that earlier drafts called a "citation".)
 
 ```tsx
 // An Address arrives from the server (e.g. on a read or a share); the SDK
@@ -898,20 +900,23 @@ Cross-planet addressing is the substrate for shareable links: the share URL embe
 - `apple-app-site-association` / `assetlinks.json` — universal/app-link configs.
 - `open-link.tmpl.html` — deep-link landing page.
 
-A single `amp.exe` instance can serve many orgs, each with its own SPA and own planet bindings. A single `app.brand.json` is the contract between the deploy and the SDK — `@art-media-platform/web` reads it to discover the public-share planet, the deep-link scheme, and the org's identity.
+A single `amp.exe` instance can serve many orgs by `Host`-header routing — each with its own `www/` SPA, planet bindings, and admin list. There is no hard per-instance cap on orgs or planets; it is bounded by host resources.
+
+`app.brand.json` is **server-side operator config**, not something the SDK fetches. The client is handed the planet tag(s) it needs at construction time (`vaultUrl` + `planetTag`, plus an optional share-planet tag) — typically surfaced into the SPA as build-time env vars (`VITE_AMP_VAULT_URL`, `VITE_AMP_PLANET_TAG`, `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`). The brand file's job is to configure the *host*: CORS, deep links, the admin allowlist, and which planet is anonymous-readable.
 
 ### 10.1 `app.brand.json` shape
 
 ```json
 {
-  "AppName":       "Maplable",
-  "AppDomain":     "maplable.com",
-  "AppDesc":       "Offline-first 3D mapping",
-  "OrgName":       "Maplable Inc.",
+  "AppName":        "Maplable",
+  "AppDomain":      "maplable.com",
+  "AppDesc":        "Offline-first 3D mapping",
+  "OrgName":        "Maplable Inc.",
   "AllowedOrigins": ["https://maplable.com", "*.maplable.com"],
-  "URLSchemes":    ["amp://", "maplable://"],
-  "Targets":       [ { "Platform": "iOS",     "DownloadURL": "..." },
-                     { "Platform": "Android", "DownloadURL": "..." } ],
+  "URLSchemes":     ["amp://", "maplable://"],
+  "Targets":        [ { "Platform": "iOS",     "DownloadURL": "..." },
+                      { "Platform": "Android", "DownloadURL": "..." } ],
+  "Admins":         ["eth:0xabc…", "email:ops@maplable.com"],
   "SharePlanet": {
     "Name": "Maplable-shares",
     "UID":  "<26-char base32 UID>"
@@ -919,7 +924,18 @@ A single `amp.exe` instance can serve many orgs, each with its own SPA and own p
 }
 ```
 
+| Field | Meaning |
+|---|---|
+| `AppName` / `AppDomain` / `AppDesc` / `OrgName` | Org identity — surfaced on the deep-link landing page and host-rendered HTML. |
+| `AllowedOrigins` | CORS allow-list. List specific origins; never pair `"*"` with credentials (see `SECURITY-amp-web-SDK.md`). |
+| `URLSchemes` | Deep-link / universal-link schemes the host advertises. |
+| `Targets[]` | Per-platform install targets — `{ Platform, DownloadURL }`. |
+| `Admins[]` | Admin allowlist — MemberID expressions (canonic identity strings like `eth:0x…` / `email:…`, or base32 UIDs). Gates the `/api/v1/admin/*` endpoints (§14.4). **Empty or missing fails closed** — every admin call returns `403`. |
+| `SharePlanet { Name, UID }` | Optional anonymous-readable share planet (§6.4). |
+
 `SharePlanet` is optional — orgs without a share planet get the standard Bearer-only posture. When present, both `Name` (canonic tag.Name) and `UID` (base32 PlanetEpoch UID) are required and must agree (`tag.Parse(Name).ID == UID`); the portal refuses to boot a mismatched pair so a deploy can't accidentally point at the wrong planet.
+
+**Field set vs storage location.** Treat the fields above as the stable integration surface. Where they *live* is migrating substrate-native: anonymous-readability and the admin allowlist are becoming signed, chronicle-tracked facts on the planet's own `Brand` record (so rotation is a signed write, not an edit-and-restart). The static `app.brand.json` is the current operator surface during that transition; the field semantics carry over.
 
 ---
 
@@ -994,7 +1010,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 3. **Never assume immediate consistency.** Writes propagate over WebSocket; design UI optimistically.
 4. **Never push SecurityEvent telemetry** to a replicated channel. Audit logs and rate-limit notifications are local-only.
 5. **Never use `window.fetch`** inside a card. Always go through `window.amp.*`.
-6. **Never gate UX on `member.kind`** at the protocol layer. Apps may surface Kind in UI; only per-channel ACC governs what a member can do.
+6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial, DESIGN-11), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
 7. **Never name specific crypto algorithms** in code or docs. Use `seal/open`, `sign/verify`, `hash`, `safe.KeyRef`.
 
 ---
@@ -1020,12 +1036,72 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Panel** | Identical to Pane in principle, though it adheres to different UI handling.
 | **Card** | A self-contained HTML document rendered as the detail view of a single item, opened on activation. Speaks to amp via `window.amp`. |
 | **Card manifest** | `<meta name="amp:card:*">` tags in a card's `<head>` declaring title, intents, focus model. |
-| **Citation** | A `(PlanetID, NodeID, ItemID)` triple addressing an item across planets. DESIGN-12. |
+| **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque; `client.address()` is an identity passthrough. Carries the DESIGN-12 element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. DESIGN-14. |
-| **Withdraw** | A signed signal that the signer no longer consents to a cited record. DESIGN-15. Carries `subject` (whose consent) + optional `delegation` citation when an authorized delegate speaks for someone else. |
+| **Withdraw** | A signed signal that the signer no longer consents to a cited record. DESIGN-15. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
 | **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `amp.exe planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |
 | **Admin endpoint** | Bearer-authenticated server endpoint reserved for operator-driven substrate operations — currently `POST /api/v1/admin/planet/create` for share-planet genesis. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. |
+
+---
+
+## 14. Deploying amp: topologies, identity & versioning
+
+This section answers the architecture questions that come up when an existing product — with its own auth, its own payments, its own offline story — folds amp in. It describes the **current** model; where something isn't built yet, it says so and gives the bridge.
+
+### 14.1 Deployment topologies — where the vault runs
+
+An `amp.exe` host is a full peer: it stores, signs, encrypts, and relays. A web / desktop app reaches one in three shapes:
+
+- **Embedded local vault** — bundle `amp.exe` (or the `amp.lib` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; projects are encrypted on their own machine; reads, writes, and seals work with no network. This is the topology that preserves an **offline-first** product. Cross-compile the Go host per target (darwin-arm64/x64, win-x64/arm64, linux-x64), code-sign each, ship it as a platform resource.
+- **Shared cloud vault** — one `amp.exe` on a server is the rendezvous point for cross-device sync and multi-member collab. Simplest to operate; loses the offline property (the app needs the server reachable to read/write).
+- **Hybrid** — an embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. This is the native amp model, not a bolt-on.
+
+A pure-JS / WASM in-process vault is **not** on the near-term path; the embeddable unit today is the native host (`amp.exe` / `amp.lib`). For a paid desktop app, **hybrid (embedded + optional cloud sync)** is the recommended shape.
+
+### 14.2 Offline membership & feature gating
+
+Be precise about "offline," because it splits in two:
+
+- **Data is offline-first by construction.** Against a local / embedded vault, reads, writes, and `seal`/`open` all work with no network; writes queue and replicate later.
+- **The session token is online-issued.** `login()` returns an opaque random `SessionToken` (a Bearer) minted by the host. It is **not** a self-verifiable signed capability, so a *cloud-only* deployment cannot confirm membership while the network is down.
+
+The way to get the equivalent of a locally-verifiable signed license token is the **embedded local vault** (§14.1): the member's signed membership lives in the local host and verifies locally — no phone-home. The forward path for a *portable* signed capability is the `memberToken` login scheme (`signed(memberID ‖ ts)`, verified against the cached member public key); it is reserved in the wire contract and returns `501 Unsupported` until it ships, so you can lock against it now but not depend on it yet.
+
+For a cloud-only build, **degrade gracefully**: when the host is unreachable and entitlement can't be confirmed, disable the gated action cleanly (grey out "Share") rather than letting it fail mid-flight.
+
+### 14.3 Device-scoped / anonymous identity
+
+Two facts that are easy to conflate:
+
+- **Sealing does not require a human identity.** The device-local `EncryptKey` (§6.2) is generated and persisted independently — `seal`/`open` are a property of *the device*, not of an email / wallet / DID.
+- **Persisting to a planet requires a session.** Writing a channel item — even a sealed BYOK blob — is a signed TxMsg against a planet, which needs a logged-in member.
+
+There is **no first-class "issue an anonymous device member" API** today — don't wait on one. To ship BYOK before unifying human identity: keep gating app launch however you do now, log the member into their auto-provisioned home planet with whatever credential you already have, and store sealed secrets under a device-stable item ID. Sealing protects the secret from the host and other members regardless; the login is just what gives you a planet to write to.
+
+### 14.4 Membership tiers, Stripe, and the admin surface
+
+- **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy (DESIGN-11), not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
+- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the `Admins` allowlist from `app.brand.json`, §10.1) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer.
+- **Not yet wired:** a tier → ACC *grant / revoke* admin endpoint. When it lands it will extend the `/api/v1/admin/*` surface without a wire-shape break. Until then, write tier as app data on subscription events (create / renew / cancel) and enforce in-app plus via the ACC primitives you have. Don't model entitlement on `Kind` as a stopgap — it's the wrong axis and you'd have to unwind it.
+
+### 14.5 SDK versioning & stability
+
+The SDK is **beta (pre-v400)**. Between minor revs, breaking changes are possible, and there is no public npm channel during beta — you receive a versioned bundle (`amp-web-SDK-vNNN[.P].zip`). One source of truth ties it together: the bundle label, the `package.json` version, and the `amp.SDK` git tag are the same revision. **Pin the bundle you integrated** (vendor it / commit the version) rather than floating; upgrade deliberately and re-run your contract tests. At v400 ("Production Ready") it flips to public GitHub Releases under an open license with a semver compatibility promise.
+
+### 14.6 amp as a signaling / coordination plane
+
+amp pub/sub can replace a bespoke signaling server for collab coordination. Pattern:
+
+- Partition by session into a per-room attr — e.g. `webrtc.signaling.{spaceId}`.
+- Each peer `upsert`s its offer / answer / ICE candidate as an item; the other peer subscribes and consumes.
+- Membership of the room = who can read / write that attr.
+
+Item order is `_ItemID` (tag.UID) byte order, not wall-clock — fine for SDP exchange; design ICE-candidate handling to tolerate reordering. Keep this to the **coordination / checkpoint plane** (§5.4): the media stream itself stays on WebRTC + TURN. No canonical reference implementation ships yet — this is the recommended shape, not a drop-in.
+
+### 14.7 Integration fixtures
+
+For end-to-end tests without a production vault, point the client at a local `amp.exe` running its in-memory dev backend — it round-trips the exact wire shape (not encrypted, not synced: a contract fixture, not a vault). The bundle also ships `scripts/smoke.mjs`, the login → upsert → query → seal / open smoke check the SDK validates against. Drive your Stripe **test-mode** webhook at a local fixture vault to exercise provision / expire paths without touching real customers.
 
 ---
 

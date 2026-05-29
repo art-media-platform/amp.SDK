@@ -1,6 +1,6 @@
 {
   "name": "@art-media-platform/web",
-  "version": "0.232.0",
+  "version": "0.233.1",
   "description": "amp-web-SDK — TypeScript client (React hooks + adapter) for art.media.platform web apps over the amp.exe app.www wire contract",
   "type": "module",
   "main": "src/index.ts",

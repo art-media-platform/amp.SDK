@@ -12,7 +12,15 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # amp.SDK/amp-web
 SDK="$(cd "$HERE/.." && pwd)"                           # amp.SDK
 VER="$(node -p "require('$HERE/package.json').version")"
-LABEL="v$(printf '%s' "$VER" | cut -d. -f2)"            # 0.232.0 -> v232
+# Version label: vMINOR for a .0 patch, vMINOR.PATCH otherwise.
+#   0.232.0 -> v232    0.233.0 -> v233    0.233.1 -> v233.1
+MINOR="$(printf '%s' "$VER" | cut -d. -f2)"
+PATCH="$(printf '%s' "$VER" | cut -d. -f3)"
+if [ "$PATCH" = "0" ]; then
+  LABEL="v$MINOR"
+else
+  LABEL="v$MINOR.$PATCH"
+fi
 STAGE="$SDK/build/amp-web-SDK"                          # extracts to ./amp-web-SDK
 OUT="$SDK/dist"
 ZIP="$OUT/amp-web-SDK-$LABEL.zip"

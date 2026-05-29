@@ -35,6 +35,9 @@ export interface AmpAdapter {
   /** Fetch the EIP-4361 (SIWE) challenge for `address` to sign before login(scheme:'wallet'). */
   getWalletChallenge(address: string): Promise<WalletChallenge>;
 
+  /** Fetch the challenge bound to a DID URI to sign before login(scheme:'did'). */
+  getDIDChallenge(did: string): Promise<WalletChallenge>;
+
   // ── CRUD ──────────────────────────────────────────────────────────
 
   query<T>(
