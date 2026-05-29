@@ -152,6 +152,20 @@ type Session interface {
 	// See SetPlanet for the ordering contract this call closes.
 	OnEpochKeyArrived(epochID tag.UID)
 
+	// PlanetMember returns the member identity this session has adopted on
+	// planetID.  For planets the session founded or owns, this is the login
+	// member; for planets joined via invite it is the freshly generated identity
+	// the session introduced on accept.  A session holds several adopted
+	// identities — one per planet it is invited to — so the signer for a tx is
+	// the identity adopted on that tx's planet, never a single mutable identity.
+	// Falls back to the login member when no per-planet identity is recorded.
+	PlanetMember(planetID tag.UID) tag.UID
+
+	// SetPlanetMember records the member identity adopted on planetID.  Called by
+	// the home app on InviteAccept so later txs on that planet are attributed to —
+	// and signed by — the adopted identity rather than the session's login member.
+	SetPlanetMember(planetID, memberID tag.UID)
+
 	// Processes a verified planet-public governance TxMsg (e.g. MemberEpoch distribution).
 	// Called by the vault controller after signature verification succeeds.
 	// Routes the TxMsg to all registered governance handlers for epoch key extraction.

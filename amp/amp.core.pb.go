@@ -877,7 +877,7 @@ type PlatformID int32
 
 const (
 	PlatformID_UnspecifiedPlatform PlatformID = 0  // proto3 default (Unity's OSXEditor=0 not surfaced)
-	PlatformID_OSX                 PlatformID = 1  // Unity RuntimePlatform.OSXPlayer
+	PlatformID_macOS               PlatformID = 1  // Unity RuntimePlatform.OSXPlayer
 	PlatformID_Windows             PlatformID = 2  // Unity RuntimePlatform.WindowsPlayer
 	PlatformID_iOS                 PlatformID = 8  // Unity RuntimePlatform.IPhonePlayer
 	PlatformID_Android             PlatformID = 11 // Unity RuntimePlatform.Android (stock)
@@ -891,7 +891,7 @@ const (
 var (
 	PlatformID_name = map[int32]string{
 		0:   "UnspecifiedPlatform",
-		1:   "OSX",
+		1:   "macOS",
 		2:   "Windows",
 		8:   "iOS",
 		11:  "Android",
@@ -902,7 +902,7 @@ var (
 	}
 	PlatformID_value = map[string]int32{
 		"UnspecifiedPlatform": 0,
-		"OSX":                 1,
+		"macOS":               1,
 		"Windows":             2,
 		"iOS":                 8,
 		"Android":             11,
@@ -6148,11 +6148,11 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11TransportType_Nil\x10\x00\x12\x15\n" +
 	"\x11TransportType_TCP\x10\x01\x12\x15\n" +
 	"\x11TransportType_UDP\x10\x02\x12\x1b\n" +
-	"\x17TransportType_Reticulum\x10\x03*\x97\x01\n" +
+	"\x17TransportType_Reticulum\x10\x03*\x99\x01\n" +
 	"\n" +
 	"PlatformID\x12\x17\n" +
-	"\x13UnspecifiedPlatform\x10\x00\x12\a\n" +
-	"\x03OSX\x10\x01\x12\v\n" +
+	"\x13UnspecifiedPlatform\x10\x00\x12\t\n" +
+	"\x05macOS\x10\x01\x12\v\n" +
 	"\aWindows\x10\x02\x12\a\n" +
 	"\x03iOS\x10\b\x12\v\n" +
 	"\aAndroid\x10\v\x12\t\n" +

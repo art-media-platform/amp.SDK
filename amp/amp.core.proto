@@ -1211,15 +1211,11 @@ message ChronicleHeader {
 // Android forks — same APK as stock Android, different install channel).
 enum PlatformID {
     UnspecifiedPlatform = 0;    // proto3 default (Unity's OSXEditor=0 not surfaced)
-    OSX                 = 1;    // Unity RuntimePlatform.OSXPlayer
+    macOS               = 1;    // Unity RuntimePlatform.OSXPlayer
     Windows             = 2;    // Unity RuntimePlatform.WindowsPlayer
     iOS                 = 8;    // Unity RuntimePlatform.IPhonePlayer
     Android             = 11;   // Unity RuntimePlatform.Android (stock)
     Linux               = 13;   // Unity RuntimePlatform.LinuxPlayer
-
-    AndroidGraphene     = 100;
-    AndroidCalyx        = 101;
-    AndroidLineage      = 102;
 }
 
 // AppTarget describes where to obtain the app for one PlatformID.
