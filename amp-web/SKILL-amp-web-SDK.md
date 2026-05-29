@@ -125,7 +125,7 @@ type LoginCredentials =
   | { Scheme: 'did';        DID: string; Signature: string; Nonce: string };
 ```
 
-The unified `/api/v1/login` is **shipped**: `wallet`, `email`, and `did` are fully wired and Bearer-issuing; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `code: "Unsupported"` until they land — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `code` (e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/wallet/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
+The unified `/api/v1/login` is **shipped**: `wallet`, `email`, and `did` are fully wired and Bearer-issuing; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `Code: "Unsupported"` until they land — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `Code` (surfaced as `AmpError.code`, e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. The cookie-bound legacy path at `/api/v1/login/wallet/{challenge,verify,session,logout}` remains for browser flows that prefer it; both paths share one session store.
 
 **DID scheme (W3C DID 1.0 — login only).** `did` proves control of the key a DID URI names: fetch a challenge with `?did=<uri>`, sign it, and submit `{ Scheme: 'did', DID, Signature, Nonce }`.  Shipped methods: **`did:key`** (Ed25519) and **`did:pkh:eip155`** (Ethereum wallet).  A `did:pkh:eip155:*:0x…` login folds to the *same* MemberID as a `wallet` login over that address (`eth:lc(addr)`) — two URI spellings of one key, one member.  A DID whose method/curve isn't wired yet (e.g. `did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) returns the same 501 `Unsupported`.  This is DID-Auth — Verifiable Credentials (issuer-signed claims) are out of scope.
 
@@ -146,6 +146,7 @@ interface AmpMember {
   Email?: string;
   PlanetID: string;            // planet tag.UID, base32
   Kind?: string;               // tag.UID resolving to a LawMemberKind_* (DESIGN-11). Default: Person.
+  Address?: string;            // 0x-prefixed; present for wallet-scheme members
 }
 ```
 
@@ -219,7 +220,7 @@ POST   /api/v1/upload
        Response: amp.Tag (UID + URI + ContentType + I/Units=Bytes)
 
 POST   /api/v1/media/resolve
-       Body: { planetTag?, blob: amp.Tag }
+       Body: { PlanetTag?, Blob: amp.Tag }
        Response: amp.Tag (with URI filled by the host's asset publisher)
 
 GET    /www/{UID}
@@ -328,7 +329,7 @@ const { data, loading, hasMore, loadMore, refetch } =
   useAmpQuery<ProjectSnapshot>('projects', 'snapshot', {
     limit: 50,
     orderBy: '_UpdatedAt',
-    filter: { ownerId: member.ID },
+    filter: { ownerID: member.ID },
   });
 ```
 
@@ -414,7 +415,7 @@ const { data } = await client.query(channel, attr, { itemID, planetTag: planetID
 
 ### 5.8 Deterministic UIDs — names → `tag.UID`
 
-`(channel, attr, itemID)` are `tag.UID`s derived from string names by amp's `tag.Name` canonicalization — a regex split on whitespace + punctuation, a lowercase rule with all-caps preservation, URL-trigger-char (`:` / `/` / `\`) handling, and an atomic word fold (word order is significant). **Don't reimplement this in JS / Swift / C#** — a subtly-wrong port yields UIDs that 404 on attrs that "should exist," and the failure stays invisible until a write lands in the wrong place. Two first-class ways get the right UID without porting the algorithm:
+`(channel, attr, itemID)` are `tag.UID`s derived from string names by amp's `tag.Name` canonization — a regex split on whitespace + punctuation, a lowercase rule with all-caps preservation, URL-trigger-char (`:` / `/` / `\`) handling, and an atomic word fold (word order is significant). **Don't reimplement this in JS / Swift / C#** — a subtly-wrong port yields UIDs that 404 on attrs that "should exist," and the failure stays invisible until a write lands in the wrong place. Two first-class ways get the right UID without porting the algorithm:
 
 #### Build-time — `forge` codegen (preferred for well-known names)
 
@@ -425,7 +426,7 @@ go run github.com/art-media-platform/forge/cmd/forge consts your.keys.sdl \
   --ts_out ./src/amp-consts.ts
 ```
 
-#### Runtime — `resolveTag` / `resolveTags` (server canonicalization)
+#### Runtime — `resolveTag` / `resolveTags` (server canonization)
 
 For names you only learn at runtime — or to warm a cache from the deploy's published catalog — resolve them server-side. The server applies the canonical `tag.Name` rule and returns the UID: one authoritative answer for every binding.
 
@@ -437,14 +438,14 @@ const named = await client.resolveTags([
   'users.profile',
   `widgets.instance.${memberID}`,
 ]);
-// named: { expr, canonic, id }[] — cache in IndexedDB; reuse across sessions.
+// named: { Expr, Canonic, ID }[] — cache in IndexedDB; reuse across sessions.
 ```
 
 Anonymous and long-cacheable (`Cache-Control: public, max-age=86400`):
 
 ```
-GET  /api/v1/tag/resolve?expr=amp.member.profile   → { expr, canonic, id }
-POST /api/v1/tag/resolve   Body: { exprs: [...] }   → { results: [{ expr, canonic, id }, ...] }
+GET  /api/v1/tag/resolve?expr=amp.member.profile   → { Expr, Canonic, ID }
+POST /api/v1/tag/resolve   Body: { Exprs: [...] }   → { Results: [{ Expr, Canonic, ID }, ...] }
 ```
 
 **Already holding a UID?** A 26-char base32 `tag.UID` (e.g. `member.ID`, or an `itemID` from a read) is already in wire form — pass it straight through. `resolveTag` round-trips a UID back to the same UID rather than re-hashing it, so mixing names and UIDs in one `resolveTags` batch is safe.
@@ -464,7 +465,7 @@ POST /api/v1/tag/resolve   Body: { exprs: [...] }   → { results: [{ expr, cano
 | Maplable concept | channel | attr | itemID convention | Notes |
 |---|---|---|---|---|
 | Project full state | `projects` | `snapshot` | server project UID | Per-entity item split recommended; see §6.3 |
-| Project listing metadata | `projects` | `meta` | same as snapshot itemID | `{ name, thumbnail, _UpdatedAt, ownerId, templatePlanet }` |
+| Project listing metadata | `projects` | `meta` | same as snapshot itemID | `{ name, thumbnail, _UpdatedAt, ownerID, templatePlanet }` |
 | Project share state | `projects` | `share` | same itemID | `{ isPublic, shareUrl, sharedAt, viewCount }` |
 | User profile | `users` | `profile` | member UID | `{ displayName, firstName, lastName, theme, accentColor }` |
 | User defaults | `users` | `defaults` | member UID | per-field `{value, ts}` for LWW |
@@ -563,7 +564,7 @@ The deploy operator creates the share planet and registers it with the running a
 # After wallet-login via the web (POST /api/v1/login scheme=wallet),
 # pass the resulting Bearer token to the CLI:
 AMP_TOKEN=<bearer> amp.exe planet create --tag <name>
-# → { "planetID": "<base32 UID>", "tag": "<canonic>", "public": true }
+# → { "PlanetID": "<base32 UID>", "Tag": "<canonic>", "Public": true }
 ```
 
 **Brand JSON (persistence across daemon restarts):** drop the resulting UID into `app.brand.json`'s `SharePlanet` block alongside the same canonic name:
@@ -599,11 +600,12 @@ A whitelabel deploy registers two planet tags in its config: the owner planet an
 ### 6.5 Identity & member shape
 
 `AmpMember` carries:
-- `id` — the member's `tag.UID` on this planet.
-- `displayName` — auto-generated callsign or user-set.
-- `email?` — optional, only present when the auth scheme exposes it.
-- `planetID` — the planet this member is scoped to.
-- `kind?` — `tag.UID` resolving to a `LawMemberKind_*` definition (DESIGN-11). Default `LawMemberKind_Person`. Apps surface this in UI but do NOT gate behavior on it; communities decide what each Kind can do via per-channel ACC, not via protocol-level rules.
+- `ID` — the member's `tag.UID` on this planet.
+- `DisplayName` — auto-generated callsign or user-set.
+- `Email?` — optional, only present when the auth scheme exposes it.
+- `PlanetID` — the planet this member is scoped to.
+- `Kind?` — `tag.UID` resolving to a `LawMemberKind_*` definition (DESIGN-11). Default `LawMemberKind_Person`. Apps surface this in UI but do NOT gate behavior on it; communities decide what each Kind can do via per-channel ACC, not via protocol-level rules.
+- `Address?` — 0x-prefixed wallet address; present for wallet-scheme members.
 
 A given human can have many `MemberTag`s — one per planet they belong to. Cross-planet equivalence is a DESIGN-14 Equivalence claim, not an automatic merge.
 
@@ -929,7 +931,7 @@ A single `amp.exe` instance can serve many orgs, each with its own SPA and own p
 const { data, hasMore, loadMore, loading } = useAmpQuery<ProjectMeta>('projects', 'meta', {
   limit: 20,
   orderBy: '_UpdatedAt',
-  filter: { ownerId: member.ID },
+  filter: { ownerID: member.ID },
 });
 
 return (
@@ -1018,7 +1020,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Panel** | Identical to Pane in principle, though it adheres to different UI handling.
 | **Card** | A self-contained HTML document rendered as the detail view of a single item, opened on activation. Speaks to amp via `window.amp`. |
 | **Card manifest** | `<meta name="amp:card:*">` tags in a card's `<head>` declaring title, intents, focus model. |
-| **Citation** | A `(planetID, nodeID, itemID)` triple addressing an item across planets. DESIGN-12. |
+| **Citation** | A `(PlanetID, NodeID, ItemID)` triple addressing an item across planets. DESIGN-12. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. DESIGN-14. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. DESIGN-15. Carries `subject` (whose consent) + optional `delegation` citation when an authorized delegate speaks for someone else. |
 | **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `amp.exe planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |

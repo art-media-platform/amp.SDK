@@ -61,7 +61,7 @@ export interface AmpAuth {
   logout: () => Promise<void>;
 }
 
-// ── Tag resolution (server canonicalization) ────────────────────────
+// ── Tag resolution (server canonization) ────────────────────────────
 
 export interface TagResolution {
   Expr: string;

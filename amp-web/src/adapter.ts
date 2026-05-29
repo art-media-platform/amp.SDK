@@ -51,7 +51,7 @@ export interface AmpAdapter {
   remove(channel: string, attr: string, itemID: string): Promise<void>;
   withdraw(channel: string, attr: string, itemID: string, opts: WithdrawOpts): Promise<void>;
 
-  // ── Tag resolution (server canonicalization) ──────────────────────
+  // ── Tag resolution (server canonization) ──────────────────────────
 
   resolveTag(expr: string): Promise<TagResolution>;
   resolveTags(exprs: string[]): Promise<TagResolution[]>;

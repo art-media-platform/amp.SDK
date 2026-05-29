@@ -34,7 +34,7 @@ message PlanetCreateRequest {
 
 // PlanetCreateResponse is the body of a successful planet create.
 //
-// PlanetID is the base32 UID of the new planet.  Tag mirrors the canonicalized
+// PlanetID is the base32 UID of the new planet.  Tag mirrors the canonized
 // form of the request's Tag so operators can verify the canonic / UID pair
 // matches before persisting elsewhere.
 message PlanetCreateResponse {

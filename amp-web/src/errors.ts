@@ -2,7 +2,7 @@
  * Typed errors for @art-media-platform/web.
  *
  * Every non-2xx /api/v1/* response carries the webapi.ErrorResponse envelope
- * ({ code, message }).  AmpError surfaces that `code` as a typed field so a
+ * ({ Code, Message }).  AmpError surfaces that `Code` as a typed field so a
  * consumer can dispatch on it — e.g. treat AmpErrorCode.Unsupported as a
  * no-op until the substrate wires the scheme on, with no wire-shape change.
  */
@@ -47,7 +47,7 @@ export class AmpError extends Error {
 
 /**
  * ampErrorFromResponse decodes a non-2xx Response into an AmpError, reading the
- * { code, message } envelope when the body is JSON and falling back to the raw
+ * { Code, Message } envelope when the body is JSON and falling back to the raw
  * text / status line otherwise.
  */
 export async function ampErrorFromResponse(resp: Response): Promise<AmpError> {
@@ -56,9 +56,9 @@ export async function ampErrorFromResponse(resp: Response): Promise<AmpError> {
   let message = text;
   if (text) {
     try {
-      const body = JSON.parse(text) as { code?: string; message?: string };
-      code = body.code ?? '';
-      message = body.message ?? text;
+      const body = JSON.parse(text) as { Code?: string; Message?: string };
+      code = body.Code ?? '';
+      message = body.Message ?? text;
     } catch {
       // Non-JSON body — keep the raw text as the message.
     }

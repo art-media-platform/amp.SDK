@@ -56,7 +56,7 @@ function Labels() {
   if (loading) return <p>Loading…</p>;
   return (
     <ul>
-      {data.map(label => <li key={label._itemID}>{label.title}</li>)}
+      {data.map(label => <li key={label._ItemID}>{label.title}</li>)}
       <button onClick={() => create('projects', 'labels', { title: 'New' })}>Add</button>
     </ul>
   );
@@ -70,17 +70,17 @@ const { login } = useAmpAuth();
 
 // Wallet sign-in (EIP-4361 / SIWE — any EVM wallet): connect, fetch challenge, sign, submit.
 const address   = await connectWallet();                       // your wallet picker (e.g. EIP-6963)
-const challenge = await client.getWalletChallenge(address);    // { nonce, message }
-const signature = await signWithWallet(challenge.message);     // wallet personal_sign
-await login({ scheme: 'wallet', address, signature, nonce: challenge.nonce });
+const challenge = await client.getWalletChallenge(address);    // { Nonce, Message }
+const signature = await signWithWallet(challenge.Message);     // wallet personal_sign
+await login({ Scheme: 'wallet', Address: address, Signature: signature, Nonce: challenge.Nonce });
 
 // W3C DID sign-in (login-only): did:key (Ed25519) or did:pkh:eip155 (EVM wallet).
-const ch  = await client.getDIDChallenge(did);                 // { nonce, message }
-const sig = await signChallenge(did, ch.message);              // ed25519, or wallet personal_sign for did:pkh:eip155
-await login({ scheme: 'did', did, signature: sig, nonce: ch.nonce });
+const ch  = await client.getDIDChallenge(did);                 // { Nonce, Message }
+const sig = await signChallenge(did, ch.Message);              // ed25519, or wallet personal_sign for did:pkh:eip155
+await login({ Scheme: 'did', DID: did, Signature: sig, Nonce: ch.Nonce });
 
 // Email / password:
-await login({ scheme: 'email', email, password });
+await login({ Scheme: 'email', Email: email, Password: password });
 ```
 
 > A `did:pkh:eip155` login resolves to the **same member** as a `wallet` login over that address. DID here is authentication only — not Verifiable Credentials.
@@ -102,7 +102,7 @@ The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
 ## Canonic names → tag.UIDs
 
 `(channel, attr, itemID)` are `tag.UID`s derived from string names by a
-non-trivial canonicalization. Don't reimplement it — two supported paths:
+non-trivial canonization. Don't reimplement it — two supported paths:
 
 - **Build-time:** generate canonic `TagName`/`TagUID` constants with
   [`forge`](https://github.com/art-media-platform/forge) from your `.sdl` keys, so

@@ -44,7 +44,7 @@ func ParseUID(s string) UID {
 	return name.ID
 }
 
-// NameFrom canonicalizes s as a tag-name expression, ALWAYS hashing — even
+// NameFrom canonizes s as a tag-name expression, ALWAYS hashing — even
 // a 26-char base32 string the caller may have meant as a UID.  Use only on
 // hardcoded canonic expressions you constructed yourself (`"eth:" + addr`,
 // `"amp.member.profile"`).
@@ -82,7 +82,7 @@ func (name Name) IsWildcard() bool {
 // RFC 3986 scheme, it is lowercased atomically — dashes / dots / plus signs
 // inside it are preserved as scheme characters.  Otherwise it is word-folded.
 //
-// See the package README for the complete canonicalization rules,
+// See the package README for the complete canonization rules,
 // examples, and rationale (acronym preservation, homophone fold,
 // URL/name split, scheme grammar per RFC 3986 §3.1).
 func (name Name) With(expr string) Name {
@@ -264,10 +264,10 @@ func Wildcard() Name {
 }
 
 // UID_HashLiteral returns the tag.UID hash of the literal byte string — no
-// canonicalization, no commutative fold.  Use for opaque-bytes identity
+// canonization, no commutative fold.  Use for opaque-bytes identity
 // (content hashes, raw blob digests, fixed-format binary tokens).  For
 // human-readable text or scheme:identifier expressions where
-// canonicalization is the point, use [NameFrom] (or [Parse] for
+// canonization is the point, use [NameFrom] (or [Parse] for
 // outside-the-program inputs).
 func UID_HashLiteral(literal []byte) UID {
 
@@ -572,7 +572,7 @@ func (id UID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON decodes a quoted base32 (or canonic name expression) into
 // a UID via Parse — so an inbound base32 UID round-trips intact instead of
-// being re-hashed by NameFrom-style canonicalization.  null and "" both
+// being re-hashed by NameFrom-style canonization.  null and "" both
 // decode to the zero UID.
 func (id *UID) UnmarshalJSON(b []byte) error {
 	if len(b) == 0 || string(b) == "null" {

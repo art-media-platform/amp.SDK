@@ -71,19 +71,19 @@ async function main() {
 
   // ── Identity ──
   const ch = await amp.getWalletChallenge(address);
-  check('challenge has nonce + message', !!ch.nonce && !!ch.message);
+  check('challenge has nonce + message', !!ch.Nonce && !!ch.Message);
   const member = await amp.login({
-    scheme: 'wallet',
-    address,
-    signature: personalSign(ch.message, priv),
-    nonce: ch.nonce,
+    Scheme: 'wallet',
+    Address: address,
+    Signature: personalSign(ch.Message, priv),
+    Nonce: ch.Nonce,
   });
-  check('login returns member.id', !!member.id);
-  check('member.address echoes wallet', (member.address || '').toLowerCase() === address.toLowerCase(), `got ${member.address}`);
+  check('login returns member.ID', !!member.ID);
+  check('member.Address echoes wallet', (member.Address || '').toLowerCase() === address.toLowerCase(), `got ${member.Address}`);
 
   // ── Batched write (the Maplable debounced-save shape) ──
   const ops = Array.from({ length: 50 }, (_, i) => ({
-    kind: 'create', channel: 'projects', attr: 'labels', value: { lat: i, lon: i * 2 },
+    Kind: 'create', Channel: 'projects', Attr: 'labels', Value: { lat: i, lon: i * 2 },
   }));
   const results = await amp.tx(ops);
   check('tx returns 50 results', results.length === 50, `got ${results.length}`);
@@ -93,9 +93,9 @@ async function main() {
   check('list returns 50 items', list.data.length === 50, `got ${list.data.length}`);
   check('list hasMore=false', list.hasMore === false);
   check('item value spread onto row', list.data[0]?.lat !== undefined);
-  check('item carries _itemID meta', !!list.data[0]?._itemID);
+  check('item carries _ItemID meta', !!list.data[0]?._ItemID);
 
-  const id = results[0].itemID;
+  const id = results[0].ItemID;
   await amp.upsert('projects', 'labels', id, { lat: 99, lon: 99 });
   const single = await amp.query('projects', 'labels', { itemID: id });
   check('single read sees upsert', single.data[0]?.lat === 99, JSON.stringify(single.data[0]));
@@ -107,26 +107,27 @@ async function main() {
   await amp.create('projects', 'labels', { lat: 7, lon: 7 });
   await sleep(600);
   check('subscribe delivered an update frame', !!updateEvent, JSON.stringify(updateEvent));
-  check('update frame carries fromID', !!updateEvent?.fromID);
+  check('update frame carries FromID', !!updateEvent?.FromID);
   unsub();
 
   // ── Withdraw (distinct from delete) ──
+  // WithdrawOpts is the SDK option bag — camelCase by design, never serialized.
   await amp.withdraw('projects', 'labels', id, { reason: 'Retracted', rationale: 'smoke' });
   const afterWd = await amp.query('projects', 'labels', { itemID: id });
-  check('withdraw note surfaces on read', afterWd.data[0]?._withdrawn?.reason === 'Retracted', JSON.stringify(afterWd.data[0]?._withdrawn));
+  check('withdraw note surfaces on read', afterWd.data[0]?._Withdrawn?.Reason === 'Retracted', JSON.stringify(afterWd.data[0]?._Withdrawn));
 
-  // ── Tag resolution (server canonicalization) ──
+  // ── Tag resolution (server canonization) ──
   const tr = await amp.resolveTag('amp.member.profile');
-  check('resolveTag canonic round-trips', tr.canonic === 'amp.member.profile' && !!tr.id, JSON.stringify(tr));
+  check('resolveTag canonic round-trips', tr.Canonic === 'amp.member.profile' && !!tr.ID, JSON.stringify(tr));
   const trs = await amp.resolveTags(['projects.labels', 'users.profile']);
   check('resolveTags returns 2', trs.length === 2);
 
   // ── Blob upload + caller-carries-the-Tag resolve ──
   const file = new File([new Uint8Array([1, 2, 3, 4])], 'smoke.bin', { type: 'application/octet-stream' });
   const blob = await amp.upload(file, 'projects', { attr: 'media' });
-  check('upload returns blob id', !!blob.id, JSON.stringify(blob));
-  const resolved = await amp.resolveMedia({ id: blob.id, contentType: blob.contentType, byteSize: blob.byteSize });
-  check('resolveMedia fills streamURL', !!resolved.streamURL, JSON.stringify(resolved));
+  check('upload returns blob UID', !!blob.UID, JSON.stringify(blob));
+  const resolved = await amp.resolveMedia({ UID: blob.UID, ContentType: blob.ContentType, I: blob.I, Units: blob.Units });
+  check('resolveMedia fills URI', !!resolved.URI, JSON.stringify(resolved));
 
   // ── Sealed-box BYOK round-trip (device EncryptKey auto-installed at login) ──
   // No setEncryptKey: seal-to-self uses the per-member key the adapter resolved
@@ -138,9 +139,9 @@ async function main() {
   check('seal produces opaque bytes (no plaintext substring)', !contains(sealed, secret));
   const sealedB64 = bytesToBase64(sealed);
   const [keyRes] = await amp.tx([
-    { kind: 'create', channel: 'users', attr: 'api_keys_overrides', value: { cesium: sealedB64 } },
+    { Kind: 'create', Channel: 'users', Attr: 'api_keys_overrides', Value: { cesium: sealedB64 } },
   ]);
-  const back = await amp.query('users', 'api_keys_overrides', { itemID: keyRes.itemID });
+  const back = await amp.query('users', 'api_keys_overrides', { itemID: keyRes.ItemID });
   const storedB64 = back.data[0]?.cesium;
   check('sealed bytes survive the wire round-trip unchanged', storedB64 === sealedB64);
   const opened = await amp.open(base64ToBytes(storedB64));
