@@ -14,6 +14,13 @@ var (
 )
 
 const (
+	// Connection-type prefix — the first 4 bytes a peer writes on a new amp.Host TCP
+	// connection so the host demultiplexes traffic types on one port without rewinding
+	// the stream.  A client login connection continues with a TxMsg stream (whose own
+	// preamble is Tx.PreambleSignature); a vault peer continues with sync framing.
+	// New traffic types add a new prefix here.
+	ClientLoginMagic = "AMPL" // client login / session connection
+	VaultAccessMagic = "AMPV" // node-to-node vault sync peer connection
 	// Default TCP port used to expose amp.Host service.
 	DefaultServicePort = int32(5192)
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ

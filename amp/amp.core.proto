@@ -181,10 +181,10 @@ message Login {
     LoginCheckpoint    Checkpoint = 12;
 
     // SigningPubKey carries the client's raw signing public key so a remotely
-    // self-generated identity can be bound to Member.  The host verifies the
+    // self-generated identity can be bound to a Member.  The host verifies the
     // challenge-response signature against the key it holds for Member; when the
-    // host has no key recorded yet it may adopt this one (trust-on-first-use).
-    // Interpreted per SigningCryptoKitID.
+    // host has no key recorded yet it may adopt this one if trust-on-first-use (TOFU)
+    // is set.
     bytes              SigningPubKey      = 14;
     safe.CryptoKitID   SigningCryptoKitID = 15;
 
@@ -388,6 +388,7 @@ enum Access {
     Private    = 3;    // Can see metadata but not content
     ReadOnly   = 4;    // Can read content
     ReadWrite  = 6;    // Can read and write
+    Moderator  = 8;    // Can approve, withdraw, and hide content and file authoritative Strikes — but not manage grants or keys
     Admin      = 10;   // Full control: create sub-channels, manage access
 }
 
@@ -416,6 +417,14 @@ message ChannelEpoch {
 
     // Default permissions for members not listed in MemberGrants.
     AccessGrants        DefaultGrants = 21;
+
+    // Attestations cited as the basis for this grant — votes, audits, witness
+    // records, or prior epochs that informed the access decision, making every
+    // governance act reviewable and appealable.  Empty for routine grants.
+    // Informational: protocol does not gate access on Cites.  Mirrors
+    // MemberEpoch.Cites.  AttrID and EditID may be left zero when citing an item
+    // rather than a specific edit (the common case).
+    repeated Address    Cites = 22;
 }
 
 

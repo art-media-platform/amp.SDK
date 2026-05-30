@@ -24,6 +24,15 @@ const Tx {
 }
 
 
+// Connection-type prefix — the first 4 bytes a peer writes on a new amp.Host TCP
+// connection so the host demultiplexes traffic types on one port without rewinding
+// the stream.  A client login connection continues with a TxMsg stream (whose own
+// preamble is Tx.PreambleSignature); a vault peer continues with sync framing.
+// New traffic types add a new prefix here.
+const string ClientLoginMagic = "AMPL"; // client login / session connection
+const string VaultAccessMagic = "AMPV"; // node-to-node vault sync peer connection
+
+
 // The bootstrapping ("head") node — well-known channel UID hosting planet
 // governance records (PlanetEpoch, MemberEpoch, ChannelEpoch) and session
 // meta-ops (Login, PlanetInviteOp).  Deterministic across all planets.
