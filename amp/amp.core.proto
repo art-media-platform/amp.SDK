@@ -180,6 +180,14 @@ message Login {
     // Checkpoint allows the client to resume an auth session.
     LoginCheckpoint    Checkpoint = 12;
 
+    // SigningPubKey carries the client's raw signing public key so a remotely
+    // self-generated identity can be bound to Member.  The host verifies the
+    // challenge-response signature against the key it holds for Member; when the
+    // host has no key recorded yet it may adopt this one (trust-on-first-use).
+    // Interpreted per SigningCryptoKitID.
+    bytes              SigningPubKey      = 14;
+    safe.CryptoKitID   SigningCryptoKitID = 15;
+
 }
 
 // LoginChallenge -- STEP 2: host -> client
@@ -1263,11 +1271,11 @@ message Brand {
     repeated AppLink    Links            = 25;
     repeated CrateRef   BundledCrates    = 26;
 
-    // Federation back-pointer: the planet's currently-publishing federation.
-    // Single-valued — a planet publishes through one federation at a time but
-    // may roam.  Read by NameService consumers to enforce the canonic-binding
-    // invariant of PRD-name-service §3.3.
-    Tag                 Federation       = 30;
+    // NamedBy is the federation that names this planet — the §3.3 back-edge the
+    // planet acknowledges as its current namer.  Single-valued: a planet is named
+    // through one federation at a time but may roam.  Read by NameService
+    // consumers to enforce the canonic-binding invariant of PRD-name-service §3.3.
+    Tag                 NamedBy          = 30;
 }
 
 
@@ -1336,10 +1344,10 @@ message NameServiceRecord {
 }
 
 
-// FederationRef — one peer / parent federation in a FederationDirectory.
+// FederationPeer — peer of a FederationDirectory.
 // PRD-name-service §4.4.
-message FederationRef {
-    Tag                 FederationID = 1;    // peer federation's PlanetID
+message FederationPeer {
+    Tag                 PlanetID     = 1;    // the peer federation's planet UID
     repeated VaultAddr  VaultAddrs   = 2;    // where peer federation is pinnable
     string              Label        = 3;    // human-readable, informational
 }
@@ -1351,7 +1359,7 @@ message FederationRef {
 // on a federation planet.  Single CRDT item per federation; admin-signed like
 // any governance change.  Analogous to DNS NS records — bounded, opt-in.
 message FederationDirectory {
-    repeated FederationRef Peers     = 1;
+    repeated FederationPeer Peers     = 1;
 }
 
 
