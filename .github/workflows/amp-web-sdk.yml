@@ -1,9 +1,10 @@
 name: amp-web-SDK
 
-# Builds the amp-web-SDK bundle from an amp.SDK release tag (e.g. v0.232.0) —
-# the SDK ships in lockstep with amp.SDK, and the tag must match the
-# @art-media-platform/web package version.  During beta this produces a build
-# artifact only; the public Release attach is enabled at v400 (see LICENSE).
+# Builds the amp-web-SDK bundle from an amp.SDK release tag (e.g. v0.240.0) — the
+# SDK ships in lockstep with amp.SDK, and pack.sh stamps the bundle version from
+# the release tag (the single source of truth; no package.json bump per release).
+# During beta this produces a build artifact only; the public Release attach is
+# enabled at v400 (see LICENSE).
 on:
   push:
     tags: ['v*']
@@ -19,19 +20,12 @@ jobs:
         with:
           node-version: '22'
 
-      # The release tag (e.g. v0.232.0) must equal amp-web/package.json version,
-      # so the bundle's stamped version always matches the amp.SDK release.
-      - name: Verify tag matches package version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          tag="${GITHUB_REF_NAME#v}"
-          pkg="$(node -p "require('./amp-web/package.json').version")"
-          if [ "$tag" != "$pkg" ]; then
-            echo "::error::tag $GITHUB_REF_NAME ($tag) != amp-web/package.json ($pkg)"
-            exit 1
-          fi
-
+      # pack.sh stamps the bundle version from the tag that triggered this run
+      # (AMP_WEB_VERSION), so the bundle always matches the amp.SDK release with no
+      # package.json bump to keep in sync.
       - name: Build amp-web-SDK bundle
+        env:
+          AMP_WEB_VERSION: ${{ github.ref_name }}
         run: bash amp-web/pack.sh
 
       - name: Upload build artifact

@@ -11,7 +11,21 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # amp.SDK/amp-web
 SDK="$(cd "$HERE/.." && pwd)"                           # amp.SDK
-VER="$(node -p "require('$HERE/package.json').version")"
+
+# The amp.SDK git tag is the single source of truth for the SDK revision, so the
+# bundle version is derived at build time — no package.json bump per release tag.
+# Resolution order: explicit override (CI passes the tag) → the tag at HEAD →
+# nearest tag (dev build, warned) → the package.json placeholder (untagged tree).
+if [ -n "${AMP_WEB_VERSION:-}" ]; then
+  VER="${AMP_WEB_VERSION#v}"
+elif TAG="$(git -C "$SDK" describe --tags --match 'v*' --exact-match 2>/dev/null)"; then
+  VER="${TAG#v}"
+elif TAG="$(git -C "$SDK" describe --tags --match 'v*' --abbrev=0 2>/dev/null)"; then
+  echo "!!! HEAD is not a release tag; bundling as nearest tag $TAG"
+  VER="${TAG#v}"
+else
+  VER="$(node -p "require('$HERE/package.json').version")"
+fi
 # Version label: vMINOR for a .0 patch, vMINOR.PATCH otherwise.
 #   0.232.0 -> v232    0.233.0 -> v233    0.233.1 -> v233.1
 MINOR="$(printf '%s' "$VER" | cut -d. -f2)"
@@ -39,6 +53,11 @@ rm -rf "$STAGE"
 mkdir -p "$STAGE/webapi"
 cp README.md SKILL-amp-web-SDK.md SECURITY-amp-web-SDK.md LICENSE \
    package.json package-lock.json tsconfig.json "$STAGE/"
+# Stamp the resolved version into the bundled package.json (the committed source
+# carries a placeholder; the tag is authoritative).  Format-preserving rewrite.
+node -e 'const fs=require("fs"),p=process.argv[1],v=process.argv[2];
+  fs.writeFileSync(p, fs.readFileSync(p,"utf8").replace(/("version":\s*)"[^"]*"/, `$1"${v}"`));' \
+  "$STAGE/package.json" "$VER"
 cp -R src     "$STAGE/src"
 cp -R dist    "$STAGE/dist"
 cp -R scripts "$STAGE/scripts"
