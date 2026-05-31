@@ -87,7 +87,7 @@ VITE_AMP_PUBLIC_SHARE_PLANET_TAG=my-planet-tag-shares
 **Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` only resolves anonymously when the deploy operator has actually registered the planet on the server side. Two mechanisms (see §6.4):
 
 - **Persisted via `app.brand.json`** — the deploy's brand config carries a `SharePlanet { Name, UID }` block; the portal registers it with the bridge at boot and on each snapshot reload.
-- **Runtime via `ampd planet create`** — the operator hits `POST /api/v1/admin/planet/create` (or runs the CLI) once, drops the returned UID into `app.brand.json` for persistence.
+- **Runtime via `amp planet create`** — the operator hits `POST /api/v1/admin/planet/create` (or runs the CLI) once, drops the returned UID into `app.brand.json` for persistence.
 
 Without one of these, anonymous reads against the planet tag fall through to the standard Bearer gate.
 
@@ -563,7 +563,7 @@ The deploy operator creates the share planet and registers it with the running `
 ```bash
 # After wallet-login via the web (POST /api/v1/login scheme=wallet),
 # pass the resulting Bearer token to the CLI:
-AMP_TOKEN=<bearer> ampd planet create --tag <name>
+AMP_TOKEN=<bearer> amp planet create --tag <name>
 # → { "PlanetID": "<base32 UID>", "Tag": "<canonic>", "Public": true }
 ```
 
@@ -1039,7 +1039,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque; `client.address()` is an identity passthrough. Carries the DESIGN-12 element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. DESIGN-14. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. DESIGN-15. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
-| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `ampd planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |
+| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |
 | **Admin endpoint** | Bearer-authenticated server endpoint reserved for operator-driven substrate operations — currently `POST /api/v1/admin/planet/create` for share-planet genesis. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. |
 
