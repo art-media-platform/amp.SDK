@@ -1,6 +1,6 @@
 // Package webapi defines the wire-level JSON shapes for the amp /api/v1/*
-// surface — the contract between the amp web SDK (@amp/web and other language
-// bindings) and an amp host (amp.exe).
+// surface — the contract between the amp web SDK (@art-media-platform/web and
+// other language bindings) and an amp host (ampd).
 //
 // Field names MUST match the wire shape one-to-one — every external SDK
 // (TypeScript, C#, Swift, future Python) reflects against these names.  Do not

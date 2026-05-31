@@ -873,7 +873,7 @@ Inline `<style>` blocks are permitted (the served CSP allows `'unsafe-inline'` f
 
 ## 9. Cross-planet addresses
 
-Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / address / +planet). (`Address` is the cross-planet addressing token throughout the SDK and wire; it carries the DESIGN-12 element/planet identity that earlier drafts called a "citation".)
+Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / address / +planet). (`Address` is the cross-planet addressing token throughout the SDK and wire; it carries the DESIGN-12 element/planet identity.)
 
 ```tsx
 // An Address arrives from the server (e.g. on a read or a share); the SDK

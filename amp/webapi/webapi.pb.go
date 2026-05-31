@@ -5,7 +5,7 @@
 // source: amp/webapi/webapi.proto
 
 // Package webapi defines the wire-level shapes for the amp /api/v1/* surface —
-// the contract between amp web/native SDKs and an amp host (amp.exe).
+// the contract between amp web/native SDKs and an amp host (`ampd`).
 //
 // Field names MUST match the wire shape one-to-one — every external SDK
 // (TypeScript, C#, Swift, future Python) reflects against these names.  These

@@ -71,6 +71,15 @@ Forks are morally neutral — the same primitive serves a community pruning bad-
 Members are identified by a `MemberID` derived from a canonic identity URI (`tag.NameFrom("eth:0xabc…").ID` and similar).  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `KitSpec` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password, and W3C [DID](https://www.w3.org/TR/did-1.0/) (login-only — `did:key` Ed25519 and `did:pkh:eip155`, the latter folding onto the same member as the wallet path).  Additional DID curves/methods (`did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) and hardware-token (YubiKey) login are on the v300 trajectory — the kit registry already covers their crypto; what remains per method is the URI-decode/verify surface.
 
 
+## Federation & Naming
+
+Planets find each other through **federation** — no central registry, no DNS authority.  A planet publishes a signed [`Brand`](amp/amp.core.proto) record naming itself, and a **NameService** resolves a human FQDN to the planet `UID` that answers for it.  Resolution rides the same zero-knowledge mesh: a peer answers from records it has synced off the verified planet-public governance stream, so a host resolves over exactly the federations it has joined.
+
+- **Brand** — a planet's self-describing identity: display name, deep-link schemes, install targets, and operational fields (CORS origins, share-planet binding).  Signed and chronicle-tracked, so rotating any of it is a signed write, not an edit-and-restart.
+- **NameService** — `Resolve(FQDN) → planet`, ranked `Search`, and federation-peer enumeration for cross-federation forwarding.  `ampd` exposes it natively and over the web wire (`/api/v1/resolve`, `/api/v1/search`, `/api/v1/federation/peers`).
+- **Deep links** — an inbound web Host resolves through NameService to its planet's `Brand`, which renders the platform-detecting landing page — the same substrate-native path whether the link is yours or a federated peer's.
+
+
 ## AI
 
 AMP's channel attribute addressing is a natural fit for AI agents.  An AI daemon is given access to explict planets or channels — and *only* thos.  This provides structural compartmentalization: an AI assistant processing `chat-support` never receives keys for `medical-records` or `financial-ledger`, not because of a policy document, but because it has not been *given* those keys.
@@ -115,7 +124,7 @@ Federal contractors, regulated verticals, and supply-chain-conscious vendors do 
 
 ```
 amp.Host
-  ├── vault.Controller         # journal, outbox, sync engine
+  ├── vault.Controller         # chronicle (signed TxMsg log) + sync engine
   │     └── vault.Transport    # Reticulum, TCP, UDP, ...
   ├── vault.BlobStore          # content-addressed encrypted blobs
   └── amp.Session              # one per connected client
