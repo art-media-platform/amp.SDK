@@ -52,32 +52,32 @@ const (
 
 	// DefaultBootstrapTTL is the default invite-token validity window in seconds (7 days).
 	// PlanetInvite tokens expire after this duration unless the issuing planet's
-	// VaultOpts.BootstrapTTLSecs sets a per-planet override.  A leaked token is
+	// VaultConfig.BootstrapTTLSecs sets a per-planet override.  A leaked token is
 	// useless past expiry; bounds the exposure window of out-of-band invite delivery.
 	DefaultBootstrapTTL int64 = 7 * 24 * 60 * 60
 )
 
-// GracePeriod returns the effective grace period for this epoch.
+// GracePeriod returns the effective grace period for this epoch's terms.
 // Returns DefaultMaxGracePeriod if MaxGracePeriod is zero (unset).
-func (ep *PlanetEpoch) GracePeriod() int64 {
-	if ep == nil || ep.MaxGracePeriod <= 0 {
+func (terms *EpochTerms) GracePeriod() int64 {
+	if terms == nil || terms.MaxGracePeriod <= 0 {
 		return DefaultMaxGracePeriod
 	}
-	return ep.MaxGracePeriod
+	return terms.MaxGracePeriod
 }
 
-// Helpers on *VaultOpts convert the on-wire units into runtime-friendly forms
+// Helpers on *VaultConfig convert the on-wire units into runtime-friendly forms
 // (e.g. seconds → time.Duration) and substitute DefaultXxx when the proto field
 // is unset.  Helpers that would collide with generated proto field names (plain
 // count/byte fields) are NOT defined — callers read those via the proto-generated
 // GetXxx getters combined with nonZeroInt64/nonZeroUint32 below.
 
 // QuarantineRetention returns the effective journal quarantine TTL as a time.Duration.
-// Nil-safe: returns DefaultQuarantineRetention seconds when opts is nil or the field is zero.
-func (opts *VaultOpts) QuarantineRetention() time.Duration {
+// Nil-safe: returns DefaultQuarantineRetention seconds when config is nil or the field is zero.
+func (config *VaultConfig) QuarantineRetention() time.Duration {
 	secs := int64(0)
-	if opts != nil {
-		secs = opts.QuarantineRetentionSecs
+	if config != nil {
+		secs = config.QuarantineRetentionSecs
 	}
 	if secs <= 0 {
 		secs = DefaultQuarantineRetention
@@ -86,11 +86,11 @@ func (opts *VaultOpts) QuarantineRetention() time.Duration {
 }
 
 // MaxFutureSkew returns the effective future-stamp intake guard as a time.Duration.
-// Nil-safe: returns DefaultMaxFutureSkew seconds when opts is nil or the field is zero.
-func (opts *VaultOpts) MaxFutureSkew() time.Duration {
+// Nil-safe: returns DefaultMaxFutureSkew seconds when config is nil or the field is zero.
+func (config *VaultConfig) MaxFutureSkew() time.Duration {
 	secs := int64(0)
-	if opts != nil {
-		secs = opts.MaxFutureSkewSecs
+	if config != nil {
+		secs = config.MaxFutureSkewSecs
 	}
 	if secs <= 0 {
 		secs = DefaultMaxFutureSkew
@@ -99,11 +99,11 @@ func (opts *VaultOpts) MaxFutureSkew() time.Duration {
 }
 
 // RateLimitWindow returns the effective sliding rate-limit window as a time.Duration.
-// Nil-safe: returns DefaultRateLimitWindow seconds when opts is nil or the field is zero.
-func (opts *VaultOpts) RateLimitWindow() time.Duration {
+// Nil-safe: returns DefaultRateLimitWindow seconds when config is nil or the field is zero.
+func (config *VaultConfig) RateLimitWindow() time.Duration {
 	secs := int64(0)
-	if opts != nil {
-		secs = opts.RateLimitWindowSecs
+	if config != nil {
+		secs = config.RateLimitWindowSecs
 	}
 	if secs <= 0 {
 		secs = DefaultRateLimitWindow
@@ -112,11 +112,11 @@ func (opts *VaultOpts) RateLimitWindow() time.Duration {
 }
 
 // BootstrapTTL returns the effective invite-token validity window as a time.Duration.
-// Nil-safe: returns DefaultBootstrapTTL seconds when opts is nil or the field is zero.
-func (opts *VaultOpts) BootstrapTTL() time.Duration {
+// Nil-safe: returns DefaultBootstrapTTL seconds when config is nil or the field is zero.
+func (config *VaultConfig) BootstrapTTL() time.Duration {
 	secs := int64(0)
-	if opts != nil {
-		secs = opts.BootstrapTTLSecs
+	if config != nil {
+		secs = config.BootstrapTTLSecs
 	}
 	if secs <= 0 {
 		secs = DefaultBootstrapTTL
@@ -161,13 +161,13 @@ func NonZeroUint32(val, fallback uint32) uint32 {
 // Direction: tx is OLDER than the epoch — used to bound how much lag is
 // tolerated from a member operating on stale state.  See WithinRevocationCliff
 // for the symmetric direction (tx newer than a cut event).
-func (ep *PlanetEpoch) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) bool {
+func (terms *EpochTerms) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) bool {
 	txUnix := txTimeID.Unix()
 	epochUnix := newEpochTimeID.Unix()
 	if txUnix >= epochUnix {
 		return true // TxMsg is newer than or concurrent with the epoch — always accept
 	}
-	return (epochUnix - txUnix) <= ep.GracePeriod()
+	return (epochUnix - txUnix) <= terms.GracePeriod()
 }
 
 // WithinRevocationCliff returns true if a TxMsg authored at txTimeID is
@@ -181,13 +181,13 @@ func (ep *PlanetEpoch) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) boo
 //
 // Direction: tx is NEWER than (or concurrent with) the cut event.  This is
 // the revocation cliff per amp.security PRD §G.6.
-func (ep *PlanetEpoch) WithinRevocationCliff(txTimeID, cutTimeID tag.UID) bool {
+func (terms *EpochTerms) WithinRevocationCliff(txTimeID, cutTimeID tag.UID) bool {
 	txUnix := txTimeID.Unix()
 	cutUnix := cutTimeID.Unix()
 	if txUnix <= cutUnix {
 		return true // tx authored at or before the cut — legitimate pre-cut authority
 	}
-	return (txUnix - cutUnix) <= ep.GracePeriod()
+	return (txUnix - cutUnix) <= terms.GracePeriod()
 }
 
 func TagFromName(name tag.Name) *Tag {
@@ -205,62 +205,19 @@ func TagFromUID(id tag.UID) *Tag {
 	}
 }
 
-// EffectiveCryptoKit returns the CryptoKitID for this epoch, defaulting to Poly25519
-// if the epoch is nil or the kit is unspecified (backward-compatible with legacy data).
-func (epoch *PlanetEpoch) EffectiveCryptoKit() safe.CryptoKitID {
-	if epoch == nil || epoch.CryptoKitID == safe.CryptoKitID_UnspecifiedKit {
+// EffectiveCryptoKit returns the CryptoKitID in force for this epoch's terms,
+// defaulting to Poly25519 if the terms are nil or the kit is unspecified.
+func (terms *EpochTerms) EffectiveCryptoKit() safe.CryptoKitID {
+	if terms == nil || terms.CryptoKitID == safe.CryptoKitID_UnspecifiedKit {
 		return safe.CryptoKitID_Poly25519
 	}
-	return epoch.CryptoKitID
+	return terms.CryptoKitID
 }
 
-// CanonicalBytes returns the deterministic canonical encoding of this PlanetEpoch
-// with Signatures and Witnesses excluded.  This is the exact payload each
-// co-signer (and each witness) passes to CryptoKit.Sign and that verifiers
-// pass to CryptoKit.Verify.
-//
-// Cross-implementation stability: amp protos forbid `map<>` and `oneof` (see
-// PRD-guidelines.md).  Under that constraint, proto.MarshalOptions{Deterministic}
-// produces bit-identical output across every major protobuf implementation —
-// the issues that motivate hand-rolled canonical encoders (map iteration order,
-// oneof variant ambiguity, unknown-field passthrough) cannot occur.  The golden-
-// hex fixture test in planet_epoch_canonical_test.go locks the byte layout for
-// regression purposes; any encoding change fails the fixture and forces review.
-//
-// Signatures are excluded so quorum members can add signatures incrementally
-// without invalidating earlier ones.  Witnesses are excluded so attestors can be
-// appended after-the-fact without re-signing the quorum.  Declaration,
-// GovernanceGroup, RequiredSignatures, and all governance fields ARE included —
-// those are the founding terms under which everyone commits.
-func (epoch *PlanetEpoch) CanonicalBytes() ([]byte, error) {
-	if epoch == nil {
-		return nil, status.Code_BadRequest.Error("amp: nil PlanetEpoch")
-	}
-	clone := proto.Clone(epoch).(*PlanetEpoch)
-	clone.Signatures = nil
-	clone.Witnesses = nil
-	return proto.MarshalOptions{Deterministic: true}.Marshal(clone)
-}
-
-// VerifyCoSignature checks that cosig is a valid signature over this epoch's
-// canonical bytes using signerPubKey and signerKit. Returns nil on success.
-func (epoch *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []byte, signerKit safe.CryptoKitID) error {
-	if cosig == nil || len(cosig.Signature) == 0 {
-		return status.Code_BadRequest.Error("amp: empty CoSignature")
-	}
-	kit, err := safe.GetKit(signerKit)
-	if err != nil {
-		return err
-	}
-	if kit.Signing == nil || kit.Signing.Verify == nil {
-		return status.Code_Unimplemented.Errorf("KitSpec %s does not support verification", signerKit.String())
-	}
-	canon, err := epoch.CanonicalBytes()
-	if err != nil {
-		return err
-	}
-	return kit.Signing.Verify(cosig.Signature, canon, signerPubKey)
-}
+// PlanetEpoch's verbatim sign/verify (SignedBytes, VerifyCoSignature,
+// AssembleEpoch, VerifyCharterContinuity, the Charter/Terms accessors) lives in
+// amp.support.epoch.go — the three-layer model signs the stored Charter/Terms
+// bytes directly and never re-marshals, so there is no PlanetEpoch.CanonicalBytes.
 
 // Clone returns a new *Tag with all user-visible fields copied from v.
 // Proto internals (MessageState, unknownFields, sizeCache) are freshly initialized.

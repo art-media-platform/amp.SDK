@@ -482,11 +482,11 @@ message PlanetStorageOpts {
 }
 
 
-// VaultOpts bundles the per-planet workload tunables that relay vaults enforce.
+// VaultConfig bundles the per-planet workload tunables that relay vaults enforce.
 // All fields are advisory — unset (zero) means "use the protocol default" from
-// amp.support.attrs.go DefaultXxx consts.  Passed around as *VaultOpts; helpers
+// amp.support.attrs.go DefaultXxx consts.  Passed around as *VaultConfig; helpers
 // on the pointer receiver are nil-safe so callers don't have to guard.
-message VaultOpts {
+message VaultConfig {
 
     // Rate limiting (per-member, sliding window):
     int64   MaxTxMsgSize         = 1;   // Max single TxMsg bytes (default: 1 MB)
@@ -522,103 +522,266 @@ message VaultOpts {
 }
 
 
-// PlanetEpoch is published in the root ACC channel to establish or rotate a planet epoch key.
-message PlanetEpoch {
+// SealState is the planet's lifecycle posture as asserted by the signing quorum
+// of one epoch (it lives in EpochTerms, never a top-level admin field, because
+// pausing or terminating a planet is a governance act).
+enum SealState {
+    Open   = 0; // live: normal read/write under this epoch
+    Paused = 1; // write-frozen, but a later quorum epoch (Open) may resume
+    Sealed = 2; // permanently sealed: no successor epoch chaining off this one is valid
+}
 
-    // Identity of this epoch.
-    Tag                 EpochTag = 1;
 
-    // Previous epoch (forms a chain).  Nil for genesis epoch.
-    Tag                 PreviousEpoch = 2;
+// BrandMark is a planet's QUORUM-SIGNED public identity — the impersonation
+// surface.  It is embedded in EpochTerms (quorum-signed), NOT the admin-mutable
+// Brand attr, so changing a planet's public face requires convening the
+// governing quorum.  This is the anti-spoof boundary: a lone admin key cannot
+// silently rename "Pentagon" to "Mercenaries of Death".
+//
+// The separate Brand attr remains the admin-mutable record for NON-identity,
+// cosmetic/operational fields (home URLs, link lists, install targets, and the
+// content-addressed BundledCrates SBOM — hash-pinned + change-logged).  When the
+// two disagree, BrandMark (here, quorum-signed) is the authoritative identity.
+message BrandMark {
 
-    // Human-readable label (e.g. "Genesis", "Post-revocation epoch 3").
-    string              Label = 5;
+    // Public name of the planet ("Tunr", "Pentagon", "The Martinez treehouse").
+    // The canonical display name; renaming requires the quorum.
+    string              AppName = 1;
 
-    // Crypto suite for this epoch.
-    // Determines which CryptoKit is used for signing, symmetric, and asymmetric ops.
-    safe.CryptoKitID    CryptoKitID = 10;
+    // Operator / sponsoring organization name ("SoundSpectrum").
+    string              OrgName = 2;
 
-    // If true, this planet operates in public mode: no payload encryption, signature-only.
-    // Set at genesis and cannot be changed without planet rebase.
-    // Anyone can syndicate and view content; only members can author (signature required).
-    bool                IsPublic = 15;
+    // Canonical domain the planet presents as ("spaces.soundspectrum.com").
+    // A domain claim is part of the impersonation surface, so it is quorum-signed.
+    string              AppDomain = 3;
 
-    // Vault-enforced workload tunables (rate limits, quarantine retention, intake guards,
-    // pending-queue caps).  Grouped under VaultOpts so operators can revise the ops posture
-    // per-planet without bloating PlanetEpoch's top-level schema.  Null-safe: unset fields
-    // fall back to the DefaultXxx consts in amp.support.attrs.go.
-    VaultOpts           VaultOpts = 20;
+    // Human-readable description of the planet.
+    string              AppDesc = 4;
 
-    // Maximum seconds after an epoch rotation during which old-epoch TxMsgs are still accepted.
-    // Allows offline members (mesh-only, off-grid) to author under the old epoch and have their
-    // TxMsgs accepted when they reconnect.  After this window, old-epoch TxMsgs are rejected.
-    // Enforced at the application layer, not by relay vaults.
-    // If 0, DefaultGracePeriod is used (90 days)
-    int64               MaxGracePeriod = 25;
+    // Deep-link / custom URL schemes this planet answers to (["tunr"]).  Quorum
+    // -signed because a scheme claim is an identity / impersonation surface.
+    repeated string     URLSchemes = 5;
+
+    // The federation that names this planet — the PRD-name-service §3.3 back-edge
+    // the planet acknowledges as its current namer.  Single-valued (one namer at
+    // a time, may roam).  Quorum-signed so federation affiliation cannot be spoofed.
+    Tag                 NamedBy = 6;
+
+    // Visual glyph variants (HTML <picture>-shaped Tags tree): size/theme/density/
+    // content-type variants consumers pick from.  The visual impersonation
+    // surface, hence quorum-signed.
+    Tags                Glyphs = 7;
+}
+
+
+// PrivacyMode is a planet's lifetime-fixed payload-confidentiality posture, set
+// at genesis in PlanetCharter and never changed (a planet that wants to switch
+// forks instead).  Confidential and Public are the endpoints; the reserved 1–6
+// gap leaves room for graduated intermediate modes without disturbing them.
+enum PrivacyMode {
+    Confidential = 0; // members-only: payloads are encrypted; only members author and view
+    Public       = 7; // signature-only: no payload encryption; anyone may syndicate/view, only members author
+}
+
+
+// PlanetCharter holds a planet's lifetime-IMMUTABLE founding terms.  It is
+// marshaled exactly once at genesis, stored verbatim in PlanetEpoch.Charter, and
+// carried byte-identically on every epoch for the planet's whole life.
+//
+// FREEZE INVARIANT: the Charter bytes are signed verbatim (see PlanetEpoch).  A
+// verifier hashes the STORED bytes and never re-marshals this message, so
+// cross-language proto-determinism is irrelevant to authority.  Field numbers
+// are still frozen so READERS across languages agree on field meaning; the
+// message grows additively (new fields take the next free number).
+message PlanetCharter {
+
+    // Layout version of this Charter.  1 at the v250 freeze.  A future
+    // incompatible layout (should never happen post-freeze) increments this so a
+    // reader refuses rather than misparses.
+    uint32              CharterSchema = 1;
+
+    // Permanent identity of the planet itself (not the epoch).  Equals the
+    // genesis planet UID.  Binds the Charter bytes to one planet so a Charter
+    // cannot be lifted and replayed onto another planet's chain.
+    Tag                 PlanetID = 2;
+
+    // Genesis epoch identity (== the first EpochTerms.EpochTag).  Anchors the
+    // root of the epoch chain inside the immutable layer.
+    Tag                 GenesisEpoch = 3;
+
+    // Containment hierarchy: the parent planet this one was founded under.
+    // Genesis-immutable — a planet's place in the parent/child tree is a founding
+    // fact, not a governance toggle.  Nil for a root planet.
+    Tag                 ParentPlanet = 4;
+
+    // Forward-only fork provenance: the planet this one was forked from, the
+    // source epoch, and fork time.  Carries no authority over this planet.
+    // Immutable because "where we came from" is a founding fact.  Nil for an
+    // original (non-forked) planet.
+    PlanetOrigin        Origin = 5;
+
+    // Privacy mode, fixed for the planet's life.  Public operates signature-only
+    // with no payload encryption (anyone may syndicate/view, only members author);
+    // Confidential encrypts payloads to members.  Changing it would retroactively
+    // re-classify all prior content — a Confidential planet that wants to go Public
+    // forks instead.
+    PrivacyMode         Privacy = 6;
+
+    // Founding declaration of intent — the vows, operating clause, house rules the
+    // founders read and signed.  Structured (Tags) so founding terms are machine-
+    // walkable: Head names the covenant; SubTags/Children carry clauses,
+    // jurisdiction, language variants, signed riders.  Immutable: the declaration
+    // each founder bound themselves to cannot be edited after.
+    Tags                Declaration = 7;
+
+    // Founding member set, by UID.  Genesis is self-ratifying: each founder
+    // co-signs Charter+Terms bytes that include this list, and their signing
+    // pubkeys ride the genesis TxMsg's MemberEpoch ops.  An explicit UID set (not
+    // a GovernanceGroup reference) avoids any chicken-and-egg at founding — a group
+    // cannot be cited before the planet that defines it exists.
+    repeated Tag        Founders = 8;
+
+    // Genesis quorum threshold: how many Founders must have validly co-signed the
+    // genesis epoch.  0 = all Founders (paranoid default).  Frozen: the rule under
+    // which the planet legitimately came into being cannot be restated.
+    int32               GenesisRequiredSignatures = 9;
+}
+
+
+// EpochTerms holds a planet's per-epoch GOVERNANCE terms.  Each epoch rotation
+// produces a fresh EpochTerms, marshaled once and stored verbatim in
+// PlanetEpoch.Terms, then co-signed by the governing quorum.  Verifiers hash the
+// STORED bytes; this message is never re-marshaled on the verify path.
+//
+// Everything here is quorum-signed.  In particular the planet's public identity
+// (Mark) lives here so a spoof rename requires convening the quorum, not a lone
+// admin write.  Non-identity Brand fields (home URLs, links, install targets,
+// hash-pinned BundledCrates) stay on the admin-mutable Brand attr.
+message EpochTerms {
+
+    // Layout version of this EpochTerms.  1 at the v250 freeze.
+    uint32              TermsSchema = 1;
+
+    // Identity of this epoch (time-ordered UID).  Matches PlanetEpoch.EpochTag and
+    // every MemberEpoch.Epoch published alongside it.
+    Tag                 EpochTag = 2;
+
+    // The epoch this one supersedes, forming the authority chain.  Nil ONLY for
+    // the genesis epoch.  A verifier walks this back to PlanetCharter.GenesisEpoch.
+    Tag                 PreviousEpoch = 3;
+
+    // Monotonic epoch height: genesis = 0, each rotation + 1.  A clock-independent
+    // total order (UIDs encode wall-clock, which a malicious minter could skew);
+    // lets verifiers reject out-of-order / replayed epochs and bound chain length.
+    uint64              EpochHeight = 4;
+
+    // Hash kit + digest of the planet's PlanetCharter bytes.  Binds every epoch to
+    // the one immutable Charter so a charter swap is detectable from the small
+    // Terms alone, without re-shipping Charter bytes for comparison.  HashKit is
+    // carried (not a hardcoded algorithm) so a future verifier selects the hasher.
+    safe.HashKitID      CharterHashKit = 5;
+    bytes               CharterHash = 6;
+
+    // Crypto suite in force for this epoch — the SOLE home for the planet's suite
+    // (no separate founding-kit slot; the genesis epoch's value IS the founding
+    // suite).  Unset resolves to Poly25519 via EffectiveCryptoKit.  A quorum-
+    // approved migration (e.g. post-quantum) rotates the suite by issuing an epoch
+    // with a new value.
+    safe.CryptoKitID    CryptoKitID = 7;
+
+    // Human-readable label for THIS epoch ("Genesis", "Rotation 3") — an operator/
+    // audit display string, NOT the planet's public name (that is Mark.AppName).
+    string              Label = 8;
+
+    // The planet's quorum-signed public identity (name/org/domain/description/URL
+    // schemes/federation back-edge/glyphs).  The impersonation surface — here, not
+    // the admin-mutable Brand attr, so a public-face change requires the quorum.
+    BrandMark           Mark = 9;
 
     // Default entry channel — where members land when opening the planet.
-    // The Foyer is to play as Index is to search.
-    Tag                 Foyer = 30;
+    // Foyer is to play as Index is to search.
+    Tag                 Foyer = 10;
 
-    // Courtesy listing of public-facing nodes on this planet.
-    // Points to a Node whose attrs enumerate discoverable channels and content.
-    Tag                 Index = 31;
+    // Public-facing node enumerating discoverable channels / content.
+    Tag                 Index = 11;
 
-    // Planet glyphs — a Tags tree of visual variants (size, theme, density,
-    // content-type).  Consumers (WebRect / Vuplex / native UI / terminal)
-    // walk SubTags and pick the variant best suited to the rendering surface.
-    // Same shape as the HTML <picture> element: Head describes the family;
-    // each SubTag carries a URI + ContentType + I,J,K dimensions + Units.
-    Tags                Glyphs = 32;
+    // The ACC group whose members are the authorized co-signers of this epoch.
+    // Zero/unset for genesis (the signers are PlanetCharter.Founders directly);
+    // for rotations, resolves to a group defined in the prior epoch's member set.
+    Tag                 GovernanceGroup = 12;
 
-    // Human-readable description of this planet.
-    string              About = 33;
+    // Threshold of GovernanceGroup co-signatures required for this epoch to be
+    // valid.  0 = all members of the resolved group (paranoid default).
+    int32               RequiredSignatures = 13;
 
-    // Human-readable declaration of intent, signed into canonical bytes.
-    // This is what a founder reads before signing: "We found this planet to ...",
-    // "We, by mutual consent, enter into this partnership ...", "The Martinez
-    // kids' treehouse — only us."  Cryptographic founding without a signed
-    // statement of purpose is alien to how humans bind themselves; this field
-    // is the vows, the operating clause, the house rules.
-    //
-    // Canonically signed (included in CanonicalBytes).  Free-form UTF-8;
-    // markdown is conventional.  Content beyond human intent (schemas, policies)
-    // belongs elsewhere.  Empty is legal but strongly discouraged for genesis.
-    string              Declaration = 40;
+    // Lifecycle posture asserted by this epoch's quorum (Open / Paused / Sealed).
+    SealState           Seal = 14;
 
-    // Governance: the ACC group whose members must co-sign this epoch.
-    // Zero/unset for genesis epochs when Signatures contains the founding set directly.
-    // For rotation epochs, resolves to a Group defined in the prior epoch's member set.
-    Tag                 GovernanceGroup = 42;
+    // Address of the immutable Codex edition this epoch publishes / seals against
+    // ("the printed edition").  Typically set on a Paused/Sealed sealing epoch.
+    // Zero when this epoch publishes no edition.
+    Address             CodexEdition = 15;
 
-    // Number of signatures required from GovernanceGroup for this epoch to be valid.
-    // 0 means "all members of GovernanceGroup must sign" (paranoid default).
-    // Genesis with 1-of-1 is the degenerate single-founder case.
-    int32               RequiredSignatures = 43;
+    // Vault workload tunables (rate limits, quarantine retention, intake guards,
+    // pending-queue caps).  Quorum-signed so an operator cannot unilaterally loosen
+    // them.  Null-safe: unset fields fall back to the DefaultXxx consts.
+    VaultConfig         VaultConfig = 16;
 
-    // Co-signatures over the canonical serialization of this PlanetEpoch
-    // (with Signatures and Witnesses excluded from the signed payload).
-    // Each signer's CryptoKitID is resolved via their MemberTag, enabling
-    // mixed-suite quorums (e.g. one signer on Poly25519, one on P-256, one on secp256k1).
-    repeated CoSignature Signatures = 44;
+    // Seconds after rotation during which old-epoch TxMsgs are still accepted
+    // (offline / mesh authors).  If 0, DefaultGracePeriod is used.
+    int64               MaxGracePeriod = 17;
+}
 
-    // Non-voting attestors: notaries, officiants, friends, auditors, AI monitors —
-    // anyone whose cryptographic presence lends legitimacy without conferring
-    // authority.  A rabbi at a wedding, a lawyer witnessing an operating agreement,
-    // a friend attesting a kid's treehouse charter.  Signatures over the same
-    // canonical bytes as Signatures; distinguished by role, not by form.
-    //
-    // Excluded from canonical bytes (same treatment as Signatures) so witnesses
-    // can be added after-the-fact without re-signing the quorum.
-    repeated CoSignature Witnesses = 45;
 
-    // If true, this planet is local to one host and never announced to peers.
-    // The host-planet holds runtime state (ledger observability, admin ops,
-    // telemetry) inside the same substrate as content planets.  The vault
-    // controller refuses to announce it, rejects inbound TxMsgs claiming this
-    // planet from remote peers, and skips it in watch-list exchanges.
-    // See PRD-host-planet.
-    bool                LocalOnly = 50;
+// PlanetEpoch is the envelope published in the root ACC channel (HeadNodeID) to
+// establish or rotate a planet epoch.  It carries two verbatim-signed sub-
+// structures — the immutable Charter and this epoch's Terms — the quorum co-
+// signatures over them, the non-voting witnesses, and unsigned runtime fields.
+//
+// SIGNED PAYLOAD (the FRAME each CoSignature covers), reconstructed from the
+// STORED bytes and never from a re-marshal:
+//
+//     u64BE(len Charter) || Charter || u64BE(len Terms) || Terms
+//
+// No protobuf library is needed to reproduce the FRAME: it is three universal
+// operations (byte length, big-endian uint64, concatenation) over two opaque
+// blobs that were each marshaled exactly once at authoring time.  The u64
+// big-endian length prefixes make the Charter/Terms boundary unforgeable and
+// additive-safe forever (a byte cannot be shifted across the boundary without
+// changing a length).  Layout evolution is signaled in-band by the signed
+// CharterSchema / TermsSchema fields, so the FRAME itself carries no magic or
+// version tag.
+message PlanetEpoch {
+
+    // Verbatim PlanetCharter bytes — marshaled once at genesis and carried byte-
+    // identically on EVERY epoch (self-contained; a single epoch is fully
+    // verifiable offline without fetching genesis).  First half of the FRAME.
+    bytes               Charter = 1;
+
+    // Verbatim EpochTerms bytes for THIS epoch.  Second half of the FRAME.
+    bytes               Terms = 2;
+
+    // Advisory denormalized copy of EpochTerms.EpochTag, in the clear so vaults and
+    // routers can index/address (HeadNodeID, LawPlanetEpoch, EpochTag) without
+    // parsing Terms.  UNSIGNED: verifiers MUST treat the value inside Terms as
+    // authoritative and reject a mismatch.
+    Tag                 EpochTag = 3;
+
+    // Quorum co-signatures over the FRAME.  Each signer's CryptoKit is resolved via
+    // MemberTag -> MemberEpoch, enabling mixed-suite quorums.  Excluded from the
+    // FRAME so signers append incrementally.
+    repeated CoSignature Signatures = 4;
+
+    // Non-voting attestors (notary, officiant, friend, auditor, AI monitor) signing
+    // the SAME FRAME as Signatures, distinguished by slice not by form.  Excluded
+    // from the FRAME so witnesses can be added after-the-fact.
+    repeated CoSignature Witnesses = 5;
+
+    // Host-only runtime flag, NEVER signed and NEVER announced: if true, this planet
+    // is local to one host (the vault refuses to announce it, rejects remote claims,
+    // and skips it in watch-list exchanges).  A per-host deployment fact — two hosts
+    // may legitimately disagree — so it lives outside the signed Charter/Terms.
+    bool                LocalOnly = 6;
 }
 
 
@@ -909,7 +1072,7 @@ message PlanetInvite {
 
     // Bootstrap expiry, unix seconds.  The acceptor rejects on accept when
     // time.Now().Unix() > ExpiresAt.  Stamped at issue using the planet's
-    // VaultOpts.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
+    // VaultConfig.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
     // expiry (only accepted from issuers that intentionally opt out).
     int64                   ExpiresAt = 25;
 }

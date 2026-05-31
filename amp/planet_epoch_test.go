@@ -11,10 +11,10 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-func TestPlanetEpoch_CanonicalBytes_ExcludesSignatures(t *testing.T) {
+func TestPlanetEpoch_SignedBytes_ExcludesSignatures(t *testing.T) {
 	epoch := makeTestEpoch(t)
 
-	canonEmpty, err := epoch.CanonicalBytes()
+	frameEmpty, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,13 +23,13 @@ func TestPlanetEpoch_CanonicalBytes_ExcludesSignatures(t *testing.T) {
 		{MemberTag: amp.TagFromUID(tag.UID{1, 2}), Signature: []byte{0xde, 0xad, 0xbe, 0xef}},
 	}
 
-	canonWithSig, err := epoch.CanonicalBytes()
+	frameWithSig, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if string(canonEmpty) != string(canonWithSig) {
-		t.Fatal("CanonicalBytes must be identical regardless of Signatures content")
+	if string(frameEmpty) != string(frameWithSig) {
+		t.Fatal("SignedBytes must be identical regardless of Signatures content")
 	}
 }
 
@@ -37,12 +37,12 @@ func TestPlanetEpoch_SignVerify_Roundtrip(t *testing.T) {
 	epoch := makeTestEpoch(t)
 	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
 
-	canon, err := epoch.CanonicalBytes()
+	frame, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sig, err := kit.Signing.Sign(canon, prv)
+	sig, err := kit.Signing.Sign(frame, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,11 +66,11 @@ func TestPlanetEpoch_Verify_RejectsTampered(t *testing.T) {
 	epoch := makeTestEpoch(t)
 	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
 
-	canon, err := epoch.CanonicalBytes()
+	frame, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	sig, err := kit.Signing.Sign(canon, prv)
+	sig, err := kit.Signing.Sign(frame, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +79,9 @@ func TestPlanetEpoch_Verify_RejectsTampered(t *testing.T) {
 		Signature: sig,
 	}
 
-	epoch.Label = "Tampered"
+	// Flip a byte inside the verbatim Terms — the FRAME no longer matches what
+	// was signed, so verification must fail.
+	epoch.Terms[len(epoch.Terms)-1] ^= 0xFF
 	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err == nil {
 		t.Fatal("verify must reject signature over a tampered epoch")
 	}
@@ -99,8 +101,8 @@ func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 
 // TestPlanetEpoch_MixedSuiteQuorum is the load-bearing demonstration that a
 // single genesis epoch can be co-signed by founders on different CryptoKits.
-// One Poly25519 founder + one P-256 founder both sign the same canonical
-// bytes; each signature is verified against its signer's native kit.
+// One Poly25519 founder + one P-256 founder both sign the same FRAME; each
+// signature is verified against its signer's native kit.
 //
 // This is the proof that PlanetEpoch.VerifyCoSignature is per-signer by design.
 //
@@ -109,7 +111,7 @@ func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	epoch := makeTestEpoch(t)
 
-	canon, err := epoch.CanonicalBytes()
+	frame, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,11 +119,11 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	polyKit, polyPub, polyPrv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
 	p256Kit, p256Pub, p256Prv := freshKeyPair(t, safe.CryptoKitID_P256)
 
-	polySig, err := polyKit.Signing.Sign(canon, polyPrv)
+	polySig, err := polyKit.Signing.Sign(frame, polyPrv)
 	if err != nil {
 		t.Fatal(err)
 	}
-	p256Sig, err := p256Kit.Signing.Sign(canon, p256Prv)
+	p256Sig, err := p256Kit.Signing.Sign(frame, p256Prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +156,7 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	}
 
 	// Populating Signatures[] for both founders must not break verification —
-	// CanonicalBytes() excludes Signatures from the signed payload.
+	// the FRAME excludes Signatures from the signed payload.
 	epoch.Signatures = []*amp.CoSignature{polyCoSig, p256CoSig}
 	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.CryptoKitID_Poly25519); err != nil {
 		t.Fatalf("Poly25519 verify after Signatures populated: %v", err)
@@ -164,21 +166,39 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	}
 }
 
-// TestPlanetEpoch_Declaration_ParticipatesInSigning confirms that the
-// human-readable Declaration is part of canonical bytes — tampering with the
+// TestPlanetEpoch_Declaration_ParticipatesInSigning confirms that the founders'
+// human-readable Declaration is part of the signed Charter bytes — swapping the
 // founders' stated intent must break verification, just like tampering with
 // EpochTag or GovernanceGroup.  This is what makes the declaration load-bearing
 // rather than decorative.
 func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
-	epoch := makeTestEpoch(t)
-	epoch.Declaration = "We, Alice and Bob, found this planet for our shared art practice."
+	mkEnv := func(declaration string) *amp.PlanetEpoch {
+		t.Helper()
+		charter := &amp.PlanetCharter{
+			CharterSchema: 1,
+			PlanetID:      amp.TagFromUID(tag.UID{0xABCD, 0xEF01}),
+			GenesisEpoch:  amp.TagFromUID(tag.UID{100, 200}),
+			Declaration:   &amp.Tags{Head: &amp.Tag{Text: declaration}},
+		}
+		terms := &amp.EpochTerms{
+			TermsSchema: 1,
+			EpochTag:    amp.TagFromUID(tag.UID{100, 200}),
+			CryptoKitID: safe.CryptoKitID_Poly25519,
+		}
+		env, err := amp.AssembleEpoch(charter, terms, safe.HashKitID_Blake2s_256)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return env
+	}
 
+	honest := mkEnv("We, Alice and Bob, found this planet for our shared art practice.")
 	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
-	canon, err := epoch.CanonicalBytes()
+	frame, err := honest.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	sig, err := kit.Signing.Sign(canon, prv)
+	sig, err := kit.Signing.Sign(frame, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,23 +207,25 @@ func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 		Signature: sig,
 	}
 
-	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err != nil {
-		t.Fatalf("verify should succeed on untampered epoch: %v", err)
+	if err := honest.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err != nil {
+		t.Fatalf("verify should succeed on the honest declaration: %v", err)
 	}
 
-	epoch.Declaration = "We, Alice and Bob, found this planet for money laundering."
-	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err == nil {
-		t.Fatal("verify must reject signature after Declaration tamper")
+	// The honest founders' signature must not validate an envelope whose
+	// Declaration was swapped — the intent lives inside the signed Charter.
+	forged := mkEnv("We, Alice and Bob, found this planet for money laundering.")
+	if err := forged.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err == nil {
+		t.Fatal("verify must reject the honest signature against a swapped Declaration")
 	}
 }
 
-// TestPlanetEpoch_Witnesses_ExcludedFromCanonicalBytes confirms that appending
-// witnesses after-the-fact does not invalidate the founders' quorum signatures.
+// TestPlanetEpoch_Witnesses_ExcludedFromFrame confirms that appending witnesses
+// after-the-fact does not invalidate the founders' quorum signatures.
 // Witnesses attest; they do not re-open the signing payload.
-func TestPlanetEpoch_Witnesses_ExcludedFromCanonicalBytes(t *testing.T) {
+func TestPlanetEpoch_Witnesses_ExcludedFromFrame(t *testing.T) {
 	epoch := makeTestEpoch(t)
 
-	canonBefore, err := epoch.CanonicalBytes()
+	frameBefore, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -213,32 +235,30 @@ func TestPlanetEpoch_Witnesses_ExcludedFromCanonicalBytes(t *testing.T) {
 		{MemberTag: amp.TagFromUID(tag.UID{99, 2}), Signature: []byte{0xcc, 0xdd}},
 	}
 
-	canonAfter, err := epoch.CanonicalBytes()
+	frameAfter, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if string(canonBefore) != string(canonAfter) {
-		t.Fatal("CanonicalBytes must be identical regardless of Witnesses content")
+	if string(frameBefore) != string(frameAfter) {
+		t.Fatal("SignedBytes must be identical regardless of Witnesses content")
 	}
 }
 
-// TestPlanetEpoch_Witnesses_VerifyOverSameCanonicalBytes confirms that a
-// witness signs the exact same payload as a quorum signer — the role
-// distinction (voting vs. attesting) lives in which slice the signature lands,
-// not in a different signed message.  A notary, officiant, or AI monitor's
-// signature can be validated with the same VerifyCoSignature call that
-// validates a founder's.
-func TestPlanetEpoch_Witnesses_VerifyOverSameCanonicalBytes(t *testing.T) {
+// TestPlanetEpoch_Witnesses_VerifyOverSameFrame confirms that a witness signs
+// the exact same payload as a quorum signer — the role distinction (voting vs.
+// attesting) lives in which slice the signature lands, not in a different signed
+// message.  A notary, officiant, or AI monitor's signature can be validated with
+// the same VerifyCoSignature call that validates a founder's.
+func TestPlanetEpoch_Witnesses_VerifyOverSameFrame(t *testing.T) {
 	epoch := makeTestEpoch(t)
-	epoch.Declaration = "Alice and Bob co-found, witnessed by Carol the notary."
 
 	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
-	canon, err := epoch.CanonicalBytes()
+	frame, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	witnessSig, err := kit.Signing.Sign(canon, prv)
+	witnessSig, err := kit.Signing.Sign(frame, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -253,18 +273,30 @@ func TestPlanetEpoch_Witnesses_VerifyOverSameCanonicalBytes(t *testing.T) {
 	// The witness's signature verifies by the same mechanism as a founder's —
 	// the only difference is the slice it lives in.
 	if err := epoch.VerifyCoSignature(witness, pub, safe.CryptoKitID_Poly25519); err != nil {
-		t.Fatalf("witness signature must verify under the same canonical bytes: %v", err)
+		t.Fatalf("witness signature must verify under the same FRAME: %v", err)
 	}
 }
 
+// makeTestEpoch assembles a minimal genesis envelope (Charter + Terms marshaled
+// once, CharterHash bound) ready for co-signing over its FRAME.
 func makeTestEpoch(t *testing.T) *amp.PlanetEpoch {
 	t.Helper()
-	return &amp.PlanetEpoch{
-		EpochTag:           amp.TagFromUID(tag.UID{100, 200}),
-		Label:              "Genesis",
-		CryptoKitID:        safe.CryptoKitID_Poly25519,
-		RequiredSignatures: 0,
+	charter := &amp.PlanetCharter{
+		CharterSchema: 1,
+		PlanetID:      amp.TagFromUID(tag.UID{0xABCD, 0xEF01}),
+		GenesisEpoch:  amp.TagFromUID(tag.UID{100, 200}),
 	}
+	terms := &amp.EpochTerms{
+		TermsSchema: 1,
+		EpochTag:    amp.TagFromUID(tag.UID{100, 200}),
+		Label:       "Genesis",
+		CryptoKitID: safe.CryptoKitID_Poly25519,
+	}
+	env, err := amp.AssembleEpoch(charter, terms, safe.HashKitID_Blake2s_256)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return env
 }
 
 func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.KitSpec, []byte, []byte) {

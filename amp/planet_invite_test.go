@@ -47,24 +47,24 @@ func TestPlanetInvite_IsExpired_BoundaryEquality(t *testing.T) {
 	}
 }
 
-// TestVaultOpts_BootstrapTTL_DefaultAndOverride — nil opts and zero field both
+// TestVaultConfig_BootstrapTTL_DefaultAndOverride — nil config and zero field both
 // fall through to DefaultBootstrapTTL; non-zero override takes precedence.
-func TestVaultOpts_BootstrapTTL_DefaultAndOverride(t *testing.T) {
+func TestVaultConfig_BootstrapTTL_DefaultAndOverride(t *testing.T) {
 	defaultTTL := time.Duration(amp.DefaultBootstrapTTL) * time.Second
 
-	if got := (*amp.VaultOpts)(nil).BootstrapTTL(); got != defaultTTL {
-		t.Errorf("nil VaultOpts: got %v want %v", got, defaultTTL)
+	if got := (*amp.VaultConfig)(nil).BootstrapTTL(); got != defaultTTL {
+		t.Errorf("nil VaultConfig: got %v want %v", got, defaultTTL)
 	}
-	if got := (&amp.VaultOpts{}).BootstrapTTL(); got != defaultTTL {
-		t.Errorf("zero VaultOpts: got %v want %v", got, defaultTTL)
+	if got := (&amp.VaultConfig{}).BootstrapTTL(); got != defaultTTL {
+		t.Errorf("zero VaultConfig: got %v want %v", got, defaultTTL)
 	}
-	if got := (&amp.VaultOpts{BootstrapTTLSecs: -5}).BootstrapTTL(); got != defaultTTL {
+	if got := (&amp.VaultConfig{BootstrapTTLSecs: -5}).BootstrapTTL(); got != defaultTTL {
 		t.Errorf("negative override must fall through to default: got %v want %v", got, defaultTTL)
 	}
 
 	override := int64(3600)
 	want := time.Hour
-	if got := (&amp.VaultOpts{BootstrapTTLSecs: override}).BootstrapTTL(); got != want {
+	if got := (&amp.VaultConfig{BootstrapTTLSecs: override}).BootstrapTTL(); got != want {
 		t.Errorf("explicit 3600s override: got %v want %v", got, want)
 	}
 }

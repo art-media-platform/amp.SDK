@@ -133,7 +133,7 @@ func TestTxWithinGracePeriod(t *testing.T) {
 
 	cases := []struct {
 		name      string
-		epoch     *PlanetEpoch
+		epoch     *EpochTerms
 		txTime    int64
 		wantAllow bool
 	}{
@@ -142,8 +142,8 @@ func TestTxWithinGracePeriod(t *testing.T) {
 		{"inside default grace (89 days)", nil, epochTime - 89*86400, true},
 		{"at default grace boundary (90 days)", nil, epochTime - 90*86400, true},
 		{"outside default grace (91 days)", nil, epochTime - 91*86400, false},
-		{"custom short grace 7 days — inside", &PlanetEpoch{MaxGracePeriod: 7 * 86400}, epochTime - 6*86400, true},
-		{"custom short grace 7 days — outside", &PlanetEpoch{MaxGracePeriod: 7 * 86400}, epochTime - 8*86400, false},
+		{"custom short grace 7 days — inside", &EpochTerms{MaxGracePeriod: 7 * 86400}, epochTime - 6*86400, true},
+		{"custom short grace 7 days — outside", &EpochTerms{MaxGracePeriod: 7 * 86400}, epochTime - 8*86400, false},
 	}
 
 	for _, tc := range cases {
