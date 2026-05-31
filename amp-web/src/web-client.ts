@@ -1,5 +1,5 @@
 /**
- * AmpWebClient — talks the amp.exe `app.www` wire contract.
+ * AmpWebClient — talks the `ampd` `app.www` wire contract.
  *
  * REST:      {vaultUrl}/api/v1/...           (amp.SDK/amp/webapi)
  * WebSocket: {vaultUrl}/ws                   (flat SubscribeFrame fan-out)

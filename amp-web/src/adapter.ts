@@ -1,7 +1,7 @@
 /**
  * AmpAdapter is the interface the hooks call — never `fetch` directly.
  *
- * AmpWebClient is the one shipped implementation: it speaks the amp.exe
+ * AmpWebClient is the one shipped implementation: it speaks the `ampd`
  * `app.www` wire contract (amp.SDK/amp/webapi).
  */
 

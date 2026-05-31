@@ -6,8 +6,8 @@
 
 This repository is the **SDK**: a dependency-light Go library defining the wire format, CRDT addressing model, key/identity primitives, and `AppModule` interface.  Pair it with amp.planet to produce:
 
-- `amp.exe` — standalone server / vault (macOS, Windows, Linux, Raspberry Pi, Android, Graphene)
-- `amp.lib` — embeddable C library for Unity and Unreal clients
+- `ampd` — standalone server / vault (macOS, Windows, Linux, Raspberry Pi, Android, Graphene)
+- `libampd` — embeddable C library for Unity and Unreal clients
 - [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks) for web apps
 - Reticulum gateway for transport over LoRa / packet radio / I2P
 
@@ -97,7 +97,7 @@ Reticulum and AMP are architecturally aligned:
 
 The future of computing is spatial.  AR/VR headsets, digital twins, geospatial logistics, immersive collaboration — these are active markets with real deployments today.  But spatial platforms have been a walled garden: Meta's Horizon, Apple's visionOS, Google's ARCore.
 
-AMP provides the security and communication layer that spatial applications need without corporate lock-in.  It ships as an embeddable C library for [Unity](https://unity.com) and [Unreal](https://unrealengine.com), or as a standalone server binary (`amp.exe`) for headless operation.
+AMP provides the security and communication layer that spatial applications need without corporate lock-in.  It ships as an embeddable C library for [Unity](https://unity.com) and [Unreal](https://unrealengine.com), or as a standalone server binary (`ampd`) for headless operation.
 
 A Unity app with AMP embedded has end-to-end encrypted federated communication, offline-capable CRDT state, authenticated media streaming, and mesh networking — all without a single line of server code or a single dependency on a cloud provider.
 
@@ -151,7 +151,7 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project
 2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L31) for your functionality
 3. Clone amp.planet and register your module
-4. `make build` produces `amp.exe` (standalone server) and `amp.lib` (embeddable C library)
+4. `make build` produces `ampd` (standalone server) and `libampd` (embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
 
 ---

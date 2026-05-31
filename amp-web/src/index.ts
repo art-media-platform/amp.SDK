@@ -2,7 +2,7 @@
  * @art-media-platform/web — TypeScript SDK for art.media.platform web apps.
  *
  * Wrap your app with <AmpProvider client={new AmpWebClient({...})}> and use
- * the hooks.  The adapter speaks the amp.exe `app.www` wire contract
+ * the hooks.  The adapter speaks the `ampd` `app.www` wire contract
  * (amp.SDK/amp/webapi); all reads, writes, uploads, and subscriptions go
  * through it.
  */

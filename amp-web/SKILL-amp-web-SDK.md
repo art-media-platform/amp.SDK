@@ -1,6 +1,6 @@
 # SKILL: amp-web-SDK
 
-> **What this document is:** Instructions for an AI coding agent (Claude Code, Cursor, Replit Agent, etc.) — and a contract for human web developers — to build web applications that persist data through the art.media.platform (amp) vault infrastructure. Drop this file into any web project. Generated code uses the `@art-media-platform/web` library to talk to `app.www`, the unified HTTP service inside `amp.exe`.
+> **What this document is:** Instructions for an AI coding agent (Claude Code, Cursor, Replit Agent, etc.) — and a contract for human web developers — to build web applications that persist data through the art.media.platform (amp) vault infrastructure. Drop this file into any web project. Generated code uses the `@art-media-platform/web` library to talk to `app.www`, the unified HTTP service inside `ampd`.
 
 > **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is encrypted, signed, and replicated across independent nodes ("vaults"). Vaults relay traffic without reading content. Every host is a full peer — your app works offline; sync is additive. Your web app is a disposable UI layer; amp is the durable substrate underneath.
 
@@ -10,7 +10,7 @@
 
 This SKILL is the contract a web app codes against. It has one consumer and one server:
 
-- **Server:** `app.www`, an amp app inside `amp.exe`, owning HTTP port 5193. The wire shape (REST verbs, WebSocket event format, auth model) is the contract.
+- **Server:** `app.www`, an amp app inside `ampd`, owning HTTP port 5193. The wire shape (REST verbs, WebSocket event format, auth model) is the contract.
 - **Reference client:** `@art-media-platform/web`, a TypeScript package that wraps the wire shape with React hooks. Other languages reach the wire directly.
 
 The SKILL describes:
@@ -87,7 +87,7 @@ VITE_AMP_PUBLIC_SHARE_PLANET_TAG=my-planet-tag-shares
 **Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` only resolves anonymously when the deploy operator has actually registered the planet on the server side. Two mechanisms (see §6.4):
 
 - **Persisted via `app.brand.json`** — the deploy's brand config carries a `SharePlanet { Name, UID }` block; the portal registers it with the bridge at boot and on each snapshot reload.
-- **Runtime via `amp.exe planet create`** — the operator hits `POST /api/v1/admin/planet/create` (or runs the CLI) once, drops the returned UID into `app.brand.json` for persistence.
+- **Runtime via `ampd planet create`** — the operator hits `POST /api/v1/admin/planet/create` (or runs the CLI) once, drops the returned UID into `app.brand.json` for persistence.
 
 Without one of these, anonymous reads against the planet tag fall through to the standard Bearer gate.
 
@@ -557,13 +557,13 @@ amp does NOT have a per-item visibility flag. Public-readable content lives on a
 
 #### Operator setup (one time per deploy)
 
-The deploy operator creates the share planet and registers it with the running amp.exe. Two paths:
+The deploy operator creates the share planet and registers it with the running `ampd` daemon. Two paths:
 
 **CLI:**
 ```bash
 # After wallet-login via the web (POST /api/v1/login scheme=wallet),
 # pass the resulting Bearer token to the CLI:
-AMP_TOKEN=<bearer> amp.exe planet create --tag <name>
+AMP_TOKEN=<bearer> ampd planet create --tag <name>
 # → { "PlanetID": "<base32 UID>", "Tag": "<canonic>", "Public": true }
 ```
 
@@ -770,7 +770,7 @@ const amp = window.amp || {
 
 #### Server route — `/cards/{cell}[/asset]`
 
-`app.www` serves card bundles at `/cards/{cell}` (anonymous; no Bearer required). Each cell is a flat directory containing `index.html` and any sibling assets. The canonical cells ship embedded in the `amp.exe` binary; an operator drop at `{homePath}/cards/{cell}/` shadows the embedded copy for whitelabel customization without a rebuild.
+`app.www` serves card bundles at `/cards/{cell}` (anonymous; no Bearer required). Each cell is a flat directory containing `index.html` and any sibling assets. The canonical cells ship embedded in the `ampd` binary; an operator drop at `{homePath}/cards/{cell}/` shadows the embedded copy for whitelabel customization without a rebuild.
 
 Cell names match `[A-Za-z0-9_-]+` and the filesystem is the registry (no allowlist). `/cards/{cell}` and `/cards/{cell}/` both resolve to `index.html`. Path traversal returns 404. Non-GET/HEAD verbs return 405.
 
@@ -790,7 +790,7 @@ form-action 'self'
 
 Inline `<script>` is forbidden — JS ships as a sibling file (`card.js`). Inline `<style>` blocks are permitted for skinning convenience. `postMessage` is the bridge to the parent frame and is not gated by CSP.
 
-The canonical example cell (`cards/example/`, shipped embedded in `amp.exe`) exercises every Bridge IDL verb and is the recommended starting template.
+The canonical example cell (`cards/example/`, shipped embedded in `ampd`) exercises every Bridge IDL verb and is the recommended starting template.
 
 ### 8.6 Card template
 
@@ -900,7 +900,7 @@ Cross-planet addressing is the substrate for shareable links: the share URL embe
 - `apple-app-site-association` / `assetlinks.json` — universal/app-link configs.
 - `open-link.tmpl.html` — deep-link landing page.
 
-A single `amp.exe` instance can serve many orgs by `Host`-header routing — each with its own `www/` SPA, planet bindings, and admin list. There is no hard per-instance cap on orgs or planets; it is bounded by host resources.
+A single `ampd` instance can serve many orgs by `Host`-header routing — each with its own `www/` SPA, planet bindings, and admin list. There is no hard per-instance cap on orgs or planets; it is bounded by host resources.
 
 `app.brand.json` is **server-side operator config**, not something the SDK fetches. The client is handed the planet tag(s) it needs at construction time (`vaultUrl` + `planetTag`, plus an optional share-planet tag) — typically surfaced into the SPA as build-time env vars (`VITE_AMP_VAULT_URL`, `VITE_AMP_PLANET_TAG`, `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`). The brand file's job is to configure the *host*: CORS, deep links, the admin allowlist, and which planet is anonymous-readable.
 
@@ -1027,8 +1027,8 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **TxMsg** | A signed, encrypted transaction containing one or more data ops. |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
-| **Vault** | An amp.exe node that stores and relays encrypted data; cannot read content. |
-| **Portal** | `app.www` — the unified HTTP service inside amp.exe (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards). |
+| **Vault** | An `ampd` peer that stores and relays encrypted data; cannot read content. |
+| **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards). |
 | **Member** | An authenticated identity within a planet. Has `kind` (DESIGN-11): Person / Group / Agent / Memorial / etc. |
 | **MemberProof** | An HMAC of derived proof key over TxID; lets a relay verify membership without decryption. |
 | **WebRect** | A Unity 3D Pane that renders a web card. |
@@ -1039,7 +1039,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque; `client.address()` is an identity passthrough. Carries the DESIGN-12 element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. DESIGN-14. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. DESIGN-15. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
-| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `amp.exe planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |
+| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `ampd planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |
 | **Admin endpoint** | Bearer-authenticated server endpoint reserved for operator-driven substrate operations — currently `POST /api/v1/admin/planet/create` for share-planet genesis. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. |
 
@@ -1051,13 +1051,13 @@ This section answers the architecture questions that come up when an existing pr
 
 ### 14.1 Deployment topologies — where the vault runs
 
-An `amp.exe` host is a full peer: it stores, signs, encrypts, and relays. A web / desktop app reaches one in three shapes:
+An `ampd` host is a full peer: it stores, signs, encrypts, and relays. A web / desktop app reaches one in three shapes:
 
-- **Embedded local vault** — bundle `amp.exe` (or the `amp.lib` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; projects are encrypted on their own machine; reads, writes, and seals work with no network. This is the topology that preserves an **offline-first** product. Cross-compile the Go host per target (darwin-arm64/x64, win-x64/arm64, linux-x64), code-sign each, ship it as a platform resource.
-- **Shared cloud vault** — one `amp.exe` on a server is the rendezvous point for cross-device sync and multi-member collab. Simplest to operate; loses the offline property (the app needs the server reachable to read/write).
+- **Embedded local vault** — bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; projects are encrypted on their own machine; reads, writes, and seals work with no network. This is the topology that preserves an **offline-first** product. Cross-compile the Go host per target (darwin-arm64/x64, win-x64/arm64, linux-x64), code-sign each, ship it as a platform resource.
+- **Shared cloud vault** — one `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab. Simplest to operate; loses the offline property (the app needs the server reachable to read/write).
 - **Hybrid** — an embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. This is the native amp model, not a bolt-on.
 
-A pure-JS / WASM in-process vault is **not** on the near-term path; the embeddable unit today is the native host (`amp.exe` / `amp.lib`). For a paid desktop app, **hybrid (embedded + optional cloud sync)** is the recommended shape.
+A pure-JS / WASM in-process vault is **not** on the near-term path; the embeddable unit today is the native host (`ampd` / `libampd`). For a paid desktop app, **hybrid (embedded + optional cloud sync)** is the recommended shape.
 
 ### 14.2 Offline membership & feature gating
 
@@ -1101,7 +1101,7 @@ Item order is `_ItemID` (tag.UID) byte order, not wall-clock — fine for SDP ex
 
 ### 14.7 Integration fixtures
 
-For end-to-end tests without a production vault, point the client at a local `amp.exe` running its in-memory dev backend — it round-trips the exact wire shape (not encrypted, not synced: a contract fixture, not a vault). The bundle also ships `scripts/smoke.mjs`, the login → upsert → query → seal / open smoke check the SDK validates against. Drive your Stripe **test-mode** webhook at a local fixture vault to exercise provision / expire paths without touching real customers.
+For end-to-end tests without a production vault, point the client at a local `ampd` running its in-memory dev backend — it round-trips the exact wire shape (not encrypted, not synced: a contract fixture, not a vault). The bundle also ships `scripts/smoke.mjs`, the login → upsert → query → seal / open smoke check the SDK validates against. Drive your Stripe **test-mode** webhook at a local fixture vault to exercise provision / expire paths without touching real customers.
 
 ---
 

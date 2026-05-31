@@ -8,7 +8,7 @@ primer lives in the [amp.SDK README](https://github.com/art-media-platform/amp.S
 
 ## What a vault can and cannot see
 
-A vault (an `amp.exe` relay node) stores and forwards encrypted transactions.
+A vault (an `ampd` relay peer) stores and forwards encrypted transactions.
 On a **private** planet it can verify that a transaction came from a legitimate
 member — via an HMAC membership proof derived from the epoch key — **without
 decrypting the content or learning which member authored it**.

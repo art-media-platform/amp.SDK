@@ -1,4 +1,4 @@
-// End-to-end smoke test for @amp/web against a live amp.exe app.www portal.
+// End-to-end smoke test for @amp/web against a live `ampd` app.www portal.
 //
 // Drives the compiled AmpWebClient (../dist) through the full wire surface:
 // wallet login → tx batch → list/read → upsert → subscribe → withdraw →
