@@ -78,7 +78,7 @@ func (st *symbolTable) bufForEntry(kv kvEntry) []byte {
 type symbolTable struct {
 	opts          TableOpts
 	refCount      atomic.Int32
-	valueCacheMu  sync.RWMutex          // Protects valueCache
+	valueCacheMu  sync.RWMutex          // Protects valueCache and the buf pools (curBufPool*, bufPools)
 	valueCache    map[uint64]kvEntry    // Maps a entry value hash to a kvEntry
 	tokenCacheMu  sync.RWMutex          // Protects tokenCache
 	tokenCache    map[symbol.ID]kvEntry // Maps an ID ("token") to an entry
@@ -211,6 +211,12 @@ func (st *symbolTable) GetSymbol(symID symbol.ID, io []byte) []byte {
 	st.tokenCacheMu.RLock()
 	kv := st.tokenCache[symID]
 	st.tokenCacheMu.RUnlock()
+
+	// bufForEntry reads the buf pools, which allocAndBindToID grows under valueCacheMu,
+	// so hold that lock here too. tokenCacheMu is released first to preserve the
+	// valueCacheMu-before-tokenCacheMu ordering and avoid a deadlock with allocAndBindToID.
+	st.valueCacheMu.RLock()
+	defer st.valueCacheMu.RUnlock()
 
 	// At this point, if symID wasn't found, kv will be zero and causing nil to be returned
 	symBuf := st.bufForEntry(kv)

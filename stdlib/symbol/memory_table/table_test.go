@@ -8,16 +8,17 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/symbol/tests"
 )
 
-var gMemTable symbol.Table
-
 func Test_memory_table(t *testing.T) {
+	// A fresh table per test run (DoTableTest closes it at the end, so a shared
+	// instance could not be reused -- e.g. under -count > 1).
+	var memTable symbol.Table
 	open_table := func() (symbol.Table, error) {
-		if gMemTable == nil {
+		if memTable == nil {
 			opts := memory_table.DefaultOpts()
-			gMemTable, _ = opts.CreateTable()
-			gMemTable.PushOpen() // add ref to get past first close in DoTableTest
+			memTable, _ = opts.CreateTable()
+			memTable.PushOpen() // add a ref so the first Close() in DoTableTest is a no-op
 		}
-		return gMemTable, nil
+		return memTable, nil
 	}
 
 	tests.DoTableTest(t, 0, open_table)
