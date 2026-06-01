@@ -2,6 +2,8 @@ package task_test
 
 import (
 	"fmt"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -205,5 +207,86 @@ func (a Awaiter) NeverHappenedOrFail(t testing.TB, params ...interface{}) {
 	case <-a:
 		t.Fatalf("should not happen: %v", msg)
 	case <-time.After(duration):
+	}
+}
+
+// TestConcurrentStartChildVsIdleClose hammers StartChild() against a parent that
+// has a live idle-close goroutine. The two must coordinate purely through the
+// Context's internal lock; run under -race to guard against regressions in the
+// idle-close bookkeeping (active count, idle floor, close state).
+func TestConcurrentStartChildVsIdleClose(t *testing.T) {
+	// A long delay keeps the root alive under the hammer while its idle-close
+	// goroutine repeatedly re-evaluates idleness as children come and go.
+	root, _ := task.Start(task.Task{
+		Info: task.Info{
+			Label:     "root",
+			IdleClose: 30 * time.Second,
+		},
+	})
+
+	const writers = 16
+	const iters = 2000
+
+	var started atomic.Int64
+	var wg sync.WaitGroup
+	for range writers {
+		wg.Go(func() {
+			for range iters {
+				child, err := root.StartChild(task.Task{
+					Info:  task.Info{Label: "c"},
+					OnRun: func(ctx task.Context) {},
+				})
+				if err != nil {
+					return // root closed unexpectedly
+				}
+				started.Add(1)
+				child.Close()
+			}
+		})
+	}
+
+	wg.Wait()
+	if got := started.Load(); got != writers*iters {
+		t.Fatalf("root closed early: started %d of %d children", got, writers*iters)
+	}
+
+	root.Close()
+	select {
+	case <-root.Done():
+	case <-time.After(10 * time.Second):
+		t.Fatal("root did not close")
+	}
+}
+
+// TestPreventIdleClose verifies that PreventIdleClose defers an otherwise
+// imminent idle-close until its floor elapses.
+func TestPreventIdleClose(t *testing.T) {
+	root, _ := task.Start(task.Task{
+		Info: task.Info{Label: "root"},
+	})
+
+	// Hold the floor well past the idle delay, then arm a near-instant idle-close.
+	if !root.PreventIdleClose(750 * time.Millisecond) {
+		t.Fatal("PreventIdleClose returned false on a running Context")
+	}
+	root.CloseWhenIdle(time.Nanosecond)
+
+	select {
+	case <-root.Done():
+		t.Fatal("idle-closed before the PreventIdleClose floor elapsed")
+	case <-time.After(250 * time.Millisecond):
+		// still open, as required
+	}
+
+	select {
+	case <-root.Done():
+		// closed after the floor, as required
+	case <-time.After(2 * time.Second):
+		t.Fatal("did not idle-close after the floor elapsed")
+	}
+
+	// After close, PreventIdleClose reports the Context is no longer running.
+	if root.PreventIdleClose(time.Second) {
+		t.Fatal("PreventIdleClose returned true on a closed Context")
 	}
 }

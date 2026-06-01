@@ -5,162 +5,208 @@ import (
 	"errors"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/alog"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-// ctx implements Context
+// ctx implements Context.
+//
+// All mutable fields are guarded by mu. state, chClosing, and chClosed give the
+// two-phase close: Close() moves Running -> Closing and closes chClosing; once
+// children and OnRun have drained, the monitor moves Closing -> Closed and
+// closes chClosed.
 type ctx struct {
-	log            alog.Logger
-	task           Task
-	state          int32
-	idle           bool
-	idleCloseRetry atomic.Int64 // time.Duration
-	idleCloseMin   time.Time
+	log  alog.Logger
+	task Task
 
-	chClosing chan struct{}  // signals Close() has been called and close execution has begun.
-	chClosed  chan struct{}  // signals Close() has been called and all close execution is done.
-	err       error          // See context.Err() for spec
-	busy      sync.WaitGroup // blocks until all execution is complete
-	subsMu    sync.Mutex     // Locked when .subs is being accessed
-	subs      []Context
+	mu        sync.Mutex
+	state     int32         // Running | Closing | Closed
+	subs      []Context     // live child Contexts
+	active    int           // outstanding work: live children + a reservation held across setup/OnRun; 0 means idle
+	changed   chan struct{} // lazily created; closed by signalChange to broadcast a state change, then cleared
+	idleDelay time.Duration // CloseWhenIdle delay; <= 0 disables idle-close
+	idleFloor time.Time     // PreventIdleClose floor; idle-close may not fire before this instant
+	idleLoop  bool          // true while an idleCloseLoop goroutine is live
+
+	chClosing chan struct{} // closed when Close() is first called
+	chClosed  chan struct{} // closed once close-down is complete and OnClosed has run
 }
 
 // Errors
 var (
-	ErrAlreadyStarted = errors.New("already started")
-	ErrNotRunning     = errors.New("not running")
-	ErrClosed         = errors.New("closed")
+	ErrNotRunning = errors.New("not running")
 )
 
-func (p *ctx) Close() error {
-	first := atomic.CompareAndSwapInt32(&p.state, Running, Closing)
-	if first {
-		close(p.chClosing)
-	}
+func (c *ctx) Close() error {
+	c.mu.Lock()
+	c.close()
+	c.mu.Unlock()
 	return nil
 }
 
-func (p *ctx) PreventIdleClose(delay time.Duration) bool {
-	p.subsMu.Lock()
-	p.idleCloseMin = time.Now().Add(delay)
-	p.idle = false
-	p.subsMu.Unlock()
-
-	select {
-	case <-p.Closing():
-		return false
-	default:
-		return true
-	}
-}
-
-func (p *ctx) CloseWhenIdle(delay time.Duration) {
-	if delay <= 0 {
-		delay = 0
-	}
-
-	// Can this be folded into the main go routine in StartChild() to save a goroutine?
-	prevDelay := p.idleCloseRetry.Swap(int64(delay))
-
-	// Only spawn a new timer when the delay is changed from 0
-	if prevDelay > 0 {
+// close moves c from Running to Closing and signals it. It is a no-op if c is
+// already closing or closed. The caller must hold c.mu.
+func (c *ctx) close() {
+	if c.state != Running {
 		return
 	}
-
-	go func() {
-		var timer *time.Timer
-
-		for idleClose := true; idleClose; {
-			p.idle = true
-			p.busy.Wait() // wait until there is a chance of catching ctx idle
-
-			retry := false
-
-			p.subsMu.Lock()
-			delay := time.Duration(p.idleCloseRetry.Load())
-			if !p.idle {
-				retry = true
-			} else if delay <= 0 {
-				idleClose = false
-			} else {
-				if !p.idleCloseMin.IsZero() {
-					minDelay := time.Until(p.idleCloseMin)
-					if minDelay <= 0 {
-						p.idleCloseMin = time.Time{}
-					}
-					// Wait for the more restrictive time constraint
-					if delay < minDelay {
-						delay = minDelay
-					}
-				}
-			}
-			p.subsMu.Unlock()
-
-			if retry || !idleClose {
-				continue
-			}
-
-			if delay > 0 {
-				if timer == nil {
-					timer = time.NewTimer(delay)
-				} else {
-					timer.Reset(delay)
-				}
-				select {
-				case <-timer.C:
-				case <-p.Closing():
-					idleClose = false
-				}
-			}
-
-			// If no new children were added while we were waiting, then we have been idle and can close.
-			// Note in the case that we're closing, the below has no effect
-			if idleClose {
-				p.subsMu.Lock()
-				if p.idle {
-					p.Close()
-					idleClose = false
-				}
-				p.subsMu.Unlock()
-			}
-		}
-
-		if timer != nil {
-			timer.Stop()
-		}
-	}()
+	c.state = Closing
+	close(c.chClosing)
+	c.signalChange()
 }
 
-func (p *ctx) Deadline() (deadline time.Time, ok bool) {
+// signalChange wakes every goroutine blocked on the broadcast channel returned
+// by changeChan. The caller must hold c.mu. It is a cheap no-op when no waiter
+// is parked, so callers may signal liberally on any state change.
+func (c *ctx) signalChange() {
+	if c.changed != nil {
+		close(c.changed)
+		c.changed = nil
+	}
+}
+
+// changeChan returns the broadcast channel that the next signalChange will
+// close. The caller must hold c.mu.
+func (c *ctx) changeChan() <-chan struct{} {
+	if c.changed == nil {
+		c.changed = make(chan struct{})
+	}
+	return c.changed
+}
+
+// release drops the work reservation held across setup and OnRun, marking c
+// idle once no children remain.
+func (c *ctx) release() {
+	c.mu.Lock()
+	c.active--
+	c.signalChange()
+	c.mu.Unlock()
+}
+
+// waitIdle blocks until c has no outstanding work (no children and no running
+// OnRun). It is used by the monitor to drain a Context before finalizing it.
+func (c *ctx) waitIdle() {
+	for {
+		c.mu.Lock()
+		if c.active == 0 {
+			c.mu.Unlock()
+			return
+		}
+		wait := c.changeChan()
+		c.mu.Unlock()
+		<-wait
+	}
+}
+
+func (c *ctx) PreventIdleClose(delay time.Duration) bool {
+	c.mu.Lock()
+	if floor := time.Now().Add(delay); floor.After(c.idleFloor) {
+		c.idleFloor = floor
+	}
+	running := c.state == Running
+	c.signalChange()
+	c.mu.Unlock()
+	return running
+}
+
+func (c *ctx) CloseWhenIdle(delay time.Duration) {
+	c.mu.Lock()
+	c.idleDelay = delay
+	spawn := delay > 0 && !c.idleLoop && c.state == Running
+	if spawn {
+		c.idleLoop = true
+	}
+	c.signalChange()
+	c.mu.Unlock()
+
+	if spawn {
+		go c.idleCloseLoop()
+	}
+}
+
+// idleCloseLoop closes c once it has stayed idle for idleDelay, honoring any
+// PreventIdleClose floor. Exactly one runs at a time, guarded by c.idleLoop;
+// CloseWhenIdle either starts it or nudges the running one via signalChange.
+func (c *ctx) idleCloseLoop() {
+	for {
+		c.mu.Lock()
+		if c.state != Running || c.idleDelay <= 0 {
+			c.idleLoop = false
+			c.mu.Unlock()
+			return
+		}
+		active := c.active
+		delay := c.idleDelay
+		floor := c.idleFloor
+		wake := c.changeChan()
+		c.mu.Unlock()
+
+		if active > 0 {
+			// Busy: re-evaluate when the work count or close-state changes.
+			select {
+			case <-wake:
+			case <-c.Closing():
+			}
+			continue
+		}
+
+		// Idle: close after delay, but not before any PreventIdleClose floor.
+		dur := delay
+		if !floor.IsZero() {
+			if until := time.Until(floor); until > dur {
+				dur = until
+			}
+		}
+		timer := time.NewTimer(dur)
+		select {
+		case <-timer.C:
+			c.mu.Lock()
+			ready := c.active == 0 && c.idleDelay > 0 &&
+				(c.idleFloor.IsZero() || !time.Now().Before(c.idleFloor))
+			if ready {
+				c.idleLoop = false
+				c.close()
+			}
+			c.mu.Unlock()
+			if ready {
+				return
+			}
+		case <-wake:
+			timer.Stop()
+		case <-c.Closing():
+			timer.Stop()
+		}
+	}
+}
+
+func (c *ctx) Deadline() (deadline time.Time, ok bool) {
 	return time.Time{}, false
 }
 
-func (p *ctx) Err() error {
+// Err reports cancellation as soon as Close() is called (i.e. once Closing() is
+// signaled), ahead of Done(). It returns context.Canceled while closing or
+// closed, and nil while still running.
+func (c *ctx) Err() error {
 	select {
-	case <-p.Done():
-		if p.err == nil {
-			return context.Canceled
-		}
-		return p.err
+	case <-c.chClosing:
+		return context.Canceled
 	default:
 		return nil
 	}
 }
 
-func (p *ctx) Value(key any) any {
+func (c *ctx) Value(key any) any {
 	return nil
 }
 
-func (p *ctx) Info() Info {
-	return p.task.Info
+func (c *ctx) Info() Info {
+	return c.task.Info
 }
 
-func (p *ctx) Log() alog.Logger {
-	return p.log
+func (c *ctx) Log() alog.Logger {
+	return c.log
 }
 
 func printContextTree(ctx Context, out *strings.Builder, depth int, prefix []rune, lastChild bool) {
@@ -199,22 +245,24 @@ func printContextTree(ctx Context, out *strings.Builder, depth int, prefix []run
 	}
 }
 
-func (p *ctx) GetChildren(in []Context) []Context {
-	p.subsMu.Lock()
-	defer p.subsMu.Unlock()
-	return append(in, p.subs...)
+func (c *ctx) GetChildren(in []Context) []Context {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return append(in, c.subs...)
 }
 
-func (p *ctx) ForEachChild(fn func(child Context)) {
-	p.subsMu.Lock()
-	defer p.subsMu.Unlock()
-	for _, child := range p.subs {
+func (c *ctx) ForEachChild(fn func(child Context)) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for _, child := range c.subs {
 		fn(child)
 	}
 }
 
-// StartChild starts the given child Context as a "sub" task.
-func (p *ctx) StartChild(task Task) (Context, error) {
+// StartChild starts the given Task as a child of c, returning its Context.
+// If c is no longer running, ErrNotRunning is returned. If Task.OnStart returns
+// an error, the child is closed and that error is returned.
+func (c *ctx) StartChild(task Task) (Context, error) {
 	if task.TaskID.IsNil() {
 		task.TaskID = tag.NowID()
 	}
@@ -227,124 +275,125 @@ func (p *ctx) StartChild(task Task) (Context, error) {
 		task:      task,
 		chClosing: make(chan struct{}),
 		chClosed:  make(chan struct{}),
+		active:    1, // reservation held across setup; released by OnStart error, OnRun, or below
 	}
 
-	// If a parent is given, add the child to the parent's list of children.
-	if p != nil {
-		var err error
-		p.subsMu.Lock()
-		if p.state == Running {
-			p.busy.Add(1)
-			p.idle = false
-			p.subs = append(p.subs, child)
-		} else {
-			err = ErrNotRunning
+	// Attach to the parent. A nil receiver (task.Start) starts a parentless root.
+	if c != nil {
+		c.mu.Lock()
+		if c.state != Running {
+			c.mu.Unlock()
+			return nil, ErrNotRunning
 		}
-		p.subsMu.Unlock()
-
-		if err != nil {
-			return nil, err
-		}
+		c.subs = append(c.subs, child)
+		c.active++
+		c.signalChange()
+		c.mu.Unlock()
 	}
 
-	go func() {
+	// The monitor drives the child through its closing lifecycle. It is launched
+	// before OnStart so a parent close can interrupt a blocking OnStart; the
+	// reservation above keeps the child from finalizing mid-setup.
+	go child.runMonitor(c)
 
-		// If there is a parent, wait until child.Close() *or* p.Close()
-		// TODO: merge CloseWhenIdle() into this block?
-		if p != nil {
-			select {
-			case <-p.Closing():
-				child.Close()
-			case <-child.Closing():
-			}
-		}
-
-		// Wait for child to begin closing phase
-		<-child.Closing()
-
-		// Fire callback if given
-		if child.task.OnClosing != nil {
-			child.task.OnClosing()
-		}
-
-		if p != nil && p.task.OnChildClosing != nil {
-			p.task.OnChildClosing(child)
-		}
-
-		// Once all child's children are closed, proceed with completion.
-		child.busy.Wait()
-
-		var idleClose time.Duration
-
-		if p != nil {
-
-			p.subsMu.Lock()
-			{
-				// remove the child from its parent
-				N := len(p.subs)
-				for i := 0; i < N; i++ {
-					if p.subs[i] == child {
-						copy(p.subs[i:], p.subs[i+1:N])
-						N--
-						p.subs[N] = nil // show GC some love
-						p.subs = p.subs[:N]
-						break
-					}
-				}
-
-				// If removing the last child and in IdleClose mode, queue the parent to be closed
-				if N == 0 {
-					idleClose = p.task.Info.IdleClose
-				}
-			}
-			p.subsMu.Unlock()
-		}
-
-		// Move to Closed state now that all that remains is the OnClosed callback and release of the chClosed chan.
-		atomic.StoreInt32(&child.state, Closed)
-		if child.task.OnClosed != nil {
-			child.task.OnClosed()
-		}
-		close(child.chClosed)
-
-		// With the child now fully closed, the parent is no longer waiting on this child
-		if p != nil {
-			p.busy.Done()
-		}
-
-		if idleClose > 0 {
-			p.CloseWhenIdle(idleClose)
-		}
-	}()
-
+	// OnStart runs synchronously; an error closes the child and is returned.
 	if child.task.OnStart != nil {
 		err := child.task.OnStart(child)
 		child.task.OnStart = nil
 		if err != nil {
 			child.Close()
+			child.release()
 			return nil, err
 		}
 	}
 
+	// OnRun is the async work body. It inherits the reservation and releases it
+	// on return, then arms idle-close if configured.
 	if child.task.OnRun != nil {
-		child.busy.Add(1)
 		go func() {
 			child.task.OnRun(child)
+			idleClose := child.task.Info.IdleClose
 			child.task.OnRun = nil
-			child.busy.Done()
-
-			// If idleclose is set, try to do so
-			if child.task.Info.IdleClose > 0 {
-				child.CloseWhenIdle(child.task.Info.IdleClose)
+			child.release()
+			if idleClose > 0 {
+				child.CloseWhenIdle(idleClose)
 			}
 		}()
+	} else {
+		child.release()
 	}
 
 	return child, nil
 }
 
-func (p *ctx) Go(label string, fn func(ctx Context)) (Context, error) {
-	return p.StartChild(Task{
+// runMonitor drives a single child Context through its closing lifecycle.
+// Exactly one runs per Context, launched by StartChild.
+func (child *ctx) runMonitor(parent *ctx) {
+	// Propagate a parent close down to the child; otherwise wait for the child
+	// to be closed on its own.
+	if parent != nil {
+		select {
+		case <-parent.Closing():
+			child.Close()
+		case <-child.Closing():
+		}
+	}
+	<-child.Closing()
+
+	// Closing has begun: run the cleanup hooks before draining children.
+	if child.task.OnClosing != nil {
+		child.task.OnClosing()
+	}
+	if parent != nil && parent.task.OnChildClosing != nil {
+		parent.task.OnChildClosing(child)
+	}
+
+	// Wait for the child's own work (its children and OnRun) to finish.
+	child.waitIdle()
+
+	// Detach from the parent. If this was the parent's last child, the parent
+	// may now idle-close.
+	var parentIdleClose time.Duration
+	if parent != nil {
+		parent.mu.Lock()
+		parent.removeChildLocked(child)
+		parent.active--
+		if parent.active == 0 {
+			parentIdleClose = parent.task.Info.IdleClose
+		}
+		parent.signalChange()
+		parent.mu.Unlock()
+	}
+
+	// Finalize: nothing remains but the OnClosed hook and releasing Done().
+	child.mu.Lock()
+	child.state = Closed
+	child.mu.Unlock()
+	if child.task.OnClosed != nil {
+		child.task.OnClosed()
+	}
+	close(child.chClosed)
+
+	if parentIdleClose > 0 {
+		parent.CloseWhenIdle(parentIdleClose)
+	}
+}
+
+// removeChildLocked removes child from c.subs. The caller must hold c.mu.
+func (c *ctx) removeChildLocked(child *ctx) {
+	for i, sub := range c.subs {
+		if sub == child {
+			last := len(c.subs) - 1
+			copy(c.subs[i:], c.subs[i+1:])
+			c.subs[last] = nil // release the reference for GC
+			c.subs = c.subs[:last]
+			return
+		}
+	}
+}
+
+func (c *ctx) Go(label string, fn func(ctx Context)) (Context, error) {
+	return c.StartChild(Task{
 		Info: Info{
 			Label:     label,
 			IdleClose: time.Nanosecond,
@@ -353,12 +402,12 @@ func (p *ctx) Go(label string, fn func(ctx Context)) (Context, error) {
 	})
 }
 
-func (p *ctx) Closing() <-chan struct{} {
-	return p.chClosing
+func (c *ctx) Closing() <-chan struct{} {
+	return c.chClosing
 }
 
-func (p *ctx) Done() <-chan struct{} {
-	return p.chClosed
+func (c *ctx) Done() <-chan struct{} {
+	return c.chClosed
 }
 
 const (
