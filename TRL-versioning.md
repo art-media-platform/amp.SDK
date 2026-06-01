@@ -45,3 +45,13 @@
 You are supposed to run out of room within a band.
 
 If a team burns through an entire band without moving up, that's useful signal: the product is changing, but not maturing.  That gentle pressure is part of the system — it asks you to earn the next level, not just increment a counter.
+
+---
+
+## Where is art.media.platform?
+
+The amp **substrate** — the wire format, CRDT addressing, key/identity primitives, and the channel contract — is at **v300**: late beta, architecture-complete.  Casting the wire format in stone is itself part of what *defines* v300, so "is the wire locked?" is one of the bars the substrate is clearing to earn the band.
+
+**Apps version independently of the substrate.**  An `AppModuleInfo.Version` is the *app's* own maturity, not the platform's.  A `v000` (Conceptual) or `v100` (Alpha) app riding the v300 substrate is normal and expected — the rails are mature; much of the cargo is still arriving.  Read a low app TRL as "this capability is early," never as "the platform is early."
+
+Format: `v{TRL}[.{minor}]`, where `{TRL}` is the three-digit band above — e.g. `v000`, `v300`, `v300.1`.  A bare `v1` is malformed; the band is always three digits.

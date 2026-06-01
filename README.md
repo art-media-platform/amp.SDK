@@ -25,7 +25,7 @@ In crisis scenarios — natural disasters, infrastructure collapse, conflict zon
 
 The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices and any relay nodes they choose to trust.
 
-A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L94)) that propagate through whatever transports are available — TCP, UDP, USB stick, or mesh-networking.  Every `TxMsg` is signed by its author and optionally encrypted with the planet's current epoch key.
+A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go)) that propagate through whatever transports are available — TCP, UDP, USB stick, or mesh-networking.  Every `TxMsg` is signed by its author and optionally encrypted with the planet's current epoch key.
 
 | Mode | Signed | Encrypted | Who Can Read (Decrypt) | Who Can Write |
 |------|--------|-----------|--------------|---------------|
@@ -45,7 +45,7 @@ Identity and key-receipt have opposing rotation needs, so AMP splits them:
 
 ### [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) Addressing
 
-Every piece of state has a unique [`amp.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go#L27): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is [guaranteed](https://crdt.tech/).  The [`amp.Tag` system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/README.md) provides UID derivation from strings.
+Every piece of state has a unique [`amp.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is [guaranteed](https://crdt.tech/).  The [`amp.Tag` system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/README.md) provides UID derivation from strings.
 
 ### Epoch Rotation
 
@@ -62,7 +62,7 @@ Relay nodes ("vaults") store and forward encrypted TxMsgs.  A vault verifies tha
 A planet has two portable forms with sharply different jobs:
 
 - **Chronicle** — every signed TxMsg, verbatim.  Source authority preserved.  Used for backup, offline SSD transport (hand-carry 10TB across a denied environment), and history compaction.  A new vault can replay a Chronicle and re-verify every signature with zero trust in the carrier.
-- **Codex** — resolved CRDT state, history discarded.  Authority resets on import.  Used for a **Fork** (a new planet inherits state from a parent, records a [`PlanetOrigin`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/amp.core.proto#L1023) pointer, and proceeds under its own governance) and for importing data from non-AMP sources.
+- **Codex** — resolved CRDT state, history discarded.  Authority resets on import.  Used for a **Fork** (a new planet inherits state from a parent, records a [`PlanetOrigin`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/amp.core.proto) pointer, and proceeds under its own governance) and for importing data from non-AMP sources.
 
 Forks are morally neutral — the same primitive serves a community pruning bad-faith members and a dissident escaping a captured custodian.  The protocol does not encode legitimacy.
 
@@ -82,7 +82,7 @@ Planets find each other through **federation** — no central registry, no DNS a
 
 ## AI
 
-AMP's channel attribute addressing is a natural fit for AI agents.  An AI daemon is given access to explict planets or channels — and *only* thos.  This provides structural compartmentalization: an AI assistant processing `chat-support` never receives keys for `medical-records` or `financial-ledger`, not because of a policy document, but because it has not been *given* those keys.
+AMP's channel attribute addressing is a natural fit for AI agents.  An AI daemon is given access to explicit planets or channels — and *only* those.  This provides structural compartmentalization: an AI assistant processing `chat-support` never receives keys for `medical-records` or `financial-ledger`, not because of a policy document, but because it has not been *given* those keys.
 
 - **Scoped by default** — implicit cryptographic enforcement
 - **Auditable** — every TxMsg is signed, attributed, and immutable
@@ -139,14 +139,14 @@ amp.Host
             └── your.app       # custom functionality
 ```
 
-Every long-lived object is a node in a [`task.Context`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go#L59) tree.  Closing a parent closes all children.  The host operates fully offline — sync happens opportunistically when connectivity is available.
+Every long-lived object is a node in a [`task.Context`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go) tree.  Closing a parent closes all children.  The host operates fully offline — sync happens opportunistically when connectivity is available.
 
 ### Packages of Interest
 
 | Package | Purpose |
 |---------|---------|
-| [`amp/`](https://github.com/art-media-platform/amp.SDK/tree/main/amp) | Core types: [`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L94), [`Session`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go#L103), [`AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L31), CRDT bindings |
-| [`stdlib/safe/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/safe) | [`Enclave`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go#L74), [`KitSpec`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go#L165), key management, AEAD, HKDF |
+| [`amp/`](https://github.com/art-media-platform/amp.SDK/tree/main/amp) | Core types: [`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go), [`Session`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go), [`AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go), CRDT bindings |
+| [`stdlib/safe/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/safe) | [`Enclave`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go), [`KitSpec`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go), key management, AEAD, HKDF |
 | [`stdlib/tag/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/tag) | Universal tagging and addressing |
 | [`stdlib/task/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/task) | Goroutine lifecycle management (parent-child process model) |
 | [`amp/webapi/`](amp/webapi/) | HTTP/JSON wire contract for the web SDK — the `/api/v1/*` shapes |
@@ -158,7 +158,7 @@ Every long-lived object is a node in a [`task.Context`](https://github.com/art-m
 This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go project.
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project
-2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go#L31) for your functionality
+2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go) for your functionality
 3. Clone amp.planet and register your module
 4. `make build` produces `ampd` (standalone server) and `libampd` (embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract

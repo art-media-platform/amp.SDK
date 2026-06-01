@@ -11,7 +11,7 @@ import (
 type AppModuleInfo struct {
 	Tag     tag.Name // what invokes this module
 	Label   string   // human-readable description of this app
-	Version string   // "v{TRL}.{minor}.{revision}"
+	Version string   // app's own maturity: "v{TRL}[.{minor}]"; TRL = 3-digit band (TRL-versioning.md)
 	Aliases []string // invocation aliases for an AppModule
 }
 

@@ -145,15 +145,15 @@ func (app *appInst) StartPin(req *amp.Request) (amp.Pin, error) {
 }
 ```
 
-Register it in your `ampd` build by calling `notes.RegisterWith(reg)` where the host assembles its registry — that is the *entire* integration surface.
+Register it in your `ampd` build by calling `notes.RegisterWith(reg)` where the host assembles its registry — in amp.planet that site is [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet), alongside the stock apps.  That call is the *entire* integration surface.
 
 **Client side (web).** The [amp-web-SDK](../amp-web/) consumes the same channel by name.  No glue, no schema duplication — the wire contract is shared:
 
 ```tsx
-// Subscribe — re-renders live as the channel changes:
+// useAmpQuery<T>(channel, attr, opts) — 'notes' is the channel verb, 'snapshot' the attr name:
 const { data, loading } = useAmpQuery<Note>('notes', 'snapshot', { limit: 50 });
 
-// Write — one signed, sealed TxMsg:
+// Write — one signed, sealed TxMsg (channel, attr, itemID, value):
 const { upsert } = useAmpMutation();
 await upsert('notes', 'snapshot', noteID, { title, body });
 ```
@@ -219,6 +219,14 @@ The p2p substrate under all of this is locked in.  The work underway is hardenin
 | [`amp.core.proto`](amp.core.proto) | The wire format: every serialized type, cast in stone |
 | [`std/`](std/) | `AppModule[T]`, `Item`, `Pin[T]`, `PinAndServe`, `ItemWriter` — the app-builder's toolkit |
 | [`webapi/`](webapi/) | The `/api/v1/*` HTTP/JSON contract the web SDK speaks |
+
+### Public API Surface
+
+A third party imports only `amp`, `amp/std`, and `stdlib/*` from this SDK.  Everything a host
+assembles on top — `amp.planet/amp/{vault,codex,host}` and the first-party `apps/*` — is
+**internal**: useful to read, not API to depend on.  If your channel needs something only an
+internal package exposes, that is a gap to raise, not an import to reach for.  The runnable
+example that stays inside this line is [`app.hello`](https://github.com/art-media-platform/amp.planet).
 
 ### Then Go Deeper
 

@@ -260,7 +260,7 @@ func RegisterKit(kit *KitSpec) error {
 	if existing == nil {
 		gRegistry.Lookup[kit.ID] = kit
 	} else if existing != kit {
-		err = status.Code_UnrecognizedCryptoKit.Errorf("KitSpec %d (%s) is already registered", kit.ID, kit.ID.String())
+		err = status.Code_CryptoKitAlreadyRegistered.Errorf("KitSpec %d (%s) is already registered", kit.ID, kit.ID.String())
 	}
 	gRegistry.Unlock()
 	return err
@@ -274,7 +274,7 @@ func GetKit(cryptoKitID CryptoKitID) (*KitSpec, error) {
 	gRegistry.RUnlock()
 
 	if kit == nil {
-		return nil, status.Code_CryptoKitAlreadyRegistered.Errorf("KitSpec %d not found", cryptoKitID)
+		return nil, status.Code_UnrecognizedCryptoKit.Errorf("KitSpec %d not found", cryptoKitID)
 	}
 	return kit, nil
 }
