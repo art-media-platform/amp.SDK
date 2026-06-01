@@ -429,9 +429,12 @@ message ChannelEpoch {
 
 
 // BlobRef is a content-addressed reference to a media blob stored outside a TxMsg.
-// Blobs are sealed with a planet epoch key before storage and transit (zero-knowledge vaults).
-// BlobTag.UID = first 16 bytes of the plaintext hash, providing stable content-addressing
-// (same plaintext → same BlobID across members and restarts).
+// It binds two content addresses: AssetTag names WHAT the content is (the plaintext
+// identity), BlobTag names HOW its bytes are stored (the on-disk / on-wire identity).
+// For a planet-public blob the stored bytes are the plaintext, so BlobTag.UID ==
+// AssetTag.UID; for an epoch-sealed blob the stored bytes are ciphertext, so the two
+// diverge and EpochID is set.  A relay routes, stores, and integrity-checks against
+// BlobTag without decrypting or learning the asset; AssetTag stays member-side.
 message BlobRef {
 
     // Planet this blob belongs to.
@@ -444,21 +447,27 @@ message BlobRef {
     safe.HashKitID      HashKitID = 8;
 
     // HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
-    // Plaintext hashing gives stable identity across encrypted/public blobs
-    // and lets receivers validate content after decryption.
+    // This is the asset's full hash; AssetTag.UID is its leading 16 bytes.  Lets a
+    // member validate content after decryption regardless of how it was stored.
     fixed64             Hash_0 = 10;
     fixed64             Hash_1 = 11;
     fixed64             Hash_2 = 12;
     fixed64             Hash_3 = 13;
 
-    // Blob identity, content type, human label, and plaintext byte length.
-    //   BlobTag.UID         — leading 16 bytes of the plaintext hash (content-addressed).
-    //   BlobTag.ContentType — MIME type (e.g. "image/jpeg", "audio/mpeg").
-    //   BlobTag.Text        — caller-supplied label (e.g. the source file name).
-    //   BlobTag.I (Units=Bytes) — authoritative plaintext byte length.
-    Tag                 BlobTag = 16;
+    // WHAT it is — the plaintext asset identity.  Member-side.
+    //   AssetTag.UID         — leading 16 bytes of the plaintext hash (Hash_0..3).
+    //   AssetTag.ContentType — MIME type (e.g. "image/jpeg", "audio/mpeg").
+    //   AssetTag.Text        — caller-supplied label (e.g. the source file name).
+    //   AssetTag.I (Units=Bytes) — authoritative plaintext byte length.
+    Tag                 AssetTag = 16;
 
-    // Epoch key used to seal this blob (zero = unsealed / planet-public).
+    // HOW it is stored — the on-disk / on-wire byte identity.  Lean, relay-facing.
+    //   BlobTag.UID         — leading 16 bytes of hash(stored bytes): ciphertext for a
+    //                         sealed blob, == AssetTag.UID for a planet-public one.
+    //   BlobTag.I (Units=Bytes) — stored byte length.  No ContentType / label.
+    Tag                 BlobTag = 17;
+
+    // Epoch key used to seal this blob (zero = unsealed / planet-public ⇒ BlobTag.UID == AssetTag.UID).
     // Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
     fixed64             EpochID_0 = 20;
     fixed64             EpochID_1 = 21;
@@ -675,11 +684,13 @@ message EpochTerms {
     // lets verifiers reject out-of-order / replayed epochs and bound chain length.
     uint64              EpochHeight = 4;
 
-    // Hash kit + digest of the planet's PlanetCharter bytes.  Binds every epoch to
-    // the one immutable Charter so a charter swap is detectable from the small
-    // Terms alone, without re-shipping Charter bytes for comparison.  HashKit is
-    // carried (not a hardcoded algorithm) so a future verifier selects the hasher.
-    safe.HashKitID      CharterHashKit = 5;
+    // HashKit is this epoch's content/digest hash policy — per-epoch and
+    // rotatable (a migration may move it alongside CryptoKitID), selected by ID
+    // so a verifier picks the hasher rather than hardcoding an algorithm.
+    // CharterHash is the digest of the planet's immutable PlanetCharter bytes
+    // under HashKit: it binds every epoch to the one Charter so a charter swap is
+    // detectable from the small Terms alone, without re-shipping Charter bytes.
+    safe.HashKitID      HashKit = 5;
     bytes               CharterHash = 6;
 
     // Crypto suite in force for this epoch — the SOLE home for the planet's suite

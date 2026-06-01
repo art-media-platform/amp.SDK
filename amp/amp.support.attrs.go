@@ -214,6 +214,19 @@ func (terms *EpochTerms) EffectiveCryptoKit() safe.CryptoKitID {
 	return terms.CryptoKitID
 }
 
+// EffectiveHashKit returns the HashKitID in force for this epoch — the per-epoch
+// content/digest hash policy — defaulting to Blake2s_256 if the terms are nil or
+// the kit is unspecified.  HashKit is the authoritative home: the hash axis is
+// orthogonal to the crypto suite (content addressing applies to blobs that carry
+// no suite), so it is selected and carried independently, and it may rotate from
+// epoch to epoch just like CryptoKitID.
+func (terms *EpochTerms) EffectiveHashKit() safe.HashKitID {
+	if terms == nil || terms.HashKit == safe.HashKitID_UnspecifiedHashKit {
+		return safe.HashKitID_Blake2s_256
+	}
+	return terms.HashKit
+}
+
 // PlanetEpoch's verbatim sign/verify (SignedBytes, VerifyCoSignature,
 // AssembleEpoch, VerifyCharterContinuity, the Charter/Terms accessors) lives in
 // amp.support.epoch.go — the three-layer model signs the stored Charter/Terms

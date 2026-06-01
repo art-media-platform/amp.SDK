@@ -34,17 +34,17 @@ Secure key storage and retrieval for the **amp** platform.
 └─────────┘     └────────────┘
 ```
 
-## CryptoKit — Pluggable Crypto Suites
+## KitSpec — Pluggable Crypto Suites
 
-Each `CryptoKit` is a struct with function pointers; `nil` fields indicate unsupported capabilities.
-Kits self-register via `init()` and are looked up by `CryptoKitID`.
+A `KitSpec` bundles two independent capability axes — `Signing` and `Encrypt` (asymmetric ECDH) — either of which may be `nil` when a kit does not offer it.  Symmetric AEAD is kit-agnostic and lives on the `safe` package directly (`SealAEAD` / `OpenAEAD`).  Kits self-register via `init()` and are looked up by `CryptoKitID` (`safe.proto`).
 
-| Kit             | ID | Symmetric | Asymmetric      | Signing   |
-|-----------------|----|-----------|-----------------|-----------|
-| XChaCha20Poly   | 3  | XChaCha20-Poly1305 | X25519 + XChaCha20 | —   |
-| ED25519         | 2  | —         | —               | Ed25519   |
+| Kit       | ID | Asymmetric (Encrypt) | Signing                                | Status               |
+|-----------|----|----------------------|----------------------------------------|----------------------|
+| Poly25519 | 1  | X25519 ECDH          | Ed25519                                | registered (default) |
+| P256      | 2  | ECDH P-256           | ECDSA P-256 + SHA-256 (NIST; YubiKey PIV)   | registered           |
+| Secp256k1 | 3  | ECDH secp256k1       | ECDSA secp256k1 + Keccak-256 (crypto-wallet) | reserved (enum-only) |
 
-To add a new suite, define a `CryptoKit` struct and call `RegisterCryptoKit()` in `init()`.
+Symmetric AEAD for every kit is XChaCha20-Poly1305.  To add a suite, define a `KitSpec` (set `Signing` and/or `Encrypt`) and call `RegisterKit()` in `init()`.
 
 ## Cryptographic Choices
 
@@ -81,18 +81,18 @@ To add a new suite, define a `CryptoKit` struct and call `RegisterCryptoKit()` i
 
 ```
 safe/
-├── amp.safe.proto          # Protobuf definitions
-├── amp.safe.pb.go          # Generated (needs protoc regeneration after proto edits)
-├── api.safe.go             # Guard, TomeStore, Enclave interfaces; CryptoKit struct + registry
-├── crypto.go               # XChaCha20-Poly1305 + HKDF primitives + XChaCha20Poly kit + X25519
+├── safe.proto              # Protobuf definitions (KeyType, CryptoKitID, SealedTome, ...)
+├── safe.pb.go              # Generated from safe.proto (regen via `make generate`)
+├── api.safe.go             # Guard, TomeStore, Enclave, EpochKeyStore interfaces; KitSpec + registry
+├── crypto.go               # XChaCha20-Poly1305 AEAD + HKDF primitives + X25519
 ├── enclave.go              # Enclave implementation (thread-safe KeyTome session)
+├── epoch_keys.go           # EpochKeyStore — symmetric epoch keys, per (container, epoch, role)
 ├── file_guard.go           # fileGuard — passphrase-based Guard + localTomeStore
-├── yubi_guard.go           # yubiGuard — YubiKey PIV placeholder
+├── yubi_guard.go           # yubiGuard — YubiKey PIV Guard
+├── phrase.go               # mnemonic phrase ↔ key material
+├── safe.keys.go            # KeyRef / PubKey / SymKey / KeyPair value types
 ├── safe.support.go         # KeyTome/Keyring/KeyEntry utilities, PayloadPacker/Unpacker
-├── safe.support.test.go    # CryptoKit test harness
-├── safe_test.go            # Integration tests
 ├── README.md               # This file
-└── ed25519/
-    ├── ed25519.go          # Ed25519 signing CryptoKit
-    └── ed25519_test.go     # Tests
+├── poly25519/              # Poly25519 KitSpec (X25519 + Ed25519)
+└── p256/                   # P256 KitSpec (ECDH P-256 + ECDSA P-256)
 ```

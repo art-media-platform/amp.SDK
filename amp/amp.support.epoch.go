@@ -129,7 +129,7 @@ func AssembleEpoch(charter *PlanetCharter, terms *EpochTerms, hashKit safe.HashK
 	if err != nil {
 		return nil, err
 	}
-	terms.CharterHashKit = hashKit
+	terms.HashKit = hashKit
 	terms.CharterHash = digest
 	termsBytes, err := proto.Marshal(terms)
 	if err != nil {
@@ -168,7 +168,7 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 	if err != nil {
 		return err
 	}
-	digest, err := hashBytes(terms.CharterHashKit, pe.Charter)
+	digest, err := hashBytes(terms.HashKit, pe.Charter)
 	if err != nil {
 		return err
 	}
