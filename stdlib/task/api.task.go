@@ -14,23 +14,57 @@ func Start(task Task) (Context, error) {
 	return Context((*ctx)(nil)).StartChild(task)
 }
 
-// Go starts fn as a new Context that runs to completion and then idle-closes --
-// the Context equivalent of launching a goroutine.
+// Go starts fn as a new child Context of parent that runs to completion and then
+// idle-closes -- the Context equivalent of launching a goroutine. fn runs in its
+// own goroutine; the child idle-closes once fn returns. For a long-lived worker,
+// fn blocks on ctx.Closing() and returns on shutdown.
 //
-// If parent is nil, the new Context has no parent (a root, as with Start).
+// A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent is
+// no longer running. Equivalent to:
+//
+//	parent.StartChild(Task{
+//	    Info:  Info{Label: label, IdleClose: time.Nanosecond},
+//	    OnRun: fn,
+//	})
 func Go(parent Context, label string, fn func(ctx Context)) (Context, error) {
 	if parent == nil {
 		parent = Context((*ctx)(nil))
 	}
-	return parent.Go(label, fn)
+	return parent.StartChild(Task{
+		Info: Info{
+			Label:     label,
+			IdleClose: time.Nanosecond,
+		},
+		OnRun: fn,
+	})
 }
 
+// NewChild starts a supervision-only Context as a child of parent: it has no work body and no
+// idle-close, so it stays Running until Close() is called on it (or until parent closes, which
+// propagates Close down to it). Use it for a named join/grouping node whose lifetime a caller
+// manages explicitly -- e.g. a per-connection container whose children are the real workers, or a
+// marker that stays open for the duration of an external transfer. Unlike Go (which arms IdleClose
+// and runs fn in its own goroutine), NewChild spawns no goroutine of its own beyond the lifecycle
+// monitor and never idle-closes; its Done() fires only after Close() and after every child it
+// adopted has drained.
+//
+// A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent is no longer running.
+// Equivalent to parent.StartChild(Task{Info: Info{Label: label}}).
+func NewChild(parent Context, label string) (Context, error) {
+	if parent == nil {
+		parent = Context((*ctx)(nil))
+	}
+	return parent.StartChild(Task{Info: Info{Label: label}})
+}
+
+// Info is the descriptor a Context is started with: its identity, its log label, and optional
+// caller-supplied metadata. It is set once at StartChild and exposed read-only via Context.Info();
+// the framework reads Label (logging) and IdleClose (idle-close), the rest is for the caller.
 type Info struct {
-	TaskID     tag.UID  // universally unique instance ID -- assigned automatically when unset
-	Headers    []string // cookies, auth, or task references
-	Label      string   // logging and debugging label
-	Attachment any      // optional user-defined value
-	DebugMode  bool     // when set, a context logs more verbosely and can perform (or log) expensive diagnostics
+	TaskID     tag.UID // universally unique instance ID -- assigned automatically when unset
+	Label      string  // logging and debugging label
+	Attachment any     // optional user-defined value
+	DebugMode  bool    // when set, a context logs more verbosely and can perform (or log) expensive diagnostics
 
 	// If > 0, Context.CloseWhenIdle() is automatically called when the last remaining child is closed or when OnRun() completes, whichever occurs later.
 	//
@@ -67,17 +101,10 @@ type Context interface {
 	// Returns a snapshot of this Context's Info.
 	Info() Info
 
-	// Creates a new child Context for the given Task.
+	// Creates a new child Context for the given Task -- the sole spawn primitive.
 	// If OnStart() returns an error, then child.Close() is immediately called and the error is returned.
+	// The package-level Start, Go, and NewChild wrap this for the common cases.
 	StartChild(task Task) (Context, error)
-
-	// Convenience wrapper for StartChild() equivalent to:
-	//
-	//      parent.StartChild(Task{
-	//          Info:  Info{Label: label, IdleClose: time.Nanosecond},
-	//          OnRun: fn,
-	//      })
-	Go(label string, fn func(ctx Context)) (Context, error)
 
 	// Atomically appends all child Contexts to the given slice and returns the new slice.
 	// The total blocking time is minimal as only a slice is populated.

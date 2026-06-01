@@ -12,9 +12,9 @@ import (
 )
 
 func spawnN(p task.Context, numGoroutines int, delay time.Duration) {
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		name := fmt.Sprintf("#%d", i+1)
-		p.Go(name, func(ctx task.Context) {
+		task.Go(p, name, func(ctx task.Context) {
 			time.Sleep(delay)
 			yoyo := delay
 			fmt.Print(yoyo)
@@ -111,7 +111,7 @@ func Test6(t *testing.T) {
 		canceled1 := NewAwaiter()
 		canceled2 := NewAwaiter()
 
-		foo1, _ := p.Go("foo1", func(ctx task.Context) {
+		foo1, _ := task.Go(p, "foo1", func(ctx task.Context) {
 			select {
 			case <-ctx.Closing():
 				canceled1.ItHappened()
@@ -120,7 +120,7 @@ func Test6(t *testing.T) {
 			}
 		})
 
-		foo2, _ := child.Go("foo2", func(ctx task.Context) {
+		foo2, _ := task.Go(child, "foo2", func(ctx task.Context) {
 			select {
 			case <-ctx.Closing():
 				canceled2.ItHappened()
@@ -288,5 +288,50 @@ func TestPreventIdleClose(t *testing.T) {
 	// After close, PreventIdleClose reports the Context is no longer running.
 	if root.PreventIdleClose(time.Second) {
 		t.Fatal("PreventIdleClose returned true on a closed Context")
+	}
+}
+
+// TestNewChild verifies the supervision-only node: no work body, no idle-close,
+// so it stays Running until its own Close() -- and a parent Close() cascades to it.
+func TestNewChild(t *testing.T) {
+	root, _ := task.Start(task.Task{Info: task.Info{Label: "root"}})
+
+	node, err := task.NewChild(root, "node")
+	if err != nil {
+		t.Fatalf("NewChild: %v", err)
+	}
+
+	// With no OnRun and no IdleClose, the node must NOT close on its own.
+	select {
+	case <-node.Done():
+		t.Fatal("NewChild node closed without an explicit Close (idle-close armed?)")
+	case <-time.After(500 * time.Millisecond):
+		// still open, as required
+	}
+
+	// Its own Close() drives it to Done.
+	node.Close()
+	select {
+	case <-node.Done():
+	case <-time.After(2 * time.Second):
+		t.Fatal("NewChild node did not reach Done after Close")
+	}
+
+	// A parent Close() cascades to a NewChild node.
+	parentClosed, _ := task.Start(task.Task{Info: task.Info{Label: "parent"}})
+	grandchild, err := task.NewChild(parentClosed, "grandchild")
+	if err != nil {
+		t.Fatalf("NewChild (grandchild): %v", err)
+	}
+	parentClosed.Close()
+	select {
+	case <-grandchild.Done():
+	case <-time.After(2 * time.Second):
+		t.Fatal("parent Close did not cascade to the NewChild node")
+	}
+
+	// NewChild on a closed parent reports ErrNotRunning.
+	if _, err := task.NewChild(parentClosed, "too-late"); err == nil {
+		t.Fatal("NewChild on a closed parent returned nil error")
 	}
 }

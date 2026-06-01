@@ -392,16 +392,6 @@ func (c *ctx) removeChildLocked(child *ctx) {
 	}
 }
 
-func (c *ctx) Go(label string, fn func(ctx Context)) (Context, error) {
-	return c.StartChild(Task{
-		Info: Info{
-			Label:     label,
-			IdleClose: time.Nanosecond,
-		},
-		OnRun: fn,
-	})
-}
-
 func (c *ctx) Closing() <-chan struct{} {
 	return c.chClosing
 }
