@@ -244,14 +244,27 @@ type BlobStore interface {
 	Retrieve(planetID tag.UID, blobID tag.UID) (io.ReadCloser, error)
 	Has(planetID tag.UID, blobID tag.UID) bool
 
-	// StoreHashed hashes and stores data content-addressed in a single streaming pass.
-	// Caller pre-populates ref.PlanetID_0/1, ref.HashKitID (0 = default Blake2s_256), and
-	// optionally ref.BlobTag.ContentType / ref.BlobTag.Text.
-	// On success, StoreHashed populates ref.Hash_0..3 from the content hash, sets
-	// ref.BlobTag.UID to the leading 16 bytes of that hash (§13.2), and sets
-	// ref.BlobTag.I / ref.BlobTag.Units = Bytes to the authoritative plaintext byte count.
+	// StoreHashed hashes and stores planet-public data content-addressed in a single streaming pass.
+	// Caller pre-populates ref.PlanetID_0/1, ref.HashKitID (0 = default Blake2s_256), and optionally
+	// the asset identity ref.AssetTag.ContentType / ref.AssetTag.Text.
+	// On success, StoreHashed populates ref.Hash_0..3 from the content hash and both content
+	// addresses (§13.2): the asset identity AssetTag (UID = leading 16 bytes of the plaintext hash,
+	// I / Units = Bytes = authoritative plaintext byte count) and the lean storage identity BlobTag.
+	// A public blob's stored bytes are the plaintext, so BlobTag.UID == AssetTag.UID.
 	// Idempotent: if the hash-derived on-disk path already exists, the temp write is discarded.
 	StoreHashed(ref *BlobRef, data io.Reader, onProgress func(bytesWritten int64)) error
+
+	// StoreValidated streams a peer-supplied blob into a temp file under the planet dir, hashing it
+	// with ref.HashKitID, and publishes it at the content-addressed path only when the streamed
+	// bytes satisfy hash(stream)[:16] == ref.BlobTag.UID() — the address of the bytes as stored
+	// (ciphertext for a sealed blob, plaintext for a public one), validated without the epoch key
+	// (§13.2.1). This is the receiver's O(1)-memory ingest: no whole-blob buffer, atomic temp+rename
+	// mirroring StoreHashed. On hash mismatch or I/O error the temp is discarded and an error
+	// returned, so the durable store and any presence tracking are never poisoned by a partial or
+	// invalid transfer. It validates against the existing BlobTag.UID and does not recompute the
+	// asset identity (ref.Hash_0..3 / AssetTag — the member's concern, resolved from the sealed
+	// TxMsg). Idempotent: an existing final path discards the temp and returns nil.
+	StoreValidated(planetID tag.UID, ref *BlobRef, data io.Reader) error
 }
 
 // Registry is where apps and types are registered -- concurrency safe.
