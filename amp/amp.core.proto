@@ -528,6 +528,23 @@ message VaultConfig {
     // admin cannot retract early but may publish an explicit revocation op.
     // If 0, DefaultBootstrapTTL applies (7 days).
     int64   BootstrapTTLSecs = 9;
+
+    // Blob-plane metering (per-peer, sliding window).  Bounds the byte volume a
+    // single authenticated peer can drive through the blob transfer plane — charged
+    // at both ingest (StoreValidated) and egress (SendBlob) — so a misbehaving peer
+    // cannot force unbounded hash+write or disk-read+send work.  The unsolicited-push
+    // ingest gate (accept only referenced blobs) is the precise first line; this
+    // budget is the coarse backstop and the only bound on the egress side.  Sized for
+    // large-media sync: the default is generous so legitimate transfers pass, and a
+    // hostile-environment operator tightens it.  If 0, DefaultMaxBlobBytesPerWindow
+    // applies (1 TiB).
+    int64   MaxBlobBytesPerWindow = 10;
+
+    // Sliding window for the blob byte budget, in seconds.  The blob plane moves
+    // large media on a slower cadence than the TxMsg plane, so it may want its own
+    // window.  If 0, RateLimitWindowSecs is used; if that is also 0,
+    // DefaultBlobRateLimitWindow applies (24h).
+    int64   BlobRateLimitWindowSecs = 11;
 }
 
 

@@ -55,6 +55,15 @@ const (
 	// VaultConfig.BootstrapTTLSecs sets a per-planet override.  A leaked token is
 	// useless past expiry; bounds the exposure window of out-of-band invite delivery.
 	DefaultBootstrapTTL int64 = 7 * 24 * 60 * 60
+
+	// DefaultMaxBlobBytesPerWindow is the default per-peer blob byte budget (1 TiB)
+	// within the blob sliding window.  Sized for large-media sync — generous so
+	// legitimate transfers pass; a hostile-environment operator tightens it per-planet
+	// via VaultConfig.MaxBlobBytesPerWindow.
+	DefaultMaxBlobBytesPerWindow int64 = 1 << 40
+
+	// DefaultBlobRateLimitWindow is the default blob byte-budget window in seconds (24h).
+	DefaultBlobRateLimitWindow int64 = 24 * 60 * 60
 )
 
 // GracePeriod returns the effective grace period for this epoch's terms.
@@ -120,6 +129,23 @@ func (config *VaultConfig) BootstrapTTL() time.Duration {
 	}
 	if secs <= 0 {
 		secs = DefaultBootstrapTTL
+	}
+	return time.Duration(secs) * time.Second
+}
+
+// BlobRateLimitWindow returns the effective blob byte-budget window as a time.Duration.
+// Nil-safe: falls back to the TxMsg RateLimitWindowSecs, then DefaultBlobRateLimitWindow,
+// when config is nil or both fields are zero.
+func (config *VaultConfig) BlobRateLimitWindow() time.Duration {
+	secs := int64(0)
+	if config != nil {
+		secs = config.BlobRateLimitWindowSecs
+		if secs <= 0 {
+			secs = config.RateLimitWindowSecs
+		}
+	}
+	if secs <= 0 {
+		secs = DefaultBlobRateLimitWindow
 	}
 	return time.Duration(secs) * time.Second
 }

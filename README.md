@@ -51,11 +51,17 @@ Every piece of state has a unique [`amp.Address`](https://github.com/art-media-p
 
 A planet's encryption changes over time through **epoch rotation**.  When an admin rotates the epoch — to revoke a member, respond to a compromise, or as routine hygiene — a new symmetric key is generated and sealed-box-wrapped to each active member's [EncryptKey](#member-keypairs).  Revoked members never receive the new key.  Historical content remains readable with old epoch keys; new content is sealed under the new epoch.  Private-channel keys derive from `HKDF(channel_epoch || planet_epoch)`, so rotating the planet implicitly invalidates all channel keys without per-channel rotation.
 
-### Zero-Knowledge Relay
+## Vaults
 
-Relay nodes ("vaults") store and forward encrypted TxMsgs.  A vault verifies that a message was authored by a legitimate planet member — via an [HMAC](https://en.wikipedia.org/wiki/HMAC) membership proof derived from the epoch key — without ever decrypting the content or learning which member authored it.
+A **vault** is the storage-and-sync half of a node: it holds a planet's signed transaction log and content-addressed blobs and reconciles them with other vaults holding the same planet.  Any device can run one — phone, Raspberry Pi, always-on server — so a planet lives wherever its members and the relays they trust keep a copy.
 
-**A seized vault yields zero content.**  It holds opaque encrypted blobs and membership proofs and exposes nothing else.  Routing metadata (PlanetID, EpochID, activity timeline) are observable; payloads and author identity do not.  You can run vault infrastructure in jurisdictions with adversarial data-access laws and sleep soundly.
+**Offline-first, convergence-second.**  A vault accepts writes with no network at all; they land in the local log and propagate when a peer is next reachable.  Two vaults reconcile by exchanging a [Merkle](https://en.wikipedia.org/wiki/Merkle_tree) range hash over their transaction sets and streaming only the difference — `O(log n)` to find a gap, then a content-addressed transfer to close it.  The hash binds entry *bytes*, not just their IDs, so a corrupted or substituted entry surfaces as a mismatch and re-heals instead of spreading.  CRDT addressing makes the merged result identical on every replica, whatever the arrival order.
+
+**Zero-knowledge by construction.**  A vault checks that a message came from a legitimate planet member — via an [HMAC](https://en.wikipedia.org/wiki/HMAC) membership proof keyed to the epoch — without decrypting it or learning who authored it.  A seized vault yields no private data: only encrypted content, membership proofs, and routing metadata (PlanetID, EpochID, activity timeline).  An operator, willing or coerced, can hand over that much and never the data inside or its author — the precise sense in which a vault is safe to rent in an adversarial jurisdiction, with one honest limit: the metadata alone can still support traffic analysis.
+
+**Self-certifying peers.**  Vaults authenticate by key, not by certificate authority: a peer's identity *is* a hash of its signing key, proven by a mutual challenge-response handshake — no CA to trust or breach.  Resource budgets bind to that proven identity, so one peer cannot masquerade as many and the metering holds against a sybil flood without a central allowlist.
+
+**Bootstrap, made concrete.**  Reaching a *first* peer is the step most peer-to-peer designs hand-wave; AMP doesn't.  Every invite carries one or more `VaultAddrs`, so a new member joins by dialing the endpoints in their invite — no peer-scanning, no public DHT to seed.  Past first contact AMP is transport-agnostic (TCP, a Reticulum mesh, a LAN, a rendezvous you run) and leans on the transport for discovery rather than reinventing NAT traversal; reach any peer that holds a planet and you converge to its full state, verifying every byte yourself.  The limit worth naming is availability, not trust: a planet whose only holders are offline waits until one returns, so a real deployment keeps a few always-on vaults for the planets it depends on — which zero-knowledge makes safe to rent.
 
 ## Backup, Restore, Fork
 
@@ -78,6 +84,8 @@ Planets find each other through **federation** — no central registry, no DNS a
 - **Brand** — a planet's self-describing identity: display name, deep-link schemes, install targets, and operational fields (CORS origins, share-planet binding).  Signed and chronicle-tracked, so rotating any of it is a signed write, not an edit-and-restart.
 - **NameService** — `Resolve(FQDN) → planet`, ranked `Search`, and federation-peer enumeration for cross-federation forwarding.  `ampd` exposes it natively and over the web wire (`/api/v1/resolve`, `/api/v1/search`, `/api/v1/federation/peers`).
 - **Deep links** — an inbound web Host resolves through NameService to its planet's `Brand`, which renders the platform-detecting landing page — the same substrate-native path whether the link is yours or a federated peer's.
+
+**What naming does *not* claim.**  There is no global name authority — by design, which also means there is no universal namespace.  An FQDN resolves only within the federations a host has joined; two federations may mint the same name and neither is canonical.  The durable identity is the planet `UID` — self-certifying and collision-free — with the human-readable name a convenience layered over it; first contact with a federation you have not joined still needs an out-of-band pointer (a UID, an invite, or a peer that already carries the record).  That is the same cost inverted into the benefit: no registry to capture, censor, or bill, and you resolve over exactly the mesh you chose to trust.
 
 
 ## AI

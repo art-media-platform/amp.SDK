@@ -2555,8 +2555,23 @@ type VaultConfig struct {
 	// admin cannot retract early but may publish an explicit revocation op.
 	// If 0, DefaultBootstrapTTL applies (7 days).
 	BootstrapTTLSecs int64 `protobuf:"varint,9,opt,name=BootstrapTTLSecs,proto3" json:"BootstrapTTLSecs,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Blob-plane metering (per-peer, sliding window).  Bounds the byte volume a
+	// single authenticated peer can drive through the blob transfer plane — charged
+	// at both ingest (StoreValidated) and egress (SendBlob) — so a misbehaving peer
+	// cannot force unbounded hash+write or disk-read+send work.  The unsolicited-push
+	// ingest gate (accept only referenced blobs) is the precise first line; this
+	// budget is the coarse backstop and the only bound on the egress side.  Sized for
+	// large-media sync: the default is generous so legitimate transfers pass, and a
+	// hostile-environment operator tightens it.  If 0, DefaultMaxBlobBytesPerWindow
+	// applies (1 TiB).
+	MaxBlobBytesPerWindow int64 `protobuf:"varint,10,opt,name=MaxBlobBytesPerWindow,proto3" json:"MaxBlobBytesPerWindow,omitempty"`
+	// Sliding window for the blob byte budget, in seconds.  The blob plane moves
+	// large media on a slower cadence than the TxMsg plane, so it may want its own
+	// window.  If 0, RateLimitWindowSecs is used; if that is also 0,
+	// DefaultBlobRateLimitWindow applies (24h).
+	BlobRateLimitWindowSecs int64 `protobuf:"varint,11,opt,name=BlobRateLimitWindowSecs,proto3" json:"BlobRateLimitWindowSecs,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
 }
 
 func (x *VaultConfig) Reset() {
@@ -2648,6 +2663,20 @@ func (x *VaultConfig) GetMaxPendingEpochs() uint32 {
 func (x *VaultConfig) GetBootstrapTTLSecs() int64 {
 	if x != nil {
 		return x.BootstrapTTLSecs
+	}
+	return 0
+}
+
+func (x *VaultConfig) GetMaxBlobBytesPerWindow() int64 {
+	if x != nil {
+		return x.MaxBlobBytesPerWindow
+	}
+	return 0
+}
+
+func (x *VaultConfig) GetBlobRateLimitWindowSecs() int64 {
+	if x != nil {
+		return x.BlobRateLimitWindowSecs
 	}
 	return 0
 }
@@ -6258,7 +6287,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xa9\x03\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\x99\x04\n" +
 	"\vVaultConfig\x12\"\n" +
 	"\fMaxTxMsgSize\x18\x01 \x01(\x03R\fMaxTxMsgSize\x12,\n" +
 	"\x11MaxBytesPerWindow\x18\x02 \x01(\x03R\x11MaxBytesPerWindow\x12&\n" +
@@ -6268,7 +6297,10 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11MaxFutureSkewSecs\x18\x06 \x01(\x03R\x11MaxFutureSkewSecs\x12.\n" +
 	"\x12MaxPendingPerEpoch\x18\a \x01(\rR\x12MaxPendingPerEpoch\x12*\n" +
 	"\x10MaxPendingEpochs\x18\b \x01(\rR\x10MaxPendingEpochs\x12*\n" +
-	"\x10BootstrapTTLSecs\x18\t \x01(\x03R\x10BootstrapTTLSecs\"\xde\x01\n" +
+	"\x10BootstrapTTLSecs\x18\t \x01(\x03R\x10BootstrapTTLSecs\x124\n" +
+	"\x15MaxBlobBytesPerWindow\x18\n" +
+	" \x01(\x03R\x15MaxBlobBytesPerWindow\x128\n" +
+	"\x17BlobRateLimitWindowSecs\x18\v \x01(\x03R\x17BlobRateLimitWindowSecs\"\xde\x01\n" +
 	"\tBrandMark\x12\x18\n" +
 	"\aAppName\x18\x01 \x01(\tR\aAppName\x12\x18\n" +
 	"\aOrgName\x18\x02 \x01(\tR\aOrgName\x12\x1c\n" +
