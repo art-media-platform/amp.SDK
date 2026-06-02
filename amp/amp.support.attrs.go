@@ -194,7 +194,7 @@ func TagFromName(name tag.Name) *Tag {
 	return &Tag{
 		UID_0: name.ID[0],
 		UID_1: name.ID[1],
-		Text:  name.Canonic,
+		Text:  name.Text,
 	}
 }
 
@@ -282,8 +282,8 @@ func (v *Tag) Name() tag.Name {
 		return tag.Name{}
 	}
 	return tag.Name{
-		ID:      v.UID(),
-		Canonic: v.Text,
+		ID:   v.UID(),
+		Text: v.Text,
 	}
 }
 

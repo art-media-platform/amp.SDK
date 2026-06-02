@@ -11,20 +11,20 @@ import (
 
 func TestTag(t *testing.T) {
 	ampTags := tag.Name{}.With("..amp+.app.")
-	if ampTags.Canonic != "amp.app" {
-		t.Fatalf("With() canonic failed: got %q", ampTags.Canonic)
+	if ampTags.Text != "amp.app" {
+		t.Fatalf("With() Text failed: got %q", ampTags.Text)
 	}
-	// Invariant: a tag's UID is the atomic hash of its canonic string
-	// (order significant — no commutative literal fold).
-	if ampTags.ID != tag.UID_HashLiteral([]byte(ampTags.Canonic)) {
-		t.Fatalf("ID != HashLiteral(Canonic): %v", ampTags.ID)
+	// Invariant: for an all-lowercase name (Text already canonic) a tag's UID
+	// is the atomic hash of its Text (order significant — no commutative fold).
+	if ampTags.ID != tag.UID_HashLiteral([]byte(ampTags.Text)) {
+		t.Fatalf("ID != HashLiteral(Text): %v", ampTags.ID)
 	}
 	name := ampTags.With("some-tag+thing")
-	if name.Canonic != "amp.app.some.tag.thing" {
-		t.Errorf("With() failed: got %q", name.Canonic)
+	if name.Text != "amp.app.some.tag.thing" {
+		t.Errorf("With() failed: got %q", name.Text)
 	}
-	if name.ID != tag.UID_HashLiteral([]byte(name.Canonic)) {
-		t.Fatalf("chained ID != HashLiteral(Canonic): %v", name.ID)
+	if name.ID != tag.UID_HashLiteral([]byte(name.Text)) {
+		t.Fatalf("chained ID != HashLiteral(Text): %v", name.ID)
 	}
 	base32 := name.ID.Base32()
 	if base32 != "5EEZ7JTVNT1D42251GSU28MQY9" {
@@ -50,14 +50,14 @@ func TestTag(t *testing.T) {
 		// Order is significant: reordered literals yield a DISTINCT UID (the
 		// commutative fold is removed).  Only an identity permutation — a
 		// shuffle that happens to reproduce the canonic order — preserves it.
-		parts := strings.Split(holyExpr.Canonic, ".")
+		parts := strings.Split(holyExpr.Text, ".")
 		for range 3773 {
 			rand.Shuffle(len(parts), func(i, j int) {
 				parts[i], parts[j] = parts[j], parts[i]
 			})
 			tryExpr := strings.Join(parts, ".")
 			try := tag.NameFrom(tryExpr)
-			if tryExpr == holyExpr.Canonic {
+			if tryExpr == holyExpr.Text {
 				if try.ID != holyExpr.ID {
 					t.Fatalf("identity permutation changed UID: got %v", try)
 				}
@@ -113,15 +113,15 @@ func TestNameOrderAndIdentity(t *testing.T) {
 		"https://example.com/path",
 	} {
 		name := tag.NameFrom(expr)
-		split := tag.PathStart(name.Canonic)
+		split := tag.PathStart(name.Text)
 		if split < 0 {
-			t.Fatalf("%q: expected a URL split in canonic %q", expr, name.Canonic)
+			t.Fatalf("%q: expected a URL split in canonic %q", expr, name.Text)
 		}
-		want := tag.UID_HashLiteral([]byte(name.Canonic[:split])).With(tag.UID_HashLiteral([]byte(name.Canonic[split:])))
+		want := tag.UID_HashLiteral([]byte(name.Text[:split])).With(tag.UID_HashLiteral([]byte(name.Text[split:])))
 		if name.ID != want {
 			t.Fatalf("%q: scheme:identifier UID is not name+identifier combine", expr)
 		}
-		if name.ID == tag.UID_HashLiteral([]byte(name.Canonic)) {
+		if name.ID == tag.UID_HashLiteral([]byte(name.Text)) {
 			t.Fatalf("%q: scheme:identifier UID collapsed to whole-string hash (regression)", expr)
 		}
 	}

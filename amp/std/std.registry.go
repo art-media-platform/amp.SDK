@@ -2,6 +2,7 @@ package std
 
 import (
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/art-media-platform/amp.SDK/amp"
@@ -33,20 +34,20 @@ func RegisterAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Na
 		typeOf = typeOf.Elem()
 	}
 	name := typeOf.Name()
-	attrID := attr.With(name)
+	attr = attr.With(name)
 	if subTags != "" {
-		attrID = attrID.With(subTags)
+		attr = attr.With(subTags)
 	}
 
 	err := gRegistry.RegisterAttr(amp.AttrDef{
-		Name:      attrID,
+		Name:      attr,
 		Prototype: prototype,
 	})
 	if err != nil {
 		panic(err)
 	}
 
-	return attrID
+	return attr
 }
 
 // Implements Registry
@@ -105,11 +106,13 @@ func (reg *registry) RegisterModule(mod *amp.AppModule) error {
 			reg.modsByAlias[alias] = mod
 		}
 	}
-	reg.modsByAlias[mod.Info.Tag.Canonic] = mod
-
-	// invoke by first component of mod ID
-	_, leafName := mod.Info.Tag.LeafTags(1)
-	reg.modsByAlias[leafName] = mod
+	// Module aliases resolve case-insensitively, so key them by the folded
+	// canonic form and its leaf component.
+	canonic := mod.Info.Tag.Canonic()
+	reg.modsByAlias[canonic] = mod
+	if dot := strings.LastIndexByte(canonic, tag.CanonicSeparatorChar); dot >= 0 {
+		reg.modsByAlias[canonic[dot+1:]] = mod
+	}
 
 	return nil
 }

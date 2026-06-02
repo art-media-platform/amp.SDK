@@ -26,7 +26,7 @@ func TestRegistry(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Make failed: %v", err)
 		}
-		if spec.Canonic != someAttr.Canonic+".av.hello.world.tag" {
+		if spec.Text != someAttr.Text+".av.Hello.World.Tag" {
 			t.Fatal("RegisterAttr failed")
 		}
 		if reflect.TypeOf(elem) != reflect.TypeOf(&amp.Tag{}) {
@@ -36,12 +36,12 @@ func TestRegistry(t *testing.T) {
 
 	// Order is significant now (atomic hash of the canonic string): the same
 	// literals in the same order reproduce the UID; the invariant ties ID to
-	// the canonic string.
+	// the folded canonic form of Text.
 	if spec.ID != (tag.Name{}.With("hello.sailor.av.Hello.World.Tag")).ID {
 		t.Fatalf("tag.With failed")
 	}
-	if spec.ID != tag.UID_HashLiteral([]byte(spec.Canonic)) {
-		t.Fatalf("spec.ID != HashLiteral(Canonic)")
+	if spec.ID != tag.UID_HashLiteral([]byte("hello.sailor.av.hello.world.tag")) {
+		t.Fatalf("spec.ID != HashLiteral(canonic form of Text)")
 	}
 	alias := someAttr.With("av").With("Hello.World.Tag")
 	if spec.ID != alias.ID {

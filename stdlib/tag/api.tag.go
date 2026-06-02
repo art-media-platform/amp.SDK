@@ -17,8 +17,8 @@ type (
 	//
 	//	tag.Name := "[{TagOp}*[{utf8_literal}]*"
 	Name struct {
-		ID      UID    // hash of any art-media-platform or other tag expression
-		Canonic string // optional UTF-8 canonic tag expression that generates Name.ID
+		ID   UID    // hash of any art-media-platform or other tag expression
+		Text string // optional case-preserved tag expression; canonize(Text) yields the canonic string hashed into ID.  May be dropped (identity is ID alone) so a UID can be matched without disclosing what it names.
 	}
 
 	// Addresses a value element in amp's CRDT schema.

@@ -58,29 +58,41 @@ func NameFrom(s string) Name {
 
 // Returns the filename representation of the tag.
 func (name Name) Filename() string {
-	if name.Canonic != "" {
-		return name.Canonic
+	if name.Text != "" {
+		return name.Text
 	}
 	return name.ID.String()
 }
 
 func (name *Name) GoString() string {
-	if name.Canonic != "" {
-		return fmt.Sprintf("%s | %s", name.Canonic, name.ID.String())
+	if name.Text != "" {
+		return fmt.Sprintf("%s | %s", name.Text, name.ID.String())
 	}
 	return name.ID.String()
 }
 
 func (name Name) IsWildcard() bool {
-	return name.ID.IsWildcard() || name.Canonic == CanonicWildcard
+	return name.ID.IsWildcard() || name.Text == CanonicWildcard
 }
 
-// With folds expr into this tag.Name, returning a new canonic Name.
+// Canonic recomputes and returns the folded canonic string — canonize(Text),
+// allocating on every call.  Text is the zero-cost stored form and the DEFAULT
+// for display, logging, and identifiers (identity is the UID; a string
+// re-parsed downstream re-folds to the same UID, so pre-folding it is wasted
+// work).  Call Canonic only when the folded bytes are the contract: normalizing
+// arbitrary input to canonic form, returning a resolve-style canonic result, or
+// a case-insensitive match against a string whose case you do not control.
+func (name Name) Canonic() string {
+	return canonize(name.Text)
+}
+
+// With folds expr into this tag.Name, returning a new Name whose Text is the
+// case-preserved tag expression and whose ID is the hash of canonize(Text).
 //
 // Splits expr at the first URL-trigger char (`:`, `/`, `\`) into a name part
-// (canonized) and a URL part (verbatim).  If the name part is itself a valid
-// RFC 3986 scheme, it is lowercased atomically — dashes / dots / plus signs
-// inside it are preserved as scheme characters.  Otherwise it is word-folded.
+// (segmented on punctuation/whitespace into dot-joined words) and a URL part
+// (verbatim).  Case is preserved in Text; the canonic fold that determines ID
+// is applied transiently by canonize at hash time.
 //
 // See the package README for the complete canonization rules,
 // examples, and rationale (acronym preservation, homophone fold,
@@ -95,7 +107,7 @@ func (name Name) With(expr string) Name {
 		return Wildcard()
 	}
 
-	// Split expr into name-part (canonized) and URL-part (verbatim).
+	// Split expr into name-part (segmented) and URL-part (verbatim).
 	namePart := expr
 	urlPart := ""
 	if split := PathStart(expr); split >= 0 {
@@ -104,19 +116,18 @@ func (name Name) With(expr string) Name {
 	}
 
 	var body strings.Builder
-	body.Grow(len(name.Canonic) + len(namePart) + len(urlPart) + 1)
-	body.WriteString(name.Canonic)
+	body.Grow(len(name.Text) + len(namePart) + len(urlPart) + 1)
+	body.WriteString(name.Text)
 
 	// Scheme-only name part: when the URL trigger is present and the name part
 	// matches the RFC 3986 scheme grammar (ALPHA *(ALPHA / DIGIT / "+" / "-"
-	// / ".")), preserve it atomically.  Lowercases per §3.1 but keeps
-	// internal +, -, . as scheme characters rather than word separators.
+	// / ".")), preserve it atomically as one segment (its case is folded by
+	// canonize at hash time, never here).
 	if urlPart != "" && isScheme(namePart) {
-		scheme := strings.ToLower(namePart)
 		if body.Len() > 0 {
 			body.WriteByte(CanonicSeparatorChar)
 		}
-		body.WriteString(scheme)
+		body.WriteString(namePart)
 	} else {
 		namePart = sSeparatorRegex.ReplaceAllString(namePart, string(CanonicSeparatorChar))
 
@@ -137,13 +148,8 @@ func (name Name) With(expr string) Name {
 				end += i
 			}
 
-			// In natural-text mode, fully capitalized literals remain upper case
-			// (USA, YMCA) so spoken acronyms keep identity.  In URL mode every
-			// name-part word lowercases per RFC 3986 §3.1.
+			// Words are stored case-preserved; the fold happens in canonize.
 			term := namePart[i:end]
-			if urlPart != "" || utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
-				term = strings.ToLower(term)
-			}
 
 			if body.Len() > 0 {
 				body.WriteByte(CanonicSeparatorChar)
@@ -162,11 +168,77 @@ func (name Name) With(expr string) Name {
 
 	// The name part hashes atomically, so word order is significant (reordered
 	// words yield distinct UIDs; no commutative literal fold).  See canonicID.
-	canonic := body.String()
+	text := body.String()
 	return Name{
-		ID:      canonicID(canonic),
-		Canonic: canonic,
+		ID:   canonicID(canonize(text)),
+		Text: text,
 	}
+}
+
+// canonize folds a case-preserved tag expression into its canonic string —
+// the string whose atomic hash is the tag UID.  It is the single authority for
+// the tag case-fold: the name part lowercases per word (multi-rune ALL-CAPS
+// acronyms like USA / YMCA are preserved in natural-text mode; URL mode
+// lowercases every word per RFC 3986 §3.1), any scheme atom lowercases, and
+// the URL / identifier part is left verbatim.  Input is already segmented into
+// dot-joined words (see With), so canonize only decides case.
+func canonize(text string) string {
+	if text == "" {
+		return ""
+	}
+
+	namePart := text
+	urlPart := ""
+	if split := PathStart(text); split >= 0 {
+		namePart = text[:split]
+		urlPart = text[split:]
+	}
+
+	var body strings.Builder
+	body.Grow(len(text))
+
+	if urlPart != "" && isScheme(namePart) {
+		body.WriteString(strings.ToLower(namePart))
+	} else {
+		urlMode := urlPart != ""
+		namePartLen := len(namePart)
+		for i := 0; i < namePartLen; {
+			for ; i < namePartLen && namePart[i] == CanonicSeparatorChar; i++ {
+			}
+			if i >= namePartLen {
+				break
+			}
+			end := strings.IndexByte(namePart[i:], CanonicSeparatorChar)
+			if end < 0 {
+				end = namePartLen
+			} else {
+				end += i
+			}
+			term := foldSegment(namePart[i:end], urlMode)
+			if body.Len() > 0 {
+				body.WriteByte(CanonicSeparatorChar)
+			}
+			body.WriteString(term)
+			i = end + 1
+		}
+	}
+
+	if urlPart != "" {
+		body.WriteString(urlPart)
+	}
+	return body.String()
+}
+
+// foldSegment applies the tag case-fold to one name-part word.  In URL mode
+// every word lowercases (RFC 3986 §3.1).  In natural-text mode a multi-rune
+// ALL-CAPS acronym (USA, YMCA) is preserved so spoken acronyms keep identity;
+// everything else (and any single rune) lowercases.  This is the only
+// case-fold in the package.
+func foldSegment(term string, urlMode bool) string {
+	if urlMode || utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
+		return strings.ToLower(term)
+	}
+	return term
 }
 
 // canonicID derives the UID of an already-canonic tag string.  The name part
@@ -213,25 +285,25 @@ func isScheme(s string) bool {
 // E.g. LeafTags(2) on "a.b.c.d.ee" yields ("a.b.c", "d.ee")
 func (name Name) LeafTags(n int) (string, string) {
 	if n <= 0 {
-		return name.Canonic, ""
+		return name.Text, ""
 	}
 
-	canonic := name.Canonic
-	R := len(canonic)
+	text := name.Text
+	R := len(text)
 	for p := R - 1; p >= 0; p-- {
-		switch c := canonic[p]; c {
+		switch c := text[p]; c {
 		case CanonicSeparatorChar:
 			n--
 			if n <= 0 {
-				prefix := canonic[:p]
+				prefix := text[:p]
 				if c == CanonicSeparatorChar {
-					p++ // omit canonic with operator
+					p++ // omit separator from the leaf
 				}
-				return prefix, canonic[p:]
+				return prefix, text[p:]
 			}
 		}
 	}
-	return "", canonic
+	return "", text
 }
 
 // Returns the index of the first path separator in the given text (':', '/', or '\\').
@@ -258,8 +330,8 @@ func WildcardID() UID {
 // Returns reserved tag.Name denoting a match with any UID value..
 func Wildcard() Name {
 	return Name{
-		ID:      WildcardID(),
-		Canonic: "*",
+		ID:   WildcardID(),
+		Text: "*",
 	}
 }
 

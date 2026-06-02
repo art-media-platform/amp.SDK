@@ -52,7 +52,7 @@ func echoLine(out *strings.Builder, line string) tag.UID {
 		fmt.Fprintf(out, "%28s   ", "")
 		out.WriteString(line)
 		out.WriteByte('\n')
-		fmt.Fprintf(out, "%28s   %s", billet.ID.Base32(), billet.Canonic)
+		fmt.Fprintf(out, "%28s   %s", billet.ID.Base32(), billet.Canonic())
 	}
 	out.WriteByte('\n')
 	return billet.ID

@@ -11,7 +11,8 @@ import "github.com/art-media-platform/amp.SDK/stdlib/tag"
 
 // Parse any inbound string (wire, file, user input).
 name, _ := tag.Parse("Hello World!")
-fmt.Println(name.Canonic)       // hello.world
+fmt.Println(name.Text)          // Hello.World   (case-preserved, for display)
+fmt.Println(name.Canonic())     // hello.world   (folded form behind ID)
 fmt.Println(name.ID.Base32())   // 7K4XGBQ7879D4F228U0CU1N627
 fmt.Println(name.ID.AsLabel())  // 7K..N627  (compact debug label)
 
@@ -25,8 +26,9 @@ id := tag.NowID()
 using art.media.platform;
 
 // Parse any inbound string (wire, file, user input).
-TagName name = TagName.Parse("Hello World!");
-Debug.Log(name.Canonic);           // hello.world
+Name name = Name.Parse("Hello World!");
+Debug.Log(name.Text);              // Hello.World   (case-preserved, for display)
+Debug.Log(name.Canonic());         // hello.world   (folded form behind ID)
 Debug.Log(name.ID.AsAsciiBase32);  // 7K4XGBQ7879D4F228U0CU1N627
 
 // Mint a fresh time-based UID with entropy.
@@ -41,10 +43,14 @@ A **`tag.Name`** pairs a UTF-8 expression with its 128-bit hash (a **`tag.UID`**
 type UID  [2]uint64
 
 type Name struct {
-    ID      UID    // hash of any tag expression
-    Canonic string // optional UTF-8 canonic form that generates ID
+    ID   UID    // hash of any text expression
+    Text string // optional case-preserved expression; canonize(Text) generates ID
 }
 ```
+
+`Text` is the expression as authored (`amp.law.PlanetEpoch`, not `amp.law.planetepoch`), so logs, attribute dumps, and debuggers stay self-documenting. Read `Text` by **default** — for display, labels, and identifiers (identity is the `ID`; a string re-parsed downstream re-folds to the same UID, so pre-folding it is wasted work). `Canonic()` recomputes the folded form (`canonize(Text)`) and allocates on every call — reach for it only when the folded bytes are the contract: normalizing arbitrary input, returning a resolve-style canonic result, or a case-insensitive match against a string whose case you do not control.
+
+`Text` is **optional and may be dropped**. The UID is the sole identity, so a processor can match, route, and serve tags with `Text` stripped — fielding queries over opaque UIDs without learning what they name. Dropping `Text` before a request reaches an untrusted relay (e.g. `tag.DarkProjectsDivision.ClassifiedProjectTitle.Q3.2026` collapses to bare UIDs) is an information-leakage control; on the wire `Tag.Text` is an optional field, so omitting it is a no-op.
 
 The hash is deterministic, cross-language, and small enough to compare with `==`, use as a map key, or fit in a database column. It has a short human-readable form via `id.Base32()` drawn from a 32-character alphabet that omits easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). This human-friendly alphabet is safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. For compact log lines and debug output, `id.AsLabel()` returns a `first2..last4` short form (e.g. `6Z..800H`) — distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
 
@@ -80,7 +86,7 @@ Punctuation and other syntactic noise also washes out, except for URLs, describe
 
 For worked examples — various inputs run through the fold alongside their canonic forms and UIDs — see [`golden/welcome-to-tags.out.txt`](golden/welcome-to-tags.out.txt).
 
-**Invariant:** for a plain name (no `/`, `:`, or `\`), a `tag.Name`'s `ID` is `UID_HashLiteral(Canonic)` — hash the canonic string, get the UID. When a name carries a URL / identifier part, the name part and the URL part hash separately and combine, so scheme:identifier UIDs stay stable (see *URLs Preserved* and *Identity Preserved* below).
+**Invariant:** for a plain name (no `/`, `:`, or `\`), a `tag.Name`'s `ID` is `UID_HashLiteral(canonize(Text))` — fold `Text` to its canonic string, hash it, get the UID. When a name carries a URL / identifier part, the name part and the URL part hash separately and combine, so scheme:identifier UIDs stay stable (see *URLs Preserved* and *Identity Preserved* below).
 
 ## Acronyms Preserved
 
