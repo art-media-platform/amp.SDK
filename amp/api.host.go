@@ -200,6 +200,14 @@ type Session interface {
 	// BlobStore returns the session's BlobStore for retrieving blobs by (planetID, blobID).
 	// Apps use this to build data.Asset instances backed by stored blobs.
 	BlobStore() BlobStore
+
+	// OpenBlob resolves a BlobRef to a seekable plaintext reader — the read-side twin of StoreBlob.
+	// An epoch-sealed blob is retrieved as ciphertext, decrypted once under its epoch key, and the
+	// recovered plaintext is validated against the asset hash (Hash_0..3, §13.5); a public blob
+	// streams straight from the BlobStore. Decrypted plaintext is served from a Tier-2 cache so
+	// repeat reads (e.g. HTTP range requests while scrubbing media) skip the decrypt. Apps use this
+	// to back a data.Asset over a stored blob.
+	OpenBlob(planetID tag.UID, ref *BlobRef) (data.AssetReader, error)
 }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
