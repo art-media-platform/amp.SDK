@@ -191,7 +191,7 @@ amp://{planet}/notes/inbox?since=2026-05-01
 
 ## What You Inherit for Free
 
-Call this the ceiling of long-term value — not a feature list, but the reason the rails are worth standing on at all.  Implement the channel contract and every one of these is already handled beneath you:
+Call this the ceiling of long-term value — not a feature list, but the reason the rails are worth standing on.  Implement the channel contract and these are yours for free:
 
 | You Get | |
 |---------|-|
