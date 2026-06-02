@@ -110,3 +110,62 @@ func TestEpochVerbatim_Roundtrip(t *testing.T) {
 
 	t.Log("verbatim epoch: assemble/sign/verify/tamper/continuity/terminal-seal all OK")
 }
+
+// TestVerifyCharterContinuity_HashKitStable pins the Phase-2 invariant: a planet's
+// HashKit is stable across its epoch chain.  A rotation that carries the prior epoch's
+// hash forward (what RotateEpoch does: AssembleEpoch with prevTerms.EffectiveHashKit())
+// verifies; one that changes the hash — e.g. the prior hardcoded Blake2s on a SHA3
+// genesis — is rejected, since a deliberate hash migration is a deferred capability.
+func TestVerifyCharterContinuity_HashKitStable(t *testing.T) {
+	uid := func(hi, lo uint64) *amp.Tag { return &amp.Tag{UID_0: hi, UID_1: lo} }
+
+	charter := &amp.PlanetCharter{
+		CharterSchema:             1,
+		PlanetID:                  uid(0x5A11, 0x7A6),
+		GenesisEpoch:              uid(100, 200),
+		Privacy:                   amp.PrivacyMode_Confidential,
+		GenesisRequiredSignatures: 1,
+	}
+	// Genesis under a NON-default hash policy (SHA3-256).
+	genesis, err := amp.AssembleEpoch(charter, &amp.EpochTerms{
+		TermsSchema: 1,
+		EpochTag:    uid(100, 200),
+		EpochHeight: 0,
+		CryptoKitID: safe.CryptoKitID_Poly25519,
+	}, safe.HashKitID_SHA3_256)
+	if err != nil {
+		t.Fatalf("AssembleEpoch(genesis): %v", err)
+	}
+
+	// A well-formed successor (same charter, height+1, points at genesis); every
+	// continuity field below is valid, so the ONLY rejection cause is the HashKit.
+	rotTerms := func() *amp.EpochTerms {
+		return &amp.EpochTerms{
+			TermsSchema:   1,
+			EpochTag:      uid(101, 201),
+			PreviousEpoch: uid(100, 200),
+			EpochHeight:   1,
+			CryptoKitID:   safe.CryptoKitID_Poly25519,
+		}
+	}
+
+	// Carry the hash forward (SHA3 → SHA3): the chain is continuity-valid.
+	prevTerms, _ := genesis.ParsedTerms()
+	carried, err := amp.AssembleEpoch(charter, rotTerms(), prevTerms.EffectiveHashKit())
+	if err != nil {
+		t.Fatalf("AssembleEpoch(carried): %v", err)
+	}
+	if err := carried.VerifyCharterContinuity(genesis); err != nil {
+		t.Fatalf("hash-stable rotation rejected: %v", err)
+	}
+
+	// Change the hash (SHA3 → Blake2s — the old hardcoded behavior): must be rejected.
+	changed, err := amp.AssembleEpoch(charter, rotTerms(), safe.HashKitID_Blake2s_256)
+	if err != nil {
+		t.Fatalf("AssembleEpoch(changed): %v", err)
+	}
+	if err := changed.VerifyCharterContinuity(genesis); err == nil {
+		t.Fatal("VerifyCharterContinuity accepted a HashKit change across the epoch chain")
+	}
+	t.Log("epoch chain pins HashKit: carry-forward verifies, change rejected")
+}

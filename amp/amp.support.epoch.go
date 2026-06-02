@@ -194,6 +194,13 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 	if terms.EpochHeight != prevTerms.EpochHeight+1 {
 		return status.Code_AuthFailed.Error("amp: EpochHeight is not predecessor + 1")
 	}
+	// HashKit is stable across a planet's epoch chain: routine rotation carries it
+	// forward so a still-in-grace tx authored under the prior epoch verifies under the
+	// same digest hash.  A deliberate hash migration is a deferred capability; this is
+	// the single site it would relax (and where an authoring-epoch hash resolver lands).
+	if terms.HashKit != prevTerms.HashKit {
+		return status.Code_AuthFailed.Error("amp: HashKit changed across epoch chain (deliberate hash migration is not yet supported)")
+	}
 	return nil
 }
 
