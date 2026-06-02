@@ -93,7 +93,7 @@ await login({ Scheme: 'email', Email: email, Password: password });
 | `useAmpQuery<T>(channel, attr, opts?)` | Read items + live WebSocket subscription |
 | `useAmpMutation()` | `tx` (batched), `create`, `upsert`, `remove`, `withdraw` |
 | `useAmpUpload()` | Blob upload with progress |
-| `useAmpMedia(blobRefID)` | Resolve a blob to a streamable URL |
+| `useAmpMedia(blobUID)` | Resolve a blob to a streamable URL |
 | `useAmpCrypto()` | Sealed-box BYOK — `seal` / `open` against the session EncryptKey |
 
 The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.

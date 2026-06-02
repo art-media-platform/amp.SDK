@@ -42,7 +42,7 @@ amp.Host ──► FindModule(tag) ──► NewAppInstance(ctx) ──► AppIn
 
 | Step | You Implement | Runtime Gives You |
 |------|---------------|-------------------|
-| **Register** | `RegisterModule(&AppModule{…})` at `init()` | Tag resolution, invocation routing |
+| **Register** | `RegisterWith(reg)` → `RegisterModule(&AppModule{…})` | Tag resolution, invocation routing |
 | **Instantiate** | `NewAppInstance(ctx)` — return your struct | `AppContext`: session, env, `NewTx()`, asset publishing |
 | **Validate** | `MakeReady(req)` — refresh tokens, check access | Verified signer identity, planet membership |
 | **Serve** | `StartPin(req)` — return a `Pin` | Encryption, sync, fanout, CRDT merge, offline queue |
@@ -89,19 +89,24 @@ For editors, viewers, anything that takes writes.  Register typed bindings with 
 
 ```go
 notes := amp.NewAttrBinding[*NoteValue](NotesAttr) // one attr → typed items
-pin.Bind(notes)
 
-// On each incoming write, fan ops out to bound responders:
-pin.MergeIncoming(tx)
+// Per-item callback: fires for each create/update/delete in an incoming TxMsg.
+notes.OnItem = func(item amp.AttrItem[*NoteValue]) {
+    // ... react to item.Value (item.Deleted marks a removal)
+}
 
-// Read merged state back, typed:
+// Read accumulated state back, typed:
 notes.EnumItems(func(itemID tag.UID, v *NoteValue) bool {
-    // ... react to current value
+    // ... inspect current value
     return true
 })
+
+// Author a write through the binding's node/attr context:
+notes.Bind(nodeID)
+notes.UpsertItem(tx, itemID, &NoteValue{ /* ... */ })
 ```
 
-> The interfaces above are real (`api.app.go`, `amp/std/api.std.go`, `amp.support.bindings.go`); the bodies are illustrative.  For a complete, runnable channel that stays strictly within the public `amp` / `amp/std` API, read [`app.hello`](https://github.com/art-media-platform/amp.planet) — the minimal send-only example, registered in `amp/host/std-apps.go`.  For interactive bindings, [`app.members`](https://github.com/art-media-platform/amp.planet) (governance + `AttrBinding`).
+> The interfaces above are real (`api.app.go`, `amp/std/api.std.go`, `amp.support.bindings.go`); the bodies are illustrative.  For a complete, runnable channel that stays strictly within the public `amp` / `amp/std` API, read [`app.hello`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.hello/app.hello.go) — the minimal send-only example, registered in [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet/blob/main/amp/host/std-apps.go).  For interactive bindings, [`app.home`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.home/home.go) binds the home planet's typed item state via `AttrBinding`.
 
 ---
 
@@ -145,7 +150,14 @@ func (app *appInst) StartPin(req *amp.Request) (amp.Pin, error) {
 }
 ```
 
-Register it in your `ampd` build by calling `notes.RegisterWith(reg)` where the host assembles its registry — in amp.planet that site is [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet), alongside the stock apps.  That call is the *entire* integration surface.
+Register it in your `ampd` build where the host assembles its registry — in amp.planet that site is [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet/blob/main/amp/host/std-apps.go), alongside the stock apps:
+
+```go
+reg := std.Registry()   // the host's module registry
+notes.RegisterWith(reg) // your one line, beside the stock apps
+```
+
+That call is the *entire* integration surface.
 
 **Client side (web).** The [amp-web-SDK](../amp-web/) consumes the same channel by name.  No glue, no schema duplication — the wire contract is shared:
 
@@ -198,11 +210,11 @@ A channel you ship on AMP is, from day one, end-to-end encrypted, offline-capabl
 
 ## Unity Rides the Same Rails
 
-Nothing about the channel contract is web-specific or Go-specific — it doesn't even know what a "client" is.  So the entire AMP 3D runtime ([`amp.3D.unity`](https://github.com/art-media-platform)) is *just another channel client*.  Scene and entity state ride CRDT + proto deltas across `(NodeID, AttrID)` cells; meshes, textures, audio, and video resolve as content-addressed **assets** by `asset:` URI.  No bespoke transport, no second sync engine — the game engine inherits end-to-end encryption, offline merge, and federation by *being a channel client*.
+Nothing about the channel contract is web-specific or Go-specific — it doesn't even know what a "client" is.  So the entire AMP 3D runtime ([`amp.3D.unity`](https://github.com/art-media-platform/amp.3D.unity)) is *just another channel client*.  Scene and entity state ride CRDT + proto deltas across `(NodeID, AttrID)` cells; meshes, textures, audio, and video resolve as content-addressed **assets** by `asset:` URI.  No bespoke transport, no second sync engine — the game engine inherits end-to-end encryption, offline merge, and federation by *being a channel client*.
 
 And Unity already models it this way, 1:1.  A `LiveCrate` is literally an `IResponder<AssetRequest>` — a scope-scoped responder that answers asset requests by address.  That is the [`Pin`](api.app.go) pattern (serve `(NodeID, AttrID)` state on request) wearing a C# hat; `CrateDepot` and `AssetCrate` are the same shape.  **A crate is a channel; an asset is a content-addressed cell.**  The moniker was never a metaphor — the two systems are the same object viewed from two languages.
 
-The p2p substrate under all of this is locked in.  The work underway is hardening the asset pipeline that feeds the crates — content-addressed seed → encrypted store → peer fetch → render — tracked in [`amp.3D.unity.crates`](https://github.com/art-media-platform).  Exploring the Unity runtime and hardening the asset system are the same effort from opposite ends: drive a real scene, watch which `asset:` references stall, fix the rail, repeat.
+The p2p substrate under all of this is locked in.  The work underway is hardening the asset pipeline that feeds the crates — content-addressed seed → encrypted store → peer fetch → render — tracked in [`amp.3D.unity`](https://github.com/art-media-platform/amp.3D.unity).  Exploring the Unity runtime and hardening the asset system are the same effort from opposite ends: drive a real scene, watch which `asset:` references stall, fix the rail, repeat.
 
 ---
 
@@ -226,7 +238,7 @@ A third party imports only `amp`, `amp/std`, and `stdlib/*` from this SDK.  Ever
 assembles on top — `amp.planet/amp/{vault,codex,host}` and the first-party `apps/*` — is
 **internal**: useful to read, not API to depend on.  If your channel needs something only an
 internal package exposes, that is a gap to raise, not an import to reach for.  The runnable
-example that stays inside this line is [`app.hello`](https://github.com/art-media-platform/amp.planet).
+example that stays inside this line is [`app.hello`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.hello/app.hello.go).
 
 ### Then Go Deeper
 
@@ -235,6 +247,7 @@ example that stays inside this line is [`app.hello`](https://github.com/art-medi
 - [`../stdlib/tag/`](../stdlib/tag/README.md) — UID derivation, `Address`, the addressing algebra
 - [`../stdlib/task/`](../stdlib/task/api.task.go) — the goroutine lifecycle model every Pin lives in
 - [`../amp-web/`](../amp-web/) — `@art-media-platform/web`, the TypeScript/React consumer; full contract in [`SKILL-amp-web-SDK.md`](../amp-web/SKILL-amp-web-SDK.md)
+- [`amp.planet/docs/INDEX.md`](https://github.com/art-media-platform/amp.planet/blob/main/docs/INDEX.md) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Manifold, commerce
 
 ---
 

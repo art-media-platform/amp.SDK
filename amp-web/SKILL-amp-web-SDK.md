@@ -51,9 +51,17 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 
 ### Install
 
+**Beta (pre-v400)** — distributed in the `amp-web-SDK` bundle, not yet on npm. Build it (`make amp-web-SDK`) or get it from your amp contact, then install the local package:
+
 ```bash
-npm install @art-media-platform/web
+npm install ./amp-web-SDK // @art-media-platform-web-SDK?
 ```
+
+```json
+{ "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
+```
+
+Publishing to npm as `@art-media-platform/web` lands at v400.
 
 ### Provider Configuration
 

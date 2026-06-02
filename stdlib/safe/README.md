@@ -42,7 +42,7 @@ A `KitSpec` bundles two independent capability axes — `Signing` and `Encrypt` 
 |-----------|----|----------------------|----------------------------------------|----------------------|
 | Poly25519 | 1  | X25519 ECDH          | Ed25519                                | registered (default) |
 | P256      | 2  | ECDH P-256           | ECDSA P-256 + SHA-256 (NIST; YubiKey PIV)   | registered           |
-| Secp256k1 | 3  | ECDH secp256k1       | ECDSA secp256k1 + Keccak-256 (crypto-wallet) | reserved (enum-only) |
+| Secp256k1 | 3  | ECDH secp256k1       | ECDSA secp256k1 + Keccak-256 (crypto-wallet) | registered (in amp.planet `app.evmwallet`) |
 
 Symmetric AEAD for every kit is XChaCha20-Poly1305.  To add a suite, define a `KitSpec` (set `Signing` and/or `Encrypt`) and call `RegisterKit()` in `init()`.
 
