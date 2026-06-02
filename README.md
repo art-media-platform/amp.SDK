@@ -115,9 +115,9 @@ A Unity app with AMP embedded has end-to-end encrypted federated communication, 
 
 ## Package Management
 
-A planet's root carries `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.
+As of the v300 wire freeze, a planet's root carries `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.  (Design: [`PRD-crate-as-channel.md`](https://github.com/art-media-platform/amp.planet/blob/main/docs/PRD-crate-as-channel.md) §3.5.)
 
-Federal contractors, regulated verticals, and supply-chain-conscious vendors do not bolt this on — they inherit it from day one.
+Because it is a structural property of every planet rather than a bolt-on, federal contractors, regulated verticals, and supply-chain-conscious vendors inherit it by construction.
 
 
 ## Architecture

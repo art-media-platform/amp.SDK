@@ -304,9 +304,12 @@ await login({ Scheme: 'wallet', Address: address, Signature: signature, Nonce: n
 await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: nonce });
 ```
 
+> Imperative calls below — `getWalletChallenge`, `getDIDChallenge`, `resolveTag` — live on the adapter. Get it in any component with `const client = useAmpClient();`.
+
 **Wallet sign-in (SIWE + multi-wallet).** The `'wallet'` scheme is **EIP-4361 (Sign-In with Ethereum)** over any EVM wallet. Discover the user's wallet(s) with **EIP-6963** so the picker shows each by name + icon — the brand lives in the UI, never on the wire (MetaMask, Coinbase, Rainbow, … all flow through the same `personal_sign`):
 
 ```tsx
+const client    = useAmpClient();   // adapter for the challenge fetch below
 const providers = new Map();
 window.addEventListener('eip6963:announceProvider', (e) => providers.set(e.detail.info.rdns, e.detail));
 window.dispatchEvent(new Event('eip6963:requestProvider'));   // each wallet announces { info: { name, icon, rdns }, provider }

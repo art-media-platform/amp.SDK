@@ -42,3 +42,13 @@ export function useAmpContext(): AmpContextValue {
   }
   return ctx;
 }
+
+/**
+ * useAmpClient — the adapter (your AmpWebClient) for imperative calls that no
+ * dedicated hook covers: login challenges (getWalletChallenge / getDIDChallenge),
+ * server-side tag resolution (resolveTag / resolveTags), ad-hoc query.
+ * Must be used within an <AmpProvider>.
+ */
+export function useAmpClient(): AmpAdapter {
+  return useAmpContext().adapter;
+}

@@ -42,7 +42,7 @@ export type { AmpWebClientOpts } from './web-client.js';
 export { AmpError, AmpErrorCode } from './errors.js';
 
 // Provider
-export { AmpProvider } from './provider.js';
+export { AmpProvider, useAmpClient } from './provider.js';
 export type { AmpProviderProps } from './provider.js';
 
 // Hooks

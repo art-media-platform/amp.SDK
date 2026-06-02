@@ -50,7 +50,7 @@ If a team burns through an entire band without moving up, that's useful signal: 
 
 ## Where is art.media.platform?
 
-The amp **substrate** — the wire format, CRDT addressing, key/identity primitives, and the channel contract — is at **v300**: late beta, architecture-complete.  Casting the wire format in stone is itself part of what *defines* v300, so "is the wire locked?" is one of the bars the substrate is clearing to earn the band.
+The amp **substrate** — the wire format, CRDT addressing, key/identity primitives, and the channel contract — is at **v300**: late beta, architecture-complete, with the wire format frozen.  Casting the wire format in stone is part of what *defines* v300 — and that lock is now in place.
 
 **Apps version independently of the substrate.**  An `AppModuleInfo.Version` is the *app's* own maturity, not the platform's.  A `v000` (Conceptual) or `v100` (Alpha) app riding the v300 substrate is normal and expected — the rails are mature; much of the cargo is still arriving.  Read a low app TRL as "this capability is early," never as "the platform is early."
 

@@ -52,12 +52,14 @@ function App() {
 function Labels() {
   const { data, loading } = useAmpQuery<{ title: string }>('projects', 'labels');
   const { create } = useAmpMutation();
+  const { isAuthenticated } = useAmpAuth();   // reads can be anonymous; writes require login (see § Login)
 
   if (loading) return <p>Loading…</p>;
   return (
     <ul>
       {data.map(label => <li key={label._ItemID}>{label.title}</li>)}
-      <button onClick={() => create('projects', 'labels', { title: 'New' })}>Add</button>
+      {/* writes 401 without a session — gate the control on auth */}
+      <button disabled={!isAuthenticated} onClick={() => create('projects', 'labels', { title: 'New' })}>Add</button>
     </ul>
   );
 }
@@ -67,6 +69,7 @@ function Labels() {
 
 ```tsx
 const { login } = useAmpAuth();
+const client    = useAmpClient(); // the adapter, for challenge fetches below
 
 // Wallet sign-in (EIP-4361 / SIWE — any EVM wallet): connect, fetch challenge, sign, submit.
 const address   = await connectWallet();                       // your wallet picker (e.g. EIP-6963)
@@ -90,6 +93,7 @@ await login({ Scheme: 'email', Email: email, Password: password });
 | Hook | Purpose |
 |------|---------|
 | `useAmpAuth()` | Login, logout, auth state |
+| `useAmpClient()` | The adapter for imperative calls — login challenges, `resolveTag`, ad-hoc `query` |
 | `useAmpQuery<T>(channel, attr, opts?)` | Read items + live WebSocket subscription |
 | `useAmpMutation()` | `tx` (batched), `create`, `upsert`, `remove`, `withdraw` |
 | `useAmpUpload()` | Blob upload with progress |
