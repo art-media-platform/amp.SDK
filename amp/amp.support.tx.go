@@ -681,6 +681,22 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 //
 // If crypto is nil, the buffer is unmarshaled without verification or decryption (local session use).
 func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCryptoKit safe.CryptoKitID) (*TxMsg, error) {
+	return openTx(wire, crypto, signerPubKey, signerCryptoKit, true)
+}
+
+// OpenTxSansVerify decrypts a sealed, encrypted wire-format TxMsg to surface its ops
+// WITHOUT verifying the author signature.  An encrypted TxMsg carries the author's FromID
+// inside the ciphertext, so the signer's public key is unknowable until after decryption —
+// a receiver must decrypt first to discover it.  This entrypoint is for a member's
+// receive-side scan (e.g. blob-ref discovery): the symmetric AEAD already authenticates the
+// payload (a wrong or forged ciphertext fails to open) and the relay's MemberProof gates
+// acceptance upstream.  Full author-signature verification, where required, follows once
+// FromID resolves to a cached member key.
+func OpenTxSansVerify(wire []byte, crypto CryptoProvider) (*TxMsg, error) {
+	return openTx(wire, crypto, nil, 0, false)
+}
+
+func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCryptoKit safe.CryptoKitID, verifySig bool) (*TxMsg, error) {
 	if len(wire) < int(TxPreambleSize) {
 		return nil, status.ErrMalformedTx
 	}
@@ -696,6 +712,9 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 		// No crypto — standard unmarshal
 		headLen := int(binary.BigEndian.Uint32(wire[4:8]))
 		dataLen := int(binary.BigEndian.Uint32(wire[8:12]))
+		if headLen < int(TxPreambleSize) || headLen > len(wire) || dataLen > len(wire)-headLen {
+			return nil, status.ErrMalformedTx
+		}
 		headBody := wire[TxPreambleSize:headLen]
 		if err := tx.UnmarshalHead(headBody); err != nil {
 			return nil, err
@@ -710,6 +729,9 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 	// --- Parse TxEnvelope from the head (in the clear) ---
 	headLen := int(binary.BigEndian.Uint32(wire[4:8]))
 	dataLen := int(binary.BigEndian.Uint32(wire[8:12]))
+	if headLen < int(TxPreambleSize) || headLen > len(wire) || dataLen > len(wire)-headLen {
+		return nil, status.ErrMalformedTx
+	}
 	headBody := wire[TxPreambleSize:headLen]
 
 	// Read just the envelope
@@ -726,15 +748,20 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 	}
 	sigOfs := len(wire) - sigLen
 
-	signedData := wire[:sigOfs]
-	sig := wire[sigOfs:]
+	// sigOfs bounds the ciphertext for the encrypted branch below and is always needed.
+	// The author-signature check itself is skipped on the SansVerify decrypt-read path
+	// (the signer's pubkey lives inside the still-sealed payload; AEAD authenticates it).
+	if verifySig {
+		signedData := wire[:sigOfs]
+		sig := wire[sigOfs:]
 
-	digest, err := crypto.HashDigest(signedData)
-	if err != nil {
-		return nil, err
-	}
-	if err := crypto.VerifyDigest(sig, digest[:], signerPubKey, signerCryptoKit); err != nil {
-		return nil, err
+		digest, err := crypto.HashDigest(signedData)
+		if err != nil {
+			return nil, err
+		}
+		if err := crypto.VerifyDigest(sig, digest[:], signerPubKey, signerCryptoKit); err != nil {
+			return nil, err
+		}
 	}
 
 	// --- Decrypt if needed ---
