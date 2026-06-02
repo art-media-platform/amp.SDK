@@ -768,9 +768,15 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 	isPublic := tx.TxEnvelope.IsPublic()
 
 	if isPublic {
-		// Planet-public: payload is plaintext, DataStore is separate
-		payloadStart := int(TxPreambleSize) + p + int(tx.TxEnvelope.HeaderOffset)
-		payloadAndOps := headBody[p+int(tx.TxEnvelope.HeaderOffset):]
+		// Planet-public: payload is plaintext, DataStore is separate.
+		// HeaderOffset is an attacker-controlled wire field; bound it before slicing
+		// (hdrOfs < p catches a uint64→int overflow into the negative range).
+		hdrOfs := p + int(tx.TxEnvelope.HeaderOffset)
+		if hdrOfs < p || hdrOfs > len(headBody) {
+			return nil, status.ErrMalformedTx
+		}
+		payloadStart := int(TxPreambleSize) + hdrOfs
+		payloadAndOps := headBody[hdrOfs:]
 
 		// Unmarshal TxHeader + TxOps from plaintext
 		tx.TxHeader = TxHeader{}
@@ -790,9 +796,16 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 			copy(tx.DataStore, wire[dsStart:dsStart+dataLen])
 		}
 	} else {
-		// Encrypted: payload contains TxHeader + TxOps + DataStore
+		// Encrypted: payload contains TxHeader + TxOps + DataStore.
+		// HeaderOffset and sigLen (→ sigOfs) are attacker-controlled wire fields, and this branch
+		// is reached via OpenTxSansVerify with no prior signature check, so bound the ciphertext
+		// span before slicing — an out-of-range or inverted span would otherwise panic the
+		// receive goroutine.  (encryptedStart < TxPreambleSize also catches a uint64→int overflow.)
 		encryptedStart := int(TxPreambleSize) + p + int(tx.TxEnvelope.HeaderOffset)
 		encryptedEnd := int(sigOfs)
+		if encryptedStart < int(TxPreambleSize) || encryptedEnd > len(wire) || encryptedEnd < encryptedStart {
+			return nil, status.ErrMalformedTx
+		}
 		ciphertext := wire[encryptedStart:encryptedEnd]
 
 		plaintext, err := crypto.DecryptPayload(ciphertext, &tx.TxEnvelope)
