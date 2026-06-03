@@ -41,10 +41,10 @@ const (
 )
 
 func init() {
-	safe.RegisterKit(&kit)
+	safe.RegisterCryptoKit(&kit)
 }
 
-var kit = safe.KitSpec{
+var kit = safe.CryptoKit{
 	ID: safe.CryptoKitID_P256,
 	Signing: &safe.SigningOps{
 		SignatureSize: SignatureSize,

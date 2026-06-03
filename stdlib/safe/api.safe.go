@@ -18,7 +18,6 @@ import (
 	"context"
 	"crypto/rand"
 	"io"
-	"sync"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -152,23 +151,27 @@ type EpochKeyStore interface {
 }
 
 /*****************************************************
-** KitSpec — pluggable crypto implementation
+** CryptoKit — pluggable crypto implementation
 **/
 
-// KitSpec is a pluggable cryptographic suite identified by a CryptoKitID.
+// CryptoKit is a pluggable cryptographic suite identified by a CryptoKitID.
 // It bundles two independent capability axes — signing and asymmetric
 // encryption — so a kit can expose one, the other, or both. Symmetric AEAD
 // is kit-agnostic and lives on the safe package directly (SealAEAD / OpenAEAD).
 //
+// A hash is deliberately NOT a CryptoKit axis: it has no keypair and no tie to
+// the suite, so content-integrity hashing is its own orthogonal registry (see
+// HashSpec / RegisterHashKit).
+//
 // Nil capability pointers mean "not supported by this kit" (e.g. a future
 // Dilithium kit would expose Signing only; a Kyber kit would expose Encrypt only).
-type KitSpec struct {
+type CryptoKit struct {
 	ID      CryptoKitID
 	Signing *SigningOps // identity / signatures; nil if kit doesn't sign
 	Encrypt *EncryptOps // ECDH / asymmetric encrypt; nil if kit doesn't ECDH
 }
 
-// SigningOps bundles the signing-side primitives of a KitSpec.
+// SigningOps bundles the signing-side primitives of a CryptoKit.
 // All non-nil functions must be threadsafe.
 type SigningOps struct {
 	// SignatureSize is the fixed byte length of signatures produced by Sign.
@@ -186,7 +189,7 @@ type SigningOps struct {
 	Verify func(sig []byte, digest []byte, signerPubKey []byte) error
 }
 
-// EncryptOps bundles the asymmetric-encryption primitives of a KitSpec.
+// EncryptOps bundles the asymmetric-encryption primitives of a CryptoKit.
 // All non-nil functions must be threadsafe.
 //
 // The Seal/Open shape is anonymous-sender (RFC 9180 HPKE base mode, libsodium
@@ -228,59 +231,18 @@ type EncryptOps struct {
 // peerKit must match the kit that generated peerPubKey; the caller typically
 // reads it from MemberEpoch.EncryptCryptoKitID alongside MemberEpoch.EncryptPubKey.
 func SealFor(peerKit CryptoKitID, peerPubKey, msg []byte) ([]byte, error) {
-	kit, err := GetKit(peerKit)
+	kit, err := GetCryptoKit(peerKit)
 	if err != nil {
 		return nil, err
 	}
 	if kit.Encrypt == nil || kit.Encrypt.Seal == nil {
-		return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric encryption", peerKit.String())
+		return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support asymmetric encryption", peerKit.String())
 	}
 	return kit.Encrypt.Seal(RandReader, msg, peerPubKey)
 }
 
-/*****************************************************
-** KitSpec registry
-**/
-
-// gRegistry maps a CryptoKitID to a registered KitSpec.
-var gRegistry struct {
-	sync.RWMutex
-	Lookup map[CryptoKitID]*KitSpec
-}
-
-// RegisterKit registers the given KitSpec so it can be retrieved via GetKit().
-// It is safe to call from init().  Registering the same kit twice (same pointer) is a no-op.
-func RegisterKit(kit *KitSpec) error {
-	var err error
-	gRegistry.Lock()
-	if gRegistry.Lookup == nil {
-		gRegistry.Lookup = map[CryptoKitID]*KitSpec{}
-	}
-	existing := gRegistry.Lookup[kit.ID]
-	if existing == nil {
-		gRegistry.Lookup[kit.ID] = kit
-	} else if existing != kit {
-		err = status.Code_CryptoKitAlreadyRegistered.Errorf("KitSpec %d (%s) is already registered", kit.ID, kit.ID.String())
-	}
-	gRegistry.Unlock()
-	return err
-}
-
-// GetKit fetches a registered KitSpec by its ID.
-// If the associated KitSpec has not been registered, an error is returned.
-func GetKit(cryptoKitID CryptoKitID) (*KitSpec, error) {
-	gRegistry.RLock()
-	kit := gRegistry.Lookup[cryptoKitID]
-	gRegistry.RUnlock()
-
-	if kit == nil {
-		return nil, status.Code_UnrecognizedCryptoKit.Errorf("KitSpec %d not found", cryptoKitID)
-	}
-	return kit, nil
-}
-
 // VerifySignature is a convenience function that performs signature validation
-// for any registered KitSpec.  Returns nil if the signature is valid.
+// for any registered CryptoKit.  Returns nil if the signature is valid.
 // This function is threadsafe.
 func VerifySignature(
 	cryptoKitID CryptoKitID,
@@ -288,12 +250,12 @@ func VerifySignature(
 	digest []byte,
 	signerPubKey []byte,
 ) error {
-	kit, err := GetKit(cryptoKitID)
+	kit, err := GetCryptoKit(cryptoKitID)
 	if err != nil {
 		return err
 	}
 	if kit.Signing == nil || kit.Signing.Verify == nil {
-		return status.Code_Unimplemented.Errorf("KitSpec %d does not support signature verification", cryptoKitID)
+		return status.Code_Unimplemented.Errorf("CryptoKit %s does not support signature verification", cryptoKitID.String())
 	}
 	return kit.Signing.Verify(sig, digest, signerPubKey)
 }

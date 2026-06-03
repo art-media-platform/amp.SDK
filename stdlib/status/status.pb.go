@@ -25,53 +25,40 @@ const (
 type Code int32
 
 const (
-	Code_Nil                        Code = 0
-	Code_Unnamed                    Code = -23001
-	Code_AssertFailed               Code = -23002
-	Code_UnsupportedOp              Code = -23003
-	Code_Unimplemented              Code = -23004
-	Code_Timeout                    Code = -23005
-	Code_ShuttingDown               Code = -23006
-	Code_NotConnected               Code = -23007
-	Code_AuthFailed                 Code = -23008
-	Code_LoginFailed                Code = -23009
-	Code_Expired                    Code = -23010
-	Code_NotReady                   Code = -23011
-	Code_Cancelled                  Code = -23012
-	Code_ItemNotFound               Code = -23013
-	Code_ParseFailed                Code = -23014
-	Code_StartupFailed              Code = -23015
-	Code_ContextNotReady            Code = -23020
-	Code_RequestClosed              Code = -23021
-	Code_BadRequest                 Code = -23022
-	Code_BadTag                     Code = -23023
-	Code_BadValue                   Code = -23024
-	Code_AlreadyExists              Code = -23025
-	Code_AttrNotFound               Code = -23026
-	Code_NothingToCommit            Code = -23027
-	Code_CommitFailed               Code = -23028
-	Code_StorageFailure             Code = -23030
-	Code_MalformedTx                Code = -23032
-	Code_BadSchema                  Code = -23040
-	Code_DataFailure                Code = -23041
-	Code_ExportErr                  Code = -23042
-	Code_PinFailed                  Code = -23043
-	Code_ProviderErr                Code = -23045
-	Code_ViolatesAppendOnly         Code = -23050
-	Code_InsufficientPermissions    Code = -23051
-	Code_CryptoKitAlreadyRegistered Code = -23100
-	Code_UnrecognizedCryptoKit      Code = -23101
-	Code_DecryptFailed              Code = -23102
-	Code_VerifySignatureFailed      Code = -23103
-	Code_BadKeyFormat               Code = -23104
-	Code_KeyGenerationFailed        Code = -23105
-	Code_SigningFailed              Code = -23109
-	Code_KeyringNotFound            Code = -23106
-	Code_KeyEntryNotFound           Code = -23107
-	Code_HashKitNotFound            Code = -23108
-	Code_UnrecognizedCryptOp        Code = -23110
-	Code_MarshalFailed              Code = -23111
-	Code_UnmarshalFailed            Code = -23112
+	Code_Nil                     Code = 0
+	Code_Unnamed                 Code = -23001
+	Code_AssertFailed            Code = -23002
+	Code_Unimplemented           Code = -23004
+	Code_Timeout                 Code = -23005
+	Code_ShuttingDown            Code = -23006
+	Code_NotConnected            Code = -23007
+	Code_AuthFailed              Code = -23008
+	Code_LoginFailed             Code = -23009
+	Code_Expired                 Code = -23010
+	Code_NotReady                Code = -23011
+	Code_Cancelled               Code = -23012
+	Code_ItemNotFound            Code = -23013
+	Code_ParseFailed             Code = -23014
+	Code_ContextNotReady         Code = -23020
+	Code_RequestClosed           Code = -23021
+	Code_BadRequest              Code = -23022
+	Code_BadTag                  Code = -23023
+	Code_BadValue                Code = -23024
+	Code_AlreadyExists           Code = -23025
+	Code_CommitFailed            Code = -23028
+	Code_StorageFailure          Code = -23030
+	Code_MalformedTx             Code = -23032
+	Code_DataFailure             Code = -23041
+	Code_PinFailed               Code = -23043
+	Code_ProviderErr             Code = -23045
+	Code_InsufficientPermissions Code = -23051
+	Code_AlreadyRegistered       Code = -23100
+	Code_DecryptFailed           Code = -23102
+	Code_VerifySignatureFailed   Code = -23103
+	Code_BadKeyFormat            Code = -23104
+	Code_KeyGenerationFailed     Code = -23105
+	Code_SigningFailed           Code = -23109
+	Code_KeyringNotFound         Code = -23106
 )
 
 // Enum value maps for Code.
@@ -80,7 +67,6 @@ var (
 		0:      "Nil",
 		-23001: "Unnamed",
 		-23002: "AssertFailed",
-		-23003: "UnsupportedOp",
 		-23004: "Unimplemented",
 		-23005: "Timeout",
 		-23006: "ShuttingDown",
@@ -92,87 +78,62 @@ var (
 		-23012: "Cancelled",
 		-23013: "ItemNotFound",
 		-23014: "ParseFailed",
-		-23015: "StartupFailed",
 		-23020: "ContextNotReady",
 		-23021: "RequestClosed",
 		-23022: "BadRequest",
 		-23023: "BadTag",
 		-23024: "BadValue",
 		-23025: "AlreadyExists",
-		-23026: "AttrNotFound",
-		-23027: "NothingToCommit",
 		-23028: "CommitFailed",
 		-23030: "StorageFailure",
 		-23032: "MalformedTx",
-		-23040: "BadSchema",
 		-23041: "DataFailure",
-		-23042: "ExportErr",
 		-23043: "PinFailed",
 		-23045: "ProviderErr",
-		-23050: "ViolatesAppendOnly",
 		-23051: "InsufficientPermissions",
-		-23100: "CryptoKitAlreadyRegistered",
-		-23101: "UnrecognizedCryptoKit",
+		-23100: "AlreadyRegistered",
 		-23102: "DecryptFailed",
 		-23103: "VerifySignatureFailed",
 		-23104: "BadKeyFormat",
 		-23105: "KeyGenerationFailed",
 		-23109: "SigningFailed",
 		-23106: "KeyringNotFound",
-		-23107: "KeyEntryNotFound",
-		-23108: "HashKitNotFound",
-		-23110: "UnrecognizedCryptOp",
-		-23111: "MarshalFailed",
-		-23112: "UnmarshalFailed",
 	}
 	Code_value = map[string]int32{
-		"Nil":                        0,
-		"Unnamed":                    -23001,
-		"AssertFailed":               -23002,
-		"UnsupportedOp":              -23003,
-		"Unimplemented":              -23004,
-		"Timeout":                    -23005,
-		"ShuttingDown":               -23006,
-		"NotConnected":               -23007,
-		"AuthFailed":                 -23008,
-		"LoginFailed":                -23009,
-		"Expired":                    -23010,
-		"NotReady":                   -23011,
-		"Cancelled":                  -23012,
-		"ItemNotFound":               -23013,
-		"ParseFailed":                -23014,
-		"StartupFailed":              -23015,
-		"ContextNotReady":            -23020,
-		"RequestClosed":              -23021,
-		"BadRequest":                 -23022,
-		"BadTag":                     -23023,
-		"BadValue":                   -23024,
-		"AlreadyExists":              -23025,
-		"AttrNotFound":               -23026,
-		"NothingToCommit":            -23027,
-		"CommitFailed":               -23028,
-		"StorageFailure":             -23030,
-		"MalformedTx":                -23032,
-		"BadSchema":                  -23040,
-		"DataFailure":                -23041,
-		"ExportErr":                  -23042,
-		"PinFailed":                  -23043,
-		"ProviderErr":                -23045,
-		"ViolatesAppendOnly":         -23050,
-		"InsufficientPermissions":    -23051,
-		"CryptoKitAlreadyRegistered": -23100,
-		"UnrecognizedCryptoKit":      -23101,
-		"DecryptFailed":              -23102,
-		"VerifySignatureFailed":      -23103,
-		"BadKeyFormat":               -23104,
-		"KeyGenerationFailed":        -23105,
-		"SigningFailed":              -23109,
-		"KeyringNotFound":            -23106,
-		"KeyEntryNotFound":           -23107,
-		"HashKitNotFound":            -23108,
-		"UnrecognizedCryptOp":        -23110,
-		"MarshalFailed":              -23111,
-		"UnmarshalFailed":            -23112,
+		"Nil":                     0,
+		"Unnamed":                 -23001,
+		"AssertFailed":            -23002,
+		"Unimplemented":           -23004,
+		"Timeout":                 -23005,
+		"ShuttingDown":            -23006,
+		"NotConnected":            -23007,
+		"AuthFailed":              -23008,
+		"LoginFailed":             -23009,
+		"Expired":                 -23010,
+		"NotReady":                -23011,
+		"Cancelled":               -23012,
+		"ItemNotFound":            -23013,
+		"ParseFailed":             -23014,
+		"ContextNotReady":         -23020,
+		"RequestClosed":           -23021,
+		"BadRequest":              -23022,
+		"BadTag":                  -23023,
+		"BadValue":                -23024,
+		"AlreadyExists":           -23025,
+		"CommitFailed":            -23028,
+		"StorageFailure":          -23030,
+		"MalformedTx":             -23032,
+		"DataFailure":             -23041,
+		"PinFailed":               -23043,
+		"ProviderErr":             -23045,
+		"InsufficientPermissions": -23051,
+		"AlreadyRegistered":       -23100,
+		"DecryptFailed":           -23102,
+		"VerifySignatureFailed":   -23103,
+		"BadKeyFormat":            -23104,
+		"KeyGenerationFailed":     -23105,
+		"SigningFailed":           -23109,
+		"KeyringNotFound":         -23106,
 	}
 )
 
@@ -352,13 +313,11 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\x05Level\x18\x03 \x01(\x05R\x05Level\x12\x18\n" +
 	"\aMessage\x18\x04 \x01(\tR\aMessage\x12\x19\n" +
 	"\bTimeID_0\x18\b \x01(\x06R\aTimeID0\x12\x19\n" +
-	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\x93\n" +
-	"\n" +
+	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\x8b\a\n" +
 	"\x04Code\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x14\n" +
 	"\aUnnamed\x10\xa7\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fAssertFailed\x10\xa6\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
-	"\rUnsupportedOp\x10\xa5\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rUnimplemented\x10\xa4\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x14\n" +
 	"\aTimeout\x10\xa3\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fShuttingDown\x10\xa2\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
@@ -370,8 +329,7 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\bNotReady\x10\x9d\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x16\n" +
 	"\tCancelled\x10\x9c\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fItemNotFound\x10\x9b\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
-	"\vParseFailed\x10\x9a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
-	"\rStartupFailed\x10\x99\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
+	"\vParseFailed\x10\x9a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
 	"\x0fContextNotReady\x10\x94\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rRequestClosed\x10\x93\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x17\n" +
 	"\n" +
@@ -379,31 +337,20 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\x06BadTag\x10\x91\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x15\n" +
 	"\bBadValue\x10\x90\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rAlreadyExists\x10\x8f\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
-	"\fAttrNotFound\x10\x8e\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
-	"\x0fNothingToCommit\x10\x8d\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fCommitFailed\x10\x8c\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1b\n" +
 	"\x0eStorageFailure\x10\x8a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
-	"\vMalformedTx\x10\x88\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x16\n" +
-	"\tBadSchema\x10\x80\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
+	"\vMalformedTx\x10\x88\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
 	"\vDataFailure\x10\xff\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x16\n" +
-	"\tExportErr\x10\xfe\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x16\n" +
 	"\tPinFailed\x10\xfd\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
-	"\vProviderErr\x10\xfb\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1f\n" +
-	"\x12ViolatesAppendOnly\x10\xf6\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12$\n" +
-	"\x17InsufficientPermissions\x10\xf5\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12'\n" +
-	"\x1aCryptoKitAlreadyRegistered\x10\xc4\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\"\n" +
-	"\x15UnrecognizedCryptoKit\x10\xc3\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
+	"\vProviderErr\x10\xfb\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12$\n" +
+	"\x17InsufficientPermissions\x10\xf5\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1e\n" +
+	"\x11AlreadyRegistered\x10\xc4\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rDecryptFailed\x10\xc2\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\"\n" +
 	"\x15VerifySignatureFailed\x10\xc1\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fBadKeyFormat\x10\xc0\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12 \n" +
 	"\x13KeyGenerationFailed\x10\xbf\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rSigningFailed\x10\xbb\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
-	"\x0fKeyringNotFound\x10\xbe\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1d\n" +
-	"\x10KeyEntryNotFound\x10\xbd\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
-	"\x0fHashKitNotFound\x10\xbc\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12 \n" +
-	"\x13UnrecognizedCryptOp\x10\xba\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
-	"\rMarshalFailed\x10\xb9\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
-	"\x0fUnmarshalFailed\x10\xb8\xcb\xfe\xff\xff\xff\xff\xff\xff\x01*7\n" +
+	"\x0fKeyringNotFound\x10\xbe\xcb\xfe\xff\xff\xff\xff\xff\xff\x01*7\n" +
 	"\bSeverity\x12\t\n" +
 	"\x05Debug\x10\x00\x12\b\n" +
 	"\x04Info\x10\x01\x12\v\n" +

@@ -145,7 +145,7 @@ func (enc *enclave) GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
 		return PubKey{}, fmt.Errorf("safe: enclave is closed")
 	}
 
-	kit, err := GetKit(spec.CryptoKitID)
+	kit, err := GetCryptoKit(spec.CryptoKitID)
 	if err != nil {
 		return PubKey{}, err
 	}
@@ -169,7 +169,7 @@ func (enc *enclave) GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
 			return PubKey{}, err
 		}
 		if kp.Pub.CryptoKitID != spec.CryptoKitID || kp.Pub.KeyType != spec.KeyType {
-			return PubKey{}, status.Code_KeyGenerationFailed.Error("safe: KitSpec mutated key spec")
+			return PubKey{}, status.Code_KeyGenerationFailed.Error("safe: CryptoKit mutated key spec")
 		}
 
 		rec := &KeyPairRecord{
@@ -215,7 +215,7 @@ func (enc *enclave) FetchPubKey(ref *KeyRef) (PubKey, error) {
 // fetchTypedRecord resolves ref, enforces enclave-not-closed, and verifies that
 // the resolved record's KeyType matches wantType.  Returns the record and its
 // kit on success.  Internal helper for the typed Enclave methods below.
-func (enc *enclave) fetchTypedRecord(ref *KeyRef, wantType KeyType, opLabel string) (*KeyPairRecord, *KitSpec, error) {
+func (enc *enclave) fetchTypedRecord(ref *KeyRef, wantType KeyType, opLabel string) (*KeyPairRecord, *CryptoKit, error) {
 	if enc.closed {
 		return nil, nil, fmt.Errorf("safe: enclave is closed")
 	}
@@ -229,7 +229,7 @@ func (enc *enclave) fetchTypedRecord(ref *KeyRef, wantType KeyType, opLabel stri
 	if rec.KeyType != wantType {
 		return nil, nil, status.Code_BadKeyFormat.Errorf("%s requires %s, got %s", opLabel, wantType.String(), rec.KeyType.String())
 	}
-	kit, err := GetKit(rec.CryptoKitID)
+	kit, err := GetCryptoKit(rec.CryptoKitID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -246,7 +246,7 @@ func (enc *enclave) Sign(ref *KeyRef, digest []byte) ([]byte, error) {
 		return nil, err
 	}
 	if kit.Signing == nil || kit.Signing.Sign == nil {
-		return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support signing", kit.ID.String())
+		return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support signing", kit.ID.String())
 	}
 	return kit.Signing.Sign(digest, rec.PrvKey)
 }
@@ -304,12 +304,12 @@ func (enc *enclave) OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error) {
 	if rec.KeyType != KeyType_AsymmetricKey {
 		return nil, status.Code_BadKeyFormat.Errorf("OpenFromPub requires AsymmetricKey, got %s", rec.KeyType.String())
 	}
-	kit, err := GetKit(rec.CryptoKitID)
+	kit, err := GetCryptoKit(rec.CryptoKitID)
 	if err != nil {
 		return nil, err
 	}
 	if kit.Encrypt == nil || kit.Encrypt.Open == nil {
-		return nil, status.Code_Unimplemented.Errorf("KitSpec %s does not support asymmetric decryption", kit.ID.String())
+		return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support asymmetric decryption", kit.ID.String())
 	}
 	return kit.Encrypt.Open(msg, rec.PrvKey)
 }

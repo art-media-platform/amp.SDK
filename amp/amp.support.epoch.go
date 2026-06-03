@@ -93,12 +93,12 @@ func (pe *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []byte
 	if cosig == nil || len(cosig.Signature) == 0 {
 		return status.Code_BadRequest.Error("amp: empty CoSignature")
 	}
-	kit, err := safe.GetKit(signerKit)
+	kit, err := safe.GetCryptoKit(signerKit)
 	if err != nil {
 		return err
 	}
 	if kit.Signing == nil || kit.Signing.Verify == nil {
-		return status.Code_Unimplemented.Errorf("KitSpec %s does not support verification", signerKit.String())
+		return status.Code_Unimplemented.Errorf("CryptoKit %s does not support verification", signerKit.String())
 	}
 	frame, err := pe.SignedBytes()
 	if err != nil {

@@ -99,7 +99,7 @@ func phraseDigest(entropy []byte) []byte {
 // The phrase's checksum is verified before any derivation occurs. The returned
 // KeyPair's private material is fresh and owned by the caller; Zero() it after use.
 func KeyPairFromPhrase(phrase Phrase, spec KeySpec, purpose string) (KeyPair, error) {
-	kit, err := GetKit(spec.CryptoKitID)
+	kit, err := GetCryptoKit(spec.CryptoKitID)
 	if err != nil {
 		return KeyPair{}, err
 	}
@@ -124,7 +124,7 @@ func KeyPairFromPhrase(phrase Phrase, spec KeySpec, purpose string) (KeyPair, er
 
 // generateKeyForSpec dispatches GenerateKey to the kit's appropriate capability
 // based on KeyType.  Symmetric keys are kit-agnostic (random bytes for both halves).
-func generateKeyForSpec(kit *KitSpec, rng io.Reader, requestedSize int, kp *KeyPair) error {
+func generateKeyForSpec(kit *CryptoKit, rng io.Reader, requestedSize int, kp *KeyPair) error {
 	switch kp.Pub.KeyType {
 	case KeyType_SymmetricKey:
 		pubSize := requestedSize
@@ -142,12 +142,12 @@ func generateKeyForSpec(kit *KitSpec, rng io.Reader, requestedSize int, kp *KeyP
 		return nil
 	case KeyType_SigningKey:
 		if kit.Signing == nil || kit.Signing.Generate == nil {
-			return status.Code_Unimplemented.Errorf("KitSpec %s does not generate SigningKeys", kit.ID.String())
+			return status.Code_Unimplemented.Errorf("CryptoKit %s does not generate SigningKeys", kit.ID.String())
 		}
 		return kit.Signing.Generate(rng, kp)
 	case KeyType_AsymmetricKey:
 		if kit.Encrypt == nil || kit.Encrypt.Generate == nil {
-			return status.Code_Unimplemented.Errorf("KitSpec %s does not generate AsymmetricKeys", kit.ID.String())
+			return status.Code_Unimplemented.Errorf("CryptoKit %s does not generate AsymmetricKeys", kit.ID.String())
 		}
 		return kit.Encrypt.Generate(rng, kp)
 	default:

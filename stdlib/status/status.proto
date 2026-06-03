@@ -11,7 +11,6 @@ enum Code {
 
     Unnamed                     = -23001;
     AssertFailed                = -23002;
-    UnsupportedOp               = -23003;
     Unimplemented               = -23004;
     Timeout                     = -23005;
     ShuttingDown                = -23006;
@@ -23,7 +22,6 @@ enum Code {
     Cancelled                   = -23012;
     ItemNotFound                = -23013;
     ParseFailed                 = -23014;
-    StartupFailed               = -23015;
 
     ContextNotReady             = -23020;
     RequestClosed               = -23021;
@@ -31,34 +29,23 @@ enum Code {
     BadTag                      = -23023;
     BadValue                    = -23024;
     AlreadyExists               = -23025;
-    AttrNotFound                = -23026;
-    NothingToCommit             = -23027;
     CommitFailed                = -23028;
     StorageFailure              = -23030;
     MalformedTx                 = -23032;
 
-    BadSchema                   = -23040;
     DataFailure                 = -23041;
-    ExportErr                   = -23042;
     PinFailed                   = -23043;
     ProviderErr                 = -23045;
 
-    ViolatesAppendOnly          = -23050;
     InsufficientPermissions     = -23051;
 
-    CryptoKitAlreadyRegistered  = -23100;
-    UnrecognizedCryptoKit       = -23101;
+    AlreadyRegistered           = -23100;
     DecryptFailed               = -23102;
     VerifySignatureFailed       = -23103;
     BadKeyFormat                = -23104;
     KeyGenerationFailed         = -23105;
     SigningFailed               = -23109;
     KeyringNotFound             = -23106;
-    KeyEntryNotFound            = -23107;
-    HashKitNotFound             = -23108;
-    UnrecognizedCryptOp         = -23110;
-    MarshalFailed               = -23111;
-    UnmarshalFailed             = -23112;
 }
 
 // Severity expresses the severity of a status message for logging and alerting purposes.

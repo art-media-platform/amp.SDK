@@ -15,7 +15,7 @@ import (
 // the sign/verify mechanics actually work, not just compile.
 func TestEpochVerbatim_Roundtrip(t *testing.T) {
 	kitID := safe.CryptoKitID_Poly25519
-	kit, err := safe.GetKit(kitID)
+	kit, err := safe.GetCryptoKit(kitID)
 	if err != nil {
 		t.Fatal(err)
 	}

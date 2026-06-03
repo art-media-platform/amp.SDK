@@ -299,9 +299,9 @@ func makeTestEpoch(t *testing.T) *amp.PlanetEpoch {
 	return env
 }
 
-func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.KitSpec, []byte, []byte) {
+func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.CryptoKit, []byte, []byte) {
 	t.Helper()
-	kit, err := safe.GetKit(kitID)
+	kit, err := safe.GetCryptoKit(kitID)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -5,7 +5,6 @@ import (
 	"hash"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/encode"
-	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"golang.org/x/crypto/blake2s"
 	"golang.org/x/crypto/sha3"
@@ -59,24 +58,21 @@ func Zero(buf []byte) {
 	}
 }
 
-// FetchHasher returns the hash pkg for the given hash kit.
-func FetchHasher(hashKitID HashKitID) func() hash.Hash {
-	var hasher func() hash.Hash
-
-	switch hashKitID {
-	case HashKitID_SHA3_256:
-		hasher = sha3.New256
-	case HashKitID_Blake2s_256:
-		hasher = func() hash.Hash {
-			inst, _ := blake2s.New256(nil)
-			return inst
-		}
-	}
-
-	return hasher
+// HashSpec is the registration recipe for a content-integrity hash: its ID, a
+// factory for a fresh stateful hasher, and the digest size.  NewHashKit resolves
+// a live HashKit from it.
+//
+// Hashing is an axis orthogonal to the CryptoKit suite — a hash has no keypair
+// and no tie to the curve — so it lives in its own registry (gHashKits), never
+// as a field on CryptoKit.
+type HashSpec struct {
+	ID   HashKitID
+	New  func() hash.Hash
+	Size int
 }
 
-// NewHashKit returns the requested HashKit.
+// NewHashKit returns a live HashKit (a fresh hasher) for the requested kit.
+// The zero value resolves to the default content hash (Blake2s_256).
 func NewHashKit(hashKitID HashKitID) (HashKit, error) {
 	var kit HashKit
 
@@ -84,14 +80,37 @@ func NewHashKit(hashKitID HashKitID) (HashKit, error) {
 		hashKitID = HashKitID_Blake2s_256
 	}
 
-	hasher := FetchHasher(hashKitID)
-	if hasher == nil {
-		return kit, status.Code_HashKitNotFound.Errorf("unrecognized HashKitID %v", hashKitID)
+	spec, err := GetHashKit(hashKitID)
+	if err != nil {
+		return kit, err
 	}
 
-	kit.HashKitID = hashKitID
-	kit.Hasher = hasher()
-	kit.HashSz = kit.Hasher.Size()
+	kit.HashKitID = spec.ID
+	kit.Hasher = spec.New()
+	kit.HashSz = spec.Size
 
 	return kit, nil
+}
+
+// The dependency-light content hashes register from this package's init().
+// BLAKE3 pulls a SIMD dependency and so registers from amp.planet (blank import).
+func init() {
+	mustRegisterHashKit(&HashSpec{
+		ID:   HashKitID_Blake2s_256,
+		New:  func() hash.Hash { h, _ := blake2s.New256(nil); return h },
+		Size: 32,
+	})
+	mustRegisterHashKit(&HashSpec{
+		ID:   HashKitID_SHA3_256,
+		New:  sha3.New256,
+		Size: 32,
+	})
+}
+
+// mustRegisterHashKit panics if registration fails — an ID collision in init() is
+// a build-time programming error, not a runtime condition.
+func mustRegisterHashKit(spec *HashSpec) {
+	if err := RegisterHashKit(spec); err != nil {
+		panic(err)
+	}
 }

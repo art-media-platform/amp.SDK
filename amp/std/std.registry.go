@@ -141,7 +141,7 @@ func (reg *registry) NewValue(attrID tag.UID) (proto.Message, error) {
 	// This is also essential during bootstrapping when the client sends a RegisterDefs is not registered yet.
 	def, exists := reg.attrDefs[attrID]
 	if !exists {
-		return nil, status.Code_AttrNotFound.Errorf("attr %q not found", attrID.String())
+		return nil, status.Code_ItemNotFound.Errorf("attr %q not found", attrID.String())
 	}
 	return data.NewLike(def.Prototype), nil
 }

@@ -23,10 +23,10 @@ import (
 )
 
 func init() {
-	safe.RegisterKit(&kit)
+	safe.RegisterCryptoKit(&kit)
 }
 
-var kit = safe.KitSpec{
+var kit = safe.CryptoKit{
 	ID: safe.CryptoKitID_Poly25519,
 	Signing: &safe.SigningOps{
 		SignatureSize: ed25519.SignatureSize,
