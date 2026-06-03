@@ -54,7 +54,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 **Beta (pre-v400)** — distributed in the `amp-web-SDK` bundle, not yet on npm. Build it (`make amp-web-SDK`) or get it from your amp contact, then install the local package:
 
 ```bash
-npm install ./amp-web-SDK // @art-media-platform-web-SDK?
+npm install ./amp-web-SDK
 ```
 
 ```json
@@ -426,7 +426,7 @@ const { data } = await client.query(channel, attr, { itemID, planetTag: planetID
 
 ### 5.8 Deterministic UIDs — names → `tag.UID`
 
-`(channel, attr, itemID)` are `tag.UID`s derived from string names by amp's `tag.Name` canonization — a regex split on whitespace + punctuation, a lowercase rule with all-caps preservation, URL-trigger-char (`:` / `/` / `\`) handling, and an atomic word fold (word order is significant). **Don't reimplement this in JS / Swift / C#** — a subtly-wrong port yields UIDs that 404 on attrs that "should exist," and the failure stays invisible until a write lands in the wrong place. Two first-class ways get the right UID without porting the algorithm:
+`(channel, attr, itemID)` are `tag.UID`s derived from string names by amp's `tag.Name` canonization — a regex split on whitespace + punctuation, a case-insensitive lowercase ASCII fold (A–Z → a–z; non-ASCII bytes verbatim), URL-trigger-char (`:` / `/` / `\`) handling, and an atomic word fold (word order is significant). **Don't reimplement this in JS / Swift / C#** — a subtly-wrong port yields UIDs that 404 on attrs that "should exist," and the failure stays invisible until a write lands in the wrong place. Two first-class ways get the right UID without porting the algorithm:
 
 #### Build-time — `forge` codegen (preferred for well-known names)
 
@@ -884,7 +884,7 @@ Inline `<style>` blocks are permitted (the served CSP allows `'unsafe-inline'` f
 
 ## 9. Cross-planet addresses
 
-Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / address / +planet). (`Address` is the cross-planet addressing token throughout the SDK and wire; it carries the DESIGN-12 element/planet identity.)
+Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / +edit / +planet). (`Address` is the cross-planet addressing token throughout the SDK and wire; it carries the DESIGN-12 element/planet identity.)
 
 ```tsx
 // An Address arrives from the server (e.g. on a read or a share); the SDK

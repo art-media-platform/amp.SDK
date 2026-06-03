@@ -77,7 +77,7 @@ export type WithdrawReason =
 
 /**
  * An Address points at a CRDT cell, optionally across planets.  On the wire
- * it is a single base32 string packing 3–5 UIDs (element / address / +planet)
+ * it is a single base32 string packing 3–5 UIDs (element / +edit / +planet)
  * — one token, one decode.  Treat it as opaque: the SDK passes through the
  * string the server produced.
  */

@@ -10,7 +10,14 @@
  * secp256k1 kits are lazy-loaded — they don't enter the default bundle.
  */
 
-/** CryptoKitID matches the numeric values in amp.SDK/stdlib/safe/safe.proto. */
+/**
+ * CryptoKitID is an SDK-local dispatch tag picking which kit implementation
+ * seals/opens.  It never rides the wire — the seal envelope is
+ * `eph_pub || nonce || ciphertext+tag` with no kit byte, and a key's kit is
+ * known from its origin.  Go-side, kits are identified by a name-derived
+ * tag.UID (safe.CryptoKit.Poly25519 / .P256 / .Secp256k1); these small
+ * integers are the TS-internal equivalent, not those UIDs.
+ */
 export const CryptoKitID = {
   Unspecified: 0,
   Poly25519: 1,

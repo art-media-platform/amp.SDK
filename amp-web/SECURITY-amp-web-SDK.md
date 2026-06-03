@@ -63,7 +63,7 @@ scrape of the local key cache exposes it after the fact.
 // Channel items are JSON — base64-encode the sealed bytes (a raw Uint8Array
 // does not survive JSON.stringify).  Decode with base64ToBytes before open().
 const sealed = bytesToBase64(await client.seal(new TextEncoder().encode(plaintext)));
-await client.upsert('users', 'api_keys_overrides', member.id, { cesium: sealed });
+await client.upsert('users', 'api_keys_overrides', member.ID, { cesium: sealed });
 ```
 
 `seal`/`open` wrap anonymous-sender HPKE (default kit Poly25519, pure JS) and are
