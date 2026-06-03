@@ -532,7 +532,7 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 }
 
 // CryptoProvider supplies the cryptographic operations needed to seal (encrypt+sign) and open (verify+decrypt) TxMsgs.
-// Implemented by the vault/host layer using safe.Enclave and safe.CryptoKit.
+// Implemented by the vault/host layer using safe.Enclave and safe.Kit.
 //
 // Methods that accept *TxEnvelope use it to determine the encryption context:
 //   - Planet-level TxMsgs: Epoch is the planet epoch; PlanetEpoch is zero.
@@ -693,7 +693,7 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 // acceptance upstream.  Full author-signature verification, where required, follows once
 // FromID resolves to a cached member key.
 func OpenTxSansVerify(wire []byte, crypto CryptoProvider) (*TxMsg, error) {
-	return openTx(wire, crypto, nil, 0, false)
+	return openTx(wire, crypto, nil, safe.CryptoKitID{}, false)
 }
 
 func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCryptoKit safe.CryptoKitID, verifySig bool) (*TxMsg, error) {

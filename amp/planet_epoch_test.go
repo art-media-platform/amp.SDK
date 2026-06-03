@@ -35,7 +35,7 @@ func TestPlanetEpoch_SignedBytes_ExcludesSignatures(t *testing.T) {
 
 func TestPlanetEpoch_SignVerify_Roundtrip(t *testing.T) {
 	epoch := makeTestEpoch(t)
-	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 
 	frame, err := epoch.SignedBytes()
 	if err != nil {
@@ -52,19 +52,19 @@ func TestPlanetEpoch_SignVerify_Roundtrip(t *testing.T) {
 		Signature: sig,
 	}
 
-	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err != nil {
+	if err := epoch.VerifyCoSignature(cosig, pub, safe.Crypto.Poly25519.ID); err != nil {
 		t.Fatalf("verify should succeed: %v", err)
 	}
 
 	epoch.Signatures = []*amp.CoSignature{cosig}
-	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err != nil {
+	if err := epoch.VerifyCoSignature(cosig, pub, safe.Crypto.Poly25519.ID); err != nil {
 		t.Fatalf("verify must still succeed after appending to Signatures: %v", err)
 	}
 }
 
 func TestPlanetEpoch_Verify_RejectsTampered(t *testing.T) {
 	epoch := makeTestEpoch(t)
-	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 
 	frame, err := epoch.SignedBytes()
 	if err != nil {
@@ -82,18 +82,18 @@ func TestPlanetEpoch_Verify_RejectsTampered(t *testing.T) {
 	// Flip a byte inside the verbatim Terms — the FRAME no longer matches what
 	// was signed, so verification must fail.
 	epoch.Terms[len(epoch.Terms)-1] ^= 0xFF
-	if err := epoch.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err == nil {
+	if err := epoch.VerifyCoSignature(cosig, pub, safe.Crypto.Poly25519.ID); err == nil {
 		t.Fatal("verify must reject signature over a tampered epoch")
 	}
 }
 
 func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 	epoch := makeTestEpoch(t)
-	_, pub, _ := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	_, pub, _ := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 
 	err := epoch.VerifyCoSignature(&amp.CoSignature{
 		MemberTag: amp.TagFromUID(tag.UID{42, 43}),
-	}, pub, safe.CryptoKitID_Poly25519)
+	}, pub, safe.Crypto.Poly25519.ID)
 	if err == nil {
 		t.Fatal("verify must reject empty signature")
 	}
@@ -116,8 +116,8 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	polyKit, polyPub, polyPrv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
-	p256Kit, p256Pub, p256Prv := freshKeyPair(t, safe.CryptoKitID_P256)
+	polyKit, polyPub, polyPrv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
+	p256Kit, p256Pub, p256Prv := freshKeyPair(t, safe.Crypto.P256.ID)
 
 	polySig, err := polyKit.Signing.Sign(frame, polyPrv)
 	if err != nil {
@@ -139,29 +139,29 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 
 	// Each CoSignature is verified against its signer's own kit.  This is the
 	// flow a vault controller runs when validating a multi-founder genesis.
-	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.CryptoKitID_Poly25519); err != nil {
+	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.Crypto.Poly25519.ID); err != nil {
 		t.Fatalf("Poly25519 cosignature must verify: %v", err)
 	}
-	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.CryptoKitID_P256); err != nil {
+	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.Crypto.P256.ID); err != nil {
 		t.Fatalf("P-256 cosignature must verify: %v", err)
 	}
 
 	// Cross-kit swaps must fail: a Poly25519 signature cannot be verified as P-256,
 	// and a P-256 signature cannot be verified as Poly25519.
-	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.CryptoKitID_P256); err == nil {
+	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.Crypto.P256.ID); err == nil {
 		t.Fatal("Poly25519 signature must not verify under P-256 kit")
 	}
-	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.CryptoKitID_Poly25519); err == nil {
+	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.Crypto.Poly25519.ID); err == nil {
 		t.Fatal("P-256 signature must not verify under Poly25519 kit")
 	}
 
 	// Populating Signatures[] for both founders must not break verification —
 	// the FRAME excludes Signatures from the signed payload.
 	epoch.Signatures = []*amp.CoSignature{polyCoSig, p256CoSig}
-	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.CryptoKitID_Poly25519); err != nil {
+	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.Crypto.Poly25519.ID); err != nil {
 		t.Fatalf("Poly25519 verify after Signatures populated: %v", err)
 	}
-	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.CryptoKitID_P256); err != nil {
+	if err := epoch.VerifyCoSignature(p256CoSig, p256Pub, safe.Crypto.P256.ID); err != nil {
 		t.Fatalf("P-256 verify after Signatures populated: %v", err)
 	}
 }
@@ -181,9 +181,10 @@ func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 			Declaration:   &amp.Tags{Head: &amp.Tag{Text: declaration}},
 		}
 		terms := &amp.EpochTerms{
-			TermsSchema: 1,
-			EpochTag:    amp.TagFromUID(tag.UID{100, 200}),
-			CryptoKitID: safe.CryptoKitID_Poly25519,
+			TermsSchema:   1,
+			EpochTag:      amp.TagFromUID(tag.UID{100, 200}),
+			CryptoKitID_0: safe.Crypto.Poly25519.ID[0],
+			CryptoKitID_1: safe.Crypto.Poly25519.ID[1],
 		}
 		env, err := amp.AssembleEpoch(charter, terms, safe.HashKitID_Blake2s_256)
 		if err != nil {
@@ -193,7 +194,7 @@ func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 	}
 
 	honest := mkEnv("We, Alice and Bob, found this planet for our shared art practice.")
-	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 	frame, err := honest.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
@@ -207,14 +208,14 @@ func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 		Signature: sig,
 	}
 
-	if err := honest.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err != nil {
+	if err := honest.VerifyCoSignature(cosig, pub, safe.Crypto.Poly25519.ID); err != nil {
 		t.Fatalf("verify should succeed on the honest declaration: %v", err)
 	}
 
 	// The honest founders' signature must not validate an envelope whose
 	// Declaration was swapped — the intent lives inside the signed Charter.
 	forged := mkEnv("We, Alice and Bob, found this planet for money laundering.")
-	if err := forged.VerifyCoSignature(cosig, pub, safe.CryptoKitID_Poly25519); err == nil {
+	if err := forged.VerifyCoSignature(cosig, pub, safe.Crypto.Poly25519.ID); err == nil {
 		t.Fatal("verify must reject the honest signature against a swapped Declaration")
 	}
 }
@@ -253,7 +254,7 @@ func TestPlanetEpoch_Witnesses_ExcludedFromFrame(t *testing.T) {
 func TestPlanetEpoch_Witnesses_VerifyOverSameFrame(t *testing.T) {
 	epoch := makeTestEpoch(t)
 
-	kit, pub, prv := freshKeyPair(t, safe.CryptoKitID_Poly25519)
+	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 	frame, err := epoch.SignedBytes()
 	if err != nil {
 		t.Fatal(err)
@@ -272,7 +273,7 @@ func TestPlanetEpoch_Witnesses_VerifyOverSameFrame(t *testing.T) {
 
 	// The witness's signature verifies by the same mechanism as a founder's —
 	// the only difference is the slice it lives in.
-	if err := epoch.VerifyCoSignature(witness, pub, safe.CryptoKitID_Poly25519); err != nil {
+	if err := epoch.VerifyCoSignature(witness, pub, safe.Crypto.Poly25519.ID); err != nil {
 		t.Fatalf("witness signature must verify under the same FRAME: %v", err)
 	}
 }
@@ -287,10 +288,11 @@ func makeTestEpoch(t *testing.T) *amp.PlanetEpoch {
 		GenesisEpoch:  amp.TagFromUID(tag.UID{100, 200}),
 	}
 	terms := &amp.EpochTerms{
-		TermsSchema: 1,
-		EpochTag:    amp.TagFromUID(tag.UID{100, 200}),
-		Label:       "Genesis",
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		TermsSchema:   1,
+		EpochTag:      amp.TagFromUID(tag.UID{100, 200}),
+		Label:         "Genesis",
+		CryptoKitID_0: safe.Crypto.Poly25519.ID[0],
+		CryptoKitID_1: safe.Crypto.Poly25519.ID[1],
 	}
 	env, err := amp.AssembleEpoch(charter, terms, safe.HashKitID_Blake2s_256)
 	if err != nil {
@@ -299,9 +301,9 @@ func makeTestEpoch(t *testing.T) *amp.PlanetEpoch {
 	return env
 }
 
-func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.CryptoKit, []byte, []byte) {
+func freshKeyPair(t *testing.T, kitID safe.CryptoKitID) (*safe.Kit, []byte, []byte) {
 	t.Helper()
-	kit, err := safe.GetCryptoKit(kitID)
+	kit, err := safe.CryptoKit(kitID)
 	if err != nil {
 		t.Fatal(err)
 	}

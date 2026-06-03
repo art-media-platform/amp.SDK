@@ -101,7 +101,7 @@ func TestExportSymmetricKey(t *testing.T) {
 	keyringID := tag.NewID()
 	_, err = enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -170,7 +170,7 @@ func TestRoundTrip(t *testing.T) {
 
 	pub, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatalf("GenerateKey: %v", err)
@@ -264,7 +264,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 
 	alice, err := enc.GenerateKey(aliceKeyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_AsymmetricKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatalf("GenerateKey (Alice): %v", err)
@@ -277,7 +277,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 
 	bob, err := enc.GenerateKey(bobKeyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_AsymmetricKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatalf("GenerateKey (Bob): %v", err)
@@ -287,7 +287,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	// Anyone can seal to Bob (sealed-box / anonymous sender).
 	_ = aliceRef
 	testMsg := []byte("hello to bob")
-	sealed, err := safe.SealFor(safe.CryptoKitID_Poly25519, bob.Bytes, testMsg)
+	sealed, err := safe.SealFor(safe.Crypto.Poly25519.ID, bob.Bytes, testMsg)
 	if err != nil {
 		t.Fatalf("SealFor: %v", err)
 	}
@@ -325,7 +325,7 @@ func TestImportKey(t *testing.T) {
 
 	kp := safe.KeyPair{
 		Pub: safe.PubKey{
-			CryptoKitID: safe.CryptoKitID_Poly25519,
+			CryptoKitID: safe.Crypto.Poly25519.ID,
 			KeyType:     safe.KeyType_SymmetricKey,
 			Bytes:       pubBytes,
 		},
@@ -349,7 +349,7 @@ func TestImportKey(t *testing.T) {
 }
 
 func TestXChaCha20PolyCryptoKit(t *testing.T) {
-	safe.CryptoKitTest(safe.CryptoKitID_Poly25519, t)
+	safe.CryptoKitTest(safe.Crypto.Poly25519.ID, t)
 }
 
 func TestFileGuardWrapUnwrap(t *testing.T) {
@@ -487,7 +487,7 @@ func TestLargePayload(t *testing.T) {
 		keyringID := tag.UID{uint64(i + 1), uint64(i + 1000)}
 		_, err := enc.GenerateKey(keyringID, safe.KeySpec{
 			KeyType:     safe.KeyType_SigningKey,
-			CryptoKitID: safe.CryptoKitID_Poly25519,
+			CryptoKitID: safe.Crypto.Poly25519.ID,
 		})
 		if err != nil {
 			t.Fatalf("GenerateKey[%d]: %v", i, err)
@@ -539,7 +539,7 @@ func TestFetchNewestKey(t *testing.T) {
 
 	first, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -547,7 +547,7 @@ func TestFetchNewestKey(t *testing.T) {
 
 	second, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -588,7 +588,7 @@ func TestEncryptDecryptVariousSizes(t *testing.T) {
 
 	pub, err := enc.GenerateKey(keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -643,7 +643,7 @@ func TestDualKeyTypeStreams(t *testing.T) {
 
 	aliceSign, err := enc.GenerateKey(aliceID, safe.KeySpec{
 		KeyType:     safe.KeyType_SigningKey,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
 	if err != nil {
 		t.Fatalf("GenerateKey alice SignKey: %v", err)
@@ -654,7 +654,7 @@ func TestDualKeyTypeStreams(t *testing.T) {
 
 	aliceEnc, err := enc.GenerateKey(aliceID, safe.KeySpec{
 		KeyType:     safe.KeyType_AsymmetricKey,
-		CryptoKitID: safe.CryptoKitID_P256,
+		CryptoKitID: safe.Crypto.P256.ID,
 	})
 	if err != nil {
 		t.Fatalf("GenerateKey alice EncKey: %v", err)
@@ -687,7 +687,7 @@ func TestDualKeyTypeStreams(t *testing.T) {
 	// A sealed-box wrap to Alice's P-256 EncKey — anonymous sender (no caller
 	// identity participates), kit determined by recipient's pubkey kit.
 	payload := []byte("epoch-key-wrap")
-	wrapped, err := safe.SealFor(safe.CryptoKitID_P256, aliceEnc.Bytes, payload)
+	wrapped, err := safe.SealFor(safe.Crypto.P256.ID, aliceEnc.Bytes, payload)
 	if err != nil {
 		t.Fatalf("SealFor (→ alice EncKey): %v", err)
 	}
@@ -708,7 +708,7 @@ func TestDualKeyTypeStreams(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Sign with SignKey: %v", err)
 	}
-	if err := safe.VerifySignature(safe.CryptoKitID_Poly25519, sig, digest, aliceSign.Bytes); err != nil {
+	if err := safe.VerifySignature(safe.Crypto.Poly25519.ID, sig, digest, aliceSign.Bytes); err != nil {
 		t.Fatalf("VerifySignature: %v", err)
 	}
 

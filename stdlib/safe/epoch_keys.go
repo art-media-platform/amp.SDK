@@ -118,7 +118,8 @@ func (eks *epochKeyStore) PutKey(containerID tag.UID, key SymKey) error {
 			ContainerID_1: containerID[1],
 			EpochID_0:     key.EpochID[0],
 			EpochID_1:     key.EpochID[1],
-			CryptoKitID:   key.CryptoKitID,
+			CryptoKitID_0: key.CryptoKitID[0],
+			CryptoKitID_1: key.CryptoKitID[1],
 		}
 		eks.keys[key.EpochID] = entry
 	}
@@ -168,7 +169,7 @@ func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID, role KeyRole) (Sy
 	for _, rk := range entry.RoleKeys {
 		if rk.Role == role {
 			return SymKey{
-				CryptoKitID: entry.CryptoKitID,
+				CryptoKitID: entry.CryptoKitID(),
 				EpochID:     epochID,
 				Role:        rk.Role,
 				Bytes:       append([]byte(nil), rk.Key...),
@@ -198,7 +199,7 @@ func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID, role KeyRole) (SymK
 	for _, rk := range entry.RoleKeys {
 		if rk.Role == role {
 			return SymKey{
-				CryptoKitID: entry.CryptoKitID,
+				CryptoKitID: entry.CryptoKitID(),
 				EpochID:     epochID,
 				Role:        rk.Role,
 				Bytes:       append([]byte(nil), rk.Key...),

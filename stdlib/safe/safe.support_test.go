@@ -14,7 +14,7 @@ func CryptoKitTest(kitToTest CryptoKitID, t *testing.T) {
 	gTesting = t
 
 	for i := 0; i < 5; i++ {
-		kit, err := GetCryptoKit(kitToTest)
+		kit, err := CryptoKit(kitToTest)
 		if err != nil {
 			gTesting.Fatal(err)
 		}
@@ -22,7 +22,7 @@ func CryptoKitTest(kitToTest CryptoKitID, t *testing.T) {
 	}
 }
 
-func testKit(kit *CryptoKit, keyLen int) {
+func testKit(kit *Kit, keyLen int) {
 	msgLen := 0
 
 	for i := int64(1); i < 37; i++ {
@@ -32,7 +32,7 @@ func testKit(kit *CryptoKit, keyLen int) {
 	}
 }
 
-func testKitWithSizes(kit *CryptoKit, keyLen, msgLen int) {
+func testKitWithSizes(kit *Kit, keyLen, msgLen int) {
 	msg := make([]byte, msgLen)
 	badMsg := make([]byte, msgLen)
 

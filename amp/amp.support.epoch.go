@@ -93,7 +93,7 @@ func (pe *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []byte
 	if cosig == nil || len(cosig.Signature) == 0 {
 		return status.Code_BadRequest.Error("amp: empty CoSignature")
 	}
-	kit, err := safe.GetCryptoKit(signerKit)
+	kit, err := safe.CryptoKit(signerKit)
 	if err != nil {
 		return err
 	}

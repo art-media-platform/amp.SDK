@@ -10,7 +10,7 @@
 //	Enclave    — the runtime session: loads a KeyTome via TomeStore+Guard,
 //	             provides crypto ops, key management, and re-seals on Close().
 //
-//	CryptoKit  — pluggable crypto implementation keyed by CryptoKitID.
+//	Kit  — pluggable crypto implementation keyed by CryptoKitID.
 //	             Nil function fields indicate unsupported capabilities.
 package safe
 
@@ -150,28 +150,36 @@ type EpochKeyStore interface {
 	Close(ctx context.Context) error
 }
 
+// CryptoKitID is a crypto kit's identity — the name-derived tag.UID of its Kit
+// (see the Kit consts, e.g. safe.Crypto.Poly25519.ID).  It is an alias, so
+// a CryptoKitID IS a tag.UID: the open suite namespace carried on the wire and the
+// key into the Kit registry.  The nil UID means "unspecified" — resolve to the
+// epoch default (EffectiveCryptoKit).
+type CryptoKitID = tag.UID
+
 /*****************************************************
-** CryptoKit — pluggable crypto implementation
+** Kit — a Kit's pluggable implementation
 **/
 
-// CryptoKit is a pluggable cryptographic suite identified by a CryptoKitID.
-// It bundles two independent capability axes — signing and asymmetric
-// encryption — so a kit can expose one, the other, or both. Symmetric AEAD
-// is kit-agnostic and lives on the safe package directly (SealAEAD / OpenAEAD).
+// Kit is the registered implementation of a crypto kit, identified by a
+// CryptoKitID (see the Kit identity namespace).  It bundles two
+// independent capability axes — signing and asymmetric encryption — so a kit
+// can expose one, the other, or both.  Symmetric AEAD is kit-agnostic and lives
+// on the safe package directly (SealAEAD / OpenAEAD).
 //
-// A hash is deliberately NOT a CryptoKit axis: it has no keypair and no tie to
-// the suite, so content-integrity hashing is its own orthogonal registry (see
+// A hash is deliberately NOT a Kit axis: it has no keypair and no tie to the
+// suite, so content-integrity hashing is its own orthogonal registry (see
 // HashSpec / RegisterHashKit).
 //
 // Nil capability pointers mean "not supported by this kit" (e.g. a future
 // Dilithium kit would expose Signing only; a Kyber kit would expose Encrypt only).
-type CryptoKit struct {
+type Kit struct {
 	ID      CryptoKitID
 	Signing *SigningOps // identity / signatures; nil if kit doesn't sign
 	Encrypt *EncryptOps // ECDH / asymmetric encrypt; nil if kit doesn't ECDH
 }
 
-// SigningOps bundles the signing-side primitives of a CryptoKit.
+// SigningOps bundles the signing-side primitives of a Kit.
 // All non-nil functions must be threadsafe.
 type SigningOps struct {
 	// SignatureSize is the fixed byte length of signatures produced by Sign.
@@ -189,7 +197,7 @@ type SigningOps struct {
 	Verify func(sig []byte, digest []byte, signerPubKey []byte) error
 }
 
-// EncryptOps bundles the asymmetric-encryption primitives of a CryptoKit.
+// EncryptOps bundles the asymmetric-encryption primitives of a Kit.
 // All non-nil functions must be threadsafe.
 //
 // The Seal/Open shape is anonymous-sender (RFC 9180 HPKE base mode, libsodium
@@ -231,18 +239,18 @@ type EncryptOps struct {
 // peerKit must match the kit that generated peerPubKey; the caller typically
 // reads it from MemberEpoch.EncryptCryptoKitID alongside MemberEpoch.EncryptPubKey.
 func SealFor(peerKit CryptoKitID, peerPubKey, msg []byte) ([]byte, error) {
-	kit, err := GetCryptoKit(peerKit)
+	kit, err := CryptoKit(peerKit)
 	if err != nil {
 		return nil, err
 	}
 	if kit.Encrypt == nil || kit.Encrypt.Seal == nil {
-		return nil, status.Code_Unimplemented.Errorf("CryptoKit %s does not support asymmetric encryption", peerKit.String())
+		return nil, status.Code_Unimplemented.Errorf("Kit %s does not support asymmetric encryption", peerKit.String())
 	}
 	return kit.Encrypt.Seal(RandReader, msg, peerPubKey)
 }
 
 // VerifySignature is a convenience function that performs signature validation
-// for any registered CryptoKit.  Returns nil if the signature is valid.
+// for any registered Kit.  Returns nil if the signature is valid.
 // This function is threadsafe.
 func VerifySignature(
 	cryptoKitID CryptoKitID,
@@ -250,12 +258,12 @@ func VerifySignature(
 	digest []byte,
 	signerPubKey []byte,
 ) error {
-	kit, err := GetCryptoKit(cryptoKitID)
+	kit, err := CryptoKit(cryptoKitID)
 	if err != nil {
 		return err
 	}
 	if kit.Signing == nil || kit.Signing.Verify == nil {
-		return status.Code_Unimplemented.Errorf("CryptoKit %s does not support signature verification", cryptoKitID.String())
+		return status.Code_Unimplemented.Errorf("Kit %s does not support signature verification", cryptoKitID.String())
 	}
 	return kit.Signing.Verify(sig, digest, signerPubKey)
 }

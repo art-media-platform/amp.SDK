@@ -44,8 +44,8 @@ func init() {
 	safe.RegisterCryptoKit(&kit)
 }
 
-var kit = safe.CryptoKit{
-	ID: safe.CryptoKitID_P256,
+var kit = safe.Kit{
+	ID: safe.Crypto.P256.ID,
 	Signing: &safe.SigningOps{
 		SignatureSize: SignatureSize,
 		Generate:      generateP256Key,

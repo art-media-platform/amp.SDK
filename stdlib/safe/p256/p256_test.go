@@ -13,13 +13,13 @@ import (
 // byte sizes match the kit's declared constants (SEC1 uncompressed public,
 // raw 32-byte scalar private).
 func TestP256_KeyPair_Shape(t *testing.T) {
-	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	kit, err := safe.CryptoKit(safe.Crypto.P256.ID)
 	if err != nil {
 		t.Fatalf("GetKit: %v", err)
 	}
 
 	kp := safe.KeyPair{
-		Pub: safe.PubKey{CryptoKitID: safe.CryptoKitID_P256, KeyType: safe.KeyType_SigningKey},
+		Pub: safe.PubKey{CryptoKitID: safe.Crypto.P256.ID, KeyType: safe.KeyType_SigningKey},
 	}
 	if err := kit.Signing.Generate(rand.Reader, &kp); err != nil {
 		t.Fatalf("Sign.Generate: %v", err)
@@ -43,13 +43,13 @@ func TestP256_KeyPair_Shape(t *testing.T) {
 // canonical byte blob (e.g. a PlanetEpoch) and verify with the public key.
 // This is the shape `PlanetEpoch.VerifyCoSignature` drives.
 func TestP256_SignVerify(t *testing.T) {
-	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	kit, err := safe.CryptoKit(safe.Crypto.P256.ID)
 	if err != nil {
 		t.Fatalf("GetKit: %v", err)
 	}
 
 	kp := safe.KeyPair{
-		Pub: safe.PubKey{CryptoKitID: safe.CryptoKitID_P256, KeyType: safe.KeyType_SigningKey},
+		Pub: safe.PubKey{CryptoKitID: safe.Crypto.P256.ID, KeyType: safe.KeyType_SigningKey},
 	}
 	if err := kit.Signing.Generate(rand.Reader, &kp); err != nil {
 		t.Fatalf("Sign.Generate: %v", err)
@@ -121,7 +121,7 @@ func TestP256_SymmetricRoundtrip(t *testing.T) {
 // recipient's prv key.  This is how epoch keys are sealed to a new member at
 // invite time and during rotation.
 func TestP256_SealedBox(t *testing.T) {
-	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	kit, err := safe.CryptoKit(safe.Crypto.P256.ID)
 	if err != nil {
 		t.Fatalf("GetKit: %v", err)
 	}
@@ -149,24 +149,24 @@ func TestP256_SealedBox(t *testing.T) {
 }
 
 // TestP256_Registered confirms the kit self-registers via import side-effect,
-// so callers that do `import _ ".../p256"` can `safe.GetCryptoKit(P256)`.
+// so callers that do `import _ ".../p256"` can `safe.CryptoKit(P256)`.
 func TestP256_Registered(t *testing.T) {
-	kit, err := safe.GetCryptoKit(safe.CryptoKitID_P256)
+	kit, err := safe.CryptoKit(safe.Crypto.P256.ID)
 	if err != nil {
 		t.Fatalf("P-256 kit must be registered via blank import: %v", err)
 	}
-	if kit.ID != safe.CryptoKitID_P256 {
-		t.Errorf("registered kit has wrong ID: got %v, want %v", kit.ID, safe.CryptoKitID_P256)
+	if kit.ID != safe.Crypto.P256.ID {
+		t.Errorf("registered kit has wrong ID: got %v, want %v", kit.ID, safe.Crypto.P256.ID)
 	}
 	if kit.Signing == nil || kit.Encrypt == nil {
 		t.Errorf("P-256 kit must expose both Sign and Encr capabilities")
 	}
 }
 
-func freshKeyPair(t *testing.T, kit *safe.CryptoKit) safe.KeyPair {
+func freshKeyPair(t *testing.T, kit *safe.Kit) safe.KeyPair {
 	t.Helper()
 	kp := safe.KeyPair{
-		Pub: safe.PubKey{CryptoKitID: safe.CryptoKitID_P256, KeyType: safe.KeyType_AsymmetricKey},
+		Pub: safe.PubKey{CryptoKitID: safe.Crypto.P256.ID, KeyType: safe.KeyType_AsymmetricKey},
 	}
 	if err := kit.Encrypt.Generate(rand.Reader, &kp); err != nil {
 		t.Fatal(err)

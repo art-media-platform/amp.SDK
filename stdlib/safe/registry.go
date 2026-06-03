@@ -53,16 +53,16 @@ func (reg *Registry[K, V]) Get(key K) (*V, error) {
 // has no keypair and no tie to the suite — bundling them is the TLS-1.2
 // cipher-suite-explosion mistake.
 var (
-	gCryptoKits = newRegistry[CryptoKitID, CryptoKit]("CryptoKit")
+	gCryptoKits = newRegistry[CryptoKitID, Kit]("CryptoKit")
 	gHashKits   = newRegistry[HashKitID, HashSpec]("HashKit")
 )
 
-// RegisterCryptoKit registers kit so it can be retrieved via GetCryptoKit.
+// RegisterCryptoKit registers a kit's CryptoKit so it can be retrieved via CryptoKit.
 // It must be called from init().
-func RegisterCryptoKit(kit *CryptoKit) error { return gCryptoKits.Register(kit.ID, kit) }
+func RegisterCryptoKit(kit *Kit) error { return gCryptoKits.Register(kit.ID, kit) }
 
-// GetCryptoKit fetches a registered CryptoKit, failing closed if unregistered.
-func GetCryptoKit(cryptoKitID CryptoKitID) (*CryptoKit, error) { return gCryptoKits.Get(cryptoKitID) }
+// CryptoKit fetches a registered kit's CryptoKit, failing closed if unregistered.
+func CryptoKit(cryptoKitID CryptoKitID) (*Kit, error) { return gCryptoKits.Get(cryptoKitID) }
 
 // RegisterHashKit registers spec so it can be retrieved via GetHashKit / NewHashKit.
 // It must be called from init().

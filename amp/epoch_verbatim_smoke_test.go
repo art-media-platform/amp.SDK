@@ -14,8 +14,8 @@ import (
 // charter continuity across a rotation -> Terminal-seal rejection.  This proves
 // the sign/verify mechanics actually work, not just compile.
 func TestEpochVerbatim_Roundtrip(t *testing.T) {
-	kitID := safe.CryptoKitID_Poly25519
-	kit, err := safe.GetCryptoKit(kitID)
+	kitID := safe.Crypto.Poly25519.ID
+	kit, err := safe.CryptoKit(kitID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -32,12 +32,13 @@ func TestEpochVerbatim_Roundtrip(t *testing.T) {
 		GenesisRequiredSignatures: 1,
 	}
 	genesisTerms := &amp.EpochTerms{
-		TermsSchema: 1,
-		EpochTag:    uid(100, 200), // == GenesisEpoch
-		EpochHeight: 0,
-		CryptoKitID: kitID,
-		Label:       "Genesis",
-		Mark:        &amp.BrandMark{AppName: "Pentagon"},
+		TermsSchema:   1,
+		EpochTag:      uid(100, 200), // == GenesisEpoch
+		EpochHeight:   0,
+		CryptoKitID_0: kitID[0],
+		CryptoKitID_1: kitID[1],
+		Label:         "Genesis",
+		Mark:          &amp.BrandMark{AppName: "Pentagon"},
 	}
 
 	// 1) Assemble: marshal charter+terms once, bind CharterHash into Terms.
@@ -85,7 +86,8 @@ func TestEpochVerbatim_Roundtrip(t *testing.T) {
 		EpochTag:      uid(101, 201),
 		PreviousEpoch: uid(100, 200),
 		EpochHeight:   1,
-		CryptoKitID:   kitID,
+		CryptoKitID_0: kitID[0],
+		CryptoKitID_1: kitID[1],
 		Label:         "Rotation 1",
 		Mark:          &amp.BrandMark{AppName: "Pentagon"},
 	}
@@ -128,10 +130,11 @@ func TestVerifyCharterContinuity_HashKitStable(t *testing.T) {
 	}
 	// Genesis under a NON-default hash policy (SHA3-256).
 	genesis, err := amp.AssembleEpoch(charter, &amp.EpochTerms{
-		TermsSchema: 1,
-		EpochTag:    uid(100, 200),
-		EpochHeight: 0,
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		TermsSchema:   1,
+		EpochTag:      uid(100, 200),
+		EpochHeight:   0,
+		CryptoKitID_0: safe.Crypto.Poly25519.ID[0],
+		CryptoKitID_1: safe.Crypto.Poly25519.ID[1],
 	}, safe.HashKitID_SHA3_256)
 	if err != nil {
 		t.Fatalf("AssembleEpoch(genesis): %v", err)
@@ -145,7 +148,8 @@ func TestVerifyCharterContinuity_HashKitStable(t *testing.T) {
 			EpochTag:      uid(101, 201),
 			PreviousEpoch: uid(100, 200),
 			EpochHeight:   1,
-			CryptoKitID:   safe.CryptoKitID_Poly25519,
+			CryptoKitID_0: safe.Crypto.Poly25519.ID[0],
+			CryptoKitID_1: safe.Crypto.Poly25519.ID[1],
 		}
 	}
 

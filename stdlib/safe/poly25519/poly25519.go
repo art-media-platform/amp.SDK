@@ -26,8 +26,8 @@ func init() {
 	safe.RegisterCryptoKit(&kit)
 }
 
-var kit = safe.CryptoKit{
-	ID: safe.CryptoKitID_Poly25519,
+var kit = safe.Kit{
+	ID: safe.Crypto.Poly25519.ID,
 	Signing: &safe.SigningOps{
 		SignatureSize: ed25519.SignatureSize,
 		Generate:      generateSignKey,

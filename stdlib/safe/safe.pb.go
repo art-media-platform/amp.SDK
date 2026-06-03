@@ -128,59 +128,6 @@ func (KeyType) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{1}
 }
 
-// CryptoKitID identifies an encryption suite that implements CryptoKit.
-type CryptoKitID int32
-
-const (
-	CryptoKitID_UnspecifiedKit CryptoKitID = 0
-	CryptoKitID_Poly25519      CryptoKitID = 1 // XChaCha20-Poly1305 symmetric, X25519 asymmetric, ED25519 signing
-	CryptoKitID_P256           CryptoKitID = 2 // XChaCha20-Poly1305 symmetric, ECDH-P256 asymmetric, ECDSA-P256+SHA-256 signing (NIST; YubiKey PIV)
-	CryptoKitID_Secp256k1      CryptoKitID = 3 // XChaCha20-Poly1305 symmetric, ECDH-secp256k1 asymmetric, ECDSA-secp256k1+Keccak-256 signing (crypto-wallet interop)
-)
-
-// Enum value maps for CryptoKitID.
-var (
-	CryptoKitID_name = map[int32]string{
-		0: "UnspecifiedKit",
-		1: "Poly25519",
-		2: "P256",
-		3: "Secp256k1",
-	}
-	CryptoKitID_value = map[string]int32{
-		"UnspecifiedKit": 0,
-		"Poly25519":      1,
-		"P256":           2,
-		"Secp256k1":      3,
-	}
-)
-
-func (x CryptoKitID) Enum() *CryptoKitID {
-	p := new(CryptoKitID)
-	*p = x
-	return p
-}
-
-func (x CryptoKitID) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (CryptoKitID) Descriptor() protoreflect.EnumDescriptor {
-	return file_stdlib_safe_safe_proto_enumTypes[2].Descriptor()
-}
-
-func (CryptoKitID) Type() protoreflect.EnumType {
-	return &file_stdlib_safe_safe_proto_enumTypes[2]
-}
-
-func (x CryptoKitID) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use CryptoKitID.Descriptor instead.
-func (CryptoKitID) EnumDescriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{2}
-}
-
 // HashKitID selects a content-integrity hash.  Blake2s-256 is the default by being
 // the zero value; an absent field means Blake2s-256 globally and forever — so a
 // BlobRef verifies from the ref alone, no epoch present.
@@ -221,11 +168,11 @@ func (x HashKitID) String() string {
 }
 
 func (HashKitID) Descriptor() protoreflect.EnumDescriptor {
-	return file_stdlib_safe_safe_proto_enumTypes[3].Descriptor()
+	return file_stdlib_safe_safe_proto_enumTypes[2].Descriptor()
 }
 
 func (HashKitID) Type() protoreflect.EnumType {
-	return &file_stdlib_safe_safe_proto_enumTypes[3]
+	return &file_stdlib_safe_safe_proto_enumTypes[2]
 }
 
 func (x HashKitID) Number() protoreflect.EnumNumber {
@@ -234,7 +181,7 @@ func (x HashKitID) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use HashKitID.Descriptor instead.
 func (HashKitID) EnumDescriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{3}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{2}
 }
 
 // KeyRole is a 2-bit role tag for symmetric epoch keys.  Each epoch may carry
@@ -280,11 +227,11 @@ func (x KeyRole) String() string {
 }
 
 func (KeyRole) Descriptor() protoreflect.EnumDescriptor {
-	return file_stdlib_safe_safe_proto_enumTypes[4].Descriptor()
+	return file_stdlib_safe_safe_proto_enumTypes[3].Descriptor()
 }
 
 func (KeyRole) Type() protoreflect.EnumType {
-	return &file_stdlib_safe_safe_proto_enumTypes[4]
+	return &file_stdlib_safe_safe_proto_enumTypes[3]
 }
 
 func (x KeyRole) Number() protoreflect.EnumNumber {
@@ -293,7 +240,7 @@ func (x KeyRole) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use KeyRole.Descriptor instead.
 func (KeyRole) EnumDescriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{3}
 }
 
 // GuardInfo describes a Guard's capabilities and identity.
@@ -620,7 +567,8 @@ type KeyRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"` // Keyring UID, bytes 0..7
 	KeyringID_1   uint64                 `protobuf:"fixed64,2,opt,name=KeyringID_1,json=KeyringID1,proto3" json:"KeyringID_1,omitempty"` // Keyring UID, bytes 8..15
-	Kit           CryptoKitID            `protobuf:"varint,3,opt,name=Kit,proto3,enum=safe.CryptoKitID" json:"Kit,omitempty"`            // Which CryptoKit produced this key (wire-form only)
+	Kit_0         uint64                 `protobuf:"fixed64,3,opt,name=Kit_0,json=Kit0,proto3" json:"Kit_0,omitempty"`                   // CryptoKit UID (which suite produced this key), bytes 0..7
+	Kit_1         uint64                 `protobuf:"fixed64,6,opt,name=Kit_1,json=Kit1,proto3" json:"Kit_1,omitempty"`                   // CryptoKit UID, bytes 8..15
 	Type          KeyType                `protobuf:"varint,5,opt,name=Type,proto3,enum=safe.KeyType" json:"Type,omitempty"`              // SigningKey / AsymmetricKey / SymmetricKey
 	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                             // Pub key prefix (lookup) or full pub key bytes (wire)
 	unknownFields protoimpl.UnknownFields
@@ -671,11 +619,18 @@ func (x *KeyRef) GetKeyringID_1() uint64 {
 	return 0
 }
 
-func (x *KeyRef) GetKit() CryptoKitID {
+func (x *KeyRef) GetKit_0() uint64 {
 	if x != nil {
-		return x.Kit
+		return x.Kit_0
 	}
-	return CryptoKitID_UnspecifiedKit
+	return 0
+}
+
+func (x *KeyRef) GetKit_1() uint64 {
+	if x != nil {
+		return x.Kit_1
+	}
+	return 0
 }
 
 func (x *KeyRef) GetType() KeyType {
@@ -697,9 +652,10 @@ func (x *KeyRef) GetPubKey() []byte {
 // only so KeyTome can be marshaled into a SealedTome.
 type KeyPairRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"` // Keyring UID, bytes 0..7
-	KeyringID_1   uint64                 `protobuf:"fixed64,2,opt,name=KeyringID_1,json=KeyringID1,proto3" json:"KeyringID_1,omitempty"` // Keyring UID, bytes 8..15
-	CryptoKitID   CryptoKitID            `protobuf:"varint,3,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
+	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"`       // Keyring UID, bytes 0..7
+	KeyringID_1   uint64                 `protobuf:"fixed64,2,opt,name=KeyringID_1,json=KeyringID1,proto3" json:"KeyringID_1,omitempty"`       // Keyring UID, bytes 8..15
+	CryptoKitID_0 uint64                 `protobuf:"fixed64,3,opt,name=CryptoKitID_0,json=CryptoKitID0,proto3" json:"CryptoKitID_0,omitempty"` // CryptoKit UID, bytes 0..7
+	CryptoKitID_1 uint64                 `protobuf:"fixed64,9,opt,name=CryptoKitID_1,json=CryptoKitID1,proto3" json:"CryptoKitID_1,omitempty"` // CryptoKit UID, bytes 8..15
 	KeyType       KeyType                `protobuf:"varint,4,opt,name=KeyType,proto3,enum=safe.KeyType" json:"KeyType,omitempty"`
 	TimeID_0      uint64                 `protobuf:"fixed64,5,opt,name=TimeID_0,json=TimeID0,proto3" json:"TimeID_0,omitempty"` // Time-based UID, bytes 0..7 (from tag.NowID)
 	TimeID_1      uint64                 `protobuf:"fixed64,6,opt,name=TimeID_1,json=TimeID1,proto3" json:"TimeID_1,omitempty"` // Time-based UID, bytes 8..15
@@ -753,11 +709,18 @@ func (x *KeyPairRecord) GetKeyringID_1() uint64 {
 	return 0
 }
 
-func (x *KeyPairRecord) GetCryptoKitID() CryptoKitID {
+func (x *KeyPairRecord) GetCryptoKitID_0() uint64 {
 	if x != nil {
-		return x.CryptoKitID
+		return x.CryptoKitID_0
 	}
-	return CryptoKitID_UnspecifiedKit
+	return 0
+}
+
+func (x *KeyPairRecord) GetCryptoKitID_1() uint64 {
+	if x != nil {
+		return x.CryptoKitID_1
+	}
+	return 0
 }
 
 func (x *KeyPairRecord) GetKeyType() KeyType {
@@ -922,7 +885,8 @@ type EpochKeyEntry struct {
 	ContainerID_1 uint64                 `protobuf:"fixed64,2,opt,name=ContainerID_1,json=ContainerID1,proto3" json:"ContainerID_1,omitempty"` // Planet or channel UID, bytes 8..15
 	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`             // Epoch UID, bytes 0..7 (time-based)
 	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Epoch UID, bytes 8..15
-	CryptoKitID   CryptoKitID            `protobuf:"varint,5,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`  // Crypto suite for this epoch
+	CryptoKitID_0 uint64                 `protobuf:"fixed64,5,opt,name=CryptoKitID_0,json=CryptoKitID0,proto3" json:"CryptoKitID_0,omitempty"` // CryptoKit UID (suite for this epoch), bytes 0..7
+	CryptoKitID_1 uint64                 `protobuf:"fixed64,6,opt,name=CryptoKitID_1,json=CryptoKitID1,proto3" json:"CryptoKitID_1,omitempty"` // CryptoKit UID, bytes 8..15
 	RoleKeys      []*RoleKey             `protobuf:"bytes,8,rep,name=RoleKeys,proto3" json:"RoleKeys,omitempty"`                               // 1-4 role-tagged materials held for this epoch
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -986,11 +950,18 @@ func (x *EpochKeyEntry) GetEpochID_1() uint64 {
 	return 0
 }
 
-func (x *EpochKeyEntry) GetCryptoKitID() CryptoKitID {
+func (x *EpochKeyEntry) GetCryptoKitID_0() uint64 {
 	if x != nil {
-		return x.CryptoKitID
+		return x.CryptoKitID_0
 	}
-	return CryptoKitID_UnspecifiedKit
+	return 0
+}
+
+func (x *EpochKeyEntry) GetCryptoKitID_1() uint64 {
+	if x != nil {
+		return x.CryptoKitID_1
+	}
+	return 0
 }
 
 func (x *EpochKeyEntry) GetRoleKeys() []*RoleKey {
@@ -1069,10 +1040,11 @@ func (x *EpochKeyTome) GetKeys() []*EpochKeyEntry {
 // surrounding signed TxMsg's responsibility.
 type EncryptedSymKey struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	CryptoKitID   CryptoKitID            `protobuf:"varint,1,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"` // Recipient's CryptoKit (which curve the wrap is in)
-	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`            // Epoch UID this key belongs to, bytes 0..7 (zero if not epoch-bound)
-	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`            // Epoch UID this key belongs to, bytes 8..15
-	Ciphertext    []byte                 `protobuf:"bytes,8,opt,name=Ciphertext,proto3" json:"Ciphertext,omitempty"`                          // Output of safe.SealFor(CryptoKitID, recipient_pub, symmetric_key)
+	CryptoKitID_0 uint64                 `protobuf:"fixed64,1,opt,name=CryptoKitID_0,json=CryptoKitID0,proto3" json:"CryptoKitID_0,omitempty"` // Recipient's CryptoKit UID (which curve the wrap is in), bytes 0..7
+	CryptoKitID_1 uint64                 `protobuf:"fixed64,2,opt,name=CryptoKitID_1,json=CryptoKitID1,proto3" json:"CryptoKitID_1,omitempty"` // Recipient's CryptoKit UID, bytes 8..15
+	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`             // Epoch UID this key belongs to, bytes 0..7 (zero if not epoch-bound)
+	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Epoch UID this key belongs to, bytes 8..15
+	Ciphertext    []byte                 `protobuf:"bytes,8,opt,name=Ciphertext,proto3" json:"Ciphertext,omitempty"`                           // Output of safe.SealFor(CryptoKitID, recipient_pub, symmetric_key)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1107,11 +1079,18 @@ func (*EncryptedSymKey) Descriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *EncryptedSymKey) GetCryptoKitID() CryptoKitID {
+func (x *EncryptedSymKey) GetCryptoKitID_0() uint64 {
 	if x != nil {
-		return x.CryptoKitID
+		return x.CryptoKitID_0
 	}
-	return CryptoKitID_UnspecifiedKit
+	return 0
+}
+
+func (x *EncryptedSymKey) GetCryptoKitID_1() uint64 {
+	if x != nil {
+		return x.CryptoKitID_1
+	}
+	return 0
 }
 
 func (x *EncryptedSymKey) GetEpochID_0() uint64 {
@@ -1178,21 +1157,23 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\tTomeNonce\x18\x06 \x01(\fR\tTomeNonce\x12\x1e\n" +
 	"\n" +
 	"Cipherblob\x18\a \x01(\fR\n" +
-	"Cipherblob\"\xaa\x01\n" +
+	"Cipherblob\"\xaf\x01\n" +
 	"\x06KeyRef\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
 	"\vKeyringID_1\x18\x02 \x01(\x06R\n" +
-	"KeyringID1\x12#\n" +
-	"\x03Kit\x18\x03 \x01(\x0e2\x11.safe.CryptoKitIDR\x03Kit\x12!\n" +
+	"KeyringID1\x12\x13\n" +
+	"\x05Kit_0\x18\x03 \x01(\x06R\x04Kit0\x12\x13\n" +
+	"\x05Kit_1\x18\x06 \x01(\x06R\x04Kit1\x12!\n" +
 	"\x04Type\x18\x05 \x01(\x0e2\r.safe.KeyTypeR\x04Type\x12\x16\n" +
-	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"\x95\x02\n" +
+	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"\xaa\x02\n" +
 	"\rKeyPairRecord\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +
 	"\vKeyringID_1\x18\x02 \x01(\x06R\n" +
-	"KeyringID1\x123\n" +
-	"\vCryptoKitID\x18\x03 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12'\n" +
+	"KeyringID1\x12#\n" +
+	"\rCryptoKitID_0\x18\x03 \x01(\x06R\fCryptoKitID0\x12#\n" +
+	"\rCryptoKitID_1\x18\t \x01(\x06R\fCryptoKitID1\x12'\n" +
 	"\aKeyType\x18\x04 \x01(\x0e2\r.safe.KeyTypeR\aKeyType\x12\x19\n" +
 	"\bTimeID_0\x18\x05 \x01(\x06R\aTimeID0\x12\x19\n" +
 	"\bTimeID_1\x18\x06 \x01(\x06R\aTimeID1\x12\x16\n" +
@@ -1203,19 +1184,21 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x04Keys\x18\x02 \x03(\v2\x13.safe.KeyPairRecordR\x04Keys\">\n" +
 	"\aRoleKey\x12!\n" +
 	"\x04Role\x18\x01 \x01(\x0e2\r.safe.KeyRoleR\x04Role\x12\x10\n" +
-	"\x03Key\x18\x02 \x01(\fR\x03Key\"\xf3\x01\n" +
+	"\x03Key\x18\x02 \x01(\fR\x03Key\"\x88\x02\n" +
 	"\rEpochKeyEntry\x12#\n" +
 	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
 	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
 	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
-	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x123\n" +
-	"\vCryptoKitID\x18\x05 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12)\n" +
+	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12#\n" +
+	"\rCryptoKitID_0\x18\x05 \x01(\x06R\fCryptoKitID0\x12#\n" +
+	"\rCryptoKitID_1\x18\x06 \x01(\x06R\fCryptoKitID1\x12)\n" +
 	"\bRoleKeys\x18\b \x03(\v2\r.safe.RoleKeyR\bRoleKeys\"S\n" +
 	"\fEpochKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
-	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xa0\x01\n" +
-	"\x0fEncryptedSymKey\x123\n" +
-	"\vCryptoKitID\x18\x01 \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x1b\n" +
+	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xb5\x01\n" +
+	"\x0fEncryptedSymKey\x12#\n" +
+	"\rCryptoKitID_0\x18\x01 \x01(\x06R\fCryptoKitID0\x12#\n" +
+	"\rCryptoKitID_1\x18\x02 \x01(\x06R\fCryptoKitID1\x12\x1b\n" +
 	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
 	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12\x1e\n" +
 	"\n" +
@@ -1229,12 +1212,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\fSymmetricKey\x10\x01\x12\x11\n" +
 	"\rAsymmetricKey\x10\x02\x12\x0e\n" +
 	"\n" +
-	"SigningKey\x10\x03*I\n" +
-	"\vCryptoKitID\x12\x12\n" +
-	"\x0eUnspecifiedKit\x10\x00\x12\r\n" +
-	"\tPoly25519\x10\x01\x12\b\n" +
-	"\x04P256\x10\x02\x12\r\n" +
-	"\tSecp256k1\x10\x03*H\n" +
+	"SigningKey\x10\x03*H\n" +
 	"\tHashKitID\x12\x0f\n" +
 	"\vBlake2s_256\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -1260,42 +1238,37 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 	return file_stdlib_safe_safe_proto_rawDescData
 }
 
-var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
 var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),              // 0: safe.Const
 	(KeyType)(0),            // 1: safe.KeyType
-	(CryptoKitID)(0),        // 2: safe.CryptoKitID
-	(HashKitID)(0),          // 3: safe.HashKitID
-	(KeyRole)(0),            // 4: safe.KeyRole
-	(*GuardInfo)(nil),       // 5: safe.GuardInfo
-	(*WrappedDEK)(nil),      // 6: safe.WrappedDEK
-	(*SealedTome)(nil),      // 7: safe.SealedTome
-	(*KeyRef)(nil),          // 8: safe.KeyRef
-	(*KeyPairRecord)(nil),   // 9: safe.KeyPairRecord
-	(*KeyTome)(nil),         // 10: safe.KeyTome
-	(*RoleKey)(nil),         // 11: safe.RoleKey
-	(*EpochKeyEntry)(nil),   // 12: safe.EpochKeyEntry
-	(*EpochKeyTome)(nil),    // 13: safe.EpochKeyTome
-	(*EncryptedSymKey)(nil), // 14: safe.EncryptedSymKey
+	(HashKitID)(0),          // 2: safe.HashKitID
+	(KeyRole)(0),            // 3: safe.KeyRole
+	(*GuardInfo)(nil),       // 4: safe.GuardInfo
+	(*WrappedDEK)(nil),      // 5: safe.WrappedDEK
+	(*SealedTome)(nil),      // 6: safe.SealedTome
+	(*KeyRef)(nil),          // 7: safe.KeyRef
+	(*KeyPairRecord)(nil),   // 8: safe.KeyPairRecord
+	(*KeyTome)(nil),         // 9: safe.KeyTome
+	(*RoleKey)(nil),         // 10: safe.RoleKey
+	(*EpochKeyEntry)(nil),   // 11: safe.EpochKeyEntry
+	(*EpochKeyTome)(nil),    // 12: safe.EpochKeyTome
+	(*EncryptedSymKey)(nil), // 13: safe.EncryptedSymKey
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
-	6,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
-	2,  // 1: safe.KeyRef.Kit:type_name -> safe.CryptoKitID
-	1,  // 2: safe.KeyRef.Type:type_name -> safe.KeyType
-	2,  // 3: safe.KeyPairRecord.CryptoKitID:type_name -> safe.CryptoKitID
-	1,  // 4: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
-	9,  // 5: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
-	4,  // 6: safe.RoleKey.Role:type_name -> safe.KeyRole
-	2,  // 7: safe.EpochKeyEntry.CryptoKitID:type_name -> safe.CryptoKitID
-	11, // 8: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
-	12, // 9: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	2,  // 10: safe.EncryptedSymKey.CryptoKitID:type_name -> safe.CryptoKitID
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	5,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
+	1,  // 1: safe.KeyRef.Type:type_name -> safe.KeyType
+	1,  // 2: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
+	8,  // 3: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
+	3,  // 4: safe.RoleKey.Role:type_name -> safe.KeyRole
+	10, // 5: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
+	11, // 6: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	7,  // [7:7] is the sub-list for method output_type
+	7,  // [7:7] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1308,7 +1281,7 @@ func file_stdlib_safe_safe_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
-			NumEnums:      5,
+			NumEnums:      4,
 			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,

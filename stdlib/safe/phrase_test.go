@@ -124,7 +124,7 @@ func TestPhrase_KeyPairDeterministic(t *testing.T) {
 	phrase := safe.EncodePhrase(entropy)
 
 	spec := safe.KeySpec{
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 		KeyType:     safe.KeyType_SigningKey,
 	}
 
@@ -162,7 +162,7 @@ func TestPhrase_KeyPairRejectsBadChecksum(t *testing.T) {
 	bad := append(safe.Phrase{alt}, phrase[1:]...)
 
 	spec := safe.KeySpec{
-		CryptoKitID: safe.CryptoKitID_Poly25519,
+		CryptoKitID: safe.Crypto.Poly25519.ID,
 		KeyType:     safe.KeyType_SigningKey,
 	}
 	if _, err := safe.KeyPairFromPhrase(bad, spec, "founder-sig"); err == nil {

@@ -1302,10 +1302,11 @@ type Login struct {
 	// challenge-response signature against the key it holds for Member; when the
 	// host has no key recorded yet it may adopt this one if trust-on-first-use (TOFU)
 	// is set.
-	SigningPubKey      []byte           `protobuf:"bytes,14,opt,name=SigningPubKey,proto3" json:"SigningPubKey,omitempty"`
-	SigningCryptoKitID safe.CryptoKitID `protobuf:"varint,15,opt,name=SigningCryptoKitID,proto3,enum=safe.CryptoKitID" json:"SigningCryptoKitID,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	SigningPubKey        []byte `protobuf:"bytes,14,opt,name=SigningPubKey,proto3" json:"SigningPubKey,omitempty"`
+	SigningCryptoKitID_0 uint64 `protobuf:"fixed64,15,opt,name=SigningCryptoKitID_0,json=SigningCryptoKitID0,proto3" json:"SigningCryptoKitID_0,omitempty"` // Client's signing-suite UID, bytes 0..7
+	SigningCryptoKitID_1 uint64 `protobuf:"fixed64,16,opt,name=SigningCryptoKitID_1,json=SigningCryptoKitID1,proto3" json:"SigningCryptoKitID_1,omitempty"` // Client's signing-suite UID, bytes 8..15
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
 func (x *Login) Reset() {
@@ -1380,11 +1381,18 @@ func (x *Login) GetSigningPubKey() []byte {
 	return nil
 }
 
-func (x *Login) GetSigningCryptoKitID() safe.CryptoKitID {
+func (x *Login) GetSigningCryptoKitID_0() uint64 {
 	if x != nil {
-		return x.SigningCryptoKitID
+		return x.SigningCryptoKitID_0
 	}
-	return safe.CryptoKitID(0)
+	return 0
+}
+
+func (x *Login) GetSigningCryptoKitID_1() uint64 {
+	if x != nil {
+		return x.SigningCryptoKitID_1
+	}
+	return 0
 }
 
 // LoginChallenge -- STEP 2: host -> client
@@ -2983,39 +2991,40 @@ type EpochTerms struct {
 	// suite).  Unset resolves to Poly25519 via EffectiveCryptoKit.  A quorum-
 	// approved migration (e.g. post-quantum) rotates the suite by issuing an epoch
 	// with a new value.
-	CryptoKitID safe.CryptoKitID `protobuf:"varint,7,opt,name=CryptoKitID,proto3,enum=safe.CryptoKitID" json:"CryptoKitID,omitempty"`
+	CryptoKitID_0 uint64 `protobuf:"fixed64,7,opt,name=CryptoKitID_0,json=CryptoKitID0,proto3" json:"CryptoKitID_0,omitempty"` // CryptoKit UID (suite in force this epoch), bytes 0..7
+	CryptoKitID_1 uint64 `protobuf:"fixed64,8,opt,name=CryptoKitID_1,json=CryptoKitID1,proto3" json:"CryptoKitID_1,omitempty"` // CryptoKit UID, bytes 8..15
 	// Human-readable label for THIS epoch ("Genesis", "Rotation 3") — an operator/
 	// audit display string, NOT the planet's public name (that is Mark.AppName).
-	Label string `protobuf:"bytes,8,opt,name=Label,proto3" json:"Label,omitempty"`
+	Label string `protobuf:"bytes,10,opt,name=Label,proto3" json:"Label,omitempty"`
 	// The planet's quorum-signed public identity (name/org/domain/description/URL
 	// schemes/federation back-edge/glyphs).  The impersonation surface — here, not
 	// the admin-mutable Brand attr, so a public-face change requires the quorum.
-	Mark *BrandMark `protobuf:"bytes,9,opt,name=Mark,proto3" json:"Mark,omitempty"`
+	Mark *BrandMark `protobuf:"bytes,11,opt,name=Mark,proto3" json:"Mark,omitempty"`
 	// Default entry channel — where members land when opening the planet.
 	// Foyer is to play as Index is to search.
-	Foyer *Tag `protobuf:"bytes,10,opt,name=Foyer,proto3" json:"Foyer,omitempty"`
+	Foyer *Tag `protobuf:"bytes,12,opt,name=Foyer,proto3" json:"Foyer,omitempty"`
 	// Public-facing node enumerating discoverable channels / content.
-	Index *Tag `protobuf:"bytes,11,opt,name=Index,proto3" json:"Index,omitempty"`
+	Index *Tag `protobuf:"bytes,13,opt,name=Index,proto3" json:"Index,omitempty"`
 	// The ACC group whose members are the authorized co-signers of this epoch.
 	// Zero/unset for genesis (the signers are PlanetCharter.Founders directly);
 	// for rotations, resolves to a group defined in the prior epoch's member set.
-	GovernanceGroup *Tag `protobuf:"bytes,12,opt,name=GovernanceGroup,proto3" json:"GovernanceGroup,omitempty"`
+	GovernanceGroup *Tag `protobuf:"bytes,16,opt,name=GovernanceGroup,proto3" json:"GovernanceGroup,omitempty"`
 	// Threshold of GovernanceGroup co-signatures required for this epoch to be
 	// valid.  0 = all members of the resolved group (paranoid default).
-	RequiredSignatures int32 `protobuf:"varint,13,opt,name=RequiredSignatures,proto3" json:"RequiredSignatures,omitempty"`
+	RequiredSignatures int32 `protobuf:"varint,18,opt,name=RequiredSignatures,proto3" json:"RequiredSignatures,omitempty"`
 	// Lifecycle posture asserted by this epoch's quorum (Open / Paused / Sealed).
-	Seal SealState `protobuf:"varint,14,opt,name=Seal,proto3,enum=amp.SealState" json:"Seal,omitempty"`
+	Seal SealState `protobuf:"varint,20,opt,name=Seal,proto3,enum=amp.SealState" json:"Seal,omitempty"`
 	// Address of the immutable Codex edition this epoch publishes / seals against
 	// ("the printed edition").  Typically set on a Paused/Sealed sealing epoch.
 	// Zero when this epoch publishes no edition.
-	CodexEdition *Address `protobuf:"bytes,15,opt,name=CodexEdition,proto3" json:"CodexEdition,omitempty"`
+	CodexEdition *Address `protobuf:"bytes,22,opt,name=CodexEdition,proto3" json:"CodexEdition,omitempty"`
 	// Vault workload tunables (rate limits, quarantine retention, intake guards,
 	// pending-queue caps).  Quorum-signed so an operator cannot unilaterally loosen
 	// them.  Null-safe: unset fields fall back to the DefaultXxx consts.
-	VaultConfig *VaultConfig `protobuf:"bytes,16,opt,name=VaultConfig,proto3" json:"VaultConfig,omitempty"`
+	VaultConfig *VaultConfig `protobuf:"bytes,25,opt,name=VaultConfig,proto3" json:"VaultConfig,omitempty"`
 	// Seconds after rotation during which old-epoch TxMsgs are still accepted
 	// (offline / mesh authors).  If 0, DefaultGracePeriod is used.
-	MaxGracePeriod int64 `protobuf:"varint,17,opt,name=MaxGracePeriod,proto3" json:"MaxGracePeriod,omitempty"`
+	MaxGracePeriod int64 `protobuf:"varint,32,opt,name=MaxGracePeriod,proto3" json:"MaxGracePeriod,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -3092,11 +3101,18 @@ func (x *EpochTerms) GetCharterHash() []byte {
 	return nil
 }
 
-func (x *EpochTerms) GetCryptoKitID() safe.CryptoKitID {
+func (x *EpochTerms) GetCryptoKitID_0() uint64 {
 	if x != nil {
-		return x.CryptoKitID
+		return x.CryptoKitID_0
 	}
-	return safe.CryptoKitID(0)
+	return 0
+}
+
+func (x *EpochTerms) GetCryptoKitID_1() uint64 {
+	if x != nil {
+		return x.CryptoKitID_1
+	}
+	return 0
 }
 
 func (x *EpochTerms) GetLabel() string {
@@ -5877,12 +5893,12 @@ func (x *Address) GetEditID_1() uint64 {
 // VaultAddr is a transport-tagged vault endpoint.  Used by NameService records
 // and federation pointers to hint where a planet can be pinned.  Reuses the
 // envelope shape of PRD-amp-security-sync §7.2 VaultAddresses; transports
-// advertise themselves via the TransportTag string so future kits land without
+// advertise themselves via the Transport string so future kits land without
 // proto changes.
 type VaultAddr struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TransportTag  string                 `protobuf:"bytes,1,opt,name=TransportTag,proto3" json:"TransportTag,omitempty"` // "tcp", "udp", "reticulum", etc.
-	Address       []byte                 `protobuf:"bytes,2,opt,name=Address,proto3" json:"Address,omitempty"`           // transport-specific encoding
+	Transport     string                 `protobuf:"bytes,1,opt,name=Transport,proto3" json:"Transport,omitempty"` // "tcp", "udp", "reticulum", etc.
+	Address       []byte                 `protobuf:"bytes,2,opt,name=Address,proto3" json:"Address,omitempty"`     // transport-specific encoding
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5917,9 +5933,9 @@ func (*VaultAddr) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{52}
 }
 
-func (x *VaultAddr) GetTransportTag() string {
+func (x *VaultAddr) GetTransport() string {
 	if x != nil {
-		return x.TransportTag
+		return x.Transport
 	}
 	return ""
 }
@@ -6177,7 +6193,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\aOpCount\x18\n" +
 	" \x01(\x04R\aOpCount\x12)\n" +
 	"\aRequest\x18\f \x01(\v2\x0f.amp.PinRequestR\aRequest\x124\n" +
-	"\fAuthContexts\x18\x0e \x03(\v2\x10.amp.AuthContextR\fAuthContexts\"\xae\x02\n" +
+	"\fAuthContexts\x18\x0e \x03(\v2\x10.amp.AuthContextR\fAuthContexts\"\xd1\x02\n" +
 	"\x05Login\x12 \n" +
 	"\x06Member\x18\x01 \x01(\v2\b.amp.TagR\x06Member\x12 \n" +
 	"\x06Planet\x18\x02 \x01(\v2\b.amp.TagR\x06Planet\x12 \n" +
@@ -6186,8 +6202,9 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"Checkpoint\x18\f \x01(\v2\x14.amp.LoginCheckpointR\n" +
 	"Checkpoint\x12$\n" +
-	"\rSigningPubKey\x18\x0e \x01(\fR\rSigningPubKey\x12A\n" +
-	"\x12SigningCryptoKitID\x18\x0f \x01(\x0e2\x11.safe.CryptoKitIDR\x12SigningCryptoKitID\"$\n" +
+	"\rSigningPubKey\x18\x0e \x01(\fR\rSigningPubKey\x121\n" +
+	"\x14SigningCryptoKitID_0\x18\x0f \x01(\x06R\x13SigningCryptoKitID0\x121\n" +
+	"\x14SigningCryptoKitID_1\x18\x10 \x01(\x06R\x13SigningCryptoKitID1\"$\n" +
 	"\x0eLoginChallenge\x12\x12\n" +
 	"\x04Hash\x18\x01 \x01(\fR\x04Hash\"3\n" +
 	"\rLoginResponse\x12\"\n" +
@@ -6320,7 +6337,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\aPrivacy\x18\x06 \x01(\x0e2\x10.amp.PrivacyModeR\aPrivacy\x12+\n" +
 	"\vDeclaration\x18\a \x01(\v2\t.amp.TagsR\vDeclaration\x12$\n" +
 	"\bFounders\x18\b \x03(\v2\b.amp.TagR\bFounders\x12<\n" +
-	"\x19GenesisRequiredSignatures\x18\t \x01(\x05R\x19GenesisRequiredSignatures\"\xb8\x05\n" +
+	"\x19GenesisRequiredSignatures\x18\t \x01(\x05R\x19GenesisRequiredSignatures\"\xcd\x05\n" +
 	"\n" +
 	"EpochTerms\x12 \n" +
 	"\vTermsSchema\x18\x01 \x01(\rR\vTermsSchema\x12$\n" +
@@ -6328,19 +6345,20 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\rPreviousEpoch\x18\x03 \x01(\v2\b.amp.TagR\rPreviousEpoch\x12 \n" +
 	"\vEpochHeight\x18\x04 \x01(\x04R\vEpochHeight\x12)\n" +
 	"\aHashKit\x18\x05 \x01(\x0e2\x0f.safe.HashKitIDR\aHashKit\x12 \n" +
-	"\vCharterHash\x18\x06 \x01(\fR\vCharterHash\x123\n" +
-	"\vCryptoKitID\x18\a \x01(\x0e2\x11.safe.CryptoKitIDR\vCryptoKitID\x12\x14\n" +
-	"\x05Label\x18\b \x01(\tR\x05Label\x12\"\n" +
-	"\x04Mark\x18\t \x01(\v2\x0e.amp.BrandMarkR\x04Mark\x12\x1e\n" +
-	"\x05Foyer\x18\n" +
-	" \x01(\v2\b.amp.TagR\x05Foyer\x12\x1e\n" +
-	"\x05Index\x18\v \x01(\v2\b.amp.TagR\x05Index\x122\n" +
-	"\x0fGovernanceGroup\x18\f \x01(\v2\b.amp.TagR\x0fGovernanceGroup\x12.\n" +
-	"\x12RequiredSignatures\x18\r \x01(\x05R\x12RequiredSignatures\x12\"\n" +
-	"\x04Seal\x18\x0e \x01(\x0e2\x0e.amp.SealStateR\x04Seal\x120\n" +
-	"\fCodexEdition\x18\x0f \x01(\v2\f.amp.AddressR\fCodexEdition\x122\n" +
-	"\vVaultConfig\x18\x10 \x01(\v2\x10.amp.VaultConfigR\vVaultConfig\x12&\n" +
-	"\x0eMaxGracePeriod\x18\x11 \x01(\x03R\x0eMaxGracePeriod\"\xe3\x01\n" +
+	"\vCharterHash\x18\x06 \x01(\fR\vCharterHash\x12#\n" +
+	"\rCryptoKitID_0\x18\a \x01(\x06R\fCryptoKitID0\x12#\n" +
+	"\rCryptoKitID_1\x18\b \x01(\x06R\fCryptoKitID1\x12\x14\n" +
+	"\x05Label\x18\n" +
+	" \x01(\tR\x05Label\x12\"\n" +
+	"\x04Mark\x18\v \x01(\v2\x0e.amp.BrandMarkR\x04Mark\x12\x1e\n" +
+	"\x05Foyer\x18\f \x01(\v2\b.amp.TagR\x05Foyer\x12\x1e\n" +
+	"\x05Index\x18\r \x01(\v2\b.amp.TagR\x05Index\x122\n" +
+	"\x0fGovernanceGroup\x18\x10 \x01(\v2\b.amp.TagR\x0fGovernanceGroup\x12.\n" +
+	"\x12RequiredSignatures\x18\x12 \x01(\x05R\x12RequiredSignatures\x12\"\n" +
+	"\x04Seal\x18\x14 \x01(\x0e2\x0e.amp.SealStateR\x04Seal\x120\n" +
+	"\fCodexEdition\x18\x16 \x01(\v2\f.amp.AddressR\fCodexEdition\x122\n" +
+	"\vVaultConfig\x18\x19 \x01(\v2\x10.amp.VaultConfigR\vVaultConfig\x12&\n" +
+	"\x0eMaxGracePeriod\x18  \x01(\x03R\x0eMaxGracePeriod\"\xe3\x01\n" +
 	"\vPlanetEpoch\x12\x18\n" +
 	"\aCharter\x18\x01 \x01(\fR\aCharter\x12\x14\n" +
 	"\x05Terms\x18\x02 \x01(\fR\x05Terms\x12$\n" +
@@ -6591,9 +6609,9 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\bItemID_1\x18\b \x01(\x06R\aItemID1\x12\x19\n" +
 	"\bEditID_0\x18\t \x01(\x06R\aEditID0\x12\x19\n" +
 	"\bEditID_1\x18\n" +
-	" \x01(\x06R\aEditID1\"I\n" +
-	"\tVaultAddr\x12\"\n" +
-	"\fTransportTag\x18\x01 \x01(\tR\fTransportTag\x12\x18\n" +
+	" \x01(\x06R\aEditID1\"C\n" +
+	"\tVaultAddr\x12\x1c\n" +
+	"\tTransport\x18\x01 \x01(\tR\tTransport\x12\x18\n" +
 	"\aAddress\x18\x02 \x01(\fR\aAddress\"\xb7\x02\n" +
 	"\x11NameServiceRecord\x12\x12\n" +
 	"\x04FQDN\x18\x01 \x01(\tR\x04FQDN\x12$\n" +
@@ -6840,12 +6858,11 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(*NameServiceRecord)(nil),       // 70: amp.NameServiceRecord
 	(*FederationPeer)(nil),          // 71: amp.FederationPeer
 	(*FederationDirectory)(nil),     // 72: amp.FederationDirectory
-	(safe.CryptoKitID)(0),           // 73: safe.CryptoKitID
-	(safe.HashKitID)(0),             // 74: safe.HashKitID
-	(safe.KeyRole)(0),               // 75: safe.KeyRole
-	(*safe.KeyRef)(nil),             // 76: safe.KeyRef
-	(*safe.KeyPairRecord)(nil),      // 77: safe.KeyPairRecord
-	(*safe.EncryptedSymKey)(nil),    // 78: safe.EncryptedSymKey
+	(safe.HashKitID)(0),             // 73: safe.HashKitID
+	(safe.KeyRole)(0),               // 74: safe.KeyRole
+	(*safe.KeyRef)(nil),             // 75: safe.KeyRef
+	(*safe.KeyPairRecord)(nil),      // 76: safe.KeyPairRecord
+	(*safe.EncryptedSymKey)(nil),    // 77: safe.EncryptedSymKey
 }
 var file_amp_amp_core_proto_depIdxs = []int32{
 	26,  // 0: amp.TxEnvelope.Planet:type_name -> amp.Tag
@@ -6857,117 +6874,115 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	26,  // 6: amp.Login.Planet:type_name -> amp.Tag
 	26,  // 7: amp.Login.Device:type_name -> amp.Tag
 	22,  // 8: amp.Login.Checkpoint:type_name -> amp.LoginCheckpoint
-	73,  // 9: amp.Login.SigningCryptoKitID:type_name -> safe.CryptoKitID
-	5,   // 10: amp.PinRequest.Mode:type_name -> amp.PinMode
-	24,  // 11: amp.PinRequest.Selector:type_name -> amp.ItemSelector
-	25,  // 12: amp.ItemSelector.Spans:type_name -> amp.ItemSpan
-	8,   // 13: amp.Tag.Units:type_name -> amp.Units
-	26,  // 14: amp.Tags.Head:type_name -> amp.Tag
-	26,  // 15: amp.Tags.SubTags:type_name -> amp.Tag
-	27,  // 16: amp.Tags.Children:type_name -> amp.Tags
-	26,  // 17: amp.AccessGrant.MemberTag:type_name -> amp.Tag
-	9,   // 18: amp.AccessGrant.Access:type_name -> amp.Access
-	29,  // 19: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
-	26,  // 20: amp.ChannelEpoch.Channel:type_name -> amp.Tag
-	26,  // 21: amp.ChannelEpoch.Parent:type_name -> amp.Tag
-	26,  // 22: amp.ChannelEpoch.ChType:type_name -> amp.Tag
-	30,  // 23: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
-	30,  // 24: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
-	68,  // 25: amp.ChannelEpoch.Cites:type_name -> amp.Address
-	74,  // 26: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
-	26,  // 27: amp.BlobRef.AssetTag:type_name -> amp.Tag
-	26,  // 28: amp.BlobRef.BlobTag:type_name -> amp.Tag
-	26,  // 29: amp.BrandMark.NamedBy:type_name -> amp.Tag
-	27,  // 30: amp.BrandMark.Glyphs:type_name -> amp.Tags
-	26,  // 31: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
-	26,  // 32: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
-	26,  // 33: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
-	54,  // 34: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
-	11,  // 35: amp.PlanetCharter.Privacy:type_name -> amp.PrivacyMode
-	27,  // 36: amp.PlanetCharter.Declaration:type_name -> amp.Tags
-	26,  // 37: amp.PlanetCharter.Founders:type_name -> amp.Tag
-	26,  // 38: amp.EpochTerms.EpochTag:type_name -> amp.Tag
-	26,  // 39: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
-	74,  // 40: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
-	73,  // 41: amp.EpochTerms.CryptoKitID:type_name -> safe.CryptoKitID
-	35,  // 42: amp.EpochTerms.Mark:type_name -> amp.BrandMark
-	26,  // 43: amp.EpochTerms.Foyer:type_name -> amp.Tag
-	26,  // 44: amp.EpochTerms.Index:type_name -> amp.Tag
-	26,  // 45: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
-	10,  // 46: amp.EpochTerms.Seal:type_name -> amp.SealState
-	68,  // 47: amp.EpochTerms.CodexEdition:type_name -> amp.Address
-	34,  // 48: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
-	26,  // 49: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
-	39,  // 50: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
-	39,  // 51: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
-	26,  // 52: amp.CoSignature.MemberTag:type_name -> amp.Tag
-	75,  // 53: amp.WrappedKey.Role:type_name -> safe.KeyRole
-	26,  // 54: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
-	26,  // 55: amp.MemberEpoch.Node:type_name -> amp.Tag
-	26,  // 56: amp.MemberEpoch.Epoch:type_name -> amp.Tag
-	40,  // 57: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
-	12,  // 58: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
-	76,  // 59: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
-	76,  // 60: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
-	68,  // 61: amp.MemberEpoch.Cites:type_name -> amp.Address
-	26,  // 62: amp.MemberEpoch.Kind:type_name -> amp.Tag
-	68,  // 63: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
-	26,  // 64: amp.Attestation.Subject:type_name -> amp.Tag
-	13,  // 65: amp.Attestation.Type:type_name -> amp.AttestationType
-	26,  // 66: amp.Attestation.ObserverID:type_name -> amp.Tag
-	26,  // 67: amp.Attestation.Modality:type_name -> amp.Tag
-	26,  // 68: amp.Equivalence.LeftAddress:type_name -> amp.Tag
-	26,  // 69: amp.Equivalence.RightAddress:type_name -> amp.Tag
-	26,  // 70: amp.Equivalence.Context:type_name -> amp.Tag
-	26,  // 71: amp.Equivalence.Strength:type_name -> amp.Tag
-	26,  // 72: amp.Withdraw.Subject:type_name -> amp.Tag
-	68,  // 73: amp.Withdraw.Withdrawn:type_name -> amp.Address
-	14,  // 74: amp.Withdraw.Reason:type_name -> amp.WithdrawReason
-	68,  // 75: amp.Withdraw.Delegation:type_name -> amp.Address
-	26,  // 76: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
-	26,  // 77: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
-	26,  // 78: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	77,  // 79: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	78,  // 80: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
-	26,  // 81: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
-	48,  // 82: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	50,  // 83: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	51,  // 84: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	49,  // 85: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	15,  // 86: amp.PeerAddr.Transport:type_name -> amp.TransportType
-	32,  // 87: amp.Artifact.BlobValue:type_name -> amp.BlobRef
-	26,  // 88: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
-	26,  // 89: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
-	26,  // 90: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
-	26,  // 91: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
-	26,  // 92: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
-	54,  // 93: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
-	57,  // 94: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
-	59,  // 95: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
-	26,  // 96: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
-	26,  // 97: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
-	55,  // 98: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
-	60,  // 99: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
-	62,  // 100: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
-	16,  // 101: amp.AppTarget.Platform:type_name -> amp.PlatformID
-	64,  // 102: amp.Brand.Targets:type_name -> amp.AppTarget
-	65,  // 103: amp.Brand.Links:type_name -> amp.AppLink
-	66,  // 104: amp.Brand.BundledCrates:type_name -> amp.CrateRef
-	26,  // 105: amp.Brand.NamedBy:type_name -> amp.Tag
-	26,  // 106: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
-	68,  // 107: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
-	67,  // 108: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
-	69,  // 109: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
-	26,  // 110: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
-	26,  // 111: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
-	26,  // 112: amp.FederationPeer.PlanetID:type_name -> amp.Tag
-	69,  // 113: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
-	71,  // 114: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
-	115, // [115:115] is the sub-list for method output_type
-	115, // [115:115] is the sub-list for method input_type
-	115, // [115:115] is the sub-list for extension type_name
-	115, // [115:115] is the sub-list for extension extendee
-	0,   // [0:115] is the sub-list for field type_name
+	5,   // 9: amp.PinRequest.Mode:type_name -> amp.PinMode
+	24,  // 10: amp.PinRequest.Selector:type_name -> amp.ItemSelector
+	25,  // 11: amp.ItemSelector.Spans:type_name -> amp.ItemSpan
+	8,   // 12: amp.Tag.Units:type_name -> amp.Units
+	26,  // 13: amp.Tags.Head:type_name -> amp.Tag
+	26,  // 14: amp.Tags.SubTags:type_name -> amp.Tag
+	27,  // 15: amp.Tags.Children:type_name -> amp.Tags
+	26,  // 16: amp.AccessGrant.MemberTag:type_name -> amp.Tag
+	9,   // 17: amp.AccessGrant.Access:type_name -> amp.Access
+	29,  // 18: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
+	26,  // 19: amp.ChannelEpoch.Channel:type_name -> amp.Tag
+	26,  // 20: amp.ChannelEpoch.Parent:type_name -> amp.Tag
+	26,  // 21: amp.ChannelEpoch.ChType:type_name -> amp.Tag
+	30,  // 22: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
+	30,  // 23: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
+	68,  // 24: amp.ChannelEpoch.Cites:type_name -> amp.Address
+	73,  // 25: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
+	26,  // 26: amp.BlobRef.AssetTag:type_name -> amp.Tag
+	26,  // 27: amp.BlobRef.BlobTag:type_name -> amp.Tag
+	26,  // 28: amp.BrandMark.NamedBy:type_name -> amp.Tag
+	27,  // 29: amp.BrandMark.Glyphs:type_name -> amp.Tags
+	26,  // 30: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
+	26,  // 31: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
+	26,  // 32: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
+	54,  // 33: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
+	11,  // 34: amp.PlanetCharter.Privacy:type_name -> amp.PrivacyMode
+	27,  // 35: amp.PlanetCharter.Declaration:type_name -> amp.Tags
+	26,  // 36: amp.PlanetCharter.Founders:type_name -> amp.Tag
+	26,  // 37: amp.EpochTerms.EpochTag:type_name -> amp.Tag
+	26,  // 38: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
+	73,  // 39: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
+	35,  // 40: amp.EpochTerms.Mark:type_name -> amp.BrandMark
+	26,  // 41: amp.EpochTerms.Foyer:type_name -> amp.Tag
+	26,  // 42: amp.EpochTerms.Index:type_name -> amp.Tag
+	26,  // 43: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
+	10,  // 44: amp.EpochTerms.Seal:type_name -> amp.SealState
+	68,  // 45: amp.EpochTerms.CodexEdition:type_name -> amp.Address
+	34,  // 46: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
+	26,  // 47: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
+	39,  // 48: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
+	39,  // 49: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
+	26,  // 50: amp.CoSignature.MemberTag:type_name -> amp.Tag
+	74,  // 51: amp.WrappedKey.Role:type_name -> safe.KeyRole
+	26,  // 52: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
+	26,  // 53: amp.MemberEpoch.Node:type_name -> amp.Tag
+	26,  // 54: amp.MemberEpoch.Epoch:type_name -> amp.Tag
+	40,  // 55: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
+	12,  // 56: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
+	75,  // 57: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
+	75,  // 58: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
+	68,  // 59: amp.MemberEpoch.Cites:type_name -> amp.Address
+	26,  // 60: amp.MemberEpoch.Kind:type_name -> amp.Tag
+	68,  // 61: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
+	26,  // 62: amp.Attestation.Subject:type_name -> amp.Tag
+	13,  // 63: amp.Attestation.Type:type_name -> amp.AttestationType
+	26,  // 64: amp.Attestation.ObserverID:type_name -> amp.Tag
+	26,  // 65: amp.Attestation.Modality:type_name -> amp.Tag
+	26,  // 66: amp.Equivalence.LeftAddress:type_name -> amp.Tag
+	26,  // 67: amp.Equivalence.RightAddress:type_name -> amp.Tag
+	26,  // 68: amp.Equivalence.Context:type_name -> amp.Tag
+	26,  // 69: amp.Equivalence.Strength:type_name -> amp.Tag
+	26,  // 70: amp.Withdraw.Subject:type_name -> amp.Tag
+	68,  // 71: amp.Withdraw.Withdrawn:type_name -> amp.Address
+	14,  // 72: amp.Withdraw.Reason:type_name -> amp.WithdrawReason
+	68,  // 73: amp.Withdraw.Delegation:type_name -> amp.Address
+	26,  // 74: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
+	26,  // 75: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
+	26,  // 76: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
+	76,  // 77: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	77,  // 78: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	26,  // 79: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	48,  // 80: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	50,  // 81: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	51,  // 82: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	49,  // 83: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	15,  // 84: amp.PeerAddr.Transport:type_name -> amp.TransportType
+	32,  // 85: amp.Artifact.BlobValue:type_name -> amp.BlobRef
+	26,  // 86: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
+	26,  // 87: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
+	26,  // 88: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
+	26,  // 89: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
+	26,  // 90: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
+	54,  // 91: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
+	57,  // 92: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
+	59,  // 93: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
+	26,  // 94: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
+	26,  // 95: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
+	55,  // 96: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
+	60,  // 97: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
+	62,  // 98: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
+	16,  // 99: amp.AppTarget.Platform:type_name -> amp.PlatformID
+	64,  // 100: amp.Brand.Targets:type_name -> amp.AppTarget
+	65,  // 101: amp.Brand.Links:type_name -> amp.AppLink
+	66,  // 102: amp.Brand.BundledCrates:type_name -> amp.CrateRef
+	26,  // 103: amp.Brand.NamedBy:type_name -> amp.Tag
+	26,  // 104: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
+	68,  // 105: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
+	67,  // 106: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
+	69,  // 107: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
+	26,  // 108: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
+	26,  // 109: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
+	26,  // 110: amp.FederationPeer.PlanetID:type_name -> amp.Tag
+	69,  // 111: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
+	71,  // 112: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
+	113, // [113:113] is the sub-list for method output_type
+	113, // [113:113] is the sub-list for method input_type
+	113, // [113:113] is the sub-list for extension type_name
+	113, // [113:113] is the sub-list for extension extendee
+	0,   // [0:113] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }

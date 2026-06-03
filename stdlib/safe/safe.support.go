@@ -52,6 +52,42 @@ func (kref *KeyRef) SetKeyringID(uid tag.UID) {
 	kref.KeyringID_1 = uid[1]
 }
 
+// Kit returns the CryptoKit UID that produced this key.
+func (kref *KeyRef) Kit() tag.UID { return tag.UID{kref.Kit_0, kref.Kit_1} }
+
+// SetKit sets the CryptoKit UID.
+func (kref *KeyRef) SetKit(uid tag.UID) { kref.Kit_0, kref.Kit_1 = uid[0], uid[1] }
+
+// CryptoKitID returns the CryptoKit UID of this key record.
+func (rec *KeyPairRecord) CryptoKitID() tag.UID {
+	return tag.UID{rec.CryptoKitID_0, rec.CryptoKitID_1}
+}
+
+// SetCryptoKitID sets the CryptoKit UID of this key record.
+func (rec *KeyPairRecord) SetCryptoKitID(uid tag.UID) {
+	rec.CryptoKitID_0, rec.CryptoKitID_1 = uid[0], uid[1]
+}
+
+// CryptoKitID returns the CryptoKit UID for this epoch's keys.
+func (ek *EpochKeyEntry) CryptoKitID() tag.UID {
+	return tag.UID{ek.CryptoKitID_0, ek.CryptoKitID_1}
+}
+
+// SetCryptoKitID sets the CryptoKit UID for this epoch's keys.
+func (ek *EpochKeyEntry) SetCryptoKitID(uid tag.UID) {
+	ek.CryptoKitID_0, ek.CryptoKitID_1 = uid[0], uid[1]
+}
+
+// CryptoKitID returns the recipient's CryptoKit UID (the curve the wrap is in).
+func (esk *EncryptedSymKey) CryptoKitID() tag.UID {
+	return tag.UID{esk.CryptoKitID_0, esk.CryptoKitID_1}
+}
+
+// SetCryptoKitID sets the recipient's CryptoKit UID.
+func (esk *EncryptedSymKey) SetCryptoKitID(uid tag.UID) {
+	esk.CryptoKitID_0, esk.CryptoKitID_1 = uid[0], uid[1]
+}
+
 // Zero overwrites a buffer with zeros.
 func Zero(buf []byte) {
 	for i := range buf {

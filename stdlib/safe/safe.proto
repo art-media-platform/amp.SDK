@@ -74,13 +74,11 @@ enum KeyType {
     SigningKey          = 3;    // Signature (Ed25519, ML-DSA)
 }
 
-// CryptoKitID identifies an encryption suite that implements CryptoKit.
-enum CryptoKitID {
-    UnspecifiedKit      = 0;
-    Poly25519           = 1;    // XChaCha20-Poly1305 symmetric, X25519 asymmetric, ED25519 signing
-    P256                = 2;    // XChaCha20-Poly1305 symmetric, ECDH-P256 asymmetric, ECDSA-P256+SHA-256 signing (NIST; YubiKey PIV)
-    Secp256k1           = 3;    // XChaCha20-Poly1305 symmetric, ECDH-secp256k1 asymmetric, ECDSA-secp256k1+Keccak-256 signing (crypto-wallet interop)
-}
+// A CryptoKit (encryption suite) is identified on the wire by its name-derived
+// tag.UID, carried as a fixed64 X_0/X_1 pair.  The namespace is open (a sovereign
+// may roll their own suite); the registered identities live in the safe package's
+// CryptoKit consts (safe.CryptoKit.Poly25519, .P256, .Secp256k1).  Trust is pinned
+// in signed EpochTerms — an unrecognized suite UID fails closed at verification.
 
 // HashKitID selects a content-integrity hash.  Blake2s-256 is the default by being
 // the zero value; an absent field means Blake2s-256 globally and forever — so a
@@ -123,7 +121,8 @@ enum KeyRole {
 message KeyRef {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
     fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15
-    CryptoKitID Kit                 = 3;    // Which CryptoKit produced this key (wire-form only)
+    fixed64     Kit_0               = 3;    // CryptoKit UID (which suite produced this key), bytes 0..7
+    fixed64     Kit_1               = 6;    // CryptoKit UID, bytes 8..15
     KeyType     Type                = 5;    // SigningKey / AsymmetricKey / SymmetricKey
     bytes       PubKey              = 4;    // Pub key prefix (lookup) or full pub key bytes (wire)
 }
@@ -135,7 +134,8 @@ message KeyRef {
 message KeyPairRecord {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
     fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15
-    CryptoKitID CryptoKitID         = 3;
+    fixed64     CryptoKitID_0       = 3;    // CryptoKit UID, bytes 0..7
+    fixed64     CryptoKitID_1       = 9;    // CryptoKit UID, bytes 8..15
     KeyType     KeyType             = 4;
     fixed64     TimeID_0            = 5;    // Time-based UID, bytes 0..7 (from tag.NowID)
     fixed64     TimeID_1            = 6;    // Time-based UID, bytes 8..15
@@ -177,7 +177,8 @@ message EpochKeyEntry {
     fixed64             ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
     fixed64             EpochID_0       = 3;    // Epoch UID, bytes 0..7 (time-based)
     fixed64             EpochID_1       = 4;    // Epoch UID, bytes 8..15
-    CryptoKitID         CryptoKitID     = 5;    // Crypto suite for this epoch
+    fixed64             CryptoKitID_0   = 5;    // CryptoKit UID (suite for this epoch), bytes 0..7
+    fixed64             CryptoKitID_1   = 6;    // CryptoKit UID, bytes 8..15
     repeated RoleKey    RoleKeys        = 8;    // 1-4 role-tagged materials held for this epoch
 }
 
@@ -203,7 +204,8 @@ message EpochKeyTome {
 // sender identity participates in the wrap.  Sender authentication is the
 // surrounding signed TxMsg's responsibility.
 message EncryptedSymKey {
-    CryptoKitID CryptoKitID  = 1;    // Recipient's CryptoKit (which curve the wrap is in)
+    fixed64     CryptoKitID_0 = 1;    // Recipient's CryptoKit UID (which curve the wrap is in), bytes 0..7
+    fixed64     CryptoKitID_1 = 2;    // Recipient's CryptoKit UID, bytes 8..15
     fixed64     EpochID_0    = 3;    // Epoch UID this key belongs to, bytes 0..7 (zero if not epoch-bound)
     fixed64     EpochID_1    = 4;    // Epoch UID this key belongs to, bytes 8..15
     bytes       Ciphertext   = 8;    // Output of safe.SealFor(CryptoKitID, recipient_pub, symmetric_key)

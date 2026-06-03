@@ -185,8 +185,9 @@ message Login {
     // challenge-response signature against the key it holds for Member; when the
     // host has no key recorded yet it may adopt this one if trust-on-first-use (TOFU)
     // is set.
-    bytes              SigningPubKey      = 14;
-    safe.CryptoKitID   SigningCryptoKitID = 15;
+    bytes              SigningPubKey        = 14;
+    fixed64            SigningCryptoKitID_0 = 15;   // Client's signing-suite UID, bytes 0..7
+    fixed64            SigningCryptoKitID_1 = 16;   // Client's signing-suite UID, bytes 8..15
 
 }
 
@@ -715,49 +716,50 @@ message EpochTerms {
     // suite).  Unset resolves to Poly25519 via EffectiveCryptoKit.  A quorum-
     // approved migration (e.g. post-quantum) rotates the suite by issuing an epoch
     // with a new value.
-    safe.CryptoKitID    CryptoKitID = 7;
+    fixed64             CryptoKitID_0 = 7;    // CryptoKit UID (suite in force this epoch), bytes 0..7
+    fixed64             CryptoKitID_1 = 8;    // CryptoKit UID, bytes 8..15
 
     // Human-readable label for THIS epoch ("Genesis", "Rotation 3") — an operator/
     // audit display string, NOT the planet's public name (that is Mark.AppName).
-    string              Label = 8;
+    string              Label = 10;
 
     // The planet's quorum-signed public identity (name/org/domain/description/URL
     // schemes/federation back-edge/glyphs).  The impersonation surface — here, not
     // the admin-mutable Brand attr, so a public-face change requires the quorum.
-    BrandMark           Mark = 9;
+    BrandMark           Mark = 11;
 
     // Default entry channel — where members land when opening the planet.
     // Foyer is to play as Index is to search.
-    Tag                 Foyer = 10;
+    Tag                 Foyer = 12;
 
     // Public-facing node enumerating discoverable channels / content.
-    Tag                 Index = 11;
+    Tag                 Index = 13;
 
     // The ACC group whose members are the authorized co-signers of this epoch.
     // Zero/unset for genesis (the signers are PlanetCharter.Founders directly);
     // for rotations, resolves to a group defined in the prior epoch's member set.
-    Tag                 GovernanceGroup = 12;
+    Tag                 GovernanceGroup = 16;
 
     // Threshold of GovernanceGroup co-signatures required for this epoch to be
     // valid.  0 = all members of the resolved group (paranoid default).
-    int32               RequiredSignatures = 13;
+    int32               RequiredSignatures = 18;
 
     // Lifecycle posture asserted by this epoch's quorum (Open / Paused / Sealed).
-    SealState           Seal = 14;
+    SealState           Seal = 20;
 
     // Address of the immutable Codex edition this epoch publishes / seals against
     // ("the printed edition").  Typically set on a Paused/Sealed sealing epoch.
     // Zero when this epoch publishes no edition.
-    Address             CodexEdition = 15;
+    Address             CodexEdition = 22;
 
     // Vault workload tunables (rate limits, quarantine retention, intake guards,
     // pending-queue caps).  Quorum-signed so an operator cannot unilaterally loosen
     // them.  Null-safe: unset fields fall back to the DefaultXxx consts.
-    VaultConfig         VaultConfig = 16;
+    VaultConfig         VaultConfig = 25;
 
     // Seconds after rotation during which old-epoch TxMsgs are still accepted
     // (offline / mesh authors).  If 0, DefaultGracePeriod is used.
-    int64               MaxGracePeriod = 17;
+    int64               MaxGracePeriod = 32;
 }
 
 
@@ -1508,10 +1510,10 @@ message Address {
 // VaultAddr is a transport-tagged vault endpoint.  Used by NameService records
 // and federation pointers to hint where a planet can be pinned.  Reuses the
 // envelope shape of PRD-amp-security-sync §7.2 VaultAddresses; transports
-// advertise themselves via the TransportTag string so future kits land without
+// advertise themselves via the Transport string so future kits land without
 // proto changes.
 message VaultAddr {
-    string              TransportTag = 1;    // "tcp", "udp", "reticulum", etc.
+    string              Transport = 1;    // "tcp", "udp", "reticulum", etc.
     bytes               Address      = 2;    // transport-specific encoding
 }
 

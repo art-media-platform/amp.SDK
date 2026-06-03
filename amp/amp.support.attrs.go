@@ -234,10 +234,34 @@ func TagFromUID(id tag.UID) *Tag {
 // EffectiveCryptoKit returns the CryptoKitID in force for this epoch's terms,
 // defaulting to Poly25519 if the terms are nil or the kit is unspecified.
 func (terms *EpochTerms) EffectiveCryptoKit() safe.CryptoKitID {
-	if terms == nil || terms.CryptoKitID == safe.CryptoKitID_UnspecifiedKit {
-		return safe.CryptoKitID_Poly25519
+	if terms == nil {
+		return safe.Crypto.Poly25519.ID
 	}
-	return terms.CryptoKitID
+	if kit := terms.CryptoKitID(); !kit.IsNil() {
+		return kit
+	}
+	return safe.Crypto.Poly25519.ID
+}
+
+// CryptoKitID returns the crypto-suite UID declared by this epoch's terms; the
+// nil UID resolves to the default via EffectiveCryptoKit.
+func (terms *EpochTerms) CryptoKitID() safe.CryptoKitID {
+	return tag.UID{terms.CryptoKitID_0, terms.CryptoKitID_1}
+}
+
+// SetCryptoKitID sets the epoch's crypto-suite UID.
+func (terms *EpochTerms) SetCryptoKitID(uid safe.CryptoKitID) {
+	terms.CryptoKitID_0, terms.CryptoKitID_1 = uid[0], uid[1]
+}
+
+// SigningCryptoKitID returns the client's declared signing-suite UID.
+func (req *Login) SigningCryptoKitID() safe.CryptoKitID {
+	return tag.UID{req.SigningCryptoKitID_0, req.SigningCryptoKitID_1}
+}
+
+// SetSigningCryptoKitID sets the client's declared signing-suite UID.
+func (req *Login) SetSigningCryptoKitID(uid safe.CryptoKitID) {
+	req.SigningCryptoKitID_0, req.SigningCryptoKitID_1 = uid[0], uid[1]
 }
 
 // EffectiveHashKit returns the HashKitID in force for this epoch — the per-epoch
