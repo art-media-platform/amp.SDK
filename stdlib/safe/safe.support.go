@@ -1,6 +1,7 @@
 package safe
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"hash"
 
@@ -76,10 +77,6 @@ type HashSpec struct {
 func NewHashKit(hashKitID HashKitID) (HashKit, error) {
 	var kit HashKit
 
-	if hashKitID == 0 {
-		hashKitID = HashKitID_Blake2s_256
-	}
-
 	spec, err := GetHashKit(hashKitID)
 	if err != nil {
 		return kit, err
@@ -98,6 +95,11 @@ func init() {
 	mustRegisterHashKit(&HashSpec{
 		ID:   HashKitID_Blake2s_256,
 		New:  func() hash.Hash { h, _ := blake2s.New256(nil); return h },
+		Size: 32,
+	})
+	mustRegisterHashKit(&HashSpec{
+		ID:   HashKitID_SHA2_256,
+		New:  sha256.New,
 		Size: 32,
 	})
 	mustRegisterHashKit(&HashSpec{

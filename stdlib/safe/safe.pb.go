@@ -181,26 +181,32 @@ func (CryptoKitID) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{2}
 }
 
-// HashKitID identifies a hash algorithm.
+// HashKitID selects a content-integrity hash.  Blake2s-256 is the default by being
+// the zero value; an absent field means Blake2s-256 globally and forever — so a
+// BlobRef verifies from the ref alone, no epoch present.
+// (The name->tag.UID identity hash is a separate, hardwired primitive — not a HashKit.)
 type HashKitID int32
 
 const (
-	HashKitID_UnspecifiedHashKit HashKitID = 0
-	HashKitID_SHA3_256           HashKitID = 3
-	HashKitID_Blake2s_256        HashKitID = 5
+	HashKitID_Blake2s_256 HashKitID = 0 // default. IETF RFC 7693 — BLAKE2 Cryptographic Hash and MAC (2015)
+	HashKitID_Blake3_256  HashKitID = 1 // verified streaming / parallel. BLAKE3 official spec, BLAKE3-team (2021); not yet standardized
+	HashKitID_SHA2_256    HashKitID = 2 // external-ecosystem interop (Git/OCI/IPFS), HW-accelerated. NIST FIPS 180-4 (2015); ISO/IEC 10118-3:2018
+	HashKitID_SHA3_256    HashKitID = 3 // diverse family (sponge), break-glass. NIST FIPS 202 (2015)
 )
 
 // Enum value maps for HashKitID.
 var (
 	HashKitID_name = map[int32]string{
-		0: "UnspecifiedHashKit",
+		0: "Blake2s_256",
+		1: "Blake3_256",
+		2: "SHA2_256",
 		3: "SHA3_256",
-		5: "Blake2s_256",
 	}
 	HashKitID_value = map[string]int32{
-		"UnspecifiedHashKit": 0,
-		"SHA3_256":           3,
-		"Blake2s_256":        5,
+		"Blake2s_256": 0,
+		"Blake3_256":  1,
+		"SHA2_256":    2,
+		"SHA3_256":    3,
 	}
 )
 
@@ -1228,11 +1234,13 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x0eUnspecifiedKit\x10\x00\x12\r\n" +
 	"\tPoly25519\x10\x01\x12\b\n" +
 	"\x04P256\x10\x02\x12\r\n" +
-	"\tSecp256k1\x10\x03*B\n" +
-	"\tHashKitID\x12\x16\n" +
-	"\x12UnspecifiedHashKit\x10\x00\x12\f\n" +
-	"\bSHA3_256\x10\x03\x12\x0f\n" +
-	"\vBlake2s_256\x10\x05*N\n" +
+	"\tSecp256k1\x10\x03*H\n" +
+	"\tHashKitID\x12\x0f\n" +
+	"\vBlake2s_256\x10\x00\x12\x0e\n" +
+	"\n" +
+	"Blake3_256\x10\x01\x12\f\n" +
+	"\bSHA2_256\x10\x02\x12\f\n" +
+	"\bSHA3_256\x10\x03*N\n" +
 	"\aKeyRole\x12\x0e\n" +
 	"\n" +
 	"ContentKey\x10\x00\x12\r\n" +
