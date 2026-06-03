@@ -27,7 +27,7 @@ func TestTag(t *testing.T) {
 		t.Fatalf("chained ID != HashLiteral(Text): %v", name.ID)
 	}
 	base32 := name.ID.Base32()
-	if base32 != "5EEZ7JTVNT1D42251GSU28MQY9" {
+	if base32 != "5eez7jtvnt1d42251gsu28mqy9" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	parsed, err := tag.Parse(base32)
@@ -43,7 +43,7 @@ func TestTag(t *testing.T) {
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
 		holyExpr := tag.NameFrom(Genesis)
-		if holyExpr.ID.Base32() != "3EVFMJWNBJ2WG7QB93XK3ZYR2B" {
+		if holyExpr.ID.Base32() != "3evfmjwnbj2wg7qb93xk3zyr2b" {
 			t.Fatalf("tag.NameFrom() failed: got %v", holyExpr.ID.Base32())
 		}
 
@@ -77,10 +77,10 @@ func TestTag(t *testing.T) {
 	}
 
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
-	if tid.AsLabel() != "7R..TRRH" {
+	if tid.AsLabel() != "7r..trrh" {
 		t.Errorf("tag.UID.AsLabel() failed: got %q", tid.AsLabel())
 	}
-	if tid.Base32() != "7RFXVRFXVRFXVJ4E2QG2ECTRRH" {
+	if tid.Base32() != "7rfxvrfxvrfxvj4e2qg2ectrrh" {
 		t.Errorf("tag.UID.Base32() failed: got %v", tid.Base32())
 	}
 	if b16 := tid.Base16(); b16 != "0xF777777777777777123456789ABCDEF0" {

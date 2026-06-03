@@ -12,11 +12,9 @@ UTF-8 whitespace, commas, periods, and other common punctuation separate tag lit
 
 10 words randomly chosen from the English dictionary, taken in order, exceeds 10^52 possible sequences.  That's 15,000 times the number of possible Bitcoin public addresses (2^160).
 
-We can cite 70NWJFD6VQFM2YX1D21YFC3SBS and 2P4V7Z6MV6HR94KFUX3HVT0GUP as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestry.
+We can cite 5qzde80zxumg8prgukbjj3ty76 and 2P4V7Z6MV6HR94KFUX3HVT0GUP as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestry.
 
-Expressing 77FCRJPYQPY0V6NDWE49VX4PFT with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
-
-Text having "homophone case" or "homophonic case" means its component words are considered interchangeable with words that sound the same but have different spelling.
+Expressing 211bzfc5kz9p0ct9cy0bbqe3by with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
 
 Since we want canonic string forms to be invariant under omitted or additional punctuation, <>, (), {}, "" [] are dropped:
 
@@ -24,23 +22,19 @@ This means we match proper nouns and titles easily, such as A Game Of Thrones
 This means we match proper nouns and titles easily, such as "A Game of Thrones".
 This means we match proper nouns and titles easily, such as a game of thrones.
 
-Acronyms like NBA, NFL, USA, CIA, PRC, and EU are capitalized since they are spoken letter by letter.  Literals that are not upper case, are considered spoken (phonetic).
+Get the AMP SDK today??
+Get the AMP SDK today
+Get the Amp SDK today!
 
-Notice how acronyms are spoken differently and have their own unique meanings, so that means ALL CAPS should be used intentionally.
-
-This has helpful implications for those with sight or hearing impairments..
-
-ADA is an acronym for the Americans with Disabilities Act, Ms. Ada is a computer programmer.
-ADA is an acronym for the Americans with Disabilities Act. ms ada is a computer programmer!
-
-Get the amp SDK today
-Get the amp.SDK today.
-Get the Amp SDK today!!
-
-Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form, with all-caps preservation dropped because URL schemes are case-insensitive per RFC 3986 §3.1.  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
+Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form (ASCII case-folded to lowercase, like URL schemes per RFC 3986 §3.1).  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
 
 https://example.com/path
 HTTPS://example.com/path
+
+spaces.plan.tools
+SPACES.PLAN.TOOLS
+spaces.Plan.Tools
+Spaces.plan.Tools
 
 Another link amp://planet.com/deep/path/with-Dashes.and.dots
 another link Amp://planet.com/deep/path/with-Dashes.and.dots

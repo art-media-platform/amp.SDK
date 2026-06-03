@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 	"time"
 	"unicode"
-	"unicode/utf8"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/encode"
 	"golang.org/x/crypto/blake2s"
@@ -95,8 +94,8 @@ func (name Name) Canonic() string {
 // is applied transiently by canonize at hash time.
 //
 // See the package README for the complete canonization rules,
-// examples, and rationale (acronym preservation, homophone fold,
-// URL/name split, scheme grammar per RFC 3986 §3.1).
+// examples, and rationale (ASCII case-fold, URL/name split,
+// scheme grammar per RFC 3986 §3.1).
 func (name Name) With(expr string) Name {
 
 	expr = strings.TrimSpace(expr)
@@ -177,11 +176,10 @@ func (name Name) With(expr string) Name {
 
 // canonize folds a case-preserved tag expression into its canonic string —
 // the string whose atomic hash is the tag UID.  It is the single authority for
-// the tag case-fold: the name part lowercases per word (multi-rune ALL-CAPS
-// acronyms like USA / YMCA are preserved in natural-text mode; URL mode
-// lowercases every word per RFC 3986 §3.1), any scheme atom lowercases, and
-// the URL / identifier part is left verbatim.  Input is already segmented into
-// dot-joined words (see With), so canonize only decides case.
+// the tag case-fold: foldSegment lowercases each name-part word and any scheme
+// atom (RFC 3986 §3.1), and the URL / identifier part is left verbatim.  Input
+// is already segmented into dot-joined words (see With), so canonize only
+// decides case.
 func canonize(text string) string {
 	if text == "" {
 		return ""
@@ -198,9 +196,8 @@ func canonize(text string) string {
 	body.Grow(len(text))
 
 	if urlPart != "" && isScheme(namePart) {
-		body.WriteString(strings.ToLower(namePart))
+		body.WriteString(foldSegment(namePart))
 	} else {
-		urlMode := urlPart != ""
 		namePartLen := len(namePart)
 		for i := 0; i < namePartLen; {
 			for ; i < namePartLen && namePart[i] == CanonicSeparatorChar; i++ {
@@ -214,7 +211,7 @@ func canonize(text string) string {
 			} else {
 				end += i
 			}
-			term := foldSegment(namePart[i:end], urlMode)
+			term := foldSegment(namePart[i:end])
 			if body.Len() > 0 {
 				body.WriteByte(CanonicSeparatorChar)
 			}
@@ -229,16 +226,32 @@ func canonize(text string) string {
 	return body.String()
 }
 
-// foldSegment applies the tag case-fold to one name-part word.  In URL mode
-// every word lowercases (RFC 3986 §3.1).  In natural-text mode a multi-rune
-// ALL-CAPS acronym (USA, YMCA) is preserved so spoken acronyms keep identity;
-// everything else (and any single rune) lowercases.  This is the only
-// case-fold in the package.
-func foldSegment(term string, urlMode bool) string {
-	if urlMode || utf8.RuneCountInString(term) == 1 || term != strings.ToUpper(term) {
-		return strings.ToLower(term)
+// foldSegment is the package case-fold, applied to each canonic token (a
+// name-part word or a URL scheme atom): ASCII letters A–Z fold to a–z; every
+// other byte — each byte of a multibyte UTF-8 rune included — is emitted
+// verbatim.  It consults no Unicode case table, so the fold reproduces
+// bit-identically across languages and Unicode revisions; non-ASCII runes are
+// therefore matched byte-exact (FQDNs are punycoded to ASCII upstream, so
+// domains fold fully).  This is the DNS / URI ASCII case-insensitivity rule
+// (RFC 4343, RFC 3986 §3.1) and the only case-fold in the package.
+func foldSegment(term string) string {
+	hasUpper := false
+	for i := range len(term) {
+		if c := term[i]; c >= 'A' && c <= 'Z' {
+			hasUpper = true
+			break
+		}
 	}
-	return term
+	if !hasUpper {
+		return term
+	}
+	folded := []byte(term)
+	for i := range folded {
+		if c := folded[i]; c >= 'A' && c <= 'Z' {
+			folded[i] = c + ('a' - 'A')
+		}
+	}
+	return string(folded)
 }
 
 // canonicID derives the UID of an already-canonic tag string.  The name part
@@ -550,7 +563,8 @@ func (id UID) WithLiteral(tagLiteral []byte) UID {
 	return UID_HashLiteral(buf)
 }
 
-// Returns this tag.UID in canonic Base32 form
+// Returns this tag.UID in canonic Base32 form (lowercase geohash alphabet,
+// matching the lowercase tag canonic fold; UID_ParseBase32 decodes either case).
 func (id UID) Base32() string {
 	x0 := id[0] // MSB
 	x1 := id[1] // LSB
@@ -562,7 +576,7 @@ func (id UID) Base32() string {
 		if b32 != 0 {
 			isZero = false
 		}
-		out[i] = encode.Base32Alphabet_Upper[b32]
+		out[i] = encode.Base32Alphabet_Lower[b32]
 
 		x1 = (x0&0x1F)<<59 | (x1 >> 5)
 		x0 >>= 5

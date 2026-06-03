@@ -13,8 +13,8 @@ import "github.com/art-media-platform/amp.SDK/stdlib/tag"
 name, _ := tag.Parse("Hello World!")
 fmt.Println(name.Text)          // Hello.World   (case-preserved, for display)
 fmt.Println(name.Canonic())     // hello.world   (folded form behind ID)
-fmt.Println(name.ID.Base32())   // 7K4XGBQ7879D4F228U0CU1N627
-fmt.Println(name.ID.AsLabel())  // 7K..N627  (compact debug label)
+fmt.Println(name.ID.Base32())   // 5zrhzgyzm22dje3p48sjj0m3wn
+fmt.Println(name.ID.AsLabel())  // 5z..m3wn  (compact debug label)
 
 // Mint a unique time-based UID with entropy.
 id := tag.NowID()
@@ -29,7 +29,7 @@ using art.media.platform;
 Name name = Name.Parse("Hello World!");
 Debug.Log(name.Text);              // Hello.World   (case-preserved, for display)
 Debug.Log(name.Canonic());         // hello.world   (folded form behind ID)
-Debug.Log(name.ID.AsAsciiBase32);  // 7K4XGBQ7879D4F228U0CU1N627
+Debug.Log(name.ID.AsAsciiBase32);  // 5zrhzgyzm22dje3p48sjj0m3wn
 
 // Mint a fresh time-based UID with entropy.
 UID id = UID.Now();
@@ -52,7 +52,7 @@ type Name struct {
 
 `Text` is **optional and may be dropped**. The UID is the sole identity, so a processor can match, route, and serve tags with `Text` stripped — fielding queries over opaque UIDs without learning what they name. Dropping `Text` before a request reaches an untrusted relay (e.g. `tag.DarkProjectsDivision.ClassifiedProjectTitle.Q3.2026` collapses to bare UIDs) is an information-leakage control; on the wire `Tag.Text` is an optional field, so omitting it is a no-op.
 
-The hash is deterministic, cross-language, and small enough to compare with `==`, use as a map key, or fit in a database column. It has a short human-readable form via `id.Base32()` drawn from a 32-character alphabet that omits easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). This human-friendly alphabet is safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. For compact log lines and debug output, `id.AsLabel()` returns a `first2..last4` short form (e.g. `6Z..800H`) — distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
+The hash is deterministic, cross-language, and small enough to compare with `==`, use as a map key, or fit in a database column. It has a short human-readable form via `id.Base32()` drawn from a 32-character **lowercase** alphabet that omits easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). Lowercase matches the canonic fold, so a UID embedded in a tag expression reads the same before and after folding, and decoding is case-insensitive (an upper-cased copy still parses to the same UID). This human-friendly alphabet is safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. For compact log lines and debug output, `id.AsLabel()` returns a `first2..last4` short form (e.g. `6z..800h`) — distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
 
 The canonic word fold is intentionally lossy in ways that improve usability without compressing the namespace into anything close to dangerous.
 
@@ -88,16 +88,17 @@ For worked examples — various inputs run through the fold alongside their cano
 
 **Invariant:** for a plain name (no `/`, `:`, or `\`), a `tag.Name`'s `ID` is `UID_HashLiteral(canonize(Text))` — fold `Text` to its canonic string, hash it, get the UID. When a name carries a URL / identifier part, the name part and the URL part hash separately and combine, so scheme:identifier UIDs stay stable (see *URLs Preserved* and *Identity Preserved* below).
 
-## Acronyms Preserved
+## Case-Insensitive Identity
 
-ALL CAPS sequences are preserved on the assumption they are spoken letter by letter:
+The canonic fold is **case-insensitive** and is the same rule [DNS](https://en.wikipedia.org/wiki/Fully_qualified_domain_name) applies to domain names ([RFC 4343](https://www.rfc-editor.org/rfc/rfc4343)) and [RFC 3986 §3.1](https://www.rfc-editor.org/rfc/rfc3986) applies to URL schemes — so two spellings that differ only in case share one identity:
 
 ```
-"Get the amp SDK today"    → get.the.amp.SDK.today
-"Acronyms like NBA, NFL"   → acronyms.like.NBA.NFL
+"Get the Amp SDK today!" → "get.the.amp.sdk.today"
 ```
 
-This keeps `Ada` (a name) distinct from `ADA` (the law) — meaningful in any search, identity, or routing context. Words that are not upper case are treated as spoken (phonetic), which also helps accessibility (sight or hearing impairments) and search across spelling variants.
+Authored case is not lost — it lives in `Text` (`amp.law.PlanetEpoch`), which is what you display and log; only the UID-bearing canonic form is lowercased and hashed. Search lowercases its needle the same way, so legibility and search-across-variants are delivered at the presentation layer without putting case in the identity hash.
+
+Because the fold consults **no Unicode case table** (pure ASCII), it reproduces bit-identically across languages and Unicode revisions — a property the wire freeze depends on. Non-ASCII letters are therefore matched byte-exact (case-sensitive); a **F**ully-**Q**ualified **D**omain **N**ame (`FQDN`) is its DNS-normalized form.
 
 ## URLs Preserved
 
