@@ -1518,6 +1518,16 @@ message VaultAddr {
 }
 
 
+// TrustState is the three-state verdict for a NameService record's §3.3 back-edge
+// consent check.  Never a bare bool: Unchecked (the resolver lacked the target's
+// live Brand to verify) must never be read as Verified.  PRD-name-service §3.3/§15.1.
+enum TrustState {
+    Unchecked = 0;  // not yet verifiable — cold resolve, no live Brand held (proto3 default)
+    Verified  = 1;  // back-edge holds: target Brand.NamedBy == the answering federation
+    Refuted   = 2;  // back-edge fails: target back-points elsewhere (a squatter)
+}
+
+
 // NameServiceRecord — one FQDN → PlanetID record published by a federation.
 // Lives in a NameService channel at
 //   (NodeID = channel_node, AttrID = amp.name.service.record, ItemID = hash(fqdn)).
