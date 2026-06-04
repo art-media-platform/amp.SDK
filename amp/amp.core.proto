@@ -1092,8 +1092,10 @@ message PlanetInvite {
     // The acceptor imports this keypair and rotates it immediately after join.
     safe.KeyPairRecord      TempKey = 5;
 
-    // Known vault addresses for initial peer discovery.
-    repeated string         VaultAddrs = 15;
+    // Known vault endpoints for initial peer discovery — unified with the typed
+    // VaultAddr used by NameServiceRecord / FederationPeer.  For Transport="tcp",
+    // Address is UTF-8 "host:port".
+    repeated VaultAddr      VaultAddrs = 15;
 
     // Planet epoch key encrypted for TempKey via CryptoKit.EncryptFor.
     // InviteAccept decrypts this immediately so the member can participate in the epoch.
@@ -1172,22 +1174,6 @@ message SyncRangeRequest {
     fixed64             PlanetID_1 = 2;
     fixed64             After_0 = 3;      // stream TxMsgs with TxTimeID > After
     fixed64             After_1 = 4;
-}
-
-
-// TransportType identifies the network transport used by a peer.
-enum TransportType {
-    TransportType_Nil       = 0;
-    TransportType_TCP       = 1;
-    TransportType_UDP       = 2;
-    TransportType_Reticulum = 3;
-}
-
-// PeerAddr describes a reachable address for a vault peer.
-message PeerAddr {
-    TransportType       Transport = 1;    // which transport layer
-    string              Address   = 2;    // transport-specific (e.g. "192.168.1.5:5192", Reticulum hash)
-    float               Score     = 3;    // 0.0–1.0; higher = preferred; updated by connection quality
 }
 
 
@@ -1591,7 +1577,7 @@ message NameServiceRecord {
 // FederationPeer — peer of a FederationDirectory.
 // PRD-name-service §4.4.
 message FederationPeer {
-    Tag                 PlanetID     = 1;    // the peer federation's planet UID
+    Tag                 FederationID = 1;    // the peer federation's planet UID
     repeated VaultAddr  VaultAddrs   = 2;    // where peer federation is pinnable
     string              Label        = 3;    // human-readable, informational
 

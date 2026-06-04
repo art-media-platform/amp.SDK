@@ -152,6 +152,19 @@ type Session interface {
 	// See SetPlanet for the ordering contract this call closes.
 	OnEpochKeyArrived(epochID tag.UID)
 
+	// DialVaultPeers asks the vault controller to dial peer addresses learned at
+	// runtime — the VaultAddrs carried by a PlanetInvite or a NameService record —
+	// so a fresh peer can bootstrap a connection without a static, operator-
+	// configured peer.  Best-effort and asynchronous; a no-op when the host runs
+	// without a vault transport.  See vault.Transport.AddPeer.
+	DialVaultPeers(addrs []*VaultAddr) error
+
+	// WatchPlanet starts syncing a planet's journal without joining as a member —
+	// the "pin" half of resolve→pin: a consumer that resolved a name (or holds a
+	// planet UID) watches it so its planet-public records stream in.  Distinct from
+	// SetPlanet, which joins with an epoch + keys.  No-op without a vault transport.
+	WatchPlanet(planetID tag.UID) error
+
 	// PlanetMember returns the member identity this session has adopted on
 	// planetID.  For planets the session founded or owns, this is the login
 	// member; for planets joined via invite it is the freshly generated identity
