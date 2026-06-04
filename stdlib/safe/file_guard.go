@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -160,6 +161,14 @@ func (s *localTomeStore) Save(_ context.Context, sealed *SealedTome) error {
 	buf, err := proto.Marshal(sealed)
 	if err != nil {
 		return fmt.Errorf("safe: failed to marshal SealedTome: %w", err)
+	}
+
+	// Ensure the containing directory exists so a store handed a fresh path (e.g. a
+	// member's home tome on first run) persists rather than silently failing to write.
+	if dir := filepath.Dir(s.pathname); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0700); err != nil {
+			return fmt.Errorf("safe: failed to create tome dir %q: %w", dir, err)
+		}
 	}
 
 	if err := os.WriteFile(s.pathname, buf, 0600); err != nil {
