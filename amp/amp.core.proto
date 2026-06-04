@@ -1553,6 +1553,38 @@ message NameServiceRecord {
 
     Tag                 RegisteredAt  = 8;    // TxID of registering TxMsg (initial Upsert)
     Tag                 RegisteredBy  = 9;    // signing member's MemberID (federation admin)
+
+    // ── Reserved at v250 — mechanism deferred, slot locked (PRD-name-service §10.4). ──
+    // These ship INERT (unverified, ignored by consumers) but freeze the field
+    // number↔meaning binding now, so the §15 trust primitives — and the §16 civil-
+    // jurisdiction / brand-dispute adjudication that rides them — land post-freeze with
+    // no wire break.  Documented here as if live so the contract is fully legible to
+    // auditors; promote a `reserved` line to a real field when its mechanism ships.
+
+    // AuthorityKit — naming-authority attestation: proof the registrant is entitled to
+    // this FQDN (domain-control challenge, DID-bound claim, or witness co-sign).  An
+    // open-namespace kit id (the CryptoKit pattern: a tag.UID kit) so the proof
+    // *mechanism* is chosen after the freeze; empty = unattested; consumers treat an
+    // unrecognized kit as unverified.  The only post-freeze defense against cross-
+    // federation FQDN squatting / confusables (§14.3, §15.3).  Also the §16 civil-
+    // jurisdiction carrier: a city / government / charter authority attesting "this FQDN
+    // belongs to this entity under our jurisdiction" is just another naming-authority
+    // kit — multiple jurisdictions may attest one name and federations choose which to
+    // honor (Ostrom polycentricity; the wire stays neutral on legitimacy).
+    reserved 10; // AuthorityKit   (Tag)
+
+    // AuthorityProof — opaque proof paired with AuthorityKit, verified by the named
+    // kit.  Format is kit-defined (e.g. a signed domain-control challenge or a notarized
+    // jurisdiction record).  Empty when AuthorityKit is empty.
+    reserved 11; // AuthorityProof (bytes)
+
+    // Reputation — federation-curated reputation / threat verdict for this record
+    // (§15.7 federation threat-mesh).  Opaque, federation-signed; ships empty until the
+    // additive advisory channel lands, so a federation's verdict can ride the record it
+    // judges.  Also the §16 brand-dispute carrier — "contested" / "adjudicated to X by
+    // authority Y", a federation- or jurisdiction-signed ruling (Ostrom conflict-
+    // resolution; the protocol attaches the dispute, it never adjudicates).
+    reserved 12; // Reputation     (bytes)
 }
 
 
@@ -1562,6 +1594,25 @@ message FederationPeer {
     Tag                 PlanetID     = 1;    // the peer federation's planet UID
     repeated VaultAddr  VaultAddrs   = 2;    // where peer federation is pinnable
     string              Label        = 3;    // human-readable, informational
+
+    // ── Reserved at v250 — directory-entry provenance, mechanism deferred (§10.4, §15.4). ──
+    // Today forwarding is trust-by-position in a flat list: a member walking a directory
+    // cannot tell a vouched-for parent from a random sibling a peer happened to list.
+    // These slots let relation-aware routing land post-freeze with no wire break; inert
+    // until then.  Documented as if live for auditor legibility.
+
+    // Relation — how this peer relates to the directory's publishing federation.  An
+    // explicit enum (not a bitfield), per the named-enum convention.  Planned values:
+    //   PeerRelation_Unspecified = 0   // flat list, trust-by-position — today's behavior, the forward-safe default
+    //   PeerRelation_Parent      = 1   // the publisher is a sub-federation of this peer
+    //   PeerRelation_Sibling     = 2   // peer federations at the same tier
+    //   PeerRelation_Backup      = 3   // mirror / failover directory source
+    reserved 4; // Relation    (PeerRelation enum)
+
+    // Attestation — optional federation-signed vouch for this peer (§15.4): a signed
+    // statement that the publisher has verified the peer's identity / standing, so
+    // directory walkers can weight forwarding by provenance.  Empty = unvouched.
+    reserved 5; // Attestation (bytes)
 }
 
 
