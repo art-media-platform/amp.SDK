@@ -341,7 +341,9 @@ enum Units {
     Operations  = 1;  // total operation count
     Bytes       = 2;  // any byte offset
     Pixels      = 3;  // texels or device pixels; not for typographic sizes
+    Seconds     = 4;  // elapsed time
     Plank       = 5;  // TOE length
+    Samples     = 6;  // one media sample (e.g. an audio frame); rate is samples per second
     Nanometers  = 7;  // 10^9 nm == 1 m
     Millimeters = 10; // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
     Meters      = 11; // IEEE 3773 length for humans

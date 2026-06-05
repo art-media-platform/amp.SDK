@@ -240,6 +240,21 @@ enum MediaFlags {
 
 }
 
+// MediaSegment is one segment of a live or recorded media stream: an inline on-chain
+// copy of the bytes plus a reference to the durable content-addressed blob.  Playback
+// time is the exact integer rational TickDelta / TickRate (the QuickTime time model),
+// so consecutive segments tile a stream exactly: TickOffset + TickDelta == the next
+// segment's TickOffset.  For a byte-rate stream the natural tick is the byte.
+message MediaSegment {
+    int64       TickOffset = 1; // cumulative tick offset of this segment's start on the stream timeline
+    int64       TickDelta  = 2; // this segment's duration as an exact tick span
+    int64       TickRate   = 3; // ticks per second — the timescale (0 when the source rate is unknown)
+    amp.Units   Units      = 4; // what one tick is (Bytes for a byte-stream; Samples / Seconds for sampled media)
+    string      Format     = 5; // content (MIME) type
+    bytes       Payload    = 6; // inline on-chain copy of the segment bytes (the integrity-check source)
+    amp.BlobRef Blob       = 7; // the segment's durable content-addressed bytes
+}
+
 // Arg is a any-purpose key/value pair
 message Arg {
     string Key   = 1;
