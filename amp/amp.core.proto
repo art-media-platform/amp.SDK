@@ -344,7 +344,8 @@ enum Units {
     Seconds     = 4;  // elapsed time
     Plank       = 5;  // TOE length
     Samples     = 6;  // one media sample (e.g. an audio frame); rate is samples per second
-    Nanometers  = 7;  // 10^9 nm == 1 m
+    BitrateKbps = 7;  // kilobits per second (1000 bits/s)
+    Nanometers  = 8;  // 10^9 nm == 1 m
     Millimeters = 10; // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
     Meters      = 11; // IEEE 3773 length for humans
     LightYears  = 16; // 1 light year == 9460730472580800. meters

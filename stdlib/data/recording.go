@@ -16,7 +16,7 @@ const (
 	Recording               // actively writing a segment
 	Committing              // sealing / persisting a completed segment
 	Done                    // source ended cleanly
-	Failed                  // source errored out
+	Failed                  // stopped / fatal error
 )
 
 // Segment is one completed unit of recorded media handed from a recording engine

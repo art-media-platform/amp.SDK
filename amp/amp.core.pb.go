@@ -513,7 +513,8 @@ const (
 	Units_Seconds     Units = 4  // elapsed time
 	Units_Plank       Units = 5  // TOE length
 	Units_Samples     Units = 6  // one media sample (e.g. an audio frame); rate is samples per second
-	Units_Nanometers  Units = 7  // 10^9 nm == 1 m
+	Units_BitrateKbps Units = 7  // kilobits per second (1000 bits/s)
+	Units_Nanometers  Units = 8  // 10^9 nm == 1 m
 	Units_Millimeters Units = 10 // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
 	Units_Meters      Units = 11 // IEEE 3773 length for humans
 	Units_LightYears  Units = 16 // 1 light year == 9460730472580800. meters
@@ -529,7 +530,8 @@ var (
 		4:  "Seconds",
 		5:  "Plank",
 		6:  "Samples",
-		7:  "Nanometers",
+		7:  "BitrateKbps",
+		8:  "Nanometers",
 		10: "Millimeters",
 		11: "Meters",
 		16: "LightYears",
@@ -542,7 +544,8 @@ var (
 		"Seconds":     4,
 		"Plank":       5,
 		"Samples":     6,
-		"Nanometers":  7,
+		"BitrateKbps": 7,
+		"Nanometers":  8,
 		"Millimeters": 10,
 		"Meters":      11,
 		"LightYears":  16,
@@ -6655,7 +6658,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x04Data\x10\a\x12\b\n" +
 	"\x04File\x10\t\x12\t\n" +
 	"\x05Asset\x10\x0f\x12\r\n" +
-	"\tAppNative\x10\x10*\x9e\x01\n" +
+	"\tAppNative\x10\x10*\xaf\x01\n" +
 	"\x05Units\x12\f\n" +
 	"\bUnitless\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -6665,9 +6668,10 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Pixels\x10\x03\x12\v\n" +
 	"\aSeconds\x10\x04\x12\t\n" +
 	"\x05Plank\x10\x05\x12\v\n" +
-	"\aSamples\x10\x06\x12\x0e\n" +
+	"\aSamples\x10\x06\x12\x0f\n" +
+	"\vBitrateKbps\x10\a\x12\x0e\n" +
 	"\n" +
-	"Nanometers\x10\a\x12\x0f\n" +
+	"Nanometers\x10\b\x12\x0f\n" +
 	"\vMillimeters\x10\n" +
 	"\x12\n" +
 	"\n" +
