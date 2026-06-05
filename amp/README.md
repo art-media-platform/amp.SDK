@@ -6,7 +6,7 @@ You write one Go type.  You do **not** write a server, a database, a sync protoc
 
 ---
 
-## What a Channel Is
+## What is a Channel?
 
 A **channel** is a `(NodeID, AttrID)` address space with a behavior contract.
 
@@ -16,13 +16,13 @@ A **channel** is a `(NodeID, AttrID)` address space with a behavior contract.
 
 Every piece of state in AMP has an [`amp.Address`](../stdlib/tag/api.tag.go) — `planet → node → attr → item → edit`.  A channel is the slice of that address space your app owns.  Writes are [`TxMsg`](api.app.go) transactions of CRDT ops; two members editing the same item offline converge automatically on sync.
 
-> **The address is the cheap part.**  A `tag.UID` is `[2]uint64` — **16 bytes**.  An [`Address`](../stdlib/tag/api.tag.go) is built from them: `NodeID · AttrID · ItemID · EditID`.  So targeting one independently-addressed, access-controlled, individually-encryptable cell costs on the order of **40 bytes** on the wire (≈ `16` NodeID `+ 16` AttrID `+ ~8` item/edit selector), plus a compact AEAD envelope.  You spend UIDs like they're free — because they very nearly are.  A planet carries *billions* of channels and items before the address space is ever what runs out; lightweight identity is a load-bearing design choice, not an accident.
+> **Addressing:.**  A `tag.UID` is `[2]uint64` — **16 bytes**.  An [`Address`](../stdlib/tag/api.tag.go) is built from them: `NodeID · AttrID · ItemID · EditID`.  So targeting one independently-addressed, access-controlled, individually-encryptable cell costs **80 bytes** on the wire, plus a compact AEAD envelope.  You spend UIDs like they're free — because they very nearly are.  A planet carries *billions* of channels and items before the address space is ever what runs out.
 
-> **Vocabulary, precisely.** "Channel" is everyday shorthand.  The addressing primitive is always `(NodeID, AttrID)` with a behavior — keep that exact when it matters; stay casual when it doesn't.
+> **Vocabulary:** "Channel" is everyday shorthand.  The addressing primitive is always `(NodeID, AttrID)` with a behavior — keep that exact when it matters; stay casual when it doesn't.
 
 ---
 
-## The Whole Job, in One Interface
+## One Interface
 
 A channel is an [`AppModule`](api.app.go) registered against an invocation tag.  When a client pins a URL that resolves to your tag, the runtime spins up an [`AppInstance`](api.app.go) and asks it to serve [`Pin`](api.app.go)s:
 
@@ -52,7 +52,7 @@ Every long-lived object is a node in a [`task.Context`](../stdlib/task/api.task.
 
 ---
 
-## Two Channel Shapes
+## Channel Conventions
 
 Most channels are one of two shapes.  The [`amp/std`](std/) package gives you a skeleton for both via `std.AppModule[*yourApp]`.
 
@@ -110,7 +110,7 @@ notes.UpsertItem(tx, itemID, &NoteValue{ /* ... */ })
 
 ---
 
-## Worked Example: a `notes` Channel, End to End
+## Worked Example: a `notes` Channel
 
 **Server side (Go).** A complete, registerable module is ~30 lines:
 
@@ -174,7 +174,7 @@ A Unity or Unreal client reaches the same channel through `libampd`; a headless 
 
 ---
 
-## The Pin URL
+## Handling App Pins
 
 Clients invoke a channel by URL.  The path's first segment resolves to your `AppModule` tag (or an `Alias`); the rest is yours to interpret via `req.InvokeURL` / `req.Params`:
 
@@ -187,24 +187,22 @@ amp://{planet}/notes/inbox?since=2026-05-01
 
 `amp://~/...` targets the caller's own home planet.
 
----
+## Inherit for Free
 
-## What You Inherit for Free
+These rails are worth standing on because when you implement a channel these are immediately yours:
 
-Call this the ceiling of long-term value — not a feature list, but the reason the rails are worth standing on.  Implement the channel contract and these are yours for free:
-
-| You Get | |
+| *Feature* | |
 |---------|-|
 | **Sovereign Secrecy** | End-to-end by construction — key exchange, epoch rotation, sealed-box wraps, every TxMsg sealed under the planet/channel epoch key.  Your keys, your crypt; the wire carries ciphertext or it carries nothing |
 | **Authorship + Integrity** | Every write signed by its author; membership proven to relays without revealing identity |
 | **CRDT Sync** | Offline edits, automatic conflict-free merge, multi-device convergence |
 | **Transport Independence** | TCP, UDP, USB hand-carry, or [Reticulum](../README.md#reticulum) mesh over LoRa — your channel doesn't know or care |
-| **Zero-Knowledge Relay** | Run vault infrastructure that stores and forwards your channel's traffic and can decrypt none of it |
+| **Vault Infrastructure** | Stores and forwards your channel's traffic and can decrypt none of it as a zero-knowledge relay |
 | **Assets** | Content-addressed, encrypted file attach — stream a 10 GB capture or a 2 KB thumbnail, deduplicated by content hash, resolved by `asset:` URI (`Session.SeedBlob` / `StoreBlob`) |
 | **Federation + Naming** | Cross-planet resolution through [`Brand`](amp.core.proto) + NameService — no DNS authority, no central registry |
 | **Lifecycle** | Parent-child `task.Context` close semantics; an offline outbox that drains when connectivity returns |
 
-A channel you ship on AMP is, from day one, end-to-end encrypted, offline-capable, federated, and seizure-resistant — properties that are normally a multi-year platform project.
+
 
 ---
 
@@ -212,9 +210,7 @@ A channel you ship on AMP is, from day one, end-to-end encrypted, offline-capabl
 
 Nothing about the channel contract is web-specific or Go-specific — it doesn't even know what a "client" is.  So the entire AMP 3D runtime ([`amp.3D.unity`](https://github.com/art-media-platform/amp.3D.unity)) is *just another channel client*.  Scene and entity state ride CRDT + proto deltas across `(NodeID, AttrID)` cells; meshes, textures, audio, and video resolve as content-addressed **assets** by `asset:` URI.  No bespoke transport, no second sync engine — the game engine inherits end-to-end encryption, offline merge, and federation by *being a channel client*.
 
-And Unity already models it this way, 1:1.  A `LiveCrate` is literally an `IResponder<AssetRequest>` — a scope-scoped responder that answers asset requests by address.  That is the [`Pin`](api.app.go) pattern (serve `(NodeID, AttrID)` state on request) wearing a C# hat; `CrateDepot` and `AssetCrate` are the same shape.  **A crate is a channel; an asset is a content-addressed cell.**  The moniker was never a metaphor — the two systems are the same object viewed from two languages.
-
-The p2p substrate under all of this is locked in.  The work underway is hardening the asset pipeline that feeds the crates — content-addressed seed → encrypted store → peer fetch → render — tracked in [`amp.3D.unity`](https://github.com/art-media-platform/amp.3D.unity).  Exploring the Unity runtime and hardening the asset system are the same effort from opposite ends: drive a real scene, watch which `asset:` references stall, fix the rail, repeat.
+And Unity already models it this way, 1:1.  A `LiveCrate` is literally an `IResponder<AssetRequest>` — a scope-scoped responder that answers asset requests by address.  That is the [`Pin`](api.app.go) pattern (serve `(NodeID, AttrID)` state on request) wearing a C# hat; `CrateDepot` and `AssetCrate` are the same shape.  **A Crate is a channel; an asset is a multi-addressed cell.** 
 
 ---
 
