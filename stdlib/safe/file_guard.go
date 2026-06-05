@@ -96,6 +96,9 @@ func (g *fileGuard) UnwrapDEK(_ context.Context, wrapped *WrappedDEK, aad []byte
 	if len(g.rootKey) == 0 {
 		return nil, fmt.Errorf("safe: fileGuard is closed")
 	}
+	if wrapped == nil {
+		return nil, fmt.Errorf("safe: nil WrappedDEK")
+	}
 
 	if wrapped.Provider != "fileGuard" {
 		return nil, fmt.Errorf("safe: WrappedDEK provider mismatch: got %q, want \"fileGuard\"", wrapped.Provider)
@@ -165,14 +168,38 @@ func (s *localTomeStore) Save(_ context.Context, sealed *SealedTome) error {
 
 	// Ensure the containing directory exists so a store handed a fresh path (e.g. a
 	// member's home tome on first run) persists rather than silently failing to write.
-	if dir := filepath.Dir(s.pathname); dir != "" && dir != "." {
+	dir := filepath.Dir(s.pathname) // "." for a bare filename — never empty
+	if dir != "." {
 		if err := os.MkdirAll(dir, 0700); err != nil {
 			return fmt.Errorf("safe: failed to create tome dir %q: %w", dir, err)
 		}
 	}
 
-	if err := os.WriteFile(s.pathname, buf, 0600); err != nil {
-		return fmt.Errorf("safe: failed to write tome file %q: %w", s.pathname, err)
+	// Write to a unique temp file in the same directory, then atomically rename it
+	// over the target.  A plain truncate-then-write lets a concurrent Load — another
+	// session opening the same member tome — read a torn file and unmarshal a tome
+	// with a nil WrappedDEK; rename publishes the new bytes in one step, so a reader
+	// sees either the complete old file or the complete new one, never a tear.
+	tmp, err := os.CreateTemp(dir, filepath.Base(s.pathname)+".tmp-*")
+	if err != nil {
+		return fmt.Errorf("safe: failed to create temp tome in %q: %w", dir, err)
+	}
+	tmpName := tmp.Name()
+	defer os.Remove(tmpName) // no-op once renamed; cleans up on any error path
+
+	if _, err := tmp.Write(buf); err != nil {
+		tmp.Close()
+		return fmt.Errorf("safe: failed to write temp tome %q: %w", tmpName, err)
+	}
+	if err := tmp.Sync(); err != nil {
+		tmp.Close()
+		return fmt.Errorf("safe: failed to sync temp tome %q: %w", tmpName, err)
+	}
+	if err := tmp.Close(); err != nil {
+		return fmt.Errorf("safe: failed to close temp tome %q: %w", tmpName, err)
+	}
+	if err := os.Rename(tmpName, s.pathname); err != nil {
+		return fmt.Errorf("safe: failed to publish tome %q: %w", s.pathname, err)
 	}
 
 	return nil

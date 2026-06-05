@@ -548,6 +548,15 @@ message VaultConfig {
     // window.  If 0, RateLimitWindowSecs is used; if that is also 0,
     // DefaultBlobRateLimitWindow applies (24h).
     int64   BlobRateLimitWindowSecs = 11;
+
+    // Bootstrap vault endpoints advertised for this planet — the admin-signed,
+    // governance home for "where can a fresh peer dial to reach this planet?".
+    // InviteCreate stamps these into every PlanetInvite it issues, so a peerless
+    // acceptor can DialVaultPeers its way onto the planet.  Reuses the transport-
+    // tagged VaultAddr envelope shared with NameServiceRecord / FederationPeer.
+    // Empty means the planet publishes no bootstrap address (reachable only via a
+    // federation NameServiceRecord or static -vault.peers).
+    repeated VaultAddr VaultAddrs = 12;
 }
 
 
