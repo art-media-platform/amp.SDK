@@ -8,6 +8,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// AppModuleInfo identifies an AppModule and how it is invoked.  Tag and Aliases drive
+// registration and lookup (amp.Registry); Label and Version are manifest metadata for
+// app-listing / about / SBOM surfaces (Version per TRL-versioning.md).
 type AppModuleInfo struct {
 	Tag     tag.Name // what invokes this module
 	Label   string   // human-readable description of this app
@@ -15,21 +18,21 @@ type AppModuleInfo struct {
 	Aliases []string // invocation aliases for an AppModule
 }
 
+// AppEnvironment is the runtime environment the amp runtime hands an AppContext: the app
+// instance's identity within its home planet and its three file-system roots.
 type AppEnvironment struct {
-	ModuleInfo  AppModuleInfo // AppModule info that spawned the AppContext
-	HomeID      tag.UID       // home ID for this app instance
-	MemberID    tag.UID       // who is running this app instance
-	IID         tag.UID       // instance ID for this app instance spawned by AboutModule
-	HomePath    string        // local persistent read-write file system access
-	CachePath   string        // local persistent read-write file system access (low-priority)
-	FactoryPath string        // local read-only file system access "from factory"
+	HomeID      tag.UID // home node ID for this app instance
+	MemberID    tag.UID // member identity running this app instance
+	HomePath    string  // durable per-app read-write fs root (survives restarts)
+	CachePath   string  // evictable per-app read-write scratch fs root
+	BundledPath string  // read-only fs root of trusted factory/bundled assets
 }
 
 // AppModule is how an app module registers with amp.Host and is used for internal components as well as for third parties. During runtime, amp.Host instantiates an amp.AppModule when a client request invokes one of the app's registered tags.
 //
 // Like a traditional OS service, an amp.AppModule responds to queries it recognizes and operates on client requests. The stock amp runtime offers essential apps, such as file system access and user account services.
 type AppModule struct {
-	Info AppModuleInfo // indentifying and invocation information
+	Info AppModuleInfo // identifying and invocation information
 
 	// NewAppInstance is the instantiation entry point for an AppModule called when an AppModule is first invoked on a User session and is not yet running.
 	//
@@ -104,7 +107,7 @@ type TxMsg struct {
 	TxEnvelope        // tx fields for tx routing and decryption (in the clear)
 	TxHeader          // tx fields encrypted by Epoch key
 	Ops        []TxOp // tx operations to perform
-	DataStore  []byte // opaque data storage; typically serialzed TxOp values
+	DataStore  []byte // opaque data storage; typically serialized TxOp values
 	Normalized bool   // normalization state of Ops
 	refCount   int32  // see AddRef() / ReleaseRef()
 	cryptOfs   uint64 // byte offset from preamble start to start of TxHeader

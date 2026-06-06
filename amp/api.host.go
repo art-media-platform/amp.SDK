@@ -242,11 +242,32 @@ type SessionPlanets interface {
 	OnGovernanceTx(planetID tag.UID, tx *TxMsg)
 }
 
-// SessionKeysOf and SessionPlanetsOf are the sanctioned downcasts from a Session to its
-// privileged seams.  They panic if sess is not a host session — an in-process invariant,
-// since the host's session is the only implementation of Session.
+// SessionVault is host-held vault/journal introspection a Session keeps OFF the public
+// amp.Session interface — non-secret sync metadata that only first-party governance code
+// (the home app) consults at genesis and for reporting.  Reach it with a single deliberate
+// assertion, mirroring SessionKeys/SessionPlanets:
+//
+//	vault, ok := sess.(amp.SessionVault)
+//
+// The host's session is the sole implementation.
+type SessionVault interface {
+
+	// Returns the local journal's high-water TxID and entry count for planetID —
+	// metadata only (never plaintext), so it needs no epoch key.
+	PlanetHighWater(planetID tag.UID) (highWater tag.UID, count int)
+
+	// Returns this node's operator-configured home-vault endpoint(s), seeded into
+	// home-planet governance (EpochTerms.VaultConfig.VaultAddrs) at genesis so a
+	// peerless acceptor can dial onto the planet.  Empty when no vault is configured.
+	VaultHomeAddrs() []string
+}
+
+// SessionKeysOf, SessionPlanetsOf, and SessionVaultOf are the sanctioned downcasts from a
+// Session to its privileged seams.  They panic if sess is not a host session — an in-process
+// invariant, since the host's session is the only implementation of Session.
 func SessionKeysOf(sess Session) SessionKeys       { return sess.(SessionKeys) }
 func SessionPlanetsOf(sess Session) SessionPlanets { return sess.(SessionPlanets) }
+func SessionVaultOf(sess Session) SessionVault     { return sess.(SessionVault) }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
 // This is the primary storage for the vault sync engine — it preserves the original wire-format
