@@ -670,6 +670,53 @@ func (TileServerAuth) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11}
 }
 
+// BodyEncoding is how an HTTP request body is encoded.
+type BodyEncoding int32
+
+const (
+	BodyEncoding_JSON BodyEncoding = 0 // application/json
+	BodyEncoding_Form BodyEncoding = 1 // application/x-www-form-urlencoded
+)
+
+// Enum value maps for BodyEncoding.
+var (
+	BodyEncoding_name = map[int32]string{
+		0: "JSON",
+		1: "Form",
+	}
+	BodyEncoding_value = map[string]int32{
+		"JSON": 0,
+		"Form": 1,
+	}
+)
+
+func (x BodyEncoding) Enum() *BodyEncoding {
+	p := new(BodyEncoding)
+	*p = x
+	return p
+}
+
+func (x BodyEncoding) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (BodyEncoding) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[12].Descriptor()
+}
+
+func (BodyEncoding) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[12]
+}
+
+func (x BodyEncoding) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use BodyEncoding.Descriptor instead.
+func (BodyEncoding) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{12}
+}
+
 type GeoPath_RenderType int32
 
 const (
@@ -703,11 +750,11 @@ func (x GeoPath_RenderType) String() string {
 }
 
 func (GeoPath_RenderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[12].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[13].Descriptor()
 }
 
 func (GeoPath_RenderType) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[12]
+	return &file_amp_std_amp_std_proto_enumTypes[13]
 }
 
 func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
@@ -2808,6 +2855,87 @@ func (x *TileServer) GetElevationEncoding() string {
 	return ""
 }
 
+// LoginForm is the recipe for exchanging a username + password for a session token:
+// POST the credentials to an endpoint and read the minted token from the response.
+//
+// A LoginForm carries NO secrets — only the *shape* of that exchange (where to POST,
+// how the body is encoded, and how the credential and token fields are named).
+type LoginForm struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Encoding      BodyEncoding           `protobuf:"varint,1,opt,name=Encoding,proto3,enum=std.BodyEncoding" json:"Encoding,omitempty"` // how the request body is encoded
+	UserField     string                 `protobuf:"bytes,2,opt,name=UserField,proto3" json:"UserField,omitempty"`                      // request field name for the username (default "username")
+	PassField     string                 `protobuf:"bytes,3,opt,name=PassField,proto3" json:"PassField,omitempty"`                      // request field name for the password (default "password")
+	TokenPostURL  string                 `protobuf:"bytes,6,opt,name=TokenPostURL,proto3" json:"TokenPostURL,omitempty"`                // POST endpoint that mints the token
+	TokenField    string                 `protobuf:"bytes,8,opt,name=TokenField,proto3" json:"TokenField,omitempty"`                    // response field holding the minted token (e.g. "token")
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginForm) Reset() {
+	*x = LoginForm{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginForm) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginForm) ProtoMessage() {}
+
+func (x *LoginForm) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginForm.ProtoReflect.Descriptor instead.
+func (*LoginForm) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *LoginForm) GetEncoding() BodyEncoding {
+	if x != nil {
+		return x.Encoding
+	}
+	return BodyEncoding_JSON
+}
+
+func (x *LoginForm) GetUserField() string {
+	if x != nil {
+		return x.UserField
+	}
+	return ""
+}
+
+func (x *LoginForm) GetPassField() string {
+	if x != nil {
+		return x.PassField
+	}
+	return ""
+}
+
+func (x *LoginForm) GetTokenPostURL() string {
+	if x != nil {
+		return x.TokenPostURL
+	}
+	return ""
+}
+
+func (x *LoginForm) GetTokenField() string {
+	if x != nil {
+		return x.TokenField
+	}
+	return ""
+}
+
 var File_amp_std_amp_std_proto protoreflect.FileDescriptor
 
 const file_amp_std_amp_std_proto_rawDesc = "" +
@@ -3025,7 +3153,15 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"TileSizePx\x12$\n" +
 	"\rMinIntervalMs\x18\x17 \x01(\x05R\rMinIntervalMs\x12 \n" +
 	"\vContentType\x18\x1e \x01(\tR\vContentType\x12,\n" +
-	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding**\n" +
+	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"\xba\x01\n" +
+	"\tLoginForm\x12-\n" +
+	"\bEncoding\x18\x01 \x01(\x0e2\x11.std.BodyEncodingR\bEncoding\x12\x1c\n" +
+	"\tUserField\x18\x02 \x01(\tR\tUserField\x12\x1c\n" +
+	"\tPassField\x18\x03 \x01(\tR\tPassField\x12\"\n" +
+	"\fTokenPostURL\x18\x06 \x01(\tR\fTokenPostURL\x12\x1e\n" +
+	"\n" +
+	"TokenField\x18\b \x01(\tR\n" +
+	"TokenField**\n" +
 	"\tTRS_Flags\x12\x0e\n" +
 	"\n" +
 	"FixedScale\x10\x00\x12\r\n" +
@@ -3100,7 +3236,10 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x13TileServerAuth_None\x10\x00\x12\x1b\n" +
 	"\x17TileServerAuth_QueryKey\x10\x01\x12\x1c\n" +
 	"\x18TileServerAuth_HeaderKey\x10\x02\x12\x19\n" +
-	"\x15TileServerAuth_Cookie\x10\x03BHZ-github.com/art-media-platform/amp.SDK/amp/std\xaa\x02\x16art.media.platform.stdb\x06proto3"
+	"\x15TileServerAuth_Cookie\x10\x03*\"\n" +
+	"\fBodyEncoding\x12\b\n" +
+	"\x04JSON\x10\x00\x12\b\n" +
+	"\x04Form\x10\x01BHZ-github.com/art-media-platform/amp.SDK/amp/std\xaa\x02\x16art.media.platform.stdb\x06proto3"
 
 var (
 	file_amp_std_amp_std_proto_rawDescOnce sync.Once
@@ -3114,8 +3253,8 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 	return file_amp_std_amp_std_proto_rawDescData
 }
 
-var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),           // 0: std.TRS_Flags
 	(ValueKind)(0),           // 1: std.ValueKind
@@ -3129,73 +3268,76 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(TileProjection)(0),      // 9: std.TileProjection
 	(TileServerScheme)(0),    // 10: std.TileServerScheme
 	(TileServerAuth)(0),      // 11: std.TileServerAuth
-	(GeoPath_RenderType)(0),  // 12: std.GeoPath.RenderType
-	(*TRS)(nil),              // 13: std.TRS
-	(*Matrix4X4)(nil),        // 14: std.Matrix4x4
-	(*CameraState)(nil),      // 15: std.CameraState
-	(*CameraOptions)(nil),    // 16: std.CameraOptions
-	(*FileInfo)(nil),         // 17: std.FileInfo
-	(*TextItem)(nil),         // 18: std.TextItem
-	(*JsonValue)(nil),        // 19: std.JsonValue
-	(*Report)(nil),           // 20: std.Report
-	(*Labels)(nil),           // 21: std.Labels
-	(*Rect)(nil),             // 22: std.Rect
-	(*GeoPath)(nil),          // 23: std.GeoPath
-	(*MediaItem)(nil),        // 24: std.MediaItem
-	(*MediaSegment)(nil),     // 25: std.MediaSegment
-	(*Arg)(nil),              // 26: std.Arg
-	(*VisPreset)(nil),        // 27: std.VisPreset
-	(*TileBand)(nil),         // 28: std.TileBand
-	(*TileMeshSpec)(nil),     // 29: std.TileMeshSpec
-	(*SkinSpec)(nil),         // 30: std.SkinSpec
-	(*AtmosphereEffect)(nil), // 31: std.AtmosphereEffect
-	(*AtmosphereSpec)(nil),   // 32: std.AtmosphereSpec
-	(*TileServer)(nil),       // 33: std.TileServer
-	(*amp.Tags)(nil),         // 34: amp.Tags
-	(*amp.Tag)(nil),          // 35: amp.Tag
-	(amp.Units)(0),           // 36: amp.Units
-	(*amp.BlobRef)(nil),      // 37: amp.BlobRef
+	(BodyEncoding)(0),        // 12: std.BodyEncoding
+	(GeoPath_RenderType)(0),  // 13: std.GeoPath.RenderType
+	(*TRS)(nil),              // 14: std.TRS
+	(*Matrix4X4)(nil),        // 15: std.Matrix4x4
+	(*CameraState)(nil),      // 16: std.CameraState
+	(*CameraOptions)(nil),    // 17: std.CameraOptions
+	(*FileInfo)(nil),         // 18: std.FileInfo
+	(*TextItem)(nil),         // 19: std.TextItem
+	(*JsonValue)(nil),        // 20: std.JsonValue
+	(*Report)(nil),           // 21: std.Report
+	(*Labels)(nil),           // 22: std.Labels
+	(*Rect)(nil),             // 23: std.Rect
+	(*GeoPath)(nil),          // 24: std.GeoPath
+	(*MediaItem)(nil),        // 25: std.MediaItem
+	(*MediaSegment)(nil),     // 26: std.MediaSegment
+	(*Arg)(nil),              // 27: std.Arg
+	(*VisPreset)(nil),        // 28: std.VisPreset
+	(*TileBand)(nil),         // 29: std.TileBand
+	(*TileMeshSpec)(nil),     // 30: std.TileMeshSpec
+	(*SkinSpec)(nil),         // 31: std.SkinSpec
+	(*AtmosphereEffect)(nil), // 32: std.AtmosphereEffect
+	(*AtmosphereSpec)(nil),   // 33: std.AtmosphereSpec
+	(*TileServer)(nil),       // 34: std.TileServer
+	(*LoginForm)(nil),        // 35: std.LoginForm
+	(*amp.Tags)(nil),         // 36: amp.Tags
+	(*amp.Tag)(nil),          // 37: amp.Tag
+	(amp.Units)(0),           // 38: amp.Units
+	(*amp.BlobRef)(nil),      // 39: amp.BlobRef
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
-	13, // 1: std.CameraState.Placement:type_name -> std.TRS
-	34, // 2: std.TextItem.Tags:type_name -> amp.Tags
+	14, // 1: std.CameraState.Placement:type_name -> std.TRS
+	36, // 2: std.TextItem.Tags:type_name -> amp.Tags
 	1,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
-	19, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	18, // 5: std.Report.Title:type_name -> std.TextItem
-	18, // 6: std.Report.Caption:type_name -> std.TextItem
-	18, // 7: std.Report.Errors:type_name -> std.TextItem
-	18, // 8: std.Report.Warnings:type_name -> std.TextItem
-	18, // 9: std.Report.Messages:type_name -> std.TextItem
-	18, // 10: std.Report.Debug:type_name -> std.TextItem
+	20, // 4: std.JsonValue.Array:type_name -> std.JsonValue
+	19, // 5: std.Report.Title:type_name -> std.TextItem
+	19, // 6: std.Report.Caption:type_name -> std.TextItem
+	19, // 7: std.Report.Errors:type_name -> std.TextItem
+	19, // 8: std.Report.Warnings:type_name -> std.TextItem
+	19, // 9: std.Report.Messages:type_name -> std.TextItem
+	19, // 10: std.Report.Debug:type_name -> std.TextItem
 	2,  // 11: std.Rect.Format:type_name -> std.PointFormat
-	12, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	13, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	2,  // 13: std.GeoPath.Format:type_name -> std.PointFormat
 	3,  // 14: std.MediaItem.Flags:type_name -> std.MediaFlags
-	35, // 15: std.MediaItem.Tag:type_name -> amp.Tag
-	36, // 16: std.MediaSegment.Units:type_name -> amp.Units
-	37, // 17: std.MediaSegment.Blob:type_name -> amp.BlobRef
-	18, // 18: std.VisPreset.Title:type_name -> std.TextItem
-	18, // 19: std.VisPreset.Collection:type_name -> std.TextItem
-	18, // 20: std.VisPreset.Credits:type_name -> std.TextItem
+	37, // 15: std.MediaItem.Tag:type_name -> amp.Tag
+	38, // 16: std.MediaSegment.Units:type_name -> amp.Units
+	39, // 17: std.MediaSegment.Blob:type_name -> amp.BlobRef
+	19, // 18: std.VisPreset.Title:type_name -> std.TextItem
+	19, // 19: std.VisPreset.Collection:type_name -> std.TextItem
+	19, // 20: std.VisPreset.Credits:type_name -> std.TextItem
 	4,  // 21: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
 	5,  // 22: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
 	6,  // 23: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	26, // 24: std.VisPreset.Args:type_name -> std.Arg
+	27, // 24: std.VisPreset.Args:type_name -> std.Arg
 	7,  // 25: std.TileBand.YEase:type_name -> std.TileEase
-	28, // 26: std.TileMeshSpec.Bands:type_name -> std.TileBand
-	29, // 27: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
-	27, // 28: std.SkinSpec.Layers:type_name -> std.VisPreset
-	31, // 29: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	29, // 26: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	30, // 27: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	28, // 28: std.SkinSpec.Layers:type_name -> std.VisPreset
+	32, // 29: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
 	8,  // 30: std.TileServer.Kind:type_name -> std.TileServerKind
 	9,  // 31: std.TileServer.Projection:type_name -> std.TileProjection
 	10, // 32: std.TileServer.Scheme:type_name -> std.TileServerScheme
 	11, // 33: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
-	34, // [34:34] is the sub-list for method output_type
-	34, // [34:34] is the sub-list for method input_type
-	34, // [34:34] is the sub-list for extension type_name
-	34, // [34:34] is the sub-list for extension extendee
-	0,  // [0:34] is the sub-list for field type_name
+	12, // 34: std.LoginForm.Encoding:type_name -> std.BodyEncoding
+	35, // [35:35] is the sub-list for method output_type
+	35, // [35:35] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -3208,8 +3350,8 @@ func file_amp_std_amp_std_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
-			NumEnums:      13,
-			NumMessages:   21,
+			NumEnums:      14,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

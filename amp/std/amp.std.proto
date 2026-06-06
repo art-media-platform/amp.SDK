@@ -480,3 +480,23 @@ message TileServer {
 
 }
 
+
+// BodyEncoding is how an HTTP request body is encoded.
+enum BodyEncoding {
+    JSON = 0;  // application/json
+    Form = 1;  // application/x-www-form-urlencoded
+}
+
+// LoginForm is the recipe for exchanging a username + password for a session token:
+// POST the credentials to an endpoint and read the minted token from the response.
+//
+// A LoginForm carries NO secrets — only the *shape* of that exchange (where to POST,
+// how the body is encoded, and how the credential and token fields are named).
+message LoginForm {
+    BodyEncoding        Encoding     = 1;  // how the request body is encoded
+    string              UserField    = 2;  // request field name for the username (default "username")
+    string              PassField    = 3;  // request field name for the password (default "password")
+    string              TokenPostURL = 6;  // POST endpoint that mints the token
+    string              TokenField   = 8;  // response field holding the minted token (e.g. "token")
+}
+
