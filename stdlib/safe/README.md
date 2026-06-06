@@ -34,9 +34,9 @@ Secure key storage and retrieval for the **amp** platform.
 └─────────┘     └────────────┘
 ```
 
-## KitSpec — Pluggable Crypto Suites
+## Pluggable Crypto
 
-A `KitSpec` bundles two independent capability axes — `Signing` and `Encrypt` (asymmetric ECDH) — either of which may be `nil` when a kit does not offer it.  Symmetric AEAD is kit-agnostic and lives on the `safe` package directly (`SealAEAD` / `OpenAEAD`).  Kits self-register via `init()` and are looked up by `CryptoKitID` (`safe.proto`).
+A `safe.Kit` bundles two independent capability axes — `Signing` and `Encrypt` (asymmetric ECDH) — either of which may be `nil` when a kit does not offer it.  Symmetric AEAD is kit-agnostic and lives on the `safe` package directly (`SealAEAD` / `OpenAEAD`).  Kits self-register via `init()` and are looked up by `CryptoKitID` (`safe.proto`).
 
 | Kit       | ID | Asymmetric (Encrypt) | Signing                                | Status               |
 |-----------|----|----------------------|----------------------------------------|----------------------|
@@ -44,7 +44,7 @@ A `KitSpec` bundles two independent capability axes — `Signing` and `Encrypt` 
 | P256      | 2  | ECDH P-256           | ECDSA P-256 + SHA-256 (NIST; YubiKey PIV)   | registered           |
 | Secp256k1 | 3  | ECDH secp256k1       | ECDSA secp256k1 + Keccak-256 (crypto-wallet) | registered (in amp.planet `app.evmwallet`) |
 
-Symmetric AEAD for every kit is XChaCha20-Poly1305.  To add a suite, define a `KitSpec` (set `Signing` and/or `Encrypt`) and call `RegisterKit()` in `init()`.
+Symmetric AEAD for every kit is XChaCha20-Poly1305.  To add a suite, define a `Kit` (set `Signing` and/or `Encrypt`) and call `RegisterKit()` in `init()`.
 
 ## Cryptographic Choices
 
@@ -83,7 +83,7 @@ Symmetric AEAD for every kit is XChaCha20-Poly1305.  To add a suite, define a `K
 safe/
 ├── safe.proto              # Protobuf definitions (KeyType, CryptoKitID, SealedTome, ...)
 ├── safe.pb.go              # Generated from safe.proto (regen via `make generate`)
-├── api.safe.go             # Guard, TomeStore, Enclave, EpochKeyStore interfaces; KitSpec + registry
+├── api.safe.go             # Guard, TomeStore, Enclave, EpochKeyStore interfaces; Kit + registry
 ├── crypto.go               # XChaCha20-Poly1305 AEAD + HKDF primitives + X25519
 ├── enclave.go              # Enclave implementation (thread-safe KeyTome session)
 ├── epoch_keys.go           # EpochKeyStore — symmetric epoch keys, per (container, epoch, role)
@@ -93,6 +93,6 @@ safe/
 ├── safe.keys.go            # KeyRef / PubKey / SymKey / KeyPair value types
 ├── safe.support.go         # KeyTome/Keyring/KeyEntry utilities, PayloadPacker/Unpacker
 ├── README.md               # This file
-├── poly25519/              # Poly25519 KitSpec (X25519 + Ed25519)
-└── p256/                   # P256 KitSpec (ECDH P-256 + ECDSA P-256)
+├── poly25519/              # Poly25519 Kit (X25519 + Ed25519)
+└── p256/                   # P256 Kit (ECDH P-256 + ECDSA P-256)
 ```

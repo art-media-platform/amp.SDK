@@ -186,9 +186,11 @@ type Session interface {
 }
 
 // SessionKeys is the privileged key-store blackboard a Session holds but keeps OFF the
-// public amp.Session interface, so ordinary apps cannot reach key material.  The home app
-// WRITES the member's Enclave + EpochKeyStore here during MakeReady; the members app READS
-// them to unwrap MemberEpoch WrappedKeys.  Reach it with a single deliberate assertion:
+// public amp.Session interface.  Key material is reachable only by a deliberate
+// downcast, sound only while all apps are first-party — convention, not
+// enforcement.  The home app WRITES the member's Enclave + EpochKeyStore here
+// during MakeReady; the members app READS them to unwrap MemberEpoch
+// WrappedKeys.  Reach it with a single deliberate assertion:
 //
 //	keys, ok := sess.(amp.SessionKeys)
 //

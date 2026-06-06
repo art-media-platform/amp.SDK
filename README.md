@@ -21,11 +21,27 @@ Your data lives on someone else's servers, encrypted with someone else's keys, s
 In crisis scenarios — natural disasters, infrastructure collapse, conflict zones — centralized platforms fail precisely when communication matters most.  Cell towers go down, internet links sever, and the tools people depend on become unreachable.
 
 
+## Design Principles
+
+| Principle | Meaning | Appears as |
+|-----------|---------------|---------------------|
+| **Total Data Ownership** | Assured data accessibility, non-deniability, and portability | Append-only signed `TxJournal` + content-addressed blob store — export, verify, and restore from any peer |
+| **Total Data Privacy** | Only designated owners have cryptographic access | Epoch keys split via HKDF into `content_key` (encryption) and `proof_key` (relay verification); relay vaults *cannot* decrypt |
+| **Community-Centric Permissions** | Nested hierarchies, local authority, flexible governance | Planet → channel permission model; admins rotate epoch keys, member removal triggers re-keying — no central authority |
+| **Off-Grid First** | Data accessible and updatable without the internet | Transport-agnostic sync over [Reticulum](https://reticulum.network/)/[LoRa](https://en.wikipedia.org/wiki/LoRa), TCP, UDP — even sneakernet; all sync is [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type), so offline edits merge deterministically |
+| **Usability & Accessibility** | Open protocols for any technical skill level | The [amp-web-SDK](amp-web/) (`@art-media-platform/web`) TypeScript SDK with React hooks — web apps, menu cells, and spatial UIs speak one adapter |
+| **Spatial UX / App Support** | Integrated real-time 3D with full workstation power |  C library `libampd` embeds into Unity / Unreal apps; UI panels render as 2D overlay, world-space canvas, or XR |
+| **Hardware Agnostic** | No restriction on device count or type | Builds for iOS, Android, macOS, Windows, Linux; one binary serves TCP clients and HTTP browsers; same protocol over radio and fiber |
+| **Pluggable & Extensible** | Anyone can grow, enhance, or fork | Apps register via [`amp.Registry`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go); a new [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) = a new capability; transport is an interface, not a dependency |
+| **Gatekeeperless** | No third parties to deploy, access, or manage data | `make ampd` and then you run a sovereign peer |
+| **Distributed Redundancy** | Built-in replication, recovery, and failure tolerance | Vault-to-vault sync with no global clock; component failure is expected and tolerated — three nodes across two countries survive anything short of extinction |
+
+
 ## Planet
 
 The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices and any relay nodes they choose to trust.
 
-A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go)) that propagate through whatever transports are available — TCP, UDP, USB stick, or mesh-networking.  Every `TxMsg` is signed by its author and optionally encrypted with the planet's current epoch key.
+A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go)) that propagate through whatever transports are available — TCP, UDP, USB stick, or mesh-networking.  Every `TxMsg` is signed by its author and optionally encrypted with the planet's current epoch key.
 
 | Mode | Signed | Encrypted | Who Can Read (Decrypt) | Who Can Write |
 |------|--------|-----------|--------------|---------------|
@@ -74,7 +90,7 @@ Forks are morally neutral — the same primitive serves a community pruning bad-
 
 ## Identity
 
-Members are identified by a `MemberID` derived from a canonic identity URI (`tag.NameFrom("eth:0xabc…").ID` and similar).  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `KitSpec` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password, and W3C [DID](https://www.w3.org/TR/did-1.0/) (login-only — `did:key` Ed25519 and `did:pkh:eip155`, the latter folding onto the same member as the wallet path).  Additional DID curves/methods (`did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) and hardware-token (YubiKey) login are on the v300 trajectory — the kit registry already covers their crypto; what remains per method is the URI-decode/verify surface.
+Members are identified by a `MemberID` derived from a canonic identity URI (`tag.NameFrom("eth:0xabc…").ID` and similar).  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `safe.Kit` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password, and W3C [DID](https://www.w3.org/TR/did-1.0/) (login-only — `did:key` Ed25519 and `did:pkh:eip155`, the latter folding onto the same member as the wallet path).  Additional DID curves/methods (`did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) and hardware-token (YubiKey) login are on the v300 trajectory — the kit registry already covers their crypto; what remains per method is the URI-decode/verify surface.
 
 
 ## Federation & Naming
@@ -123,7 +139,7 @@ A Unity app with AMP embedded has end-to-end encrypted federated communication, 
 
 ## Package Management
 
-As of the v300 wire freeze, a planet's root carries `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.  (Design: [`PRD-crate-as-channel.md`](https://github.com/art-media-platform/amp.planet/blob/main/docs/PRD-crate-as-channel.md) §3.5.)
+At the v300 wire freeze, a planet's root will carry `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.
 
 Because it is a structural property of every planet rather than a bolt-on, federal contractors, regulated verticals, and supply-chain-conscious vendors inherit it by construction.
 
@@ -132,29 +148,36 @@ Because it is a structural property of every planet rather than a bolt-on, feder
 
 ```
 amp.Host
-  ├── vault.Controller         # chronicle (signed TxMsg log) + sync engine
-  │     └── vault.Transport    # Reticulum, TCP, UDP, ...
-  ├── vault.BlobStore          # content-addressed encrypted blobs
-  └── amp.Session              # one per connected client
-       ├── safe.Enclave        # identity keys, never leaves device
-       ├── safe.EpochKeyStore  # symmetric epoch keys, per planet epoch
+  ├── app.www.WebService [::]:5193  # HTTP front door
+  │    ├── /www/*   → asset streaming (data.Publisher)
+  │    ├── /link/*  → deep links
+  │    └── /*       → static sites · REST · WebSocket · menu cells
+  ├── tcp.HostService [::]:5192     # TCP client transport
+  ├── vault.Controller              # chronicle (signed TxMsg log) + sync
+  │    ├── TxJournal                # append-only signed transaction log
+  │    ├── BlobStore                # content-addressed encrypted blobs
+  │    └── vault.Transport          # Reticulum · TCP · UDP · mesh
+  └── amp.Session                   # one per connected client
+       ├── safe.Enclave             # identity keys, never leave the device
+       ├── safe.EpochKeyStore       # symmetric epoch keys, per planet epoch
        └── AppInstances
-            ├── app.home       # member identity, planet subscriptions
-            ├── app.members    # epoch key extraction, governance
-            ├── app.cabinets   # persistent key-value storage
-            ├── app.www        # REST / WebSocket / asset streaming
-            ├── app.codex      # Chronicle / Codex export + restore
-            └── your.app       # custom functionality
+            ├── app.home            # member identity, planet subscriptions
+            ├── app.members         # epoch-key extraction, governance
+            ├── app.cabinets        # persistent key-value storage
+            ├── app.codex           # Chronicle / Codex export & restore
+            └── your.app            # custom functionality
 ```
 
 Every long-lived object is a node in a [`task.Context`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/task/api.task.go) tree.  Closing a parent closes all children.  The host operates fully offline — sync happens opportunistically when connectivity is available.
+
+Apps register via [`amp.Registry`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go); each [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) is a factory that creates instances on demand.  A client *pins* a node by URL, the host resolves it to an app, and the app pushes [`amp.TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) updates back through the session.
 
 ### Packages of Interest
 
 | Package | Purpose |
 |---------|---------|
-| [`amp/`](https://github.com/art-media-platform/amp.SDK/tree/main/amp) | Core types: [`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go), [`Session`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go), [`AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go), CRDT bindings |
-| [`stdlib/safe/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/safe) | [`Enclave`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go), [`KitSpec`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go), key management, AEAD, HKDF |
+| [`amp/`](https://github.com/art-media-platform/amp.SDK/tree/main/amp) | Core types: [`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go), [`Session`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go), [`AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go), CRDT bindings |
+| [`stdlib/safe/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/safe) | [`Enclave`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go), [`Kit`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/safe/api.safe.go), key management, AEAD, HKDF |
 | [`stdlib/tag/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/tag) | Universal tagging and addressing |
 | [`stdlib/task/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/task) | Goroutine lifecycle management (parent-child process model) |
 | [`amp/webapi/`](amp/webapi/) | HTTP/JSON wire contract for the web SDK — the `/api/v1/*` shapes |
@@ -166,7 +189,7 @@ Every long-lived object is a node in a [`task.Context`](https://github.com/art-m
 This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go project.
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project
-2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.app.go) for your functionality
+2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) for your functionality
 3. Clone amp.planet and register your module
 4. `make build` produces `ampd` (standalone server) and `libampd` (embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract

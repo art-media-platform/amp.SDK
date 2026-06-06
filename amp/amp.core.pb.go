@@ -866,21 +866,21 @@ func (AttestationType) EnumDescriptor() ([]byte, []int) {
 type WithdrawReason int32
 
 const (
-	WithdrawReason_NoReason     WithdrawReason = 0 // proto3 default; not a valid withdrawal
-	WithdrawReason_Consent      WithdrawReason = 1
-	WithdrawReason_Inaccuracy   WithdrawReason = 2
-	WithdrawReason_Outdated     WithdrawReason = 3
-	WithdrawReason_Coerced      WithdrawReason = 4
-	WithdrawReason_Forgotten    WithdrawReason = 5
-	WithdrawReason_Departed     WithdrawReason = 6
-	WithdrawReason_InviteRecall WithdrawReason = 7
-	WithdrawReason_Retracted    WithdrawReason = 8
+	WithdrawReason_UnspecifiedReason WithdrawReason = 0 // proto default; not a valid withdrawal
+	WithdrawReason_Consent           WithdrawReason = 1
+	WithdrawReason_Inaccuracy        WithdrawReason = 2
+	WithdrawReason_Outdated          WithdrawReason = 3
+	WithdrawReason_Coerced           WithdrawReason = 4
+	WithdrawReason_Forgotten         WithdrawReason = 5
+	WithdrawReason_Departed          WithdrawReason = 6
+	WithdrawReason_InviteRecall      WithdrawReason = 7
+	WithdrawReason_Retracted         WithdrawReason = 8
 )
 
 // Enum value maps for WithdrawReason.
 var (
 	WithdrawReason_name = map[int32]string{
-		0: "NoReason",
+		0: "UnspecifiedReason",
 		1: "Consent",
 		2: "Inaccuracy",
 		3: "Outdated",
@@ -891,15 +891,15 @@ var (
 		8: "Retracted",
 	}
 	WithdrawReason_value = map[string]int32{
-		"NoReason":     0,
-		"Consent":      1,
-		"Inaccuracy":   2,
-		"Outdated":     3,
-		"Coerced":      4,
-		"Forgotten":    5,
-		"Departed":     6,
-		"InviteRecall": 7,
-		"Retracted":    8,
+		"UnspecifiedReason": 0,
+		"Consent":           1,
+		"Inaccuracy":        2,
+		"Outdated":          3,
+		"Coerced":           4,
+		"Forgotten":         5,
+		"Departed":          6,
+		"InviteRecall":      7,
+		"Retracted":         8,
 	}
 )
 
@@ -937,18 +937,18 @@ func (WithdrawReason) EnumDescriptor() ([]byte, []int) {
 type PlatformID int32
 
 const (
-	PlatformID_UnspecifiedPlatform PlatformID = 0  // proto3 default (Unity's OSXEditor=0 not surfaced)
-	PlatformID_macOS               PlatformID = 1  // Unity RuntimePlatform.OSXPlayer
-	PlatformID_Windows             PlatformID = 2  // Unity RuntimePlatform.WindowsPlayer
-	PlatformID_iOS                 PlatformID = 8  // Unity RuntimePlatform.IPhonePlayer
-	PlatformID_Android             PlatformID = 11 // Unity RuntimePlatform.Android (stock)
-	PlatformID_Linux               PlatformID = 13 // Unity RuntimePlatform.LinuxPlayer
+	PlatformID_Universal PlatformID = 0  // proto3 default
+	PlatformID_macOS     PlatformID = 1  // Unity RuntimePlatform.OSXPlayer
+	PlatformID_Windows   PlatformID = 2  // Unity RuntimePlatform.WindowsPlayer
+	PlatformID_iOS       PlatformID = 8  // Unity RuntimePlatform.IPhonePlayer
+	PlatformID_Android   PlatformID = 11 // Unity RuntimePlatform.Android (stock)
+	PlatformID_Linux     PlatformID = 13 // Unity RuntimePlatform.LinuxPlayer
 )
 
 // Enum value maps for PlatformID.
 var (
 	PlatformID_name = map[int32]string{
-		0:  "UnspecifiedPlatform",
+		0:  "Universal",
 		1:  "macOS",
 		2:  "Windows",
 		8:  "iOS",
@@ -956,12 +956,12 @@ var (
 		13: "Linux",
 	}
 	PlatformID_value = map[string]int32{
-		"UnspecifiedPlatform": 0,
-		"macOS":               1,
-		"Windows":             2,
-		"iOS":                 8,
-		"Android":             11,
-		"Linux":               13,
+		"Universal": 0,
+		"macOS":     1,
+		"Windows":   2,
+		"iOS":       8,
+		"Android":   11,
+		"Linux":     13,
 	}
 )
 
@@ -993,8 +993,8 @@ func (PlatformID) EnumDescriptor() ([]byte, []int) {
 }
 
 // TrustState is the three-state verdict for a NameService record's §3.3 back-edge
-// consent check.  Never a bare bool: Unchecked (the resolver lacked the target's
-// live Brand to verify) must never be read as Verified.  PRD-name-service §3.3/§15.1.
+// consent check. Unchecked (the resolver lacked the target's
+// live Brand to verify) must never map to Verified.  PRD-name-service §3.3/§15.1.
 type TrustState int32
 
 const (
@@ -2016,9 +2016,9 @@ func (x *Tags) GetChildren() []*Tags {
 //
 // Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
 //
-//	ChannelID          AttrID                          ItemID                     EditID
-//	---------          ------                          ------                     ------
-//	{LawChID}  / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LawEpoch}  // where a legislating channel publishes keys for an explicit member or child legislature IDs
+//	ChannelID     AttrID                         ItemID                  EditID
+//	---------     ------                         ------                  ------
+//	{LawChID}  / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LawEpoch}        // where a legislating channel publishes keys for an explicit member or child legislature IDs
 //	{GroupID}  / "series.Keyring.public"       / {KeyringID}           / {Group_Epoch}     // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
 //
 // To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
@@ -3333,7 +3333,7 @@ func (x *PlanetEpoch) GetLocalOnly() bool {
 type CoSignature struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The signing member. Their CryptoKitID is resolved via MemberEpoch,
-	// allowing each co-signer to use a different crypto suite.
+	// allowing each co-signer to use their preferred crypto suite.
 	MemberTag *Tag `protobuf:"bytes,1,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"`
 	// Raw signature bytes, interpreted per the signer's CryptoKitID.
 	Signature     []byte `protobuf:"bytes,2,opt,name=Signature,proto3" json:"Signature,omitempty"`
@@ -3921,7 +3921,7 @@ func (x *Withdraw) GetReason() WithdrawReason {
 	if x != nil {
 		return x.Reason
 	}
-	return WithdrawReason_NoReason
+	return WithdrawReason_UnspecifiedReason
 }
 
 func (x *Withdraw) GetDelegation() *Address {
@@ -4118,12 +4118,6 @@ func (x *PlanetInviteOp) GetSealedInvite() []byte {
 
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
 // Exactly one of the body fields is set per message — peers detect by nil pointer.
-//
-// amp protos forbid `oneof` (see PRD-guidelines.md): variant ordering / encoding
-// has subtle implementation differences across protobuf libraries, and removing
-// the construct keeps proto.Marshal{Deterministic} bit-stable across impls.
-// The discriminator-by-presence pattern below has the same wire shape benefit
-// (only the populated field is serialized) without the oneof's downsides.
 type SyncMsg struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WatchList     *SyncWatchList         `protobuf:"bytes,1,opt,name=WatchList,proto3" json:"WatchList,omitempty"`
@@ -4302,14 +4296,16 @@ func (x *SyncPlanetStatus) GetHighWater_1() uint64 {
 // SyncRangeOffer carries a hash over a TxTimeID range for a planet.
 // Used in the Merkle bisection protocol to identify divergence between peers.
 type SyncRangeOffer struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
-	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	Start_0       uint64                 `protobuf:"fixed64,3,opt,name=Start_0,json=Start0,proto3" json:"Start_0,omitempty"` // range start (inclusive)
-	Start_1       uint64                 `protobuf:"fixed64,4,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
-	End_0         uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // range end (inclusive)
-	End_1         uint64                 `protobuf:"fixed64,6,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
-	RangeHash     []byte                 `protobuf:"bytes,10,opt,name=RangeHash,proto3" json:"RangeHash,omitempty"` // 32-byte hash over TxTimeIDs in [Start, End]
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	PlanetID_0 uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1 uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	Start_0    uint64                 `protobuf:"fixed64,3,opt,name=Start_0,json=Start0,proto3" json:"Start_0,omitempty"` // range start (inclusive)
+	Start_1    uint64                 `protobuf:"fixed64,4,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
+	End_0      uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // range end (inclusive)
+	End_1      uint64                 `protobuf:"fixed64,6,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
+	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End].
+	RangeHash_0   uint64 `protobuf:"fixed64,10,opt,name=RangeHash_0,json=RangeHash0,proto3" json:"RangeHash_0,omitempty"`
+	RangeHash_1   uint64 `protobuf:"fixed64,11,opt,name=RangeHash_1,json=RangeHash1,proto3" json:"RangeHash_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4386,11 +4382,18 @@ func (x *SyncRangeOffer) GetEnd_1() uint64 {
 	return 0
 }
 
-func (x *SyncRangeOffer) GetRangeHash() []byte {
+func (x *SyncRangeOffer) GetRangeHash_0() uint64 {
 	if x != nil {
-		return x.RangeHash
+		return x.RangeHash_0
 	}
-	return nil
+	return 0
+}
+
+func (x *SyncRangeOffer) GetRangeHash_1() uint64 {
+	if x != nil {
+		return x.RangeHash_1
+	}
+	return 0
 }
 
 // SyncRangeRequest asks a peer to stream all TxMsgs in a range for a planet.
@@ -5447,7 +5450,7 @@ func (x *AppTarget) GetPlatform() PlatformID {
 	if x != nil {
 		return x.Platform
 	}
-	return PlatformID_UnspecifiedPlatform
+	return PlatformID_Universal
 }
 
 func (x *AppTarget) GetDownloadURL() string {
@@ -6421,7 +6424,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vHighWater_0\x18\x03 \x01(\x06R\n" +
 	"HighWater0\x12\x1f\n" +
 	"\vHighWater_1\x18\x04 \x01(\x06R\n" +
-	"HighWater1\"\xc8\x01\n" +
+	"HighWater1\"\xec\x01\n" +
 	"\x0eSyncRangeOffer\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -6430,9 +6433,12 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\aStart_0\x18\x03 \x01(\x06R\x06Start0\x12\x17\n" +
 	"\aStart_1\x18\x04 \x01(\x06R\x06Start1\x12\x13\n" +
 	"\x05End_0\x18\x05 \x01(\x06R\x04End0\x12\x13\n" +
-	"\x05End_1\x18\x06 \x01(\x06R\x04End1\x12\x1c\n" +
-	"\tRangeHash\x18\n" +
-	" \x01(\fR\tRangeHash\"\x82\x01\n" +
+	"\x05End_1\x18\x06 \x01(\x06R\x04End1\x12\x1f\n" +
+	"\vRangeHash_0\x18\n" +
+	" \x01(\x06R\n" +
+	"RangeHash0\x12\x1f\n" +
+	"\vRangeHash_1\x18\v \x01(\x06R\n" +
+	"RangeHash1\"\x82\x01\n" +
 	"\x10SyncRangeRequest\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -6711,9 +6717,9 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vEndorsement\x10\x02\x12\v\n" +
 	"\aWitness\x10\x03\x12\t\n" +
 	"\x05Audit\x10\x04\x12\v\n" +
-	"\aAmnesty\x10\x05*\x94\x01\n" +
-	"\x0eWithdrawReason\x12\f\n" +
-	"\bNoReason\x10\x00\x12\v\n" +
+	"\aAmnesty\x10\x05*\x9d\x01\n" +
+	"\x0eWithdrawReason\x12\x15\n" +
+	"\x11UnspecifiedReason\x10\x00\x12\v\n" +
 	"\aConsent\x10\x01\x12\x0e\n" +
 	"\n" +
 	"Inaccuracy\x10\x02\x12\f\n" +
@@ -6722,10 +6728,10 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tForgotten\x10\x05\x12\f\n" +
 	"\bDeparted\x10\x06\x12\x10\n" +
 	"\fInviteRecall\x10\a\x12\r\n" +
-	"\tRetracted\x10\b*^\n" +
+	"\tRetracted\x10\b*T\n" +
 	"\n" +
-	"PlatformID\x12\x17\n" +
-	"\x13UnspecifiedPlatform\x10\x00\x12\t\n" +
+	"PlatformID\x12\r\n" +
+	"\tUniversal\x10\x00\x12\t\n" +
 	"\x05macOS\x10\x01\x12\v\n" +
 	"\aWindows\x10\x02\x12\a\n" +
 	"\x03iOS\x10\b\x12\v\n" +

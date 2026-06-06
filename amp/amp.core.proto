@@ -357,9 +357,9 @@ enum Units {
 //
 // Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
 //
-//   ChannelID          AttrID                          ItemID                     EditID
-//   ---------          ------                          ------                     ------
-//   {LawChID}  / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LawEpoch}  // where a legislating channel publishes keys for an explicit member or child legislature IDs
+//   ChannelID     AttrID                         ItemID                  EditID
+//   ---------     ------                         ------                  ------
+//   {LawChID}  / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LawEpoch}        // where a legislating channel publishes keys for an explicit member or child legislature IDs
 //   {GroupID}  / "series.Keyring.public"       / {KeyringID}           / {Group_Epoch}     // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
 //
 // To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
@@ -832,7 +832,7 @@ message PlanetEpoch {
 message CoSignature {
 
     // The signing member. Their CryptoKitID is resolved via MemberEpoch,
-    // allowing each co-signer to use a different crypto suite.
+    // allowing each co-signer to use their preferred crypto suite.
     Tag                 MemberTag = 1;
 
     // Raw signature bytes, interpreted per the signer's CryptoKitID.
@@ -1035,15 +1035,15 @@ message Equivalence {
 // Go const names are emitted by protoc-gen-go as `WithdrawReason_<Value>`
 // (e.g. WithdrawReason_Consent).
 enum WithdrawReason {
-    NoReason     = 0;    // proto3 default; not a valid withdrawal
-    Consent      = 1;
-    Inaccuracy   = 2;
-    Outdated     = 3;
-    Coerced      = 4;
-    Forgotten    = 5;
-    Departed     = 6;
-    InviteRecall = 7;
-    Retracted    = 8;
+    UnspecifiedReason = 0;  // proto default; not a valid withdrawal
+    Consent           = 1;
+    Inaccuracy        = 2;
+    Outdated          = 3;
+    Coerced           = 4;
+    Forgotten         = 5;
+    Departed          = 6;
+    InviteRecall      = 7;
+    Retracted         = 8;
 }
 
 
@@ -1091,34 +1091,34 @@ message Withdraw {
 message PlanetInvite {
 
     // Planet being invited to.
-    Tag                     PlanetTag = 1;
+    Tag                 PlanetTag = 1;
 
     // Current epoch at the time of invite (for initial sync).
-    Tag                     EpochTag = 2;
+    Tag                 EpochTag = 2;
 
     // Newly generated member identity assigned by the admin.
-    Tag                     MemberTag = 3;
+    Tag                 MemberTag = 3;
 
     // Temporary keypair for the invited member.  Prv is cleartext within the invite;
     // the invite itself is passphrase-sealed before leaving the admin's device.
     // The acceptor imports this keypair and rotates it immediately after join.
-    safe.KeyPairRecord      TempKey = 5;
+    safe.KeyPairRecord  TempKey = 5;
 
     // Known vault endpoints for initial peer discovery — unified with the typed
     // VaultAddr used by NameServiceRecord / FederationPeer.  For Transport="tcp",
     // Address is UTF-8 "host:port".
-    repeated VaultAddr      VaultAddrs = 15;
+    repeated VaultAddr  VaultAddrs = 15;
 
     // Planet epoch key encrypted for TempKey via CryptoKit.EncryptFor.
     // InviteAccept decrypts this immediately so the member can participate in the epoch.
     // SenderPubKey identifies the admin who encrypted it.
-    safe.EncryptedSymKey    EpochKey = 20;
+    safe.EncryptedSymKey EpochKey = 20;
 
     // Bootstrap expiry, unix seconds.  The acceptor rejects on accept when
     // time.Now().Unix() > ExpiresAt.  Stamped at issue using the planet's
     // VaultConfig.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
     // expiry (only accepted from issuers that intentionally opt out).
-    int64                   ExpiresAt = 25;
+    int64               ExpiresAt = 25;
 }
 
 
@@ -1141,12 +1141,6 @@ message PlanetInviteOp {
 
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
 // Exactly one of the body fields is set per message — peers detect by nil pointer.
-//
-// amp protos forbid `oneof` (see PRD-guidelines.md): variant ordering / encoding
-// has subtle implementation differences across protobuf libraries, and removing
-// the construct keeps proto.Marshal{Deterministic} bit-stable across impls.
-// The discriminator-by-presence pattern below has the same wire shape benefit
-// (only the populated field is serialized) without the oneof's downsides.
 message SyncMsg {
     SyncWatchList    WatchList    = 1;
     SyncRangeOffer   RangeOffer   = 2;
@@ -1170,13 +1164,15 @@ message SyncPlanetStatus {
 // SyncRangeOffer carries a hash over a TxTimeID range for a planet.
 // Used in the Merkle bisection protocol to identify divergence between peers.
 message SyncRangeOffer {
-    fixed64             PlanetID_0 = 1;
-    fixed64             PlanetID_1 = 2;
-    fixed64             Start_0 = 3;      // range start (inclusive)
-    fixed64             Start_1 = 4;
-    fixed64             End_0 = 5;        // range end (inclusive)
-    fixed64             End_1 = 6;
-    bytes               RangeHash = 10;   // 32-byte hash over TxTimeIDs in [Start, End]
+    fixed64             PlanetID_0  = 1;
+    fixed64             PlanetID_1  = 2;
+    fixed64             Start_0     = 3;  // range start (inclusive)
+    fixed64             Start_1     = 4;
+    fixed64             End_0       = 5;  // range end (inclusive)
+    fixed64             End_1       = 6;
+    // 128-bit fingerprint: leading 16 bytes of the digest over [Start, End].
+    fixed64             RangeHash_0 = 10;
+    fixed64             RangeHash_1 = 11;
 }
 
 // SyncRangeRequest asks a peer to stream all TxMsgs in a range for a planet.
@@ -1248,8 +1244,8 @@ message PlanetOrigin {
 message UIDRange {
     fixed64             Start_0 = 1;
     fixed64             Start_1 = 2;
-    fixed64             End_0 = 3;
-    fixed64             End_1 = 4;
+    fixed64             End_0   = 3;
+    fixed64             End_1   = 4;
 }
 
 // BlobEntry describes one blob in a sibling content-addressed store.
@@ -1366,7 +1362,7 @@ message ChronicleCompact {
 // ChronicleManifest summarizes a Chronicle for pre-flight validation.
 message ChronicleManifest {
     int64               TxMsgCount = 1;
-    int64               BlobCount = 2;
+    int64               BlobCount  = 2;
     int64               TotalBytes = 3;
 }
 
@@ -1396,13 +1392,13 @@ message ChronicleHeader {
     int64                   ExportTime = 5;
 
     // Compact lineage.  Nil if this chronicle has never been compacted.
-    ChronicleCompactHistory  CompactHistory = 6;
+    ChronicleCompactHistory CompactHistory = 6;
 
     // Reserved for future redaction manifest (PRD-chronicle-and-codex §4.7.4).
     reserved 10 to 19;
 
     // Summary for pre-flight validation.
-    ChronicleManifest Manifest = 20;
+    ChronicleManifest       Manifest = 20;
 
     // Optional exporter-provided label ("nightly-backup 2026-04-23").
     string                  Label = 21;
@@ -1410,7 +1406,7 @@ message ChronicleHeader {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Brand & planet metadata — PRD-name-service.md §2
+// Brand & Planet metadata — PRD-name-service.md §2
 // ══════════════════════════════════════════════════════════════════════
 
 // PlatformID identifies a build/install target.  Values mirror Unity's
@@ -1418,7 +1414,7 @@ message ChronicleHeader {
 // >= 100 are amp-specific variants Unity doesn't enumerate (e.g. de-Googled
 // Android forks — same APK as stock Android, different install channel).
 enum PlatformID {
-    UnspecifiedPlatform = 0;    // proto3 default (Unity's OSXEditor=0 not surfaced)
+    Universal           = 0;    // proto3 default
     macOS               = 1;    // Unity RuntimePlatform.OSXPlayer
     Windows             = 2;    // Unity RuntimePlatform.WindowsPlayer
     iOS                 = 8;    // Unity RuntimePlatform.IPhonePlayer
@@ -1512,13 +1508,13 @@ message Address {
 // proto changes.
 message VaultAddr {
     string              Transport = 1;    // "tcp", "udp", "reticulum", etc.
-    bytes               Address      = 2;    // transport-specific encoding
+    bytes               Address   = 2;    // transport-specific encoding
 }
 
 
 // TrustState is the three-state verdict for a NameService record's §3.3 back-edge
-// consent check.  Never a bare bool: Unchecked (the resolver lacked the target's
-// live Brand to verify) must never be read as Verified.  PRD-name-service §3.3/§15.1.
+// consent check. Unchecked (the resolver lacked the target's
+// live Brand to verify) must never map to Verified.  PRD-name-service §3.3/§15.1.
 enum TrustState {
     Unchecked = 0;  // not yet verifiable — cold resolve, no live Brand held (proto3 default)
     Verified  = 1;  // back-edge holds: target Brand.NamedBy == the answering federation
@@ -1643,30 +1639,6 @@ message UIEditField {
     string              Content         = 3;
     int32               Flags           = 4;
 }
-
-enum  UIDFormat {
-    UIDFormat_Unspecified = 0;
-    UIDFormat_TimeUID  = 1;     // node / item ID (time-sorted)
-    UIDFormat_H3_Time  = 2; // time-based geo
-    UIDFormat_H3_UTC_H3   = 4; // geo, time, geo
-    UIDFormat_UTC_H3_UTC  = 6; // time, geo, time
-    UIDFormat_IJK         = 7; // 3D discrete grid
-    UIDFormat_UTC_H3_H3   = 8; // RadialH3: res=0 => r=1mm .. res=15 => r=1m
-    UIDFormat_H3_H3_H3    = 9; // "sphere-bottle" ID
-}
-
-
-// Grid specifies a standard lattice or coordinate convention.
-enum Grid {
-    Grid_Ortho               = 0;  // X, Y, Z are a linear orthonormal basis
-    Grid_Cylinder            = 5;  // X: longitude,    Y: vertical,      Z: radius
-    Grid_Sphere              = 6;  // X: longitude,    Y: latitude,      Z: radius
-    Grid_Tile                = 7;  // X: H3 geo-tile,  Y: H3 sub-tile,   Z: altitude
-    Grid_EquilateralRhomboid = 16; // TODO
-    Grid_TrapezoDodecahedron = 17; // TODO
-}
-
-
 
 */
 

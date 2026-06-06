@@ -10,11 +10,11 @@ import (
 
 // AppModuleInfo identifies an AppModule and how it is invoked.  Tag and Aliases drive
 // registration and lookup (amp.Registry); Label and Version are manifest metadata for
-// app-listing / about / SBOM surfaces (Version per TRL-versioning.md).
+// app-listing / about / SBOM surfaces.
 type AppModuleInfo struct {
 	Tag     tag.Name // what invokes this module
 	Label   string   // human-readable description of this app
-	Version string   // app's own maturity: "v{TRL}[.{minor}]"; TRL = 3-digit band (TRL-versioning.md)
+	Version string   // app's own maturity: "v{TRL}[.{minor}]"; see TRL-versioning.md
 	Aliases []string // invocation aliases for an AppModule
 }
 
@@ -88,15 +88,6 @@ type Pin interface {
 	Context() task.Context
 }
 
-// TxScope is the optional NewTx parameter fixing a tx's target planet — the planet lever, set
-// once at creation.  The zero value (and a bare NewTx()) targets the caller's home planet; set
-// Planet to commit to an explicit planet.  Scope governs ROUTING only: signer identity
-// (TxMsg.SetFromID) and privacy (TxMsg.Epoch) are independent levers set separately.  See
-// PRD-amp-security-sync §7.6.
-type TxScope struct {
-	Planet tag.UID // unset → the caller's home planet; set → that explicit planet
-}
-
 // TxMsg is the serialized transport container of CRDT (append-only modeled) operations
 //
 // A TxMsg carries one encryption context: TxEnvelope.Epoch selects a single planet or
@@ -121,6 +112,15 @@ type TxOp struct {
 	AuthContext uint64      // AuthContext index that resides within TxHeader.AuthContexts
 	DataOfs     uint64      // byte offset to where serialized data is stored
 	DataLen     uint64      // byte length of associated serialized data
+}
+
+// TxScope is the optional NewTx parameter fixing a tx's target planet — the planet lever, set
+// once at creation.  The zero value (and a bare NewTx()) targets the caller's home planet; set
+// Planet to commit to an explicit planet.  Scope governs ROUTING only: signer identity
+// (TxMsg.SetFromID) and privacy (TxMsg.Epoch) are independent levers set separately.  See
+// PRD-amp-security-sync §7.6.
+type TxScope struct {
+	Planet tag.UID // unset → the caller's home planet; set → that explicit planet
 }
 
 // Binds an proto.Message prototype to its associated attribute tag.
