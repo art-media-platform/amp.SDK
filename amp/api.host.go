@@ -283,7 +283,7 @@ type TxJournal interface {
 	Append(planetID tag.UID, txTimeID tag.UID, raw []byte) error
 	ReadSince(planetID tag.UID, after tag.UID, cb func(txTimeID tag.UID, raw []byte) bool) error
 	HighWater(planetID tag.UID) (tag.UID, error)
-	RangeHash(planetID tag.UID, start, end tag.UID) ([32]byte, error)
+	RangeHash(planetID tag.UID, start, end tag.UID) (tag.UID, error)
 
 	// Quarantine rewrites the existing entry for (planetID, txTimeID) with a quarantine
 	// flag and the given TTL.  Returns ErrNotFound-style status if the entry is absent.
@@ -378,7 +378,7 @@ type ItemFilter struct {
 
 // CRDT kv entry pair
 type ValueEntry struct {
-	Addr  tag.Address   // CRDT value element address
+	Addr  tag.Address   // CRDT value address
 	Value proto.Message // initialized with default value of expected type
 }
 
