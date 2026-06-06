@@ -111,8 +111,8 @@ type Session interface {
 	// Returns info about this user and session -- READ ONLY
 	Login() *Login
 
-	// Creates a new tx ready for use
-	NewTx() *TxMsg
+	// Creates a new tx ready for use, scoped to a target planet (default: home).
+	NewTx(scope ...TxScope) *TxMsg
 
 	// Submits a tx to this Session for processing, including who will receive replies and status updates.
 	SubmitTx(commit TxCommit) error
@@ -121,36 +121,8 @@ type Session interface {
 	// If not running and autoCreate is set, a new instance is created and started.
 	AppInstance(moduleID tag.UID, autoCreate bool) (AppInstance, error)
 
-	// Returns the session's Enclave (identity key store), or nil if not yet initialized.
-	Enclave() safe.Enclave
-
-	// Sets the session's Enclave. Called by the home app after opening/creating it.
-	SetEnclave(enc safe.Enclave)
-
-	// Returns the session's EpochKeyStore (symmetric epoch keys), or nil if not yet initialized.
-	EpochKeys() safe.EpochKeyStore
-
-	// Sets the session's EpochKeyStore. Called by the home app after opening/creating it.
-	SetEpochKeys(eks safe.EpochKeyStore)
-
 	// Returns the current PlanetEpoch for a joined planet, or nil if not registered.
 	Planet(planetID tag.UID) *PlanetEpoch
-
-	// Registers or updates a planet's epoch in this session.
-	// First call for a given planetID also joins the planet on the vault controller.
-	//
-	// Rotation-receipt atomicity contract — epoch installation MUST follow:
-	//   (a) EpochKeyStore.PutKey for the new epoch's keys
-	//   (b) Session.SetPlanet (this call)
-	//   (c) Session.OnEpochKeyArrived
-	// Any encrypted op dispatched after SetPlanet expects its key to already
-	// be resolvable; inverting (a)/(b) is a latent race even on synchronous paths.
-	SetPlanet(planetID tag.UID, epoch *PlanetEpoch)
-
-	// Called after a new epoch key has been stored in EpochKeyStore.  Notifies
-	// the vault controller to re-verify pending journal entries for this epoch.
-	// See SetPlanet for the ordering contract this call closes.
-	OnEpochKeyArrived(epochID tag.UID)
 
 	// DialVaultPeers asks the vault controller to dial peer addresses learned at
 	// runtime — the VaultAddrs carried by a PlanetInvite or a NameService record —
@@ -162,7 +134,7 @@ type Session interface {
 	// WatchPlanet starts syncing a planet's journal without joining as a member —
 	// the "pin" half of resolve→pin: a consumer that resolved a name (or holds a
 	// planet UID) watches it so its planet-public records stream in.  Distinct from
-	// SetPlanet, which joins with an epoch + keys.  No-op without a vault transport.
+	// SessionPlanets.SetPlanet, which joins with an epoch + keys.  No-op without a vault transport.
 	WatchPlanet(planetID tag.UID) error
 
 	// PlanetMember returns the member identity this session has adopted on
@@ -173,16 +145,6 @@ type Session interface {
 	// the identity adopted on that tx's planet, never a single mutable identity.
 	// Falls back to the login member when no per-planet identity is recorded.
 	PlanetMember(planetID tag.UID) tag.UID
-
-	// SetPlanetMember records the member identity adopted on planetID.  Called by
-	// the home app on InviteAccept so later txs on that planet are attributed to —
-	// and signed by — the adopted identity rather than the session's login member.
-	SetPlanetMember(planetID, memberID tag.UID)
-
-	// Processes a verified planet-public governance TxMsg (e.g. MemberEpoch distribution).
-	// Called by the vault controller after signature verification succeeds.
-	// Routes the TxMsg to all registered governance handlers for epoch key extraction.
-	OnGovernanceTx(planetID tag.UID, tx *TxMsg)
 
 	// Registers a handler to receive verified planet-public governance TxMsgs.
 	// Apps call this during MakeReady to subscribe to governance events.
@@ -222,6 +184,69 @@ type Session interface {
 	// to back a data.Asset over a stored blob.
 	OpenBlob(planetID tag.UID, ref *BlobRef) (data.AssetReader, error)
 }
+
+// SessionKeys is the privileged key-store blackboard a Session holds but keeps OFF the
+// public amp.Session interface, so ordinary apps cannot reach key material.  The home app
+// WRITES the member's Enclave + EpochKeyStore here during MakeReady; the members app READS
+// them to unwrap MemberEpoch WrappedKeys.  Reach it with a single deliberate assertion:
+//
+//	keys, ok := sess.(amp.SessionKeys)
+//
+// The host's session is the sole implementation.
+type SessionKeys interface {
+
+	// Returns the session's Enclave (identity key store), or nil if not yet initialized.
+	Enclave() safe.Enclave
+
+	// Sets the session's Enclave. Called by the home app after opening/creating it.
+	SetEnclave(enc safe.Enclave)
+
+	// Returns the session's EpochKeyStore (symmetric epoch keys), or nil if not yet initialized.
+	EpochKeys() safe.EpochKeyStore
+
+	// Sets the session's EpochKeyStore. Called by the home app after opening/creating it.
+	SetEpochKeys(eks safe.EpochKeyStore)
+}
+
+// SessionPlanets is privileged planet/epoch control a Session holds but keeps OFF the public
+// amp.Session interface: only first-party governance apps (home, members) install epochs +
+// adopted identities and notify the vault.  Reach it with a single deliberate assertion:
+//
+//	planets, ok := sess.(amp.SessionPlanets)
+type SessionPlanets interface {
+
+	// Registers or updates a planet's epoch in this session.
+	// First call for a given planetID also joins the planet on the vault controller.
+	//
+	// Rotation-receipt atomicity contract — epoch installation MUST follow:
+	//   (a) EpochKeyStore.PutKey for the new epoch's keys
+	//   (b) SessionPlanets.SetPlanet (this call)
+	//   (c) SessionPlanets.OnEpochKeyArrived
+	// Any encrypted op dispatched after SetPlanet expects its key to already
+	// be resolvable; inverting (a)/(b) is a latent race even on synchronous paths.
+	SetPlanet(planetID tag.UID, epoch *PlanetEpoch)
+
+	// SetPlanetMember records the member identity adopted on planetID.  Called by
+	// the home app on InviteAccept so later txs on that planet are attributed to —
+	// and signed by — the adopted identity rather than the session's login member.
+	SetPlanetMember(planetID, memberID tag.UID)
+
+	// Called after a new epoch key has been stored in EpochKeyStore.  Notifies
+	// the vault controller to re-verify pending journal entries for this epoch.
+	// See SetPlanet for the ordering contract this call closes.
+	OnEpochKeyArrived(epochID tag.UID)
+
+	// Processes a verified planet-public governance TxMsg (e.g. MemberEpoch distribution).
+	// Called by the vault controller after signature verification succeeds.
+	// Routes the TxMsg to all registered governance handlers for epoch key extraction.
+	OnGovernanceTx(planetID tag.UID, tx *TxMsg)
+}
+
+// SessionKeysOf and SessionPlanetsOf are the sanctioned downcasts from a Session to its
+// privileged seams.  They panic if sess is not a host session — an in-process invariant,
+// since the host's session is the only implementation of Session.
+func SessionKeysOf(sess Session) SessionKeys       { return sess.(SessionKeys) }
+func SessionPlanetsOf(sess Session) SessionPlanets { return sess.(SessionPlanets) }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
 // This is the primary storage for the vault sync engine — it preserves the original wire-format
@@ -290,10 +315,6 @@ type BlobStore interface {
 
 // Registry is where apps and types are registered -- concurrency safe.
 type Registry interface {
-
-	// Imports all the types and apps from another registry.
-	// When a Session is created, its registry starts by importing the Host's registry.
-	Import(other Registry) error
 
 	// Registers a value as a prototype with a UID
 	// This allows the value to be instantiated and unmarshaled when an AttrID is known.

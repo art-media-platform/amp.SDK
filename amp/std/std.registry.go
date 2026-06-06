@@ -70,28 +70,6 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	return nil
 }
 
-func (reg *registry) Import(other amp.Registry) error {
-	src := other.(*registry)
-
-	src.mu.Lock()
-	defer src.mu.Unlock()
-
-	{
-		reg.mu.Lock()
-		for _, def := range src.attrDefs {
-			reg.attrDefs[def.Name.ID] = def
-		}
-		reg.mu.Unlock()
-	}
-
-	for _, mod := range src.modsByID {
-		if err := reg.RegisterModule(mod); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // Implements Registry
 func (reg *registry) RegisterModule(mod *amp.AppModule) error {
 	modID := mod.Info.Tag.ID

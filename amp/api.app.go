@@ -42,7 +42,7 @@ type AppContext interface {
 	task.Context   // Allows select{} for graceful handling of app shutdown
 	data.Publisher // Allows an app to publish assets for client consumption
 
-	NewTx() *TxMsg                  // Creates a new tx ready for use
+	NewTx(scope ...TxScope) *TxMsg  // Creates a new tx, scoped to a target planet (default: home)
 	Session() Session               // Access to underlying Session
 	AppEnvironment() AppEnvironment // Runtime environment for this app instance
 }
@@ -83,6 +83,15 @@ type Pin interface {
 	// This means an AppContext contains all its Pins, and Close() will close all Pins (and children).
 	// This can be used to determine if a request is still being served and to close it if needed.
 	Context() task.Context
+}
+
+// TxScope is the optional NewTx parameter fixing a tx's target planet — the planet lever, set
+// once at creation.  The zero value (and a bare NewTx()) targets the caller's home planet; set
+// Planet to commit to an explicit planet.  Scope governs ROUTING only: signer identity
+// (TxMsg.SetFromID) and privacy (TxMsg.Epoch) are independent levers set separately.  See
+// PRD-amp-security-sync §7.6.
+type TxScope struct {
+	Planet tag.UID // unset → the caller's home planet; set → that explicit planet
 }
 
 // TxMsg is the serialized transport container of CRDT (append-only modeled) operations

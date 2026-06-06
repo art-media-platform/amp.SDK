@@ -99,10 +99,11 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 	return err
 }
 
+// Commit submits tx and blocks until the commit completes.  The target planet is fixed at
+// tx creation (NewTx via TxScope; default = the caller's home planet) — Commit does not alter
+// it.  Planet routing, signer (tx.SetFromID), and privacy (tx.Epoch) are independent levers;
+// see PRD-amp-security-sync §7.6.
 func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
-	if tx.Planet == nil {
-		tx.Planet = appCtx.Session().Login().Planet
-	}
 	tx.Request = &amp.PinRequest{
 		Mode: amp.PinMode_Commit,
 		URL:  "amp://~/cabinets",
