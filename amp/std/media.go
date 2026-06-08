@@ -116,6 +116,96 @@ func PublishMediaStream(appCtx amp.AppContext, src MediaStreamSource, opts Media
 	return &amp.Tag{URI: url, ContentType: asset.ContentType()}, nil
 }
 
+// A MediaRecord is the set of standard media attributes describing one asset on a
+// channel node: the human-facing label/caption/collection lines plus playback flags
+// and duration.  WriteMediaRecord writes these alongside the asset's BlobRef so the
+// node renders in the same media UI as any other std media item.
+type MediaRecord struct {
+	Label      string     // ItemLabel — the track/title line
+	Caption    string     // ItemCaption — the artist/subtitle line
+	Collection string     // ItemCollection — the album/show/station line
+	Seconds    float64    // MediaItem playback duration in seconds
+	Flags      MediaFlags // MediaItem flags (HasAudio, IsSeekable, ...)
+}
+
+// WriteMediaRecord upserts the standard media attributes for one stored asset onto
+// tx at node: the BlobRef (keyed by its asset UID), a MediaItem, and the
+// label/caption/collection TextItems.  It only builds the tx — the caller owns the
+// StoreBlob, any extra index entries, and the Commit — so an app composes this with
+// its own catalog without duplicating the std-attr layout.
+func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRecord) error {
+	if ref == nil || ref.AssetTag == nil {
+		return fmt.Errorf("std: WriteMediaRecord requires a BlobRef with an AssetTag")
+	}
+	if err := tx.Upsert(node, Attr.BlobRef.ID, ref.AssetTag.UID(), ref); err != nil {
+		return err
+	}
+	if err := tx.Upsert(node, Attr.MediaItem.ID, tag.UID{}, &MediaItem{Flags: rec.Flags, Seconds: rec.Seconds}); err != nil {
+		return err
+	}
+	if err := tx.Upsert(node, Attr.ItemLabel.ID, tag.UID{}, &TextItem{Body: rec.Label}); err != nil {
+		return err
+	}
+	if err := tx.Upsert(node, Attr.ItemCaption.ID, tag.UID{}, &TextItem{Body: rec.Caption}); err != nil {
+		return err
+	}
+	if err := tx.Upsert(node, Attr.ItemCollection.ID, tag.UID{}, &TextItem{Body: rec.Collection}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// A MediaAsset is the parameter block for CommitMediaAsset: one streamed media blob
+// plus the MediaRecord describing it.
+type MediaAsset struct {
+	Planet      tag.UID   // commit-target planet (also the blob's owning planet)
+	Node        tag.UID   // channel node the record is written at
+	Source      io.Reader // blob bytes, streamed into the blob store (not buffered in heap)
+	ContentType string    // MIME type of the blob (e.g. "audio/mpeg")
+	ByteLen     int64     // blob byte length when known (0 = unknown)
+	MediaRecord
+}
+
+// CommitMediaAsset stores Source as a content-addressed blob on the target planet
+// and commits its BlobRef + MediaRecord at Node in a single transaction, returning
+// the stored BlobRef.  It is the one-shot path an app uses to cache a complete media
+// asset (a downloaded mix, an attached file); an app that also maintains an index
+// builds WriteMediaRecord into its own tx instead.  Source is streamed straight into
+// the blob store, so a multi-hour asset never resides whole in heap.
+func CommitMediaAsset(appCtx amp.AppContext, asset MediaAsset) (*amp.BlobRef, error) {
+	blobMeta := &amp.Tag{
+		ContentType: asset.ContentType,
+		Text:        mediaAssetText(asset.Caption, asset.Label),
+		I:           asset.ByteLen,
+		Units:       amp.Units_Bytes,
+	}
+	ref, err := appCtx.Session().StoreBlob(asset.Planet, asset.Source, blobMeta, nil)
+	if err != nil {
+		return nil, err
+	}
+	tx := appCtx.NewTx(amp.TxScope{Planet: asset.Planet})
+	if err := WriteMediaRecord(tx, asset.Node, ref, asset.MediaRecord); err != nil {
+		return nil, err
+	}
+	if err := Commit(appCtx, tx); err != nil {
+		return nil, err
+	}
+	return ref, nil
+}
+
+// mediaAssetText builds a blob's descriptive Text ("caption - label"), tolerating an
+// empty caption or label.
+func mediaAssetText(caption, label string) string {
+	switch {
+	case caption == "":
+		return label
+	case label == "":
+		return caption
+	default:
+		return caption + " - " + label
+	}
+}
+
 // segEntry is one segment's place on the byte timeline and its durable blob.  The
 // inline Payload is deliberately absent: the index stays compact (a few dozen bytes
 // per segment) however long the recording runs.
