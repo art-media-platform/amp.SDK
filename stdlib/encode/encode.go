@@ -1,6 +1,11 @@
 package encode
 
-import "encoding/base32"
+import (
+	"bufio"
+	"encoding/base32"
+	"io"
+	"strings"
+)
 
 const (
 	// Base32Alphabet is a base32 (5-bit) based symbol set also used by geohash.
@@ -16,27 +21,89 @@ const (
 )
 
 var (
-	// Base32Encoding is used to encode/decode binary buffer to/from base 32
-	Base32Encoding = base32.NewEncoding(Base32Alphabet_Upper).WithPadding(base32.NoPadding)
+	// Base32Encoding encodes and decodes binary buffers using amp's lower-case
+	// geohash alphabet with no padding.  Lower case is the canonic form — it
+	// matches tag.UID.Base32 — while NewDecoder / FromBase32 accept either case.
+	Base32Encoding = base32.NewEncoding(Base32Alphabet_Lower).WithPadding(base32.NoPadding)
 )
 
-// ToBase32 encodes raw byte string to a base32 string that sorts lexicographically in ASCII space.
+// NewEncoder returns a WriteCloser that base32-encodes (amp alphabet) every byte
+// written to it onto dst.  Close must be called to flush the final 5-bit group.
+func NewEncoder(dst io.Writer) io.WriteCloser {
+	return base32.NewEncoder(Base32Encoding, dst)
+}
+
+// NewDecoder returns a Reader that decodes amp-base32 text read from src.  It is
+// forgiving of the benign noise a token accumulates in transit: ASCII
+// whitespace, '-' grouping separators, and a leading UTF-8 byte-order mark are
+// ignored, and either case is accepted.  Any other character is left for the
+// base32 decoder to reject, so a corrupted or wrong-alphabet stream fails
+// cleanly instead of decoding to plausible-but-wrong bytes.
+func NewDecoder(src io.Reader) io.Reader {
+	return base32.NewDecoder(Base32Encoding, &sanitizer{src: bufio.NewReader(src), atStart: true})
+}
+
+// ToBase32 encodes a raw byte string to an amp-base32 string that sorts
+// lexicographically in ASCII space.  The empty and all-zero inputs collapse to
+// the single sentinel "0".
 func ToBase32(in []byte) string {
 	if len(in) == 0 {
 		return "0"
 	}
-	str := Base32Encoding.EncodeToString(in)
-	start := -1
-	for i := 0; i < len(str); i++ {
-		if str[i] != '0' {
-			start = i
-			break
-		}
-	}
-	if start < 0 {
+	var out strings.Builder
+	encoder := NewEncoder(&out)
+	_, _ = encoder.Write(in) // writing to a strings.Builder cannot fail
+	_ = encoder.Close()
+	str := out.String()
+	if strings.Trim(str, "0") == "" {
 		return "0"
 	}
 	return str
+}
+
+// FromBase32 decodes an amp-base32 string produced by ToBase32 back to its
+// bytes, tolerating the transit noise documented on NewDecoder.  An empty or
+// all-noise input decodes to no bytes.
+func FromBase32(in string) ([]byte, error) {
+	return io.ReadAll(NewDecoder(strings.NewReader(in)))
+}
+
+// sanitizer is the io.Reader that strips benign transit noise from a base32
+// stream and folds ASCII letters to the canonic lower-case alphabet, so a token
+// that picked up newlines, spaces, dashes, a BOM, or case changes still decodes.
+type sanitizer struct {
+	src     *bufio.Reader
+	atStart bool
+}
+
+func (san *sanitizer) Read(dst []byte) (int, error) {
+	if san.atStart {
+		san.atStart = false
+		if mark, _ := san.src.Peek(3); len(mark) == 3 &&
+			mark[0] == 0xEF && mark[1] == 0xBB && mark[2] == 0xBF {
+			_, _ = san.src.Discard(3) // drop a leading UTF-8 BOM
+		}
+	}
+	count := 0
+	for count < len(dst) {
+		next, err := san.src.ReadByte()
+		if err != nil {
+			if count > 0 {
+				return count, nil
+			}
+			return 0, err
+		}
+		switch {
+		case next == '-' || next == ' ' || next == '\t' ||
+			next == '\r' || next == '\n' || next == '\v' || next == '\f':
+			continue // ignore grouping dashes and ASCII whitespace
+		case next >= 'A' && next <= 'Z':
+			next += 'a' - 'A' // fold to the canonic lower alphabet
+		}
+		dst[count] = next
+		count++
+	}
+	return count, nil
 }
 
 // DebugLabel returns a base32 encoding of a binary string, limiting it to a short number of character for debugging and logging.
