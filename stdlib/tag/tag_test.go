@@ -5,9 +5,35 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
+
+func TestNameAsLabel(t *testing.T) {
+	id := tag.UID{0xF777777777777777, 0x123456789abcdef0}
+
+	// empty Text falls back to the UID's compact form
+	if got := (tag.Name{ID: id}).AsLabel(); got != id.AsLabel() {
+		t.Errorf("empty-Text AsLabel = %q, want UID form %q", got, id.AsLabel())
+	}
+
+	// short Text is returned verbatim
+	short := tag.Name{}.With("hello.world")
+	if got := short.AsLabel(); got != short.Text {
+		t.Errorf("short AsLabel = %q, want %q", got, short.Text)
+	}
+
+	// long multibyte Text is elided on rune boundaries — never split mid-rune
+	long := tag.Name{}.With(strings.Repeat("世", 40)) // 40 runes
+	got := long.AsLabel()
+	if !utf8.ValidString(got) {
+		t.Errorf("AsLabel produced invalid UTF-8: %q", got)
+	}
+	if n := utf8.RuneCountInString(got); n != 32 { // first 16 + ellipsis + last 15
+		t.Errorf("elided rune count = %d, want 32", n)
+	}
+}
 
 func TestTag(t *testing.T) {
 	ampTags := tag.Name{}.With("..amp+.app.")
@@ -77,7 +103,7 @@ func TestTag(t *testing.T) {
 	}
 
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
-	if tid.AsLabel() != "7r..trrh" {
+	if tid.AsLabel() != "7r…trrh" {
 		t.Errorf("tag.UID.AsLabel() failed: got %q", tid.AsLabel())
 	}
 	if tid.Base32() != "7rfxvrfxvrfxvj4e2qg2ectrrh" {

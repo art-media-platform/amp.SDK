@@ -47,7 +47,7 @@ func TestRegistry(t *testing.T) {
 	if spec.ID != alias.ID {
 		t.Fatalf("tag.With failed")
 	}
-	if str := spec.ID.AsLabel(); str != "2u..xhjf" {
+	if str := spec.ID.AsLabel(); str != "2u…xhjf" {
 		t.Fatalf("unexpected spec.ID: %v", str)
 	}
 	if (tag.UID{}).Base32() != "0" {

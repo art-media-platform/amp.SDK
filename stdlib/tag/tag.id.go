@@ -70,6 +70,20 @@ func (name *Name) GoString() string {
 	return name.ID.String()
 }
 
+// AsLabel returns a compact label for logging / debugging — the human Text when
+// present (elided to "first16…last15" on rune boundaries when over 31 runes),
+// else the compact "first2…last4" base32 form of the UID.
+func (name Name) AsLabel() string {
+	if name.Text == "" {
+		return name.ID.AsLabel()
+	}
+	runes := []rune(name.Text)
+	if len(runes) < 32 {
+		return name.Text
+	}
+	return string(runes[:16]) + "…" + string(runes[len(runes)-15:])
+}
+
 func (name Name) IsWildcard() bool {
 	return name.ID.IsWildcard() || name.Text == CanonicWildcard
 }
@@ -589,13 +603,13 @@ func (id UID) Base32() string {
 	return string(out)
 }
 
-// AsLabel returns a compact "first2..last4" base32 label for debugging / logging.
+// AsLabel returns a compact "first2…last4" base32 label for debugging / logging.
 func (id UID) AsLabel() string {
 	full := id.Base32()
 	if len(full) <= 8 {
 		return full
 	}
-	return full[:2] + ".." + full[len(full)-4:]
+	return full[:2] + "…" + full[len(full)-4:]
 }
 
 // Converts this tag.UID to a 63-bit composite integer (i.e. always positive).
