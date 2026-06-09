@@ -36,9 +36,11 @@ func NewEncoder(dst io.Writer) io.WriteCloser {
 // NewDecoder returns a Reader that decodes amp-base32 text read from src.  It is
 // forgiving of the benign noise a token accumulates in transit: ASCII
 // whitespace, '-' grouping separators, and a leading UTF-8 byte-order mark are
-// ignored, and either case is accepted.  Any other character is left for the
-// base32 decoder to reject, so a corrupted or wrong-alphabet stream fails
-// cleanly instead of decoding to plausible-but-wrong bytes.
+// ignored; either case is accepted; and the alphabet's omitted look-alikes fold
+// to the character they are mistaken for — i, I, l, L → 1 and o, O → 0 — so a
+// hand-transcribed token still decodes.  Any other out-of-alphabet character is
+// left for the base32 decoder to reject, so a corrupted or wrong-alphabet
+// stream fails cleanly instead of decoding to plausible-but-wrong bytes.
 func NewDecoder(src io.Reader) io.Reader {
 	return base32.NewDecoder(Base32Encoding, &sanitizer{src: bufio.NewReader(src), atStart: true})
 }
@@ -69,8 +71,10 @@ func FromBase32(in string) ([]byte, error) {
 }
 
 // sanitizer is the io.Reader that strips benign transit noise from a base32
-// stream and folds ASCII letters to the canonic lower-case alphabet, so a token
-// that picked up newlines, spaces, dashes, a BOM, or case changes still decodes.
+// stream, maps the alphabet's omitted look-alikes to the digit they resemble,
+// and folds ASCII letters to the canonic lower-case alphabet — so a token that
+// picked up newlines, spaces, dashes, a BOM, case changes, or a hand-transcribed
+// i/l-for-1 or o-for-0 still decodes.
 type sanitizer struct {
 	src     *bufio.Reader
 	atStart bool
@@ -97,6 +101,10 @@ func (san *sanitizer) Read(dst []byte) (int, error) {
 		case next == '-' || next == ' ' || next == '\t' ||
 			next == '\r' || next == '\n' || next == '\v' || next == '\f':
 			continue // ignore grouping dashes and ASCII whitespace
+		case next == 'i' || next == 'I' || next == 'l' || next == 'L':
+			next = '1' // omitted from the alphabet; mistaken for one
+		case next == 'o' || next == 'O':
+			next = '0' // omitted from the alphabet; mistaken for zero
 		case next >= 'A' && next <= 'Z':
 			next += 'a' - 'A' // fold to the canonic lower alphabet
 		}

@@ -72,13 +72,47 @@ func TestFromBase32ToleratesTransitNoise(t *testing.T) {
 	}
 }
 
+func TestFromBase32MapsLookalikes(t *testing.T) {
+	in := sample(200)
+	canonical := ToBase32(in) // lower geohash: contains 0/1, never i/l/o
+
+	// A human or OCR substitutes the omitted letters for the digits they
+	// resemble: 1 → i,I,l,L and 0 → o,O.  Decode must undo the substitution.
+	lookalikes := map[byte]string{
+		'1': "ilIL",
+		'0': "oO",
+	}
+	exercised := 0
+	for digit, subs := range lookalikes {
+		for i := 0; i < len(subs); i++ {
+			mangled := strings.ReplaceAll(canonical, string(digit), string(subs[i]))
+			if mangled == canonical {
+				continue // sample produced no such digit
+			}
+			exercised++
+			got, err := FromBase32(mangled)
+			if err != nil {
+				t.Errorf("%c→%c: %v", digit, subs[i], err)
+				continue
+			}
+			if !bytes.Equal(got, in) {
+				t.Errorf("%c→%c: decoded to wrong bytes", digit, subs[i])
+			}
+		}
+	}
+	if exercised == 0 {
+		t.Fatal("sample produced neither 0 nor 1 to substitute — widen the sample")
+	}
+}
+
 func TestFromBase32RejectsForeignAlphabet(t *testing.T) {
-	// the canonical base64 markers must always be rejected
+	// base64 markers (+ / =) are not in the alphabet and are not look-alikes
 	if _, err := FromBase32("token+with/markers="); err == nil {
 		t.Fatal("base64 markers (+,/,=) must be rejected by the geohash alphabet")
 	}
-	// letters the geohash alphabet omits (i, l, o, u) and punctuation are foreign
-	for _, str := range []string{"hello", "validish@token", "AAAA===="} {
+	// 'a' is omitted from the alphabet and (unlike i/l/o) has no digit look-alike,
+	// so it stays foreign; '@' and '=' are likewise out-of-alphabet
+	for _, str := range []string{"aaaa", "bad@token", "qq==qq"} {
 		if _, err := FromBase32(str); err == nil {
 			t.Errorf("expected %q to be rejected", str)
 		}
