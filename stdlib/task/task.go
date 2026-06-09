@@ -266,11 +266,8 @@ func (c *ctx) StartChild(task Task) (Context, error) {
 	if task.TaskID.IsNil() {
 		task.TaskID = tag.NowID()
 	}
-	if task.Label == "" {
-		task.Label = task.Info.TaskID.AsLabel()
-	}
 	child := &ctx{
-		log:       alog.NewLogger(task.Label),
+		log:       alog.NewLoggerWithID(task.TaskID.AsLabel(), task.Label),
 		state:     Running,
 		task:      task,
 		chClosing: make(chan struct{}),

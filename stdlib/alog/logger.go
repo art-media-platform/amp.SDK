@@ -1,14 +1,17 @@
 // Package alog is amp's built-in logging primitive — a lean, dependency-free
 // tag-scoped logger.  Each log line is a single-char severity tag, a timestamp,
-// a bracketed source token "[file:line label]", then the message, all
-// space-separated and vertically aligned:
+// a bracketed source token, then the message, all space-separated and vertically
+// aligned:
 //
-//	I 2026-05-24 15:04:05.123 [logger.go:175 app.www] some message
+//	I 2026-05-24 15:04:05.123 [00..1234 app.www] some message
 //
-// The interior is right-padded to a running max so the closing bracket and the
-// message column stay put.  That max resets every few dozen lines so one wide
-// entry can't permanently inflate the gutter.  Optional ANSI color on TTY stderr;
-// plain text when tee'd to a file.
+// The source token leads with the logger's owner id (a task.Context's id, say) when
+// it has one, then the label; a logger with no label shows the log call-site file:line
+// in the label's place, so every line still names either its context or its origin.
+// The interior is right-padded to a sticky width: it grows to fit, holds a floor so
+// short labels stay aligned, caps so one wide label can't swallow the message column,
+// and relaxes toward the widest token recently seen rather than snapping narrow.
+// Optional ANSI color on TTY stderr; plain text when tee'd to a file.
 //
 // Verbosity: Info(n, …) / Infof(n, …) only print when n == 0 (unconditional)
 // or n ≤ the global verbosity set via the -v flag.  This matches the pattern
@@ -64,6 +67,16 @@ func NewLogger(label string) Logger {
 	return l
 }
 
+// NewLoggerWithID creates a Logger whose lines lead with id — a short, stable owner
+// identifier such as a task.Context's TaskID.AsLabel() — followed by label.  When label
+// is empty, the log call-site file:line takes the label's place, so every line still
+// carries the id for disambiguation.
+func NewLoggerWithID(id, label string) Logger {
+	l := &logger{idLabel: id}
+	l.SetLogLabel(label)
+	return l
+}
+
 // InitFlags registers -v and -log_file on the given FlagSet.
 func InitFlags(fs *flag.FlagSet) {
 	fs.Var(verbosityFlag{}, "v", "log verbosity level (higher = more verbose)")
@@ -87,27 +100,38 @@ var (
 	gDefault     = logger{}
 )
 
-// columnWidths tracks the running max width of the source column interior
-// (file:line plus label, inside the brackets).  The max zeroes out every
-// widthResetLines lines so a past burst of wide entries can't keep the gutter
-// inflated.  All fields are read and mutated only under gOutMu, which emit
-// already holds for the write — no extra lock, atomic, or goroutine is introduced.
+// columnWidths tracks the sticky pad width of the source column interior (the id, label,
+// and/or file:line inside the brackets).  The width grows to fit and holds a floor; once
+// every widthRelaxLines it relaxes toward the widest interior seen in that window so a
+// past burst of wide entries decays out without snapping the gutter to zero.  All fields
+// are read and mutated only under gOutMu, which emit already holds for the write — no
+// extra lock, atomic, or goroutine is introduced.
 type columnWidths struct {
-	source     int // current running max for the [file:line label] column
-	sinceReset int // emitted lines since the last reset
+	source     int // current pad width for the bracket interior
+	windowMax  int // widest interior seen in the current relax window
+	sinceRelax int // emitted lines since the last relax
 }
 
 const (
-	// columnHardCap bounds a single value's contribution to a column.  It is set
-	// wide enough that real file:line and label values rarely reach it; a longer
-	// value is truncated with an ellipsis so one pathological entry can't blow
+	// columnHardCap bounds a single token's contribution to the source column.  It is
+	// set wide enough that real id, file:line, and label values rarely reach it; a
+	// longer value is truncated with an ellipsis so one pathological entry can't blow
 	// out the line.
 	columnHardCap = 48
 
-	// widthResetLines is the decay window: the running column maxes zero out
-	// after this many emitted lines, so a past burst of wide entries can't keep
-	// the gutter inflated.  Small enough that the columns re-tighten promptly.
-	widthResetLines = 10
+	// labelColumnMin is the floor the source column pads to: the gutter never narrows
+	// below this, so short labels stay aligned and the column doesn't start from zero
+	// and creep wider line by line.
+	labelColumnMin = 24
+
+	// labelColumnMax caps the source column so one wide label can't swallow the message
+	// column; a source longer than this overflows without realigning the rest.
+	labelColumnMax = 44
+
+	// widthRelaxLines is how long a width persists before the column relaxes toward the
+	// widest source actually seen in that window (never to zero) — long enough that the
+	// gutter settles instead of fighting between narrow and wide.
+	widthRelaxLines = 512
 )
 
 // spacer supplies right-padding without per-line allocation; writePad repeats it
@@ -157,8 +181,9 @@ const ansiReset = "\x1b[0m"
 // ────────────────────────── logger ──────────────────────────
 
 type logger struct {
-	label  string
-	prefix string
+	idLabel string // short, stable owner id shown as the first source token (may be empty)
+	label   string
+	prefix  string
 }
 
 func (l *logger) SetLogLabel(label string) {
@@ -179,15 +204,21 @@ func (l *logger) GetLogPrefix() string { return l.prefix }
 // the public entry methods (Debug/Info/...) pass 1 to name their caller; a
 // wrapper that forwards through another method passes 2.
 func (l *logger) emit(sev severity, depth int, msg string) {
-	file, line := callerFileLine(depth + 2)
-
-	// Build the source content "file:line label" (just "file:line" when
-	// unlabeled), capping its parts, before taking the lock; its width drives
-	// alignment under gOutMu.  The padding goes inside the brackets so the
-	// closing ']' right-justifies against the message column.
-	source := capColumn(file + ":" + strconv.Itoa(line))
+	// Build the bracket interior before taking the lock; its width drives alignment
+	// under gOutMu, and the padding goes inside the brackets so the closing ']'
+	// right-justifies against the message column.  The interior leads with idLabel
+	// when present; the second token is the label, or — when unlabeled — the log
+	// call-site file:line, so an anonymous logger still names its origin.
+	var second string
 	if l.label != "" {
-		source += " " + capColumn(l.label)
+		second = capColumn(l.label)
+	} else {
+		file, line := callerFileLine(depth + 2)
+		second = capColumn(file + ":" + strconv.Itoa(line))
+	}
+	source := second
+	if l.idLabel != "" {
+		source = l.idLabel + " " + second // idLabel is the fixed-width AsLabel form
 	}
 
 	entry := sevTable[sev]
@@ -235,18 +266,30 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 	gOutMu.Unlock()
 }
 
-// observe folds one line's source-column length into the running max and returns
-// the width to pad to.  Every widthResetLines lines it first zeroes the max so a
-// past burst of wide entries can't keep the gutter inflated.  Callers must hold
-// gOutMu.
+// observe folds one line's source-column length into the pad width and returns the
+// width to pad to.  The width grows immediately to fit, holds the labelColumnMin floor,
+// caps at labelColumnMax so one wide label can't swallow the message column, and once
+// every widthRelaxLines relaxes toward the widest interior actually seen in that window
+// — never to zero, so the gutter settles instead of snapping narrow and re-widening.
+// Callers must hold gOutMu.
 func (w *columnWidths) observe(sourceLen int) (sourceWidth int) {
-	w.sinceReset++
-	if w.sinceReset >= widthResetLines {
-		w.source = 0
-		w.sinceReset = 0
+	if sourceLen > w.windowMax {
+		w.windowMax = sourceLen
 	}
 	if sourceLen > w.source {
 		w.source = sourceLen
+	}
+	w.sinceRelax++
+	if w.sinceRelax >= widthRelaxLines {
+		w.source = w.windowMax
+		w.windowMax = 0
+		w.sinceRelax = 0
+	}
+	if w.source > labelColumnMax {
+		w.source = labelColumnMax
+	}
+	if w.source < labelColumnMin {
+		w.source = labelColumnMin
 	}
 	return w.source
 }
