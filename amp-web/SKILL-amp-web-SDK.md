@@ -92,18 +92,13 @@ VITE_AMP_PLANET_TAG=my-planet-tag
 VITE_AMP_PUBLIC_SHARE_PLANET_TAG=my-planet-tag-shares
 ```
 
-**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` only resolves anonymously when the deploy operator has actually registered the planet on the server side. Two mechanisms (see §6.4):
-
-- **Persisted via `app.brand.json`** — the deploy's brand config carries a `SharePlanet { Name, UID }` block; the portal registers it with the bridge at boot and on each snapshot reload.
-- **Runtime via `amp planet create`** — the operator hits `POST /api/v1/admin/planet/create` (or runs the CLI) once, drops the returned UID into `app.brand.json` for persistence.
-
-Without one of these, anonymous reads against the planet tag fall through to the standard Bearer gate.
+**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` resolves anonymously only once the deploy operator performs genesis of a public planet and registers it host-side (`amp planet create`, §6.4). Where that registration is stored is operator-side and substrate-native (§10) — not your concern. Without it, anonymous reads against the planet tag fall through to the standard Bearer gate.
 
 ---
 
 ## 4. Wire Shape — the Contract
 
-`app.www` listens on port 5193. Every endpoint accepts `Authorization: Bearer <session-token>`, except where noted. CORS is per-org and configured in the deploy's `app.brand.json`. The server emits `Content-Type: application/json; charset=utf-8` on JSON responses.
+`app.www` listens on port 5193. Every endpoint accepts `Authorization: Bearer <session-token>`, except where noted. CORS is operator-configured per allowed web origin (§10). The server emits `Content-Type: application/json; charset=utf-8` on JSON responses.
 
 ### 4.1 Authentication
 
@@ -616,9 +611,8 @@ amp does NOT have a per-item visibility flag. Public-readable content lives on a
 
 #### Operator setup (one time per deploy)
 
-The deploy operator creates the share planet and registers it with the running `ampd` daemon. Two paths:
+The deploy operator performs share planet genesis once and registers it with the running `ampd` host:
 
-**CLI:**
 ```bash
 # After wallet-login via the web (POST /api/v1/login scheme=wallet),
 # pass the resulting Bearer token to the CLI:
@@ -626,15 +620,7 @@ AMP_TOKEN=<bearer> amp planet create --tag <name>
 # → { "PlanetID": "<base32 UID>", "Tag": "<canonic>", "Public": true }
 ```
 
-**Brand JSON (persistence across daemon restarts):** drop the resulting UID into `app.brand.json`'s `SharePlanet` block alongside the same canonic name:
-```json
-"SharePlanet": {
-  "Name": "Maplable-shares",
-  "UID":  "<26-char base32 UID>"
-}
-```
-
-The portal validates `tag.Parse(Name).ID == UID` at boot — refuses to start with a mismatched pair so silent drift between brand JSON and the planet-genesis ceremony surfaces immediately.
+The host then records that planet as anonymous-readable so the registration survives restarts. Where that fact is stored is operator-side and substrate-native — see §10; it is not something your app ships or reads.
 
 #### Anonymous read URL shape
 
@@ -950,51 +936,30 @@ Cross-planet addressing is the substrate for shareable links: the share URL embe
 
 ---
 
-## 10. Whitelabel & per-org configuration
+## 10. Whitelabel & Deploy Configuration
 
-`app.www` matches the inbound `Host` header against per-org configs in `{persistPath}/orgs/{domain}/`. Each org carries:
+Two things get conflated; keep them apart:
 
-- `app.brand.json` — identity, deep-link schemes, per-platform install targets, allowed CORS origins, planet tag bindings (main + share).
-- `www/` — static-site root. Marketing pages, the SPA, service worker, etc.
-- `apple-app-site-association` / `assetlinks.json` — universal/app-link configs.
-- `open-link.tmpl.html` — deep-link landing page.
+- **Your app's own branding is yours.** Your web UI — logo, theme, copy, fonts — lives in your app. amp never dictates your chrome.
+- **Per-deploy *host* configuration is operator-side and invisible to your SDK code.** The identity of the planets you display, the web origins allowed to call the host (CORS), the anonymous-readable share planet, deep-link schemes, and the admin allowlist are configured by whoever operates the `ampd` deploy and enforced by the host. **Your client is constructed with exactly `vaultUrl` + `planetTag` (+ an optional share-planet tag) and nothing else** — typically build-time env vars (`VITE_AMP_VAULT_URL`, `VITE_AMP_PLANET_TAG`, `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`). You never ship, fetch, or parse a deploy-config file.
 
-A single `ampd` instance can serve many orgs by `Host`-header routing — each with its own `www/` SPA, planet bindings, and admin list. There is no hard per-instance cap on orgs or planets; it is bounded by host resources.
+A single `ampd` can host many planets/orgs at once; that multi-tenancy is a host capability, not something your app coordinates.
 
-`app.brand.json` is **server-side operator config**, not something the SDK fetches. The client is handed the planet tag(s) it needs at construction time (`vaultUrl` + `planetTag`, plus an optional share-planet tag) — typically surfaced into the SPA as build-time env vars (`VITE_AMP_VAULT_URL`, `VITE_AMP_PLANET_TAG`, `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`). The brand file's job is to configure the *host*: CORS, deep links, the admin allowlist, and which planet is anonymous-readable.
+### 10.1 Deployment vs. Signed Substrate Channels
 
-### 10.1 `app.brand.json` shape
+The durable model: per-deploy configuration is **signed, chronicle-tracked facts on the substrate**, rotated by a signed write — never a static file hand-edited-and-restarted. There is no consumer-facing config file to build against. Three records, by purpose:
 
-```json
-{
-  "AppName":        "Maplable",
-  "AppDomain":      "maplable.com",
-  "AppDesc":        "Offline-first 3D mapping",
-  "OrgName":        "Maplable Inc.",
-  "AllowedOrigins": ["https://maplable.com", "*.maplable.com"],
-  "URLSchemes":     ["amp://", "maplable://"],
-  "Targets":        [ { "Platform": "iOS",     "DownloadURL": "..." },
-                      { "Platform": "Android", "DownloadURL": "..." } ],
-  "Admins":         ["eth:0xabc…", "email:ops@maplable.com"],
-  "SharePlanet": {
-    "Name": "Maplable-shares",
-    "UID":  "<26-char base32 UID>"
-  }
-}
-```
+**1. A planet's identity — its `Brand` record.** Each public / org planet carries one `Brand` item at a fixed CRDT address (the `amp.brand` attr), admin-signed and edit-chained — so a rebrand (rename, domain change, scheme update, federation roam) is a single signed edit, no restart and no re-genesis. Fields: `AppName`, `AppDomain`, `OrgName`, `OrgHomeURL` / `AppHomeURL`, `URLSchemes`, `Targets[]` (per-platform installs), `Links[]`, `CrateSnapshotURL`, `BundledCrates`, and `NamedBy` (the federation that names this planet — the §4.6 back-edge). The personal home planet is "naked" (no `Brand`); its display name is `PlanetEpoch.Label` ("Home").
 
-| Field | Meaning |
-|---|---|
-| `AppName` / `AppDomain` / `AppDesc` / `OrgName` | Org identity — surfaced on the deep-link landing page and host-rendered HTML. |
-| `AllowedOrigins` | CORS allow-list. List specific origins; never pair `"*"` with credentials (see `SECURITY-amp-web-SDK.md`). |
-| `URLSchemes` | Deep-link / universal-link schemes the host advertises. |
-| `Targets[]` | Per-platform install targets — `{ Platform, DownloadURL }`. |
-| `Admins[]` | Admin allowlist — MemberID expressions (canonic identity strings like `eth:0x…` / `email:…`, or base32 UIDs). Gates the `/api/v1/admin/*` endpoints (§14.4). **Empty or missing fails closed** — every admin call returns `403`. |
-| `SharePlanet { Name, UID }` | Optional anonymous-readable share planet (§6.4). |
+> **Display-only — the durable security rule.** A planet's substrate `Brand` is read for **display only**: planet header, picker tile, publisher attribution. Because it is admin-mutable, it is **never** read for app *behavior*. Every behavioral field — your deep-link schemes, link host, install targets, crate feed — is read from your **build's own factory brand** (bundled in the app / SKU), never from a planet's `Brand`. So a planet rebrand changes what it *displays as*, never what your app *does*. (One resolver returns `planetBrand ?? factoryBrand` for display; behavioral code reads the factory directly.)
 
-`SharePlanet` is optional — orgs without a share planet get the standard Bearer-only posture. When present, both `Name` (canonic tag.Name) and `UID` (base32 PlanetEpoch UID) are required and must agree (`tag.Parse(Name).ID == UID`); the portal refuses to boot a mismatched pair so a deploy can't accidentally point at the wrong planet.
+**2. Host gating config — CORS origins + admin allowlist.** The web origins authorized to call the host (the CORS allow-list) and the operator-admin allowlist (who may hit `/api/v1/admin/*`) are **operator HTTP-gating config, not planet governance**. Stable field semantics: a list of allowed origins (`https://maplable.com`, `*.maplable.com` — never pair `"*"` with credentials; see `SECURITY-amp-web-SDK.md`) and a list of admin member-IDs (`eth:0x…`, `email:…`; empty fails closed → every admin call `403`). Storage is consolidating onto a signed planet attr — no consumer-facing file.
 
-**Field set vs storage location.** Treat the fields above as the stable integration surface. Where they *live* is migrating substrate-native: anonymous-readability and the admin allowlist are becoming signed, chronicle-tracked facts on the planet's own `Brand` record (so rotation is a signed write, not an edit-and-restart). The static `app.brand.json` is the current operator surface during that transition; the field semantics carry over.
+**3. The share planet.** Anonymous-readable content lives on a separate public planet (`PlanetEpoch.IsPublic = true`); the operator genesis's it once and registers it host-side (§6.4). Your client points at it via `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`.
+
+**What this means for you:** none of this is in your bundle or code path — construct with `vaultUrl` + `planetTag` (+ share tag). What your operator needs *from you*, once, at deploy time is a short, stable list: the web origins to allow (CORS) and the share-planet name. The field *semantics* are the stable integration surface; where they're stored is operator-side and changes nothing in your integration.
+
+> **Operators:** during the migration to substrate-native facts the running host may still read CORS, the admin allowlist, and the share-planet UID from a transitional local config; that mechanism is documented operator-side (PRD-app-www, `deploy/`) and is being retired. It is deliberately **not** part of the consumer contract — don't build against the file.
 
 ---
 
@@ -1099,7 +1064,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque; `client.address()` is an identity passthrough. Carries the DESIGN-12 element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. DESIGN-14. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. DESIGN-15. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
-| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |
+| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registered host-side; see §6.4 / §10. |
 | **Admin endpoint** | Bearer-authenticated server endpoint reserved for operator-driven substrate operations — currently `POST /api/v1/admin/planet/create` for share-planet genesis. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
 | **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. Authenticated-only; see §4.6. |
@@ -1120,6 +1085,7 @@ An `ampd` host is a full peer: it stores, signs, encrypts, and relays. A web / d
 - **Embedded local vault** — bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; projects are encrypted on their own machine; reads, writes, and seals work with no network. This is the topology that preserves an **offline-first** product. Cross-compile the Go host per target (darwin-arm64/x64, win-x64/arm64, linux-x64), code-sign each, ship it as a platform resource.
 - **Shared cloud vault** — one `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab. Simplest to operate; loses the offline property (the app needs the server reachable to read/write).
 - **Hybrid** — an embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. This is the native amp model, not a bolt-on.
+- **Self-hosted & federated (the licensee path)** — a partner runs their *own* `ampd` and is therefore their own operator: their own CORS, their own planets, their own admin — no per-deploy config handoff to you. They join the wider network by **federating** with a parent deploy, so their planets are discoverable through it (and vice-versa). See §14.8.
 
 A pure-JS / WASM in-process vault is **not** on the near-term path; the embeddable unit today is the native host (`ampd` / `libampd`). For a paid desktop app, **hybrid (embedded + optional cloud sync)** is the recommended shape.
 
@@ -1146,7 +1112,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy (DESIGN-11), not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the `Admins` allowlist from `app.brand.json`, §10.1) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a sealed invite and `POST /api/v1/invite/accept` redeems it (both Bearer; both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the operator admin allowlist — operator-side gating config, §10) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a sealed invite and `POST /api/v1/invite/accept` redeems it (both Bearer; both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability
@@ -1166,6 +1132,19 @@ Item order is `_ItemID` (tag.UID) byte order, not wall-clock — fine for SDP ex
 ### 14.7 Integration fixtures
 
 For end-to-end tests without a production vault, point the client at a local `ampd` running its in-memory dev backend — it round-trips the exact wire shape (not encrypted, not synced: a contract fixture, not a vault). The bundle also ships `scripts/smoke.mjs`, the login → upsert → query → seal / open smoke check the SDK validates against. Drive your Stripe **test-mode** webhook at a local fixture vault to exercise provision / expire paths without touching real customers.
+
+### 14.8 Running your own vault & federating (the licensee path)
+
+When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. Two ways to federate, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
+
+- **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner accepts (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port`. Their names resolve to their planets, carrying their own vault as the bootstrap address.
+- **Peer two federations.** The partner runs their *own* federation; the parent links it in with `amp federation peer <partner-fed-UID> --vault tcp:their-host:port`. A resolver then forwards across the directory hop (`ResolveVia`) into the partner's federation. Either side can peer the other.
+
+**Following a federation at boot.** A self-hosted node pins the federations it follows with `ampd -federation <UID>@tcp:host:port` — it dials the bootstrap peer and watches that federation's NameService channel at startup, so its names are carried without a manual resolve-and-pin each boot (connectivity otherwise rides `-vault.peers`).
+
+**Identity & trust.** A partner's planets set `Brand.NamedBy` to the naming federation — the back-edge (§4.6) that lets a resolver return `TrustState: 'Verified'`. Resolved records carry the partner's own `VaultAddrs`, so a consumer reaches the partner's vault **directly** — cross-host, never proxied through the parent.
+
+The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own. Operator runbook with the exact genesis / invite / register / peer steps: **`PRD-name-service.md` §5.4** and `deploy/README`.
 
 ---
 
