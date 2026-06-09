@@ -281,6 +281,79 @@ type SubscribeFrame struct {
 	Error     string          `json:"Error,omitempty"`
 }
 
+// NameService / federation directory shapes — POST /api/v1/resolve,
+// POST /api/v1/search, GET /api/v1/federation/peers.
+//
+// These mirror the substrate resolver (nameservice.Resolution / Match /
+// amp.FederationPeer).  All three endpoints require Bearer auth: a session
+// resolves over the federations it has joined, and there is no anonymous
+// discovery surface — FQDN keys are low-entropy and dictionary-reversible, so
+// namespace privacy comes from federation unreachability, not key secrecy.
+// VaultAddrs (a planet's dialable bootstrap addresses) are a members-only
+// benefit and are redacted from any unauthenticated path.
+
+// ResolveRequest is the body of POST /api/v1/resolve.
+type ResolveRequest struct {
+	FQDN string `json:"FQDN"`
+}
+
+// ResolveResponse is an exact-match FQDN resolution.  TrustState rides as its
+// enum name ("Verified", …) via amp.TrustState's marshaler; a consumer must
+// not silently follow a non-Verified or Ambiguous answer.
+type ResolveResponse struct {
+	FQDN          string          `json:"FQDN"`
+	PlanetID      tag.UID         `json:"PlanetID"`
+	AnsweredBy    tag.UID         `json:"AnsweredBy"`
+	VaultAddrs    []VaultEndpoint `json:"VaultAddrs,omitempty"`
+	TrustState    amp.TrustState  `json:"TrustState"`
+	PinPrecedence bool            `json:"PinPrecedence"`
+	Ambiguous     bool            `json:"Ambiguous"`
+	Hops          int             `json:"Hops"`
+}
+
+// VaultEndpoint is the JSON form of amp.VaultAddr — where a planet's vault is
+// dialable.  Address rides as base64 (Go's default []byte JSON encoding).
+type VaultEndpoint struct {
+	Transport string `json:"Transport"`
+	Address   []byte `json:"Address"`
+}
+
+// SearchRequest is the body of POST /api/v1/search.
+type SearchRequest struct {
+	Query string `json:"Query"`
+	Limit int    `json:"Limit,omitempty"`
+}
+
+// SearchResponse is a ranked, best-effort search over cached federation
+// records — membership-gated discovery, not a public directory dump.
+type SearchResponse struct {
+	Matches []SearchMatch `json:"Matches"`
+}
+
+// SearchMatch is one ranked result (mirrors nameservice.Match + Snippet).
+type SearchMatch struct {
+	PlanetID   tag.UID  `json:"PlanetID"`
+	FQDN       string   `json:"FQDN"`
+	AnsweredBy tag.UID  `json:"AnsweredBy"`
+	Score      float64  `json:"Score"`
+	AppName    string   `json:"AppName"`
+	AppDesc    string   `json:"AppDesc"`
+	Platforms  []string `json:"Platforms,omitempty"`
+}
+
+// FederationPeersResponse is the body of GET /api/v1/federation/peers.
+type FederationPeersResponse struct {
+	Peers []FederationPeerEntry `json:"Peers"`
+}
+
+// FederationPeerEntry is the JSON form of amp.FederationPeer — a peer / parent
+// pointer a federation enumerates for cross-federation forwarding.
+type FederationPeerEntry struct {
+	FederationID tag.UID         `json:"FederationID"`
+	VaultAddrs   []VaultEndpoint `json:"VaultAddrs,omitempty"`
+	Label        string          `json:"Label,omitempty"`
+}
+
 // ErrorResponse is the body of every non-2xx /api/v1/* response.
 type ErrorResponse struct {
 	Code    string `json:"Code"`

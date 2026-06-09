@@ -118,6 +118,10 @@ POST /api/v1/logout
 GET  /api/v1/session
   Header: Authorization: Bearer <token>
   Response: { Member: AmpMember, ExpiresAt: number }
+
+GET  /api/v1/me
+  Header: Authorization: Bearer <token>
+  Response: AmpMember
 ```
 
 `LoginCredentials` is a discriminated union.  Keys are PascalCase like every
@@ -287,6 +291,50 @@ Frame format (JSON):
 Subscriptions are per-`(channel, attr)` and deliver every item event on that attr. To scope subscribe by item, partition the data into per-scope attrs at write time (e.g., `widgets/instance.{memberID}` rather than `widgets/instance` filtered by ownerID).
 
 The server NEVER pushes telemetry frames (failed-login, rate-limit, audit) over the consumer WebSocket. SecurityEvent telemetry is local-only by design.
+
+### 4.6 Planet & federation name resolution (NameService)
+
+> **Three "resolve" verbs — keep them straight.** `/api/v1/tag/resolve` (§5.8) canonizes a *name string* to a `tag.UID` — a pure hash, anonymous, reveals nothing that exists. The NameService `resolve` below maps a registered *FQDN* (`spaces.example.com`) to the *planet* that serves it. The cross-planet `resolve(address)` (§9, lands M5) follows a packed `amp.Address` to one record. Same English word, three layers — don't wire them to the same code path.
+
+NameService is amp's federation directory: it answers "which planet is `spaces.example.com`, and where is its vault dialable?" from records the session has verified off the planet-public governance stream it follows. A session resolves over the federations it has **joined**. **All three verbs require `Authorization: Bearer` — there is no anonymous discovery surface (see Posture).**
+
+```
+POST /api/v1/resolve
+     Body: { FQDN }                          → ResolveResponse   (404 if no joined federation names it)
+POST /api/v1/search
+     Body: { Query, Limit? }                 → { Matches: SearchMatch[] }   (ranked, best-effort)
+GET  /api/v1/federation/peers?federation=<base32-UID>
+                                             → { Peers: FederationPeerEntry[] }
+```
+
+```typescript
+interface ResolveResponse {
+  FQDN:          string;
+  PlanetID:      string;     // base32 tag.UID — the planet the FQDN names
+  AnsweredBy:    string;     // base32 tag.UID — federation that answered
+  VaultAddrs:    VaultEndpoint[];   // dialable bootstrap addrs — members only
+  TrustState:    'Unchecked' | 'Verified' | 'Refuted';
+  PinPrecedence: boolean;
+  Ambiguous:     boolean;    // >1 federation claims this FQDN
+  Hops:          number;     // forwarding hops to the answer
+}
+interface VaultEndpoint       { Transport: string; Address: string /* base64 */ }
+interface SearchMatch         { PlanetID: string; FQDN: string; AnsweredBy: string;
+                                Score: number; AppName: string; AppDesc: string; Platforms?: string[] }
+interface FederationPeerEntry { FederationID: string; VaultAddrs: VaultEndpoint[]; Label?: string }
+```
+
+**`TrustState` is load-bearing — never silently pick.** A record is `Verified` only when the answering federation matches the planet's own `Brand` back-edge (the planet consents to being named there). `Refuted` flags a third party claiming a name the planet never authorized; `Unchecked` means the back-edge wasn't confirmed. When `Ambiguous` is set or `TrustState != 'Verified'`, surface it and let the user choose — do not auto-follow.
+
+**Posture — authenticated-only, by design.** This is membership-gated discovery, not a public directory. FQDN keys are low-entropy and dictionary-reversible, so a *reachable* federation's names are inherently enumerable to its members; a private namespace's privacy comes from federation **unreachability** (not a member → can't reach it), never from key secrecy. Two consequences for your app:
+- **`search` is best-effort discovery over the federations you've joined — not a scrape endpoint, and never anonymous.** Don't build features that depend on bulk-enumerating the namespace. `VaultAddrs` (a planet's dialable bootstrap addresses) are a members-only benefit and are redacted from any future public path.
+- **You don't need NameService to run a single deploy.** Your planet tag is handed to the client at construction (`VITE_AMP_PLANET_TAG`); reads/writes/subscribes never touch it. Resolve/search matter only when you discover *other* planets across federations.
+
+**Publishing a name (operator-side).** A name enters the directory when an operator registers it into a federation's NameService channel — a signed governance write, not a consumer call:
+
+```bash
+amp name register <fqdn> --target <planet-UID> [--federation <UID>] [--vault transport:addr …]   # alias: amp ns
+```
 
 ---
 
@@ -1023,6 +1071,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 5. **Never use `window.fetch`** inside a card. Always go through `window.amp.*`.
 6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial, DESIGN-11), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
 7. **Never name specific crypto algorithms** in code or docs. Use `seal/open`, `sign/verify`, `hash`, `safe.KeyRef`.
+8. **Never build on bulk namespace enumeration.** `/api/v1/search` is membership-gated, best-effort discovery over the federations you've joined — not a public directory dump, and never anonymous. Resolve exact FQDNs you already know; don't crawl. (§4.6)
 
 ---
 
@@ -1052,7 +1101,11 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. DESIGN-15. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
 | **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. Configured per-org via `app.brand.json`'s `SharePlanet { Name, UID }` block (boot-time registration) or created at runtime via `amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`. |
 | **Admin endpoint** | Bearer-authenticated server endpoint reserved for operator-driven substrate operations — currently `POST /api/v1/admin/planet/create` for share-planet genesis. |
-| **ChannelEpoch** | A channel's per-epoch ACC + access grants. |
+| **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
+| **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. Authenticated-only; see §4.6. |
+| **FQDN** | A fully-qualified domain name (`spaces.example.com`) registered in a federation's NameService and resolvable to a planet. |
+| **Federation** | A set of planets whose names a session resolves over once it has joined; the unit of namespace reachability. |
+| **TrustState** | A resolve verdict — `Verified` / `Refuted` / `Unchecked` — from checking the planet's `Brand` back-edge against the answering federation. The UI must not silently pick when it isn't `Verified`. |
 
 ---
 
@@ -1093,8 +1146,8 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy (DESIGN-11), not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the `Admins` allowlist from `app.brand.json`, §10.1) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer.
-- **Not yet wired:** a tier → ACC *grant / revoke* admin endpoint. When it lands it will extend the `/api/v1/admin/*` surface without a wire-shape break. Until then, write tier as app data on subscription events (create / renew / cancel) and enforce in-app plus via the ACC primitives you have. Don't model entitlement on `Kind` as a stopgap — it's the wrong axis and you'd have to unwind it.
+- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the `Admins` allowlist from `app.brand.json`, §10.1) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a sealed invite and `POST /api/v1/invite/accept` redeems it (both Bearer; both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability
 

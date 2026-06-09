@@ -69,6 +69,38 @@ func (reason *WithdrawReason) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// --- amp.TrustState -------------------------------------------------------
+//
+// A resolve verdict rides the JSON wire as its self-documenting enum name
+// ("Unchecked", "Verified", "Refuted") rather than an integer, so a consumer
+// branches on a stable string instead of a magic number — matching the
+// WithdrawReason convention above.  UnmarshalJSON accepts either form.
+
+func (trust TrustState) MarshalJSON() ([]byte, error) {
+	if name, ok := TrustState_name[int32(trust)]; ok {
+		return json.Marshal(name)
+	}
+	return json.Marshal(int32(trust))
+}
+
+func (trust *TrustState) UnmarshalJSON(data []byte) error {
+	name := ""
+	if err := json.Unmarshal(data, &name); err == nil {
+		value, ok := TrustState_value[name]
+		if !ok {
+			return fmt.Errorf("amp.TrustState: unknown state %q", name)
+		}
+		*trust = TrustState(value)
+		return nil
+	}
+	value := int32(0)
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	*trust = TrustState(value)
+	return nil
+}
+
 // --- amp.Tag --------------------------------------------------------------
 
 type tagJSON struct {
