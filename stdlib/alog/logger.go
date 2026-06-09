@@ -399,16 +399,20 @@ func (l *logger) Infof(level int32, f string, a ...any) {
 
 // ────────────────────────── interrupt handling ──────────────────────────
 
-// AwaitInterrupt returns two channels: the first closes on SIGINT/SIGTERM/SIGHUP,
-// the second closes on a sustained burst (3 signals within 3 seconds) so long-
-// running programs can distinguish graceful shutdown from user demanding exit now.
+// AwaitInterrupt returns two channels: the first closes on SIGINT/SIGTERM, the
+// second closes on a sustained burst (3 signals within 3 seconds) so long-running
+// programs can distinguish graceful shutdown from user demanding exit now.
 func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 	onFirst := make(chan struct{})
 	onRepeated := make(chan struct{})
 
 	go func() {
 		sigInbox := make(chan os.Signal, 1)
-		signal.Notify(sigInbox, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
+		// SIGHUP is deliberately excluded: catching it would override the SIG_IGN that
+		// nohup installs, letting a closing controlling terminal or SSH session terminate
+		// a backgrounded daemon.  SIGINT/SIGTERM are the shutdown signals; for a daemon a
+		// hangup means "reload", not "die".
+		signal.Notify(sigInbox, syscall.SIGINT, syscall.SIGTERM)
 
 		count := 0
 		firstTime := int64(0)
