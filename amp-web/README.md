@@ -10,6 +10,11 @@ and copied into this SDK bundle at [`webapi/webapi.types.go`](webapi/webapi.type
 > Get the latest by building it (`make amp-web-SDK`) or from your amp contact. At
 > v400 (Production Ready) it flips to public GitHub Releases + an open license.
 
+> **You connect to an operated node — you do not run one.** The vault (`ampd`) is
+> server software an operator runs; this package is a browser / Node **client**
+> that talks to it over HTTPS. For Maplable that node is `https://prod.plan.tools`.
+> Building a Go server means you're off the path — see `SKILL-amp-web-SDK.md` §0.
+
 ## Install
 
 Install from the client directory shipped in the bundle — it resolves under its
@@ -33,9 +38,9 @@ is pure JS (`@noble/*`); networking is native `fetch` + `WebSocket`.
 ```tsx
 import { AmpProvider, AmpWebClient, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
 
-// 1. Point the client at your amp node + planet.
+// 1. Point the client at the operated amp node + your planet (you don't run the node).
 const client = new AmpWebClient({
-  vaultUrl:  import.meta.env.VITE_AMP_VAULT_URL,   // e.g. https://my-amp-node:5193
+  vaultUrl:  import.meta.env.VITE_AMP_VAULT_URL,   // operated node — e.g. https://prod.plan.tools
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG,  // the planet your app reads/writes
 });
 
@@ -87,6 +92,10 @@ await login({ Scheme: 'email', Email: email, Password: password });
 ```
 
 > A `did:pkh:eip155` login resolves to the **same member** as a `wallet` login over that address. DID here is authentication only — not Verifiable Credentials.
+
+### Joining a federation
+
+Handed an `amp-invite-v1:…` token? After login, `await client.acceptInvite({ inviteText, passphrase })` joins you to that federation (passphrase arrives out-of-band). You don't need it to read/write your *own* planet, but **registering planets / names into a federation requires membership** — which the invite grants. See `SKILL-amp-web-SDK.md` §4.7.
 
 ## Hooks
 

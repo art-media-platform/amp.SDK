@@ -6,6 +6,64 @@
 
 ---
 
+## 0. Read This First (AI agents especially)
+
+**You are building a web client. amp is already running as a service. You will
+not build, run, compile, embed, or `go build` any server.** If you catch yourself
+cloning amp.planet / amp.SDK, writing Go, running `make`, or "standing up a node,"
+stop — wrong path. Your whole footprint is one TypeScript package + HTTPS calls.
+
+- **Your dependency** is the SDK bundle: `npm install ./amp-web-SDK` (a `file:`
+  dependency). The bare-name `npm install @art-media-platform/web` from the public
+  registry is **not** available during beta — it lands when the SDK publishes at
+  **v400**. We're pre-v400 today, so install the versioned bundle locally.
+- **Your server already exists.** You connect over HTTPS to an `ampd` node an
+  **operator runs for you** — you do not run, build, or host one. For Maplable that
+  node is **`https://prod.plan.tools`**. (`:5193`, seen elsewhere in this doc, is
+  only the local-dev default; an operated node is plain TLS on 443.)
+- **First goal — one round-trip:** log in → write one item → read it back (~20
+  lines, below). If that round-trips, you're talking to the vault and the rest of
+  this document is detail.
+- **Hello-world needs no invite; *joining a federation* does.** Wallet login
+  already binds you to a private planet you can write to immediately (the
+  round-trip below). But registering your planets / names into a federation — and
+  being discoverable across orgs — **requires membership in it**, which is what
+  accepting your invite grants (§4.7). Prove the pipe with a Tx first, then accept
+  the invite to join Federation Alpha.
+
+### Zero to first Tx
+
+```ts
+import { AmpWebClient } from '@art-media-platform/web';
+
+const client = new AmpWebClient({
+  vaultUrl:  'https://prod.plan.tools',   // the operated node (NOT one you run)
+  planetTag: '<handed to you>',
+});
+
+// Log in. Wallet (SIWE) auto-provisions a private home planet — zero operator setup.
+const addr      = await connectWallet();                  // your EIP-6963 wallet picker
+const challenge = await client.getWalletChallenge(addr);
+const signature = await signWithWallet(challenge.Message);
+await client.login({ Scheme: 'wallet', Address: addr, Signature: signature, Nonce: challenge.Nonce });
+
+// Write your first transaction, then read it straight back.
+const itemID   = await client.create('hello', 'world', { msg: 'hi' });
+const { data } = await client.query('hello', 'world', { itemID });
+console.log(data[0].Value);   // { msg: 'hi' } — round-tripped through a real journal
+```
+
+No Go, no node, no genesis ceremony — just a client and HTTPS.
+
+| Do | Don't |
+|---|---|
+| `npm install ./amp-web-SDK` (the bundle) | `git clone` / `go build` amp.planet or amp.SDK |
+| construct `AmpWebClient` at the operated `vaultUrl` | run / compile / embed `ampd`, or stand up a node |
+| `login` → `create` / `query` / `subscribe` / `upload` | reimplement tag canonization (use `resolveTag`, §5.8) |
+| build your React UI + cards (§8) | raw-`fetch` `/api/v1/*` (always go through the SDK) |
+
+---
+
 ## 1. Scope of This Contract
 
 This SKILL is the contract a web app codes against. It has one consumer and one server:
@@ -34,7 +92,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 
 ## 2. How to Use This SKILL
 
-**AI Agent rules.** When generating or modifying code for a web project that uses amp:
+**AI Agent rules.** You are writing a **web client** against an `ampd` node an operator already runs — never building, running, or embedding a server (§0). When generating or modifying code for a web project that uses amp:
 
 1. **All data operations** go through `@art-media-platform/web` (never raw `fetch` to `/api/v1/*`).
 2. **File uploads** go through `useAmpUpload()`.
@@ -61,15 +119,17 @@ npm install ./amp-web-SDK
 { "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
 ```
 
-Publishing to npm as `@art-media-platform/web` lands at v400.
+Publishing to npm as `@art-media-platform/web` lands at v400 — until then, install the versioned bundle locally (above).
 
 ### Provider Configuration
+
+`vaultUrl` is the HTTPS address of an `ampd` node an **operator runs for you** — you never run, build, or host one (§0). For Maplable it is `https://prod.plan.tools`.
 
 ```tsx
 import { AmpProvider, AmpWebClient } from '@art-media-platform/web';
 
 const client = new AmpWebClient({
-  vaultUrl: import.meta.env.VITE_AMP_VAULT_URL,    // e.g. https://my-amp-node:5193
+  vaultUrl: import.meta.env.VITE_AMP_VAULT_URL,    // operated node — e.g. https://prod.plan.tools
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG,  // the planet your app reads/writes
 });
 
@@ -85,7 +145,7 @@ export default function App() {
 ### Environment Variables
 
 ```env
-VITE_AMP_VAULT_URL=https://my-amp-node:5193
+VITE_AMP_VAULT_URL=https://prod.plan.tools   # the operated node (:5193 is only the local-dev default)
 VITE_AMP_PLANET_TAG=my-planet-tag
 
 # When reading anonymous shares, point at the share planet:
@@ -329,6 +389,51 @@ interface FederationPeerEntry { FederationID: string; VaultAddrs: VaultEndpoint[
 
 ```bash
 amp name register <fqdn> --target <planet-UID> [--federation <UID>] [--vault transport:addr …]   # alias: amp ns
+```
+
+### 4.7 Joining a federation — invite accept
+
+Accepting an invite is **how you join a federation**, and **federation membership
+is the authorization to publish names** (§4.6). You don't need it to read or write
+your *own* home planet — that works the moment you log in (§0) — but you **do**
+need it to register your planets / names into a federation and be discoverable
+across orgs (it mints your member keys on your side). This is the bootstrapping
+step for the cross-org / licensee workflow. Log in first (§4.1), then redeem the
+token:
+
+```
+POST /api/v1/invite/accept            (Bearer)
+     Body:     { InviteText: string, Passphrase: string }
+     Response: { PlanetID: string, MemberID: string }    // 201 Created; base32 UIDs
+```
+
+- `InviteText` is the canonical `amp-invite-v1:…` form — whitespace / newline /
+  case-tolerant, so it survives copy-paste and transit.
+- `Passphrase` is delivered **out-of-band**; the token is inert without it, which
+  is why an invite is safe to paste into a doc or email.
+- Returns `501` on the in-memory dev backend (§14.7); live on a host-bridged node
+  such as `prod.plan.tools`.
+- Issuing invites is the operator side of this — `POST /api/v1/invite/issue` (§14.4).
+
+From the SDK:
+
+```ts
+const { PlanetID, MemberID } = await client.acceptInvite({
+  inviteText: 'amp-invite-v1:…',
+  passphrase: '…',                 // out-of-band
+});
+// You are now a member of that federation's planet; from here you can register
+// your own names with `amp name register` (§4.6).
+```
+
+Bootstrapping with no SDK code yet — already holding a Bearer from login? One
+curl redeems it:
+
+```bash
+curl -sX POST https://prod.plan.tools/api/v1/invite/accept \
+  -H "Authorization: Bearer $AMP_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"InviteText":"amp-invite-v1:…","Passphrase":"…"}'
 ```
 
 ---
@@ -1080,14 +1185,16 @@ This section answers the architecture questions that come up when an existing pr
 
 ### 14.1 Deployment topologies — where the vault runs
 
-An `ampd` host is a full peer: it stores, signs, encrypts, and relays. A web / desktop app reaches one in three shapes:
+**The web SDK is a pure client — it never builds, embeds, or runs a vault.** For a web app the vault is an `ampd` host an operator already runs, reached over HTTPS (§0). The shapes below describe where *that host* lives — an operator / deploy concern, not something your web build ships.
 
-- **Embedded local vault** — bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; projects are encrypted on their own machine; reads, writes, and seals work with no network. This is the topology that preserves an **offline-first** product. Cross-compile the Go host per target (darwin-arm64/x64, win-x64/arm64, linux-x64), code-sign each, ship it as a platform resource.
-- **Shared cloud vault** — one `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab. Simplest to operate; loses the offline property (the app needs the server reachable to read/write).
-- **Hybrid** — an embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. This is the native amp model, not a bolt-on.
-- **Self-hosted & federated (the licensee path)** — a partner runs their *own* `ampd` and is therefore their own operator: their own CORS, their own planets, their own admin — no per-deploy config handoff to you. They join the wider network by **federating** with a parent deploy, so their planets are discoverable through it (and vice-versa). See §14.8.
+An `ampd` host is a full peer: it stores, signs, encrypts, and relays.
 
-A pure-JS / WASM in-process vault is **not** on the near-term path; the embeddable unit today is the native host (`ampd` / `libampd`). For a paid desktop app, **hybrid (embedded + optional cloud sync)** is the recommended shape.
+- **Shared cloud vault (the default for a web app).** One `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab; your client connects to it over HTTPS (for Maplable, `https://prod.plan.tools`). Simplest to operate; the app needs the server reachable to read / write.
+- **Embedded local vault (ADVANCED — bundled desktop/Electron only; *not* a web build).** Bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; reads, writes, and seals work with no network — this is what preserves an **offline-first** desktop product. It is the one topology that ships the Go host (cross-compile per target — darwin-arm64/x64, win-x64/arm64, linux-x64 — and code-sign each), and it is **not** part of a web-SDK integration. Reach for it only if you are explicitly building a bundled native app.
+- **Hybrid.** An embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. The native amp model for a desktop app, not a bolt-on.
+- **Self-hosted & federated (the licensee path).** A partner runs their *own* `ampd` and is therefore their own operator — their own CORS, planets, and admin, with no per-deploy config handoff to you. They join the wider network by **federating** with a parent deploy, so their planets are discoverable through it (and vice-versa). See §14.8.
+
+A pure-JS / WASM in-process vault is **not** on the near-term path; the embeddable unit today is the native host (`ampd` / `libampd`). For a paid **desktop** app, **hybrid (embedded + optional cloud sync)** is the recommended shape — but a **web** app needs none of this: it connects to an operated node.
 
 ### 14.2 Offline membership & feature gating
 
@@ -1112,7 +1219,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy (AOM substrate-agnostic-members), not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the operator admin allowlist — operator-side gating config, §10) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a sealed invite and `POST /api/v1/invite/accept` redeems it (both Bearer; both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the operator admin allowlist — operator-side gating config, §10) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a sealed invite and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability
@@ -1134,6 +1241,8 @@ Item order is `_ItemID` (tag.UID) byte order, not wall-clock — fine for SDP ex
 For end-to-end tests without a production vault, point the client at a local `ampd` running its in-memory dev backend — it round-trips the exact wire shape (not encrypted, not synced: a contract fixture, not a vault). The bundle also ships `scripts/smoke.mjs`, the login → upsert → query → seal / open smoke check the SDK validates against. Drive your Stripe **test-mode** webhook at a local fixture vault to exercise provision / expire paths without touching real customers.
 
 ### 14.8 Running your own vault & federating (the licensee path)
+
+> **Accepting an invite to *join* a federation does not require running your own vault — that's a web-client call (§4.7).** This section is the heavier, self-hosting path: running your **own** `ampd` so your planets are independently hosted and discoverable. A web app on an operated node needs none of it.
 
 When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. Two ways to federate, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
 

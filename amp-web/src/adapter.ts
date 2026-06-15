@@ -12,6 +12,8 @@ import type {
   AmpQueryOpts,
   BlobRef,
   Address,
+  InviteAcceptOpts,
+  InviteAcceptResult,
   LoginCredentials,
   SubscriptionEvent,
   TagResolution,
@@ -68,6 +70,11 @@ export interface AmpAdapter {
 
   /** Direct /www/{UID} URL for an already-published blob. */
   mediaUrl(blobUID: string): Promise<string>;
+
+  // ── Federation invites ────────────────────────────────────────────
+
+  /** Redeem a sealed amp-invite-v1 token to join its federation planet (Bearer; see SKILL §4.7). */
+  acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult>;
 
   // ── Addresses (cross-planet CRDT-cell references, AOM cross-planet-citation) ──────
 
