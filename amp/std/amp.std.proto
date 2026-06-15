@@ -33,8 +33,10 @@ message TRS {
     double              Qz = 12;
     double              Qw = 13;
 
-    // If non-zero and a globe surface is defined, this TRS is applied from the spherical position, normal, and scale associated with the given S2 tile cell.
-    fixed64             TileS2 = 16;
+    // (local geo coordinates,  local Quaternion, local scale, ..)
+    // this TRS is applied from the spherical position -- TODO: add enum for how to form the resultant TRS!
+    fixed64             S2_0 = 14;
+    fixed64             S2_1 = 15;
 }
 
 message Matrix4x4 {

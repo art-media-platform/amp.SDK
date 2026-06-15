@@ -69,7 +69,7 @@ export interface AmpAdapter {
   /** Direct /www/{UID} URL for an already-published blob. */
   mediaUrl(blobUID: string): Promise<string>;
 
-  // ── Addresses (cross-planet CRDT-cell references, DESIGN-12) ──────
+  // ── Addresses (cross-planet CRDT-cell references, AOM cross-planet-citation) ──────
 
   /** Build an Address for embedding in shares / withdraw delegations. */
   address(ref: Address): Address;

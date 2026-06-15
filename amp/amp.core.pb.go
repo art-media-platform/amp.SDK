@@ -857,7 +857,7 @@ func (AttestationType) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{13}
 }
 
-// WithdrawReason categorizes a withdrawal per DESIGN-15.  Used by both
+// WithdrawReason categorizes a withdrawal per AOM withdrawal-consent.  Used by both
 // amp.Withdraw (substrate-side TxMsg payload) and webapi.WithdrawNote
 // (REST/WebSocket wire shape).
 //
@@ -994,7 +994,7 @@ func (PlatformID) EnumDescriptor() ([]byte, []int) {
 
 // TrustState is the three-state verdict for a NameService record's §3.3 back-edge
 // consent check. Unchecked (the resolver lacked the target's
-// live Brand to verify) must never map to Verified.  PRD-name-service §3.3/§15.1.
+// live Brand to verify) must never map to Verified.  AOM name-service §3.3/§15.1.
 type TrustState int32
 
 const (
@@ -2737,7 +2737,7 @@ type BrandMark struct {
 	// Deep-link / custom URL schemes this planet answers to (["tunr"]).  Quorum
 	// -signed because a scheme claim is an identity / impersonation surface.
 	URLSchemes []string `protobuf:"bytes,5,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"`
-	// The federation that names this planet — the PRD-name-service §3.3 back-edge
+	// The federation that names this planet — the AOM name-service §3.3 back-edge
 	// the planet acknowledges as its current namer.  Single-valued (one namer at
 	// a time, may roam).  Quorum-signed so federation affiliation cannot be spoofed.
 	NamedBy *Tag `protobuf:"bytes,6,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
@@ -3646,7 +3646,7 @@ type Attestation struct {
 	// LawAttestationModality_* definition in amp.consts.sdl (or any
 	// community/app's consts).  Zero UID = unspecified.  Modality is
 	// categorical (what kind of utterance), not gradational (how confident).
-	// See PRD §6 / DESIGN-13 for the canonical modalities.
+	// See PRD §6 / AOM modal-attestation for the canonical modalities.
 	Modality      *Tag `protobuf:"bytes,16,opt,name=Modality,proto3" json:"Modality,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3752,7 +3752,7 @@ func (x *Attestation) GetModality() *Tag {
 // Use cases: translations of the same text, cultural-frame mappings of the
 // same role/rite, substrate migration (biological → upload), bridging amp
 // MemberIDs to external identity spaces (e.g. Stripe customer IDs).  See
-// DESIGN-14.
+// AOM address-equivalence.
 type Equivalence struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The two addresses being equated.  Order is insignificant — the relation
@@ -3846,7 +3846,7 @@ func (x *Equivalence) GetRationale() string {
 // MUST surface alongside the original record.  Whether to honor the
 // withdrawal — by suppression, redaction, or recontextualization — is a
 // per-app, per-community, per-jurisdiction choice the protocol does not
-// adjudicate.  See DESIGN-15.
+// adjudicate.  See AOM withdrawal-consent.
 //
 // Authority: Subject MUST equal the signer of the containing TxMsg, OR be
 // a member who has explicitly delegated withdrawal authority to the signer
@@ -3860,7 +3860,7 @@ type Withdraw struct {
 	// addresses supported.  AttrID and EditID typically zero (citing an item
 	// rather than a specific edit).
 	Withdrawn []*Address `protobuf:"bytes,4,rep,name=Withdrawn,proto3" json:"Withdrawn,omitempty"`
-	// Reason for withdrawal, per DESIGN-15.  Same enum used substrate +
+	// Reason for withdrawal, per AOM withdrawal-consent.  Same enum used substrate +
 	// wire; webapi.WithdrawNote.Reason is the same type.
 	Reason WithdrawReason `protobuf:"varint,6,opt,name=Reason,proto3,enum=amp.WithdrawReason" json:"Reason,omitempty"`
 	// Optional delegation address — proves the signer's authority to withdraw
@@ -5147,7 +5147,7 @@ func (x *ChronicleCompactHistory) GetPoints() []*ChronicleCompactPoint {
 // ChronicleCompact is the governance TxMsg that declares a chronicle compact.
 // Signed by the governance quorum.  Peers with the full chronicle may keep it
 // for forensics; peers syncing fresh after rebase receive only the compacted
-// form plus post-rebase TxMsgs.  See PRD-chronicle-and-codex §4.7.
+// form plus post-rebase TxMsgs.  See AOM chronicle-and-codex §4.7.
 type ChronicleCompact struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// TxID up to which the chronicle has been rebased; older TxMsgs discardable.
@@ -5600,7 +5600,7 @@ func (x *CrateRef) GetBlobID_1() uint64 {
 //
 // All fields admin-signable; founders may include a Brand TxOp in the genesis
 // envelope as the first record (EditID=0) or defer to a later admin-signed
-// channel write.  PRD-name-service.md §2.
+// channel write.  AOM name-service §2.
 type Brand struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	AppName          string                 `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`     // "Tunr"
@@ -5617,7 +5617,7 @@ type Brand struct {
 	// NamedBy is the federation that names this planet — the §3.3 back-edge the
 	// planet acknowledges as its current namer.  Single-valued: a planet is named
 	// through one federation at a time but may roam.  Read by NameService
-	// consumers to enforce the canonic-binding invariant of PRD-name-service §3.3.
+	// consumers to enforce the canonic-binding invariant of AOM name-service §3.3.
 	NamedBy       *Tag `protobuf:"bytes,30,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5859,7 +5859,7 @@ func (x *Address) GetEditID_1() uint64 {
 
 // VaultAddr is a transport-tagged vault endpoint.  Used by NameService records
 // and federation pointers to hint where a planet can be pinned.  Reuses the
-// envelope shape of PRD-amp-security-sync §7.2 VaultAddresses; transports
+// envelope shape of AOM security-sync §7.2 VaultAddresses; transports
 // advertise themselves via the Transport string so future kits land without
 // proto changes.
 type VaultAddr struct {
@@ -5919,7 +5919,7 @@ func (x *VaultAddr) GetAddress() []byte {
 //
 //	(NodeID = channel_node, AttrID = amp.name.service.record, ItemID = hash(fqdn)).
 //
-// Signed under the publishing federation's epoch admin.  PRD-name-service §3.1.
+// Signed under the publishing federation's epoch admin.  AOM name-service §3.1.
 type NameServiceRecord struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	FQDN     string                 `protobuf:"bytes,1,opt,name=FQDN,proto3" json:"FQDN,omitempty"`         // "spaces.plan.tools" — exact-match key for Resolve
@@ -6021,7 +6021,7 @@ func (x *NameServiceRecord) GetRegisteredBy() *Tag {
 }
 
 // FederationPeer — peer of a FederationDirectory.
-// PRD-name-service §4.4.
+// AOM name-service §4.4.
 type FederationPeer struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FederationID  *Tag                   `protobuf:"bytes,1,opt,name=FederationID,proto3" json:"FederationID,omitempty"` // the peer federation's planet UID
@@ -6083,7 +6083,7 @@ func (x *FederationPeer) GetLabel() string {
 }
 
 // FederationDirectory — federation peer pointers, NS-record style cross-federation
-// forwarding (PRD-name-service §4.4).  Lives at
+// forwarding (AOM name-service §4.4).  Lives at
 //
 //	(HeadNodeID, amp.federation.directory, amp.federation.directory.UID)
 //

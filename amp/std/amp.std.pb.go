@@ -783,8 +783,10 @@ type TRS struct {
 	Qy float64 `protobuf:"fixed64,11,opt,name=Qy,proto3" json:"Qy,omitempty"`
 	Qz float64 `protobuf:"fixed64,12,opt,name=Qz,proto3" json:"Qz,omitempty"`
 	Qw float64 `protobuf:"fixed64,13,opt,name=Qw,proto3" json:"Qw,omitempty"`
-	// If non-zero and a globe surface is defined, this TRS is applied from the spherical position, normal, and scale associated with the given S2 tile cell.
-	TileS2        uint64 `protobuf:"fixed64,16,opt,name=TileS2,proto3" json:"TileS2,omitempty"`
+	// (local geo coordinates,  local Quaternion, local scale, ..)
+	// this TRS is applied from the spherical position -- TODO: add enum for how to form the resultant TRS!
+	S2_0          uint64 `protobuf:"fixed64,14,opt,name=S2_0,json=S20,proto3" json:"S2_0,omitempty"`
+	S2_1          uint64 `protobuf:"fixed64,15,opt,name=S2_1,json=S21,proto3" json:"S2_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -882,9 +884,16 @@ func (x *TRS) GetQw() float64 {
 	return 0
 }
 
-func (x *TRS) GetTileS2() uint64 {
+func (x *TRS) GetS2_0() uint64 {
 	if x != nil {
-		return x.TileS2
+		return x.S2_0
+	}
+	return 0
+}
+
+func (x *TRS) GetS2_1() uint64 {
+	if x != nil {
+		return x.S2_1
 	}
 	return 0
 }
@@ -2940,7 +2949,7 @@ var File_amp_std_amp_std_proto protoreflect.FileDescriptor
 
 const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
-	"\x15amp/std/amp.std.proto\x12\x03std\x1a\x12amp/amp.core.proto\"\xc3\x01\n" +
+	"\x15amp/std/amp.std.proto\x12\x03std\x1a\x12amp/amp.core.proto\"\xd1\x01\n" +
 	"\x03TRS\x12\x0e\n" +
 	"\x02Sx\x18\x01 \x01(\x01R\x02Sx\x12$\n" +
 	"\x05Flags\x18\x02 \x01(\x0e2\x0e.std.TRS_FlagsR\x05Flags\x12\x0e\n" +
@@ -2951,8 +2960,9 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	" \x01(\x01R\x02Qx\x12\x0e\n" +
 	"\x02Qy\x18\v \x01(\x01R\x02Qy\x12\x0e\n" +
 	"\x02Qz\x18\f \x01(\x01R\x02Qz\x12\x0e\n" +
-	"\x02Qw\x18\r \x01(\x01R\x02Qw\x12\x16\n" +
-	"\x06TileS2\x18\x10 \x01(\x06R\x06TileS2\"\xab\x02\n" +
+	"\x02Qw\x18\r \x01(\x01R\x02Qw\x12\x11\n" +
+	"\x04S2_0\x18\x0e \x01(\x06R\x03S20\x12\x11\n" +
+	"\x04S2_1\x18\x0f \x01(\x06R\x03S21\"\xab\x02\n" +
 	"\tMatrix4x4\x12\x10\n" +
 	"\x03M00\x18\x01 \x01(\x01R\x03M00\x12\x10\n" +
 	"\x03M01\x18\x02 \x01(\x01R\x03M01\x12\x10\n" +

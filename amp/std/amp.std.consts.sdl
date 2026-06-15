@@ -102,12 +102,12 @@ tags Attr {
         }
     }
 
-    // Brand — substrate-native planet identity (PRD-name-service.md §2).
+    // Brand — substrate-native planet identity (AOM name-service §2).
     // Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
     // TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
     Brand "amp.brand"
 
-    // NameService — substrate-native naming primitive (PRD-name-service.md §3).
+    // NameService — substrate-native naming primitive (AOM name-service §3).
     // A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.
     // Federations propagate their channel to members via normal CRDT sync.
     // Generalized beyond planet naming — any UID-bearing entity is namable.
@@ -115,7 +115,7 @@ tags Attr {
         NameServiceRecord "record"
     }
 
-    // Federation directory — peer / parent federation pointers (PRD-name-service.md §4.3).
+    // Federation directory — peer / parent federation pointers (AOM name-service §4.3).
     // NS-record-style cross-federation forwarding without DNS dependency.
     FederationDirectory "amp.federation.directory"
 
@@ -130,7 +130,7 @@ tags Attr {
         LawEquivalence  "Equivalence"
         LawWithdraw     "Withdraw"
 
-        // Substrate-agnostic Member Kind (DESIGN-11).  MemberEpoch.Kind is a Tag
+        // Substrate-agnostic Member Kind (AOM substrate-agnostic-members).  MemberEpoch.Kind is a Tag
         // resolving to one of these UIDs.  Communities + apps may register
         // additional Kinds in their own consts.sdl.  Zero UID = unspecified.
         LawMemberKind "MemberKind" {
@@ -143,7 +143,7 @@ tags Attr {
             LawMemberKind_Process    "Process"
         }
 
-        // Modal Attestation modalities (DESIGN-13).  Attestation.Modality is a
+        // Modal Attestation modalities (AOM modal-attestation).  Attestation.Modality is a
         // Tag resolving to one of these UIDs.  Communities + apps may register
         // additional modalities.  Zero UID = unspecified.
         LawAttestationModality "AttestationModality" {
@@ -159,7 +159,7 @@ tags Attr {
             LawAttestationModality_Retracted   "Retracted"
         }
 
-        // Equivalence strengths (DESIGN-14).  Equivalence.Strength is a Tag
+        // Equivalence strengths (AOM address-equivalence).  Equivalence.Strength is a Tag
         // resolving to one of these UIDs.  Zero UID = unspecified.
         LawEquivalenceStrength "EquivalenceStrength" {
             LawEquivalenceStrength_Identity    "Identity"
@@ -168,7 +168,7 @@ tags Attr {
             LawEquivalenceStrength_Analogous   "Analogous"
         }
 
-        // Withdrawal reasons (DESIGN-15).  Withdraw.Reason is a Tag resolving
+        // Withdrawal reasons (AOM withdrawal-consent).  Withdraw.Reason is a Tag resolving
         // to one of these UIDs.  Zero UID = unspecified.
         LawWithdrawReason "WithdrawReason" {
             LawWithdrawReason_Consent      "Consent"
@@ -304,7 +304,7 @@ const Atmosphere {
 
 // Bundled crate URIs — platform-wide crates every amp client imports at boot.
 // BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live in
-// Brand.BundledCrates (PRD-name-service §2).  Each URI is asset:PublisherID/CrateID
+// Brand.BundledCrates (AOM name-service §2).  Each URI is asset:PublisherID/CrateID
 // per the wire scheme declared in amp.core.proto:Asset; the build pipeline stages
 // matching .crate files under StreamingAssets/Bundled/CrateDepot.
 const Crates {

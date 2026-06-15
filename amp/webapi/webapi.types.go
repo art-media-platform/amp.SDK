@@ -73,7 +73,7 @@ type LoginResponse struct {
 
 // AmpMember describes the authenticated identity on the wire.  `Kind` is a
 // human-readable label (e.g. "Person") sourced from a `LawMemberKind_*`
-// definition (DESIGN-11); apps surface it but do not gate behavior on it.
+// definition (AOM substrate-agnostic-members); apps surface it but do not gate behavior on it.
 type AmpMember struct {
 	ID          tag.UID `json:"ID"`
 	DisplayName string  `json:"DisplayName,omitempty"`
@@ -101,7 +101,7 @@ type EmailIssueResponse struct {
 	Email    string  `json:"Email"`
 }
 
-// WithdrawNote is the wire-shape carrier for DESIGN-15 withdrawal facts,
+// WithdrawNote is the wire-shape carrier for AOM withdrawal-consent withdrawal facts,
 // carried in TxOp.Withdraw / EditEntry.Withdraw / Item.Withdrawn /
 // SubscribeFrame.Withdraw.  It is never marshaled to binary, so its UID
 // fields are typed tag.UID / amp.Address and ride the JSON wire as base32
@@ -141,7 +141,7 @@ const (
 // server-side schema knowledge.
 //
 // Withdraw is non-nil only on withdraw ops (Kind = TxOpWithdraw); it carries
-// the DESIGN-15 facts (Reason/Rationale/Subject/Delegation).  Non-nil on a
+// the AOM withdrawal-consent facts (Reason/Rationale/Subject/Delegation).  Non-nil on a
 // non-withdraw op is ignored.
 type TxOp struct {
 	Kind     TxOpKind        `json:"Kind"`
@@ -266,7 +266,7 @@ type MediaResolveRequest struct {
 // ItemID/EditID/FromID are typed UIDs.
 //
 // Withdraw is non-nil on withdraw frames (Type = "withdraw") and carries the
-// full DESIGN-15 record so subscribers can reconstruct it without a
+// full AOM withdrawal-consent record so subscribers can reconstruct it without a
 // follow-up read.
 type SubscribeFrame struct {
 	Type      string          `json:"Type"`
@@ -285,12 +285,13 @@ type SubscribeFrame struct {
 // POST /api/v1/search, GET /api/v1/federation/peers.
 //
 // These mirror the substrate resolver (nameservice.Resolution / Match /
-// amp.FederationPeer).  All three endpoints require Bearer auth: a session
-// resolves over the federations it has joined, and there is no anonymous
-// discovery surface — FQDN keys are low-entropy and dictionary-reversible, so
-// namespace privacy comes from federation unreachability, not key secrecy.
-// VaultAddrs (a planet's dialable bootstrap addresses) are a members-only
-// benefit and are redacted from any unauthenticated path.
+// amp.FederationPeer).  POST /api/v1/resolve is anonymous: exact-match resolution
+// answers off the host's federation resolver and returns VaultAddrs in full so any
+// caller — a fresh install, a deep-link source — can dial + pin the named planet
+// (FQDN keys are low-entropy and dictionary-reversible, so namespace privacy comes
+// from federation unreachability, not key secrecy).  Search and federation/peers
+// require Bearer auth: ranked enumeration is the scraping surface, so a session
+// walks only the federations it has joined.
 
 // ResolveRequest is the body of POST /api/v1/resolve.
 type ResolveRequest struct {

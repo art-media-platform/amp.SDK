@@ -601,7 +601,7 @@ message BrandMark {
     // -signed because a scheme claim is an identity / impersonation surface.
     repeated string     URLSchemes = 5;
 
-    // The federation that names this planet — the PRD-name-service §3.3 back-edge
+    // The federation that names this planet — the AOM name-service §3.3 back-edge
     // the planet acknowledges as its current namer.  Single-valued (one namer at
     // a time, may roam).  Quorum-signed so federation affiliation cannot be spoofed.
     Tag                 NamedBy = 6;
@@ -993,7 +993,7 @@ message Attestation {
     // LawAttestationModality_* definition in amp.consts.sdl (or any
     // community/app's consts).  Zero UID = unspecified.  Modality is
     // categorical (what kind of utterance), not gradational (how confident).
-    // See PRD §6 / DESIGN-13 for the canonical modalities.
+    // See PRD §6 / AOM modal-attestation for the canonical modalities.
     Tag                 Modality = 16;
 }
 
@@ -1005,7 +1005,7 @@ message Attestation {
 // Use cases: translations of the same text, cultural-frame mappings of the
 // same role/rite, substrate migration (biological → upload), bridging amp
 // MemberIDs to external identity spaces (e.g. Stripe customer IDs).  See
-// DESIGN-14.
+// AOM address-equivalence.
 message Equivalence {
 
     // The two addresses being equated.  Order is insignificant — the relation
@@ -1028,7 +1028,7 @@ message Equivalence {
 }
 
 
-// WithdrawReason categorizes a withdrawal per DESIGN-15.  Used by both
+// WithdrawReason categorizes a withdrawal per AOM withdrawal-consent.  Used by both
 // amp.Withdraw (substrate-side TxMsg payload) and webapi.WithdrawNote
 // (REST/WebSocket wire shape).
 //
@@ -1055,7 +1055,7 @@ enum WithdrawReason {
 // MUST surface alongside the original record.  Whether to honor the
 // withdrawal — by suppression, redaction, or recontextualization — is a
 // per-app, per-community, per-jurisdiction choice the protocol does not
-// adjudicate.  See DESIGN-15.
+// adjudicate.  See AOM withdrawal-consent.
 //
 // Authority: Subject MUST equal the signer of the containing TxMsg, OR be
 // a member who has explicitly delegated withdrawal authority to the signer
@@ -1071,7 +1071,7 @@ message Withdraw {
     // rather than a specific edit).
     repeated Address    Withdrawn = 4;
 
-    // Reason for withdrawal, per DESIGN-15.  Same enum used substrate +
+    // Reason for withdrawal, per AOM withdrawal-consent.  Same enum used substrate +
     // wire; webapi.WithdrawNote.Reason is the same type.
     WithdrawReason      Reason = 6;
 
@@ -1186,7 +1186,7 @@ message SyncRangeRequest {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Chronicle & Codex — PRD-chronicle-and-codex.md
+// Chronicle & Codex — AOM chronicle-and-codex
 // ══════════════════════════════════════════════════════════════════════
 
 // Artifact is one addressable unit in a planet: a (NodeID, AttrID, ItemID)
@@ -1339,7 +1339,7 @@ message ChronicleCompactHistory {
 // ChronicleCompact is the governance TxMsg that declares a chronicle compact.
 // Signed by the governance quorum.  Peers with the full chronicle may keep it
 // for forensics; peers syncing fresh after rebase receive only the compacted
-// form plus post-rebase TxMsgs.  See PRD-chronicle-and-codex §4.7.
+// form plus post-rebase TxMsgs.  See AOM chronicle-and-codex §4.7.
 message ChronicleCompact {
 
     // TxID up to which the chronicle has been rebased; older TxMsgs discardable.
@@ -1355,7 +1355,7 @@ message ChronicleCompact {
     // Optional rationale for audit trails.
     string              Label = 5;
 
-    // Reserved for future redaction manifest (PRD-chronicle-and-codex §4.7.4).
+    // Reserved for future redaction manifest (AOM chronicle-and-codex §4.7.4).
     reserved 10 to 19;
 }
 
@@ -1394,7 +1394,7 @@ message ChronicleHeader {
     // Compact lineage.  Nil if this chronicle has never been compacted.
     ChronicleCompactHistory CompactHistory = 6;
 
-    // Reserved for future redaction manifest (PRD-chronicle-and-codex §4.7.4).
+    // Reserved for future redaction manifest (AOM chronicle-and-codex §4.7.4).
     reserved 10 to 19;
 
     // Summary for pre-flight validation.
@@ -1406,7 +1406,7 @@ message ChronicleHeader {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Brand & Planet metadata — PRD-name-service.md §2
+// Brand & Planet metadata — AOM name-service §2
 // ══════════════════════════════════════════════════════════════════════
 
 // PlatformID identifies a build/install target.  Values mirror Unity's
@@ -1453,7 +1453,7 @@ message CrateRef {
 //   (PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=*)
 // All fields admin-signable; founders may include a Brand TxOp in the genesis
 // envelope as the first record (EditID=0) or defer to a later admin-signed
-// channel write.  PRD-name-service.md §2.
+// channel write.  AOM name-service §2.
 message Brand {
     string              AppName          = 1;     // "Tunr"
     string              AppDomain        = 2;     // "spaces.soundspectrum.com"
@@ -1470,13 +1470,13 @@ message Brand {
     // NamedBy is the federation that names this planet — the §3.3 back-edge the
     // planet acknowledges as its current namer.  Single-valued: a planet is named
     // through one federation at a time but may roam.  Read by NameService
-    // consumers to enforce the canonic-binding invariant of PRD-name-service §3.3.
+    // consumers to enforce the canonic-binding invariant of AOM name-service §3.3.
     Tag                 NamedBy          = 30;
 }
 
 
 // ══════════════════════════════════════════════════════════════════════
-// NameService & federation — PRD-name-service.md
+// NameService & federation — AOM name-service
 // ══════════════════════════════════════════════════════════════════════
 
 // Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID, ItemID, EditID)
@@ -1503,7 +1503,7 @@ message Address {
 
 // VaultAddr is a transport-tagged vault endpoint.  Used by NameService records
 // and federation pointers to hint where a planet can be pinned.  Reuses the
-// envelope shape of PRD-amp-security-sync §7.2 VaultAddresses; transports
+// envelope shape of AOM security-sync §7.2 VaultAddresses; transports
 // advertise themselves via the Transport string so future kits land without
 // proto changes.
 message VaultAddr {
@@ -1514,7 +1514,7 @@ message VaultAddr {
 
 // TrustState is the three-state verdict for a NameService record's §3.3 back-edge
 // consent check. Unchecked (the resolver lacked the target's
-// live Brand to verify) must never map to Verified.  PRD-name-service §3.3/§15.1.
+// live Brand to verify) must never map to Verified.  AOM name-service §3.3/§15.1.
 enum TrustState {
     Unchecked = 0;  // not yet verifiable — cold resolve, no live Brand held (proto3 default)
     Verified  = 1;  // back-edge holds: target Brand.NamedBy == the answering federation
@@ -1525,7 +1525,7 @@ enum TrustState {
 // NameServiceRecord — one FQDN → PlanetID record published by a federation.
 // Lives in a NameService channel at
 //   (NodeID = channel_node, AttrID = amp.name.service.record, ItemID = hash(fqdn)).
-// Signed under the publishing federation's epoch admin.  PRD-name-service §3.1.
+// Signed under the publishing federation's epoch admin.  AOM name-service §3.1.
 message NameServiceRecord {
 
     string              FQDN          = 1;    // "spaces.plan.tools" — exact-match key for Resolve
@@ -1548,7 +1548,7 @@ message NameServiceRecord {
     Tag                 RegisteredAt  = 8;    // TxID of registering TxMsg (initial Upsert)
     Tag                 RegisteredBy  = 9;    // signing member's MemberID (federation admin)
 
-    // ── Reserved at v250 — mechanism deferred, slot locked (PRD-name-service §10.4). ──
+    // ── Reserved at v250 — mechanism deferred, slot locked (AOM name-service §10.4). ──
     // These ship INERT (unverified, ignored by consumers) but freeze the field
     // number↔meaning binding now, so the §15 trust primitives — and the §16 civil-
     // jurisdiction / brand-dispute adjudication that rides them — land post-freeze with
@@ -1583,7 +1583,7 @@ message NameServiceRecord {
 
 
 // FederationPeer — peer of a FederationDirectory.
-// PRD-name-service §4.4.
+// AOM name-service §4.4.
 message FederationPeer {
     Tag                 FederationID = 1;    // the peer federation's planet UID
     repeated VaultAddr  VaultAddrs   = 2;    // where peer federation is pinnable
@@ -1611,7 +1611,7 @@ message FederationPeer {
 
 
 // FederationDirectory — federation peer pointers, NS-record style cross-federation
-// forwarding (PRD-name-service §4.4).  Lives at
+// forwarding (AOM name-service §4.4).  Lives at
 //   (HeadNodeID, amp.federation.directory, amp.federation.directory.UID)
 // on a federation planet.  Single CRDT item per federation; admin-signed like
 // any governance change.  Analogous to DNS NS records — bounded, opt-in.

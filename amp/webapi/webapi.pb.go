@@ -39,7 +39,7 @@ const (
 // PlanetEpoch.IsPublic=true; per-member private planets are auto-genesisd by
 // app.home on first login and don't need this surface.
 //
-// Brand is the founding Brand (PRD-name-service §2).  Optional — when omitted,
+// Brand is the founding Brand (AOM name-service §2).  Optional — when omitted,
 // the server synthesizes a minimal Brand{AppName: derived from Tag}.
 type PlanetCreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`

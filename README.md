@@ -194,7 +194,7 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 4. `make build` produces `ampd` (standalone server) and `libampd` (embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
 
-> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in [`amp.planet/docs/INDEX.md`](https://github.com/art-media-platform/amp.planet/blob/main/docs/INDEX.md).
+> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in [`amp.planet/AOM/AOM.md`](https://github.com/art-media-platform/amp.planet/blob/main/AOM/AOM.md).
 
 ---
 

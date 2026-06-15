@@ -16,7 +16,7 @@ export interface AmpMember {
   DisplayName: string;
   Email?: string;        // present when the auth scheme exposes it
   PlanetID: string;      // planet tag.UID, base32
-  Kind?: string;         // tag.UID resolving to a LawMemberKind_* (DESIGN-11)
+  Kind?: string;         // tag.UID resolving to a LawMemberKind_* (AOM substrate-agnostic-members)
   Address?: string;      // 0x-prefixed; present for wallet-scheme members
 }
 
@@ -69,7 +69,7 @@ export interface TagResolution {
   ID: string;            // base32 tag.UID
 }
 
-// ── Withdrawal & addresses (DESIGN-15 / DESIGN-12) ──────────────────
+// ── Withdrawal & addresses (AOM withdrawal-consent / AOM cross-planet-citation) ──────────────────
 
 export type WithdrawReason =
   | 'NoReason' | 'Consent' | 'Inaccuracy' | 'Outdated' | 'Coerced'
