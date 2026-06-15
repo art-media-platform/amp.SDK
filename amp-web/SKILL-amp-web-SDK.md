@@ -426,10 +426,18 @@ const { PlanetID, MemberID } = await client.acceptInvite({
 // your own names with `amp name register` (§4.6).
 ```
 
-Bootstrapping with no SDK code yet — already holding a Bearer from login? One
-curl redeems it:
+Bootstrapping with no SDK code yet? **The Bearer is your login `SessionToken`**
+(§4.1). With the SDK you never handle it — `client.login()` stores it and
+`client.acceptInvite()` sends it; for a raw curl, read `SessionToken` from a login
+response into `$AMP_TOKEN`:
 
 ```bash
+# Wallet (SIWE) needs a signed challenge — easiest via the SDK login, which then
+# holds the session for you; the email scheme is a plain POST once provisioned.
+AMP_TOKEN=$(curl -sX POST https://prod.plan.tools/api/v1/login \
+  -H 'Content-Type: application/json' \
+  -d '{"Scheme":"email","Email":"you@org","Password":"…"}' | jq -r .SessionToken)
+
 curl -sX POST https://prod.plan.tools/api/v1/invite/accept \
   -H "Authorization: Bearer $AMP_TOKEN" \
   -H 'Content-Type: application/json' \
