@@ -26,6 +26,8 @@ import type {
   AmpMember,
   AmpQueryOpts,
   BlobRef,
+  InviteAcceptOpts,
+  InviteAcceptResult,
   LoginCredentials,
   SubscriptionEvent,
   TagResolution,
@@ -39,7 +41,7 @@ import type {
 } from './types.js';
 
 export interface AmpWebClientOpts {
-  vaultUrl: string;       // e.g. https://my-amp-node:5193
+  vaultUrl: string;       // operated node URL — e.g. https://prod.plan.tools
   planetTag: string;      // the planet this client reads/writes by default
 
   /**
@@ -339,6 +341,18 @@ export class AmpWebClient implements AmpAdapter {
 
   async mediaUrl(blobUID: string): Promise<string> {
     return `${this.vaultUrl}/www/${encodeURIComponent(blobUID)}`;
+  }
+
+  // ── Federation invites ────────────────────────────────────────────
+
+  // acceptInvite redeems a sealed amp-invite-v1 token to join its federation
+  // planet, minting this member's keys host-side.  Requires a logged-in session
+  // (Bearer); the passphrase arrives out-of-band and the token is inert without it.
+  async acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult> {
+    return this.apiFetch<InviteAcceptResult>('/invite/accept', {
+      method: 'POST',
+      body: JSON.stringify({ InviteText: opts.inviteText, Passphrase: opts.passphrase }),
+    });
   }
 
   // ── Addresses (cross-planet CRDT-cell references) ─────────────────

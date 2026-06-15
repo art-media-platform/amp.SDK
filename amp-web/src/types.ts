@@ -61,6 +61,24 @@ export interface AmpAuth {
   logout: () => Promise<void>;
 }
 
+// ── Federation invites ──────────────────────────────────────────────
+
+/**
+ * Options for redeeming a sealed federation invite (SDK ergonomic shape,
+ * camelCase).  `inviteText` is the canonical `amp-invite-v1:…` token;
+ * `passphrase` arrives out-of-band — the token is inert without it.
+ */
+export interface InviteAcceptOpts {
+  inviteText: string;
+  passphrase: string;
+}
+
+/** Result of accepting an invite — the joined planet + this member, base32 UIDs. */
+export interface InviteAcceptResult {
+  PlanetID: string;
+  MemberID: string;
+}
+
 // ── Tag resolution (server canonization) ────────────────────────────
 
 export interface TagResolution {

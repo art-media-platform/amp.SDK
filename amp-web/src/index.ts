@@ -20,6 +20,8 @@ export type {
   Address,
   BlobRef,
   EmailCredential,
+  InviteAcceptOpts,
+  InviteAcceptResult,
   LoginCredentials,
   SubscriptionEvent,
   TagResolution,
