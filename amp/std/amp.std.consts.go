@@ -79,6 +79,7 @@ var Attr = struct {
 	ChannelTypePlanetPicker            tag.Name
 	ChannelTypeBrand                   tag.Name
 	ChannelTypeNameService             tag.Name
+	ChannelTypeTerminal                tag.Name
 	Brand                              tag.Name
 	NameService                        tag.Name
 	NameServiceRecord                  tag.Name
@@ -230,6 +231,7 @@ var Attr = struct {
 	ChannelTypePlanetPicker: tag.Name{ID: tag.UID{0x235A1464B1A9B829, 0xA3F82B96FE207780}, Text: "channel.type.PlanetPicker"}, // 13c8b69de9r0nu7y1ckvz20xw0
 	ChannelTypeBrand:        tag.Name{ID: tag.UID{0xB65147BCC3C55E4C, 0x9BE811A46788AFF8}, Text: "channel.type.Brand"},        // 5qb53vthy5ct69ru0jnjmsjczs
 	ChannelTypeNameService:  tag.Name{ID: tag.UID{0xE2BA6A5DBCA4EC87, 0x3B64FA486677CFBA}, Text: "channel.type.name.service"}, // 72r9p5vg54xk3mqt7u91m7gmxu
+	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.Terminal"},     // 52nz89dr5zw7120g6rzq8mekvv
 
 	// ─── Brand — substrate-native planet identity (AOM name-service §2). ───
 	// Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis

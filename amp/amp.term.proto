@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+// TermIO is the wire frame for amp.Terminal — a teletype that rides an amp
+// channel.  One frame is one CRDT append at (sessionNode, terminal series attr,
+// ItemID = tag.NowID()); a UID's leading six bytes are UTC seconds, so frames
+// are time-ordered with no timestamp attr.  The persisted series is a read-only
+// "console"; its live tail driven interactively is a "terminal".
+// See AOM/design-specs/AD-app-terminal.md.
+package amp;
+
+option go_package    = "github.com/art-media-platform/amp.SDK/amp";
+option csharp_namespace = "art.media.platform";
+
+// TermBlock is one contiguous run of terminal bytes — typically one PTY read.
+// Blocks within a TermIO are ordered; concatenating their Data reproduces the
+// raw stream.
+message TermBlock {
+
+    // TermDir is the flow direction of a terminal byte block.
+    enum TermDir {
+        Unspecified  = 0;
+        HostToClient = 1; // PTY output  -> client stdout
+        ClientToHost = 2; // keystrokes  -> PTY stdin
+    }
+
+    // Raw, opaque terminal bytes.  Never UTF-8-validated or transformed; ANSI is
+    // rendered only by the receiving emulator.
+    bytes Data = 1;
+
+    // Monotonic byte offset of this block's first byte from session start in this
+    // direction.  Lets a receiver detect a gap (a dropped laggard) and order or
+    // dedupe blocks independently of arrival.
+    int64 SeqOffset = 2;
+
+    // Capture time of this block, microseconds since the unix epoch (UTC).
+    // Per-block (not per-batch) so inter-burst timing survives batching.
+    int64 CapturedAt_Micros = 3;
+
+    // Flow direction.  Per block so a captured batch is self-describing and a
+    // future muxed stream stays valid.
+    TermDir Dir = 4;
+}
+
+// TermIO is one flush of batched terminal I/O for a single session/stream,
+// destined to ride an amp channel under the terminal series attr.
+message TermIO {
+
+    // TermKind classifies a frame for DVR replay.  A Keyframe is a full-screen
+    // snapshot — a scrub seek target that bounds how far back a reader must
+    // replay to reconstruct the grid at a given time.
+    enum TermKind {
+      Output   = 0; // ordinary batched terminal I/O
+      Keyframe = 1; // full-screen snapshot (repaint of the current visible grid)
+      Resize   = 2; // control frame; Blocks[0].Data encodes new cols x rows
+    }
+
+    // 128-bit session UID (the amp NodeID convention: a fixed64 pair).
+    fixed64 SessionID_0 = 1;
+    fixed64 SessionID_1 = 2;
+
+    // Monotonic batch sequence within the session+direction (0,1,2,...).  Coarse
+    // gap/dup detection; SeqOffset gives byte-exact detail.
+    uint64 BatchSeq = 5;
+
+    // Flush time of this batch, microseconds since the unix epoch (UTC).  Seconds
+    // is far too coarse for terminal IO (a one-second window holds thousands of
+    // sub-second flushes); micros keeps the int64 shape and never overflows.
+    int64 FlushedAt_Micros = 6;
+
+    // Frame classification for DVR replay.
+    TermKind Kind = 7;
+
+    // The ordered byte blocks in this flush.  Concatenate Data in order to
+    // reconstruct the raw stream.
+    repeated TermBlock Blocks = 10;
+}

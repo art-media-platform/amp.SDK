@@ -99,6 +99,7 @@ tags Attr {
             ChannelTypePlanetPicker "PlanetPicker"
             ChannelTypeBrand        "Brand"
             ChannelTypeNameService  "name.service"
+            ChannelTypeTerminal     "Terminal"
         }
     }
 
