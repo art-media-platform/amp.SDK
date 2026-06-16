@@ -103,7 +103,7 @@ func TestTag(t *testing.T) {
 	}
 
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
-	if tid.AsLabel() != "7r…trrh" {
+	if tid.AsLabel() != "7…trrh" {
 		t.Errorf("tag.UID.AsLabel() failed: got %q", tid.AsLabel())
 	}
 	if tid.Base32() != "7rfxvrfxvrfxvj4e2qg2ectrrh" {

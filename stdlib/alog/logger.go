@@ -3,7 +3,7 @@
 // a bracketed source token, then the message, all space-separated and vertically
 // aligned:
 //
-//	I 2026-05-24 15:04:05.123 [00..1234 app.www] some message
+//	I 2026-05-24 15:04:05.123 [0..1234 app.www] some message
 //
 // The source token leads with the logger's owner id (a task.Context's id, say) when
 // it has one, then the label; a logger with no label shows the log call-site file:line
