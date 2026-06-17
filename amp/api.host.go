@@ -368,8 +368,8 @@ type Request struct {
 	ItemFilter            // selects which nodes / attrs / items / edits to sync
 	Tx         *TxMsg     // tx to process for this request
 	ID         tag.UID    // universally unique ID for this request (inherited from tx invoking this request)
-	InvokeURL  *url.URL   // initialized from PinRequest.Invoke.URI
-	Params     url.Values // initialized from PinRequest.Invoke.URI
+	InvokeURL  *url.URL   // derived from PinRequest.URL in Request.Revise()
+	Params     url.Values // derived from PinRequest.URL in Request.Revise()
 }
 
 // ItemFilter is the accumulated state of all PinRequests made by the client.
