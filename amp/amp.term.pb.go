@@ -6,8 +6,10 @@
 
 // TermIO is the wire frame for amp.Terminal — a teletype that rides an amp
 // channel.  One frame is one CRDT append at (sessionNode, terminal series attr,
-// ItemID = tag.NowID()); a UID's leading six bytes are UTC seconds, so frames
-// are time-ordered with no timestamp attr.  The persisted series is a read-only
+// ItemID).  The ItemID is a UID stamped when the batch flushes (capture time,
+// not commit time): a UID's leading six bytes are UTC seconds, so the series is
+// time-ordered by capture with no timestamp field, and a delayed or offline
+// commit preserves the original order.  The persisted series is a read-only
 // "console"; its live tail driven interactively is a "terminal".
 // See AOM/design-specs/AD-app-terminal.md.
 
@@ -78,58 +80,6 @@ func (TermBlock_TermDir) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_term_proto_rawDescGZIP(), []int{0, 0}
 }
 
-// TermKind classifies a frame for DVR replay.  A Keyframe is a full-screen
-// snapshot — a scrub seek target that bounds how far back a reader must
-// replay to reconstruct the grid at a given time.
-type TermIO_TermKind int32
-
-const (
-	TermIO_Output   TermIO_TermKind = 0 // ordinary batched terminal I/O
-	TermIO_Keyframe TermIO_TermKind = 1 // full-screen snapshot (repaint of the current visible grid)
-	TermIO_Resize   TermIO_TermKind = 2 // control frame; Blocks[0].Data encodes new cols x rows
-)
-
-// Enum value maps for TermIO_TermKind.
-var (
-	TermIO_TermKind_name = map[int32]string{
-		0: "Output",
-		1: "Keyframe",
-		2: "Resize",
-	}
-	TermIO_TermKind_value = map[string]int32{
-		"Output":   0,
-		"Keyframe": 1,
-		"Resize":   2,
-	}
-)
-
-func (x TermIO_TermKind) Enum() *TermIO_TermKind {
-	p := new(TermIO_TermKind)
-	*p = x
-	return p
-}
-
-func (x TermIO_TermKind) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (TermIO_TermKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_term_proto_enumTypes[1].Descriptor()
-}
-
-func (TermIO_TermKind) Type() protoreflect.EnumType {
-	return &file_amp_amp_term_proto_enumTypes[1]
-}
-
-func (x TermIO_TermKind) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use TermIO_TermKind.Descriptor instead.
-func (TermIO_TermKind) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_term_proto_rawDescGZIP(), []int{1, 0}
-}
-
 // TermBlock is one contiguous run of terminal bytes — typically one PTY read.
 // Blocks within a TermIO are ordered; concatenating their Data reproduces the
 // raw stream.
@@ -142,9 +92,6 @@ type TermBlock struct {
 	// direction.  Lets a receiver detect a gap (a dropped laggard) and order or
 	// dedupe blocks independently of arrival.
 	SeqOffset int64 `protobuf:"varint,2,opt,name=SeqOffset,proto3" json:"SeqOffset,omitempty"`
-	// Capture time of this block, microseconds since the unix epoch (UTC).
-	// Per-block (not per-batch) so inter-burst timing survives batching.
-	CapturedAt_Micros int64 `protobuf:"varint,3,opt,name=CapturedAt_Micros,json=CapturedAtMicros,proto3" json:"CapturedAt_Micros,omitempty"`
 	// Flow direction.  Per block so a captured batch is self-describing and a
 	// future muxed stream stays valid.
 	Dir           TermBlock_TermDir `protobuf:"varint,4,opt,name=Dir,proto3,enum=amp.TermBlock_TermDir" json:"Dir,omitempty"`
@@ -196,13 +143,6 @@ func (x *TermBlock) GetSeqOffset() int64 {
 	return 0
 }
 
-func (x *TermBlock) GetCapturedAt_Micros() int64 {
-	if x != nil {
-		return x.CapturedAt_Micros
-	}
-	return 0
-}
-
 func (x *TermBlock) GetDir() TermBlock_TermDir {
 	if x != nil {
 		return x.Dir
@@ -210,22 +150,19 @@ func (x *TermBlock) GetDir() TermBlock_TermDir {
 	return TermBlock_Unspecified
 }
 
-// TermIO is one flush of batched terminal I/O for a single session/stream,
-// destined to ride an amp channel under the terminal series attr.
+// TermIO is one flush of batched terminal I/O for a single session/stream.
 type TermIO struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// 128-bit session UID (the amp NodeID convention: a fixed64 pair).
-	SessionID_0 uint64 `protobuf:"fixed64,1,opt,name=SessionID_0,json=SessionID0,proto3" json:"SessionID_0,omitempty"`
-	SessionID_1 uint64 `protobuf:"fixed64,2,opt,name=SessionID_1,json=SessionID1,proto3" json:"SessionID_1,omitempty"`
-	// Monotonic batch sequence within the session+direction (0,1,2,...).  Coarse
-	// gap/dup detection; SeqOffset gives byte-exact detail.
+	// Monotonic batch sequence within the session+direction (0,1,2,...).  Earns
+	// its place precisely because the series is sparse: a time gap is normal
+	// (idle), so this counter is how a reader tells idle apart from a dropped
+	// frame.  SeqOffset gives byte-exact detail within a direction.
 	BatchSeq uint64 `protobuf:"varint,5,opt,name=BatchSeq,proto3" json:"BatchSeq,omitempty"`
-	// Flush time of this batch, microseconds since the unix epoch (UTC).  Seconds
-	// is far too coarse for terminal IO (a one-second window holds thousands of
-	// sub-second flushes); micros keeps the int64 shape and never overflows.
-	FlushedAt_Micros int64 `protobuf:"varint,6,opt,name=FlushedAt_Micros,json=FlushedAtMicros,proto3" json:"FlushedAt_Micros,omitempty"`
-	// Frame classification for DVR replay.
-	Kind TermIO_TermKind `protobuf:"varint,7,opt,name=Kind,proto3,enum=amp.TermIO_TermKind" json:"Kind,omitempty"`
+	// Keyframe marks a self-contained full-screen snapshot — a repaint of the
+	// visible grid a reader can apply without any prior frame.  It is the DVR's
+	// scrub seek target: jump to the nearest keyframe <= T, then replay forward
+	// to T.  Ordinary output frames leave it false.
+	Keyframe bool `protobuf:"varint,7,opt,name=Keyframe,proto3" json:"Keyframe,omitempty"`
 	// The ordered byte blocks in this flush.  Concatenate Data in order to
 	// reconstruct the raw stream.
 	Blocks        []*TermBlock `protobuf:"bytes,10,rep,name=Blocks,proto3" json:"Blocks,omitempty"`
@@ -263,20 +200,6 @@ func (*TermIO) Descriptor() ([]byte, []int) {
 	return file_amp_amp_term_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *TermIO) GetSessionID_0() uint64 {
-	if x != nil {
-		return x.SessionID_0
-	}
-	return 0
-}
-
-func (x *TermIO) GetSessionID_1() uint64 {
-	if x != nil {
-		return x.SessionID_1
-	}
-	return 0
-}
-
 func (x *TermIO) GetBatchSeq() uint64 {
 	if x != nil {
 		return x.BatchSeq
@@ -284,18 +207,11 @@ func (x *TermIO) GetBatchSeq() uint64 {
 	return 0
 }
 
-func (x *TermIO) GetFlushedAt_Micros() int64 {
+func (x *TermIO) GetKeyframe() bool {
 	if x != nil {
-		return x.FlushedAt_Micros
+		return x.Keyframe
 	}
-	return 0
-}
-
-func (x *TermIO) GetKind() TermIO_TermKind {
-	if x != nil {
-		return x.Kind
-	}
-	return TermIO_Output
+	return false
 }
 
 func (x *TermIO) GetBlocks() []*TermBlock {
@@ -309,32 +225,20 @@ var File_amp_amp_term_proto protoreflect.FileDescriptor
 
 const file_amp_amp_term_proto_rawDesc = "" +
 	"\n" +
-	"\x12amp/amp.term.proto\x12\x03amp\"\xd4\x01\n" +
+	"\x12amp/amp.term.proto\x12\x03amp\"\xa7\x01\n" +
 	"\tTermBlock\x12\x12\n" +
 	"\x04Data\x18\x01 \x01(\fR\x04Data\x12\x1c\n" +
-	"\tSeqOffset\x18\x02 \x01(\x03R\tSeqOffset\x12+\n" +
-	"\x11CapturedAt_Micros\x18\x03 \x01(\x03R\x10CapturedAtMicros\x12(\n" +
+	"\tSeqOffset\x18\x02 \x01(\x03R\tSeqOffset\x12(\n" +
 	"\x03Dir\x18\x04 \x01(\x0e2\x16.amp.TermBlock.TermDirR\x03Dir\">\n" +
 	"\aTermDir\x12\x0f\n" +
 	"\vUnspecified\x10\x00\x12\x10\n" +
 	"\fHostToClient\x10\x01\x12\x10\n" +
-	"\fClientToHost\x10\x02\"\x95\x02\n" +
-	"\x06TermIO\x12\x1f\n" +
-	"\vSessionID_0\x18\x01 \x01(\x06R\n" +
-	"SessionID0\x12\x1f\n" +
-	"\vSessionID_1\x18\x02 \x01(\x06R\n" +
-	"SessionID1\x12\x1a\n" +
-	"\bBatchSeq\x18\x05 \x01(\x04R\bBatchSeq\x12)\n" +
-	"\x10FlushedAt_Micros\x18\x06 \x01(\x03R\x0fFlushedAtMicros\x12(\n" +
-	"\x04Kind\x18\a \x01(\x0e2\x14.amp.TermIO.TermKindR\x04Kind\x12&\n" +
+	"\fClientToHost\x10\x02\"h\n" +
+	"\x06TermIO\x12\x1a\n" +
+	"\bBatchSeq\x18\x05 \x01(\x04R\bBatchSeq\x12\x1a\n" +
+	"\bKeyframe\x18\a \x01(\bR\bKeyframe\x12&\n" +
 	"\x06Blocks\x18\n" +
-	" \x03(\v2\x0e.amp.TermBlockR\x06Blocks\"0\n" +
-	"\bTermKind\x12\n" +
-	"\n" +
-	"\x06Output\x10\x00\x12\f\n" +
-	"\bKeyframe\x10\x01\x12\n" +
-	"\n" +
-	"\x06Resize\x10\x02B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
+	" \x03(\v2\x0e.amp.TermBlockR\x06BlocksB@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_amp_term_proto_rawDescOnce sync.Once
@@ -348,23 +252,21 @@ func file_amp_amp_term_proto_rawDescGZIP() []byte {
 	return file_amp_amp_term_proto_rawDescData
 }
 
-var file_amp_amp_term_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_amp_amp_term_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_amp_amp_term_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_amp_amp_term_proto_goTypes = []any{
 	(TermBlock_TermDir)(0), // 0: amp.TermBlock.TermDir
-	(TermIO_TermKind)(0),   // 1: amp.TermIO.TermKind
-	(*TermBlock)(nil),      // 2: amp.TermBlock
-	(*TermIO)(nil),         // 3: amp.TermIO
+	(*TermBlock)(nil),      // 1: amp.TermBlock
+	(*TermIO)(nil),         // 2: amp.TermIO
 }
 var file_amp_amp_term_proto_depIdxs = []int32{
 	0, // 0: amp.TermBlock.Dir:type_name -> amp.TermBlock.TermDir
-	1, // 1: amp.TermIO.Kind:type_name -> amp.TermIO.TermKind
-	2, // 2: amp.TermIO.Blocks:type_name -> amp.TermBlock
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	1, // 1: amp.TermIO.Blocks:type_name -> amp.TermBlock
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_term_proto_init() }
@@ -377,7 +279,7 @@ func file_amp_amp_term_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_amp_term_proto_rawDesc), len(file_amp_amp_term_proto_rawDesc)),
-			NumEnums:      2,
+			NumEnums:      1,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
