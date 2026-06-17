@@ -8,13 +8,14 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// AppModuleInfo identifies an AppModule and how it is invoked.  Tag and Aliases drive
-// registration and lookup (amp.Registry); Label and Version are manifest metadata for
-// app-listing / about / SBOM surfaces.
+// AppModuleInfo is the in-process handle an app hands to Registry.RegisterModule:
+// what invokes the module (Tag, Aliases) plus the minimum needed to name and
+// version it.  Its wire-facing projection (long-form About, glyphs, SBOM row) is
+// std.ModuleRef, built via std.NewModuleRef.
 type AppModuleInfo struct {
-	Tag     tag.Name // what invokes this module
-	Label   string   // human-readable description of this app
-	Version string   // app's own maturity: "v{TRL}[.{minor}]"; see TRL-versioning.md
+	Name    tag.Name // what invokes this module (registry lookup)
+	About   string   // 1-line description -> ModuleRef.Labels.Caption
+	Version string   // maturity "v{TRL}[.{minor}]"; see TRL-versioning.md
 	Aliases []string // invocation aliases for an AppModule
 }
 

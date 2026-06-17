@@ -72,7 +72,7 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 
 // Implements Registry
 func (reg *registry) RegisterModule(mod *amp.AppModule) error {
-	modID := mod.Info.Tag.ID
+	modID := mod.Info.Name.ID
 
 	reg.mu.Lock()
 	defer reg.mu.Unlock()
@@ -86,7 +86,7 @@ func (reg *registry) RegisterModule(mod *amp.AppModule) error {
 	}
 	// Module aliases resolve case-insensitively, so key them by the folded
 	// canonic form and its leaf component.
-	canonic := mod.Info.Tag.Canonic()
+	canonic := mod.Info.Name.Canonic()
 	reg.modsByAlias[canonic] = mod
 	if dot := strings.LastIndexByte(canonic, tag.CanonicSeparatorChar); dot >= 0 {
 		reg.modsByAlias[canonic[dot+1:]] = mod

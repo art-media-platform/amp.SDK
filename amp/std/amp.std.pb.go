@@ -763,7 +763,7 @@ func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GeoPath_RenderType.Descriptor instead.
 func (GeoPath_RenderType) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10, 0}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11, 0}
 }
 
 // TRS (Translate Rotate Scale) IEEE 1207
@@ -1661,6 +1661,78 @@ func (x *Labels) GetAbout() string {
 	return ""
 }
 
+// ModuleRef is the wire / attr-value descriptor of one app module: its identity,
+// human presentation, and maturity.  It is the serializable projection of an
+// in-process amp.AppModuleInfo (see std.NewModuleRef) for app-listing / about
+// surfaces and as a software-bill-of-materials row (one per installed module).
+type ModuleRef struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Module        *amp.Tag               `protobuf:"bytes,1,opt,name=Module,proto3" json:"Module,omitempty"`   // the module this describes (its invocation tag)
+	Labels        *Labels                `protobuf:"bytes,2,opt,name=Labels,proto3" json:"Labels,omitempty"`   // Title (name), Caption (1-line), About (detail)
+	Tags          *amp.Tags              `protobuf:"bytes,3,opt,name=Tags,proto3" json:"Tags,omitempty"`       // glyph variant tree (size / theme / density)
+	Version       string                 `protobuf:"bytes,4,opt,name=Version,proto3" json:"Version,omitempty"` // maturity "v{TRL}[.{minor}]"; see TRL-versioning.md
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModuleRef) Reset() {
+	*x = ModuleRef{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModuleRef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModuleRef) ProtoMessage() {}
+
+func (x *ModuleRef) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModuleRef.ProtoReflect.Descriptor instead.
+func (*ModuleRef) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ModuleRef) GetModule() *amp.Tag {
+	if x != nil {
+		return x.Module
+	}
+	return nil
+}
+
+func (x *ModuleRef) GetLabels() *Labels {
+	if x != nil {
+		return x.Labels
+	}
+	return nil
+}
+
+func (x *ModuleRef) GetTags() *amp.Tags {
+	if x != nil {
+		return x.Tags
+	}
+	return nil
+}
+
+func (x *ModuleRef) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
 // General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
 // The units are typically mid H3 resolution with rectangular dimensions in units of font glyph size.
 type Rect struct {
@@ -1679,7 +1751,7 @@ type Rect struct {
 
 func (x *Rect) Reset() {
 	*x = Rect{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[9]
+	mi := &file_amp_std_amp_std_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1691,7 +1763,7 @@ func (x *Rect) String() string {
 func (*Rect) ProtoMessage() {}
 
 func (x *Rect) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[9]
+	mi := &file_amp_std_amp_std_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1704,7 +1776,7 @@ func (x *Rect) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Rect.ProtoReflect.Descriptor instead.
 func (*Rect) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{9}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Rect) GetFormat() PointFormat {
@@ -1777,7 +1849,7 @@ type GeoPath struct {
 
 func (x *GeoPath) Reset() {
 	*x = GeoPath{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[10]
+	mi := &file_amp_std_amp_std_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1789,7 +1861,7 @@ func (x *GeoPath) String() string {
 func (*GeoPath) ProtoMessage() {}
 
 func (x *GeoPath) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[10]
+	mi := &file_amp_std_amp_std_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1802,7 +1874,7 @@ func (x *GeoPath) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GeoPath.ProtoReflect.Descriptor instead.
 func (*GeoPath) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GeoPath) GetType() GeoPath_RenderType {
@@ -1855,7 +1927,7 @@ type MediaItem struct {
 
 func (x *MediaItem) Reset() {
 	*x = MediaItem{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[11]
+	mi := &file_amp_std_amp_std_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1867,7 +1939,7 @@ func (x *MediaItem) String() string {
 func (*MediaItem) ProtoMessage() {}
 
 func (x *MediaItem) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[11]
+	mi := &file_amp_std_amp_std_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1880,7 +1952,7 @@ func (x *MediaItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MediaItem.ProtoReflect.Descriptor instead.
 func (*MediaItem) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MediaItem) GetFlags() MediaFlags {
@@ -1945,7 +2017,7 @@ type MediaSegment struct {
 
 func (x *MediaSegment) Reset() {
 	*x = MediaSegment{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[12]
+	mi := &file_amp_std_amp_std_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1957,7 +2029,7 @@ func (x *MediaSegment) String() string {
 func (*MediaSegment) ProtoMessage() {}
 
 func (x *MediaSegment) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[12]
+	mi := &file_amp_std_amp_std_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1970,7 +2042,7 @@ func (x *MediaSegment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MediaSegment.ProtoReflect.Descriptor instead.
 func (*MediaSegment) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{12}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *MediaSegment) GetTickOffset() int64 {
@@ -2033,7 +2105,7 @@ type Arg struct {
 
 func (x *Arg) Reset() {
 	*x = Arg{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[13]
+	mi := &file_amp_std_amp_std_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2045,7 +2117,7 @@ func (x *Arg) String() string {
 func (*Arg) ProtoMessage() {}
 
 func (x *Arg) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[13]
+	mi := &file_amp_std_amp_std_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2058,7 +2130,7 @@ func (x *Arg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Arg.ProtoReflect.Descriptor instead.
 func (*Arg) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{13}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Arg) GetKey() string {
@@ -2093,7 +2165,7 @@ type VisPreset struct {
 
 func (x *VisPreset) Reset() {
 	*x = VisPreset{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	mi := &file_amp_std_amp_std_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2105,7 +2177,7 @@ func (x *VisPreset) String() string {
 func (*VisPreset) ProtoMessage() {}
 
 func (x *VisPreset) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[14]
+	mi := &file_amp_std_amp_std_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2118,7 +2190,7 @@ func (x *VisPreset) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VisPreset.ProtoReflect.Descriptor instead.
 func (*VisPreset) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *VisPreset) GetTitle() *TextItem {
@@ -2224,7 +2296,7 @@ type TileBand struct {
 
 func (x *TileBand) Reset() {
 	*x = TileBand{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[15]
+	mi := &file_amp_std_amp_std_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2236,7 +2308,7 @@ func (x *TileBand) String() string {
 func (*TileBand) ProtoMessage() {}
 
 func (x *TileBand) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[15]
+	mi := &file_amp_std_amp_std_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2249,7 +2321,7 @@ func (x *TileBand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TileBand.ProtoReflect.Descriptor instead.
 func (*TileBand) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{15}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *TileBand) GetLabel() string {
@@ -2420,7 +2492,7 @@ type TileMeshSpec struct {
 
 func (x *TileMeshSpec) Reset() {
 	*x = TileMeshSpec{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[16]
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2432,7 +2504,7 @@ func (x *TileMeshSpec) String() string {
 func (*TileMeshSpec) ProtoMessage() {}
 
 func (x *TileMeshSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[16]
+	mi := &file_amp_std_amp_std_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2445,7 +2517,7 @@ func (x *TileMeshSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TileMeshSpec.ProtoReflect.Descriptor instead.
 func (*TileMeshSpec) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{16}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *TileMeshSpec) GetBands() []*TileBand {
@@ -2491,7 +2563,7 @@ type SkinSpec struct {
 
 func (x *SkinSpec) Reset() {
 	*x = SkinSpec{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	mi := &file_amp_std_amp_std_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2503,7 +2575,7 @@ func (x *SkinSpec) String() string {
 func (*SkinSpec) ProtoMessage() {}
 
 func (x *SkinSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[17]
+	mi := &file_amp_std_amp_std_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2516,7 +2588,7 @@ func (x *SkinSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SkinSpec.ProtoReflect.Descriptor instead.
 func (*SkinSpec) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *SkinSpec) GetMeshAssetURI() string {
@@ -2562,7 +2634,7 @@ type AtmosphereEffect struct {
 
 func (x *AtmosphereEffect) Reset() {
 	*x = AtmosphereEffect{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[18]
+	mi := &file_amp_std_amp_std_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2574,7 +2646,7 @@ func (x *AtmosphereEffect) String() string {
 func (*AtmosphereEffect) ProtoMessage() {}
 
 func (x *AtmosphereEffect) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[18]
+	mi := &file_amp_std_amp_std_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2587,7 +2659,7 @@ func (x *AtmosphereEffect) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AtmosphereEffect.ProtoReflect.Descriptor instead.
 func (*AtmosphereEffect) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{18}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *AtmosphereEffect) GetLabel() string {
@@ -2633,7 +2705,7 @@ type AtmosphereSpec struct {
 
 func (x *AtmosphereSpec) Reset() {
 	*x = AtmosphereSpec{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[19]
+	mi := &file_amp_std_amp_std_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2645,7 +2717,7 @@ func (x *AtmosphereSpec) String() string {
 func (*AtmosphereSpec) ProtoMessage() {}
 
 func (x *AtmosphereSpec) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[19]
+	mi := &file_amp_std_amp_std_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2658,7 +2730,7 @@ func (x *AtmosphereSpec) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AtmosphereSpec.ProtoReflect.Descriptor instead.
 func (*AtmosphereSpec) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{19}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AtmosphereSpec) GetEffects() []*AtmosphereEffect {
@@ -2717,7 +2789,7 @@ type TileServer struct {
 
 func (x *TileServer) Reset() {
 	*x = TileServer{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[20]
+	mi := &file_amp_std_amp_std_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2729,7 +2801,7 @@ func (x *TileServer) String() string {
 func (*TileServer) ProtoMessage() {}
 
 func (x *TileServer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[20]
+	mi := &file_amp_std_amp_std_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2742,7 +2814,7 @@ func (x *TileServer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TileServer.ProtoReflect.Descriptor instead.
 func (*TileServer) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{20}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *TileServer) GetID() string {
@@ -2882,7 +2954,7 @@ type LoginForm struct {
 
 func (x *LoginForm) Reset() {
 	*x = LoginForm{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[21]
+	mi := &file_amp_std_amp_std_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2894,7 +2966,7 @@ func (x *LoginForm) String() string {
 func (*LoginForm) ProtoMessage() {}
 
 func (x *LoginForm) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[21]
+	mi := &file_amp_std_amp_std_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2907,7 +2979,7 @@ func (x *LoginForm) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginForm.ProtoReflect.Descriptor instead.
 func (*LoginForm) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{21}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *LoginForm) GetEncoding() BodyEncoding {
@@ -3034,7 +3106,12 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
 	"Collection\x18\x03 \x01(\tR\n" +
 	"Collection\x12\x14\n" +
-	"\x05About\x18\x04 \x01(\tR\x05About\"\xae\x01\n" +
+	"\x05About\x18\x04 \x01(\tR\x05About\"\x8b\x01\n" +
+	"\tModuleRef\x12 \n" +
+	"\x06Module\x18\x01 \x01(\v2\b.amp.TagR\x06Module\x12#\n" +
+	"\x06Labels\x18\x02 \x01(\v2\v.std.LabelsR\x06Labels\x12\x1d\n" +
+	"\x04Tags\x18\x03 \x01(\v2\t.amp.TagsR\x04Tags\x12\x18\n" +
+	"\aVersion\x18\x04 \x01(\tR\aVersion\"\xae\x01\n" +
 	"\x04Rect\x12(\n" +
 	"\x06Format\x18\x01 \x01(\x0e2\x10.std.PointFormatR\x06Format\x12\x16\n" +
 	"\x06Anchor\x18\x02 \x01(\x06R\x06Anchor\x12\f\n" +
@@ -3264,7 +3341,7 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 }
 
 var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),           // 0: std.TRS_Flags
 	(ValueKind)(0),           // 1: std.ValueKind
@@ -3289,28 +3366,29 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(*JsonValue)(nil),        // 20: std.JsonValue
 	(*Report)(nil),           // 21: std.Report
 	(*Labels)(nil),           // 22: std.Labels
-	(*Rect)(nil),             // 23: std.Rect
-	(*GeoPath)(nil),          // 24: std.GeoPath
-	(*MediaItem)(nil),        // 25: std.MediaItem
-	(*MediaSegment)(nil),     // 26: std.MediaSegment
-	(*Arg)(nil),              // 27: std.Arg
-	(*VisPreset)(nil),        // 28: std.VisPreset
-	(*TileBand)(nil),         // 29: std.TileBand
-	(*TileMeshSpec)(nil),     // 30: std.TileMeshSpec
-	(*SkinSpec)(nil),         // 31: std.SkinSpec
-	(*AtmosphereEffect)(nil), // 32: std.AtmosphereEffect
-	(*AtmosphereSpec)(nil),   // 33: std.AtmosphereSpec
-	(*TileServer)(nil),       // 34: std.TileServer
-	(*LoginForm)(nil),        // 35: std.LoginForm
-	(*amp.Tags)(nil),         // 36: amp.Tags
-	(*amp.Tag)(nil),          // 37: amp.Tag
-	(amp.Units)(0),           // 38: amp.Units
-	(*amp.BlobRef)(nil),      // 39: amp.BlobRef
+	(*ModuleRef)(nil),        // 23: std.ModuleRef
+	(*Rect)(nil),             // 24: std.Rect
+	(*GeoPath)(nil),          // 25: std.GeoPath
+	(*MediaItem)(nil),        // 26: std.MediaItem
+	(*MediaSegment)(nil),     // 27: std.MediaSegment
+	(*Arg)(nil),              // 28: std.Arg
+	(*VisPreset)(nil),        // 29: std.VisPreset
+	(*TileBand)(nil),         // 30: std.TileBand
+	(*TileMeshSpec)(nil),     // 31: std.TileMeshSpec
+	(*SkinSpec)(nil),         // 32: std.SkinSpec
+	(*AtmosphereEffect)(nil), // 33: std.AtmosphereEffect
+	(*AtmosphereSpec)(nil),   // 34: std.AtmosphereSpec
+	(*TileServer)(nil),       // 35: std.TileServer
+	(*LoginForm)(nil),        // 36: std.LoginForm
+	(*amp.Tags)(nil),         // 37: amp.Tags
+	(*amp.Tag)(nil),          // 38: amp.Tag
+	(amp.Units)(0),           // 39: amp.Units
+	(*amp.BlobRef)(nil),      // 40: amp.BlobRef
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
 	14, // 1: std.CameraState.Placement:type_name -> std.TRS
-	36, // 2: std.TextItem.Tags:type_name -> amp.Tags
+	37, // 2: std.TextItem.Tags:type_name -> amp.Tags
 	1,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
 	20, // 4: std.JsonValue.Array:type_name -> std.JsonValue
 	19, // 5: std.Report.Title:type_name -> std.TextItem
@@ -3319,35 +3397,38 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	19, // 8: std.Report.Warnings:type_name -> std.TextItem
 	19, // 9: std.Report.Messages:type_name -> std.TextItem
 	19, // 10: std.Report.Debug:type_name -> std.TextItem
-	2,  // 11: std.Rect.Format:type_name -> std.PointFormat
-	13, // 12: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
-	2,  // 13: std.GeoPath.Format:type_name -> std.PointFormat
-	3,  // 14: std.MediaItem.Flags:type_name -> std.MediaFlags
-	37, // 15: std.MediaItem.Tag:type_name -> amp.Tag
-	38, // 16: std.MediaSegment.Units:type_name -> amp.Units
-	39, // 17: std.MediaSegment.Blob:type_name -> amp.BlobRef
-	19, // 18: std.VisPreset.Title:type_name -> std.TextItem
-	19, // 19: std.VisPreset.Collection:type_name -> std.TextItem
-	19, // 20: std.VisPreset.Credits:type_name -> std.TextItem
-	4,  // 21: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
-	5,  // 22: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
-	6,  // 23: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	27, // 24: std.VisPreset.Args:type_name -> std.Arg
-	7,  // 25: std.TileBand.YEase:type_name -> std.TileEase
-	29, // 26: std.TileMeshSpec.Bands:type_name -> std.TileBand
-	30, // 27: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
-	28, // 28: std.SkinSpec.Layers:type_name -> std.VisPreset
-	32, // 29: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
-	8,  // 30: std.TileServer.Kind:type_name -> std.TileServerKind
-	9,  // 31: std.TileServer.Projection:type_name -> std.TileProjection
-	10, // 32: std.TileServer.Scheme:type_name -> std.TileServerScheme
-	11, // 33: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
-	12, // 34: std.LoginForm.Encoding:type_name -> std.BodyEncoding
-	35, // [35:35] is the sub-list for method output_type
-	35, // [35:35] is the sub-list for method input_type
-	35, // [35:35] is the sub-list for extension type_name
-	35, // [35:35] is the sub-list for extension extendee
-	0,  // [0:35] is the sub-list for field type_name
+	38, // 11: std.ModuleRef.Module:type_name -> amp.Tag
+	22, // 12: std.ModuleRef.Labels:type_name -> std.Labels
+	37, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
+	2,  // 14: std.Rect.Format:type_name -> std.PointFormat
+	13, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	2,  // 16: std.GeoPath.Format:type_name -> std.PointFormat
+	3,  // 17: std.MediaItem.Flags:type_name -> std.MediaFlags
+	38, // 18: std.MediaItem.Tag:type_name -> amp.Tag
+	39, // 19: std.MediaSegment.Units:type_name -> amp.Units
+	40, // 20: std.MediaSegment.Blob:type_name -> amp.BlobRef
+	19, // 21: std.VisPreset.Title:type_name -> std.TextItem
+	19, // 22: std.VisPreset.Collection:type_name -> std.TextItem
+	19, // 23: std.VisPreset.Credits:type_name -> std.TextItem
+	4,  // 24: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
+	5,  // 25: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
+	6,  // 26: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
+	28, // 27: std.VisPreset.Args:type_name -> std.Arg
+	7,  // 28: std.TileBand.YEase:type_name -> std.TileEase
+	30, // 29: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	31, // 30: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	29, // 31: std.SkinSpec.Layers:type_name -> std.VisPreset
+	33, // 32: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	8,  // 33: std.TileServer.Kind:type_name -> std.TileServerKind
+	9,  // 34: std.TileServer.Projection:type_name -> std.TileProjection
+	10, // 35: std.TileServer.Scheme:type_name -> std.TileServerScheme
+	11, // 36: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
+	12, // 37: std.LoginForm.Encoding:type_name -> std.BodyEncoding
+	38, // [38:38] is the sub-list for method output_type
+	38, // [38:38] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -3361,7 +3442,7 @@ func file_amp_std_amp_std_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
 			NumEnums:      14,
-			NumMessages:   22,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

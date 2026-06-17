@@ -160,6 +160,17 @@ message Labels {
     string        About       = 4;  // long-form description / synopsis
 }
 
+// ModuleRef is the wire / attr-value descriptor of one app module: its identity,
+// human presentation, and maturity.  It is the serializable projection of an
+// in-process amp.AppModuleInfo (see std.NewModuleRef) for app-listing / about
+// surfaces and as a software-bill-of-materials row (one per installed module).
+message ModuleRef {
+    amp.Tag  Module  = 1; // the module this describes (its invocation tag)
+    Labels   Labels  = 2; // Title (name), Caption (1-line), About (detail)
+    amp.Tags Tags    = 3; // glyph variant tree (size / theme / density)
+    string   Version = 4; // maturity "v{TRL}[.{minor}]"; see TRL-versioning.md
+}
+
 // General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
 // The units are typically mid H3 resolution with rectangular dimensions in units of font glyph size.
 message Rect {
