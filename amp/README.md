@@ -122,13 +122,12 @@ import (
     "github.com/art-media-platform/amp.SDK/amp/std"
 )
 
-var AppTag = std.Attr.App.With("notes") // invocation tag: amp://{planet}/notes/...
+var AppName = std.Attr.App.With("notes") // invocation tag: amp://{planet}/notes/...
 
 func RegisterWith(reg amp.Registry) {
     reg.RegisterModule(&amp.AppModule{
         Info: amp.AppModuleInfo{
-            Tag:     AppTag,
-            Label:   "notes — a tiny channel",
+            Name:     AppName,
             Version: "v000",
             Aliases: []string{"notes"},
         },
