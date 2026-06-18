@@ -76,7 +76,7 @@ export interface AmpAdapter {
   /** Redeem a sealed amp-invite-v1 token to join its federation planet (Bearer; see SKILL §4.7). */
   acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult>;
 
-  // ── Addresses (cross-planet CRDT-cell references, AOM cross-planet-citation) ──────
+  // ── Addresses (cross-planet CRDT-cell references, AOM SD-cross-planet-citation.md) ──────
 
   /** Build an Address for embedding in shares / withdraw delegations. */
   address(ref: Address): Address;

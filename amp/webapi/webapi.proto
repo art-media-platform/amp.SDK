@@ -24,7 +24,7 @@ import "amp/amp.core.proto";
 // PlanetEpoch.IsPublic=true; per-member private planets are auto-genesisd by
 // app.home on first login and don't need this surface.
 //
-// Brand is the founding Brand (AOM name-service §2).  Optional — when omitted,
+// Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when omitted,
 // the server synthesizes a minimal Brand{AppName: derived from Tag}.
 message PlanetCreateRequest {
     amp.Tag             Tag   = 1;
@@ -62,7 +62,7 @@ message EmailCredential {
     string              PlanetTag   = 5;
 }
 
-// WithdrawNote (the wire-shape carrier for AOM withdrawal-consent withdrawal facts) is a
+// WithdrawNote (the wire-shape carrier for AOM SD-withdrawal-consent.md withdrawal facts) is a
 // hand-written Go struct in webapi.types.go, not a proto message: it is never
 // marshaled to binary, and as a struct its UID fields are typed tag.UID /
 // amp.Address so they ride the JSON wire as base32 strings — consistent with

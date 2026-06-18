@@ -119,7 +119,7 @@ type TxOp struct {
 // once at creation.  The zero value (and a bare NewTx()) targets the caller's home planet; set
 // Planet to commit to an explicit planet.  Scope governs ROUTING only: signer identity
 // (TxMsg.SetFromID) and privacy (TxMsg.Epoch) are independent levers set separately.  See
-// AOM security-sync §7.6.
+// AOM SD-security-sync.md §7.6.
 type TxScope struct {
 	Planet tag.UID // unset → the caller's home planet; set → that explicit planet
 }

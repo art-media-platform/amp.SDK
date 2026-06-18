@@ -233,12 +233,12 @@ var Attr = struct {
 	ChannelTypeNameService:  tag.Name{ID: tag.UID{0xE2BA6A5DBCA4EC87, 0x3B64FA486677CFBA}, Text: "channel.type.name.service"}, // 72r9p5vg54xk3mqt7u91m7gmxu
 	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.Terminal"},     // 52nz89dr5zw7120g6rzq8mekvv
 
-	// ─── Brand — substrate-native planet identity (AOM name-service §2). ───
+	// ─── Brand — substrate-native planet identity (AOM DD-name-service.md §2). ───
 	// Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
 	// TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
 	Brand: tag.Name{ID: tag.UID{0xB70889689791764B, 0xB554FC786AE221AE}, Text: "amp.brand"}, // 5r124qj5wjft5vbp7wg1pf48ef
 
-	// ─── NameService — substrate-native naming primitive (AOM name-service §3). ───
+	// ─── NameService — substrate-native naming primitive (AOM DD-name-service.md §3). ───
 	// A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.
 	// Federations propagate their channel to members via normal CRDT sync.
 	// Generalized beyond planet naming — any UID-bearing entity is namable.
@@ -246,7 +246,7 @@ var Attr = struct {
 
 	NameServiceRecord: tag.Name{ID: tag.UID{0x46F3C16F52B61C22, 0x7C5C870E89180A36}, Text: "amp.name.service.record"}, // 26yg0qynpq3hj7sr471u4jh2jq
 
-	// ─── Federation directory — peer / parent federation pointers (AOM name-service §4.3). ───
+	// ─── Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.3). ───
 	// NS-record-style cross-federation forwarding without DNS dependency.
 	FederationDirectory: tag.Name{ID: tag.UID{0x9D75EA0B352ABCF1, 0xE8235D89C9A7D3F9}, Text: "amp.federation.directory"}, // 4xfrp0qe9brmsyh8uxj74ugnzt
 
@@ -261,7 +261,7 @@ var Attr = struct {
 	LawPlanetOrigin: tag.Name{ID: tag.UID{0x6C8CDF082B47A29E, 0xCC572ADCF4282E79}, Text: "amp.law.PlanetOrigin"}, // 3djmghhbu7nbgdsptbvmu2hcmt
 	LawEquivalence:  tag.Name{ID: tag.UID{0x99F3808D1F407BE6, 0x2E656BA55F1738FE}, Text: "amp.law.Equivalence"},  // 4tyf08u7u0ggm2wtccnpgjff7y
 	LawWithdraw:     tag.Name{ID: tag.UID{0x850B8DAE8EC87EF2, 0x228AC81879D663ED}, Text: "amp.law.Withdraw"},     // 451f6ux3q8gvt252q831wxdsze
-	// Substrate-agnostic Member Kind (AOM substrate-agnostic-members).  MemberEpoch.Kind is a Tag
+	// Substrate-agnostic Member Kind (AOM SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
 	// resolving to one of these UIDs.  Communities + apps may register
 	// additional Kinds in their own consts.sdl.  Zero UID = unspecified.
 	LawMemberKind: tag.Name{ID: tag.UID{0x102047CBC77F0A3E, 0x5C2BBD3DA4EA137C}, Text: "amp.law.MemberKind"}, // 0h413wrjvz18z5sbxx7qkfn4vw
@@ -273,7 +273,7 @@ var Attr = struct {
 	LawMemberKind_Successor: tag.Name{ID: tag.UID{0x627C11221E4584F9, 0xCD00ACCD3211B4F9}, Text: "amp.law.MemberKind.Successor"}, // 32gh8k47k5hmwwu05dtnt13e7t
 	LawMemberKind_Memorial:  tag.Name{ID: tag.UID{0xBA335B3927C0252B, 0xB791D002F55B477F}, Text: "amp.law.MemberKind.Memorial"},  // 5u6eemk9y04npvg4fh0cupqjvz
 	LawMemberKind_Process:   tag.Name{ID: tag.UID{0x98ECE8E691BE5BD5, 0x7E0A29F6F4393466}, Text: "amp.law.MemberKind.Process"},   // 4sxmnfe4eycgbrw2j9yvu3ke36
-	// Modal Attestation modalities (AOM modal-attestation).  Attestation.Modality is a
+	// Modal Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a
 	// Tag resolving to one of these UIDs.  Communities + apps may register
 	// additional modalities.  Zero UID = unspecified.
 	LawAttestationModality: tag.Name{ID: tag.UID{0x9F5377F513757A9F, 0x74B304390F47261B}, Text: "amp.law.AttestationModality"}, // 4zbevzb4vpgbgr9ds4747nf9hv
@@ -288,7 +288,7 @@ var Attr = struct {
 	LawAttestationModality_Conditional: tag.Name{ID: tag.UID{0x84466F1352512715, 0x29E493F726901576}, Text: "amp.law.AttestationModality.Conditional"}, // 448trj6nkj4wbkmt4mywm905cq
 	LawAttestationModality_Contested:   tag.Name{ID: tag.UID{0x0502182AD6D3BDB4, 0xC9F14651631969E3}, Text: "amp.law.AttestationModality.Contested"},   // 0508d2ppqmrqudmwb6b5jjkug3
 	LawAttestationModality_Retracted:   tag.Name{ID: tag.UID{0xCA955565A08728E6, 0x4FCC6CCB72D595CB}, Text: "amp.law.AttestationModality.Retracted"},   // 6bkpbqc84753m4zm3dtetec5fc
-	// Equivalence strengths (AOM address-equivalence).  Equivalence.Strength is a Tag
+	// Equivalence strengths (AOM SD-address-equivalence.md).  Equivalence.Strength is a Tag
 	// resolving to one of these UIDs.  Zero UID = unspecified.
 	LawEquivalenceStrength: tag.Name{ID: tag.UID{0x17501E56DC9B1A5D, 0x19F49F4EF6B49F84}, Text: "amp.law.EquivalenceStrength"}, // 0rb0g5er4v39fjmx4z9vvc97w4
 
@@ -296,7 +296,7 @@ var Attr = struct {
 	LawEquivalenceStrength_Translation: tag.Name{ID: tag.UID{0x8D295A1372FA2C5D, 0x10798077BE8E1B1A}, Text: "amp.law.EquivalenceStrength.Translation"}, // 4e55e16wru5jfj0yd0fyz8w6su
 	LawEquivalenceStrength_Approximate: tag.Name{ID: tag.UID{0x90E61D55697A0D3C, 0xA6613FC42F78EF78}, Text: "amp.law.EquivalenceStrength.Approximate"}, // 4hwsfpbucu1nybds9zshrrjvvs
 	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x112A5CA73BB8C091, 0x8A80533CC1EC7186}, Text: "amp.law.EquivalenceStrength.Analogous"},   // 0j59fbffxss28sp02m7m0yswd6
-	// Withdrawal reasons (AOM withdrawal-consent).  Withdraw.Reason is a Tag resolving
+	// Withdrawal reasons (AOM SD-withdrawal-consent.md).  Withdraw.Reason is a Tag resolving
 	// to one of these UIDs.  Zero UID = unspecified.
 	LawWithdrawReason: tag.Name{ID: tag.UID{0x72FDAD1F33EAB71A, 0x6643A4A97C032829}, Text: "amp.law.WithdrawReason"}, // 3kzqqjydzbqwe6dhx4p5y06b19
 
@@ -430,7 +430,7 @@ const (
 
 // ─── Bundled crate URIs — platform-wide crates every amp client imports at boot. ───
 // BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live in
-// Brand.BundledCrates (AOM name-service §2).  Each URI is asset:PublisherID/CrateID
+// Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is asset:PublisherID/CrateID
 // per the wire scheme declared in amp.core.proto:Asset; the build pipeline stages
 // matching .crate files under StreamingAssets/Bundled/CrateDepot.
 const (

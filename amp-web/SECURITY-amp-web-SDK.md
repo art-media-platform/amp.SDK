@@ -75,7 +75,7 @@ on first login and persists it in the browser (IndexedDB), reinstalling it on ev
 later login — so `seal`/`open` work for any logged-in member with no out-of-band
 setup. The private key never reaches the host or any other member, so a sealed
 secret stays opaque to admins, vault operators, other planet members, and a
-cold-store/AOM epoch-key-coldstore forensic adversary holding the planet epoch key. That is the
+cold-store/AOM SD-epoch-key-coldstore.md forensic adversary holding the planet epoch key. That is the
 property the planet epoch key alone cannot give you.
 
 Two consequences to design around:

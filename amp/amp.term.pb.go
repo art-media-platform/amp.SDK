@@ -11,7 +11,7 @@
 // time-ordered by capture with no timestamp field, and a delayed or offline
 // commit preserves the original order.  The persisted series is a read-only
 // "console"; its live tail driven interactively is a "terminal".
-// See AOM/design-specs/AD-app-terminal.md.
+// See AOM/AD-app-terminal.md.
 
 package amp
 

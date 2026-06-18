@@ -73,7 +73,7 @@ type LoginResponse struct {
 
 // AmpMember describes the authenticated identity on the wire.  `Kind` is a
 // human-readable label (e.g. "Person") sourced from a `LawMemberKind_*`
-// definition (AOM substrate-agnostic-members); apps surface it but do not gate behavior on it.
+// definition (AOM SD-substrate-agnostic-members.md); apps surface it but do not gate behavior on it.
 type AmpMember struct {
 	ID          tag.UID `json:"ID"`
 	DisplayName string  `json:"DisplayName,omitempty"`
@@ -101,7 +101,7 @@ type EmailIssueResponse struct {
 	Email    string  `json:"Email"`
 }
 
-// WithdrawNote is the wire-shape carrier for AOM withdrawal-consent withdrawal facts,
+// WithdrawNote is the wire-shape carrier for AOM SD-withdrawal-consent.md withdrawal facts,
 // carried in TxOp.Withdraw / EditEntry.Withdraw / Item.Withdrawn /
 // SubscribeFrame.Withdraw.  It is never marshaled to binary, so its UID
 // fields are typed tag.UID / amp.Address and ride the JSON wire as base32
@@ -141,7 +141,7 @@ const (
 // server-side schema knowledge.
 //
 // Withdraw is non-nil only on withdraw ops (Kind = TxOpWithdraw); it carries
-// the AOM withdrawal-consent facts (Reason/Rationale/Subject/Delegation).  Non-nil on a
+// the AOM SD-withdrawal-consent.md facts (Reason/Rationale/Subject/Delegation).  Non-nil on a
 // non-withdraw op is ignored.
 type TxOp struct {
 	Kind     TxOpKind        `json:"Kind"`
@@ -266,7 +266,7 @@ type MediaResolveRequest struct {
 // ItemID/EditID/FromID are typed UIDs.
 //
 // Withdraw is non-nil on withdraw frames (Type = "withdraw") and carries the
-// full AOM withdrawal-consent record so subscribers can reconstruct it without a
+// full AOM SD-withdrawal-consent.md record so subscribers can reconstruct it without a
 // follow-up read.
 type SubscribeFrame struct {
 	Type      string          `json:"Type"`

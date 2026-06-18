@@ -204,7 +204,7 @@ POST /api/v1/login/email/redeem      (anonymous; consumes token, mints session)
 POST /api/v1/admin/credentials/email/issue   (Bearer; admin-gated signup)
 ```
 
-MemberID for the email scheme = `tag.NameFrom("email:lc(addr)").ID` — mirror of the wallet path's `tag.NameFrom("eth:lc(addr)").ID` rule.  Failure modes (unknown email, wrong password) return a single 401 envelope with timing-uniform KDF cost so the response carries no existence oracle.  Bulk email (campaigns, white-label outreach) routes through `app.email`'s queue channel; see AOM app-email for the campaign-side contract.
+MemberID for the email scheme = `tag.NameFrom("email:lc(addr)").ID` — mirror of the wallet path's `tag.NameFrom("eth:lc(addr)").ID` rule.  Failure modes (unknown email, wrong password) return a single 401 envelope with timing-uniform KDF cost so the response carries no existence oracle.  Bulk email (campaigns, white-label outreach) routes through `app.email`'s queue channel; see AOM AD-app-email.md for the campaign-side contract.
 
 ```typescript
 interface AmpMember {
@@ -212,7 +212,7 @@ interface AmpMember {
   DisplayName: string;
   Email?: string;
   PlanetID: string;            // planet tag.UID, base32
-  Kind?: string;               // tag.UID resolving to a LawMemberKind_* (AOM substrate-agnostic-members). Default: Person.
+  Kind?: string;               // tag.UID resolving to a LawMemberKind_* (AOM SD-substrate-agnostic-members.md). Default: Person.
   Address?: string;            // 0x-prefixed; present for wallet-scheme members
 }
 ```
@@ -262,7 +262,7 @@ TxOp =                                                          // Kind values s
   | { Kind: 'create',   Channel, Attr, Value, ItemID? }
   | { Kind: 'upsert',   Channel, Attr, ItemID, Value }
   | { Kind: 'remove',   Channel, Attr, ItemID }
-  | { Kind: 'withdraw', Channel, Attr, ItemID, Withdraw: WithdrawNote }   // see §7 + AOM withdrawal-consent
+  | { Kind: 'withdraw', Channel, Attr, ItemID, Withdraw: WithdrawNote }   // see §7 + AOM SD-withdrawal-consent.md
 
 POST   /api/v1/channels/{channel}/attrs/{attr}/items                       ─ sugar: tx with one create op
 PUT    /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}              ─ sugar: tx with one upsert op
@@ -306,7 +306,7 @@ interface BlobRef {
 }
 ```
 
-**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}` URL.  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No AOM epoch-key-coldstore cold-store window for filenames or ContentType; no persistent publisher state to migrate.
+**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}` URL.  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No AOM SD-epoch-key-coldstore.md cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
 After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them.
 
@@ -341,7 +341,7 @@ Frame format (JSON):
 }
 ```
 
-`FromID` is always the TxMsg signer (the member who authored the op). On a `withdraw` frame, `Withdraw.Subject` names whose consent is being withdrawn — equal to `FromID` in the common case (signer is the subject), distinct when an authorized delegate (Memorial, GDPR delegation per AOM address-equivalence) speaks on the subject's behalf. `Withdraw.Delegation` is a base32-packed `amp.Address` citing the record proving that authority. `Subject`/`WithdrawnBy` are plain base32 UID strings. See §7 + AOM withdrawal-consent.
+`FromID` is always the TxMsg signer (the member who authored the op). On a `withdraw` frame, `Withdraw.Subject` names whose consent is being withdrawn — equal to `FromID` in the common case (signer is the subject), distinct when an authorized delegate (Memorial, GDPR delegation per AOM SD-address-equivalence.md) speaks on the subject's behalf. `Withdraw.Delegation` is a base32-packed `amp.Address` citing the record proving that authority. `Subject`/`WithdrawnBy` are plain base32 UID strings. See §7 + AOM SD-withdrawal-consent.md.
 
 Subscriptions are per-`(channel, attr)` and deliver every item event on that attr. To scope subscribe by item, partition the data into per-scope attrs at write time (e.g., `widgets/instance.{memberID}` rather than `widgets/instance` filtered by ownerID).
 
@@ -487,7 +487,7 @@ const signature = await signChallenge(did, challenge.Message);  // ed25519 for d
 await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: challenge.Nonce });
 ```
 
-For `did:pkh:eip155` the signer is the same EVM-wallet `personal_sign` as above (the DID just carries the address), and the resulting member is identical to the `wallet` path. For `did:key` the signer is whatever holds the Ed25519 private key (client-custody is an open UX question — see AOM did-identity §9).
+For `did:pkh:eip155` the signer is the same EVM-wallet `personal_sign` as above (the DID just carries the address), and the resulting member is identical to the `wallet` path. For `did:key` the signer is whatever holds the Ed25519 private key (client-custody is an open UX question — see AOM SD-did-identity.md §9).
 
 ### 5.2 `useAmpQuery<T>()`
 
@@ -524,7 +524,7 @@ await withdraw('shares', 'link', itemID, {
   rationale: 'left the team',
   // subject + delegation are optional — omit when the signer is the subject.
   // (WithdrawOpts keys are camelCase — an SDK option bag, never serialized.)
-  subject: deceasedMember.ID,                            // AOM withdrawal-consent delegated path
+  subject: deceasedMember.ID,                            // AOM SD-withdrawal-consent.md delegated path
   delegation: delegationAddress,                         // base32-packed amp.Address
 });
 ```
@@ -576,7 +576,7 @@ const addr = client.address(addressFromServer);   // base32 string in, string ou
 
 // Reading a planet you can reach (a public share, or a cross-planet record) is a
 // planet-scoped query today — pass planetTag to query.  The one-call
-// resolve(address) REST primitive lands at M5 (AOM app-www §8):
+// resolve(address) REST primitive lands at M5 (AOM AD-app-www.md §8):
 const { data } = await client.query(channel, attr, { itemID, planetTag: planetID });
 ```
 
@@ -762,10 +762,10 @@ A whitelabel deploy registers two planet tags in its config: the owner planet an
 - `DisplayName` — auto-generated callsign or user-set.
 - `Email?` — optional, only present when the auth scheme exposes it.
 - `PlanetID` — the planet this member is scoped to.
-- `Kind?` — `tag.UID` resolving to a `LawMemberKind_*` definition (AOM substrate-agnostic-members). Default `LawMemberKind_Person`. Apps surface this in UI but do NOT gate behavior on it; communities decide what each Kind can do via per-channel ACC, not via protocol-level rules.
+- `Kind?` — `tag.UID` resolving to a `LawMemberKind_*` definition (AOM SD-substrate-agnostic-members.md). Default `LawMemberKind_Person`. Apps surface this in UI but do NOT gate behavior on it; communities decide what each Kind can do via per-channel ACC, not via protocol-level rules.
 - `Address?` — 0x-prefixed wallet address; present for wallet-scheme members.
 
-A given human can have many `MemberTag`s — one per planet they belong to. Cross-planet equivalence is a AOM address-equivalence Equivalence claim, not an automatic merge.
+A given human can have many `MemberTag`s — one per planet they belong to. Cross-planet equivalence is a AOM SD-address-equivalence.md Equivalence claim, not an automatic merge.
 
 ---
 
@@ -773,11 +773,11 @@ A given human can have many `MemberTag`s — one per planet they belong to. Cros
 
 The chronicle is immutable. `DELETE /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}` writes a tombstone — a TxOp that the resolved-state view interprets as "no longer authoritative." Bytes survive in the journal bound by retention.
 
-For records about a member that the member wants disowned (a project shared on a public planet, a profile attribution), the right primitive is **AOM withdrawal-consent Withdraw** — a parallel signed signal. `withdraw('shares', 'link', itemID, { reason, rationale })` writes a Withdraw record. The original item stays signed and visible; consumers see both the original and the withdrawal, and choose honoring policy (suppress, redact, recontextualize). Withdraw reasons (the `WithdrawReason` union — the wire value is the bare enum name) are `Consent`, `Inaccuracy`, `Outdated`, `Coerced`, `Forgotten`, `Departed`, `InviteRecall`, `Retracted` (plus `NoReason` = zero sentinel).
+For records about a member that the member wants disowned (a project shared on a public planet, a profile attribution), the right primitive is **AOM SD-withdrawal-consent.md Withdraw** — a parallel signed signal. `withdraw('shares', 'link', itemID, { reason, rationale })` writes a Withdraw record. The original item stays signed and visible; consumers see both the original and the withdrawal, and choose honoring policy (suppress, redact, recontextualize). Withdraw reasons (the `WithdrawReason` union — the wire value is the bare enum name) are `Consent`, `Inaccuracy`, `Outdated`, `Coerced`, `Forgotten`, `Departed`, `InviteRecall`, `Retracted` (plus `NoReason` = zero sentinel).
 
 ### 7.1 Wire surface
 
-A `withdraw` op carries the full AOM withdrawal-consent information set:
+A `withdraw` op carries the full AOM SD-withdrawal-consent.md information set:
 
 ```typescript
 // WithdrawOpts is the SDK option bag (camelCase — never serialized directly;
@@ -804,7 +804,7 @@ interface WithdrawNote {
 }
 ```
 
-`Subject == WithdrawnBy` is the common case — the signer is the subject. They differ only when an authorized delegate (Memorial speaking for a deceased member, GDPR delegation per AOM address-equivalence, etc.) issues the withdrawal on the subject's behalf; then `delegation` cites the record that grants that authority.
+`Subject == WithdrawnBy` is the common case — the signer is the subject. They differ only when an authorized delegate (Memorial speaking for a deceased member, GDPR delegation per AOM SD-address-equivalence.md, etc.) issues the withdrawal on the subject's behalf; then `delegation` cites the record that grants that authority.
 
 ### 7.2 UX distinctions
 
@@ -813,7 +813,7 @@ interface WithdrawNote {
 | Delete | `remove` | "Remove this from my project list" — owner removes their own record |
 | Unshare | `withdraw` | "Take down the public copy" — record stays signed; consumers see the withdrawal |
 | Forget me | `withdraw` with `Reason=Forgotten` | "Right-to-be-forgotten" request; per-jurisdiction node operators may also delete bytes locally to comply with law |
-| Memorial unshare | `withdraw` with `subject` + `delegation` | An authorized delegate withdraws on behalf of someone who can no longer act for themselves (AOM withdrawal-consent §3) |
+| Memorial unshare | `withdraw` with `subject` + `delegation` | An authorized delegate withdraws on behalf of someone who can no longer act for themselves (AOM SD-withdrawal-consent.md §3) |
 
 A query for an item returns the latest version AND any withdraw signals citing it. Consumers MUST surface both.
 
@@ -1031,7 +1031,7 @@ Inline `<style>` blocks are permitted (the served CSP allows `'unsafe-inline'` f
 
 ## 9. Cross-planet addresses
 
-Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / +edit / +planet). (`Address` is the cross-planet addressing token throughout the SDK and wire; it carries the AOM cross-planet-citation element/planet identity.)
+Amp is many planets, not one. A user's home planet, a project's collaboration planet, a public-share planet, a partner organization's planet — each has its own `tag.UID`. An item is addressed across planets by an `amp.Address` — on the wire a single opaque base32 string packing 3–5 UIDs (element / +edit / +planet). (`Address` is the cross-planet addressing token throughout the SDK and wire; it carries the AOM SD-cross-planet-citation.md element/planet identity.)
 
 ```tsx
 // An Address arrives from the server (e.g. on a read or a share); the SDK
@@ -1042,10 +1042,10 @@ const addr = client.address(addressFromServer);
 // Embed `addr` in a share link or a withdraw delegation.  Reading the cited record
 // today is a planet-scoped query against its planet (anonymous if that planet is a
 // registered public share); the one-call resolve(address) REST primitive lands at
-// M5 — AOM app-www §8.
+// M5 — AOM AD-app-www.md §8.
 ```
 
-Cross-planet addressing is the substrate for shareable links: the share URL embeds the packed Address string, and the public viewer's `@art-media-platform/web` resolves it via the public planet without auth. Cross-planet equivalence claims (AOM address-equivalence) sit on top: a member who exists on multiple planets can publish an Equivalence asserting that two `MemberTag`s refer to the same self.
+Cross-planet addressing is the substrate for shareable links: the share URL embeds the packed Address string, and the public viewer's `@art-media-platform/web` resolves it via the public planet without auth. Cross-planet equivalence claims (AOM SD-address-equivalence.md) sit on top: a member who exists on multiple planets can publish an Equivalence asserting that two `MemberTag`s refer to the same self.
 
 ---
 
@@ -1072,7 +1072,7 @@ The durable model: per-deploy configuration is **signed, chronicle-tracked facts
 
 **What this means for you:** none of this is in your bundle or code path — construct with `vaultUrl` + `planetTag` (+ share tag). What your operator needs *from you*, once, at deploy time is a short, stable list: the web origins to allow (CORS) and the share-planet name. The field *semantics* are the stable integration surface; where they're stored is operator-side and changes nothing in your integration.
 
-> **Operators:** the host reads CORS, the admin allowlist, and the share-planet UID from operator-side config (`app.brand.json` per whitelabel domain; documented in AOM app-www and `deploy/`). It is deliberately **not** part of the consumer contract — don't build against the file. Planet identity and deep-link display are substrate-native `Brand`, resolved from the federation NameService — not this file.
+> **Operators:** the host reads CORS, the admin allowlist, and the share-planet UID from operator-side config (`app.brand.json` per whitelabel domain; documented in AOM AD-app-www.md and `deploy/`). It is deliberately **not** part of the consumer contract — don't build against the file. Planet identity and deep-link display are substrate-native `Brand`, resolved from the federation NameService — not this file.
 
 ---
 
@@ -1147,7 +1147,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 3. **Never assume immediate consistency.** Writes propagate over WebSocket; design UI optimistically.
 4. **Never push SecurityEvent telemetry** to a replicated channel. Audit logs and rate-limit notifications are local-only.
 5. **Never use `window.fetch`** inside a card. Always go through `window.amp.*`.
-6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial, AOM substrate-agnostic-members), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
+6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial, AOM SD-substrate-agnostic-members.md), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
 7. **Never name specific crypto algorithms** in code or docs. Use `seal/open`, `sign/verify`, `hash`, `safe.KeyRef`.
 8. **Never build on bulk namespace enumeration.** `/api/v1/search` is membership-gated, best-effort discovery over the federations you've joined — not a public directory dump, and never anonymous. Resolve exact FQDNs you already know; don't crawl. (§4.6)
 
@@ -1167,16 +1167,16 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
 | **Vault** | An `ampd` peer that stores and relays encrypted data; cannot read content. |
 | **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards). |
-| **Member** | An authenticated identity within a planet. Has `kind` (AOM substrate-agnostic-members): Person / Group / Agent / Memorial / etc. |
+| **Member** | An authenticated identity within a planet. Has `kind` (AOM SD-substrate-agnostic-members.md): Person / Group / Agent / Memorial / etc. |
 | **MemberProof** | An HMAC of derived proof key over TxID; lets a relay verify membership without decryption. |
 | **WebRect** | A Unity 3D Pane that renders a web card. |
 | **Pane** | The host (Unity WebView panel or 2D drawer) of a card. |
 | **Panel** | Identical to Pane in principle, though it adheres to different UI handling.
 | **Card** | A self-contained HTML document rendered as the detail view of a single item, opened on activation. Speaks to amp via `window.amp`. |
 | **Card manifest** | `<meta name="amp:card:*">` tags in a card's `<head>` declaring title, intents, focus model. |
-| **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque; `client.address()` is an identity passthrough. Carries the AOM cross-planet-citation element/planet identity. |
-| **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. AOM address-equivalence. |
-| **Withdraw** | A signed signal that the signer no longer consents to a cited record. AOM withdrawal-consent. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
+| **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque; `client.address()` is an identity passthrough. Carries the AOM SD-cross-planet-citation.md element/planet identity. |
+| **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. AOM SD-address-equivalence.md. |
+| **Withdraw** | A signed signal that the signer no longer consents to a cited record. AOM SD-withdrawal-consent.md. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
 | **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registered host-side; see §6.4 / §10. |
 | **Admin endpoint** | Bearer-authenticated server endpoint reserved for operator-driven substrate operations — currently `POST /api/v1/admin/planet/create` for share-planet genesis. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
@@ -1226,7 +1226,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
-- **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy (AOM substrate-agnostic-members), not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
+- **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy (AOM SD-substrate-agnostic-members.md), not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
 - **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the operator admin allowlist — operator-side gating config, §10) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a sealed invite and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
@@ -1261,7 +1261,7 @@ When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology)
 
 **Identity & trust.** A partner's planets set `Brand.NamedBy` to the naming federation — the back-edge (§4.6) that lets a resolver return `TrustState: 'Verified'`. Resolved records carry the partner's own `VaultAddrs`, so a consumer reaches the partner's vault **directly** — cross-host, never proxied through the parent.
 
-The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own. Operator runbook with the exact genesis / invite / register / peer steps: **AOM name-service §5.4** and `deploy/README`.
+The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own. Operator runbook with the exact genesis / invite / register / peer steps: **AOM DD-name-service.md §5.4** and `deploy/README`.
 
 ---
 
