@@ -18,6 +18,10 @@ export function useAmpQuery<T>(
   const optsRef = useRef(opts);
   optsRef.current = opts;
 
+  // Serialize opts so a change to limit/after/filter/planetTag re-creates `fetch`
+  // (and thus refetches) instead of being captured once through the ref.
+  const optsKey = JSON.stringify(opts ?? {});
+
   const fetch = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -30,7 +34,7 @@ export function useAmpQuery<T>(
     } finally {
       setLoading(false);
     }
-  }, [adapter, channel, attr]);
+  }, [adapter, channel, attr, optsKey]);
 
   // Initial fetch
   useEffect(() => { fetch(); }, [fetch]);
@@ -66,6 +70,10 @@ export function useAmpQuery<T>(
               WithdrawnBy: event.Withdraw.WithdrawnBy ?? event.FromID ?? '',
             } }
           : row));
+      } else if (event.type === 'error') {
+        // A server-side subscribe rejection — surface it instead of silently
+        // never delivering.
+        setError(new Error(event.Error));
       }
     });
   }, [adapter, channel, attr]);

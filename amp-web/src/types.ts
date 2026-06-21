@@ -16,7 +16,7 @@ export interface AmpMember {
   DisplayName: string;
   Email?: string;        // present when the auth scheme exposes it
   PlanetID: string;      // planet tag.UID, base32
-  Kind?: string;         // tag.UID resolving to a LawMemberKind_* (AOM SD-substrate-agnostic-members.md)
+  Kind?: string;         // tag.UID resolving to a LawMemberKind_* (Person / Group / Agent / Memorial)
   Address?: string;      // 0x-prefixed; present for wallet-scheme members
 }
 
@@ -51,13 +51,14 @@ export interface EmailCredential {
 export interface WalletChallenge {
   Nonce: string;
   Message: string;
+  ExpiresAt?: number;   // unix seconds — when the challenge nonce expires (server-set)
 }
 
 export interface AmpAuth {
   member: AmpMember | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<AmpMember>;
   logout: () => Promise<void>;
 }
 
@@ -87,10 +88,10 @@ export interface TagResolution {
   ID: string;            // base32 tag.UID
 }
 
-// ── Withdrawal & addresses (AOM SD-withdrawal-consent.md / AOM SD-cross-planet-citation.md) ──────────────────
+// ── Withdrawal & addresses ──────────────────────────────────────────
 
 export type WithdrawReason =
-  | 'NoReason' | 'Consent' | 'Inaccuracy' | 'Outdated' | 'Coerced'
+  | 'Consent' | 'Inaccuracy' | 'Outdated' | 'Coerced'
   | 'Forgotten' | 'Departed' | 'InviteRecall' | 'Retracted';
 
 /**
@@ -236,4 +237,8 @@ export type SubscriptionEvent =
       EditID?: string;
       FromID?: string;
       Withdraw: WithdrawNote;
-    };
+    }
+  // A server-side subscribe rejection (e.g. no access to the channel/attr) or a
+  // malformed frame.  Routed to the (channel, attr) subscribers so a failed
+  // subscription surfaces instead of silently never delivering.
+  | { type: 'error'; Channel?: string; Attr?: string; Error: string };

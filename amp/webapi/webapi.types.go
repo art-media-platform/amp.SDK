@@ -6,7 +6,9 @@
 // (TypeScript, C#, Swift, future Python) reflects against these names.  Do not
 // rename without version-bumping the API surface.  JSON keys are PascalCase,
 // matching the Go (and C#) identifiers — one identifier set across all
-// platforms.
+// platforms.  Two deliberate exceptions: the protocol-metadata keys on `Item`
+// carry a leading `_` (`_ItemID`, `_EditID`, …) to stay clear of app data keys,
+// and URL query params (`?after=`, `?limit=`, `?planetTag=`) are lowerCamelCase.
 //
 // Field-type discipline:
 //   - tag.UID for fields that are ALWAYS UIDs (member IDs, item/edit/from

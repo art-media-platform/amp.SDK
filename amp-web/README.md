@@ -30,8 +30,8 @@ Or pin it as a path dependency in your `package.json`:
 { "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
 ```
 
-Peer dependency: `react` (>= 18). No other runtime deps — the sealed-box crypto
-is pure JS (`@noble/*`); networking is native `fetch` + `WebSocket`.
+Peer dependency: `react` (>= 18). Runtime deps are three pure-JS `@noble/*`
+packages (the sealed-box crypto); networking is native `fetch` + `WebSocket`.
 
 ## Quick Start
 
@@ -57,7 +57,7 @@ function App() {
 function Labels() {
   const { data, loading } = useAmpQuery<{ title: string }>('projects', 'labels');
   const { create } = useAmpMutation();
-  const { isAuthenticated } = useAmpAuth();   // reads can be anonymous; writes require login (see § Login)
+  const { isAuthenticated } = useAmpAuth();   // private-planet reads & writes both require login; anonymous reads need a public share planet (SKILL §6.4)
 
   if (loading) return <p>Loading…</p>;
   return (
@@ -71,6 +71,8 @@ function Labels() {
 ```
 
 ### Login
+
+`connectWallet` / `signWithWallet` / `signChallenge` below are **your** wallet glue (EIP-1193 / Ed25519), not SDK exports — see `SKILL-amp-web-SDK.md` §5.1 for the full implementation.
 
 ```tsx
 const { login } = useAmpAuth();
@@ -111,6 +113,10 @@ Handed an `amp-invite-v1:…` token? After login, `await client.acceptInvite({ i
 
 The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
 `create` / `upsert` / `remove` / `withdraw` are single-op convenience wrappers.
+
+**Error convention:** read hooks (`useAmpQuery` / `useAmpMedia`) surface failures via
+`error` state; action hooks (`useAmpMutation` / `useAmpUpload`) set `error` **and**
+throw, so you can `try/catch` an awaited call.
 
 ## Canonic names → tag.UIDs
 

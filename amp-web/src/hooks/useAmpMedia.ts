@@ -7,7 +7,7 @@ import type { AmpMediaResult } from '../types.js';
  * Tag path (POST /api/v1/media/resolve), falling back to the direct /www/{UID}
  * URL if resolve is unavailable.  Pass the result `url` to <img>/<video>/<audio>.
  */
-export function useAmpMedia(blobUID: string): AmpMediaResult {
+export function useAmpMedia(blobUID: string, planetTag?: string): AmpMediaResult {
   const { adapter } = useAmpContext();
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,27 +26,23 @@ export function useAmpMedia(blobUID: string): AmpMediaResult {
     setLoading(true);
     setError(null);
 
-    adapter.resolveMedia({ UID: blobUID })
-      .then(async (blob) => {
+    adapter.resolveMedia({ UID: blobUID }, planetTag)
+      .then((blob) => {
         if (cancelled) return;
-        setUrl(blob.URI ?? await adapter.mediaUrl(blobUID));
+        setUrl(blob.URI ?? adapter.mediaUrl(blobUID));
         setContentType(blob.ContentType ?? null);
         setByteSize(blob.I ?? null);
         setLoading(false);
       })
-      .catch(async () => {
+      .catch(() => {
         // Resolve unavailable — fall back to the direct stream URL.
         if (cancelled) return;
-        try {
-          setUrl(await adapter.mediaUrl(blobUID));
-        } catch (err) {
-          setError(err instanceof Error ? err : new Error(String(err)));
-        }
+        setUrl(adapter.mediaUrl(blobUID));
         setLoading(false);
       });
 
     return () => { cancelled = true; };
-  }, [adapter, blobUID]);
+  }, [adapter, blobUID, planetTag]);
 
   return { url, loading, contentType, byteSize, error };
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/hkdf"
 )
@@ -69,6 +70,34 @@ func DeriveKey(rootKey, salt, info []byte) ([]byte, error) {
 // Purpose strings provide domain separation (e.g. "member-proof", "content").
 func DeriveSubKey(masterKey []byte, purpose string) ([]byte, error) {
 	return DeriveKey(masterKey, nil, []byte(purpose))
+}
+
+// StretchParams names the tunable work factors for StretchKey.  They travel with
+// the derived key (in a credential record or a sealed token) so a derivation can
+// be upgraded without breaking older material.
+type StretchParams struct {
+	MemoryKiB uint32 // memory cost (KiB)
+	Time      uint32 // iterations
+	Threads   uint8  // parallelism
+	KeyLen    uint32 // output length (bytes)
+}
+
+// DefaultStretchParams is the OWASP-2023 floor: 19 MiB, time=2, parallelism=1,
+// 32-byte output — slow enough to make offline guessing expensive, fast enough
+// that an interactive derive feels instant.
+var DefaultStretchParams = StretchParams{
+	MemoryKiB: 19 * 1024,
+	Time:      2,
+	Threads:   1,
+	KeyLen:    DEKSize,
+}
+
+// StretchKey turns a low-entropy secret (a passphrase) into a key using a
+// memory-hard, work-factored KDF, for inputs that must resist offline brute
+// force.  Use DeriveKey (HKDF) for high-entropy root keys, where no work factor
+// is needed.  (Implemented with Argon2id.)
+func StretchKey(secret, salt []byte, params StretchParams) []byte {
+	return argon2.IDKey(secret, salt, params.Time, params.MemoryKiB, params.Threads, params.KeyLen)
 }
 
 // ComputeHMAC computes HMAC-SHA256 over msg using the given key.

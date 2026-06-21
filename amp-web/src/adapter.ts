@@ -5,13 +5,12 @@
  * `app.www` wire contract (amp.SDK/amp/webapi).
  */
 
-import type { KeyPair } from './crypto/types.js';
+import type { KeyPair, PubKeyRef } from './crypto/types.js';
 import type {
   AmpItemMeta,
   AmpMember,
   AmpQueryOpts,
   BlobRef,
-  Address,
   InviteAcceptOpts,
   InviteAcceptResult,
   LoginCredentials,
@@ -65,21 +64,17 @@ export interface AmpAdapter {
 
   upload(file: File, channel: string, opts?: UploadOpts): Promise<BlobRef>;
 
-  /** Caller-carries-the-Tag resolve: BlobRef → BlobRef with URI (stream URL) set. */
-  resolveMedia(blob: BlobRef): Promise<BlobRef>;
+  /** Caller-carries-the-Tag resolve: BlobRef → BlobRef with URI (stream URL) set.
+   *  Pass planetTag to resolve a blob on another planet (e.g. an anonymous public share). */
+  resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef>;
 
-  /** Direct /www/{UID} URL for an already-published blob. */
-  mediaUrl(blobUID: string): Promise<string>;
+  /** Direct /www/{UID} URL for an already-published blob (pure string build, no I/O). */
+  mediaUrl(blobUID: string): string;
 
   // ── Federation invites ────────────────────────────────────────────
 
   /** Redeem a sealed amp-invite-v1 token to join its federation planet (Bearer; see SKILL §4.7). */
   acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult>;
-
-  // ── Addresses (cross-planet CRDT-cell references, AOM SD-cross-planet-citation.md) ──────
-
-  /** Build an Address for embedding in shares / withdraw delegations. */
-  address(ref: Address): Address;
 
   // ── Subscriptions ─────────────────────────────────────────────────
 
@@ -103,4 +98,7 @@ export interface AmpAdapter {
 
   /** Open sealed bytes with the session member's EncryptKey. */
   open(sealed: Uint8Array): Promise<Uint8Array>;
+
+  /** The installed EncryptKey's public ref, or null when BYOK isn't installed. */
+  getEncryptPub(): PubKeyRef | null;
 }

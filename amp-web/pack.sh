@@ -52,7 +52,7 @@ npm run build
 rm -rf "$STAGE"
 mkdir -p "$STAGE/webapi"
 cp README.md SKILL-amp-web-SDK.md SECURITY-amp-web-SDK.md LICENSE \
-   package.json package-lock.json tsconfig.json "$STAGE/"
+   package.json package-lock.json "$STAGE/"
 # Stamp the resolved version into the bundled package.json (the committed source
 # carries a placeholder; the tag is authoritative).  Format-preserving rewrite.
 node -e 'const fs=require("fs"),p=process.argv[1],v=process.argv[2];

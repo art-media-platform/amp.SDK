@@ -19,9 +19,8 @@ import {
   defaultEncryptKeyStorage,
   resolveDeviceEncryptKey,
 } from './crypto/keystore.js';
-import type { AmpCrypto, KeyPair } from './crypto/types.js';
+import type { AmpCrypto, KeyPair, PubKeyRef } from './crypto/types.js';
 import type {
-  Address,
   AmpItemMeta,
   AmpMember,
   AmpQueryOpts,
@@ -332,14 +331,14 @@ export class AmpWebClient implements AmpAdapter {
     return resp.json();
   }
 
-  async resolveMedia(blob: BlobRef): Promise<BlobRef> {
+  async resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef> {
     return this.apiFetch<BlobRef>('/media/resolve', {
       method: 'POST',
-      body: JSON.stringify({ Blob: blob }),
+      body: JSON.stringify({ Blob: blob, PlanetTag: planetTag }),
     });
   }
 
-  async mediaUrl(blobUID: string): Promise<string> {
+  mediaUrl(blobUID: string): string {
     return `${this.vaultUrl}/www/${encodeURIComponent(blobUID)}`;
   }
 
@@ -353,15 +352,6 @@ export class AmpWebClient implements AmpAdapter {
       method: 'POST',
       body: JSON.stringify({ InviteText: opts.inviteText, Passphrase: opts.passphrase }),
     });
-  }
-
-  // ── Addresses (cross-planet CRDT-cell references) ─────────────────
-  //
-  // An Address is an opaque base32 string on the wire; the SDK passes it
-  // through unchanged.
-
-  address(ref: Address): Address {
-    return ref;
   }
 
   // ── WebSocket subscriptions ───────────────────────────────────────
@@ -468,6 +458,13 @@ export class AmpWebClient implements AmpAdapter {
   open(sealed: Uint8Array): Promise<Uint8Array> {
     return this.crypto.open(sealed);
   }
+
+  // The installed EncryptKey's public ref, or null when BYOK isn't installed
+  // (seal/open would then throw).  Gate a must-be-sealed write on this rather
+  // than catching seal()'s throw and silently falling back to plaintext.
+  getEncryptPub(): PubKeyRef | null {
+    return this.crypto.getEncryptPub();
+  }
 }
 
 /** Wire-shape WithdrawNote (PascalCase; base32 UID strings). */
@@ -491,10 +488,16 @@ interface WireSubscribeFrame {
   Value?: Record<string, unknown>;
   UpdatedAt?: string;
   Withdraw?: WireWithdrawNote;
+  Error?: string;
 }
 
 /** Decode a flat webapi.SubscribeFrame into a typed SubscriptionEvent. */
 function frameToEvent(frame: WireSubscribeFrame): SubscriptionEvent | null {
+  // An error frame carries no ItemID — surface it before the data-frame guard so
+  // a rejected subscribe reaches its (channel, attr) subscribers.
+  if (frame.Type === 'error') {
+    return { type: 'error', Channel: frame.Channel, Attr: frame.Attr, Error: frame.Error ?? 'subscription error' };
+  }
   if (!frame.ItemID) return null;
   switch (frame.Type) {
     case 'update':
@@ -524,6 +527,8 @@ function frameToEvent(frame: WireSubscribeFrame): SubscriptionEvent | null {
 /** Translate a wire WithdrawNote into the SDK shape (base32 UID strings). */
 function wireToWithdrawNote(w: WireWithdrawNote | undefined): WithdrawNote {
   return {
+    // The server always stamps a Reason on a stored withdraw, so this fallback is
+    // unreachable in practice; it only satisfies the required field on decode.
     Reason: w?.Reason ?? 'Retracted',
     Rationale: w?.Rationale,
     WithdrawnAt: w?.WithdrawnAt,

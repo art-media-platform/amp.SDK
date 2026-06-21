@@ -16,11 +16,16 @@ decrypting the content or learning which member authored it**.
 | A vault sees | A vault does NOT see (private planet) |
 |---|---|
 | PlanetID, EpochID | message payloads (encrypted) |
-| activity timeline (when, how much) | which member authored a given message |
+| activity timeline (when, how much) | who authored an encrypted tx it relays (only an HMAC proof) |
 | membership-proof validity | private-channel keys it isn't a member of |
 
 A seized vault yields opaque blobs and proofs — no plaintext. Routing metadata
-(PlanetID, EpochID, timing) is observable; treat that as your metadata surface.
+(PlanetID, EpochID, timing) is observable, and a sealed value still leaks its
+**size** (sealed-box adds a fixed overhead, so ciphertext length ≈ plaintext length)
+and its channel/attr/item address; treat that as your metadata surface. Sealing
+hides content, not that a secret of ~N bytes exists in slot X and changed at time T.
+(Note this is the *relay* layer — when the host serves you decrypted items/frames,
+each carries `_FromID`, the author; see Attribution below.)
 
 ---
 
@@ -52,6 +57,25 @@ A seized vault yields opaque blobs and proofs — no plaintext. Routing metadata
 
 ---
 
+## Session tokens in URLs
+
+Two surfaces carry the session Bearer in a URL query string rather than an
+`Authorization` header:
+
+- **`wss://…/ws?token=<sessionToken>`** — browsers can't set headers on a WebSocket
+  upgrade, so the token rides the query. `wss://` hides it from network observers, but
+  it still lands in **server access logs**. Don't log WS URLs.
+- **`{vaultUrl}/cards/{cell}?token=<sessionToken>&planet=…`** — a card URL is a
+  *navigable* WebView / iframe `src`, so the Bearer there can leak via the `Referer`
+  header (to any third-party resource the card loads), browser history, and access logs.
+
+The Bearer authorizes the member's full read / write / invite surface, so treat these
+URLs as secrets: require `https://` / `wss://` (never plaintext), never log them, and
+don't load third-party resources in a card you wouldn't hand the token to. A
+shorter-lived, capability-scoped card token is the intended direction.
+
+---
+
 ## Sealed-box BYOK — the #1 rule
 
 User-supplied secrets (API keys for Cesium Ion, OpenRouter, Mapbox, …) **must be
@@ -70,21 +94,30 @@ await client.upsert('users', 'api_keys_overrides', member.ID, { cesium: sealed }
 byte-compatible with the Go side. **Plaintext API keys in a channel item are the
 single most common security mistake — never do it.**
 
+**A failed `seal()` must abort the write — never fall back to plaintext.** `login`
+installs the EncryptKey best-effort; if device storage is unavailable (private-mode
+quota, a blocked IndexedDB upgrade), BYOK is left uninstalled and `seal()` throws.
+That is fail-closed *only if you let it fail*: a `catch` that stores the secret
+unsealed turns a transient storage error into a silent plaintext leak. Gate the write
+on `client.getEncryptPub() !== null`, or let `seal()`'s throw propagate and abort.
+
 **The EncryptKey is device-local.** The client generates a per-member EncryptKey
 on first login and persists it in the browser (IndexedDB), reinstalling it on every
 later login — so `seal`/`open` work for any logged-in member with no out-of-band
 setup. The private key never reaches the host or any other member, so a sealed
 secret stays opaque to admins, vault operators, other planet members, and a
-cold-store/AOM SD-epoch-key-coldstore.md forensic adversary holding the planet epoch key. That is the
+cold-store / forensic adversary holding the planet epoch key. That is the
 property the planet epoch key alone cannot give you.
 
 Two consequences to design around:
 
-- **At rest.** The private key sits in IndexedDB as raw bytes. A local-device
-  compromise (disk forensics, a hostile extension) can read it — the same exposure
-  class as the "local key cache scrape" noted above. Treat the device as part of
-  the BYOK trust boundary; BYOK protects against the *host* and *other members*, not
-  against a compromised client device.
+- **At rest & same-origin.** The private key sits in IndexedDB as raw bytes — no
+  WebCrypto non-extractable handle, no passphrase wrap. So it is readable by (a) a
+  local-device compromise (disk forensics, a hostile extension) **and (b) any
+  same-origin JavaScript** — an XSS payload in *your own app* exfiltrates it with no
+  device compromise at all. Your app's CSP / XSS posture is therefore part of the BYOK
+  trust boundary: BYOK protects against the *host* and *other members*, not against
+  script you let run on your origin, nor a compromised device. Ship a strict CSP.
 - **Scope is same-device.** Because the key is device-local, "seal on phone, open on
   laptop" does **not** work: a member who clears storage or signs in on a second
   device gets a fresh key there and re-enters their (re-enterable) BYOK secrets.
@@ -127,3 +160,8 @@ device-local.
   file-ACL-restricted.
 - Run behind a TLS terminator in production. The plaintext-over-wire guarantee
   assumes the transport is TLS.
+
+**Client-side:** `vaultUrl` MUST be `https://` in any non-localhost deployment — the
+SDK derives `wss://` from it and otherwise falls back to plaintext `ws://`, which would
+expose the Bearer (and all "TLS-protected" traffic) in the clear. The SDK does not
+enforce this; your `vaultUrl` config is the control point.
