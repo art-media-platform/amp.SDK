@@ -666,7 +666,7 @@ func (sel *ItemSelector) Normalize(force bool) error {
 			drop = true
 		} else if span.EditsPerItem == 0 {
 			drop = true
-		} else if span.ItemID_Min_0 > span.ItemID_Max_0 || (span.ItemID_Min_0 == span.ItemID_Max_1 && span.ItemID_Min_1 > span.ItemID_Max_1) {
+		} else if span.ItemID_Min_0 > span.ItemID_Max_0 || (span.ItemID_Min_0 == span.ItemID_Max_0 && span.ItemID_Min_1 > span.ItemID_Max_1) {
 			drop = true
 		}
 
