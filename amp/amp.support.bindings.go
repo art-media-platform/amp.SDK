@@ -31,6 +31,7 @@ type AttrItem[V proto.Message] struct {
 	Addr    tag.Address
 	Value   V
 	Deleted bool
+	Tx      *TxMsg // carrying tx; borrowed for the callback only (read Tx.TxID(), never retain)
 }
 
 // AttrBinding wires a specific attr (and optional item filter) to typed callbacks and caches item state.
@@ -48,8 +49,18 @@ type AttrBinding[V proto.Message] struct {
 	Attr tag.Name // attr to match
 	Item tag.Name // item to match (wildcard matches all)
 
-	OnItem func(item AttrItem[V]) // per-item update callback (optional)
-	OnSync func()                 // called after all items in an update are dispatched (optional)
+	// OnAdmit, if set, is a pre-commit veto invoked for each matching op AFTER the
+	// (node, attr, item) filter but BEFORE the CRDT edit-ordering check and cache:
+	// return false to drop the op entirely (no edit recorded, no cache, no OnItem),
+	// so a vetoed op cannot advance the item's high-water EditID.  Receives the op
+	// address and the carrying tx (e.g. for tx.TxID() recency / skew / cap policy).
+	OnAdmit func(addr tag.Address, tx *TxMsg) bool
+
+	// OnItem fires for each matching op that passes the admit check and CRDT ordering (if non-nil)
+	OnItem func(item AttrItem[V])
+
+	// OnSync fires once after all ops in a NodeUpdate have been processed  (if non-nil)
+	OnSync func()
 
 	revision tag.UID                  // most recently witnessed NodeUpdate
 	nodeID   tag.UID                  // bound node ID
@@ -230,6 +241,12 @@ func (b *AttrBinding[V]) OnNodeUpdate(update NodeUpdate) {
 			continue
 		}
 
+		// Pre-commit veto: runs before the edit-ordering check so a rejected op
+		// never advances the item's high-water EditID (no cache poisoning).
+		if b.OnAdmit != nil && !b.OnAdmit(op.Addr, tx) {
+			continue
+		}
+
 		// CRDT: reject edits older than what we already have.
 		prevEdit, hasEdit := b.edits[op.Addr.ItemID]
 		if hasEdit && prevEdit.CompareTo(op.Addr.EditID) >= 0 {
@@ -239,6 +256,7 @@ func (b *AttrBinding[V]) OnNodeUpdate(update NodeUpdate) {
 
 		item := AttrItem[V]{
 			Addr:  op.Addr,
+			Tx:    tx,
 			Value: b.msgType.New().Interface().(V),
 		}
 
@@ -305,6 +323,7 @@ func ExtractItems[V proto.Message](tx *TxMsg, nodeID, attrID tag.UID) []AttrItem
 		}
 		item := AttrItem[V]{
 			Addr:  op.Addr,
+			Tx:    tx,
 			Value: msgType.New().Interface().(V),
 		}
 		if (op.Flags & TxOpFlags_Delete) != 0 {
