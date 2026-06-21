@@ -1912,8 +1912,8 @@ func (x *GeoPath) GetPoints() []uint64 {
 	return nil
 }
 
-// MediaItem wraps a media track, feature, featurette, collection, album, or playlist.
-type MediaItem struct {
+// MediaInfo wraps a media track, feature, featurette, collection, album, or playlist.
+type MediaInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Flags         MediaFlags             `protobuf:"varint,1,opt,name=Flags,proto3,enum=std.MediaFlags" json:"Flags,omitempty"` // describes this item
 	Tag           *amp.Tag               `protobuf:"bytes,3,opt,name=Tag,proto3" json:"Tag,omitempty"`                          // free use
@@ -1925,20 +1925,20 @@ type MediaItem struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *MediaItem) Reset() {
-	*x = MediaItem{}
+func (x *MediaInfo) Reset() {
+	*x = MediaInfo{}
 	mi := &file_amp_std_amp_std_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *MediaItem) String() string {
+func (x *MediaInfo) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MediaItem) ProtoMessage() {}
+func (*MediaInfo) ProtoMessage() {}
 
-func (x *MediaItem) ProtoReflect() protoreflect.Message {
+func (x *MediaInfo) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_std_amp_std_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1950,85 +1950,87 @@ func (x *MediaItem) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use MediaItem.ProtoReflect.Descriptor instead.
-func (*MediaItem) Descriptor() ([]byte, []int) {
+// Deprecated: Use MediaInfo.ProtoReflect.Descriptor instead.
+func (*MediaInfo) Descriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *MediaItem) GetFlags() MediaFlags {
+func (x *MediaInfo) GetFlags() MediaFlags {
 	if x != nil {
 		return x.Flags
 	}
 	return MediaFlags_NoMedia
 }
 
-func (x *MediaItem) GetTag() *amp.Tag {
+func (x *MediaInfo) GetTag() *amp.Tag {
 	if x != nil {
 		return x.Tag
 	}
 	return nil
 }
 
-func (x *MediaItem) GetStartAt() float64 {
+func (x *MediaInfo) GetStartAt() float64 {
 	if x != nil {
 		return x.StartAt
 	}
 	return 0
 }
 
-func (x *MediaItem) GetSeconds() float64 {
+func (x *MediaInfo) GetSeconds() float64 {
 	if x != nil {
 		return x.Seconds
 	}
 	return 0
 }
 
-func (x *MediaItem) GetPopularity() float32 {
+func (x *MediaInfo) GetPopularity() float32 {
 	if x != nil {
 		return x.Popularity
 	}
 	return 0
 }
 
-func (x *MediaItem) GetOrdering() float32 {
+func (x *MediaInfo) GetOrdering() float32 {
 	if x != nil {
 		return x.Ordering
 	}
 	return 0
 }
 
-// MediaSegment is one segment of a live or recorded media stream: an inline on-chain
-// copy of the bytes plus a reference to the durable content-addressed blob.  Playback
-// time is the exact integer rational TickDelta / TickRate (the QuickTime time model),
-// so consecutive segments tile a stream exactly: TickOffset + TickDelta == the next
-// segment's TickOffset.  For a byte-rate stream the natural tick is the byte.
-type MediaSegment struct {
+// Segment is one unit of content: an inline on-chain copy of the bytes and/or a
+// reference to the durable content-addressed blob.  The timeline fields are optional —
+// zero for an atomic asset (a file, an image, a portal template), set for a slice of a
+// live or recorded stream.  When timed, playback time is the exact integer rational
+// TickDelta / TickRate (the QuickTime time model), so consecutive segments tile a stream
+// exactly: TickOffset + TickDelta == the next segment's TickOffset.  For a byte-rate
+// stream the natural tick is the byte.
+type Segment struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TickOffset    int64                  `protobuf:"varint,1,opt,name=TickOffset,proto3" json:"TickOffset,omitempty"`      // cumulative tick offset of this segment's start on the stream timeline
-	TickDelta     int64                  `protobuf:"varint,2,opt,name=TickDelta,proto3" json:"TickDelta,omitempty"`        // this segment's duration as an exact tick span
+	TickOffset    int64                  `protobuf:"varint,1,opt,name=TickOffset,proto3" json:"TickOffset,omitempty"`      // cumulative tick offset of this segment's start on the stream timeline (0 if untimed)
+	TickDelta     int64                  `protobuf:"varint,2,opt,name=TickDelta,proto3" json:"TickDelta,omitempty"`        // this segment's duration as an exact tick span (0 if untimed)
 	TickRate      int64                  `protobuf:"varint,3,opt,name=TickRate,proto3" json:"TickRate,omitempty"`          // ticks per second — the timescale (0 when the source rate is unknown)
 	Units         amp.Units              `protobuf:"varint,4,opt,name=Units,proto3,enum=amp.Units" json:"Units,omitempty"` // what one tick is (Bytes for a byte-stream; Samples / Seconds for sampled media)
-	Format        string                 `protobuf:"bytes,5,opt,name=Format,proto3" json:"Format,omitempty"`               // content (MIME) type
-	Payload       []byte                 `protobuf:"bytes,6,opt,name=Payload,proto3" json:"Payload,omitempty"`             // inline on-chain copy of the segment bytes (the integrity-check source)
-	Blob          *amp.BlobRef           `protobuf:"bytes,7,opt,name=Blob,proto3" json:"Blob,omitempty"`                   // the segment's durable content-addressed bytes
+	ContentType   string                 `protobuf:"bytes,5,opt,name=ContentType,proto3" json:"ContentType,omitempty"`     // content (MIME) type of the bytes
+	Inline        []byte                 `protobuf:"bytes,6,opt,name=Inline,proto3" json:"Inline,omitempty"`               // inline on-chain copy of the bytes (integrity-check / live-edge); empty for blob-only
+	Blob          *amp.BlobRef           `protobuf:"bytes,7,opt,name=Blob,proto3" json:"Blob,omitempty"`                   // the durable content-addressed bytes; nil for inline-only
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *MediaSegment) Reset() {
-	*x = MediaSegment{}
+func (x *Segment) Reset() {
+	*x = Segment{}
 	mi := &file_amp_std_amp_std_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *MediaSegment) String() string {
+func (x *Segment) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MediaSegment) ProtoMessage() {}
+func (*Segment) ProtoMessage() {}
 
-func (x *MediaSegment) ProtoReflect() protoreflect.Message {
+func (x *Segment) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_std_amp_std_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2040,54 +2042,54 @@ func (x *MediaSegment) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use MediaSegment.ProtoReflect.Descriptor instead.
-func (*MediaSegment) Descriptor() ([]byte, []int) {
+// Deprecated: Use Segment.ProtoReflect.Descriptor instead.
+func (*Segment) Descriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *MediaSegment) GetTickOffset() int64 {
+func (x *Segment) GetTickOffset() int64 {
 	if x != nil {
 		return x.TickOffset
 	}
 	return 0
 }
 
-func (x *MediaSegment) GetTickDelta() int64 {
+func (x *Segment) GetTickDelta() int64 {
 	if x != nil {
 		return x.TickDelta
 	}
 	return 0
 }
 
-func (x *MediaSegment) GetTickRate() int64 {
+func (x *Segment) GetTickRate() int64 {
 	if x != nil {
 		return x.TickRate
 	}
 	return 0
 }
 
-func (x *MediaSegment) GetUnits() amp.Units {
+func (x *Segment) GetUnits() amp.Units {
 	if x != nil {
 		return x.Units
 	}
 	return amp.Units(0)
 }
 
-func (x *MediaSegment) GetFormat() string {
+func (x *Segment) GetContentType() string {
 	if x != nil {
-		return x.Format
+		return x.ContentType
 	}
 	return ""
 }
 
-func (x *MediaSegment) GetPayload() []byte {
+func (x *Segment) GetInline() []byte {
 	if x != nil {
-		return x.Payload
+		return x.Inline
 	}
 	return nil
 }
 
-func (x *MediaSegment) GetBlob() *amp.BlobRef {
+func (x *Segment) GetBlob() *amp.BlobRef {
 	if x != nil {
 		return x.Blob
 	}
@@ -3133,7 +3135,7 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x05Point\x10\x00\x12\b\n" +
 	"\x04Path\x10\x01\x12\b\n" +
 	"\x04Ring\x10\x02\"\xbe\x01\n" +
-	"\tMediaItem\x12%\n" +
+	"\tMediaInfo\x12%\n" +
 	"\x05Flags\x18\x01 \x01(\x0e2\x0f.std.MediaFlagsR\x05Flags\x12\x1a\n" +
 	"\x03Tag\x18\x03 \x01(\v2\b.amp.TagR\x03Tag\x12\x18\n" +
 	"\aStartAt\x18\x05 \x01(\x01R\aStartAt\x12\x18\n" +
@@ -3141,17 +3143,17 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
 	"Popularity\x18\x10 \x01(\x02R\n" +
 	"Popularity\x12\x1a\n" +
-	"\bOrdering\x18\x11 \x01(\x02R\bOrdering\"\xde\x01\n" +
-	"\fMediaSegment\x12\x1e\n" +
+	"\bOrdering\x18\x11 \x01(\x02R\bOrdering\"\xe1\x01\n" +
+	"\aSegment\x12\x1e\n" +
 	"\n" +
 	"TickOffset\x18\x01 \x01(\x03R\n" +
 	"TickOffset\x12\x1c\n" +
 	"\tTickDelta\x18\x02 \x01(\x03R\tTickDelta\x12\x1a\n" +
 	"\bTickRate\x18\x03 \x01(\x03R\bTickRate\x12 \n" +
 	"\x05Units\x18\x04 \x01(\x0e2\n" +
-	".amp.UnitsR\x05Units\x12\x16\n" +
-	"\x06Format\x18\x05 \x01(\tR\x06Format\x12\x18\n" +
-	"\aPayload\x18\x06 \x01(\fR\aPayload\x12 \n" +
+	".amp.UnitsR\x05Units\x12 \n" +
+	"\vContentType\x18\x05 \x01(\tR\vContentType\x12\x16\n" +
+	"\x06Inline\x18\x06 \x01(\fR\x06Inline\x12 \n" +
 	"\x04Blob\x18\a \x01(\v2\f.amp.BlobRefR\x04Blob\"-\n" +
 	"\x03Arg\x12\x10\n" +
 	"\x03Key\x18\x01 \x01(\tR\x03Key\x12\x14\n" +
@@ -3369,8 +3371,8 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(*ModuleRef)(nil),        // 23: std.ModuleRef
 	(*Rect)(nil),             // 24: std.Rect
 	(*GeoPath)(nil),          // 25: std.GeoPath
-	(*MediaItem)(nil),        // 26: std.MediaItem
-	(*MediaSegment)(nil),     // 27: std.MediaSegment
+	(*MediaInfo)(nil),        // 26: std.MediaInfo
+	(*Segment)(nil),          // 27: std.Segment
 	(*Arg)(nil),              // 28: std.Arg
 	(*VisPreset)(nil),        // 29: std.VisPreset
 	(*TileBand)(nil),         // 30: std.TileBand
@@ -3403,10 +3405,10 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	2,  // 14: std.Rect.Format:type_name -> std.PointFormat
 	13, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	2,  // 16: std.GeoPath.Format:type_name -> std.PointFormat
-	3,  // 17: std.MediaItem.Flags:type_name -> std.MediaFlags
-	38, // 18: std.MediaItem.Tag:type_name -> amp.Tag
-	39, // 19: std.MediaSegment.Units:type_name -> amp.Units
-	40, // 20: std.MediaSegment.Blob:type_name -> amp.BlobRef
+	3,  // 17: std.MediaInfo.Flags:type_name -> std.MediaFlags
+	38, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
+	39, // 19: std.Segment.Units:type_name -> amp.Units
+	40, // 20: std.Segment.Blob:type_name -> amp.BlobRef
 	19, // 21: std.VisPreset.Title:type_name -> std.TextItem
 	19, // 22: std.VisPreset.Collection:type_name -> std.TextItem
 	19, // 23: std.VisPreset.Credits:type_name -> std.TextItem

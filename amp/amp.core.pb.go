@@ -5412,6 +5412,7 @@ type AppTarget struct {
 	DownloadURL   string                 `protobuf:"bytes,3,opt,name=DownloadURL,proto3" json:"DownloadURL,omitempty"`   // store URL, HTTPS download, magnet link, etc.
 	BundleID      string                 `protobuf:"bytes,4,opt,name=BundleID,proto3" json:"BundleID,omitempty"`         // "org.plan.tunr" (iOS/Android bundle ID)
 	MinOSVersion  string                 `protobuf:"bytes,5,opt,name=MinOSVersion,proto3" json:"MinOSVersion,omitempty"` // minimum OS version, e.g. "14.0"
+	AppleTeamID   string                 `protobuf:"bytes,6,opt,name=AppleTeamID,proto3" json:"AppleTeamID,omitempty"`   // Apple Developer Team ID; AASA appID is "{AppleTeamID}.{BundleID}"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5470,6 +5471,13 @@ func (x *AppTarget) GetBundleID() string {
 func (x *AppTarget) GetMinOSVersion() string {
 	if x != nil {
 		return x.MinOSVersion
+	}
+	return ""
+}
+
+func (x *AppTarget) GetAppleTeamID() string {
+	if x != nil {
+		return x.AppleTeamID
 	}
 	return ""
 }
@@ -5618,7 +5626,13 @@ type Brand struct {
 	// planet acknowledges as its current namer.  Single-valued: a planet is named
 	// through one federation at a time but may roam.  Read by NameService
 	// consumers to enforce the canonic-binding invariant of AOM DD-name-service.md §3.3.
-	NamedBy       *Tag `protobuf:"bytes,30,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
+	NamedBy *Tag `protobuf:"bytes,30,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
+	// TemplateSet selects which portal template set renders this planet's HTTP
+	// surfaces — names a template-set channel (NodeID) on the naming federation
+	// planet that app.www reads template Segments from.  Empty = the federation's
+	// default set.  Members select among federation-published sets; the markup is
+	// federation-authored (DD-name-service.md §12.3).
+	TemplateSet   *Tag `protobuf:"bytes,31,opt,name=TemplateSet,proto3" json:"TemplateSet,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5733,6 +5747,13 @@ func (x *Brand) GetBundledCrates() []*CrateRef {
 func (x *Brand) GetNamedBy() *Tag {
 	if x != nil {
 		return x.NamedBy
+	}
+	return nil
+}
+
+func (x *Brand) GetTemplateSet() *Tag {
+	if x != nil {
+		return x.TemplateSet
 	}
 	return nil
 }
@@ -6532,19 +6553,20 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x0eCompactHistory\x18\x06 \x01(\v2\x1c.amp.ChronicleCompactHistoryR\x0eCompactHistory\x122\n" +
 	"\bManifest\x18\x14 \x01(\v2\x16.amp.ChronicleManifestR\bManifest\x12\x14\n" +
 	"\x05Label\x18\x15 \x01(\tR\x05LabelJ\x04\b\n" +
-	"\x10\x14\"\x9a\x01\n" +
+	"\x10\x14\"\xbc\x01\n" +
 	"\tAppTarget\x12+\n" +
 	"\bPlatform\x18\x01 \x01(\x0e2\x0f.amp.PlatformIDR\bPlatform\x12 \n" +
 	"\vDownloadURL\x18\x03 \x01(\tR\vDownloadURL\x12\x1a\n" +
 	"\bBundleID\x18\x04 \x01(\tR\bBundleID\x12\"\n" +
-	"\fMinOSVersion\x18\x05 \x01(\tR\fMinOSVersion\"1\n" +
+	"\fMinOSVersion\x18\x05 \x01(\tR\fMinOSVersion\x12 \n" +
+	"\vAppleTeamID\x18\x06 \x01(\tR\vAppleTeamID\"1\n" +
 	"\aAppLink\x12\x14\n" +
 	"\x05Label\x18\x01 \x01(\tR\x05Label\x12\x10\n" +
 	"\x03URL\x18\x02 \x01(\tR\x03URL\"\\\n" +
 	"\bCrateRef\x12\x1a\n" +
 	"\bCrateURI\x18\x01 \x01(\tR\bCrateURI\x12\x19\n" +
 	"\bBlobID_0\x18\x02 \x01(\x06R\aBlobID0\x12\x19\n" +
-	"\bBlobID_1\x18\x03 \x01(\x06R\aBlobID1\"\xa6\x03\n" +
+	"\bBlobID_1\x18\x03 \x01(\x06R\aBlobID1\"\xd2\x03\n" +
 	"\x05Brand\x12\x18\n" +
 	"\aAppName\x18\x01 \x01(\tR\aAppName\x12\x1c\n" +
 	"\tAppDomain\x18\x02 \x01(\tR\tAppDomain\x12\x18\n" +
@@ -6564,7 +6586,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x10CrateSnapshotURL\x18\x14 \x01(\tR\x10CrateSnapshotURL\x12\"\n" +
 	"\x05Links\x18\x19 \x03(\v2\f.amp.AppLinkR\x05Links\x123\n" +
 	"\rBundledCrates\x18\x1a \x03(\v2\r.amp.CrateRefR\rBundledCrates\x12\"\n" +
-	"\aNamedBy\x18\x1e \x01(\v2\b.amp.TagR\aNamedBy\"\x9f\x02\n" +
+	"\aNamedBy\x18\x1e \x01(\v2\b.amp.TagR\aNamedBy\x12*\n" +
+	"\vTemplateSet\x18\x1f \x01(\v2\b.amp.TagR\vTemplateSet\"\x9f\x02\n" +
 	"\aAddress\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -6942,20 +6965,21 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	64,  // 102: amp.Brand.Links:type_name -> amp.AppLink
 	65,  // 103: amp.Brand.BundledCrates:type_name -> amp.CrateRef
 	26,  // 104: amp.Brand.NamedBy:type_name -> amp.Tag
-	26,  // 105: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
-	67,  // 106: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
-	66,  // 107: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
-	68,  // 108: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
-	26,  // 109: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
-	26,  // 110: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
-	26,  // 111: amp.FederationPeer.FederationID:type_name -> amp.Tag
-	68,  // 112: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
-	70,  // 113: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
-	114, // [114:114] is the sub-list for method output_type
-	114, // [114:114] is the sub-list for method input_type
-	114, // [114:114] is the sub-list for extension type_name
-	114, // [114:114] is the sub-list for extension extendee
-	0,   // [0:114] is the sub-list for field type_name
+	26,  // 105: amp.Brand.TemplateSet:type_name -> amp.Tag
+	26,  // 106: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
+	67,  // 107: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
+	66,  // 108: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
+	68,  // 109: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
+	26,  // 110: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
+	26,  // 111: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
+	26,  // 112: amp.FederationPeer.FederationID:type_name -> amp.Tag
+	68,  // 113: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
+	70,  // 114: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
+	115, // [115:115] is the sub-list for method output_type
+	115, // [115:115] is the sub-list for method input_type
+	115, // [115:115] is the sub-list for extension type_name
+	115, // [115:115] is the sub-list for extension extendee
+	0,   // [0:115] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }

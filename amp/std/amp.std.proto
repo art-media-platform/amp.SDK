@@ -217,8 +217,8 @@ enum PointFormat {
 }
 
 
-// MediaItem wraps a media track, feature, featurette, collection, album, or playlist.
-message MediaItem {
+// MediaInfo wraps a media track, feature, featurette, collection, album, or playlist.
+message MediaInfo {
     MediaFlags Flags      = 1; // describes this item
     amp.Tag    Tag        = 3; // free use
     double     StartAt    = 5; // starts playback at the given seconds offset
@@ -253,19 +253,21 @@ enum MediaFlags {
 
 }
 
-// MediaSegment is one segment of a live or recorded media stream: an inline on-chain
-// copy of the bytes plus a reference to the durable content-addressed blob.  Playback
-// time is the exact integer rational TickDelta / TickRate (the QuickTime time model),
-// so consecutive segments tile a stream exactly: TickOffset + TickDelta == the next
-// segment's TickOffset.  For a byte-rate stream the natural tick is the byte.
-message MediaSegment {
-    int64       TickOffset = 1; // cumulative tick offset of this segment's start on the stream timeline
-    int64       TickDelta  = 2; // this segment's duration as an exact tick span
-    int64       TickRate   = 3; // ticks per second — the timescale (0 when the source rate is unknown)
-    amp.Units   Units      = 4; // what one tick is (Bytes for a byte-stream; Samples / Seconds for sampled media)
-    string      Format     = 5; // content (MIME) type
-    bytes       Payload    = 6; // inline on-chain copy of the segment bytes (the integrity-check source)
-    amp.BlobRef Blob       = 7; // the segment's durable content-addressed bytes
+// Segment is one unit of content: an inline on-chain copy of the bytes and/or a
+// reference to the durable content-addressed blob.  The timeline fields are optional —
+// zero for an atomic asset (a file, an image, a portal template), set for a slice of a
+// live or recorded stream.  When timed, playback time is the exact integer rational
+// TickDelta / TickRate (the QuickTime time model), so consecutive segments tile a stream
+// exactly: TickOffset + TickDelta == the next segment's TickOffset.  For a byte-rate
+// stream the natural tick is the byte.
+message Segment {
+    int64       TickOffset  = 1; // cumulative tick offset of this segment's start on the stream timeline (0 if untimed)
+    int64       TickDelta   = 2; // this segment's duration as an exact tick span (0 if untimed)
+    int64       TickRate    = 3; // ticks per second — the timescale (0 when the source rate is unknown)
+    amp.Units   Units       = 4; // what one tick is (Bytes for a byte-stream; Samples / Seconds for sampled media)
+    string      ContentType = 5; // content (MIME) type of the bytes
+    bytes       Inline      = 6; // inline on-chain copy of the bytes (integrity-check / live-edge); empty for blob-only
+    amp.BlobRef Blob        = 7; // the durable content-addressed bytes; nil for inline-only
 }
 
 // Arg is a any-purpose key/value pair

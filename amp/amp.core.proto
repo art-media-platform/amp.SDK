@@ -1428,6 +1428,7 @@ message AppTarget {
     string              DownloadURL  = 3;    // store URL, HTTPS download, magnet link, etc.
     string              BundleID     = 4;    // "org.plan.tunr" (iOS/Android bundle ID)
     string              MinOSVersion = 5;    // minimum OS version, e.g. "14.0"
+    string              AppleTeamID  = 6;    // Apple Developer Team ID; AASA appID is "{AppleTeamID}.{BundleID}"
 }
 
 // AppLink is one curated entry point — typically an amp:// or https:// URL with a label.
@@ -1472,6 +1473,13 @@ message Brand {
     // through one federation at a time but may roam.  Read by NameService
     // consumers to enforce the canonic-binding invariant of AOM DD-name-service.md §3.3.
     Tag                 NamedBy          = 30;
+
+    // TemplateSet selects which portal template set renders this planet's HTTP
+    // surfaces — names a template-set channel (NodeID) on the naming federation
+    // planet that app.www reads template Segments from.  Empty = the federation's
+    // default set.  Members select among federation-published sets; the markup is
+    // federation-authored (DD-name-service.md §12.3).
+    Tag                 TemplateSet      = 31;
 }
 
 

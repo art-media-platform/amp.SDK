@@ -12,9 +12,9 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
 
-// A media stream presents the MediaSegment records on one (node, attr) cell as a
+// A media stream presents the Segment records on one (node, attr) cell as a
 // single seekable byte stream — the channel's segments concatenated in capture
-// order.  Any app that records media as time-ordered MediaSegments (a live radio
+// order.  Any app that records media as time-ordered Segments (a live radio
 // segmenter, a podcast, a screen capture) turns its channel into one playable URL
 // with these helpers; a URL-based player (Unity / web / a browser) opens it and
 // scrubs via HTTP range requests.
@@ -23,7 +23,7 @@ import (
 // when a Read/Seek touches that segment, and at most MaxResidentBytes of segment
 // data stays open at once.  A four-hour mix is therefore served without ever
 // holding the whole recording in memory — only a compact offset index plus the
-// current read window.  The inline MediaSegment.Payload is intentionally unused
+// current read window.  The inline Segment.Inline is intentionally unused
 // here (it is the live-edge / integrity copy); the stream serves the Blob.
 
 const (
@@ -39,7 +39,7 @@ const (
 	minMediaResidentBytes = 1 << 20
 )
 
-// MediaStreamSource names the (planet, node, attr) cell whose MediaSegment items
+// MediaStreamSource names the (planet, node, attr) cell whose Segment items
 // are streamed as one continuous asset.
 type MediaStreamSource struct {
 	Planet tag.UID
@@ -140,7 +140,7 @@ func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRe
 	if err := tx.Upsert(node, Attr.BlobRef.ID, ref.AssetTag.UID(), ref); err != nil {
 		return err
 	}
-	if err := tx.Upsert(node, Attr.MediaItem.ID, tag.UID{}, &MediaItem{Flags: rec.Flags, Seconds: rec.Seconds}); err != nil {
+	if err := tx.Upsert(node, Attr.MediaItem.ID, tag.UID{}, &MediaInfo{Flags: rec.Flags, Seconds: rec.Seconds}); err != nil {
 		return err
 	}
 	if err := tx.Upsert(node, Attr.ItemLabel.ID, tag.UID{}, &TextItem{Body: rec.Label}); err != nil {
@@ -283,8 +283,8 @@ type segRaw struct {
 	blob   *amp.BlobRef
 }
 
-// segCollector gathers a node's MediaSegment items under one attr — their blob,
-// byte length, and ItemID — dropping the inline Payload.
+// segCollector gathers a node's Segment items under one attr — their blob,
+// byte length, and ItemID — dropping the inline copy.
 type segCollector struct {
 	revision    tag.UID
 	attr        tag.UID
@@ -302,7 +302,7 @@ func (c *segCollector) OnNodeUpdate(update amp.NodeUpdate) {
 		if op.Addr.AttrID != c.attr {
 			continue
 		}
-		seg := &MediaSegment{}
+		seg := &Segment{}
 		if err := update.Tx.ExtractValue(c.attr, op.Addr.ItemID, seg); err != nil {
 			continue
 		}
@@ -311,15 +311,15 @@ func (c *segCollector) OnNodeUpdate(update amp.NodeUpdate) {
 		}
 		length := seg.TickDelta
 		if seg.Blob.AssetTag != nil && seg.Blob.AssetTag.I > 0 {
-			length = seg.Blob.AssetTag.I // the blob's byte size — robust across MediaSegment.Units
+			length = seg.Blob.AssetTag.I // the blob's byte size — robust across Segment.Units
 		}
 		if length <= 0 {
 			continue
 		}
 		c.raw = append(c.raw, segRaw{itemID: op.Addr.ItemID, length: length, blob: seg.Blob})
 		if c.contentType == "" {
-			if seg.Format != "" {
-				c.contentType = seg.Format
+			if seg.ContentType != "" {
+				c.contentType = seg.ContentType
 			} else if seg.Blob.AssetTag != nil {
 				c.contentType = seg.Blob.AssetTag.ContentType
 			}
