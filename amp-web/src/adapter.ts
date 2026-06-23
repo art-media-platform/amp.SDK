@@ -50,6 +50,14 @@ export interface AmpAdapter {
   /** Canonical batched write — one TxMsg, N ops, one signature + MemberProof. */
   tx(ops: TxOp[], planetTag?: string): Promise<TxResult[]>;
 
+  /**
+   * Invoke an app verb: route the ops to the named verb URL's handler instead of
+   * the cabinet, carrying the session member as the authoring caller.  The app
+   * reads the ops as RPC arguments and authors any durable writes itself
+   * (custodially).  Form: "amp://~/{app}/{verb}" (e.g. "amp://~/forums/post").
+   */
+  invoke(verbURL: string, ops: TxOp[], planetTag?: string): Promise<TxResult[]>;
+
   create(channel: string, attr: string, value: Record<string, unknown>): Promise<string>;
   upsert(channel: string, attr: string, itemID: string, value: Record<string, unknown>): Promise<void>;
   remove(channel: string, attr: string, itemID: string): Promise<void>;

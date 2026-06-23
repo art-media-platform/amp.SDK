@@ -261,6 +261,17 @@ export class AmpWebClient implements AmpAdapter {
     return out.Results ?? [];
   }
 
+  async invoke(verbURL: string, ops: TxOp[], planetTag?: string): Promise<TxResult[]> {
+    const wireOps = ops.map(op =>
+      op.Withdraw ? { ...op, Withdraw: withdrawNoteToWire(op.Withdraw) } : op,
+    );
+    const out = await this.apiFetch<{ TxID: string; Results: TxResult[] }>('/tx', {
+      method: 'POST',
+      body: JSON.stringify({ Ops: wireOps, PlanetTag: planetTag, InvokeURL: verbURL }),
+    });
+    return out.Results ?? [];
+  }
+
   async create(channel: string, attr: string, value: Record<string, unknown>): Promise<string> {
     const out = await this.apiFetch<{ Results: TxResult[] }>(
       this.itemsPath(channel, attr),

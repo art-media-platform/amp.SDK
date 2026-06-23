@@ -25,6 +25,9 @@ export function useAmpMutation(): AmpMutationResult {
   const tx = useCallback((ops: TxOp[], planetTag?: string): Promise<TxResult[]> =>
     run(() => adapter.tx(ops, planetTag)), [adapter, run]);
 
+  const invoke = useCallback((verbURL: string, ops: TxOp[], planetTag?: string): Promise<TxResult[]> =>
+    run(() => adapter.invoke(verbURL, ops, planetTag)), [adapter, run]);
+
   const create = useCallback((channel: string, attr: string, value: Record<string, unknown>): Promise<string> =>
     run(() => adapter.create(channel, attr, value)), [adapter, run]);
 
@@ -37,5 +40,5 @@ export function useAmpMutation(): AmpMutationResult {
   const withdraw = useCallback((channel: string, attr: string, itemID: string, opts: WithdrawOpts): Promise<void> =>
     run(() => adapter.withdraw(channel, attr, itemID, opts)), [adapter, run]);
 
-  return { tx, create, upsert, remove, withdraw, loading, error };
+  return { tx, invoke, create, upsert, remove, withdraw, loading, error };
 }
