@@ -271,16 +271,16 @@ type SessionVault interface {
 // See AOM SD-channel-governance.md.
 type ACCEngine interface {
 
-	// ChannelEpoch returns the latest governing ChannelEpoch for (planetID, channelID),
+	// ChannelEpoch returns the latest governing ChannelEpoch for (planetID, nodeID),
 	// or nil when the channel is ungoverned.
-	ChannelEpoch(planetID, channelID tag.UID) *ChannelEpoch
+	ChannelEpoch(planetID, nodeID tag.UID) *ChannelEpoch
 
 	// HasAccess reports whether memberID holds at least `required` access on the channel.
-	HasAccess(planetID, channelID, memberID tag.UID, required Access) bool
+	HasAccess(planetID, nodeID, memberID tag.UID, required Access) bool
 
 	// ResolveAccess returns memberID's effective Access on the channel (parent-chain
 	// resolved, fail-closed at any missing ancestor).
-	ResolveAccess(planetID, channelID, memberID tag.UID) Access
+	ResolveAccess(planetID, nodeID, memberID tag.UID) Access
 
 	// IsFounder reports whether memberID is a founder of planetID — PlanetCharter.Founders,
 	// verified from the immutable genesis envelope (the root of governance authority).
