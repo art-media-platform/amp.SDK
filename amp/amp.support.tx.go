@@ -675,6 +675,41 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 	return nil
 }
 
+// TxSigOffset returns the byte offset in a sealed TxMsg wire image where the trailing author
+// signature begins, validating the preamble[12:14] signature-length contract (the signature is
+// the trailing bytes of the wire).  This is the single authoritative site for that wire-layout
+// rule; TxSignedDigest, the planet-public intake guard, and the deferred author-verify path all
+// resolve the signature boundary through it.
+func TxSigOffset(raw []byte) (sigOfs int, err error) {
+	if len(raw) < int(TxPreambleSize) {
+		return 0, status.ErrMalformedTx
+	}
+	sigLen := int(binary.BigEndian.Uint16(raw[12:14]))
+	if sigLen == 0 || sigLen > len(raw)-int(TxPreambleSize) {
+		return 0, status.Code_BadRequest.Error("malformed signature length")
+	}
+	return len(raw) - sigLen, nil
+}
+
+// TxSignedDigest parses a sealed TxMsg wire image and returns the digest a verifier checks —
+// hashKitID run over the bytes preceding the signature — together with the trailing signature
+// bytes.  Verifiers pass these to their chosen backend (safe.VerifySignature, a CryptoProvider's
+// VerifyDigest, …); the parse + digest live in one place so the wire contract is not
+// re-implemented per caller.
+func TxSignedDigest(raw []byte, hashKitID safe.HashKitID) (digest, sig []byte, err error) {
+	sigOfs, err := TxSigOffset(raw)
+	if err != nil {
+		return nil, nil, err
+	}
+	hashKit, err := safe.NewHashKit(hashKitID)
+	if err != nil {
+		return nil, nil, err
+	}
+	hashKit.Hasher.Reset()
+	hashKit.Hasher.Write(raw[:sigOfs])
+	return hashKit.Hasher.Sum(nil), raw[sigOfs:], nil
+}
+
 // OpenTx verifies the signature and decrypts a sealed wire-format TxMsg.
 // signerPubKey and signerCryptoKit are the author's signing public key and CryptoKit
 // (looked up externally from the MemberEpoch via TxHeader.FromID).
@@ -741,12 +776,12 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 	}
 
 	// --- Verify signature ---
-	// Signature length is in preamble[12:14]; signature is the trailing bytes of wire.
-	sigLen := int(binary.BigEndian.Uint16(wire[12:14]))
-	if sigLen == 0 || sigLen > len(wire)-int(TxPreambleSize) {
-		return nil, status.ErrMalformedTx
+	// The trailing-signature boundary (the preamble[12:14] contract) resolves through the one
+	// authoritative site, TxSigOffset.
+	sigOfs, err := TxSigOffset(wire)
+	if err != nil {
+		return nil, err
 	}
-	sigOfs := len(wire) - sigLen
 
 	// sigOfs bounds the ciphertext for the encrypted branch below and is always needed.
 	// The author-signature check itself is skipped on the SansVerify decrypt-read path
