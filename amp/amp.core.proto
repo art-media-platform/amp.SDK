@@ -1271,15 +1271,12 @@ message BlobEntry {
 // Codex — resolved-state snapshot.  Authority resets on import.
 // ──────────────────────────────────────────────────────────────────────
 
-// CodexManifest summarizes a Codex for pre-flight validation.
+// CodexManifest carries schema introspection for a Codex.  Entry counts are
+// authoritative in the export trailer, not in this up-front header.
 message CodexManifest {
 
-    int64               ArtifactCount = 1;
-    int64               BlobCount = 2;
-    int64               TotalBytes = 3;
-
-    // Attribute types present in the Codex (for fast schema introspection).
-    repeated Tag        AttributeKinds = 4;
+    // Attribute kinds present in the Codex (for fast schema introspection).
+    repeated Tag        AttributeKinds = 1;
 }
 
 // CodexHeader is the first protobuf record in codex.bin after the preamble.
@@ -1305,6 +1302,10 @@ message CodexHeader {
 
     // Optional exporter-provided label.
     string              Label = 6;
+
+    // HashKit that computed the container integrity digest (the trailing digest
+    // over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
+    safe.HashKitID      DigestHashKit = 7;
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -1359,11 +1360,9 @@ message ChronicleCompact {
     reserved 10 to 19;
 }
 
-// ChronicleManifest summarizes a Chronicle for pre-flight validation.
+// ChronicleManifest carries Chronicle schema introspection (none defined yet).
+// Entry counts are authoritative in the export trailer, not in this header.
 message ChronicleManifest {
-    int64               TxMsgCount = 1;
-    int64               BlobCount  = 2;
-    int64               TotalBytes = 3;
 }
 
 // ChronicleHeader is the first protobuf record in chronicle.bin after
@@ -1393,6 +1392,10 @@ message ChronicleHeader {
 
     // Compact lineage.  Nil if this chronicle has never been compacted.
     ChronicleCompactHistory CompactHistory = 6;
+
+    // HashKit that computed the container integrity digest.  0 = Blake2s_256
+    // (the back-compat default).
+    safe.HashKitID          DigestHashKit = 7;
 
     // Reserved for future redaction manifest (AOM DD-chronicle-and-codex.md §4.7.4).
     reserved 10 to 19;

@@ -4845,14 +4845,12 @@ func (x *BlobEntry) GetRelativePath() string {
 	return ""
 }
 
-// CodexManifest summarizes a Codex for pre-flight validation.
+// CodexManifest carries schema introspection for a Codex.  Entry counts are
+// authoritative in the export trailer, not in this up-front header.
 type CodexManifest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ArtifactCount int64                  `protobuf:"varint,1,opt,name=ArtifactCount,proto3" json:"ArtifactCount,omitempty"`
-	BlobCount     int64                  `protobuf:"varint,2,opt,name=BlobCount,proto3" json:"BlobCount,omitempty"`
-	TotalBytes    int64                  `protobuf:"varint,3,opt,name=TotalBytes,proto3" json:"TotalBytes,omitempty"`
-	// Attribute types present in the Codex (for fast schema introspection).
-	AttributeKinds []*Tag `protobuf:"bytes,4,rep,name=AttributeKinds,proto3" json:"AttributeKinds,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Attribute kinds present in the Codex (for fast schema introspection).
+	AttributeKinds []*Tag `protobuf:"bytes,1,rep,name=AttributeKinds,proto3" json:"AttributeKinds,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -4887,27 +4885,6 @@ func (*CodexManifest) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{39}
 }
 
-func (x *CodexManifest) GetArtifactCount() int64 {
-	if x != nil {
-		return x.ArtifactCount
-	}
-	return 0
-}
-
-func (x *CodexManifest) GetBlobCount() int64 {
-	if x != nil {
-		return x.BlobCount
-	}
-	return 0
-}
-
-func (x *CodexManifest) GetTotalBytes() int64 {
-	if x != nil {
-		return x.TotalBytes
-	}
-	return 0
-}
-
 func (x *CodexManifest) GetAttributeKinds() []*Tag {
 	if x != nil {
 		return x.AttributeKinds
@@ -4932,7 +4909,10 @@ type CodexHeader struct {
 	// Summary for pre-flight validation.
 	Manifest *CodexManifest `protobuf:"bytes,5,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
 	// Optional exporter-provided label.
-	Label         string `protobuf:"bytes,6,opt,name=Label,proto3" json:"Label,omitempty"`
+	Label string `protobuf:"bytes,6,opt,name=Label,proto3" json:"Label,omitempty"`
+	// HashKit that computed the container integrity digest (the trailing digest
+	// over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
+	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5007,6 +4987,13 @@ func (x *CodexHeader) GetLabel() string {
 		return x.Label
 	}
 	return ""
+}
+
+func (x *CodexHeader) GetDigestHashKit() safe.HashKitID {
+	if x != nil {
+		return x.DigestHashKit
+	}
+	return safe.HashKitID(0)
 }
 
 // ChronicleCompactPoint records one rebase event in the lineage chain.
@@ -5228,12 +5215,10 @@ func (x *ChronicleCompact) GetLabel() string {
 	return ""
 }
 
-// ChronicleManifest summarizes a Chronicle for pre-flight validation.
+// ChronicleManifest carries Chronicle schema introspection (none defined yet).
+// Entry counts are authoritative in the export trailer, not in this header.
 type ChronicleManifest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	TxMsgCount    int64                  `protobuf:"varint,1,opt,name=TxMsgCount,proto3" json:"TxMsgCount,omitempty"`
-	BlobCount     int64                  `protobuf:"varint,2,opt,name=BlobCount,proto3" json:"BlobCount,omitempty"`
-	TotalBytes    int64                  `protobuf:"varint,3,opt,name=TotalBytes,proto3" json:"TotalBytes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5268,27 +5253,6 @@ func (*ChronicleManifest) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{44}
 }
 
-func (x *ChronicleManifest) GetTxMsgCount() int64 {
-	if x != nil {
-		return x.TxMsgCount
-	}
-	return 0
-}
-
-func (x *ChronicleManifest) GetBlobCount() int64 {
-	if x != nil {
-		return x.BlobCount
-	}
-	return 0
-}
-
-func (x *ChronicleManifest) GetTotalBytes() int64 {
-	if x != nil {
-		return x.TotalBytes
-	}
-	return 0
-}
-
 // ChronicleHeader is the first protobuf record in chronicle.bin after
 // the preamble.  The portable realization of a planet's Chronicle.  The
 // embedded GenesisEpoch TxMsg lets any receiver with the founders' pubkeys
@@ -5311,6 +5275,9 @@ type ChronicleHeader struct {
 	ExportTime int64 `protobuf:"varint,5,opt,name=ExportTime,proto3" json:"ExportTime,omitempty"`
 	// Compact lineage.  Nil if this chronicle has never been compacted.
 	CompactHistory *ChronicleCompactHistory `protobuf:"bytes,6,opt,name=CompactHistory,proto3" json:"CompactHistory,omitempty"`
+	// HashKit that computed the container integrity digest.  0 = Blake2s_256
+	// (the back-compat default).
+	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
 	// Summary for pre-flight validation.
 	Manifest *ChronicleManifest `protobuf:"bytes,20,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
 	// Optional exporter-provided label ("nightly-backup 2026-04-23").
@@ -5389,6 +5356,13 @@ func (x *ChronicleHeader) GetCompactHistory() *ChronicleCompactHistory {
 		return x.CompactHistory
 	}
 	return nil
+}
+
+func (x *ChronicleHeader) GetDigestHashKit() safe.HashKitID {
+	if x != nil {
+		return x.DigestHashKit
+	}
+	return safe.HashKitID(0)
 }
 
 func (x *ChronicleHeader) GetManifest() *ChronicleManifest {
@@ -6499,21 +6473,17 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\bBlobID_1\x18\x02 \x01(\x06R\aBlobID1\x12\x12\n" +
 	"\x04Size\x18\x03 \x01(\x03R\x04Size\x12 \n" +
 	"\vContentType\x18\x04 \x01(\tR\vContentType\x12\"\n" +
-	"\fRelativePath\x18\x05 \x01(\tR\fRelativePath\"\xa5\x01\n" +
-	"\rCodexManifest\x12$\n" +
-	"\rArtifactCount\x18\x01 \x01(\x03R\rArtifactCount\x12\x1c\n" +
-	"\tBlobCount\x18\x02 \x01(\x03R\tBlobCount\x12\x1e\n" +
-	"\n" +
-	"TotalBytes\x18\x03 \x01(\x03R\n" +
-	"TotalBytes\x120\n" +
-	"\x0eAttributeKinds\x18\x04 \x03(\v2\b.amp.TagR\x0eAttributeKinds\"\xf6\x01\n" +
+	"\fRelativePath\x18\x05 \x01(\tR\fRelativePath\"A\n" +
+	"\rCodexManifest\x120\n" +
+	"\x0eAttributeKinds\x18\x01 \x03(\v2\b.amp.TagR\x0eAttributeKinds\"\xad\x02\n" +
 	"\vCodexHeader\x12,\n" +
 	"\fSourcePlanet\x18\x01 \x01(\v2\b.amp.TagR\fSourcePlanet\x12*\n" +
 	"\vSourceEpoch\x18\x02 \x01(\v2\b.amp.TagR\vSourceEpoch\x12\x1c\n" +
 	"\tCodexTime\x18\x03 \x01(\x03R\tCodexTime\x12)\n" +
 	"\x06Origin\x18\x04 \x01(\v2\x11.amp.PlanetOriginR\x06Origin\x12.\n" +
 	"\bManifest\x18\x05 \x01(\v2\x12.amp.CodexManifestR\bManifest\x12\x14\n" +
-	"\x05Label\x18\x06 \x01(\tR\x05Label\"\xeb\x01\n" +
+	"\x05Label\x18\x06 \x01(\tR\x05Label\x125\n" +
+	"\rDigestHashKit\x18\a \x01(\x0e2\x0f.safe.HashKitIDR\rDigestHashKit\"\xeb\x01\n" +
 	"\x15ChronicleCompactPoint\x12\x1d\n" +
 	"\n" +
 	"UpToTxID_0\x18\x01 \x01(\x06R\tUpToTxID0\x12\x1d\n" +
@@ -6533,15 +6503,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x0fCompactedDigest\x18\x03 \x01(\fR\x0fCompactedDigest\x12 \n" +
 	"\vCompactTime\x18\x04 \x01(\x03R\vCompactTime\x12\x14\n" +
 	"\x05Label\x18\x05 \x01(\tR\x05LabelJ\x04\b\n" +
-	"\x10\x14\"q\n" +
-	"\x11ChronicleManifest\x12\x1e\n" +
-	"\n" +
-	"TxMsgCount\x18\x01 \x01(\x03R\n" +
-	"TxMsgCount\x12\x1c\n" +
-	"\tBlobCount\x18\x02 \x01(\x03R\tBlobCount\x12\x1e\n" +
-	"\n" +
-	"TotalBytes\x18\x03 \x01(\x03R\n" +
-	"TotalBytes\"\xea\x02\n" +
+	"\x10\x14\"\x13\n" +
+	"\x11ChronicleManifest\"\xa1\x03\n" +
 	"\x0fChronicleHeader\x12,\n" +
 	"\fSourcePlanet\x18\x01 \x01(\v2\b.amp.TagR\fSourcePlanet\x12*\n" +
 	"\vSourceEpoch\x18\x02 \x01(\v2\b.amp.TagR\vSourceEpoch\x12\"\n" +
@@ -6550,7 +6513,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"ExportTime\x18\x05 \x01(\x03R\n" +
 	"ExportTime\x12D\n" +
-	"\x0eCompactHistory\x18\x06 \x01(\v2\x1c.amp.ChronicleCompactHistoryR\x0eCompactHistory\x122\n" +
+	"\x0eCompactHistory\x18\x06 \x01(\v2\x1c.amp.ChronicleCompactHistoryR\x0eCompactHistory\x125\n" +
+	"\rDigestHashKit\x18\a \x01(\x0e2\x0f.safe.HashKitIDR\rDigestHashKit\x122\n" +
 	"\bManifest\x18\x14 \x01(\v2\x16.amp.ChronicleManifestR\bManifest\x12\x14\n" +
 	"\x05Label\x18\x15 \x01(\tR\x05LabelJ\x04\b\n" +
 	"\x10\x14\"\xbc\x01\n" +
@@ -6954,32 +6918,34 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	26,  // 91: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
 	53,  // 92: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
 	56,  // 93: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
-	58,  // 94: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
-	26,  // 95: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
-	26,  // 96: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
-	54,  // 97: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
-	59,  // 98: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
-	61,  // 99: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
-	15,  // 100: amp.AppTarget.Platform:type_name -> amp.PlatformID
-	63,  // 101: amp.Brand.Targets:type_name -> amp.AppTarget
-	64,  // 102: amp.Brand.Links:type_name -> amp.AppLink
-	65,  // 103: amp.Brand.BundledCrates:type_name -> amp.CrateRef
-	26,  // 104: amp.Brand.NamedBy:type_name -> amp.Tag
-	26,  // 105: amp.Brand.TemplateSet:type_name -> amp.Tag
-	26,  // 106: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
-	67,  // 107: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
-	66,  // 108: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
-	68,  // 109: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
-	26,  // 110: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
-	26,  // 111: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
-	26,  // 112: amp.FederationPeer.FederationID:type_name -> amp.Tag
-	68,  // 113: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
-	70,  // 114: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
-	115, // [115:115] is the sub-list for method output_type
-	115, // [115:115] is the sub-list for method input_type
-	115, // [115:115] is the sub-list for extension type_name
-	115, // [115:115] is the sub-list for extension extendee
-	0,   // [0:115] is the sub-list for field type_name
+	72,  // 94: amp.CodexHeader.DigestHashKit:type_name -> safe.HashKitID
+	58,  // 95: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
+	26,  // 96: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
+	26,  // 97: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
+	54,  // 98: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
+	59,  // 99: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
+	72,  // 100: amp.ChronicleHeader.DigestHashKit:type_name -> safe.HashKitID
+	61,  // 101: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
+	15,  // 102: amp.AppTarget.Platform:type_name -> amp.PlatformID
+	63,  // 103: amp.Brand.Targets:type_name -> amp.AppTarget
+	64,  // 104: amp.Brand.Links:type_name -> amp.AppLink
+	65,  // 105: amp.Brand.BundledCrates:type_name -> amp.CrateRef
+	26,  // 106: amp.Brand.NamedBy:type_name -> amp.Tag
+	26,  // 107: amp.Brand.TemplateSet:type_name -> amp.Tag
+	26,  // 108: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
+	67,  // 109: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
+	66,  // 110: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
+	68,  // 111: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
+	26,  // 112: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
+	26,  // 113: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
+	26,  // 114: amp.FederationPeer.FederationID:type_name -> amp.Tag
+	68,  // 115: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
+	70,  // 116: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
+	117, // [117:117] is the sub-list for method output_type
+	117, // [117:117] is the sub-list for method input_type
+	117, // [117:117] is the sub-list for extension type_name
+	117, // [117:117] is the sub-list for extension extendee
+	0,   // [0:117] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }
