@@ -12,7 +12,7 @@ enum TRS_Flags {
 }
 
 
-// TRS (Translate Rotate Scale) IEEE 1207
+// TRS (Translate Rotate Scale)
 // General purpose placement time, space, orientation, and/or geo-position.
 message TRS {
 
@@ -112,7 +112,7 @@ message TextItem {
     amp.Tags Tags  = 4; // free use attachments or metadata
 }
 
-// ValueKind specfies the primary type of a JsonValue.
+// ValueKind specifies the primary type of a JsonValue.
 enum ValueKind {
     Null   = 0;
     False  = 1;
@@ -122,8 +122,8 @@ enum ValueKind {
 }
 
 // JsonValue is a general-purpose JSON value container.
-// Though multiple fields can be set (e.g. a Number also encoded as a string,
-//    the Kind field is which field is considered the primary source of truth.
+// Though multiple fields may be set (e.g. a Number also encoded as a string),
+// the Kind field declares which is the primary source of truth.
 message JsonValue {
     ValueKind          Kind   = 1;
     string             String = 2;
@@ -225,11 +225,6 @@ message MediaInfo {
 
     float      Popularity = 16; // 0.0 to 1.0
     float      Ordering   = 17; // items are sorted by this value
-
-    // string              CommonName = 1;
-    // string              DebugLabel = 2;
-    // bool                RequiresSubscription = 10;
-    // bool                RequiresInternet     = 11;
 }
 
 
@@ -247,7 +242,8 @@ enum MediaFlags {
     HasSpeech           = 0x0400;
     NeedsNetwork        = 0x0800;
 
-    // When set, the user is more likely to skipping short intervals than switch media items.
+    // When set, the user is more likely to skip short intervals than to switch
+    // media items.
     SkipIsLikely        = 0x01000000;
 
 }

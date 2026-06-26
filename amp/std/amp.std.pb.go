@@ -68,7 +68,7 @@ func (TRS_Flags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{0}
 }
 
-// ValueKind specfies the primary type of a JsonValue.
+// ValueKind specifies the primary type of a JsonValue.
 type ValueKind int32
 
 const (
@@ -189,7 +189,8 @@ const (
 	MediaFlags_HasVideo     MediaFlags = 512
 	MediaFlags_HasSpeech    MediaFlags = 1024
 	MediaFlags_NeedsNetwork MediaFlags = 2048
-	// When set, the user is more likely to skipping short intervals than switch media items.
+	// When set, the user is more likely to skip short intervals than to switch
+	// media items.
 	MediaFlags_SkipIsLikely MediaFlags = 16777216
 )
 
@@ -766,7 +767,7 @@ func (GeoPath_RenderType) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11, 0}
 }
 
-// TRS (Translate Rotate Scale) IEEE 1207
+// TRS (Translate Rotate Scale)
 // General purpose placement time, space, orientation, and/or geo-position.
 type TRS struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -783,8 +784,7 @@ type TRS struct {
 	Qy float64 `protobuf:"fixed64,11,opt,name=Qy,proto3" json:"Qy,omitempty"`
 	Qz float64 `protobuf:"fixed64,12,opt,name=Qz,proto3" json:"Qz,omitempty"`
 	Qw float64 `protobuf:"fixed64,13,opt,name=Qw,proto3" json:"Qw,omitempty"`
-	// (local geo coordinates,  local Quaternion, local scale, ..)
-	// this TRS is applied from the spherical position -- TODO: add enum for how to form the resultant TRS!
+	// Optional S2 tiles
 	S2_0          uint64 `protobuf:"fixed64,14,opt,name=S2_0,json=S20,proto3" json:"S2_0,omitempty"`
 	S2_1          uint64 `protobuf:"fixed64,15,opt,name=S2_1,json=S21,proto3" json:"S2_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1427,9 +1427,8 @@ func (x *TextItem) GetTags() *amp.Tags {
 }
 
 // JsonValue is a general-purpose JSON value container.
-// Though multiple fields can be set (e.g. a Number also encoded as a string,
-//
-//	the Kind field is which field is considered the primary source of truth.
+// Though multiple fields may be set (e.g. a Number also encoded as a string),
+// the Kind field declares which is the primary source of truth.
 type JsonValue struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Kind          ValueKind              `protobuf:"varint,1,opt,name=Kind,proto3,enum=std.ValueKind" json:"Kind,omitempty"`

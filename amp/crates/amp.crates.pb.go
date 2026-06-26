@@ -188,7 +188,7 @@ type AssetEntry struct {
 	//	"A typical 6 crew member fire truck"
 	//	"A leading U.S. naval ship-based helicopter"
 	//	"The Texas capitol building located in Austin"
-	//	"An animated scared-geometry inspired flat seal"
+	//	"An animated sacred-geometry inspired flat seal"
 	ShortDesc string `protobuf:"bytes,32,opt,name=ShortDesc,proto3" json:"ShortDesc,omitempty"`
 	// Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI leaf).
 	// Survives re-tagging and rebuilds, letting references resolve by UID independent of path.
@@ -681,12 +681,13 @@ func (x *CrateInfo) GetApproxSize() int64 {
 	return 0
 }
 
-// CrateManifest is the top-level manifest/catalog for a amp asset module called a "crate".
+// CrateManifest is the top-level manifest/catalog for an amp asset module
+// called a "crate".
 // It contains catalog and type info that amp loads at runtime to know what's inside binary asset bundles without having to load them.
 //
-// A reference to a amp asset is via a URI with the form:
+// A reference to an amp asset is via a URI with the form:
 //
-//	assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.Pathname}"
+//	assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.EntryURI}"
 type CrateManifest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Info  *CrateInfo             `protobuf:"bytes,1,opt,name=Info,proto3" json:"Info,omitempty"`

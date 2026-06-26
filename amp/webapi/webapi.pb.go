@@ -35,9 +35,9 @@ const (
 //
 // Tag carries the planet's human-readable label — typically with Text set to
 // a tag.Name expression ("tunr", "spaces.soundspectrum.com"), or with UID_0/1
-// set for raw-UID input.  The endpoint creates planets with
-// PlanetEpoch.IsPublic=true; per-member private planets are auto-genesisd by
-// app.home on first login and don't need this surface.
+// set for raw-UID input.  The endpoint creates Public planets — privacy is
+// PlanetCharter.Privacy = Public. Per-member private planets are auto-genesisd
+// by app.home on first login and don't need this surface.
 //
 // Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when omitted,
 // the server synthesizes a minimal Brand{AppName: derived from Tag}.

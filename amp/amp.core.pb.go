@@ -511,12 +511,12 @@ const (
 	Units_Bytes       Units = 2  // any byte offset
 	Units_Pixels      Units = 3  // texels or device pixels; not for typographic sizes
 	Units_Seconds     Units = 4  // elapsed time
-	Units_Plank       Units = 5  // TOE length
+	Units_Planck      Units = 5  // Planck length
 	Units_Samples     Units = 6  // one media sample (e.g. an audio frame); rate is samples per second
 	Units_BitrateKbps Units = 7  // kilobits per second (1000 bits/s)
 	Units_Nanometers  Units = 8  // 10^9 nm == 1 m
 	Units_Millimeters Units = 10 // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
-	Units_Meters      Units = 11 // IEEE 3773 length for humans
+	Units_Meters      Units = 11 // length for humans
 	Units_LightYears  Units = 16 // 1 light year == 9460730472580800. meters
 )
 
@@ -528,7 +528,7 @@ var (
 		2:  "Bytes",
 		3:  "Pixels",
 		4:  "Seconds",
-		5:  "Plank",
+		5:  "Planck",
 		6:  "Samples",
 		7:  "BitrateKbps",
 		8:  "Nanometers",
@@ -542,7 +542,7 @@ var (
 		"Bytes":       2,
 		"Pixels":      3,
 		"Seconds":     4,
-		"Plank":       5,
+		"Planck":      5,
 		"Samples":     6,
 		"BitrateKbps": 7,
 		"Nanometers":  8,
@@ -1044,24 +1044,24 @@ func (TrustState) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{16}
 }
 
-// TxEnvelope contains tx fields that are used for routing and decryption of tx content.
+// TxEnvelope carries the cleartext routing/decryption fields of a tx; all
+// other components (TxHeader, TxOps, datastore) are encrypted under the epoch
+// the envelope names and are thus securely "within" the tx.
 //
-// TxEnvelope is IN THE CLEAR, all other tx components are encrypted based on the TxEnvelope fields.
-//
-// TxHeader, TxOps, and the tx datastore are therefore said to be securely "within" a tx.
-//
-// INVARIANT: One TxMsg = one encryption context.  A single Epoch field determines the
-// encryption key for the entire payload.  All ops in a TxMsg must be readable by anyone
-// holding that epoch key.  To write ops under different encryption domains (e.g. two
-// private channels with different keys), author separate TxMsgs — one per epoch.
+// INVARIANT: one TxMsg = one encryption context — a single Epoch field keys
+// the whole payload, so every op must be readable by any holder of that epoch
+// key.  To write under a different domain (e.g. another private channel),
+// author a separate TxMsg.  (AOM ZO-design-conventions.md §3.3,
+// SD-security-sync.md §3.)
 //
 // Epoch modes:
-//   - nil/zero  → planet-public: payload is plaintext, only signed (governance, MemberEpoch, PlanetEpoch).
-//   - planet ID → private planet: all ops encrypted under the planet epoch key.
-//   - channel ID → private channel: all ops encrypted under that channel's epoch key.
+//   - nil/zero   → planet-public: plaintext, signed-only (governance ops).
+//   - planet ID  → private planet: ops encrypted under the planet epoch key.
+//   - channel ID → private channel: ops encrypted under that channel's key.
 //
-// FromID (author identity) resides inside the encrypted TxHeader so that passive observers
-// and relay vaults cannot correlate sender identity with traffic patterns.
+// FromID (author identity) lives inside the encrypted TxHeader so passive
+// observers and relay vaults cannot correlate sender with traffic.
+// (AOM ZO-design-conventions.md §3.4.)
 type TxEnvelope struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Universally unique ID assigned when a tx is created
@@ -1076,22 +1076,17 @@ type TxEnvelope struct {
 	Epoch *Tag `protobuf:"bytes,7,opt,name=Epoch,proto3" json:"Epoch,omitempty"`
 	// Byte offset from the end of the marshalled TxEnvelope to the start of the TxHeader.
 	HeaderOffset uint64 `protobuf:"varint,10,opt,name=HeaderOffset,proto3" json:"HeaderOffset,omitempty"`
-	// Proves sender is a planet/channel member without revealing identity.
-	// HMAC(proof_key, TxID) where proof_key = HKDF(epoch_key, "member-proof").
-	// Allows relay vaults to reject spam without decrypting content.
+	// Proves sender is a planet/channel member without revealing identity, so
+	// relay vaults can reject spam without decrypting content.
+	// (AOM SD-security-sync.md §3.6.)
 	MemberProof []byte `protobuf:"bytes,25,opt,name=MemberProof,proto3" json:"MemberProof,omitempty"`
-	// Planet epoch UID that was active when this TxMsg was sealed.
-	// For channel-encrypted TxMsgs, this enables role-specific derived keys:
-	//
-	//	content_key = HKDF(node_content_key || planet_epoch_key, "content")
-	//	proof_key   = HKDF(node_write_seed || planet_epoch_key, "member-proof")
-	//
-	// The channel side uses access-tiered materials (see safe.KeyRole): ReadOnly+
-	// holds ContentKey; ReadWrite+ additionally holds WriteSeed.  Members without
-	// WriteSeed cannot forge a valid MemberProof — cryptographic write gating.
-	// Rotating the planet epoch automatically invalidates all channel-derived keys,
-	// even if the channel epoch hasn't rotated.
-	// For planet-encrypted TxMsgs (Epoch = planet epoch), this is zero/omitted.
+	// Planet epoch UID active when this tx was sealed.  For channel-encrypted
+	// txs it keys the role-specific derived keys: ReadOnly+ holds ContentKey,
+	// ReadWrite+ also holds WriteSeed (see safe.KeyRole), so members without
+	// WriteSeed cannot forge a MemberProof — write access is cryptographic.
+	// Rotating the planet epoch invalidates channel-derived keys even if the
+	// channel epoch has not rotated.  Zero/omitted for planet-encrypted txs.
+	// (AOM SD-security-sync.md §3.6.)
 	PlanetEpoch_0 uint64 `protobuf:"fixed64,30,opt,name=PlanetEpoch_0,json=PlanetEpoch0,proto3" json:"PlanetEpoch_0,omitempty"`
 	PlanetEpoch_1 uint64 `protobuf:"fixed64,31,opt,name=PlanetEpoch_1,json=PlanetEpoch1,proto3" json:"PlanetEpoch_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2012,20 +2007,24 @@ func (x *Tags) GetChildren() []*Tags {
 	return nil
 }
 
-// An AuthContext is referenced by a tx operation (TxOp), pointing to values that authorize the operation to be performed.
+// AuthContext is referenced by a TxOp to name the governance record that
+// authorizes the op, letting amp's validation runtime reach the public keys
+// needed to verify txs signed by a given author.
+// (AOM SD-channel-governance.md §3.)
 //
-// Allows amp's validation runtime to access necessary public keys for other members to validate txs signed by a given author.
+// The authorizing keyring is addressed as (ChannelID, AttrID, ItemID, EditID):
+//   - legislate: {LawChID} / "series.Keyring.legislate" /
+//     {KeyringID}.{GroupID} / {LawEpoch} — a legislating channel publishes keys
+//     for a member or child legislature.
+//   - public: {GroupID} / "series.Keyring.public" / {KeyringID} /
+//     {Group_Epoch} — members/groups publish their planet public keys
+//     (member write access only).
 //
-//	ChannelID     AttrID                         ItemID                  EditID
-//	---------     ------                         ------                  ------
-//	{LawChID}  / "series.Keyring.legislate"    / {KeyringID}.{GroupID} / {LawEpoch}        // where a legislating channel publishes keys for an explicit member or child legislature IDs
-//	{GroupID}  / "series.Keyring.public"       / {KeyringID}           / {Group_Epoch}     // where member or groups publish their planet public keys; MEMBER WRITE ACCESS ONLY
-//
-// To "join" a private channel, one requires keyring UID (typically sent with the channel invite OR can only be passed out of band; e.g. a written tag)
-//
-// When a legislating channel removes or alters a member's access, it must issue a new keyring epoch. This means for each channel member, the channel's private key
-//
-//	is encrypted using each member's latest public key, so that only the member can decrypt them.
+// Joining a private channel requires the keyring UID (sent with the channel
+// invite or passed out of band, e.g. a written tag).  When a legislating
+// channel alters a member's access it issues a new keyring epoch: the channel's
+// private key is re-encrypted to each member's latest public key, so only that
+// member can decrypt it.
 type AuthContext struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The channel epoch that contains the authorizing legislature reference
@@ -3386,7 +3385,7 @@ func (x *CoSignature) GetSignature() []byte {
 }
 
 // WrappedKey carries one role-tagged symmetric key, sealed to a specific member's
-// EncryptPubKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A MemberEpoch
+// EncryptKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A MemberEpoch
 // publishes one WrappedKey per role the recipient is authorized for (up to 4
 // roles per epoch — see safe.KeyRole).
 //
@@ -3402,9 +3401,10 @@ func (x *CoSignature) GetSignature() []byte {
 // Encrypted per the recipient kit's wire format.  Recipient decrypts with
 // safe.Enclave.OpenFromPub using only their EncryptKey.
 type WrappedKey struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Role          safe.KeyRole           `protobuf:"varint,1,opt,name=Role,proto3,enum=safe.KeyRole" json:"Role,omitempty"` // which role this key material serves
-	Encrypted     []byte                 `protobuf:"bytes,2,opt,name=Encrypted,proto3" json:"Encrypted,omitempty"`          // ciphertext produced by safe.SealFor(member.EncryptCryptoKitID, member.EncryptPubKey, key)
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Role  safe.KeyRole           `protobuf:"varint,1,opt,name=Role,proto3,enum=safe.KeyRole" json:"Role,omitempty"` // which role this key material serves
+	// Role key sealed to the member's EncryptKey via safe.SealFor.
+	Encrypted     []byte `protobuf:"bytes,2,opt,name=Encrypted,proto3" json:"Encrypted,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3497,7 +3497,7 @@ type MemberEpoch struct {
 	// LawMemberKind_* definition in amp.consts.sdl (or any community/app's
 	// consts).  Zero UID = unspecified.  Protocol does not gate behavior on
 	// Kind — it is a label for downstream readers (UI, governance, ledger
-	// filters), not a privilege class.  See PRD §5 (Membership).
+	// filters), not a privilege class.  See AOM SD-security-sync.md §5.
 	Kind *Tag `protobuf:"bytes,33,opt,name=Kind,proto3" json:"Kind,omitempty"`
 	// Self-signed claim of identity continuation from prior identities.
 	// Cross-planet citations supported (and typical) — a being's lineage
@@ -3646,7 +3646,7 @@ type Attestation struct {
 	// LawAttestationModality_* definition in amp.consts.sdl (or any
 	// community/app's consts).  Zero UID = unspecified.  Modality is
 	// categorical (what kind of utterance), not gradational (how confident).
-	// See PRD §6 / AOM SD-modal-attestation.md for the canonical modalities.
+	// See AOM SD-modal-attestation.md for the canonical modalities.
 	Modality      *Tag `protobuf:"bytes,16,opt,name=Modality,proto3" json:"Modality,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3957,9 +3957,9 @@ type PlanetInvite struct {
 	// VaultAddr used by NameServiceRecord / FederationPeer.  For Transport="tcp",
 	// Address is UTF-8 "host:port".
 	VaultAddrs []*VaultAddr `protobuf:"bytes,15,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
-	// Planet epoch key encrypted for TempKey via CryptoKit.EncryptFor.
-	// InviteAccept decrypts this immediately so the member can participate in the epoch.
-	// SenderPubKey identifies the admin who encrypted it.
+	// Planet epoch key sealed to TempKey via safe.SealFor (anonymous-sender, so
+	// the issuing admin is not revealed).  InviteAccept decrypts it immediately
+	// so the member can participate in the epoch.
 	EpochKey *safe.EncryptedSymKey `protobuf:"bytes,20,opt,name=EpochKey,proto3" json:"EpochKey,omitempty"`
 	// Bootstrap expiry, unix seconds.  The acceptor rejects on accept when
 	// time.Now().Unix() > ExpiresAt.  Stamped at issue using the planet's
@@ -6651,7 +6651,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x04Data\x10\a\x12\b\n" +
 	"\x04File\x10\t\x12\t\n" +
 	"\x05Asset\x10\x0f\x12\r\n" +
-	"\tAppNative\x10\x10*\xaf\x01\n" +
+	"\tAppNative\x10\x10*\xb0\x01\n" +
 	"\x05Units\x12\f\n" +
 	"\bUnitless\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -6659,8 +6659,9 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x05Bytes\x10\x02\x12\n" +
 	"\n" +
 	"\x06Pixels\x10\x03\x12\v\n" +
-	"\aSeconds\x10\x04\x12\t\n" +
-	"\x05Plank\x10\x05\x12\v\n" +
+	"\aSeconds\x10\x04\x12\n" +
+	"\n" +
+	"\x06Planck\x10\x05\x12\v\n" +
 	"\aSamples\x10\x06\x12\x0f\n" +
 	"\vBitrateKbps\x10\a\x12\x0e\n" +
 	"\n" +

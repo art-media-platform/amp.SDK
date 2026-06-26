@@ -68,7 +68,7 @@ message AssetEntry {
     //      "A typical 6 crew member fire truck"
     //      "A leading U.S. naval ship-based helicopter"
     //      "The Texas capitol building located in Austin"
-    //      "An animated scared-geometry inspired flat seal"
+    //      "An animated sacred-geometry inspired flat seal"
     string                  ShortDesc = 32;
 
     // Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI leaf).
@@ -170,11 +170,12 @@ message CrateInfo {
     int64                   ApproxSize = 60;
 }
 
-// CrateManifest is the top-level manifest/catalog for a amp asset module called a "crate".
+// CrateManifest is the top-level manifest/catalog for an amp asset module
+// called a "crate".
 // It contains catalog and type info that amp loads at runtime to know what's inside binary asset bundles without having to load them.
 //
-// A reference to a amp asset is via a URI with the form:
-//   assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.Pathname}"
+// A reference to an amp asset is via a URI with the form:
+//   assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.EntryURI}"
 //
 message CrateManifest {
 

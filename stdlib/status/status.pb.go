@@ -220,8 +220,8 @@ func (Severity) EnumDescriptor() ([]byte, []int) {
 // Status is a general purpose status message.
 type Status struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          Code                   `protobuf:"varint,1,opt,name=Code,proto3,enum=status.Code" json:"Code,omitempty"`             // numberical code
-	Severity      Severity               `protobuf:"varint,2,opt,name=Severity,proto3,enum=status.Severity" json:"Severity,omitempty"` // which log to larget
+	Code          Code                   `protobuf:"varint,1,opt,name=Code,proto3,enum=status.Code" json:"Code,omitempty"`             // numerical code
+	Severity      Severity               `protobuf:"varint,2,opt,name=Severity,proto3,enum=status.Severity" json:"Severity,omitempty"` // which log to target
 	Level         int32                  `protobuf:"varint,3,opt,name=Level,proto3" json:"Level,omitempty"`                            // log level, 0 is highest priority
 	Message       string                 `protobuf:"bytes,4,opt,name=Message,proto3" json:"Message,omitempty"`                         // human readable message, may be empty
 	TimeID_0      uint64                 `protobuf:"fixed64,8,opt,name=TimeID_0,json=TimeID0,proto3" json:"TimeID_0,omitempty"`        // time-based ID, for ordering and deduplication use - tag.NowID()

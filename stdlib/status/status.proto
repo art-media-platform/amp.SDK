@@ -58,8 +58,8 @@ enum Severity {
 
 // Status is a general purpose status message.
 message Status {
-    Code        Code     = 1; // numberical code
-    Severity    Severity = 2; // which log to larget
+    Code        Code     = 1; // numerical code
+    Severity    Severity = 2; // which log to target
     int32       Level    = 3; // log level, 0 is highest priority
     string      Message  = 4; // human readable message, may be empty
     fixed64     TimeID_0 = 8; // time-based ID, for ordering and deduplication use - tag.NowID()
