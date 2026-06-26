@@ -176,6 +176,8 @@ export interface WithdrawOpts {
 export interface AmpMutationResult {
   /** Canonical batched write — one TxMsg, N ops, one signature. */
   tx: (ops: TxOp[], planetTag?: string) => Promise<TxResult[]>;
+  /** Invoke an app verb — ops routed to verbURL's handler, member-authored. */
+  invoke: (verbURL: string, ops: TxOp[], planetTag?: string) => Promise<TxResult[]>;
   create: (channel: string, attr: string, value: Record<string, unknown>) => Promise<string>;
   upsert: (channel: string, attr: string, itemID: string, value: Record<string, unknown>) => Promise<void>;
   remove: (channel: string, attr: string, itemID: string) => Promise<void>;

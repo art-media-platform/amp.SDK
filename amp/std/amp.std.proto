@@ -33,8 +33,7 @@ message TRS {
     double              Qz = 12;
     double              Qw = 13;
 
-    // (local geo coordinates,  local Quaternion, local scale, ..)
-    // this TRS is applied from the spherical position -- TODO: add enum for how to form the resultant TRS!
+    // Optional S2 tiles
     fixed64             S2_0 = 14;
     fixed64             S2_1 = 15;
 }

@@ -162,6 +162,14 @@ type TxRequest struct {
 	// caller direct a write at the deploy's share planet without
 	// instantiating a second client.  Accepts canonic name or base32 UID.
 	PlanetTag string `json:"PlanetTag,omitempty"`
+
+	// InvokeURL, when set, routes the whole batch to an app verb handler instead
+	// of the default cabinet-commit path: the host delivers the ops to the named
+	// verb's StartPin as RPC arguments (PinMode_Invoke — not journaled as planet
+	// state), carrying the session member as the tx FromID, and the app authors any
+	// durable writes itself (custodially).  Form: "amp://~/{app}/{verb}" (e.g.
+	// "amp://~/forums/post").  Empty = a normal cabinet commit.  One batch = one verb.
+	InvokeURL string `json:"InvokeURL,omitempty"`
 }
 
 // TxOpResult is the per-op outcome inside a TxResponse.

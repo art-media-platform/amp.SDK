@@ -81,6 +81,15 @@ type TxCommit struct {
 	Tx      *TxMsg          // tx to commit
 	Context context.Context // context for completion in that Done() aborts
 	Origin  TxReceiver      // where to send replies and status updates
+
+	// Invoke marks an in-process verb-RPC: the host delivers Tx's ops to the app
+	// verb named by Tx.Request.URL as StartPin arguments WITHOUT sealing or
+	// journaling them as planet state — the request is not signed, not written to
+	// the journal/outbox, and never propagated to peers, so it must originate from
+	// an already-authenticated local session.  The verb authors any durable writes
+	// itself (e.g. a custodial Commit).  This is a host-internal submit flag, not a
+	// wire field: verb-RPC is local by construction and carries no wire mode.
+	Invoke bool
 }
 
 // TxReceiver handles / processes incoming tx
