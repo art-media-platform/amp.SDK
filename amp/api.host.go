@@ -264,12 +264,45 @@ type SessionVault interface {
 	VaultHomeAddrs() []string
 }
 
-// SessionKeysOf, SessionPlanetsOf, and SessionVaultOf are the sanctioned downcasts from a
-// Session to its privileged seams.  They panic if sess is not a host session — an in-process
-// invariant, since the host's session is the only implementation of Session.
+// ACCEngine is the host's access-control resolver: it answers "who may do what" from a
+// planet's verified governance state (channel epochs + the immutable founder set).  A
+// Session exposes it OFF the public amp.Session interface for first-party governance apps
+// (members, home) to consult.  The host's ACC engine is the sole implementation.
+// See AOM SD-channel-governance.md.
+type ACCEngine interface {
+
+	// ChannelEpoch returns the latest governing ChannelEpoch for (planetID, nodeID),
+	// or nil when the channel is ungoverned.
+	ChannelEpoch(planetID, nodeID tag.UID) *ChannelEpoch
+
+	// HasAccess reports whether memberID holds at least `required` access on the channel.
+	HasAccess(planetID, nodeID, memberID tag.UID, required Access) bool
+
+	// ResolveAccess returns memberID's effective Access on the channel (parent-chain
+	// resolved, fail-closed at any missing ancestor).
+	ResolveAccess(planetID, nodeID, memberID tag.UID) Access
+
+	// IsFounder reports whether memberID is a founder of planetID — PlanetCharter.Founders,
+	// verified from the immutable genesis envelope (the root of governance authority).
+	IsFounder(planetID, memberID tag.UID) bool
+}
+
+// SessionACC exposes the host's ACCEngine off the public amp.Session interface, mirroring
+// SessionKeys/SessionPlanets/SessionVault.  Reach it with a single deliberate assertion:
+//
+//	acc, ok := sess.(amp.SessionACC)
+type SessionACC interface {
+	ACC() ACCEngine
+}
+
+// SessionKeysOf, SessionPlanetsOf, SessionVaultOf, and SessionACCOf are the sanctioned
+// downcasts from a Session to its privileged seams.  They panic if sess is not a host
+// session — an in-process invariant, since the host's session is the only implementation
+// of Session.
 func SessionKeysOf(sess Session) SessionKeys       { return sess.(SessionKeys) }
 func SessionPlanetsOf(sess Session) SessionPlanets { return sess.(SessionPlanets) }
 func SessionVaultOf(sess Session) SessionVault     { return sess.(SessionVault) }
+func SessionACCOf(sess Session) SessionACC         { return sess.(SessionACC) }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
 // This is the primary storage for the vault sync engine — it preserves the original wire-format

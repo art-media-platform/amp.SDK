@@ -87,6 +87,16 @@ func (pe *PlanetEpoch) ParsedTerms() (*EpochTerms, error) {
 	return terms, nil
 }
 
+// IsGenesis reports whether these terms describe a founding epoch — one that names no
+// predecessor.  A rotation (any later epoch in the chain) carries a non-nil PreviousEpoch.
+// The single discriminator the authority gate and the epoch-acceptance state machine share.
+// Nil-safe: a nil receiver / nil PreviousEpoch reads as genesis (the getter is nil-safe and
+// the `||` short-circuits before UID()).
+func (t *EpochTerms) IsGenesis() bool {
+	prev := t.GetPreviousEpoch()
+	return prev == nil || prev.UID().IsNil()
+}
+
 // VerifyCoSignature checks that cosig is a valid signature over this envelope's
 // FRAME using signerPubKey under signerKit.  Returns nil on success.
 func (pe *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []byte, signerKit safe.CryptoKitID) error {
