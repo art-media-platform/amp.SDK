@@ -49,7 +49,7 @@ var Attr = struct {
 	SeriesS2T                          tag.Name
 	MediaLink                          tag.Name
 	MediaRelease                       tag.Name
-	MediaItem                          tag.Name
+	MediaInfo                          tag.Name
 	MediaPlaylist                      tag.Name
 	ChannelAttr                        tag.Name
 	ChannelCatalog                     tag.Name
@@ -196,7 +196,7 @@ var Attr = struct {
 	SeriesS2T:      tag.Name{ID: tag.UID{0x749CA29A38DAA5BF, 0x7139081806CBF2C5}, Text: "item.series.S2.UTC64"},       // 3nmkj9nf6unqzr2f88303drwq5
 	MediaLink:      tag.Name{ID: tag.UID{0x4DED4FC2D91C296A, 0x44D348001E677047}, Text: "item.media.link.Tag"},        // 2exp7w5q8w55p49nu800g6fw27
 	MediaRelease:   tag.Name{ID: tag.UID{0x6C5BC935E454FEC6, 0x6F4F5F1B04975D0E}, Text: "item.media.release"},         // 3dcg4mct2nzv36ymuz3d29fr8f
-	MediaItem:      tag.Name{ID: tag.UID{0xF8CF20D20A67B40F, 0x9D8F1F0071CDFBF5}, Text: "item.MediaItem"},             // 7stwhe42m7qh7tv3sz01swvyzp
+	MediaInfo:      tag.Name{ID: tag.UID{0x9C7620B0D5488458, 0xDD6F3D4B07305E88}, Text: "item.MediaInfo"},             // 4wfshc1pb8hjdeuvtx9d3m0rn8
 	MediaPlaylist:  tag.Name{ID: tag.UID{0x3DAB9BFD75B29097, 0x7EE88C07BE024476}, Text: "item.MediaPlaylist"},         // 1xpfezuxekk2crxu4d0yz04j3q
 
 	// ─── Channel metadata and catalog ───────────────────────────────

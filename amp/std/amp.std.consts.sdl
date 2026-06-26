@@ -65,7 +65,7 @@ tags Attr {
 
         MediaLink        "media.link.Tag"
         MediaRelease     "media.release"
-        MediaItem        "MediaItem"
+        MediaInfo        "MediaInfo"
         MediaPlaylist    "MediaPlaylist"
     }
 

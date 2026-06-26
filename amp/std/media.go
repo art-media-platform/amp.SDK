@@ -124,12 +124,12 @@ type MediaRecord struct {
 	Label      string     // ItemLabel — the track/title line
 	Caption    string     // ItemCaption — the artist/subtitle line
 	Collection string     // ItemCollection — the album/show/station line
-	Seconds    float64    // MediaItem playback duration in seconds
-	Flags      MediaFlags // MediaItem flags (HasAudio, IsSeekable, ...)
+	Seconds    float64    // MediaInfo playback duration in seconds
+	Flags      MediaFlags // MediaInfo flags (HasAudio, IsSeekable, ...)
 }
 
 // WriteMediaRecord upserts the standard media attributes for one stored asset onto
-// tx at node: the BlobRef (keyed by its asset UID), a MediaItem, and the
+// tx at node: the BlobRef (keyed by its asset UID), a MediaInfo, and the
 // label/caption/collection TextItems.  It only builds the tx — the caller owns the
 // StoreBlob, any extra index entries, and the Commit — so an app composes this with
 // its own catalog without duplicating the std-attr layout.
@@ -140,7 +140,7 @@ func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRe
 	if err := tx.Upsert(node, Attr.BlobRef.ID, ref.AssetTag.UID(), ref); err != nil {
 		return err
 	}
-	if err := tx.Upsert(node, Attr.MediaItem.ID, tag.UID{}, &MediaInfo{Flags: rec.Flags, Seconds: rec.Seconds}); err != nil {
+	if err := tx.Upsert(node, Attr.MediaInfo.ID, tag.UID{}, &MediaInfo{Flags: rec.Flags, Seconds: rec.Seconds}); err != nil {
 		return err
 	}
 	if err := tx.Upsert(node, Attr.ItemLabel.ID, tag.UID{}, &TextItem{Body: rec.Label}); err != nil {
