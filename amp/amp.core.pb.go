@@ -2585,6 +2585,11 @@ type VaultConfig struct {
 	// window.  If 0, RateLimitWindowSecs is used; if that is also 0,
 	// DefaultBlobRateLimitWindow applies (24h).
 	BlobRateLimitWindowSecs int64 `protobuf:"varint,11,opt,name=BlobRateLimitWindowSecs,proto3" json:"BlobRateLimitWindowSecs,omitempty"`
+	// Per-object blob size ceiling: the maximum stored byte size of a SINGLE blob this vault will
+	// ingest, distinct from the per-window byte budget above.  Bounds the otherwise 1 PiB-declarable
+	// transfer the sliding-window budget alone admits.  If 0, DefaultMaxBlobBytesPerObject applies
+	// (1 TiB).
+	MaxBlobBytesPerObject int64 `protobuf:"varint,13,opt,name=MaxBlobBytesPerObject,proto3" json:"MaxBlobBytesPerObject,omitempty"`
 	// Bootstrap vault endpoints advertised for this planet — the admin-signed,
 	// governance home for "where can a fresh peer dial to reach this planet?".
 	// InviteCreate stamps these into every PlanetInvite it issues, so a peerless
@@ -2700,6 +2705,13 @@ func (x *VaultConfig) GetMaxBlobBytesPerWindow() int64 {
 func (x *VaultConfig) GetBlobRateLimitWindowSecs() int64 {
 	if x != nil {
 		return x.BlobRateLimitWindowSecs
+	}
+	return 0
+}
+
+func (x *VaultConfig) GetMaxBlobBytesPerObject() int64 {
+	if x != nil {
+		return x.MaxBlobBytesPerObject
 	}
 	return 0
 }
@@ -6266,7 +6278,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x11PlanetStorageOpts\x12\x1a\n" +
 	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
 	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xc9\x04\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xff\x04\n" +
 	"\vVaultConfig\x12\"\n" +
 	"\fMaxTxMsgSize\x18\x01 \x01(\x03R\fMaxTxMsgSize\x12,\n" +
 	"\x11MaxBytesPerWindow\x18\x02 \x01(\x03R\x11MaxBytesPerWindow\x12&\n" +
@@ -6279,7 +6291,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x10BootstrapTTLSecs\x18\t \x01(\x03R\x10BootstrapTTLSecs\x124\n" +
 	"\x15MaxBlobBytesPerWindow\x18\n" +
 	" \x01(\x03R\x15MaxBlobBytesPerWindow\x128\n" +
-	"\x17BlobRateLimitWindowSecs\x18\v \x01(\x03R\x17BlobRateLimitWindowSecs\x12.\n" +
+	"\x17BlobRateLimitWindowSecs\x18\v \x01(\x03R\x17BlobRateLimitWindowSecs\x124\n" +
+	"\x15MaxBlobBytesPerObject\x18\r \x01(\x03R\x15MaxBlobBytesPerObject\x12.\n" +
 	"\n" +
 	"VaultAddrs\x18\f \x03(\v2\x0e.amp.VaultAddrR\n" +
 	"VaultAddrs\"\xde\x01\n" +

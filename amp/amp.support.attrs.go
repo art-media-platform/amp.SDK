@@ -62,9 +62,39 @@ const (
 	// via VaultConfig.MaxBlobBytesPerWindow.
 	DefaultMaxBlobBytesPerWindow int64 = 1 << 40
 
+	// DefaultMaxBlobBytesPerObject caps a SINGLE blob's stored byte size (1 TiB) — the per-object
+	// ceiling distinct from the per-window budget.  Bounds the otherwise 1 PiB-declarable transfer
+	// the sliding-window budget alone admits; a hostile-environment operator tightens it per-planet
+	// via VaultConfig.MaxBlobBytesPerObject.
+	DefaultMaxBlobBytesPerObject int64 = 1 << 40
+
 	// DefaultBlobRateLimitWindow is the default blob byte-budget window in seconds (24h).
 	DefaultBlobRateLimitWindow int64 = 24 * 60 * 60
 )
+
+// PlaintextUID is the asset (plaintext) identity: the leading 16 bytes of the plaintext hash.
+// Stable across epochs — the member-side identity used for caching and arrangement.
+func (ref *BlobRef) PlaintextUID() tag.UID {
+	if ref.AssetTag != nil {
+		return ref.AssetTag.UID()
+	}
+	return tag.UID{ref.Hash_0, ref.Hash_1}
+}
+
+// StorageUID is the stored-bytes identity: the leading 16 bytes of hash(stored bytes) — ciphertext
+// for a sealed blob, == PlaintextUID for a planet-public one.  The relay / on-disk routing key.
+func (ref *BlobRef) StorageUID() tag.UID {
+	if ref.BlobTag != nil {
+		return ref.BlobTag.UID()
+	}
+	return ref.PlaintextUID()
+}
+
+// IsPublic reports whether the blob is planet-public (unsealed): the stored bytes are the plaintext,
+// so StorageUID == PlaintextUID and no epoch key is needed to read it.
+func (ref *BlobRef) IsPublic() bool {
+	return ref.EpochID_0 == 0 && ref.EpochID_1 == 0
+}
 
 // GracePeriod returns the effective grace period for this epoch's terms.
 // Returns DefaultMaxGracePeriod if MaxGracePeriod is zero (unset).

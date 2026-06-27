@@ -550,6 +550,12 @@ message VaultConfig {
     // DefaultBlobRateLimitWindow applies (24h).
     int64   BlobRateLimitWindowSecs = 11;
 
+    // Per-object blob size ceiling: the maximum stored byte size of a SINGLE blob this vault will
+    // ingest, distinct from the per-window byte budget above.  Bounds the otherwise 1 PiB-declarable
+    // transfer the sliding-window budget alone admits.  If 0, DefaultMaxBlobBytesPerObject applies
+    // (1 TiB).
+    int64   MaxBlobBytesPerObject = 13;
+
     // Bootstrap vault endpoints advertised for this planet — the admin-signed,
     // governance home for "where can a fresh peer dial to reach this planet?".
     // InviteCreate stamps these into every PlanetInvite it issues, so a peerless

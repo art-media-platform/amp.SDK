@@ -165,8 +165,9 @@ type Session interface {
 	//
 	// meta describes the blob's MIME type (ContentType), human label (Text), and
 	// byte size (I with Units = Bytes, used as the progress denominator); or may be nil.
-	// The stored BlobRef's BlobTag inherits ContentType and Text from meta; UID is set to
-	// the leading 16 bytes of the plaintext hash (content-addressed, §13.2).
+	// The stored BlobRef's AssetTag carries ContentType and Text from meta; AssetTag.UID is the
+	// leading 16 bytes of the plaintext hash (content-addressed, §13.2), and for a planet-public
+	// blob BlobTag.UID coincides with it.  BlobTag itself stays lean — UID + stored byte count.
 	//
 	// For large files, data is streamed — not buffered in memory.
 	// If onProgress is non-nil, it is called periodically with cumulative bytes written.
@@ -351,6 +352,11 @@ type TxOutbox interface {
 // BlobStore manages content-addressed encrypted blob storage.
 // Blobs are identified by (PlanetID, BlobID) and validated by their content hash.
 type BlobStore interface {
+
+	// Store writes data under a caller-supplied blobID without deriving or validating it — the raw
+	// primitive beneath StoreHashed (derives the ID from the plaintext hash) and StoreValidated
+	// (validates the stream against an existing BlobTag.UID before publish).  Callers that already
+	// hold the content address use it directly; most callers want StoreHashed or StoreValidated.
 	Store(planetID tag.UID, blobID tag.UID, data io.Reader, byteSize int64) error
 	Retrieve(planetID tag.UID, blobID tag.UID) (io.ReadCloser, error)
 	Has(planetID tag.UID, blobID tag.UID) bool
