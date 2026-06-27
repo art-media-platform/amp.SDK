@@ -57,6 +57,11 @@ var (
 	gHashKits   = newRegistry[HashKitID, HashSpec]("HashKit")
 )
 
+// minHashKitDigest is the smallest digest a registered HashKit may produce.  Content addressing reads
+// a 32-byte plaintext hash (BlobRef.Hash_0..3); a shorter digest would let StoreValidated (needs 16)
+// admit a blob StoreHashed (needs 32) rejects.
+const minHashKitDigest = 32
+
 // RegisterCryptoKit registers a kit's CryptoKit so it can be retrieved via CryptoKit.
 // It must be called from init().
 func RegisterCryptoKit(kit *Kit) error { return gCryptoKits.Register(kit.ID, kit) }
@@ -65,8 +70,13 @@ func RegisterCryptoKit(kit *Kit) error { return gCryptoKits.Register(kit.ID, kit
 func CryptoKit(cryptoKitID CryptoKitID) (*Kit, error) { return gCryptoKits.Get(cryptoKitID) }
 
 // RegisterHashKit registers spec so it can be retrieved via GetHashKit / NewHashKit.
-// It must be called from init().
-func RegisterHashKit(spec *HashSpec) error { return gHashKits.Register(spec.ID, spec) }
+// It must be called from init().  A kit must yield at least minHashKitDigest bytes.
+func RegisterHashKit(spec *HashSpec) error {
+	if spec.Size < minHashKitDigest {
+		return status.Code_BadRequest.Errorf("HashKit %v digest size %d < required %d", spec.ID, spec.Size, minHashKitDigest)
+	}
+	return gHashKits.Register(spec.ID, spec)
+}
 
 // GetHashKit fetches a registered HashSpec, failing closed if the kit's package
 // was never imported.
