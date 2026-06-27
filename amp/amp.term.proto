@@ -25,6 +25,8 @@ message TermBlock {
         ClientToHost = 2; // keystrokes  -> PTY stdin
     }
 
+    reserved 3; // freed: per-block CapturedAt
+
     // Raw, opaque terminal bytes.  Never UTF-8-validated or transformed; ANSI is
     // rendered only by the receiving emulator.
     bytes Data = 1;
@@ -42,17 +44,26 @@ message TermBlock {
 // TermIO is one flush of batched terminal I/O for a single session/stream.
 message TermIO {
 
+    // TermMode flags a frame that is more than ordinary stream bytes: a
+    // self-contained Keyframe (the DVR's scrub seek target — jump to the nearest
+    // keyframe <= T, then replay forward to T) or a Resize.
+    enum TermMode {
+        Unspecified = 0; // ordinary terminal byte stream
+        Keyframe    = 1; // self-contained full-screen snapshot
+        Resize      = 2; // new cols x rows dimensions (M4)
+    }
+
+    reserved 1, 2, 6, 7; // freed: SessionID_0/1 (now the NodeID), FlushedAt, Keyframe bool
+
     // Monotonic batch sequence within the session+direction (0,1,2,...).  Earns
     // its place precisely because the series is sparse: a time gap is normal
     // (idle), so this counter is how a reader tells idle apart from a dropped
     // frame.  SeqOffset gives byte-exact detail within a direction.
     uint64 BatchSeq = 5;
 
-    // Keyframe marks a self-contained full-screen snapshot — a repaint of the
-    // visible grid a reader can apply without any prior frame.  It is the DVR's
-    // scrub seek target: jump to the nearest keyframe <= T, then replay forward
-    // to T.  Ordinary output frames leave it false.
-    bool Keyframe = 7;
+    // Frame classification (default Unspecified = ordinary stream).  Keyframe is
+    // the DVR seek target; Resize carries dimensions (M4).
+    TermMode Mode = 8;
 
     // The ordered byte blocks in this flush.  Concatenate Data in order to
     // reconstruct the raw stream.

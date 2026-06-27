@@ -80,6 +80,58 @@ func (TermBlock_TermDir) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_term_proto_rawDescGZIP(), []int{0, 0}
 }
 
+// TermMode flags a frame that is more than ordinary stream bytes: a
+// self-contained Keyframe (the DVR's scrub seek target — jump to the nearest
+// keyframe <= T, then replay forward to T) or a Resize.
+type TermIO_TermMode int32
+
+const (
+	TermIO_Unspecified TermIO_TermMode = 0 // ordinary terminal byte stream
+	TermIO_Keyframe    TermIO_TermMode = 1 // self-contained full-screen snapshot
+	TermIO_Resize      TermIO_TermMode = 2 // new cols x rows dimensions (M4)
+)
+
+// Enum value maps for TermIO_TermMode.
+var (
+	TermIO_TermMode_name = map[int32]string{
+		0: "Unspecified",
+		1: "Keyframe",
+		2: "Resize",
+	}
+	TermIO_TermMode_value = map[string]int32{
+		"Unspecified": 0,
+		"Keyframe":    1,
+		"Resize":      2,
+	}
+)
+
+func (x TermIO_TermMode) Enum() *TermIO_TermMode {
+	p := new(TermIO_TermMode)
+	*p = x
+	return p
+}
+
+func (x TermIO_TermMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TermIO_TermMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_term_proto_enumTypes[1].Descriptor()
+}
+
+func (TermIO_TermMode) Type() protoreflect.EnumType {
+	return &file_amp_amp_term_proto_enumTypes[1]
+}
+
+func (x TermIO_TermMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TermIO_TermMode.Descriptor instead.
+func (TermIO_TermMode) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_term_proto_rawDescGZIP(), []int{1, 0}
+}
+
 // TermBlock is one contiguous run of terminal bytes — typically one PTY read.
 // Blocks within a TermIO are ordered; concatenating their Data reproduces the
 // raw stream.
@@ -158,11 +210,9 @@ type TermIO struct {
 	// (idle), so this counter is how a reader tells idle apart from a dropped
 	// frame.  SeqOffset gives byte-exact detail within a direction.
 	BatchSeq uint64 `protobuf:"varint,5,opt,name=BatchSeq,proto3" json:"BatchSeq,omitempty"`
-	// Keyframe marks a self-contained full-screen snapshot — a repaint of the
-	// visible grid a reader can apply without any prior frame.  It is the DVR's
-	// scrub seek target: jump to the nearest keyframe <= T, then replay forward
-	// to T.  Ordinary output frames leave it false.
-	Keyframe bool `protobuf:"varint,7,opt,name=Keyframe,proto3" json:"Keyframe,omitempty"`
+	// Frame classification (default Unspecified = ordinary stream).  Keyframe is
+	// the DVR seek target; Resize carries dimensions (M4).
+	Mode TermIO_TermMode `protobuf:"varint,8,opt,name=Mode,proto3,enum=amp.TermIO_TermMode" json:"Mode,omitempty"`
 	// The ordered byte blocks in this flush.  Concatenate Data in order to
 	// reconstruct the raw stream.
 	Blocks        []*TermBlock `protobuf:"bytes,10,rep,name=Blocks,proto3" json:"Blocks,omitempty"`
@@ -207,11 +257,11 @@ func (x *TermIO) GetBatchSeq() uint64 {
 	return 0
 }
 
-func (x *TermIO) GetKeyframe() bool {
+func (x *TermIO) GetMode() TermIO_TermMode {
 	if x != nil {
-		return x.Keyframe
+		return x.Mode
 	}
-	return false
+	return TermIO_Unspecified
 }
 
 func (x *TermIO) GetBlocks() []*TermBlock {
@@ -225,7 +275,7 @@ var File_amp_amp_term_proto protoreflect.FileDescriptor
 
 const file_amp_amp_term_proto_rawDesc = "" +
 	"\n" +
-	"\x12amp/amp.term.proto\x12\x03amp\"\xa7\x01\n" +
+	"\x12amp/amp.term.proto\x12\x03amp\"\xad\x01\n" +
 	"\tTermBlock\x12\x12\n" +
 	"\x04Data\x18\x01 \x01(\fR\x04Data\x12\x1c\n" +
 	"\tSeqOffset\x18\x02 \x01(\x03R\tSeqOffset\x12(\n" +
@@ -233,12 +283,17 @@ const file_amp_amp_term_proto_rawDesc = "" +
 	"\aTermDir\x12\x0f\n" +
 	"\vUnspecified\x10\x00\x12\x10\n" +
 	"\fHostToClient\x10\x01\x12\x10\n" +
-	"\fClientToHost\x10\x02\"h\n" +
+	"\fClientToHost\x10\x02J\x04\b\x03\x10\x04\"\xc5\x01\n" +
 	"\x06TermIO\x12\x1a\n" +
-	"\bBatchSeq\x18\x05 \x01(\x04R\bBatchSeq\x12\x1a\n" +
-	"\bKeyframe\x18\a \x01(\bR\bKeyframe\x12&\n" +
+	"\bBatchSeq\x18\x05 \x01(\x04R\bBatchSeq\x12(\n" +
+	"\x04Mode\x18\b \x01(\x0e2\x14.amp.TermIO.TermModeR\x04Mode\x12&\n" +
 	"\x06Blocks\x18\n" +
-	" \x03(\v2\x0e.amp.TermBlockR\x06BlocksB@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
+	" \x03(\v2\x0e.amp.TermBlockR\x06Blocks\"5\n" +
+	"\bTermMode\x12\x0f\n" +
+	"\vUnspecified\x10\x00\x12\f\n" +
+	"\bKeyframe\x10\x01\x12\n" +
+	"\n" +
+	"\x06Resize\x10\x02J\x04\b\x01\x10\x02J\x04\b\x02\x10\x03J\x04\b\x06\x10\aJ\x04\b\a\x10\bB@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_amp_term_proto_rawDescOnce sync.Once
@@ -252,21 +307,23 @@ func file_amp_amp_term_proto_rawDescGZIP() []byte {
 	return file_amp_amp_term_proto_rawDescData
 }
 
-var file_amp_amp_term_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_amp_amp_term_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_amp_amp_term_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_amp_amp_term_proto_goTypes = []any{
 	(TermBlock_TermDir)(0), // 0: amp.TermBlock.TermDir
-	(*TermBlock)(nil),      // 1: amp.TermBlock
-	(*TermIO)(nil),         // 2: amp.TermIO
+	(TermIO_TermMode)(0),   // 1: amp.TermIO.TermMode
+	(*TermBlock)(nil),      // 2: amp.TermBlock
+	(*TermIO)(nil),         // 3: amp.TermIO
 }
 var file_amp_amp_term_proto_depIdxs = []int32{
 	0, // 0: amp.TermBlock.Dir:type_name -> amp.TermBlock.TermDir
-	1, // 1: amp.TermIO.Blocks:type_name -> amp.TermBlock
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 1: amp.TermIO.Mode:type_name -> amp.TermIO.TermMode
+	2, // 2: amp.TermIO.Blocks:type_name -> amp.TermBlock
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_term_proto_init() }
@@ -279,7 +336,7 @@ func file_amp_amp_term_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_amp_term_proto_rawDesc), len(file_amp_amp_term_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      2,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
