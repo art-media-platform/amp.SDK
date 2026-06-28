@@ -14,6 +14,8 @@ var Attr = struct {
 	LoginChallenge                     tag.Name
 	LoginResponse                      tag.Name
 	LoginCheckpoint                    tag.Name
+	MintMemberToken                    tag.Name
+	MemberToken                        tag.Name
 	SessionStatus                      tag.Name
 	SessionTag                         tag.Name
 	LaunchWeb                          tag.Name
@@ -154,6 +156,8 @@ var Attr = struct {
 	LoginChallenge:  tag.Name{ID: tag.UID{0x4CDE92F1C346D9A6, 0x3DBC5E21F58B7690}, Text: "session.LoginChallenge"},  // 2dvu9g3hu6v6m3vg2y47usqxnh
 	LoginResponse:   tag.Name{ID: tag.UID{0xD5D931DCBF32B11B, 0x845B0B9940F8F258}, Text: "session.LoginResponse"},   // 6pv4sxtgtkq4es8qscm50gjwks
 	LoginCheckpoint: tag.Name{ID: tag.UID{0xD1FD78AD2D86A001, 0x89D5922FF13EB7CE}, Text: "session.LoginCheckpoint"}, // 6jzpwbucd6n00smpdk5zsmxeyf
+	MintMemberToken: tag.Name{ID: tag.UID{0xDC73A73FD82C3B2C, 0xD9B03922FF778D57}, Text: "session.MintMemberToken"}, // 6wffmmzq1d7dqemd1t4czrg3br
+	MemberToken:     tag.Name{ID: tag.UID{0xADEE675024C4539A, 0x0A8F425BA8732A9B}, Text: "session.MemberToken"},     // 5extmp0964bfe0p3u2cfn76bnv
 	SessionStatus:   tag.Name{ID: tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, Text: "session.Status"},          // 3zqf0vt3ejmdnf7v345guq2p9c
 	SessionTag:      tag.Name{ID: tag.UID{0xCCE00314A1263502, 0x7A38CD68C10DC759}, Text: "session.Tag"},             // 6dw01j98966n17nf6ee30hvjut
 

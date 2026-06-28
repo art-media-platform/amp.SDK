@@ -21,6 +21,8 @@ tags Attr {
         LoginChallenge    "LoginChallenge"
         LoginResponse     "LoginResponse"
         LoginCheckpoint   "LoginCheckpoint"
+        MintMemberToken   "MintMemberToken"
+        MemberToken       "MemberToken"
         SessionStatus     "Status"
         SessionTag "Tag" {
             LaunchWeb     "www"
