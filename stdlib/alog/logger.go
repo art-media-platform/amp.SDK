@@ -220,6 +220,10 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 	if l.idLabel != "" {
 		source = l.idLabel + " " + second // idLabel is the fixed-width AsLabel form
 	}
+	// Alignment is by display column, not byte: the AsLabel "first…last" id form and
+	// capColumn's own elision both carry the 3-byte "…", so byte length over-counts the
+	// gutter and short-pads ellipsis-bearing lines against ASCII-only ones.
+	sourceCols := utf8.RuneCountInString(source)
 
 	entry := sevTable[sev]
 	useColor := gUseColor.Load()
@@ -230,7 +234,7 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 
 	gOutMu.Lock()
 
-	sourceWidth := gWidths.observe(len(source))
+	sourceWidth := gWidths.observe(sourceCols)
 
 	if useColor && entry.ansi != "" {
 		sb.WriteString(entry.ansi)
@@ -241,7 +245,7 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 	sb.WriteByte(' ')
 	sb.WriteByte('[')
 	sb.WriteString(source)
-	writePad(&sb, sourceWidth-len(source))
+	writePad(&sb, sourceWidth-sourceCols)
 	sb.WriteByte(']')
 	if useColor && entry.ansi != "" {
 		sb.WriteString(ansiReset)
@@ -272,12 +276,12 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 // every widthRelaxLines relaxes toward the widest interior actually seen in that window
 // — never to zero, so the gutter settles instead of snapping narrow and re-widening.
 // Callers must hold gOutMu.
-func (w *columnWidths) observe(sourceLen int) (sourceWidth int) {
-	if sourceLen > w.windowMax {
-		w.windowMax = sourceLen
+func (w *columnWidths) observe(sourceCols int) (sourceWidth int) {
+	if sourceCols > w.windowMax {
+		w.windowMax = sourceCols
 	}
-	if sourceLen > w.source {
-		w.source = sourceLen
+	if sourceCols > w.source {
+		w.source = sourceCols
 	}
 	w.sinceRelax++
 	if w.sinceRelax >= widthRelaxLines {
