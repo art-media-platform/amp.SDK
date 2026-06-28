@@ -86,6 +86,13 @@ type Enclave interface {
 	// If len(ref.PubKey) == 0, the newest key in the keyring is returned.
 	FetchPubKey(ref *KeyRef) (PubKey, error)
 
+	// CanSign reports whether ref resolves to a SigningKey whose PRIVATE half is
+	// held — i.e. this enclave can actually produce a signature for it.  A key
+	// adopted public-only (a TOFU-declared peer key) has its pubkey but no PrvKey,
+	// so FetchPubKey succeeds for it while CanSign returns false: "knows the
+	// pubkey" is not "can sign."  Self-signing authorship must gate on CanSign.
+	CanSign(ref *KeyRef) bool
+
 	// Sign produces a cryptographic signature over digest using the SigningKey
 	// referenced by ref.  Returns the signature bytes.
 	Sign(ref *KeyRef, digest []byte) ([]byte, error)

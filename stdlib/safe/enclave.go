@@ -214,6 +214,23 @@ func (enc *enclave) FetchPubKey(ref *KeyRef) (PubKey, error) {
 	return pubKeyFromRecord(rec), nil
 }
 
+// CanSign reports whether ref resolves to a SigningKey whose private half is held — the
+// signing-capability probe self-sovereign authorship gates on.  A public-only adopted key
+// (a TOFU-declared peer key, PrvKey nil) is fetchable via FetchPubKey but cannot sign, so a
+// FetchPubKey success must NOT be read as "can sign."  Fails closed (false) when the enclave
+// is closed, ref is unresolved, the entry is not a SigningKey, or no private half is held.
+func (enc *enclave) CanSign(ref *KeyRef) bool {
+	enc.mu.RLock()
+	defer enc.mu.RUnlock()
+
+	if enc.closed {
+		return false
+	}
+
+	rec, err := enc.fetchRecord(ref)
+	return err == nil && rec.KeyType == KeyType_SigningKey && len(rec.PrvKey) > 0
+}
+
 // fetchTypedRecord resolves ref, enforces enclave-not-closed, and verifies that
 // the resolved record's KeyType matches wantType.  Returns the record and its
 // kit on success.  Internal helper for the typed Enclave methods below.
