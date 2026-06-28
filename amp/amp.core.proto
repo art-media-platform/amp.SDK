@@ -407,11 +407,23 @@ message AccessGrants {
     repeated AccessGrant Grants = 1;
 }
 
+// ContentPolicy constrains HOW a channel's content cells may be written — orthogonal
+// to the AccessGrants axis, which gates WHO may write.  Default Unbound keeps classic
+// semantics (any Access_ReadWrite holder writes any cell on the node).  AuthorBound
+// restricts a non-moderator writer to cells whose ItemID is bound to their own
+// identity, so members self-author on one shared channel without being able to
+// overwrite another member's cell (AOM SD-channel-governance.md §4).
+enum ContentPolicy {
+    Unbound     = 0; // any Access_ReadWrite holder may write any cell on the node
+    AuthorBound = 1; // a non-moderator writer may write only cells bound to their own identity
+}
+
 // Governing unit of amp channel permissions and security.
 message ChannelEpoch {
     Tag                 Channel = 1; // channel this record applies to
     Tag                 Parent  = 2; // parent legislating channel whose grants are inherited; if nil, Channel legislates itself
     Tag                 ChType  = 6; // channel type name and/or ID
+    ContentPolicy       ContentPolicy = 7; // how content cells may be written (orthogonal to the grants axis)
 
     string              Label     = 10; // debugging
     string              LegacyURI = 11;

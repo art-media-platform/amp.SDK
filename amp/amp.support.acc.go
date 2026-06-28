@@ -76,3 +76,22 @@ func minAccess(level1, level2 Access) Access {
 	}
 	return level2
 }
+
+// AuthorSlot64 folds a member UID to the 64-bit "author slot" that a ContentPolicy_AuthorBound
+// channel's item IDs carry in their low word.  Writers on such a channel mint item IDs as
+// { high: time/entropy, low: AuthorSlot64(author) }, so the ACC gate can bind a content cell to
+// its author from the address alone — no payload read, no item-existence state.  The fold is the
+// full 64 bits: forging another member's slot is a 2^64 second-preimage, and member UIDs are not
+// attacker-chosen (SD-channel-governance.md §4).
+func AuthorSlot64(author tag.UID) uint64 {
+	return tag.UID_HashLiteral(author.AppendTo(nil))[0]
+}
+
+// ItemBoundToAuthor reports whether itemID is bound to author on a ContentPolicy_AuthorBound
+// channel: either its low word carries the author slot (a minted content cell), or the item IS
+// the author (a self-keyed record — read-state, subscription).  The author-bound ACC rule admits
+// a non-moderator write only when this holds, so a member self-authors without being able to
+// overwrite another member's cell.
+func ItemBoundToAuthor(author, itemID tag.UID) bool {
+	return itemID[1] == AuthorSlot64(author) || itemID == author
+}
