@@ -35,6 +35,11 @@ export const VERB = {
 export const PostStatus = { Live: 0, Edited: 1, Removed: 2 } as const;
 export const NotifyFrequency = { Immediate: 0, Daily: 1, Weekly: 2, Never: 3 } as const;
 
+// A content document is an amp.Tags map {ContentType: Text} — the pure-text JSON form the Go side
+// decodes into amp.Tags (SD-content-substrate.md).  Post bodies + profile signatures ride a
+// text/html (display) leaf + an optional text/markdown (re-edit) leaf.
+export type TagsDoc = Record<string, string>;
+
 // ── Wire item shapes (PascalCase, matching the proto messages) ──────────
 
 export interface Forum {
@@ -55,8 +60,7 @@ export interface Topic {
 }
 
 export interface Post {
-  BodyHTML: string;
-  BodySource?: string;
+  Body?: TagsDoc;          // text/html (display) + text/markdown (re-edit) leaves
   Author?: string;
   EditedAt?: number;
   Status?: number;
@@ -64,7 +68,7 @@ export interface Post {
 
 export interface Profile {
   DisplayName?: string;
-  SignatureHTML?: string;
+  Signature?: TagsDoc;     // text/html signature document
   JoinedAt?: number;
   PostCount?: number;
 }
@@ -88,4 +92,22 @@ export function authorUID(author: unknown): string {
     if (typeof tag.ID === 'string') return tag.ID;
   }
   return '';
+}
+
+/**
+ * postBody builds a Post.Body / Profile.Signature document — the pure-text amp.Tags map
+ * {ContentType: Text} the custodian and the embedded host both decode into amp.Tags (mirrors
+ * the Go postBody; SD-content-substrate.md).  text/markdown is added only when a source is given.
+ */
+export function postBody(html: string, source?: string): TagsDoc {
+  const doc: TagsDoc = { 'text/html': html };
+  if (source) {
+    doc['text/markdown'] = source;
+  }
+  return doc;
+}
+
+/** tagText reads a leaf's Text from a Tags map by IANA ContentType (mirrors Go TextByContentType). */
+export function tagText(doc: TagsDoc | undefined, contentType: string): string {
+  return doc?.[contentType] ?? '';
 }

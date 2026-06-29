@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { AmpItemMeta } from '@art-media-platform/web';
-import { authorUID, PostStatus } from '../forums-attrs';
+import { authorUID, PostStatus, tagText } from '../forums-attrs';
 import type { Post } from '../forums-attrs';
 import { shortID } from '../util';
 
@@ -25,7 +25,7 @@ export function PostCard({ post, canModerate, onRemove }: {
           ? <em className="post-removed">[removed]</em>
           // Dogfood: bodies render as authored HTML. Server-side sanitization is a
           // noted cross-cutting fast-follow (AD-app-forums.md §13).
-          : <span dangerouslySetInnerHTML={{ __html: post.BodyHTML || '' }} />}
+          : <span dangerouslySetInnerHTML={{ __html: tagText(post.Body, 'text/html') }} />}
       </div>
       {canModerate && !removed && (
         <div className="post-actions">

@@ -11,7 +11,7 @@ import type { TxOp } from '@art-media-platform/web';
 import {
   BOARD, PROFILES,
   ATTR_TOPIC, ATTR_POST, ATTR_PROFILE, ATTR_READSTATE, ATTR_SUBSCRIPTION,
-  VERB, PostStatus,
+  VERB, PostStatus, postBody,
 } from '../forums-attrs';
 
 export function useForumsApi() {
@@ -22,14 +22,14 @@ export function useForumsApi() {
   const createTopic = useCallback((title: string, bodyHTML: string, forumID?: string) => {
     const ops: TxOp[] = [
       { Kind: 'upsert', Channel: BOARD, Attr: ATTR_TOPIC, Value: { Title: title, ...(forumID ? { Forum: forumID } : {}) } },
-      { Kind: 'upsert', Channel: BOARD, Attr: ATTR_POST, Value: { BodyHTML: bodyHTML, BodySource: bodyHTML, Status: PostStatus.Live } },
+      { Kind: 'upsert', Channel: BOARD, Attr: ATTR_POST, Value: { Body: postBody(bodyHTML, bodyHTML), Status: PostStatus.Live } },
     ];
     return invoke(VERB.topic, ops);
   }, [invoke]);
 
   const reply = useCallback((topicID: string, bodyHTML: string) => {
     const ops: TxOp[] = [
-      { Kind: 'upsert', Channel: topicID, Attr: ATTR_POST, Value: { BodyHTML: bodyHTML, BodySource: bodyHTML, Status: PostStatus.Live } },
+      { Kind: 'upsert', Channel: topicID, Attr: ATTR_POST, Value: { Body: postBody(bodyHTML, bodyHTML), Status: PostStatus.Live } },
     ];
     return invoke(VERB.post, ops);
   }, [invoke]);
@@ -38,7 +38,7 @@ export function useForumsApi() {
     const ops: TxOp[] = [
       {
         Kind: 'upsert', Channel: topicID, Attr: ATTR_POST, ItemID: postID,
-        Value: { Status: status, ...(bodyHTML !== undefined ? { BodyHTML: bodyHTML, BodySource: bodyHTML } : {}) },
+        Value: { Status: status, ...(bodyHTML !== undefined ? { Body: postBody(bodyHTML, bodyHTML) } : {}) },
       },
     ];
     return invoke(VERB.moderate, ops);
@@ -55,7 +55,7 @@ export function useForumsApi() {
   const saveProfile = useCallback((displayName: string, signatureHTML: string) => {
     if (!member) throw new Error('login required to edit a profile');
     const ops: TxOp[] = [
-      { Kind: 'upsert', Channel: PROFILES, Attr: ATTR_PROFILE, ItemID: member.ID, Value: { DisplayName: displayName, SignatureHTML: signatureHTML } },
+      { Kind: 'upsert', Channel: PROFILES, Attr: ATTR_PROFILE, ItemID: member.ID, Value: { DisplayName: displayName, Signature: postBody(signatureHTML) } },
     ];
     return invoke(VERB.profile, ops);
   }, [invoke, member]);

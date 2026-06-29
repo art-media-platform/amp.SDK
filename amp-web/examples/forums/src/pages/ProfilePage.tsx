@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAmpQuery, useAmpAuth } from '@art-media-platform/web';
-import { PROFILES, ATTR_PROFILE } from '../forums-attrs';
+import { PROFILES, ATTR_PROFILE, tagText } from '../forums-attrs';
 import type { Profile } from '../forums-attrs';
 import { useForumsApi } from '../hooks/useForumsApi';
 import { shortID } from '../util';
@@ -12,13 +12,14 @@ export function ProfilePage() {
   const isSelf = member?.ID === memberID;
   const { data, loading } = useAmpQuery<Profile>(PROFILES, ATTR_PROFILE, { itemID: memberID });
   const profile = data[0];
+  const sigHTML = tagText(profile?.Signature, 'text/html');
 
   return (
     <div className="profile">
       <h1>{profile?.DisplayName || shortID(memberID)}</h1>
       {loading && <div className="forums-empty">Loading…</div>}
-      {profile?.SignatureHTML && (
-        <div className="profile-sig" dangerouslySetInnerHTML={{ __html: profile.SignatureHTML }} />
+      {sigHTML && (
+        <div className="profile-sig" dangerouslySetInnerHTML={{ __html: sigHTML }} />
       )}
       {isSelf && <ProfileEditor initial={profile} />}
     </div>
@@ -28,13 +29,13 @@ export function ProfilePage() {
 function ProfileEditor({ initial }: { initial?: Profile }) {
   const { saveProfile } = useForumsApi();
   const [name, setName] = useState(initial?.DisplayName ?? '');
-  const [sig, setSig] = useState(initial?.SignatureHTML ?? '');
+  const [sig, setSig] = useState(tagText(initial?.Signature, 'text/html'));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
     setName(initial?.DisplayName ?? '');
-    setSig(initial?.SignatureHTML ?? '');
+    setSig(tagText(initial?.Signature, 'text/html'));
   }, [initial]);
 
   async function save() {

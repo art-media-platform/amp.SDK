@@ -14,6 +14,7 @@
 import type { AmpAdapter } from './adapter.js';
 import { createAmpCrypto } from './crypto/index.js';
 import { ampErrorFromResponse } from './errors.js';
+import { EmbedBridge } from './embed-bridge.js';
 import {
   type EncryptKeyStorage,
   defaultEncryptKeyStorage,
@@ -76,11 +77,15 @@ export class AmpWebClient implements AmpAdapter {
   private wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private crypto: AmpCrypto = createAmpCrypto();
   private keyStorage: EncryptKeyStorage;
+  private embed: EmbedBridge | null = null;
 
   constructor(opts: AmpWebClientOpts) {
     this.vaultUrl = opts.vaultUrl.replace(/\/$/, '');
     this.planetTag = opts.planetTag;
     this.keyStorage = opts.encryptKeyStorage ?? defaultEncryptKeyStorage();
+    // Pick up the host-injected embed context: in the Unity host, window.__amp advertises the
+    // verbs it handles natively and carries the SSO memberToken (AD-app-forums.md §6.4).
+    this.embed = (typeof window !== 'undefined' && window.__amp?.embed) ? new EmbedBridge(window.__amp) : null;
   }
 
   // ── Internal helpers ─────────────────────────────────────────────
@@ -266,6 +271,12 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   async invoke(verbURL: string, ops: TxOp[], planetTag?: string): Promise<TxResult[]> {
+    // Embedded in the host + the host handles this verb natively → divert so the member's OWN
+    // key signs the write (e.g. a self-signed forums reply); reads + other writes stay custodial.
+    if (this.embed?.routes(verbURL)) {
+      const op = ops[0];
+      return this.embed.invoke(verbURL, op.Value, planetTag ?? this.planetTag, op.Channel);
+    }
     const wireOps = ops.map(op =>
       op.Withdraw ? { ...op, Withdraw: withdrawNoteToWire(op.Withdraw) } : op,
     );

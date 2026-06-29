@@ -85,3 +85,10 @@ export type {
   TxReceipt,
 } from './card-bridge.js';
 import './card-bridge.js';
+
+// Embed host bridge (window.__amp) — engine-agnostic SSO + verb-divert when the SPA runs
+// embedded in the Unity host.  Importing the package augments the global Window with an
+// optional `__amp` field (AD-app-forums.md §6.4-6.5).
+export type { AmpEmbed } from './embed-bridge.js';
+export { EmbedBridge } from './embed-bridge.js';
+import './embed-bridge.js';
