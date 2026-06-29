@@ -236,9 +236,7 @@ func (w *itemWriter) PutTextAt(attrID, itemID tag.UID, value string) {
 	if w.err != nil {
 		return
 	}
-	err := w.tx.Upsert(w.nodeID, attrID, itemID, &TextItem{
-		Body: value,
-	})
+	err := w.tx.Upsert(w.nodeID, attrID, itemID, &amp.Tag{Text: value})
 	if err != nil {
 		w.err = err
 	}

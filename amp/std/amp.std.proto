@@ -106,12 +106,6 @@ message FileInfo {
 }
 
 
-// Multi-purpose, future-proof text element or label.
-message TextItem {
-    string   Body  = 2; // atomic plain-text body
-    amp.Tags Tags  = 4; // free use attachments or metadata
-}
-
 // ValueKind specifies the primary type of a JsonValue.
 enum ValueKind {
     Null   = 0;
@@ -289,9 +283,9 @@ enum AudioFlags {
 }
 
 message VisPreset {
-    std.TextItem    Title       = 1;
-    std.TextItem    Collection  = 2;
-    std.TextItem    Credits     = 3;
+    amp.Tag         Title       = 1;
+    amp.Tag         Collection  = 2;
+    amp.Tag         Credits     = 3;
 
     ColormapFlags   ColormapFlags = 6;
     SensorFlags     SensorFlags   = 7;

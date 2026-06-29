@@ -130,7 +130,7 @@ type MediaRecord struct {
 
 // WriteMediaRecord upserts the standard media attributes for one stored asset onto
 // tx at node: the BlobRef (keyed by its asset UID), a MediaInfo, and the
-// label/caption/collection TextItems.  It only builds the tx — the caller owns the
+// label/caption/collection amp.Tag leaves.  It only builds the tx — the caller owns the
 // StoreBlob, any extra index entries, and the Commit — so an app composes this with
 // its own catalog without duplicating the std-attr layout.
 func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRecord) error {
@@ -143,13 +143,13 @@ func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRe
 	if err := tx.Upsert(node, Attr.MediaInfo.ID, tag.UID{}, &MediaInfo{Flags: rec.Flags, Seconds: rec.Seconds}); err != nil {
 		return err
 	}
-	if err := tx.Upsert(node, Attr.ItemLabel.ID, tag.UID{}, &TextItem{Body: rec.Label}); err != nil {
+	if err := tx.Upsert(node, Attr.ItemLabel.ID, tag.UID{}, amp.TagText("text/plain", rec.Label)); err != nil {
 		return err
 	}
-	if err := tx.Upsert(node, Attr.ItemCaption.ID, tag.UID{}, &TextItem{Body: rec.Caption}); err != nil {
+	if err := tx.Upsert(node, Attr.ItemCaption.ID, tag.UID{}, amp.TagText("text/plain", rec.Caption)); err != nil {
 		return err
 	}
-	if err := tx.Upsert(node, Attr.ItemCollection.ID, tag.UID{}, &TextItem{Body: rec.Collection}); err != nil {
+	if err := tx.Upsert(node, Attr.ItemCollection.ID, tag.UID{}, amp.TagText("text/plain", rec.Collection)); err != nil {
 		return err
 	}
 	return nil

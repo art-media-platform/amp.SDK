@@ -223,7 +223,7 @@ const (
 // EditEntry is one record in the chronicle replay of an item.
 //
 // Body carries the op's payload bytes (post-extraction; for upserts this is
-// the marshaled std.TextItem with the JSON body, for withdraws this is the
+// the marshaled amp.Tag with the JSON body, for withdraws this is the
 // marshaled amp.Withdraw companion).  Kept opaque on the wire layer per the
 // thin-wire posture — the caller decodes against the registered proto
 // for the addressed attr.
