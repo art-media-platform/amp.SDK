@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/encode"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -140,6 +141,90 @@ func (tagValue *Tag) UnmarshalJSON(data []byte) error {
 	tagValue.I, tagValue.J, tagValue.K = wire.I, wire.J, wire.K
 	tagValue.Units = wire.Units
 	tagValue.ContentType, tagValue.URI, tagValue.Text = wire.ContentType, wire.URI, wire.Text
+	return nil
+}
+
+// --- amp.Tags ---------------------------------------------------------------
+//
+// A "document" Tags — leaves only (no Children), each a pure ContentType+Text leaf with a
+// distinct ContentType — marshals to a clean { "<ContentType>": "<Text>", … } map, so a web
+// client reads body["text/html"].  Any richer tree (Children, or a leaf carrying a UID / URI /
+// scalar) marshals to the faithful { Head, SubTags, Children } form (identical to the prior
+// default).  Unmarshal accepts both: the faithful form is detected by its Head/SubTags/Children
+// keys (a media type is never one), otherwise the object is a ContentType→Text document.
+
+type tagsTreeJSON struct {
+	Head     *Tag    `json:"Head,omitempty"`
+	SubTags  []*Tag  `json:"SubTags,omitempty"`
+	Children []*Tags `json:"Children,omitempty"`
+}
+
+// docLeaves returns Head+SubTags when this Tags is a pure-text document (no Children, every leaf
+// carrying only a distinct ContentType + Text), else ok=false.
+func (tagsValue *Tags) docLeaves() (leaves []*Tag, ok bool) {
+	if len(tagsValue.Children) > 0 {
+		return nil, false
+	}
+	if tagsValue.Head != nil {
+		leaves = append(leaves, tagsValue.Head)
+	}
+	leaves = append(leaves, tagsValue.SubTags...)
+	seen := make(map[string]bool, len(leaves))
+	for _, leaf := range leaves {
+		pureText := leaf != nil && leaf.ContentType != "" && leaf.URI == "" &&
+			leaf.UID_0 == 0 && leaf.UID_1 == 0 &&
+			leaf.I == 0 && leaf.J == 0 && leaf.K == 0 && leaf.Units == 0
+		if !pureText || seen[leaf.ContentType] {
+			return nil, false
+		}
+		seen[leaf.ContentType] = true
+	}
+	return leaves, len(leaves) > 0
+}
+
+func (tagsValue *Tags) MarshalJSON() ([]byte, error) {
+	if leaves, ok := tagsValue.docLeaves(); ok {
+		doc := make(map[string]string, len(leaves))
+		for _, leaf := range leaves {
+			doc[leaf.ContentType] = leaf.Text
+		}
+		return json.Marshal(doc)
+	}
+	return json.Marshal(tagsTreeJSON{Head: tagsValue.Head, SubTags: tagsValue.SubTags, Children: tagsValue.Children})
+}
+
+func (tagsValue *Tags) UnmarshalJSON(data []byte) error {
+	probe := map[string]json.RawMessage{}
+	if err := json.Unmarshal(data, &probe); err != nil {
+		return err
+	}
+	_, hasHead := probe["Head"]
+	_, hasSub := probe["SubTags"]
+	_, hasKids := probe["Children"]
+	if hasHead || hasSub || hasKids {
+		wire := tagsTreeJSON{}
+		if err := json.Unmarshal(data, &wire); err != nil {
+			return err
+		}
+		tagsValue.Head, tagsValue.SubTags, tagsValue.Children = wire.Head, wire.SubTags, wire.Children
+		return nil
+	}
+	// ContentType → Text document.  Head/SubTag placement is immaterial to ByContentType (the
+	// sole reader), so emit all as SubTags in sorted ContentType order for a deterministic value.
+	doc := map[string]string{}
+	if err := json.Unmarshal(data, &doc); err != nil {
+		return err
+	}
+	cts := make([]string, 0, len(doc))
+	for contentType := range doc {
+		cts = append(cts, contentType)
+	}
+	sort.Strings(cts)
+	tagsValue.Head, tagsValue.Children = nil, nil
+	tagsValue.SubTags = make([]*Tag, 0, len(cts))
+	for _, contentType := range cts {
+		tagsValue.SubTags = append(tagsValue.SubTags, &Tag{ContentType: contentType, Text: doc[contentType]})
+	}
 	return nil
 }
 
