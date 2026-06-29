@@ -1500,12 +1500,12 @@ func (x *JsonValue) GetArray() []*JsonValue {
 // Generic report summary
 type Report struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         *TextItem              `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`
-	Caption       *TextItem              `protobuf:"bytes,2,opt,name=Caption,proto3" json:"Caption,omitempty"`
-	Errors        []*TextItem            `protobuf:"bytes,3,rep,name=Errors,proto3" json:"Errors,omitempty"`
-	Warnings      []*TextItem            `protobuf:"bytes,4,rep,name=Warnings,proto3" json:"Warnings,omitempty"`
-	Messages      []*TextItem            `protobuf:"bytes,5,rep,name=Messages,proto3" json:"Messages,omitempty"`
-	Debug         []*TextItem            `protobuf:"bytes,15,rep,name=Debug,proto3" json:"Debug,omitempty"`
+	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`
+	Caption       *amp.Tag               `protobuf:"bytes,2,opt,name=Caption,proto3" json:"Caption,omitempty"`
+	Errors        []*amp.Tag             `protobuf:"bytes,3,rep,name=Errors,proto3" json:"Errors,omitempty"`
+	Warnings      []*amp.Tag             `protobuf:"bytes,4,rep,name=Warnings,proto3" json:"Warnings,omitempty"`
+	Messages      []*amp.Tag             `protobuf:"bytes,5,rep,name=Messages,proto3" json:"Messages,omitempty"`
+	Debug         []*amp.Tag             `protobuf:"bytes,15,rep,name=Debug,proto3" json:"Debug,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1540,42 +1540,42 @@ func (*Report) Descriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *Report) GetTitle() *TextItem {
+func (x *Report) GetTitle() *amp.Tag {
 	if x != nil {
 		return x.Title
 	}
 	return nil
 }
 
-func (x *Report) GetCaption() *TextItem {
+func (x *Report) GetCaption() *amp.Tag {
 	if x != nil {
 		return x.Caption
 	}
 	return nil
 }
 
-func (x *Report) GetErrors() []*TextItem {
+func (x *Report) GetErrors() []*amp.Tag {
 	if x != nil {
 		return x.Errors
 	}
 	return nil
 }
 
-func (x *Report) GetWarnings() []*TextItem {
+func (x *Report) GetWarnings() []*amp.Tag {
 	if x != nil {
 		return x.Warnings
 	}
 	return nil
 }
 
-func (x *Report) GetMessages() []*TextItem {
+func (x *Report) GetMessages() []*amp.Tag {
 	if x != nil {
 		return x.Messages
 	}
 	return nil
 }
 
-func (x *Report) GetDebug() []*TextItem {
+func (x *Report) GetDebug() []*amp.Tag {
 	if x != nil {
 		return x.Debug
 	}
@@ -3093,14 +3093,14 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x04Kind\x18\x01 \x01(\x0e2\x0e.std.ValueKindR\x04Kind\x12\x16\n" +
 	"\x06String\x18\x02 \x01(\tR\x06String\x12\x16\n" +
 	"\x06Number\x18\x03 \x01(\x01R\x06Number\x12$\n" +
-	"\x05Array\x18\x04 \x03(\v2\x0e.std.JsonValueR\x05Array\"\xf8\x01\n" +
-	"\x06Report\x12#\n" +
-	"\x05Title\x18\x01 \x01(\v2\r.std.TextItemR\x05Title\x12'\n" +
-	"\aCaption\x18\x02 \x01(\v2\r.std.TextItemR\aCaption\x12%\n" +
-	"\x06Errors\x18\x03 \x03(\v2\r.std.TextItemR\x06Errors\x12)\n" +
-	"\bWarnings\x18\x04 \x03(\v2\r.std.TextItemR\bWarnings\x12)\n" +
-	"\bMessages\x18\x05 \x03(\v2\r.std.TextItemR\bMessages\x12#\n" +
-	"\x05Debug\x18\x0f \x03(\v2\r.std.TextItemR\x05Debug\"n\n" +
+	"\x05Array\x18\x04 \x03(\v2\x0e.std.JsonValueR\x05Array\"\xda\x01\n" +
+	"\x06Report\x12\x1e\n" +
+	"\x05Title\x18\x01 \x01(\v2\b.amp.TagR\x05Title\x12\"\n" +
+	"\aCaption\x18\x02 \x01(\v2\b.amp.TagR\aCaption\x12 \n" +
+	"\x06Errors\x18\x03 \x03(\v2\b.amp.TagR\x06Errors\x12$\n" +
+	"\bWarnings\x18\x04 \x03(\v2\b.amp.TagR\bWarnings\x12$\n" +
+	"\bMessages\x18\x05 \x03(\v2\b.amp.TagR\bMessages\x12\x1e\n" +
+	"\x05Debug\x18\x0f \x03(\v2\b.amp.TagR\x05Debug\"n\n" +
 	"\x06Labels\x12\x14\n" +
 	"\x05Title\x18\x01 \x01(\tR\x05Title\x12\x18\n" +
 	"\aCaption\x18\x02 \x01(\tR\aCaption\x12\x1e\n" +
@@ -3392,12 +3392,12 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	37, // 2: std.TextItem.Tags:type_name -> amp.Tags
 	1,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
 	20, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	19, // 5: std.Report.Title:type_name -> std.TextItem
-	19, // 6: std.Report.Caption:type_name -> std.TextItem
-	19, // 7: std.Report.Errors:type_name -> std.TextItem
-	19, // 8: std.Report.Warnings:type_name -> std.TextItem
-	19, // 9: std.Report.Messages:type_name -> std.TextItem
-	19, // 10: std.Report.Debug:type_name -> std.TextItem
+	38, // 5: std.Report.Title:type_name -> amp.Tag
+	38, // 6: std.Report.Caption:type_name -> amp.Tag
+	38, // 7: std.Report.Errors:type_name -> amp.Tag
+	38, // 8: std.Report.Warnings:type_name -> amp.Tag
+	38, // 9: std.Report.Messages:type_name -> amp.Tag
+	38, // 10: std.Report.Debug:type_name -> amp.Tag
 	38, // 11: std.ModuleRef.Module:type_name -> amp.Tag
 	22, // 12: std.ModuleRef.Labels:type_name -> std.Labels
 	37, // 13: std.ModuleRef.Tags:type_name -> amp.Tags

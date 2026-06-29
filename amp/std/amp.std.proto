@@ -133,13 +133,13 @@ message JsonValue {
 
 // Generic report summary
 message Report {
-    TextItem Title   = 1;
-    TextItem Caption = 2;
+    amp.Tag Title   = 1;
+    amp.Tag Caption = 2;
 
-    repeated TextItem Errors   = 3;
-    repeated TextItem Warnings = 4;
-    repeated TextItem Messages = 5;
-    repeated TextItem Debug    = 15;
+    repeated amp.Tag Errors   = 3;
+    repeated amp.Tag Warnings = 4;
+    repeated amp.Tag Messages = 5;
+    repeated amp.Tag Debug    = 15;
 }
 
 // Labels is the bundled label struct for "described items" — media tracks,
