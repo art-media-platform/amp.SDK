@@ -194,23 +194,18 @@ func (tagsValue *Tags) MarshalJSON() ([]byte, error) {
 }
 
 func (tagsValue *Tags) UnmarshalJSON(data []byte) error {
-	probe := map[string]json.RawMessage{}
-	if err := json.Unmarshal(data, &probe); err != nil {
+	// Decode the faithful tree directly — its Head/SubTags/Children populate iff this is that shape.
+	// A single parse: the prior probe-then-parse re-scanned every subtree, quadratic on nested input.
+	wire := tagsTreeJSON{}
+	if err := json.Unmarshal(data, &wire); err != nil {
 		return err
 	}
-	_, hasHead := probe["Head"]
-	_, hasSub := probe["SubTags"]
-	_, hasKids := probe["Children"]
-	if hasHead || hasSub || hasKids {
-		wire := tagsTreeJSON{}
-		if err := json.Unmarshal(data, &wire); err != nil {
-			return err
-		}
+	if wire.Head != nil || len(wire.SubTags) > 0 || len(wire.Children) > 0 {
 		tagsValue.Head, tagsValue.SubTags, tagsValue.Children = wire.Head, wire.SubTags, wire.Children
 		return nil
 	}
-	// ContentType → Text document.  Head/SubTag placement is immaterial to ByContentType (the
-	// sole reader), so emit all as SubTags in sorted ContentType order for a deterministic value.
+	// Otherwise a ContentType → Text document map (or empty).  Head/SubTag placement is immaterial to
+	// ByContentType, so emit all as SubTags in sorted ContentType order for a deterministic value.
 	doc := map[string]string{}
 	if err := json.Unmarshal(data, &doc); err != nil {
 		return err
