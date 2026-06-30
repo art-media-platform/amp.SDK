@@ -66,6 +66,32 @@ cp -R scripts "$STAGE/scripts"
 # 3. Copy the canonical wire contract (the public source of truth).
 cp "$SDK/amp/webapi/webapi.types.go" "$STAGE/webapi/webapi.types.go"
 
+# 3b. Bundle a curated set of AOM design docs (partner reference; see README
+#     "Design references").  These live in the PRIVATE amp.planet/AOM, so this is a
+#     reviewed carve-out of the public-inputs-only rule: an explicit allowlist (never
+#     cp -R, so operator/audit docs can't leak), guarded so a public/CI build without
+#     amp.planet still yields a valid bundle (just without these refs).
+AOM_SRC="$SDK/../amp.planet/AOM"
+AOM_DOCS=(
+  0-amp-operations-manual.md
+  DD-architecture-overview.md
+  SD-content-substrate.md
+  AD-app-www.md
+  SD-edit-resolution.md
+)
+if [ -d "$AOM_SRC" ]; then
+  mkdir -p "$STAGE/AOM"
+  for doc in "${AOM_DOCS[@]}"; do
+    if [ -f "$AOM_SRC/$doc" ]; then
+      cp "$AOM_SRC/$doc" "$STAGE/AOM/$doc"
+    else
+      echo "!!! AOM doc missing, skipped: $doc"
+    fi
+  done
+else
+  echo "!!! amp.planet/AOM not found — bundling without AOM design refs (public/CI build)"
+fi
+
 # 4. Strip cruft.
 find "$STAGE" -name '.DS_Store' -delete 2>/dev/null || true
 

@@ -136,6 +136,20 @@ non-trivial canonization. Don't reimplement it — two supported paths:
 - **[`SECURITY-amp-web-SDK.md`](SECURITY-amp-web-SDK.md)** — the security model a
   consumer relies on (encryption, identity, what a vault can and cannot see).
 
+## Design references (AOM)
+
+The distributed bundle ships a small, curated set of design docs from AMP's
+**Operations Manual (AOM)** under [`AOM/`](AOM/) — background reading for deeper
+architectural context. They are **not the contract**: this README,
+[`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md), and `webapi/webapi.types.go` are.
+Start with the overview, then dip in as questions arise:
+
+- **[`AOM/DD-architecture-overview.md`](AOM/DD-architecture-overview.md)** — *start here*: the whole-stack design tour, written for partners.
+- **[`AOM/SD-content-substrate.md`](AOM/SD-content-substrate.md)** — the data model under channels/attrs: the `tag.UID`, and the `Tag` content tree behind item values.
+- **[`AOM/AD-app-www.md`](AOM/AD-app-www.md)** — `app.www`, the portal your client talks to: auth flow, REST + WebSocket surface, media, cards / WebRect, deep links.
+- **[`AOM/SD-edit-resolution.md`](AOM/SD-edit-resolution.md)** — CRDT concurrent-write semantics: who wins on a conflicting edit, and why both survive.
+- **[`AOM/0-amp-operations-manual.md`](AOM/0-amp-operations-manual.md)** — the AOM index/spine (node-operator oriented; included for orientation).
+
 ## Versioning & stability
 
 **Beta, pre-v400.** Breaking changes are possible between minor revisions, and
