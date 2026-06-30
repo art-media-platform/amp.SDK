@@ -4985,8 +4985,14 @@ type CodexHeader struct {
 	// HashKit that computed the container integrity digest (the trailing digest
 	// over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
 	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// Content-model epoch: the SDK proto semantics governing artifact payloads (the
+	// Tag/Tags content model).  An importer whose host epoch differs MUST refuse,
+	// not silently mis-decode persisted bytes (DD-chronicle-and-codex.md §5.5).
+	// Orthogonal to FormatVersion (on-disk layout) — this is payload meaning.  Bump
+	// on each wire-incompatible content-model change; amp.ContentModelEpoch is current.
+	ContentModelEpoch uint32 `protobuf:"varint,8,opt,name=ContentModelEpoch,proto3" json:"ContentModelEpoch,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *CodexHeader) Reset() {
@@ -5066,6 +5072,13 @@ func (x *CodexHeader) GetDigestHashKit() safe.HashKitID {
 		return x.DigestHashKit
 	}
 	return safe.HashKitID(0)
+}
+
+func (x *CodexHeader) GetContentModelEpoch() uint32 {
+	if x != nil {
+		return x.ContentModelEpoch
+	}
+	return 0
 }
 
 // ChronicleCompactPoint records one rebase event in the lineage chain.
@@ -6549,7 +6562,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vContentType\x18\x04 \x01(\tR\vContentType\x12\"\n" +
 	"\fRelativePath\x18\x05 \x01(\tR\fRelativePath\"A\n" +
 	"\rCodexManifest\x120\n" +
-	"\x0eAttributeKinds\x18\x01 \x03(\v2\b.amp.TagR\x0eAttributeKinds\"\xad\x02\n" +
+	"\x0eAttributeKinds\x18\x01 \x03(\v2\b.amp.TagR\x0eAttributeKinds\"\xdb\x02\n" +
 	"\vCodexHeader\x12,\n" +
 	"\fSourcePlanet\x18\x01 \x01(\v2\b.amp.TagR\fSourcePlanet\x12*\n" +
 	"\vSourceEpoch\x18\x02 \x01(\v2\b.amp.TagR\vSourceEpoch\x12\x1c\n" +
@@ -6557,7 +6570,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Origin\x18\x04 \x01(\v2\x11.amp.PlanetOriginR\x06Origin\x12.\n" +
 	"\bManifest\x18\x05 \x01(\v2\x12.amp.CodexManifestR\bManifest\x12\x14\n" +
 	"\x05Label\x18\x06 \x01(\tR\x05Label\x125\n" +
-	"\rDigestHashKit\x18\a \x01(\x0e2\x0f.safe.HashKitIDR\rDigestHashKit\"\xeb\x01\n" +
+	"\rDigestHashKit\x18\a \x01(\x0e2\x0f.safe.HashKitIDR\rDigestHashKit\x12,\n" +
+	"\x11ContentModelEpoch\x18\b \x01(\rR\x11ContentModelEpoch\"\xeb\x01\n" +
 	"\x15ChronicleCompactPoint\x12\x1d\n" +
 	"\n" +
 	"UpToTxID_0\x18\x01 \x01(\x06R\tUpToTxID0\x12\x1d\n" +

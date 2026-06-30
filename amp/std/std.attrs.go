@@ -58,3 +58,17 @@ func (v *FileInfo) SetCreatedAt(t time.Time) {
 	uid := tag.UID_FromTime(t)
 	v.CreatedAt = int64(uid[0])
 }
+
+// IsGovernanceLawAttr reports whether attrID is a governance-law attr — the
+// channel/member/planet authority records that flow only through founder/admin
+// paths, never a member content write or a content-bearing artifact stream
+// (SD-channel-governance.md §6).  Web-bridge member writes and codex content
+// imports both reject these.  LawWithdraw is intentionally excluded: a member may
+// withdraw their own content.
+func IsGovernanceLawAttr(attrID tag.UID) bool {
+	return attrID == Attr.LawChannelEpoch.ID ||
+		attrID == Attr.LawMemberEpoch.ID ||
+		attrID == Attr.LawPlanetEpoch.ID ||
+		attrID == Attr.LawPlanetOrigin.ID ||
+		attrID == Attr.LawEquivalence.ID
+}

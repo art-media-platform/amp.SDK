@@ -23,6 +23,12 @@ const (
 	VaultAccessMagic = "AMPV" // node-to-node vault sync peer connection
 	// Default TCP port used to expose amp.Host service.
 	DefaultServicePort = int32(5192)
+	// Content-model epoch — the SDK proto semantics under which artifact payloads are
+	// encoded (the Tag/Tags content model).  A Codex stamps this in its header; an
+	// importer refuses a Codex whose epoch differs rather than silently mis-decoding
+	// persisted bytes (DD-chronicle-and-codex.md §5.5).  Bump on each wire-incompatible
+	// content-model change.
+	ContentModelEpoch = uint32(1)
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 	// oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
 	// now let us get to work!

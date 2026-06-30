@@ -1326,6 +1326,13 @@ message CodexHeader {
     // HashKit that computed the container integrity digest (the trailing digest
     // over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
     safe.HashKitID      DigestHashKit = 7;
+
+    // Content-model epoch: the SDK proto semantics governing artifact payloads (the
+    // Tag/Tags content model).  An importer whose host epoch differs MUST refuse,
+    // not silently mis-decode persisted bytes (DD-chronicle-and-codex.md §5.5).
+    // Orthogonal to FormatVersion (on-disk layout) — this is payload meaning.  Bump
+    // on each wire-incompatible content-model change; amp.ContentModelEpoch is current.
+    uint32              ContentModelEpoch = 8;
 }
 
 // ──────────────────────────────────────────────────────────────────────
