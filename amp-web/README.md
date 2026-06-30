@@ -106,7 +106,7 @@ Handed an `amp-invite-v1:…` token? After login, `await client.acceptInvite({ i
 | `useAmpAuth()` | Login, logout, auth state |
 | `useAmpClient()` | The adapter for imperative calls — login challenges, `resolveTag`, ad-hoc `query` |
 | `useAmpQuery<T>(channel, attr, opts?)` | Read items + live WebSocket subscription |
-| `useAmpMutation()` | `tx` (batched), `create`, `upsert`, `remove`, `withdraw` |
+| `useAmpMutation()` | `tx` (batched), `invoke` (verb-RPC), `create`, `upsert`, `remove`, `withdraw` |
 | `useAmpUpload()` | Blob upload with progress |
 | `useAmpMedia(blobUID)` | Resolve a blob to a streamable URL |
 | `useAmpCrypto()` | Sealed-box BYOK — `seal` / `open` against the session EncryptKey |

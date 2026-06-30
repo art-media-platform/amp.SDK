@@ -5,8 +5,9 @@
 #
 # Self-contained: assembles only from public amp.SDK content — the amp-web/
 # TypeScript client plus the canonical wire contract in amp/webapi.  No
-# amp.planet (private) inputs.  Version is stamped from amp-web/package.json,
-# so there is one source of truth for the SDK revision.
+# amp.planet (private) inputs.  Version is derived from the amp.SDK git tag at
+# build time (resolution order below), so there is one source of truth for the
+# SDK revision — the committed package.json carries only a placeholder.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # amp.SDK/amp-web

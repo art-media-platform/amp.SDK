@@ -37,4 +37,4 @@ jobs:
       # Public Release attach is enabled at v400 (TRL "Production Ready"),
       # alongside flipping the LICENSE open + the service-boundary access gate.
       # During beta (TRL 2xx) the bundle is distributed to partners directly —
-      # build locally with `make amp-web-SDK`, or pull the artifact above.
+      # build locally with `bash amp-web/pack.sh`, or pull the artifact above.

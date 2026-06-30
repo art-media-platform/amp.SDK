@@ -195,7 +195,7 @@ type LoginCredentials =
   | { Scheme: 'did';        DID: string; Signature: string; Nonce: string };
 ```
 
-The unified `/api/v1/login` is **shipped**: `wallet`, `email`, and `did` are fully wired and Bearer-issuing; `memberToken` and `yubikey` parse cleanly and return HTTP 501 with `Code: "Unsupported"` until they land — SDK clients can lock the contract today, and the remaining schemes flip on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `Code` (surfaced as `AmpError.code`, e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. (Method errors are the exception: a `405` rides `Code: "BadRequest"`, so branch on `AmpError.status` to tell a wrong method from a malformed body.) The cookie-bound path at `/api/v1/login/wallet/{challenge,verify,session,logout}` serves browser flows that prefer per-step cookie handling; both paths share one session store.
+The unified `/api/v1/login` is **shipped**: `wallet`, `email`, `did`, and `memberToken` are fully wired and Bearer-issuing — `memberToken` is the challenge-less SSO scheme (present `signed(memberID‖ts)`, verified against the member's seated `MemberEpoch.SigningKey`), **live on a host-bridged node** and returning `501` only on the in-memory dev backend (§14.7) (AD-app-www §3.3). `yubikey` still parses cleanly and returns HTTP 501 with `Code: "Unsupported"` until it lands — SDK clients can lock the contract today, and it flips on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `Code` (surfaced as `AmpError.code`, e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. (Method errors are the exception: a `405` rides `Code: "BadRequest"`, so branch on `AmpError.status` to tell a wrong method from a malformed body.) The cookie-bound path at `/api/v1/login/wallet/{challenge,verify,session,logout}` serves browser flows that prefer per-step cookie handling; both paths share one session store.
 
 **DID scheme (W3C DID 1.0 — login only).** `did` proves control of the key a DID URI names: fetch a challenge with `?did=<uri>`, sign it, and submit `{ Scheme: 'did', DID, Signature, Nonce }`.  Shipped methods: **`did:key`** (Ed25519) and **`did:pkh:eip155`** (Ethereum wallet).  A `did:pkh:eip155:*:0x…` login folds to the *same* MemberID as a `wallet` login over that address (`eth:lc(addr)`) — two URI spellings of one key, one member.  A DID whose method/curve isn't wired yet (e.g. `did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) returns the same 501 `Unsupported`.  This is DID-Auth — Verifiable Credentials (issuer-signed claims) are out of scope.
 
@@ -258,7 +258,7 @@ Cross-planet reads ride the same path with `?planetTag=<other-planet>`; the serv
 
 ```
 POST   /api/v1/tx
-       Body: { Ops: TxOp[], PlanetTag?: string }
+       Body: { Ops: TxOp[], PlanetTag?: string, InvokeURL?: string }   // InvokeURL → verb-RPC (below)
        Response: { TxID, Results: Array<{ ItemID, EditID }> }
 
 TxOp =                                                          // Kind values stay lowercase
@@ -282,6 +282,8 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 **Tombstone semantics.** `remove` writes a tombstone, not a wipe; bytes survive in the journal bound by retention. `withdraw` is the parallel signed signal — see §7.
 
 **Idempotency & retries.** `upsert` / `remove` / `withdraw` are keyed by a caller-supplied `ItemID`, so replaying one (e.g. after a network timeout that swallowed the `TxResponse`) is safe — same key, last-write-wins. A `create` *without* an explicit `ItemID` mints a fresh item on every call, so a blind retry duplicates; supply a deterministic `ItemID` (§5.8) to make `create` idempotent too.
+
+**Verb-RPC — routing a batch to an app handler.** Set `InvokeURL` on `POST /api/v1/tx` to `"amp://~/{app}/{verb}"` (e.g. `amp://~/forums/post`) to route the whole batch to an app's verb handler instead of the default cabinet commit. The host delivers the ops to the named verb as RPC arguments under `PinMode_Invoke` — **not journaled as planet state** — carrying the session member as the tx `FromID`; the app authors any durable writes itself, custodially, recording the invoking member as author. **One batch = one verb**; an empty `InvokeURL` is a normal cabinet commit. This is the write path for a channel a member holds only `Access_ReadOnly` on — the verb, not a direct op, is how the mutation lands. SDK: `client.invoke(verbURL, ops, planetTag?)`, or `invoke` from `useAmpMutation()` (§5.3). (AD-app-forums §3.4.)
 
 ### 4.4 Media Upload
 
@@ -517,7 +519,7 @@ The hook subscribes via WebSocket automatically and re-renders on updates. `data
 ### 5.3 `useAmpMutation()`
 
 ```tsx
-const { tx, create, upsert, remove, withdraw, loading } = useAmpMutation();
+const { tx, invoke, create, upsert, remove, withdraw, loading } = useAmpMutation();
 
 // One TxMsg, many ops — atomic, single signature, single MemberProof:
 const results = await tx([
@@ -525,6 +527,12 @@ const results = await tx([
   { Kind: 'upsert', Channel: 'projects', Attr: 'labels',   ItemID: l2, Value: lv2 },
   { Kind: 'upsert', Channel: 'projects', Attr: 'articles', ItemID: a1, Value: av1 },
   { Kind: 'remove', Channel: 'projects', Attr: 'circles',  ItemID: c1 },
+]);
+
+// Verb-RPC — route the batch to an app handler instead of a cabinet commit (§4.3).
+// The write path for a channel you hold only Access_ReadOnly on; the app authors custodially:
+const posted = await invoke('amp://~/forums/post', [
+  { Kind: 'create', Channel: 'threads', Attr: 'posts', Value: { body, threadID } },
 ]);
 
 // Single-op convenience wrappers (each is one one-op tx under the hood):
@@ -542,6 +550,8 @@ await withdraw('shares', 'link', itemID, {
 ```
 
 `tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg, sealed under a single encryption context, with one signature and one MemberProof. A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
+
+`invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write custodially (§4.3).
 
 `upsert` accepts any client-supplied `tag.UID` for the item. For singleton items, derive a stable UID from a well-known name — generate it at build time with `forge` or resolve it once via `client.resolveTag('settings:theme-preference')` (§5.8) — or reuse the member's own UID directly. The `scheme:identifier` form matches CAIP-10 / DID conventions.
 
@@ -1072,7 +1082,7 @@ A single `ampd` can host many planets/orgs at once; that multi-tenancy is a host
 
 The durable model: per-deploy configuration is **signed, chronicle-tracked facts on the substrate**, rotated by a signed write — never a static file hand-edited-and-restarted. There is no consumer-facing config file to build against. Three records, by purpose:
 
-**1. A planet's identity — its `Brand` record.** Each public / org planet carries one `Brand` item at a fixed CRDT address (the `amp.brand` attr), admin-signed and edit-chained — so a rebrand (rename, domain change, scheme update, federation roam) is a single signed edit, no restart and no re-genesis. Fields: `AppName`, `AppDomain`, `OrgName`, `OrgHomeURL` / `AppHomeURL`, `URLSchemes`, `Targets[]` (per-platform installs), `Links[]`, `CrateSnapshotURL`, `BundledCrates`, and `NamedBy` (the federation that names this planet — the §4.6 back-edge). The personal home planet is "naked" (no `Brand`); its display name is `PlanetEpoch.Label` ("Home").
+**1. A planet's identity — its `Brand` record.** Each public / org planet carries one `Brand` item at a fixed CRDT address (the `amp.brand` attr), admin-signed and edit-chained — so a rebrand (rename, domain change, scheme update, federation roam) is a single signed edit, no restart and no re-genesis. Fields: `AppName`, `AppDomain`, `OrgName`, `OrgHomeURL` / `AppHomeURL`, `URLSchemes`, `Targets[]` (per-platform installs, each an `AppTarget` — incl. `AppleTeamID`), `Links[]`, `CrateSnapshotURL`, `BundledCrates`, `TemplateSet`, and `NamedBy` (the federation that names this planet — the §4.6 back-edge). The personal home planet is "naked" (no `Brand`); its display name is `PlanetEpoch.Label` ("Home").
 
 > **Display-only — the durable security rule.** A planet's substrate `Brand` is read for **display only**: planet header, picker tile, publisher attribution. Because it is admin-mutable, it is **never** read for app *behavior*. Every behavioral field — your deep-link schemes, link host, install targets, crate feed — is read from your **build's own factory brand** (bundled in the app / SKU), never from a planet's `Brand`. So a planet rebrand changes what it *displays as*, never what your app *does*. (One resolver returns `planetBrand ?? factoryBrand` for display; behavioral code reads the factory directly.)
 
@@ -1174,6 +1184,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Item** | A single CRDT record, identified by `tag.UID`. |
 | **Edit** | A versioned update to an item; CRDT-merged. |
 | **TxMsg** | A signed, encrypted transaction containing one or more data ops. |
+| **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (`PinMode_Invoke`, not journaled) which authors the durable write custodially; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
 | **Vault** | An `ampd` peer that stores and relays encrypted data; cannot read content. |
@@ -1222,7 +1233,7 @@ Be precise about "offline," because it splits in two:
 - **Data is offline-first by construction.** Against a local / embedded vault, reads, writes, and `seal`/`open` all work with no network; writes queue and replicate later.
 - **The session token is online-issued.** `login()` returns an opaque random `SessionToken` (a Bearer) minted by the host. It is **not** a self-verifiable signed capability, so a *cloud-only* deployment cannot confirm membership while the network is down.
 
-The way to get the equivalent of a locally-verifiable signed license token is the **embedded local vault** (§14.1): the member's signed membership lives in the local host and verifies locally — no phone-home. The forward path for a *portable* signed capability is the `memberToken` login scheme (`signed(memberID ‖ ts)`, verified against the cached member public key); it is reserved in the wire contract and returns `501 Unsupported` until it ships, so you can lock against it now but not depend on it yet.
+The way to get the equivalent of a locally-verifiable signed license token is the **embedded local vault** (§14.1): the member's signed membership lives in the local host and verifies locally — no phone-home. The *portable* signed capability is the `memberToken` login scheme (`signed(memberID‖ts)`, verified against the member's seated signing key — §4.1) — **available on a host-bridged node**: a co-located client (e.g. a Unity WebView on loopback) has the local `ampd` mint it from the held key, so an embedded deployment issues a verifiable session without phone-home. It returns `501` only on the in-memory dev backend (§14.7).
 
 For a cloud-only build, **degrade gracefully**: when the host is unreachable and entitlement can't be confirmed, disable the gated action cleanly (grey out "Share") rather than letting it fail mid-flight.
 
