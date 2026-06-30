@@ -39,6 +39,7 @@ interface Pending {
 export class EmbedBridge {
   private pending = new Map<string, Pending>();
   private seq = 0;
+  private timeoutMs = 30_000;   // a host that never answers must not wedge the caller forever
 
   constructor(private host: AmpEmbed) {
     host.onHostMessage(raw => this.onMessage(raw));
@@ -53,7 +54,17 @@ export class EmbedBridge {
   invoke(verbURL: string, value: unknown, planetTag?: string, topicID?: string): Promise<TxResult[]> {
     const type = this.host.bridgeVerbs![verbURL];
     const id = `${type}#${++this.seq}`;
-    const p = new Promise<TxResult[]>((resolve, reject) => this.pending.set(id, { resolve, reject }));
+    const p = new Promise<TxResult[]>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        if (this.pending.delete(id)) {
+          reject(new Error(`host did not answer ${type} within ${this.timeoutMs}ms`));
+        }
+      }, this.timeoutMs);
+      this.pending.set(id, {
+        resolve: v => { clearTimeout(timer); resolve(v); },
+        reject:  e => { clearTimeout(timer); reject(e); },
+      });
+    });
     this.host.toHost(JSON.stringify({ type, id, planetTag, topicID, verbURL, value }));
     return p;
   }

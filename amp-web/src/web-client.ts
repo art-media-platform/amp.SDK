@@ -274,6 +274,9 @@ export class AmpWebClient implements AmpAdapter {
     // Embedded in the host + the host handles this verb natively → divert so the member's OWN
     // key signs the write (e.g. a self-signed forums reply); reads + other writes stay custodial.
     if (this.embed?.routes(verbURL)) {
+      if (ops.length !== 1) {
+        throw new Error(`embedded divert of ${verbURL} expects exactly one op, got ${ops.length}`);
+      }
       const op = ops[0];
       return this.embed.invoke(verbURL, op.Value, planetTag ?? this.planetTag, op.Channel);
     }

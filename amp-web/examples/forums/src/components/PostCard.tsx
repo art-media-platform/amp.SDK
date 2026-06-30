@@ -18,7 +18,7 @@ export function PostCard({ post, canModerate, onRemove }: {
         {author
           ? <Link to={`/u/${author}`} className="post-author">{shortID(author)}</Link>
           : <span className="post-author">unknown</span>}
-        {post.EditedAt ? <span className="post-edited">edited</span> : null}
+        {post.Status === PostStatus.Edited ? <span className="post-edited">edited</span> : null}
       </div>
       <div className="post-body">
         {removed

@@ -60,10 +60,9 @@ export interface Topic {
 }
 
 export interface Post {
-  Body?: TagsDoc;          // text/html (display) + text/markdown (re-edit) leaves
+  Body?: TagsDoc;          // text/html (display) + optional text/markdown (re-edit) leaves
   Author?: string;
-  EditedAt?: number;
-  Status?: number;
+  Status?: number;         // PostStatus; Edited ⇒ show the "edited" badge
 }
 
 export interface Profile {

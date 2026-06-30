@@ -22,14 +22,14 @@ export function useForumsApi() {
   const createTopic = useCallback((title: string, bodyHTML: string, forumID?: string) => {
     const ops: TxOp[] = [
       { Kind: 'upsert', Channel: BOARD, Attr: ATTR_TOPIC, Value: { Title: title, ...(forumID ? { Forum: forumID } : {}) } },
-      { Kind: 'upsert', Channel: BOARD, Attr: ATTR_POST, Value: { Body: postBody(bodyHTML, bodyHTML), Status: PostStatus.Live } },
+      { Kind: 'upsert', Channel: BOARD, Attr: ATTR_POST, Value: { Body: postBody(bodyHTML), Status: PostStatus.Live } },
     ];
     return invoke(VERB.topic, ops);
   }, [invoke]);
 
   const reply = useCallback((topicID: string, bodyHTML: string) => {
     const ops: TxOp[] = [
-      { Kind: 'upsert', Channel: topicID, Attr: ATTR_POST, Value: { Body: postBody(bodyHTML, bodyHTML), Status: PostStatus.Live } },
+      { Kind: 'upsert', Channel: topicID, Attr: ATTR_POST, Value: { Body: postBody(bodyHTML), Status: PostStatus.Live } },
     ];
     return invoke(VERB.post, ops);
   }, [invoke]);
@@ -38,7 +38,7 @@ export function useForumsApi() {
     const ops: TxOp[] = [
       {
         Kind: 'upsert', Channel: topicID, Attr: ATTR_POST, ItemID: postID,
-        Value: { Status: status, ...(bodyHTML !== undefined ? { Body: postBody(bodyHTML, bodyHTML) } : {}) },
+        Value: { Status: status, ...(bodyHTML !== undefined ? { Body: postBody(bodyHTML) } : {}) },
       },
     ];
     return invoke(VERB.moderate, ops);
