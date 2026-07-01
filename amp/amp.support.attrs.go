@@ -320,15 +320,15 @@ func (v *Tag) Clone() *Tag {
 		return nil
 	}
 	return &Tag{
-		UID_0:       v.UID_0,
-		UID_1:       v.UID_1,
-		I:           v.I,
-		J:           v.J,
-		K:           v.K,
-		Units:       v.Units,
-		ContentType: v.ContentType,
-		URI:         v.URI,
-		Text:        v.Text,
+		UID_0:          v.UID_0,
+		UID_1:          v.UID_1,
+		I:              v.I,
+		J:              v.J,
+		K:              v.K,
+		Units:          v.Units,
+		ContentTypeRaw: v.ContentTypeRaw,
+		URI:            v.URI,
+		Text:           v.Text,
 	}
 }
 

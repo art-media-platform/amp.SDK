@@ -55,7 +55,7 @@ func buildStream(t *testing.T) (index []segEntry, size int64, concat []byte, uid
 		uid := tag.NowID()
 		payload := bytes.Repeat([]byte{byte('A' + i)}, testSegLen)
 		bytesByUID[uid] = payload
-		assetTag := &amp.Tag{I: testSegLen, Units: amp.Units_Bytes, ContentType: "audio/mpeg"}
+		assetTag := &amp.Tag{I: testSegLen, Units: amp.Units_Bytes, ContentTypeRaw: "audio/mpeg"}
 		assetTag.SetID(uid)
 		index[i] = segEntry{offset: offset, length: testSegLen, blob: &amp.BlobRef{AssetTag: assetTag}}
 		uids[i] = uid

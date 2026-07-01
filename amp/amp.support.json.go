@@ -105,26 +105,26 @@ func (trust *TrustState) UnmarshalJSON(data []byte) error {
 // --- amp.Tag --------------------------------------------------------------
 
 type tagJSON struct {
-	UID         string `json:"UID,omitempty"`
-	I           int64  `json:"I,omitempty"`
-	J           int64  `json:"J,omitempty"`
-	K           int64  `json:"K,omitempty"`
-	Units       Units  `json:"Units,omitempty"`
-	ContentType string `json:"ContentType,omitempty"`
-	URI         string `json:"URI,omitempty"`
-	Text        string `json:"Text,omitempty"`
+	UID            string `json:"UID,omitempty"`
+	I              int64  `json:"I,omitempty"`
+	J              int64  `json:"J,omitempty"`
+	K              int64  `json:"K,omitempty"`
+	Units          Units  `json:"Units,omitempty"`
+	ContentTypeRaw string `json:"ContentTypeRaw,omitempty"`
+	URI            string `json:"URI,omitempty"`
+	Text           string `json:"Text,omitempty"`
 }
 
 func (tagValue *Tag) MarshalJSON() ([]byte, error) {
 	return json.Marshal(tagJSON{
-		UID:         uidToBase32(tagValue.UID_0, tagValue.UID_1),
-		I:           tagValue.I,
-		J:           tagValue.J,
-		K:           tagValue.K,
-		Units:       tagValue.Units,
-		ContentType: tagValue.ContentType,
-		URI:         tagValue.URI,
-		Text:        tagValue.Text,
+		UID:            uidToBase32(tagValue.UID_0, tagValue.UID_1),
+		I:              tagValue.I,
+		J:              tagValue.J,
+		K:              tagValue.K,
+		Units:          tagValue.Units,
+		ContentTypeRaw: tagValue.ContentTypeRaw,
+		URI:            tagValue.URI,
+		Text:           tagValue.Text,
 	})
 }
 
@@ -140,7 +140,7 @@ func (tagValue *Tag) UnmarshalJSON(data []byte) error {
 	tagValue.UID_0, tagValue.UID_1 = uid[0], uid[1]
 	tagValue.I, tagValue.J, tagValue.K = wire.I, wire.J, wire.K
 	tagValue.Units = wire.Units
-	tagValue.ContentType, tagValue.URI, tagValue.Text = wire.ContentType, wire.URI, wire.Text
+	tagValue.ContentTypeRaw, tagValue.URI, tagValue.Text = wire.ContentTypeRaw, wire.URI, wire.Text
 	return nil
 }
 
@@ -171,13 +171,14 @@ func (tagsValue *Tags) docLeaves() (leaves []*Tag, ok bool) {
 	leaves = append(leaves, tagsValue.SubTags...)
 	seen := make(map[string]bool, len(leaves))
 	for _, leaf := range leaves {
-		pureText := leaf != nil && leaf.ContentType != "" && leaf.URI == "" &&
+		contentType := leaf.ContentType()
+		pureText := leaf != nil && contentType != "" && leaf.URI == "" &&
 			leaf.UID_0 == 0 && leaf.UID_1 == 0 &&
 			leaf.I == 0 && leaf.J == 0 && leaf.K == 0 && leaf.Units == 0
-		if !pureText || seen[leaf.ContentType] {
+		if !pureText || seen[contentType] {
 			return nil, false
 		}
-		seen[leaf.ContentType] = true
+		seen[contentType] = true
 	}
 	return leaves, len(leaves) > 0
 }
@@ -186,7 +187,7 @@ func (tagsValue *Tags) MarshalJSON() ([]byte, error) {
 	if leaves, ok := tagsValue.docLeaves(); ok {
 		doc := make(map[string]string, len(leaves))
 		for _, leaf := range leaves {
-			doc[leaf.ContentType] = leaf.Text
+			doc[leaf.ContentType()] = leaf.Text
 		}
 		return json.Marshal(doc)
 	}
@@ -218,7 +219,7 @@ func (tagsValue *Tags) UnmarshalJSON(data []byte) error {
 	tagsValue.Head, tagsValue.Children = nil, nil
 	tagsValue.SubTags = make([]*Tag, 0, len(cts))
 	for _, contentType := range cts {
-		tagsValue.SubTags = append(tagsValue.SubTags, &Tag{ContentType: contentType, Text: doc[contentType]})
+		tagsValue.SubTags = append(tagsValue.SubTags, TagText(contentType, doc[contentType]))
 	}
 	return nil
 }

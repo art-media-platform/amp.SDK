@@ -13,7 +13,7 @@ import (
 
 func TestTagJSONBase32(t *testing.T) {
 	uid := tag.NameFrom("spaces.plan.tools").ID
-	in := &amp.Tag{UID_0: uid[0], UID_1: uid[1], ContentType: "image/png", URI: "amp://x/y"}
+	in := &amp.Tag{UID_0: uid[0], UID_1: uid[1], ContentTypeRaw: "image/png", URI: "amp://x/y"}
 
 	data, err := json.Marshal(in)
 	if err != nil {
@@ -30,7 +30,7 @@ func TestTagJSONBase32(t *testing.T) {
 	if err := json.Unmarshal(data, out); err != nil {
 		t.Fatal(err)
 	}
-	if out.UID_0 != in.UID_0 || out.UID_1 != in.UID_1 || out.ContentType != in.ContentType || out.URI != in.URI {
+	if out.UID_0 != in.UID_0 || out.UID_1 != in.UID_1 || out.ContentTypeRaw != in.ContentTypeRaw || out.URI != in.URI {
 		t.Fatalf("Tag round-trip mismatch: %+v", out)
 	}
 }

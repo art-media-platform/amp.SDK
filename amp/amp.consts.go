@@ -28,7 +28,11 @@ const (
 	// importer refuses a Codex whose epoch differs rather than silently mis-decoding
 	// persisted bytes (DD-chronicle-and-codex.md §5.5).  Bump on each wire-incompatible
 	// content-model change.
-	ContentModelEpoch = uint32(1)
+	ContentModelEpoch = uint32(2)
+	// Default IANA media type a Tag carries when its ContentTypeRaw field is empty.  Tag.ContentType()
+	// resolves the empty field to this; TagText strips an explicit text/plain so a plain-text leaf
+	// costs 0 wire bytes.  Lower-case (media types are case-insensitive) for portable comparison.
+	DefaultContentType = "text/plain"
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 	// oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
 	// now let us get to work!

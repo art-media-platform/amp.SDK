@@ -254,7 +254,7 @@ type EditChainResponse struct {
 //
 // Blob is an amp.Tag carrying the blob's identity + metadata:
 //   - Tag.UID: blob ID (leading 16 bytes of plaintext hash), base32
-//   - Tag.ContentType: MIME type
+//   - Tag.ContentType(): MIME type
 //   - Tag.I + Tag.Units (= Bytes): plaintext byte length
 //   - Tag.URI: server-populated stream URL on response; ignored on request
 //

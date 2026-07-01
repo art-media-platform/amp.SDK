@@ -363,7 +363,7 @@ type BlobStore interface {
 
 	// StoreHashed hashes and stores planet-public data content-addressed in a single streaming pass.
 	// Caller pre-populates ref.PlanetID_0/1, ref.HashKitID (0 = default Blake2s_256), and optionally
-	// the asset identity ref.AssetTag.ContentType / ref.AssetTag.Text.
+	// the asset identity ref.AssetTag.ContentType() / ref.AssetTag.Text.
 	// On success, StoreHashed populates ref.Hash_0..3 from the content hash and both content
 	// addresses (§13.2): the asset identity AssetTag (UID = leading 16 bytes of the plaintext hash,
 	// I / Units = Bytes = authoritative plaintext byte count) and the lean storage identity BlobTag.

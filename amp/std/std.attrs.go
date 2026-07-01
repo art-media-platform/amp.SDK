@@ -39,8 +39,8 @@ func TagsForContentType(contentType string) *amp.Tags {
 func TagsForImageURL(imageURL string) *amp.Tags {
 	return &amp.Tags{
 		Head: &amp.Tag{
-			URI:         imageURL,
-			ContentType: GenericImageType,
+			URI:            imageURL,
+			ContentTypeRaw: GenericImageType,
 		},
 	}
 }

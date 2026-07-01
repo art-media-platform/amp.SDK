@@ -1896,11 +1896,11 @@ type Tag struct {
 	Units Units  `protobuf:"varint,21,opt,name=Units,proto3,enum=amp.Units" json:"Units,omitempty"` // units for (i,j,k)
 	// / open-use non-inline fields
 	// /
-	ContentType   string `protobuf:"bytes,24,opt,name=ContentType,proto3" json:"ContentType,omitempty"` // IANA RFC 2045 media type; e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
-	URI           string `protobuf:"bytes,26,opt,name=URI,proto3" json:"URI,omitempty"`                 // IANA RFC 1738 URL or unix pathname
-	Text          string `protobuf:"bytes,28,opt,name=Text,proto3" json:"Text,omitempty"`               // UTF8 plain-text, XML, RTF
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	ContentTypeRaw string `protobuf:"bytes,24,opt,name=ContentTypeRaw,proto3" json:"ContentTypeRaw,omitempty"` // IANA media type; access via Tag.ContentType() e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
+	URI            string `protobuf:"bytes,26,opt,name=URI,proto3" json:"URI,omitempty"`                       // IANA RFC 1738 URL or unix pathname
+	Text           string `protobuf:"bytes,28,opt,name=Text,proto3" json:"Text,omitempty"`                     // UTF8 plain-text, XML, RTF
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Tag) Reset() {
@@ -1975,9 +1975,9 @@ func (x *Tag) GetUnits() Units {
 	return Units_Unitless
 }
 
-func (x *Tag) GetContentType() string {
+func (x *Tag) GetContentTypeRaw() string {
 	if x != nil {
-		return x.ContentType
+		return x.ContentTypeRaw
 	}
 	return ""
 }
@@ -6290,7 +6290,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\fItemID_Max_1\x18\r \x01(\x06R\n" +
 	"ItemIDMax1\x12\"\n" +
 	"\fItemsPerAttr\x18\x0e \x01(\x03R\fItemsPerAttr\x12\"\n" +
-	"\fEditsPerItem\x18\x0f \x01(\x03R\fEditsPerItem\"\xc3\x01\n" +
+	"\fEditsPerItem\x18\x0f \x01(\x03R\fEditsPerItem\"\xc9\x01\n" +
 	"\x03Tag\x12\x13\n" +
 	"\x05UID_0\x18\x03 \x01(\x06R\x04UID0\x12\x13\n" +
 	"\x05UID_1\x18\x04 \x01(\x06R\x04UID1\x12\f\n" +
@@ -6298,8 +6298,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x01J\x18\x11 \x01(\x03R\x01J\x12\f\n" +
 	"\x01K\x18\x12 \x01(\x03R\x01K\x12 \n" +
 	"\x05Units\x18\x15 \x01(\x0e2\n" +
-	".amp.UnitsR\x05Units\x12 \n" +
-	"\vContentType\x18\x18 \x01(\tR\vContentType\x12\x10\n" +
+	".amp.UnitsR\x05Units\x12&\n" +
+	"\x0eContentTypeRaw\x18\x18 \x01(\tR\x0eContentTypeRaw\x12\x10\n" +
 	"\x03URI\x18\x1a \x01(\tR\x03URI\x12\x12\n" +
 	"\x04Text\x18\x1c \x01(\tR\x04Text\"o\n" +
 	"\x04Tags\x12\x1c\n" +

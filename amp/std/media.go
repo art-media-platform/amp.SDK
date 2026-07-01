@@ -113,7 +113,7 @@ func PublishMediaStream(appCtx amp.AppContext, src MediaStreamSource, opts Media
 	if err != nil {
 		return nil, err
 	}
-	return &amp.Tag{URI: url, ContentType: asset.ContentType()}, nil
+	return &amp.Tag{URI: url, ContentTypeRaw: asset.ContentType()}, nil
 }
 
 // A MediaRecord is the set of standard media attributes describing one asset on a
@@ -174,10 +174,10 @@ type MediaAsset struct {
 // the blob store, so a multi-hour asset never resides whole in heap.
 func CommitMediaAsset(appCtx amp.AppContext, asset MediaAsset) (*amp.BlobRef, error) {
 	blobMeta := &amp.Tag{
-		ContentType: asset.ContentType,
-		Text:        mediaAssetText(asset.Caption, asset.Label),
-		I:           asset.ByteLen,
-		Units:       amp.Units_Bytes,
+		ContentTypeRaw: asset.ContentType,
+		Text:           mediaAssetText(asset.Caption, asset.Label),
+		I:              asset.ByteLen,
+		Units:          amp.Units_Bytes,
 	}
 	ref, err := appCtx.Session().StoreBlob(asset.Planet, asset.Source, blobMeta, nil)
 	if err != nil {
@@ -321,7 +321,7 @@ func (c *segCollector) OnNodeUpdate(update amp.NodeUpdate) {
 			if seg.ContentType != "" {
 				c.contentType = seg.ContentType
 			} else if seg.Blob.AssetTag != nil {
-				c.contentType = seg.Blob.AssetTag.ContentType
+				c.contentType = seg.Blob.AssetTag.ContentTypeRaw
 			}
 		}
 	}
