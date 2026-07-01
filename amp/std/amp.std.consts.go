@@ -455,6 +455,15 @@ const (
 	ActorDefaultOrbitDegPerSec   = float32(8)   // signature orbit rate (deg/s) when the field is 0
 )
 
+// ─── Theme — the unified chrome skin contract.  asset:theme/<slot> is the chrome analog of asset:glyph/ ───
+// (ContentGlyphURI); ThemeMap resolves it from the bound atlas.  A theme = ONE atlas crate (DefaultAtlas)
+// whose named sub-sprites match the slots; a mod ships its own atlas crate and points selection there
+// without touching code.
+const (
+	ThemeSlotPrefix   = "asset:theme/"                                               // ThemeMap owns this namespace
+	ThemeDefaultAtlas = "asset:crates.planet.tools/amp.3D.base.assets/theme.default" // factory atlas (in Crates.BaseAssets)
+)
+
 // ─── Locus spatial binding ──────────────────────────────────────
 const (
 	LocusBits         = uint32(6)    // cell index bit width
