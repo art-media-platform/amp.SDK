@@ -228,3 +228,13 @@ func TestIDOps(t *testing.T) {
 	}
 
 }
+
+// BenchmarkNowID guards the mint hot path: NowID must stay crypto-free (the
+// per-process entropy is seeded once at init and advanced arithmetically, not
+// read from crypto/rand per call).  A regression that added crypto to NowID
+// would show up here as a large ns/op jump.
+func BenchmarkNowID(b *testing.B) {
+	for b.Loop() {
+		tag.NowID()
+	}
+}

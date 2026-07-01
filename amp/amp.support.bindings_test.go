@@ -81,6 +81,40 @@ func TestAttrBinding_ItemTxExposesWitnessedTxID(t *testing.T) {
 	}
 }
 
+// TestAttrBinding_BoundEditIDEqualsTxID pins the shared Go/C# invariant: a bound-path
+// edit mints its EditID from the TxID with no parent seed, so EditID == TxID.  The C#
+// AttrBinding.UpdateItem must satisfy the identical invariant (else the two clients
+// derive different EditIDs on one wire and LWW winners diverge).
+func TestAttrBinding_BoundEditIDEqualsTxID(t *testing.T) {
+	node := tag.NowID()
+	item := tag.NowID()
+	txID := tag.NowID()
+
+	binding := bindTag(node)
+	gotEdit := tag.UID{}
+	gotTx := tag.UID{}
+	binding.OnItem = func(updated amp.AttrItem[*amp.Tag]) {
+		gotEdit = updated.Addr.EditID
+		if updated.Tx != nil {
+			gotTx = updated.Tx.TxID()
+		}
+	}
+
+	tx := amp.TxNew()
+	tx.SetTxID(txID)
+	if err := binding.UpsertItem(tx, item, &amp.Tag{Text: "x"}); err != nil {
+		t.Fatal(err)
+	}
+	binding.OnNodeUpdate(amp.NodeUpdate{NodeID: node, Revision: txID, Tx: tx})
+
+	if gotEdit != txID {
+		t.Fatalf("bound-path EditID = %v, want TxID %v (must mint from TxID, no parent seed)", gotEdit, txID)
+	}
+	if gotTx != txID {
+		t.Fatalf("witnessed TxID = %v, want %v", gotTx, txID)
+	}
+}
+
 // TestAttrBinding_DeleteFiresOnItemDeleted pins the delete branch the resolver's
 // reverse-index maintenance relies on: a delete op is consulted by OnAdmit, fires
 // OnItem with Deleted=true, and removes the live value.

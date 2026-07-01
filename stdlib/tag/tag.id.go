@@ -407,7 +407,12 @@ func NowID() UID {
 var gEntropy atomic.Uint64
 
 func init() {
-	gEntropy.Store(37730003773)
+	// Per-process seed so NowID entropy isn't in phase across processes
+	// (cross-process uniqueness must not rest on the clock alone).  NowID()
+	// itself stays crypto-free.
+	var seed [8]byte
+	rand.Read(seed[:])
+	gEntropy.Store(binary.LittleEndian.Uint64(seed[:]))
 }
 
 func NewID() UID {
