@@ -444,7 +444,7 @@ message BrandIdentity {
 // surface.  It is embedded in EpochTerms (quorum-signed), NOT the admin-mutable
 // Brand attr, so changing a planet's public face requires convening the
 // governing quorum.  This is the anti-spoof boundary: a lone admin key cannot
-// silently rename "Pentagon" to "Mercenaries of Death".
+// silently rename "119th Congress" to "War Profiteers".
 //
 // The separate Brand attr remains the admin-mutable record for NON-identity,
 // cosmetic/operational fields (home URLs, link lists, install targets, and the

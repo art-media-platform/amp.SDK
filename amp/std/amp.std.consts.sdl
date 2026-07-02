@@ -25,7 +25,7 @@ tags Attr {
         TxSealResponse    "TxSealResponse"
         MintMemberToken   "MintMemberToken"
         MemberToken       "MemberToken"
-        SessionStatus     "Status"
+        SessionStatus     "status"
         SessionTag "Tag" {
             LaunchWeb     "www"
             LaunchOAuth   "oauth"
@@ -34,7 +34,7 @@ tags Attr {
 
     // Item attributes
     ItemAttr "item" {
-        ChildLink          "child.link.ID"
+        ChildLink          "child.link.id"
         ItemLabels         "Labels"
         ItemTextTag "text.Tag" {
             ItemLabel        "label"
@@ -63,8 +63,8 @@ tags Attr {
             SeriesAssetTag "Tag.asset"
             SeriesHeadLink "Tag.link"
             SeriesLinkTree "Tags.link.tree"
-            SeriesS2R      "S2.R.mm"
-            SeriesS2T      "S2.UTC64"
+            SeriesS2R      "s2.r.mm"
+            SeriesS2T      "s2.utc64"
         }
 
         MediaLink        "media.link.Tag"
@@ -85,32 +85,32 @@ tags Attr {
             ChannelPropertyGrid        "grid"
         }
         ChannelType "type" {
-            ChannelTypeSpreadsheet  "Spreadsheet"
-            ChannelTypeMessages     "Messages"
-            ChannelTypeTimeline     "Timeline"
-            ChannelTypeNotes        "Notes"
-            ChannelTypeMap          "Map"
-            ChannelTypeGlobe        "Globe"
-            ChannelTypeManifold     "Manifold"
-            ChannelTypeSpace        "Space"
-            ChannelTypeLinks        "Links"
-            ChannelTypeRegistry     "Registry"
-            ChannelTypeSystem       "System"
-            ChannelTypeWeb          "Web"
-            ChannelTypeCrateManager "CrateManager"
-            ChannelTypePlaylist     "Playlist"
-            ChannelTypePicker       "Picker"
-            ChannelTypePlanetPicker "PlanetPicker"
-            ChannelTypeBrand        "Brand"
+            ChannelTypeSpreadsheet  "spreadsheet"
+            ChannelTypeMessages     "messages"
+            ChannelTypeTimeline     "timeline"
+            ChannelTypeNotes        "notes"
+            ChannelTypeMap          "map"
+            ChannelTypeGlobe        "globe"
+            ChannelTypeManifold     "manifold"
+            ChannelTypeSpace        "space"
+            ChannelTypeLinks        "links"
+            ChannelTypeRegistry     "registry"
+            ChannelTypeSystem       "system"
+            ChannelTypeWeb          "web"
+            ChannelTypeCrateManager "cratemanager"
+            ChannelTypePlaylist     "playlist"
+            ChannelTypePicker       "picker"
+            ChannelTypePlanetPicker "planetpicker"
+            ChannelTypeBrand        "brand"
             ChannelTypeNameService  "name.service"
-            ChannelTypeTerminal     "Terminal"
+            ChannelTypeTerminal     "terminal"
         }
     }
 
     // Brand — substrate-native planet identity (AOM DD-name-service.md §2).
     // Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
     // TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
-    Brand "amp.brand"
+    Brand "amp.Brand"
 
     // NameService — substrate-native naming primitive (AOM DD-name-service.md §3).
     // A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.
@@ -146,39 +146,39 @@ tags Attr {
         // Substrate-agnostic Member Kind (AOM SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
         // resolving to one of these UIDs.  Communities + apps may register
         // additional Kinds in their own consts.sdl.  Zero UID = unspecified.
-        LawMemberKind "MemberKind" {
-            LawMemberKind_Person     "Person"
-            LawMemberKind_Group      "Group"
-            LawMemberKind_Agent      "Agent"
-            LawMemberKind_Instance   "Instance"
-            LawMemberKind_Successor  "Successor"
-            LawMemberKind_Memorial   "Memorial"
-            LawMemberKind_Process    "Process"
+        LawMemberKind "memberkind" {
+            LawMemberKind_Person     "person"
+            LawMemberKind_Group      "group"
+            LawMemberKind_Agent      "agent"
+            LawMemberKind_Instance   "instance"
+            LawMemberKind_Successor  "successor"
+            LawMemberKind_Memorial   "memorial"
+            LawMemberKind_Process    "process"
         }
 
         // Modal Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a
         // Tag resolving to one of these UIDs.  Communities + apps may register
         // additional modalities.  Zero UID = unspecified.
-        LawAttestationModality "AttestationModality" {
-            LawAttestationModality_Asserted    "Asserted"
-            LawAttestationModality_Witnessed   "Witnessed"
-            LawAttestationModality_Reported    "Reported"
-            LawAttestationModality_Inferred    "Inferred"
-            LawAttestationModality_Speculated  "Speculated"
-            LawAttestationModality_Dreamed     "Dreamed"
-            LawAttestationModality_Liturgical  "Liturgical"
-            LawAttestationModality_Conditional "Conditional"
-            LawAttestationModality_Contested   "Contested"
-            LawAttestationModality_Retracted   "Retracted"
+        LawAttestationModality "attestationmodality" {
+            LawAttestationModality_Asserted    "asserted"
+            LawAttestationModality_Witnessed   "witnessed"
+            LawAttestationModality_Reported    "reported"
+            LawAttestationModality_Inferred    "inferred"
+            LawAttestationModality_Speculated  "speculated"
+            LawAttestationModality_Dreamed     "dreamed"
+            LawAttestationModality_Liturgical  "liturgical"
+            LawAttestationModality_Conditional "conditional"
+            LawAttestationModality_Contested   "contested"
+            LawAttestationModality_Retracted   "retracted"
         }
 
         // Equivalence strengths (AOM SD-address-equivalence.md).  Equivalence.Strength is a Tag
         // resolving to one of these UIDs.  Zero UID = unspecified.
-        LawEquivalenceStrength "EquivalenceStrength" {
-            LawEquivalenceStrength_Identity    "Identity"
-            LawEquivalenceStrength_Translation "Translation"
-            LawEquivalenceStrength_Approximate "Approximate"
-            LawEquivalenceStrength_Analogous   "Analogous"
+        LawEquivalenceStrength "equivalencestrength" {
+            LawEquivalenceStrength_Identity    "identity"
+            LawEquivalenceStrength_Translation "translation"
+            LawEquivalenceStrength_Approximate "approximate"
+            LawEquivalenceStrength_Analogous   "analogous"
         }
 
     }

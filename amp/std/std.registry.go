@@ -29,14 +29,18 @@ func NewRegistry() amp.Registry {
 }
 
 func RegisterAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
-	typeOf := reflect.TypeOf(prototype)
-	if typeOf.Kind() == reflect.Pointer {
-		typeOf = typeOf.Elem()
-	}
-	name := typeOf.Name()
-	attr = attr.With(name)
 	if subTags != "" {
 		attr = attr.With(subTags)
+	}
+	// Use-scope words lead; the stored message's exact name trails (ZO attr-ID
+	// grammar).  amp.Tag is the elided default — a content-leaf attr carries no
+	// type segment.
+	if _, isTag := prototype.(*amp.Tag); !isTag {
+		typeOf := reflect.TypeOf(prototype)
+		if typeOf.Kind() == reflect.Pointer {
+			typeOf = typeOf.Elem()
+		}
+		attr = attr.With(typeOf.Name())
 	}
 
 	err := gRegistry.RegisterAttr(amp.AttrDef{
