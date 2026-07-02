@@ -87,6 +87,9 @@ var Attr = struct {
 	Brand                              tag.Name
 	NameService                        tag.Name
 	NameServiceRecord                  tag.Name
+	PlanetInvites                      tag.Name
+	PlanetInvitePolicy                 tag.Name
+	PlanetInviteRedemption             tag.Name
 	FederationDirectory                tag.Name
 	LawAttr                            tag.Name
 	LawPlanetEpoch                     tag.Name
@@ -253,6 +256,14 @@ var Attr = struct {
 	NameService: tag.Name{ID: tag.UID{0xB363152A99B543E3, 0x44B6A07DD731D29D}, Text: "amp.name.service"}, // 5mddbkp6ep8gjn9ep0grcm3nnx
 
 	NameServiceRecord: tag.Name{ID: tag.UID{0x46F3C16F52B61C22, 0x7C5C870E89180A36}, Text: "amp.name.service.record"}, // 26yg0qynpq3hj7sr471u4jh2jq
+
+	// ─── Invite governance — policy + redemption ledger for governed multi-use invites ───
+	// (app.invite).  Policies live at (PlanetInvites, PlanetInvitePolicy, inviteID);
+	// each invite's ledger at (inviteID, PlanetInviteRedemption, RedeemedAt NowID).
+	PlanetInvites: tag.Name{ID: tag.UID{0x5402ED235E2EB7C4, 0xB00FB2AE73715FDA}, Text: "amp.planet.invites"}, // 2n0cqk6rjfqz2c03xkpttr2ryu
+
+	PlanetInvitePolicy:     tag.Name{ID: tag.UID{0x51E016640771A6BF, 0x8E46E8E8FE0D7A26}, Text: "amp.planet.invites.policy"},     // 2jw0c681vjnuzswjr8x3z0uyj6
+	PlanetInviteRedemption: tag.Name{ID: tag.UID{0xFF2E48158678787E, 0x9A7A2A10F4F9281F}, Text: "amp.planet.invites.redemption"}, // 7z5t41c1msg1z9nyjb23ugkb0z
 
 	// ─── Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.3). ───
 	// NS-record-style cross-federation forwarding without DNS dependency.

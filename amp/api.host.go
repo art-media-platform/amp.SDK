@@ -295,6 +295,19 @@ type ACCEngine interface {
 	// IsFounder reports whether memberID is a founder of planetID — PlanetCharter.Founders,
 	// verified from the immutable genesis envelope (the root of governance authority).
 	IsFounder(planetID, memberID tag.UID) bool
+
+	// InvitePolicy returns the latest admitted invite policy for inviteID on
+	// planetID, or nil — the gated view app.invite reads and the invite ACC
+	// rule enforces against.
+	InvitePolicy(planetID, inviteID tag.UID) *PlanetInvitePolicy
+
+	// InvitePolicies returns planetID's admitted invite policies, keyed by
+	// invite ID.
+	InvitePolicies(planetID tag.UID) map[tag.UID]*PlanetInvitePolicy
+
+	// InviteRedemptions returns one invite's admitted redemption ledger, keyed
+	// by RedeemedAt item ID.  Rank over it is the redemption count.
+	InviteRedemptions(planetID, inviteID tag.UID) map[tag.UID]*PlanetInviteRedemption
 }
 
 // SessionACC exposes the host's ACCEngine off the public amp.Session interface, mirroring

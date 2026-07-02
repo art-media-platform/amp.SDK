@@ -120,6 +120,14 @@ tags Attr {
         NameServiceRecord "record"
     }
 
+    // Invite governance — policy + redemption ledger for governed multi-use invites
+    // (app.invite).  Policies live at (PlanetInvites, PlanetInvitePolicy, inviteID);
+    // each invite's ledger at (inviteID, PlanetInviteRedemption, RedeemedAt NowID).
+    PlanetInvites "amp.planet.invites" {
+        PlanetInvitePolicy     "policy"
+        PlanetInviteRedemption "redemption"
+    }
+
     // Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.3).
     // NS-record-style cross-federation forwarding without DNS dependency.
     FederationDirectory "amp.federation.directory"
