@@ -236,7 +236,6 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 	op.DataLen = uint64(len(ds) - startOfs)
 	op.DataOfs = uint64(startOfs)
 	tx.DataStore = ds
-	tx.OpCount++
 	tx.Ops = append(tx.Ops, *op)
 	tx.Normalized = false
 
@@ -249,7 +248,6 @@ func (tx *TxMsg) MarshalOpAndData(op *TxOp, opValue []byte) {
 	op.DataOfs = uint64(len(tx.DataStore))
 	op.DataLen = uint64(len(opValue))
 	tx.DataStore = append(tx.DataStore, opValue...)
-	tx.OpCount++
 	tx.Ops = append(tx.Ops, *op)
 	tx.Normalized = false
 }
@@ -362,107 +360,115 @@ func (tx *TxMsg) MarshalHeadAndOps(dst *[]byte) {
 }
 
 func (tx *TxMsg) MarshalHead(dst []byte) []byte {
-
-	tx.OpCount = uint64(len(tx.Ops))
-	tx.TxEnvelope.HeaderOffset = 0        // byte skip before TxHeader
 	dst, _ = writePb(dst, &tx.TxEnvelope) // write TxEnvelope uvarint & data
 	tx.cryptOfs = uint64(len(dst))        // store TxHeader start (encrypt begins here)
 	dst, _ = writePb(dst, &tx.TxHeader)   // write TxHeader uvarint & data
+	return appendOps(dst, tx.Ops)
+}
+
+// appendOps appends the ops section — a fixed u32 BE byte-length prefix
+// followed by the delta-compressed ops (flags byte, Logical / DataOfs /
+// DataLen / reserved-skip uvarints, hasFields mask, changed 8-byte fields).
+// The ONE authoritative encode site; MarshalHead and marshalPayload call it.
+// The length prefix self-delimits the section: readers slice it exactly and
+// skip it in O(1) — no op count rides the wire.
+func appendOps(dst []byte, ops []TxOp) []byte {
+	lenOfs := len(dst)
+	dst = append(dst, 0, 0, 0, 0) // u32 ops-length, backfilled below
 
 	var (
 		op_prv [TxField_MaxFields]uint64
 		op_cur [TxField_MaxFields]uint64
 	)
-
-	for _, op := range tx.Ops {
+	for _, op := range ops {
 		dst = append(dst, byte(op.Flags))
-		dst = binary.AppendUvarint(dst, op.AuthContext)
+		dst = binary.AppendUvarint(dst, op.Logical)
 		dst = binary.AppendUvarint(dst, op.DataOfs)
 		dst = binary.AppendUvarint(dst, op.DataLen)
 		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
 
 		// detect repeated fields and write only what changes (with corresponding flags)
-		{
-			op_cur[TxField_NodeID_0] = op.Addr.NodeID[0]
-			op_cur[TxField_NodeID_1] = op.Addr.NodeID[1]
+		op_cur[TxField_EditID_0] = op.Addr.EditID[0]
+		op_cur[TxField_EditID_1] = op.Addr.EditID[1]
 
-			op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
-			op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
+		op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
+		op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
 
-			op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
-			op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
+		op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
+		op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
 
-			op_cur[TxField_EditID_0] = op.Addr.EditID[0]
-			op_cur[TxField_EditID_1] = op.Addr.EditID[1]
+		op_cur[TxField_NodeID_0] = op.Addr.NodeID[0]
+		op_cur[TxField_NodeID_1] = op.Addr.NodeID[1]
 
-			hasFields := uint64(0)
-			for i, fi := range op_cur {
-				if fi != op_prv[i] {
-					hasFields |= (1 << i)
-				}
+		hasFields := uint64(0)
+		for i, fi := range op_cur {
+			if fi != op_prv[i] {
+				hasFields |= (1 << i)
 			}
-
-			dst = binary.AppendUvarint(dst, hasFields)
-			for i, fi := range op_cur {
-				if hasFields&(1<<i) != 0 {
-					dst = binary.BigEndian.AppendUint64(dst, fi)
-				}
-			}
-
-			op_prv = op_cur // current becomes previous
 		}
+
+		dst = binary.AppendUvarint(dst, hasFields)
+		for i, fi := range op_cur {
+			if hasFields&(1<<i) != 0 {
+				dst = binary.BigEndian.AppendUint64(dst, fi)
+			}
+		}
+
+		op_prv = op_cur // current becomes previous
 	}
 
+	binary.BigEndian.PutUint32(dst[lenOfs:lenOfs+4], uint32(len(dst)-lenOfs-4))
 	return dst
 }
 
-func (tx *TxMsg) UnmarshalHead(src []byte) error {
+// readOpsSection slices the u32-length-prefixed ops span out of src at *pos,
+// advancing *pos past it, then parses every op in the span into tx.Ops.
+func readOpsSection(tx *TxMsg, src []byte, pos *int) error {
+	p := *pos
+	if p+4 > len(src) {
+		return status.ErrMalformedTx
+	}
+	opsLen := int(binary.BigEndian.Uint32(src[p : p+4]))
+	p += 4
+	if opsLen > len(src)-p {
+		return status.ErrMalformedTx
+	}
+	if err := readOps(tx, src[p:p+opsLen]); err != nil {
+		return err
+	}
+	*pos = p + opsLen
+	return nil
+}
+
+// readOps parses delta-compressed ops from src (exactly one ops span, sliced
+// by its length prefix) into tx.Ops until src is exhausted — the ONE
+// authoritative decode walk; every parse path resolves op boundaries here.
+func readOps(tx *TxMsg, src []byte) error {
 	p := 0
+	var op_cur [TxField_MaxFields]uint64
 
-	// TxEnvelope
-	tx.TxEnvelope = TxEnvelope{}
-	if err := readPb(src, &p, &tx.TxEnvelope); err != nil {
-		return err
-	}
-
-	p += int(tx.TxEnvelope.HeaderOffset)
-
-	tx.TxHeader = TxHeader{}
-	if err := readPb(src, &p, &tx.TxHeader); err != nil {
-		return err
-	}
-
-	var (
-		op_cur [TxField_MaxFields]uint64
-	)
-
-	for i := uint64(0); i < tx.OpCount; i++ {
+	for p < len(src) {
 		var op TxOp
 		var n int
 
-		// OpFlags
 		op.Flags = TxOpFlags(src[p])
-		p += 1
+		p++
 
-		// AuthContext
-		if op.AuthContext, n = binary.Uvarint(src[p:]); n <= 0 {
+		if op.Logical, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
 		}
 		p += n
 
-		// DataOfs
 		if op.DataOfs, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
 		}
 		p += n
 
-		// DataLen
 		if op.DataLen, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
 		}
 		p += n
 
-		// reserved / future use
 		var skip uint64
 		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
@@ -472,7 +478,6 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 			return status.ErrMalformedTx
 		}
 
-		// hasFields
 		var hasFields uint64
 		if hasFields, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
@@ -489,19 +494,39 @@ func (tx *TxMsg) UnmarshalHead(src []byte) error {
 			}
 		}
 
-		op.Addr.NodeID[0] = op_cur[TxField_NodeID_0]
-		op.Addr.NodeID[1] = op_cur[TxField_NodeID_1]
-
-		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
-		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]
+		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
+		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
 
 		op.Addr.ItemID[0] = op_cur[TxField_ItemID_0]
 		op.Addr.ItemID[1] = op_cur[TxField_ItemID_1]
 
-		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
-		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
+		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
+		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]
+
+		op.Addr.NodeID[0] = op_cur[TxField_NodeID_0]
+		op.Addr.NodeID[1] = op_cur[TxField_NodeID_1]
 
 		tx.Ops = append(tx.Ops, op)
+	}
+	return nil
+}
+
+func (tx *TxMsg) UnmarshalHead(src []byte) error {
+	p := 0
+
+	// TxEnvelope
+	tx.TxEnvelope = TxEnvelope{}
+	if err := readPb(src, &p, &tx.TxEnvelope); err != nil {
+		return err
+	}
+
+	tx.TxHeader = TxHeader{}
+	if err := readPb(src, &p, &tx.TxHeader); err != nil {
+		return err
+	}
+
+	if err := readOpsSection(tx, src, &p); err != nil {
+		return err
 	}
 
 	// ensure we renormalize later
@@ -579,9 +604,7 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 		buf = make([]byte, 2048)
 	}
 
-	// --- Marshal the payload (TxHeader + TxOps) without preamble or envelope ---
-	tx.OpCount = uint64(len(tx.Ops))
-	tx.TxEnvelope.HeaderOffset = 0
+	// --- Marshal the payload (TxHeader + ops section) without preamble or envelope ---
 	payload := marshalPayload(tx, nil)
 
 	// --- Encrypt payload if epoch is set (private planet/channel) ---
@@ -779,41 +802,33 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 
 	if isPublic {
 		// Planet-public: payload is plaintext, DataStore is separate.
-		// HeaderOffset is an attacker-controlled wire field; bound it before slicing
-		// (hdrOfs < p catches a uint64→int overflow into the negative range).
-		hdrOfs := p + int(tx.TxEnvelope.HeaderOffset)
-		if hdrOfs < p || hdrOfs > len(headBody) {
-			return nil, status.ErrMalformedTx
-		}
-		payloadStart := int(TxPreambleSize) + hdrOfs
-		payloadAndOps := headBody[hdrOfs:]
+		payloadAndOps := headBody[p:]
 
-		// Unmarshal TxHeader + TxOps from plaintext
+		// Unmarshal TxHeader + ops section from plaintext
 		tx.TxHeader = TxHeader{}
 		hp := 0
 		if err := readPb(payloadAndOps, &hp, &tx.TxHeader); err != nil {
 			return nil, err
 		}
-		if err := unmarshalOps(tx, payloadAndOps[hp:]); err != nil {
+		if err := readOpsSection(tx, payloadAndOps, &hp); err != nil {
 			return nil, err
 		}
 
 		// DataStore
 		if dataLen > 0 {
 			dsStart := headLen
-			_ = payloadStart // used for clarity
 			tx.DataStore = make([]byte, dataLen)
 			copy(tx.DataStore, wire[dsStart:dsStart+dataLen])
 		}
 	} else {
-		// Encrypted: payload contains TxHeader + TxOps + DataStore.
-		// HeaderOffset and sigLen (→ sigOfs) are attacker-controlled wire fields, and this branch
-		// is reached via OpenTxSansVerify with no prior signature check, so bound the ciphertext
-		// span before slicing — an out-of-range or inverted span would otherwise panic the
-		// receive goroutine.  (encryptedStart < TxPreambleSize also catches a uint64→int overflow.)
-		encryptedStart := int(TxPreambleSize) + p + int(tx.TxEnvelope.HeaderOffset)
+		// Encrypted: payload contains TxHeader + ops section + DataStore.
+		// sigLen (→ sigOfs) is an attacker-controlled wire field, and this branch is
+		// reached via OpenTxSansVerify with no prior signature check, so bound the
+		// ciphertext span before slicing — an out-of-range or inverted span would
+		// otherwise panic the receive goroutine.
+		encryptedStart := int(TxPreambleSize) + p
 		encryptedEnd := int(sigOfs)
-		if encryptedStart < int(TxPreambleSize) || encryptedEnd > len(wire) || encryptedEnd < encryptedStart {
+		if encryptedEnd > len(wire) || encryptedEnd < encryptedStart {
 			return nil, status.ErrMalformedTx
 		}
 		ciphertext := wire[encryptedStart:encryptedEnd]
@@ -823,30 +838,18 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 			return nil, err
 		}
 
-		// The plaintext is: marshalPayload output + DataStore
-		// We need to split them. The headLen preamble field tells us where ops end.
-		// For encrypted mode, dataLen=0 in the preamble and the original headLen covers
-		// Preamble + Envelope only. The payload is self-contained.
-		//
-		// Re-unmarshal from the decrypted plaintext
+		// The plaintext is: TxHeader | ops section (u32-length-prefixed) | DataStore.
 		hp := 0
 		tx.TxHeader = TxHeader{}
 		if err := readPb(plaintext, &hp, &tx.TxHeader); err != nil {
 			return nil, err
 		}
-
-		// Find where ops end — we marshal OpCount ops, then remainder is DataStore
-		opsAndData := plaintext[hp:]
-		opsEnd, err := skipOps(opsAndData, tx.OpCount)
-		if err != nil {
+		if err := readOpsSection(tx, plaintext, &hp); err != nil {
 			return nil, err
 		}
-		if err := unmarshalOps(tx, opsAndData[:opsEnd]); err != nil {
-			return nil, err
-		}
-		if opsEnd < len(opsAndData) {
-			tx.DataStore = make([]byte, len(opsAndData)-opsEnd)
-			copy(tx.DataStore, opsAndData[opsEnd:])
+		if hp < len(plaintext) {
+			tx.DataStore = make([]byte, len(plaintext)-hp)
+			copy(tx.DataStore, plaintext[hp:])
 		}
 	}
 
@@ -877,169 +880,10 @@ func ParseTxEnvelope(wire []byte) (*TxEnvelope, error) {
 	return env, nil
 }
 
-// marshalPayload marshals TxHeader + TxOps (the encrypted portion) without preamble or envelope.
+// marshalPayload marshals TxHeader + ops section (the encrypted portion) without preamble or envelope.
 func marshalPayload(tx *TxMsg, dst []byte) []byte {
 	dst, _ = writePb(dst, &tx.TxHeader)
-
-	var (
-		op_prv [TxField_MaxFields]uint64
-		op_cur [TxField_MaxFields]uint64
-	)
-
-	for _, op := range tx.Ops {
-		dst = append(dst, byte(op.Flags))
-		dst = binary.AppendUvarint(dst, op.AuthContext)
-		dst = binary.AppendUvarint(dst, op.DataOfs)
-		dst = binary.AppendUvarint(dst, op.DataLen)
-		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
-
-		op_cur[TxField_NodeID_0] = op.Addr.NodeID[0]
-		op_cur[TxField_NodeID_1] = op.Addr.NodeID[1]
-		op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
-		op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
-		op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
-		op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
-		op_cur[TxField_EditID_0] = op.Addr.EditID[0]
-		op_cur[TxField_EditID_1] = op.Addr.EditID[1]
-
-		hasFields := uint64(0)
-		for i, fi := range op_cur {
-			if fi != op_prv[i] {
-				hasFields |= (1 << i)
-			}
-		}
-		dst = binary.AppendUvarint(dst, hasFields)
-		for i, fi := range op_cur {
-			if hasFields&(1<<i) != 0 {
-				dst = binary.BigEndian.AppendUint64(dst, fi)
-			}
-		}
-		op_prv = op_cur
-	}
-
-	return dst
-}
-
-// unmarshalOps reads compressed TxOp fields from src into tx.Ops.
-func unmarshalOps(tx *TxMsg, src []byte) error {
-	p := 0
-	var op_cur [TxField_MaxFields]uint64
-
-	for i := uint64(0); i < tx.OpCount; i++ {
-		if p >= len(src) {
-			return status.ErrMalformedTx
-		}
-		var op TxOp
-		var n int
-
-		op.Flags = TxOpFlags(src[p])
-		p++
-
-		if op.AuthContext, n = binary.Uvarint(src[p:]); n <= 0 {
-			return status.ErrMalformedTx
-		}
-		p += n
-
-		if op.DataOfs, n = binary.Uvarint(src[p:]); n <= 0 {
-			return status.ErrMalformedTx
-		}
-		p += n
-
-		if op.DataLen, n = binary.Uvarint(src[p:]); n <= 0 {
-			return status.ErrMalformedTx
-		}
-		p += n
-
-		var skip uint64
-		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
-			return status.ErrMalformedTx
-		}
-		p += n + int(skip)
-		if p > len(src) {
-			return status.ErrMalformedTx
-		}
-
-		var hasFields uint64
-		if hasFields, n = binary.Uvarint(src[p:]); n <= 0 {
-			return status.ErrMalformedTx
-		}
-		p += n
-
-		for j := range int(TxField_MaxFields) {
-			if hasFields&(1<<j) != 0 {
-				if p+8 > len(src) {
-					return status.ErrMalformedTx
-				}
-				op_cur[j] = binary.BigEndian.Uint64(src[p:])
-				p += 8
-			}
-		}
-
-		op.Addr.NodeID[0] = op_cur[TxField_NodeID_0]
-		op.Addr.NodeID[1] = op_cur[TxField_NodeID_1]
-		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
-		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]
-		op.Addr.ItemID[0] = op_cur[TxField_ItemID_0]
-		op.Addr.ItemID[1] = op_cur[TxField_ItemID_1]
-		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
-		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
-
-		tx.Ops = append(tx.Ops, op)
-	}
-
-	return nil
-}
-
-// skipOps advances past OpCount encoded ops, returning the byte offset where ops end.
-func skipOps(src []byte, opCount uint64) (int, error) {
-	p := 0
-	for i := uint64(0); i < opCount; i++ {
-		if p >= len(src) {
-			return 0, status.ErrMalformedTx
-		}
-		p++ // Flags
-
-		var n int
-		if _, n = binary.Uvarint(src[p:]); n <= 0 {
-			return 0, status.ErrMalformedTx
-		}
-		p += n // AuthContext
-
-		if _, n = binary.Uvarint(src[p:]); n <= 0 {
-			return 0, status.ErrMalformedTx
-		}
-		p += n // DataOfs
-
-		if _, n = binary.Uvarint(src[p:]); n <= 0 {
-			return 0, status.ErrMalformedTx
-		}
-		p += n // DataLen
-
-		var skip uint64
-		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
-			return 0, status.ErrMalformedTx
-		}
-		p += n + int(skip)
-		if p > len(src) {
-			return 0, status.ErrMalformedTx
-		}
-
-		var hasFields uint64
-		if hasFields, n = binary.Uvarint(src[p:]); n <= 0 {
-			return 0, status.ErrMalformedTx
-		}
-		p += n
-
-		for j := range int(TxField_MaxFields) {
-			if hasFields&(1<<j) != 0 {
-				p += 8
-			}
-		}
-		if p > len(src) {
-			return 0, status.ErrMalformedTx
-		}
-	}
-	return p, nil
+	return appendOps(dst, tx.Ops)
 }
 
 // Marshals a proto.Message with a Uvarint length prefix

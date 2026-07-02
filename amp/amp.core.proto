@@ -130,20 +130,24 @@ enum TxOpFlags {
 // TxField maps a fixed count of int64 payload fields.
 //
 // Why not a proto message? Compression is much better since values usually repeat.
+// TxField indexes the per-op u64 slots in the hand-rolled TxOp codec.
+// Bit order = change frequency: EditID differs on EVERY op (derived from TxID),
+// so it sits in the low bits and the common-case hasFields mask stays a 1-byte
+// uvarint.  Slots 8..15 are reserved headroom: readers scan MaxFields slots, so
+// a post-freeze writer may assign a new u64 field there and old readers carry
+// it losslessly.
 enum TxField {
-    Nil = 0;
+    EditID_0 = 0;
+    EditID_1 = 1;
 
-    NodeID_0 = 1;
-    NodeID_1 = 2;
+    ItemID_0 = 2;
+    ItemID_1 = 3;
 
     AttrID_0 = 4;
     AttrID_1 = 5;
 
-    ItemID_0 = 6;
-    ItemID_1 = 7;
-
-    EditID_0 = 10;
-    EditID_1 = 11;
+    NodeID_0 = 6;
+    NodeID_1 = 7;
 
     MaxFields = 16;
 }
@@ -199,9 +203,6 @@ message TxEnvelope {
     // A single TxMsg is encrypted under exactly one epoch — never mixed.
     Tag                 Epoch = 7;
 
-    // Byte offset from the end of the marshalled TxEnvelope to the start of the TxHeader.
-    uint64              HeaderOffset = 10;
-
     // Proves sender is a planet/channel member without revealing identity, so
     // relay vaults can reject spam without decrypting content.
     // (AOM SD-security-sync.md §3.6.)
@@ -236,9 +237,6 @@ message TxHeader {
 
     // Status of the most recent PinRequest revision.
     PinStatus           Status = 7;
-
-    // Number of TxOps in this tx.
-    uint64              OpCount = 10;
 
     // If set, updates the active PinRequest state.
     PinRequest          Request = 12;

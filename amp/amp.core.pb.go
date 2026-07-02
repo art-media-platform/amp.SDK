@@ -222,45 +222,48 @@ func (TxOpFlags) EnumDescriptor() ([]byte, []int) {
 // TxField maps a fixed count of int64 payload fields.
 //
 // Why not a proto message? Compression is much better since values usually repeat.
+// TxField indexes the per-op u64 slots in the hand-rolled TxOp codec.
+// Bit order = change frequency: EditID differs on EVERY op (derived from TxID),
+// so it sits in the low bits and the common-case hasFields mask stays a 1-byte
+// uvarint.  Slots 8..15 are reserved headroom: readers scan MaxFields slots, so
+// a post-freeze writer may assign a new u64 field there and old readers carry
+// it losslessly.
 type TxField int32
 
 const (
-	TxField_Nil       TxField = 0
-	TxField_NodeID_0  TxField = 1
-	TxField_NodeID_1  TxField = 2
+	TxField_EditID_0  TxField = 0
+	TxField_EditID_1  TxField = 1
+	TxField_ItemID_0  TxField = 2
+	TxField_ItemID_1  TxField = 3
 	TxField_AttrID_0  TxField = 4
 	TxField_AttrID_1  TxField = 5
-	TxField_ItemID_0  TxField = 6
-	TxField_ItemID_1  TxField = 7
-	TxField_EditID_0  TxField = 10
-	TxField_EditID_1  TxField = 11
+	TxField_NodeID_0  TxField = 6
+	TxField_NodeID_1  TxField = 7
 	TxField_MaxFields TxField = 16
 )
 
 // Enum value maps for TxField.
 var (
 	TxField_name = map[int32]string{
-		0:  "Nil",
-		1:  "NodeID_0",
-		2:  "NodeID_1",
+		0:  "EditID_0",
+		1:  "EditID_1",
+		2:  "ItemID_0",
+		3:  "ItemID_1",
 		4:  "AttrID_0",
 		5:  "AttrID_1",
-		6:  "ItemID_0",
-		7:  "ItemID_1",
-		10: "EditID_0",
-		11: "EditID_1",
+		6:  "NodeID_0",
+		7:  "NodeID_1",
 		16: "MaxFields",
 	}
 	TxField_value = map[string]int32{
-		"Nil":       0,
-		"NodeID_0":  1,
-		"NodeID_1":  2,
+		"EditID_0":  0,
+		"EditID_1":  1,
+		"ItemID_0":  2,
+		"ItemID_1":  3,
 		"AttrID_0":  4,
 		"AttrID_1":  5,
-		"ItemID_0":  6,
-		"ItemID_1":  7,
-		"EditID_0":  10,
-		"EditID_1":  11,
+		"NodeID_0":  6,
+		"NodeID_1":  7,
 		"MaxFields": 16,
 	}
 )
@@ -1430,8 +1433,6 @@ type TxEnvelope struct {
 	// Works for both planet-level and channel-level encryption.
 	// A single TxMsg is encrypted under exactly one epoch — never mixed.
 	Epoch *Tag `protobuf:"bytes,7,opt,name=Epoch,proto3" json:"Epoch,omitempty"`
-	// Byte offset from the end of the marshalled TxEnvelope to the start of the TxHeader.
-	HeaderOffset uint64 `protobuf:"varint,10,opt,name=HeaderOffset,proto3" json:"HeaderOffset,omitempty"`
 	// Proves sender is a planet/channel member without revealing identity, so
 	// relay vaults can reject spam without decrypting content.
 	// (AOM SD-security-sync.md §3.6.)
@@ -1507,13 +1508,6 @@ func (x *TxEnvelope) GetEpoch() *Tag {
 	return nil
 }
 
-func (x *TxEnvelope) GetHeaderOffset() uint64 {
-	if x != nil {
-		return x.HeaderOffset
-	}
-	return 0
-}
-
 func (x *TxEnvelope) GetMemberProof() []byte {
 	if x != nil {
 		return x.MemberProof
@@ -1549,8 +1543,6 @@ type TxHeader struct {
 	FromID_1 uint64 `protobuf:"fixed64,4,opt,name=FromID_1,json=FromID1,proto3" json:"FromID_1,omitempty"`
 	// Status of the most recent PinRequest revision.
 	Status PinStatus `protobuf:"varint,7,opt,name=Status,proto3,enum=amp.PinStatus" json:"Status,omitempty"`
-	// Number of TxOps in this tx.
-	OpCount uint64 `protobuf:"varint,10,opt,name=OpCount,proto3" json:"OpCount,omitempty"`
 	// If set, updates the active PinRequest state.
 	Request       *PinRequest `protobuf:"bytes,12,opt,name=Request,proto3" json:"Request,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -1620,13 +1612,6 @@ func (x *TxHeader) GetStatus() PinStatus {
 		return x.Status
 	}
 	return PinStatus_Inactive
-}
-
-func (x *TxHeader) GetOpCount() uint64 {
-	if x != nil {
-		return x.OpCount
-	}
-	return 0
 }
 
 func (x *TxHeader) GetRequest() *PinRequest {
@@ -6441,18 +6426,16 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\aStart_0\x18\x01 \x01(\x06R\x06Start0\x12\x17\n" +
 	"\aStart_1\x18\x02 \x01(\x06R\x06Start1\x12\x13\n" +
 	"\x05End_0\x18\x03 \x01(\x06R\x04End0\x12\x13\n" +
-	"\x05End_1\x18\x04 \x01(\x06R\x04End1\"\x8c\x02\n" +
+	"\x05End_1\x18\x04 \x01(\x06R\x04End1\"\xe8\x01\n" +
 	"\n" +
 	"TxEnvelope\x12\x15\n" +
 	"\x06TxID_0\x18\x01 \x01(\x06R\x05TxID0\x12\x15\n" +
 	"\x06TxID_1\x18\x02 \x01(\x06R\x05TxID1\x12 \n" +
 	"\x06Planet\x18\x06 \x01(\v2\b.amp.TagR\x06Planet\x12\x1e\n" +
-	"\x05Epoch\x18\a \x01(\v2\b.amp.TagR\x05Epoch\x12\"\n" +
-	"\fHeaderOffset\x18\n" +
-	" \x01(\x04R\fHeaderOffset\x12 \n" +
+	"\x05Epoch\x18\a \x01(\v2\b.amp.TagR\x05Epoch\x12 \n" +
 	"\vMemberProof\x18\x19 \x01(\fR\vMemberProof\x12#\n" +
 	"\rPlanetEpoch_0\x18\x1e \x01(\x06R\fPlanetEpoch0\x12#\n" +
-	"\rPlanetEpoch_1\x18\x1f \x01(\x06R\fPlanetEpoch1\"\xef\x01\n" +
+	"\rPlanetEpoch_1\x18\x1f \x01(\x06R\fPlanetEpoch1\"\xd5\x01\n" +
 	"\bTxHeader\x12\x1f\n" +
 	"\vContextID_0\x18\x01 \x01(\x06R\n" +
 	"ContextID0\x12\x1f\n" +
@@ -6460,9 +6443,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"ContextID1\x12\x19\n" +
 	"\bFromID_0\x18\x03 \x01(\x06R\aFromID0\x12\x19\n" +
 	"\bFromID_1\x18\x04 \x01(\x06R\aFromID1\x12&\n" +
-	"\x06Status\x18\a \x01(\x0e2\x0e.amp.PinStatusR\x06Status\x12\x18\n" +
-	"\aOpCount\x18\n" +
-	" \x01(\x04R\aOpCount\x12)\n" +
+	"\x06Status\x18\a \x01(\x0e2\x0e.amp.PinStatusR\x06Status\x12)\n" +
 	"\aRequest\x18\f \x01(\v2\x0f.amp.PinRequestR\aRequest\"\xb5\x01\n" +
 	"\n" +
 	"PinRequest\x12\x1a\n" +
@@ -6935,18 +6916,16 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Upsert\x10\x04\x12\n" +
 	"\n" +
-	"\x06Delete\x10\b*\x91\x01\n" +
-	"\aTxField\x12\a\n" +
-	"\x03Nil\x10\x00\x12\f\n" +
-	"\bNodeID_0\x10\x01\x12\f\n" +
-	"\bNodeID_1\x10\x02\x12\f\n" +
+	"\x06Delete\x10\b*\x88\x01\n" +
+	"\aTxField\x12\f\n" +
+	"\bEditID_0\x10\x00\x12\f\n" +
+	"\bEditID_1\x10\x01\x12\f\n" +
+	"\bItemID_0\x10\x02\x12\f\n" +
+	"\bItemID_1\x10\x03\x12\f\n" +
 	"\bAttrID_0\x10\x04\x12\f\n" +
 	"\bAttrID_1\x10\x05\x12\f\n" +
-	"\bItemID_0\x10\x06\x12\f\n" +
-	"\bItemID_1\x10\a\x12\f\n" +
-	"\bEditID_0\x10\n" +
-	"\x12\f\n" +
-	"\bEditID_1\x10\v\x12\r\n" +
+	"\bNodeID_0\x10\x06\x12\f\n" +
+	"\bNodeID_1\x10\a\x12\r\n" +
 	"\tMaxFields\x10\x10*H\n" +
 	"\x10ValueHeaderFlags\x12\b\n" +
 	"\x04None\x10\x00\x12\n" +
