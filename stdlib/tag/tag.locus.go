@@ -7,7 +7,8 @@ import (
 )
 
 // Locus constants — mirrored from amp/std to avoid import cycle (tag ← std ← amp ← tag).
-// Source of truth: amp.std.consts.sdl
+// Source of truth: amp.std.consts.sdl; drift is guarded by amp/std
+// TestLocusConstsMirrorStd.
 const (
 	locusMask     = uint64(0x3F) // low 6-bit extraction mask
 	locusSpan     = 64           // total cells per locus (1 << 6)
