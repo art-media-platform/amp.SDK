@@ -129,17 +129,6 @@ func PinAndServe[AppT amp.AppInstance](item Item[AppT], app AppT, req *amp.Reque
 	return pin, nil
 }
 
-func (app *AppModule[AppT]) MakeReady(req *amp.Request) error {
-	return nil
-}
-
-func (app *AppModule[AppT]) PinAndServe(item Item[AppT], req *amp.Request) (amp.Pin, error) {
-	return PinAndServe(item, app.Instance, req)
-}
-
-func (app *AppModule[AppT]) OnClosing() {
-}
-
 // OnPinClosed is called when this Pin's task context is closed.
 func (pin *Pin[AppT]) OnPinClosed() {
 }

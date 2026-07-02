@@ -1,6 +1,6 @@
 // Package std provides Go support classes for building amp apps.
 //
-// Most amp apps embed AppModule and use Pin to manage bidirectional state flow.
+// Most amp apps embed App and use Pin to manage bidirectional state flow.
 // Send-only apps (e.g. serving a file listing) use the Item/PinAndServe pattern.
 // Interactive apps (e.g. planet viewers, editors) use Pin.Bind/MergeIncoming with AttrBinding.
 package std
@@ -12,12 +12,15 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// AppModule is a helper for implementing AppInstance.
-// An amp.AppModule implementation embeds this into their app instance struct, instantly providing a skeleton of amp.AppInstance interface.
-type AppModule[AppT amp.AppInstance] struct {
+// App is the base every amp app embeds: it carries the runtime AppContext and
+// supplies no-op MakeReady / OnClosing, so an app implements only StartPin
+// (and overrides the lifecycle hooks it actually uses).
+type App struct {
 	amp.AppContext
-	Instance AppT
 }
+
+func (app *App) MakeReady(req *amp.Request) error { return nil }
+func (app *App) OnClosing()                       {}
 
 // Item is how std implements a send-only node for serving state to clients.
 // Apps that only push state (filesys, spotify, tunr) implement this interface.
