@@ -29,6 +29,18 @@ const (
 	SigningDomain_InviteRedeem SigningDomain = "amp.sig.invite.v1" // invite redemption proof — RedeemKey binds a redemption to its invite policy (app.invite)
 )
 
+// AllSigningDomains enumerates every registered SigningDomain — the audit
+// surface: the distinctness, cross-rejection, and length-bound tests iterate
+// it, so a new domain is covered the moment it is added here.
+var AllSigningDomains = []SigningDomain{
+	SigningDomain_Login,
+	SigningDomain_TxAuthor,
+	SigningDomain_EpochCoSign,
+	SigningDomain_MemberToken,
+	SigningDomain_VaultNode,
+	SigningDomain_InviteRedeem,
+}
+
 // SigningDomainTag returns the length-prefixed domain bytes that prefix every
 // signed payload for domain — u8(len) || domain.  The length prefix makes the
 // boundary between the tag and the payload unambiguous, so no domain can be a

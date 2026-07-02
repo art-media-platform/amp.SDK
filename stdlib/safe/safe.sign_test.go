@@ -80,7 +80,10 @@ func TestSignVerifyDomain_RoundTripAndCrossReject(t *testing.T) {
 		t.Fatalf("same-domain verify must succeed: %v", err)
 	}
 	// Rejected under every other domain — the whole point.
-	for _, other := range []safe.SigningDomain{safe.SigningDomain_TxAuthor, safe.SigningDomain_EpochCoSign, safe.SigningDomain_MemberToken, safe.SigningDomain_VaultNode} {
+	for _, other := range safe.AllSigningDomains {
+		if other == safe.SigningDomain_Login {
+			continue
+		}
 		if err := safe.VerifyDomain(safe.Crypto.Poly25519.ID, 0, other, sig, kp.Pub.Bytes, payload); err == nil {
 			t.Fatalf("a %s signature must NOT verify under %s", safe.SigningDomain_Login, other)
 		}
@@ -90,13 +93,7 @@ func TestSignVerifyDomain_RoundTripAndCrossReject(t *testing.T) {
 // TestSigningDomains_Distinct asserts the registry has no accidental duplicates —
 // two contexts sharing a domain string would silently re-enable cross-reuse.
 func TestSigningDomains_Distinct(t *testing.T) {
-	all := []safe.SigningDomain{
-		safe.SigningDomain_Login,
-		safe.SigningDomain_TxAuthor,
-		safe.SigningDomain_EpochCoSign,
-		safe.SigningDomain_MemberToken,
-		safe.SigningDomain_VaultNode,
-	}
+	all := safe.AllSigningDomains
 	seen := make(map[safe.SigningDomain]bool, len(all))
 	for _, d := range all {
 		if d == "" {
@@ -114,14 +111,7 @@ func TestSigningDomains_Distinct(t *testing.T) {
 // tag, re-opening cross-domain collision.  The registry is closed and short today;
 // this fails loudly the moment a future domain crosses the boundary.
 func TestSigningDomains_LengthBounded(t *testing.T) {
-	all := []safe.SigningDomain{
-		safe.SigningDomain_Login,
-		safe.SigningDomain_TxAuthor,
-		safe.SigningDomain_EpochCoSign,
-		safe.SigningDomain_MemberToken,
-		safe.SigningDomain_VaultNode,
-	}
-	for _, d := range all {
+	for _, d := range safe.AllSigningDomains {
 		if len(d) > 255 {
 			t.Fatalf("signing domain %q is %d bytes; the u8 length prefix truncates above 255", d, len(d))
 		}
