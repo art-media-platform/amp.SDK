@@ -31,7 +31,6 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) erro
 		Origin:  req,
 		Context: ctx,
 	})
-	tx.ReleaseRef()
 	if err != nil {
 		return err
 	}
@@ -40,7 +39,6 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) erro
 	case err = <-req.outErr:
 	case txOut := <-req.outTx:
 		err = txOut.ExtractValue(attrID, tag.UID{}, dst)
-		txOut.ReleaseRef()
 	case <-appCtx.Closing():
 		err = ctx.Err()
 	}
@@ -87,7 +85,6 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 		return status.ErrNothingToCommit
 	}
 
-	tx.AddRef()
 	var err error
 
 	select {
@@ -171,7 +168,6 @@ func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.N
 		Origin:  loader,
 		Context: ctx,
 	})
-	tx.ReleaseRef()
 	if err != nil {
 		ctx.Close(err)
 		return err
@@ -185,7 +181,6 @@ func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.N
 			NodeID:   nodeID,
 			Revision: tag.NowID(),
 		})
-		txOut.ReleaseRef()
 	case <-appCtx.Closing():
 		err = appCtx.Err()
 	}

@@ -78,7 +78,7 @@ type Pin interface {
 	// Revises this Pin's target sync state.
 	ReviseRequest(latest *PinRequest) error
 
-	// CommitTx calls tx.AddRef() and queues it for processing.
+	// CommitTx queues the given tx for processing.
 	// When complete, successful or not, Requester.RecvEvent() is called.
 	CommitTx(tx *TxMsg) error
 
@@ -101,7 +101,6 @@ type TxMsg struct {
 	Ops        []TxOp // tx operations to perform
 	DataStore  []byte // opaque data storage; typically serialized TxOp values
 	Normalized bool   // normalization state of Ops
-	refCount   int32  // see AddRef() / ReleaseRef()
 	cryptOfs   uint64 // byte offset from preamble start to start of TxHeader
 }
 

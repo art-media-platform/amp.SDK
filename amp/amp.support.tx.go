@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"io"
 	"sort"
-	"sync"
-	"sync/atomic"
 	"unsafe"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
@@ -34,17 +32,10 @@ func (preamble TxPreamble) TxSignatureSize() int {
 	return int(binary.BigEndian.Uint16(preamble[12:14]))
 }
 
+// TxNew is the single TxMsg constructor — internal buffer reuse, if ever
+// warranted, lands here without touching callers.
 func TxNew() *TxMsg {
-	tx := gTxMsgPool.Get().(*TxMsg)
-	tx.Normalized = false
-	tx.refCount = 1
-	return tx
-}
-
-var gTxMsgPool = sync.Pool{
-	New: func() any {
-		return &TxMsg{}
-	},
+	return &TxMsg{}
 }
 
 func (tx *TxEnvelope) TxID() tag.UID {
@@ -90,35 +81,6 @@ func (tx *TxHeader) SetContextID(ID tag.UID) {
 
 func (tx *TxHeader) ContextID() tag.UID {
 	return tag.UID{tx.ContextID_0, tx.ContextID_1}
-}
-
-func (tx *TxMsg) AddRef() {
-	atomic.AddInt32(&tx.refCount, 1)
-}
-
-func (tx *TxMsg) AddRefs(delta int) {
-	if delta == 0 {
-		return
-	}
-	if delta < 0 || delta > 0x7FFFFFFF {
-		panic("AddRefs: invalid delta")
-	}
-	atomic.AddInt32(&tx.refCount, int32(delta))
-}
-
-func (tx *TxMsg) ReleaseRef() {
-	// TODO systematic ReleaseRef() makeover in amp.planet
-
-	// newCount := atomic.AddInt32(&tx.refCount, -1)
-	// if newCount != 0 {
-	// 	return
-	// }
-
-	// *tx = TxMsg{
-	// 	Ops:       tx.Ops[:0],
-	// 	DataStore: tx.DataStore[:0],
-	// }
-	// gTxMsgPool.Put(tx)
 }
 
 func (tx *TxMsg) UnmarshalOpValue(opIndex int, out proto.Message) error {
