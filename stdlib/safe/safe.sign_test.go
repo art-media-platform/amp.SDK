@@ -108,3 +108,22 @@ func TestSigningDomains_Distinct(t *testing.T) {
 		seen[d] = true
 	}
 }
+
+// TestSigningDomains_LengthBounded guards the u8 length prefix in SigningDomainTag:
+// a 256-plus-byte domain would truncate mod-256 and could alias a shorter domain's
+// tag, re-opening cross-domain collision.  The registry is closed and short today;
+// this fails loudly the moment a future domain crosses the boundary.
+func TestSigningDomains_LengthBounded(t *testing.T) {
+	all := []safe.SigningDomain{
+		safe.SigningDomain_Login,
+		safe.SigningDomain_TxAuthor,
+		safe.SigningDomain_EpochCoSign,
+		safe.SigningDomain_MemberToken,
+		safe.SigningDomain_VaultNode,
+	}
+	for _, d := range all {
+		if len(d) > 255 {
+			t.Fatalf("signing domain %q is %d bytes; the u8 length prefix truncates above 255", d, len(d))
+		}
+	}
+}
