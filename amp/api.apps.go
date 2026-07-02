@@ -71,22 +71,25 @@ type Pinner interface {
 	StartPin(req *Request) (Pin, error)
 }
 
-// Pin is an attribute state connection to an app.
+// Pin is an attribute state connection to an app (read-serving).
 type Pin interface {
 	Pinner
-
-	// Revises this Pin's target sync state.
-	ReviseRequest(latest *PinRequest) error
-
-	// CommitTx queues the given tx for processing.
-	// When complete, successful or not, Requester.RecvEvent() is called.
-	CommitTx(tx *TxMsg) error
 
 	// Context returns the task.Context associated with this Pin.
 	// Apps start a Pin as a child Context of amp.AppContext.Context or as a child of another Pin.
 	// This means an AppContext contains all its Pins, and Close() will close all Pins (and children).
 	// This can be used to determine if a request is still being served and to close it if needed.
 	Context() task.Context
+}
+
+// PinCommitter is the write-accepting half of a Pin: the host routes follow-up
+// TxMsgs on an open request here.  Send-only pins simply do not implement it.
+type PinCommitter interface {
+	Pin
+
+	// CommitTx queues the given tx for processing.
+	// When complete, successful or not, Requester.RecvEvent() is called.
+	CommitTx(tx *TxMsg) error
 }
 
 // TxMsg is the serialized transport container of CRDT (append-only modeled) operations

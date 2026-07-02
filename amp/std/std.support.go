@@ -113,9 +113,6 @@ func PinAndServe[AppT amp.AppInstance](item Item[AppT], app AppT, req *amp.Reque
 					pinContext.Log().Warnf("op failed: %v", err)
 				}
 			}
-			if err == nil && req.Current.Mode != amp.PinMode_Snapshot {
-				// TODO: add tx submitter loop?
-			}
 			pin.Request.RecvEvent(amp.PinEvent{
 				Status: amp.PinStatus_Complete,
 				Error:  err,
@@ -183,14 +180,6 @@ func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
 		return nil, status.ErrItemNotFound
 	}
 	return PinAndServe(item, pin.App, req)
-}
-
-func (pin *Pin[AppT]) CommitTx(tx *amp.TxMsg) error {
-	return status.ErrUnimplemented
-}
-
-func (pin *Pin[AppT]) ReviseRequest(latest *amp.PinRequest) error {
-	return nil
 }
 
 // pushState builds and sends the current state of all items to the client.
