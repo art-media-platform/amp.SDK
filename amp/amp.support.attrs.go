@@ -494,7 +494,7 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 	}
 
 	// Merge incoming PinRequest
-	current := &req.ItemFilter.Current
+	current := &req.Current
 	proto.Reset(current)
 	proto.Merge(current, pinReq)
 
@@ -515,8 +515,8 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 		if err != nil {
 			return err
 		}
-		proto.Reset(&req.ItemFilter.Selector)
-		proto.Merge(&req.ItemFilter.Selector, pinReq.Selector)
+		proto.Reset(&req.Selector)
+		proto.Merge(&req.Selector, pinReq.Selector)
 	}
 	return nil
 }
@@ -561,8 +561,8 @@ func (req *Request) ParseAsAddressURL() error {
 	return nil
 }
 
-func (filter *ItemFilter) AsLabel() string {
-	pinReq := &filter.Current
+func (req *Request) FilterLabel() string {
+	pinReq := &req.Current
 
 	label := make([]byte, 0, 255)
 	label = append(label, pinReq.URL...)
@@ -576,8 +576,8 @@ func (filter *ItemFilter) AsLabel() string {
 }
 
 // Returns if this range includes the given item's ElementID
-func (filter *ItemFilter) Admits(elem tag.ElementID) bool {
-	for _, span := range filter.Selector.Spans {
+func (req *Request) Admits(elem tag.ElementID) bool {
+	for _, span := range req.Selector.Spans {
 		nodeID := span.NodeID()
 		if !nodeID.IsWildcard() && nodeID != elem.NodeID {
 			continue
