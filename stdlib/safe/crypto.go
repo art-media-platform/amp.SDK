@@ -37,23 +37,15 @@ const (
 ** to build their kit without duplicating low-level cipher operations.
 **/
 
-// NewAEAD creates an AEAD cipher from a 32-byte key using the default cipher suite.
-// Legacy callers that don't know the CryptoKitID (Enclave, Guard, SealAEAD) use this.
-// Cipher-agnostic callers should use NewAEADForKit(kitID, key) instead.
+// NewAEAD creates an AEAD cipher from a 32-byte key (XChaCha20-Poly1305).
+// AEAD is deliberately kit-agnostic — symmetric sealing is not a CryptoKit axis —
+// so this is the single symmetric-cipher entry point for Enclave, Guard, and
+// SealAEAD/OpenAEAD alike.
 func NewAEAD(key []byte) (cipher.AEAD, error) {
 	if len(key) != DEKSize {
 		return nil, fmt.Errorf("safe: key must be %d bytes, got %d", DEKSize, len(key))
 	}
 	return chacha20poly1305.NewX(key)
-}
-
-// NewAEADForKit returns a streaming AEAD for callers that received (key,
-// cryptoKitID) from an EpochKeyStore or similar.  All registered kits use
-// XChaCha20-Poly1305 for symmetric AEAD, so this just routes to NewAEAD; the
-// kitID parameter is retained to satisfy callers that pass it for completeness.
-func NewAEADForKit(cryptoKitID CryptoKitID, key []byte) (cipher.AEAD, error) {
-	_ = cryptoKitID
-	return NewAEAD(key)
 }
 
 // DeriveKey uses HKDF-SHA256 to derive a key from root material + salt + info.

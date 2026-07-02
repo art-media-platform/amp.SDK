@@ -54,6 +54,9 @@ type ringIndex struct {
 
 var _ Enclave = (*enclave)(nil)
 
+// errEnclaveClosed is returned by every Enclave method once Close() has sealed the session.
+var errEnclaveClosed = status.Code_NotReady.Error("safe: enclave is closed")
+
 // OpenEnclave starts a new cryptographic session.
 //
 // If the TomeStore has no existing SealedTome, a fresh empty index is created.
@@ -112,7 +115,7 @@ func (enc *enclave) ImportKey(keyringID tag.UID, kp KeyPair) error {
 	defer enc.mu.Unlock()
 
 	if enc.closed {
-		return fmt.Errorf("safe: enclave is closed")
+		return errEnclaveClosed
 	}
 	if len(kp.Pub.Bytes) < MinPubKeyPrefixSz {
 		return status.Code_BadKeyFormat.Errorf("safe: imported public key too short (got %d bytes)", len(kp.Pub.Bytes))
@@ -143,7 +146,7 @@ func (enc *enclave) GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
 	defer enc.mu.Unlock()
 
 	if enc.closed {
-		return PubKey{}, fmt.Errorf("safe: enclave is closed")
+		return PubKey{}, errEnclaveClosed
 	}
 
 	kit, err := CryptoKit(spec.CryptoKitID)
@@ -204,7 +207,7 @@ func (enc *enclave) FetchPubKey(ref *KeyRef) (PubKey, error) {
 	defer enc.mu.RUnlock()
 
 	if enc.closed {
-		return PubKey{}, fmt.Errorf("safe: enclave is closed")
+		return PubKey{}, errEnclaveClosed
 	}
 
 	rec, err := enc.fetchRecord(ref)
@@ -236,7 +239,7 @@ func (enc *enclave) CanSign(ref *KeyRef) bool {
 // kit on success.  Internal helper for the typed Enclave methods below.
 func (enc *enclave) fetchTypedRecord(ref *KeyRef, wantType KeyType, opLabel string) (*KeyPairRecord, *Kit, error) {
 	if enc.closed {
-		return nil, nil, fmt.Errorf("safe: enclave is closed")
+		return nil, nil, errEnclaveClosed
 	}
 	if ref == nil {
 		return nil, nil, status.Code_BadRequest.Errorf("%s: ref is required", opLabel)
@@ -255,19 +258,22 @@ func (enc *enclave) fetchTypedRecord(ref *KeyRef, wantType KeyType, opLabel stri
 	return rec, kit, nil
 }
 
-// Sign produces a cryptographic signature over digest using ref's SigningKey.
-func (enc *enclave) Sign(ref *KeyRef, digest []byte) ([]byte, error) {
+// SignRaw signs msg exactly as given — NO domain is applied.  Every call site
+// must pass a registry-derived digest (SigningDigest / CoSignatureDigest /
+// TxSignedDigest) or the documented MemberToken text-message exception; new
+// signing contexts go through SignDomain.
+func (enc *enclave) SignRaw(ref *KeyRef, msg []byte) ([]byte, error) {
 	enc.mu.RLock()
 	defer enc.mu.RUnlock()
 
-	rec, kit, err := enc.fetchTypedRecord(ref, KeyType_SigningKey, "Sign")
+	rec, kit, err := enc.fetchTypedRecord(ref, KeyType_SigningKey, "SignRaw")
 	if err != nil {
 		return nil, err
 	}
 	if kit.Signing == nil || kit.Signing.Sign == nil {
 		return nil, status.Code_Unimplemented.Errorf("Kit %s does not support signing", kit.ID.String())
 	}
-	return kit.Signing.Sign(digest, rec.PrvKey)
+	return kit.Signing.Sign(msg, rec.PrvKey)
 }
 
 // EncryptSym encrypts plaintext using ref's SymmetricKey.
@@ -310,7 +316,7 @@ func (enc *enclave) OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error) {
 	defer enc.mu.RUnlock()
 
 	if enc.closed {
-		return nil, fmt.Errorf("safe: enclave is closed")
+		return nil, errEnclaveClosed
 	}
 	if ref == nil {
 		return nil, status.Code_BadRequest.Error("OpenFromPub: ref is required")
@@ -338,7 +344,7 @@ func (enc *enclave) ExportSymmetricKey(ref *KeyRef) ([]byte, error) {
 	defer enc.mu.RUnlock()
 
 	if enc.closed {
-		return nil, fmt.Errorf("safe: enclave is closed")
+		return nil, errEnclaveClosed
 	}
 
 	rec, err := enc.fetchRecord(ref)

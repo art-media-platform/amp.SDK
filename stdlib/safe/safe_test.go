@@ -442,13 +442,6 @@ func TestGuardInfo(t *testing.T) {
 	}
 }
 
-func TestYubiGuardPlaceholder(t *testing.T) {
-	_, err := safe.NewYubiGuard()
-	if err == nil {
-		t.Fatal("expected error from unimplemented yubiGuard")
-	}
-}
-
 func TestDoubleClose(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
@@ -704,9 +697,9 @@ func TestDualKeyTypeStreams(t *testing.T) {
 	// Alice's SignKey continues to sign independently in Poly25519.
 	digest := make([]byte, 32)
 	rand.Read(digest)
-	sig, err := enc.Sign(signRef, digest)
+	sig, err := enc.SignRaw(signRef, digest)
 	if err != nil {
-		t.Fatalf("Sign with SignKey: %v", err)
+		t.Fatalf("SignRaw with SignKey: %v", err)
 	}
 	if err := safe.VerifySignature(safe.Crypto.Poly25519.ID, sig, digest, aliceSign.Bytes); err != nil {
 		t.Fatalf("VerifySignature: %v", err)

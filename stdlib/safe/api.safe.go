@@ -3,7 +3,7 @@
 // Architecture:
 //
 //	Guard      — protects/recovers a DEK (Data Encryption Key) using root material.
-//	             Implementations: fileGuard (local passphrase), yubiGuard (YubiKey PIV).
+//	             Implementations: fileGuard (local passphrase).
 //
 //	TomeStore  — persists a SealedTome to durable storage (file, cloud, etc).
 //
@@ -31,7 +31,6 @@ var RandReader io.Reader = rand.Reader
 //
 // Implementations:
 //   - fileGuard  — derives a wrapping key from a passphrase via HKDF
-//   - yubiGuard  — uses YubiKey PIV key agreement to derive a wrapping key
 type Guard interface {
 
 	// Info returns metadata about this Guard's capabilities.
@@ -93,9 +92,11 @@ type Enclave interface {
 	// pubkey" is not "can sign."  Self-signing authorship must gate on CanSign.
 	CanSign(ref *KeyRef) bool
 
-	// Sign produces a cryptographic signature over digest using the SigningKey
-	// referenced by ref.  Returns the signature bytes.
-	Sign(ref *KeyRef, digest []byte) ([]byte, error)
+	// SignRaw signs msg exactly as given — NO domain is applied.  Every call
+	// site must pass a registry-derived digest (SigningDigest / CoSignatureDigest /
+	// TxSignedDigest) or the documented MemberToken text-message exception; new
+	// signing contexts go through SignDomain.
+	SignRaw(ref *KeyRef, msg []byte) ([]byte, error)
 
 	// EncryptSym encrypts plaintext using the SymmetricKey referenced by ref
 	// (XChaCha20-Poly1305).  Output: nonce (24) || ciphertext+tag.
