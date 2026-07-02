@@ -25,8 +25,12 @@ import type {
   AmpMember,
   AmpQueryOpts,
   BlobRef,
+  InviteIssueOpts,
+  InviteIssueResult,
   InviteAcceptOpts,
   InviteAcceptResult,
+  InviteRevokeOpts,
+  InviteListResult,
   LoginCredentials,
   SubscriptionEvent,
   TagResolution,
@@ -353,16 +357,58 @@ export class AmpWebClient implements AmpAdapter {
     return `${this.vaultUrl}/www/${encodeURIComponent(blobUID)}`;
   }
 
-  // ── Federation invites ────────────────────────────────────────────
+  // ── Invites ───────────────────────────────────────────────────────
 
-  // acceptInvite redeems a sealed amp-invite-v1 token to join its federation
-  // planet, minting this member's keys host-side.  Requires a logged-in session
-  // (Bearer); the passphrase arrives out-of-band and the token is inert without it.
+  // issueInvite mints an invite on a planet the session administers.  Omit
+  // maxRedemptions (or 0) for a single-use pre-minted slot; set it for a
+  // multi-use self-mint policy.  Returns the invite ID + its universal-URL text
+  // (deliver the URL and the passphrase over separate channels).  Bearer.
+  async issueInvite(opts: InviteIssueOpts): Promise<InviteIssueResult> {
+    return this.apiFetch<InviteIssueResult>('/invite/issue', {
+      method: 'POST',
+      body: JSON.stringify({
+        Planet: opts.planet,
+        Passphrase: opts.passphrase,
+        MaxRedemptions: opts.maxRedemptions ?? 0,
+        Access: opts.access ?? '',
+        ExpiresAt: opts.expiresAt ?? 0,
+        VaultAddrs: opts.vaultAddrs ?? [],
+      }),
+    });
+  }
+
+  // acceptInvite redeems a sealed invite (its universal URL or amp-base32 body)
+  // to join the planet, minting this member's keys host-side.  Bearer; the
+  // passphrase arrives out-of-band and the token is inert without it.
   async acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult> {
     return this.apiFetch<InviteAcceptResult>('/invite/accept', {
       method: 'POST',
       body: JSON.stringify({ InviteText: opts.inviteText, Passphrase: opts.passphrase }),
     });
+  }
+
+  // revokeInvite terminally revokes an invite's policy (reissue rather than
+  // un-revoke).  Set rotate to also rotate the planet epoch, retiring the
+  // token-held key (node-custodial founder only).  Bearer.
+  async revokeInvite(opts: InviteRevokeOpts): Promise<void> {
+    await this.apiFetch<InviteListResult>('/invite/revoke', {
+      method: 'POST',
+      body: JSON.stringify({
+        Planet: opts.planet,
+        InviteID: opts.inviteId ?? '',
+        InviteText: opts.inviteText ?? '',
+        Rotate: opts.rotate ?? false,
+      }),
+    });
+  }
+
+  // listInvites returns a planet's invite policies with their rank-adjudicated
+  // redemption ledgers.  Bearer.
+  async listInvites(planet: string): Promise<InviteListResult> {
+    return this.apiFetch<InviteListResult>(
+      `/invite/list?planet=${encodeURIComponent(planet)}`,
+      { method: 'GET' },
+    );
   }
 
   // ── WebSocket subscriptions ───────────────────────────────────────

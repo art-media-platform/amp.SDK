@@ -95,9 +95,9 @@ await login({ Scheme: 'email', Email: email, Password: password });
 
 > A `did:pkh:eip155` login resolves to the **same member** as a `wallet` login over that address. DID here is authentication only — not Verifiable Credentials.
 
-### Joining a federation
+### Joining a Federation
 
-Handed an `amp-invite-v1:…` token? After login, `await client.acceptInvite({ inviteText, passphrase })` joins you to that federation (passphrase arrives out-of-band). You don't need it to read/write your *own* planet, but **registering planets / names into a federation requires membership** — which the invite grants. See `SKILL-amp-web-SDK.md` §4.7.
+Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.acceptInvite({ inviteText, passphrase })` joins you to that federation (passphrase arrives out-of-band). You don't need it to read/write your *own* planet, but **registering planets / names into a federation requires membership** — which the invite grants. Operators mint them with `client.issueInvite({ planet, passphrase, maxRedemptions })` (one URL, many self-minting members), revoke with `client.revokeInvite`, and audit with `client.listInvites`. See `SKILL-amp-web-SDK.md` §4.7.
 
 ## Hooks
 
@@ -118,7 +118,7 @@ The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
 `error` state; action hooks (`useAmpMutation` / `useAmpUpload`) set `error` **and**
 throw, so you can `try/catch` an awaited call.
 
-## Canonic names → tag.UIDs
+## Canonic Names → tag.UIDs
 
 `(channel, attr, itemID)` are `tag.UID`s derived from string names by a
 non-trivial canonization. Don't reimplement it — two supported paths:
@@ -136,7 +136,7 @@ non-trivial canonization. Don't reimplement it — two supported paths:
 - **[`SECURITY-amp-web-SDK.md`](SECURITY-amp-web-SDK.md)** — the security model a
   consumer relies on (encryption, identity, what a vault can and cannot see).
 
-## Design references (AOM)
+## Design References (AOM)
 
 The distributed bundle ships a small, curated set of design docs from AMP's
 **Operations Manual (AOM)** under [`AOM/`](AOM/) — background reading for deeper
@@ -150,7 +150,7 @@ Start with the overview, then dip in as questions arise:
 - **[`AOM/SD-edit-resolution.md`](AOM/SD-edit-resolution.md)** — CRDT concurrent-write semantics: who wins on a conflicting edit, and why both survive.
 - **[`AOM/0-amp-operations-manual.md`](AOM/0-amp-operations-manual.md)** — the AOM index/spine (node-operator oriented; included for orientation).
 
-## Versioning & stability
+## Versioning & Stability
 
 **Beta, pre-v400.** Breaking changes are possible between minor revisions, and
 there is no public npm channel yet — you integrate a versioned bundle

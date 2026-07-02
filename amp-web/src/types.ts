@@ -62,15 +62,35 @@ export interface AmpAuth {
   logout: () => Promise<void>;
 }
 
-// ── Federation invites ──────────────────────────────────────────────
+// ── Invites ─────────────────────────────────────────────────────────
+//
+// Governed invites: an issuer mints a policy-bearing invite (single-use
+// pre-minted slot, or multi-use self-mint with a redemption ceiling), a
+// redeemer joins under it, and every redemption leaves a ledger record.  The
+// sealed invite travels as `inviteText` — the universal URL
+// `https://{fqdn}/invite#…` (or its bare amp-base32 body); the passphrase is
+// always delivered out-of-band, so the token is inert without it.
 
-/**
- * Options for redeeming a sealed federation invite (SDK ergonomic shape,
- * camelCase).  `inviteText` is the canonical `amp-invite-v1:…` token;
- * `passphrase` arrives out-of-band — the token is inert without it.
- */
+/** Options for issuing an invite (SDK ergonomic shape, camelCase). */
+export interface InviteIssueOpts {
+  planet: string;               // base32 UID of the planet to invite to
+  passphrase: string;           // seals the returned invite (delivered out-of-band)
+  maxRedemptions?: number;      // 0 / omitted = single-use pre-minted slot; > 0 = multi-use ceiling
+  access?: AccessLevel;         // access each redeemer is granted; omitted = planet default
+  expiresAt?: number;           // unix seconds; omitted = planet bootstrap TTL
+  vaultAddrs?: string[];        // optional bootstrap peer addresses
+}
+
+/** Result of issuing an invite — the invite ID + its universal-URL text. */
+export interface InviteIssueResult {
+  PlanetID: string;
+  InviteID: string;
+  InviteText: string;
+}
+
+/** Options for redeeming a sealed invite. */
 export interface InviteAcceptOpts {
-  inviteText: string;
+  inviteText: string;           // the invite URL or its amp-base32 body
   passphrase: string;
 }
 
@@ -78,6 +98,41 @@ export interface InviteAcceptOpts {
 export interface InviteAcceptResult {
   PlanetID: string;
   MemberID: string;
+}
+
+/** Options for revoking an invite (terminal). */
+export interface InviteRevokeOpts {
+  planet: string;               // base32 UID of the planet
+  inviteId?: string;            // base32 invite ID …
+  inviteText?: string;          // … or the invite URL / body
+  rotate?: boolean;             // also rotate the planet epoch (node-custodial founder only)
+}
+
+/** Access levels a redeemer may be granted (enum names, per the wire contract). */
+export type AccessLevel =
+  | 'ReadOnly' | 'ReadWrite' | 'Moderator' | 'Admin';
+
+/** One invite policy with its rank-adjudicated redemption ledger. */
+export interface InvitePolicyEntry {
+  InviteID: string;
+  MaxRedemptions: number;
+  GrantedAccess?: string;
+  Status: 'InviteActive' | 'InviteRevoked';
+  ExpiresAt?: number;
+  Redemptions?: InviteRedemptionEntry[];
+}
+
+/** One ledger record; `InRank` is false for an over-rank (void) record. */
+export interface InviteRedemptionEntry {
+  Member: string;
+  RedeemedAt: number;           // unix seconds
+  Rank: number;
+  InRank: boolean;
+}
+
+/** Result of listing a planet's invites. */
+export interface InviteListResult {
+  Policies: InvitePolicyEntry[];
 }
 
 // ── Tag resolution (server canonization) ────────────────────────────

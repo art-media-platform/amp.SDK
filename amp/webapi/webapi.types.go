@@ -365,6 +365,85 @@ type FederationPeerEntry struct {
 	Label        string          `json:"Label,omitempty"`
 }
 
+// ── Invites (§ app.invite) ──────────────────────────────────────────────
+//
+// Governed invites: an issuer mints a policy-bearing invite (single-use
+// pre-minted slot, or multi-use self-mint with MaxRedemptions), a redeemer
+// joins under it, and every redemption leaves a ledger record.  The sealed
+// invite travels as InviteText — the universal URL https://{fqdn}/invite#… (or
+// its bare amp-base32 body); the passphrase is always delivered out-of-band.
+
+// InviteIssueRequest is the body of POST /api/v1/invite/issue (Bearer).
+// MaxRedemptions == 0 mints a single-use pre-minted slot; > 0 mints a multi-use
+// self-mint policy.  Access is the enum name a redeemer is granted ("ReadWrite",
+// …); empty = the planet's default.  ExpiresAt is unix seconds; 0 = the planet's
+// bootstrap TTL.
+type InviteIssueRequest struct {
+	Planet         string   `json:"Planet"`                   // amp-base32 UID of the planet to invite to
+	Passphrase     string   `json:"Passphrase"`               // seals the returned invite (out-of-band from the URL)
+	MaxRedemptions uint32   `json:"MaxRedemptions,omitempty"` // 0 = single-use; > 0 = multi-use ceiling
+	Access         string   `json:"Access,omitempty"`         // access enum name granted per redeemer
+	ExpiresAt      int64    `json:"ExpiresAt,omitempty"`      // unix seconds; 0 = planet bootstrap TTL
+	VaultAddrs     []string `json:"VaultAddrs,omitempty"`     // optional bootstrap peer addresses
+}
+
+// InviteIssueResponse returns the sealed invite as its universal URL plus the
+// invite's ID (the sealed-body hash — the ledger + revocation key).
+type InviteIssueResponse struct {
+	PlanetID   tag.UID `json:"PlanetID"`
+	InviteID   tag.UID `json:"InviteID"`
+	InviteText string  `json:"InviteText"` // the invite's universal URL (https://{fqdn}/invite#…)
+}
+
+// InviteAcceptRequest is the body of POST /api/v1/invite/accept (Bearer).
+type InviteAcceptRequest struct {
+	InviteText string `json:"InviteText"` // the invite URL or its amp-base32 body (transit noise tolerated)
+	Passphrase string `json:"Passphrase"`
+}
+
+// InviteAcceptResponse returns the joined planet and the redeemer's member UID.
+type InviteAcceptResponse struct {
+	PlanetID tag.UID `json:"PlanetID"`
+	MemberID tag.UID `json:"MemberID"`
+}
+
+// InviteRevokeRequest is the body of POST /api/v1/invite/revoke (Bearer).
+// Identify the invite by InviteID (the sealed-body hash) or InviteText.  Revoke
+// is terminal.  Rotate also rotates the planet epoch to retire the token-held
+// key (node-custodial founder only).
+type InviteRevokeRequest struct {
+	Planet     string `json:"Planet"`               // amp-base32 UID of the planet (required)
+	InviteID   string `json:"InviteID,omitempty"`   // amp-base32 invite ID
+	InviteText string `json:"InviteText,omitempty"` // or the invite URL / body
+	Rotate     bool   `json:"Rotate,omitempty"`     // also rotate the planet epoch
+}
+
+// InviteListResponse is the body of GET /api/v1/invite/list?planet= (Bearer):
+// a planet's invite policies with their redemption ledgers.
+type InviteListResponse struct {
+	Policies []InvitePolicyEntry `json:"Policies"`
+}
+
+// InvitePolicyEntry is one invite policy with its ranked redemption ledger.
+// Status rides as its enum name ("InviteActive" / "InviteRevoked").
+type InvitePolicyEntry struct {
+	InviteID       tag.UID              `json:"InviteID"`
+	MaxRedemptions uint32               `json:"MaxRedemptions"`
+	GrantedAccess  string               `json:"GrantedAccess,omitempty"`
+	Status         string               `json:"Status"`
+	ExpiresAt      int64                `json:"ExpiresAt,omitempty"`
+	Redemptions    []InviteRedemptionEntry `json:"Redemptions,omitempty"`
+}
+
+// InviteRedemptionEntry is one ledger record with its adjudicated rank; InRank
+// is false for an over-rank (void) record.
+type InviteRedemptionEntry struct {
+	Member     tag.UID `json:"Member"`
+	RedeemedAt int64   `json:"RedeemedAt"` // unix seconds
+	Rank       int     `json:"Rank"`
+	InRank     bool    `json:"InRank"`
+}
+
 // ErrorResponse is the body of every non-2xx /api/v1/* response.
 type ErrorResponse struct {
 	Code    string `json:"Code"`

@@ -417,8 +417,10 @@ POST /api/v1/invite/accept            (Bearer)
      Response: { PlanetID: string, MemberID: string }    // 201 Created; base32 UIDs
 ```
 
-- `InviteText` is the canonical `amp-invite-v1:…` form — whitespace / newline /
-  case-tolerant, so it survives copy-paste and transit.
+- `InviteText` is the invite's **universal URL** `https://{fqdn}/invite#{body}`
+  (the sealed token rides the URL fragment, so a click never sends it to the
+  host) — or its bare amp-base32 body. Whitespace / newline / case-tolerant, so
+  it survives copy-paste and transit; a mangled paste fails the CRC cleanly.
 - `Passphrase` is delivered **out-of-band**. Generate it from a CSPRNG with **≥128
   bits of entropy** (a diceware phrase or `crypto.getRandomValues`), never a
   human-chosen word: the sealed token is offline-attackable by anyone who captures
@@ -433,11 +435,37 @@ From the SDK:
 
 ```ts
 const { PlanetID, MemberID } = await client.acceptInvite({
-  inviteText: 'amp-invite-v1:…',
-  passphrase: '…',                 // out-of-band
+  inviteText: 'https://{fqdn}/invite#…',   // the universal URL, or its amp-base32 body
+  passphrase: '…',                          // out-of-band
 });
 // You are now a member of that federation's planet; from here you can register
 // your own names with `amp name register` (§4.6).
+```
+
+**Issuing, revoking, and listing invites** (operator side; Bearer, host-bridged):
+
+```
+POST /api/v1/invite/issue      Body { Planet, Passphrase, MaxRedemptions?, Access?, ExpiresAt?, VaultAddrs? }
+                               Response { PlanetID, InviteID, InviteText }   // 201
+POST /api/v1/invite/revoke     Body { Planet, InviteID? | InviteText?, Rotate? }   // 200
+GET  /api/v1/invite/list?planet={UID}    Response { Policies: [{ InviteID, MaxRedemptions, Status, ExpiresAt?, Redemptions:[{ Member, RedeemedAt, Rank, InRank }] }] }
+```
+
+`MaxRedemptions` selects the invite kind: **0** (or omitted) mints a single-use
+pre-minted slot; **> 0** mints a multi-use self-mint policy that many members
+join off one URL, each minting their own identity. `Access` (`ReadWrite`, …) is
+what each redeemer is granted; `ExpiresAt` is unix seconds (0 = the planet's
+bootstrap TTL). `revoke` is **terminal** (reissue, never un-revoke); `Rotate`
+also rotates the planet epoch to retire the token-held key (node-custodial
+founder only). `list` shows each policy's redemption ledger with an adjudicated
+`Rank` — a record with `InRank: false` is over the ceiling and void.
+
+```ts
+const { InviteID, InviteText } = await client.issueInvite({
+  planet, passphrase, maxRedemptions: 25, access: 'ReadWrite',
+});
+const { Policies } = await client.listInvites(planet);
+await client.revokeInvite({ planet, inviteId: InviteID, rotate: true });
 ```
 
 Bootstrapping with no SDK code yet? **The Bearer is your login `SessionToken`**
@@ -1249,7 +1277,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy, not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the operator admin allowlist — operator-side gating config, §10) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a sealed invite and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the operator admin allowlist — operator-side gating config, §10) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability
