@@ -410,6 +410,36 @@ enum PrivacyMode {
 }
 
 
+// BrandIdentity is the planet-identity field set shared verbatim by BrandMark
+// (quorum-signed) and Brand (admin-mutable) — one message, so the two records'
+// identity fields can never drift apart field-by-field.  Where both are
+// present and disagree, BrandMark wins (it is the quorum-signed authority).
+message BrandIdentity {
+
+    // Public name of the planet ("Tunr", "Pentagon", "The Martinez treehouse").
+    string              AppName = 1;
+
+    // Operator / sponsoring organization name ("SoundSpectrum").
+    string              OrgName = 2;
+
+    // Canonical domain the planet presents as ("spaces.soundspectrum.com").
+    // A domain claim is part of the impersonation surface.
+    string              AppDomain = 3;
+
+    // Human-readable description of the planet.
+    string              AppDesc = 4;
+
+    // Deep-link / custom URL schemes this planet answers to (["tunr"]) — an
+    // identity / impersonation surface.
+    repeated string     URLSchemes = 5;
+
+    // The federation that names this planet — the AOM DD-name-service.md §3.3
+    // back-edge the planet acknowledges as its current namer.  Single-valued
+    // (one namer at a time, may roam).
+    Tag                 NamedBy = 6;
+}
+
+
 // BrandMark is a planet's QUORUM-SIGNED public identity — the impersonation
 // surface.  It is embedded in EpochTerms (quorum-signed), NOT the admin-mutable
 // Brand attr, so changing a planet's public face requires convening the
@@ -422,28 +452,8 @@ enum PrivacyMode {
 // two disagree, BrandMark (here, quorum-signed) is the authoritative identity.
 message BrandMark {
 
-    // Public name of the planet ("Tunr", "Pentagon", "The Martinez treehouse").
-    // The canonical display name; renaming requires the quorum.
-    string              AppName = 1;
-
-    // Operator / sponsoring organization name ("SoundSpectrum").
-    string              OrgName = 2;
-
-    // Canonical domain the planet presents as ("spaces.soundspectrum.com").
-    // A domain claim is part of the impersonation surface, so it is quorum-signed.
-    string              AppDomain = 3;
-
-    // Human-readable description of the planet.
-    string              AppDesc = 4;
-
-    // Deep-link / custom URL schemes this planet answers to (["tunr"]).  Quorum
-    // -signed because a scheme claim is an identity / impersonation surface.
-    repeated string     URLSchemes = 5;
-
-    // The federation that names this planet — the AOM DD-name-service.md §3.3 back-edge
-    // the planet acknowledges as its current namer.  Single-valued (one namer at
-    // a time, may roam).  Quorum-signed so federation affiliation cannot be spoofed.
-    Tag                 NamedBy = 6;
+    // The planet's identity field set — quorum-signed here.
+    BrandIdentity       Identity = 1;
 
     // Visual glyph variants (HTML <picture>-shaped Tags tree): size/theme/density/
     // content-type variants consumers pick from.  The visual impersonation
@@ -1602,23 +1612,17 @@ message CrateRef {
 // envelope as the first record (EditID=0) or defer to a later admin-signed
 // channel write.  AOM DD-name-service.md §2.
 message Brand {
-    string              AppName          = 1;     // "Tunr"
-    string              AppDomain        = 2;     // "spaces.soundspectrum.com"
-    string              AppDesc          = 3;
-    string              OrgName          = 5;     // "SoundSpectrum"
+
+    // The planet's identity field set — admin-mutable here; where it disagrees
+    // with the quorum-signed BrandMark.Identity, BrandMark wins.
+    BrandIdentity       Identity         = 1;
+
     string              OrgHomeURL       = 6;
     string              AppHomeURL       = 7;
-    repeated string     URLSchemes       = 10;    // ["soundspectrum", "tunr"]
     repeated AppTarget  Targets          = 15;
     string              CrateSnapshotURL = 20;
     repeated AppLink    Links            = 25;
     repeated CrateRef   BundledCrates    = 26;
-
-    // NamedBy is the federation that names this planet — the §3.3 back-edge the
-    // planet acknowledges as its current namer.  Single-valued: a planet is named
-    // through one federation at a time but may roam.  Read by NameService
-    // consumers to enforce the canonic-binding invariant of AOM DD-name-service.md §3.3.
-    Tag                 NamedBy          = 30;
 
     // TemplateSet selects which portal template set renders this planet's HTTP
     // surfaces — names a template-set channel (NodeID) on the naming federation
@@ -1649,7 +1653,7 @@ message VaultAddr {
 // live Brand to verify) must never map to Verified.  AOM DD-name-service.md §3.3/§15.1.
 enum TrustState {
     Unchecked = 0;  // not yet verifiable — cold resolve, no live Brand held (proto3 default)
-    Verified  = 1;  // back-edge holds: target Brand.NamedBy == the answering federation
+    Verified  = 1;  // back-edge holds: target Brand.Identity.NamedBy == the answering federation
     Refuted   = 2;  // back-edge fails: target back-points elsewhere (a squatter)
 }
 

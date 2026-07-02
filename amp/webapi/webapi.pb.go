@@ -40,7 +40,7 @@ const (
 // by app.home on first login and don't need this surface.
 //
 // Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when omitted,
-// the server synthesizes a minimal Brand{AppName: derived from Tag}.
+// the server synthesizes a minimal Brand whose Identity.AppName derives from Tag.
 type PlanetCreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Tag           *amp.Tag               `protobuf:"bytes,1,opt,name=Tag,proto3" json:"Tag,omitempty"`

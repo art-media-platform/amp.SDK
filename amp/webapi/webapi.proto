@@ -25,7 +25,7 @@ import "amp/amp.core.proto";
 // by app.home on first login and don't need this surface.
 //
 // Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when omitted,
-// the server synthesizes a minimal Brand{AppName: derived from Tag}.
+// the server synthesizes a minimal Brand whose Identity.AppName derives from Tag.
 message PlanetCreateRequest {
     amp.Tag             Tag   = 1;
     amp.Brand           Brand = 2;

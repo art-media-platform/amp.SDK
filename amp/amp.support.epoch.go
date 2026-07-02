@@ -97,6 +97,28 @@ func (t *EpochTerms) IsGenesis() bool {
 	return prev == nil || prev.UID().IsNil()
 }
 
+// brandIdentityZero is the shared zero-value instance IdentityOrZero returns when
+// a record carries no BrandIdentity.  Read-only by convention — callers never mutate.
+var brandIdentityZero = &BrandIdentity{}
+
+// IdentityOrZero returns the mark's BrandIdentity, never nil (a zero-value
+// instance when absent) — the nil-safe read path for both Brand and BrandMark.
+func (mark *BrandMark) IdentityOrZero() *BrandIdentity {
+	if mark == nil || mark.Identity == nil {
+		return brandIdentityZero
+	}
+	return mark.Identity
+}
+
+// IdentityOrZero returns the brand's BrandIdentity, never nil (a zero-value
+// instance when absent) — the nil-safe read path for both Brand and BrandMark.
+func (brand *Brand) IdentityOrZero() *BrandIdentity {
+	if brand == nil || brand.Identity == nil {
+		return brandIdentityZero
+	}
+	return brand.Identity
+}
+
 // CoSignatureDigest returns the domain-separated digest a founder/admin signs and
 // a verifier checks for this epoch — SigningDomain_EpochCoSign (safe.sign.go) bound
 // over the FRAME under the epoch's hash policy.  The single authoritative epoch

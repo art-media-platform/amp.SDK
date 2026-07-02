@@ -38,7 +38,7 @@ func TestEpochVerbatim_Roundtrip(t *testing.T) {
 		CryptoKitID_0: kitID[0],
 		CryptoKitID_1: kitID[1],
 		Label:         "Genesis",
-		Mark:          &amp.BrandMark{AppName: "Pentagon"},
+		Mark:          &amp.BrandMark{Identity: &amp.BrandIdentity{AppName: "Pentagon"}},
 	}
 
 	// 1) Assemble: marshal charter+terms once, bind CharterHash into Terms.
@@ -89,7 +89,7 @@ func TestEpochVerbatim_Roundtrip(t *testing.T) {
 		CryptoKitID_0: kitID[0],
 		CryptoKitID_1: kitID[1],
 		Label:         "Rotation 1",
-		Mark:          &amp.BrandMark{AppName: "Pentagon"},
+		Mark:          &amp.BrandMark{Identity: &amp.BrandIdentity{AppName: "Pentagon"}},
 	}
 	rot, err := amp.AssembleEpoch(charter, rotTerms, safe.HashKitID_Blake2s_256)
 	if err != nil {
