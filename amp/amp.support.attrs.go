@@ -412,6 +412,44 @@ func (v *PinRequest) AsLabel() string {
 	return string(label)
 }
 
+// VerbPath returns InvokeURL's path with the leading module segment stripped
+// ("amp://{planet}/{module}/{verb}/..." → "{verb}/..."), or "" when the request
+// carries no invoke URL.  The ONE site apps route verbs from.
+func (req *Request) VerbPath() string {
+	if req.InvokeURL == nil {
+		return ""
+	}
+	path := strings.TrimLeft(req.InvokeURL.Path, "/")
+	if cut := strings.IndexByte(path, '/'); cut >= 0 {
+		return path[cut+1:]
+	}
+	return ""
+}
+
+// Verb returns the first segment of VerbPath — the invocation verb.
+func (req *Request) Verb() string {
+	verbPath := req.VerbPath()
+	if cut := strings.IndexByte(verbPath, '/'); cut >= 0 {
+		return verbPath[:cut]
+	}
+	return verbPath
+}
+
+// WithinFutureSkew reports whether a witnessed TxID is stamped no further into
+// the future than maxSkew allows: time cannot run backward, so a further-future
+// stamp is forged recency.  Compares in the seconds domain — txID.Unix() is
+// attacker-controlled (~2^48 range), so a nanosecond Duration conversion could
+// overflow int64 and wrap negative; plain second arithmetic cannot.
+// maxSkew <= 0 applies DefaultMaxFutureSkew.  The ONE authoritative site for
+// this guard (host intake, vault verify, app-level admission all call it).
+func WithinFutureSkew(txID tag.UID, maxSkew time.Duration) bool {
+	maxSecs := int64(maxSkew / time.Second)
+	if maxSecs <= 0 {
+		maxSecs = DefaultMaxFutureSkew
+	}
+	return txID.Unix()-time.Now().Unix() <= maxSecs
+}
+
 func (req *Request) ParseParam(paramKey string, dst any) error {
 	var paramStr string
 	if paramStr = req.Params.Get(paramKey); paramStr == "" {

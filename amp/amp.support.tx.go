@@ -83,15 +83,19 @@ func (tx *TxHeader) ContextID() tag.UID {
 	return tag.UID{tx.ContextID_0, tx.ContextID_1}
 }
 
-func (tx *TxMsg) UnmarshalOpValue(opIndex int, out proto.Message) error {
+// OpValueBytes returns the serialized value bytes of op opIndex with the
+// leading ValueHeader (flags byte + inline UIDs) skipped — exactly the span
+// UnmarshalOpValue decodes.  The ONE authoritative header-skip; the returned
+// slice aliases tx.DataStore, so callers that retain it must copy.
+func (tx *TxMsg) OpValueBytes(opIndex int) ([]byte, error) {
 	if opIndex < 0 || opIndex >= len(tx.Ops) {
-		return status.ErrMalformedTx
+		return nil, status.ErrMalformedTx
 	}
 	op := tx.Ops[opIndex]
 	ofs := op.DataOfs
 	end := ofs + op.DataLen
 	if op.DataLen < 1 || ofs > end || end > uint64(len(tx.DataStore)) {
-		return status.ErrBadTxOp
+		return nil, status.ErrBadTxOp
 	}
 
 	// skip value header and inline UIDs
@@ -103,9 +107,16 @@ func (tx *TxMsg) UnmarshalOpValue(opIndex int, out proto.Message) error {
 		}
 	}
 	if ofs > end {
-		return status.ErrBadTxOp
+		return nil, status.ErrBadTxOp
 	}
-	span := tx.DataStore[ofs:end]
+	return tx.DataStore[ofs:end], nil
+}
+
+func (tx *TxMsg) UnmarshalOpValue(opIndex int, out proto.Message) error {
+	span, err := tx.OpValueBytes(opIndex)
+	if err != nil {
+		return err
+	}
 	return proto.Unmarshal(span, out)
 }
 

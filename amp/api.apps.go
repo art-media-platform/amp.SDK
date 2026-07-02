@@ -116,11 +116,17 @@ type TxOp struct {
 
 // TxScope is the optional NewTx parameter fixing a tx's target planet — the planet lever, set
 // once at creation.  The zero value (and a bare NewTx()) targets the caller's home planet; set
-// Planet to commit to an explicit planet.  Scope governs ROUTING only: signer identity
-// (TxMsg.SetFromID) and privacy (TxMsg.Epoch) are independent levers set separately.  See
-// AOM SD-security-sync.md §7.6.
+// Planet to commit to an explicit planet.  MemberSigned optionally couples the signer to the
+// resolved planet's adopted member (the common durable-write pairing); privacy (TxMsg.Epoch)
+// stays an independent lever set separately.  See AOM SD-security-sync.md §7.6.
 type TxScope struct {
 	Planet tag.UID // unset → the caller's home planet; set → that explicit planet
+
+	// MemberSigned authors the tx as the session's adopted member identity on
+	// the target planet (Session.PlanetMember) instead of the session UID —
+	// the pairing nearly every durable app write uses.  Custodial and other
+	// exceptional signers still call TxMsg.SetFromID explicitly.
+	MemberSigned bool
 }
 
 // Binds an proto.Message prototype to its associated attribute tag.
