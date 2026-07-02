@@ -59,16 +59,6 @@ enum ValueHeaderFlags {
     // FromSelf = 0x10; // equivalent to FromID of owner (saves 16 bytes)
 }
 
-enum TxStatus {
-    Ready        = 0; // not set / invalid
-    Received     = 1; // tx received, pending processing
-    Validated    = 2; // tx verified, pending commit
-    Committed    = 3; // tx committed to local storage
-    Propagated   = 4; // tx propagated to peers
-    Acknowledged = 5; // tx acknowledged by peers
-    Rejected     = 6; // tx rejected (invalid, malformed, etc)
-}
-
 // TxEnvelope carries the cleartext routing/decryption fields of a tx; all
 // other components (TxHeader, TxOps, datastore) are encrypted under the epoch
 // the envelope names and are thus securely "within" the tx.
@@ -144,9 +134,6 @@ message TxHeader {
 
     // If set, updates the active PinRequest state.
     PinRequest          Request = 12;
-
-    // Referenced by a TxOp; an AuthContext names the governance record that authorizes the TxOp to be applied.
-    repeated AuthContext AuthContexts = 14;
 
 }
 
@@ -277,13 +264,6 @@ enum PinMode {
 
 
 
-enum Enable {
-    LatentOff = 0x0;
-    LatentOn  = 0x1;
-    ActiveOn  = 0x2;
-    ActiveOff = 0x3;
-}
-
 
 enum UriScheme {
     Unspecified = 0;
@@ -347,42 +327,6 @@ enum Units {
 }
 
 
-
-// AuthContext is referenced by a TxOp to name the governance record that
-// authorizes the op, letting amp's validation runtime reach the public keys
-// needed to verify txs signed by a given author.
-// (AOM SD-channel-governance.md §3.)
-//
-// The authorizing keyring is addressed as (ChannelID, AttrID, ItemID, EditID):
-//   - legislate: {LawChID} / "series.Keyring.legislate" /
-//     {KeyringID}.{GroupID} / {LawEpoch} — a legislating channel publishes keys
-//     for a member or child legislature.
-//   - public: {GroupID} / "series.Keyring.public" / {KeyringID} /
-//     {Group_Epoch} — members/groups publish their planet public keys
-//     (member write access only).
-//
-// Joining a private channel requires the keyring UID (sent with the channel
-// invite or passed out of band, e.g. a written tag).  When a legislating
-// channel alters a member's access it issues a new keyring epoch: the channel's
-// private key is re-encrypted to each member's latest public key, so only that
-// member can decrypt it.
-message AuthContext {
-
-    // The channel epoch that contains the authorizing legislature reference
-    fixed64             ChannelEpochID_0 = 2;
-    fixed64             ChannelEpochID_1 = 3;
-
-
-    // Legislating-channel epoch that authorizes the requested operation.
-    fixed64             LawEpoch_0 = 4;
-    fixed64             LawEpoch_1 = 5;
-
-    // Keyring ID match
-    fixed64             KeyringID_0 = 10;
-    fixed64             KeyringID_1 = 11;
-
-
-}
 
 
 // Access levels ordered by privilege (higher = more access).
