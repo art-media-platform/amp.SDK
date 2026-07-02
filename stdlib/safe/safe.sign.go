@@ -21,11 +21,11 @@ package safe
 type SigningDomain string
 
 const (
-	SigningDomain_Login       SigningDomain = "amp.sig.login.v1" // member login proof-of-possession over the host challenge
-	SigningDomain_TxAuthor    SigningDomain = "amp.sig.tx.v1"    // TxMsg author seal over the wire (SealTx / TxSignedDigest)
-	SigningDomain_EpochCoSign SigningDomain = "amp.sig.epoch.v1" // PlanetEpoch founder/admin co-signature over the epoch frame
-	SigningDomain_MemberToken SigningDomain = "amp.sig.token.v1" // SSO bearer token — signed as a text MESSAGE (external-wallet SIWE compatible), not a SigningDigest (app.www)
-	SigningDomain_VaultNode   SigningDomain = "amp.sig.vault.v1" // node/device vault-transport handshake proof (vault.identity)
+	SigningDomain_Login        SigningDomain = "amp.sig.login.v1"  // member login proof-of-possession over the host challenge
+	SigningDomain_TxAuthor     SigningDomain = "amp.sig.tx.v1"     // TxMsg author seal over the wire (SealTx / TxSignedDigest)
+	SigningDomain_EpochCoSign  SigningDomain = "amp.sig.epoch.v1"  // PlanetEpoch founder/admin co-signature over the epoch frame
+	SigningDomain_MemberToken  SigningDomain = "amp.sig.token.v1"  // SSO bearer token — signed as a text MESSAGE (external-wallet SIWE compatible), not a SigningDigest (app.www)
+	SigningDomain_VaultNode    SigningDomain = "amp.sig.vault.v1"  // node/device vault-transport handshake proof (vault.identity)
 	SigningDomain_InviteRedeem SigningDomain = "amp.sig.invite.v1" // invite redemption proof — RedeemKey binds a redemption to its invite policy (app.invite)
 )
 

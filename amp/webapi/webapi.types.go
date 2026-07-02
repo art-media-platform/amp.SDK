@@ -427,11 +427,11 @@ type InviteListResponse struct {
 // InvitePolicyEntry is one invite policy with its ranked redemption ledger.
 // Status rides as its enum name ("InviteActive" / "InviteRevoked").
 type InvitePolicyEntry struct {
-	InviteID       tag.UID              `json:"InviteID"`
-	MaxRedemptions uint32               `json:"MaxRedemptions"`
-	GrantedAccess  string               `json:"GrantedAccess,omitempty"`
-	Status         string               `json:"Status"`
-	ExpiresAt      int64                `json:"ExpiresAt,omitempty"`
+	InviteID       tag.UID                 `json:"InviteID"`
+	MaxRedemptions uint32                  `json:"MaxRedemptions"`
+	GrantedAccess  string                  `json:"GrantedAccess,omitempty"`
+	Status         string                  `json:"Status"`
+	ExpiresAt      int64                   `json:"ExpiresAt,omitempty"`
 	Redemptions    []InviteRedemptionEntry `json:"Redemptions,omitempty"`
 }
 
