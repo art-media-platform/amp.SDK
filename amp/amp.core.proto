@@ -1139,6 +1139,27 @@ message PlanetInvite {
     // VaultConfig.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
     // expiry (only accepted from issuers that intentionally opt out).
     int64               ExpiresAt = 25;
+
+    // Max times this invite may be redeemed.  0 = unset → single-use: the invite
+    // carries the one pre-minted MemberTag (field 3).  For a multi-use invite
+    // MemberTag is empty and each redeemer self-mints its own identity, so the
+    // issuer never holds the joiner's key.
+    uint32              MaxRedemptions = 26;
+
+    // Access level a redeemer is granted on join.  NotAllowed (0) = unset → the
+    // planet's default member access; snapshotted into each PlanetInviteRedemption.
+    Access              GrantedAccess = 27;
+
+    // Proof-signing keypair.  Prv is cleartext within the passphrase-sealed
+    // invite (like TempKey); a redeemer signs its redemption's RedeemProof with
+    // it, making passphrase + token possession publicly verifiable against the
+    // invite policy's anchored public half.  Empty on pre-ledger invites.
+    safe.KeyPairRecord  RedeemKey = 28;
+
+    // The planet's hash policy (EpochTerms.EffectiveHashKit) — the digest kit a
+    // RedeemProof signs under, carried so a peerless acceptor needs no synced
+    // genesis to produce a verifiable proof.  Zero = the default kit.
+    safe.HashKitID      HashKitID = 29;
 }
 
 
@@ -1156,7 +1177,60 @@ message PlanetInviteOp {
     // Encrypted PlanetInvite blob (accept only).
     // On create this is empty; the response returns the encrypted blob.
     bytes               SealedInvite = 10;
+
+    // Redemption ceiling for the invite being issued.  0 = unset → single-use
+    // pre-minted slot (today's behavior); > 0 → multi-use self-mint policy.
+    uint32              MaxRedemptions = 15;
+
+    // Access granted to each redeemer (issue).  NotAllowed (0) = unset → the
+    // planet's default member access.
+    Access              GrantedAccess = 16;
+
+    // Expiry override, unix seconds (issue).  0 = unset → the planet's
+    // bootstrap TTL.
+    int64               ExpiresAt = 17;
+
+    // Invite ID — the sealed-body hash — addressing an existing policy
+    // (revoke / list).
+    Tag                 InviteTag = 18;
+
+    // The member a redemption minted (redeem response) — the self-minted
+    // identity now seated on the planet.
+    Tag                 MemberTag = 19;
 }
+
+
+// PlanetInviteRedemption is the durable, signed record of one invite redemption —
+// the audit / legal trail of who joined via which invite and when.  The app.invite
+// redemption engine (a future workstream) writes one per redemption to the planet's
+// invite-audit channel; carried on the wire now but not yet produced or enforced.
+// Kept LAST in the file so adding it shifts no other message's generated type index.
+message PlanetInviteRedemption {
+
+    // The original invite that was redeemed, keyed by the hash of its sealed body
+    // (stable across copies).
+    Tag                 Invite = 1;
+
+    // Member identity that joined via this redemption — self-minted by the redeemer
+    // for a multi-use invite, or the invite's pre-assigned member for single-use.
+    Tag                 Member = 2;
+
+    // Redemption NowID — a time-ordered UID that both uniquely stamps this
+    // redemption and encodes when it happened.
+    fixed64             RedeemedAt_0 = 3;   // bytes 0..7
+    fixed64             RedeemedAt_1 = 4;   // bytes 8..15
+
+    // Access granted at redemption — a snapshot of the invite's GrantedAccess so the
+    // record stands alone as the authoritative grant proof.
+    Access              GrantedAccess = 5;
+
+    // Domain-separated RedeemKey signature (safe.SigningDomain amp.sig.invite.v1)
+    // over (planet, invite, member, RedeemedAt, member signing key) — proves the
+    // redeemer opened the sealed token, verifiable by any third party against the
+    // policy's anchored RedeemKey.  A record without a valid proof is void.
+    bytes               RedeemProof = 6;
+}
+
 
 
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
@@ -1657,4 +1731,49 @@ message FederationDirectory {
     repeated FederationPeer Peers     = 1;
 }
 
+
+// InviteStatus is an invite policy's lifecycle state.  Revoked is terminal —
+// the ACC invite rule rejects an un-revoke; reissue instead, so the redemption
+// ledger's legal reading stays monotonic.
+enum InviteStatus {
+    InviteActive  = 0;
+    InviteRevoked = 1;
+}
+
+
+// PlanetInvitePolicy is the governed, planet-side twin of a sealed PlanetInvite
+// token: the founder/admin-authored rules an invite is redeemed under.  Lives
+// planet-public at (PlanetInvites channel, PlanetInvitePolicy, inviteID) where
+// inviteID is the hash of the sealed token body — computable identically by
+// issuer, redeemer, and the ACC gate.  Kept last in the file with
+// PlanetInviteRedemption; keep new messages after it.
+message PlanetInvitePolicy {
+
+    // The invite this policy governs, keyed by the hash of its sealed body.
+    Tag                 Invite = 1;
+
+    // Max redemptions.  0 = unset → single-use pre-minted slot (Member below
+    // pins the slot); > 0 → multi-use self-mint.
+    uint32              MaxRedemptions = 2;
+
+    // Expiry, unix seconds.  The policy is authoritative over the token's own
+    // ExpiresAt at redemption; 0 = no expiry (intentional issuer opt-out).
+    int64               ExpiresAt = 3;
+
+    // Access granted to each redeemer.  NotAllowed (0) = unset → the planet's
+    // default member access.  A redemption claiming more than this is rejected.
+    Access              GrantedAccess = 4;
+
+    // Lifecycle state; see InviteStatus.
+    InviteStatus        Status = 5;
+
+    // Public half of the token's RedeemKey — the anchor every RedeemProof is
+    // verified against.  Chain of authority: genesis → founder-gated policy →
+    // proof → redemption → member.
+    safe.KeyRef         RedeemKey = 6;
+
+    // Single-use only: the pre-minted member this invite admits.  Empty for
+    // multi-use (each redeemer self-mints).
+    Tag                 Member = 7;
+}
 

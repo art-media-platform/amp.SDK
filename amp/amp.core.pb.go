@@ -1096,6 +1096,55 @@ func (TrustState) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{17}
 }
 
+// InviteStatus is an invite policy's lifecycle state.  Revoked is terminal —
+// the ACC invite rule rejects an un-revoke; reissue instead, so the redemption
+// ledger's legal reading stays monotonic.
+type InviteStatus int32
+
+const (
+	InviteStatus_InviteActive  InviteStatus = 0
+	InviteStatus_InviteRevoked InviteStatus = 1
+)
+
+// Enum value maps for InviteStatus.
+var (
+	InviteStatus_name = map[int32]string{
+		0: "InviteActive",
+		1: "InviteRevoked",
+	}
+	InviteStatus_value = map[string]int32{
+		"InviteActive":  0,
+		"InviteRevoked": 1,
+	}
+)
+
+func (x InviteStatus) Enum() *InviteStatus {
+	p := new(InviteStatus)
+	*p = x
+	return p
+}
+
+func (x InviteStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (InviteStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[18].Descriptor()
+}
+
+func (InviteStatus) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[18]
+}
+
+func (x InviteStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use InviteStatus.Descriptor instead.
+func (InviteStatus) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{18}
+}
+
 // TxEnvelope carries the cleartext routing/decryption fields of a tx; all
 // other components (TxHeader, TxOps, datastore) are encrypted under the epoch
 // the envelope names and are thus securely "within" the tx.
@@ -4037,7 +4086,24 @@ type PlanetInvite struct {
 	// time.Now().Unix() > ExpiresAt.  Stamped at issue using the planet's
 	// VaultConfig.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
 	// expiry (only accepted from issuers that intentionally opt out).
-	ExpiresAt     int64 `protobuf:"varint,25,opt,name=ExpiresAt,proto3" json:"ExpiresAt,omitempty"`
+	ExpiresAt int64 `protobuf:"varint,25,opt,name=ExpiresAt,proto3" json:"ExpiresAt,omitempty"`
+	// Max times this invite may be redeemed.  0 = unset → single-use: the invite
+	// carries the one pre-minted MemberTag (field 3).  For a multi-use invite
+	// MemberTag is empty and each redeemer self-mints its own identity, so the
+	// issuer never holds the joiner's key.
+	MaxRedemptions uint32 `protobuf:"varint,26,opt,name=MaxRedemptions,proto3" json:"MaxRedemptions,omitempty"`
+	// Access level a redeemer is granted on join.  NotAllowed (0) = unset → the
+	// planet's default member access; snapshotted into each PlanetInviteRedemption.
+	GrantedAccess Access `protobuf:"varint,27,opt,name=GrantedAccess,proto3,enum=amp.Access" json:"GrantedAccess,omitempty"`
+	// Proof-signing keypair.  Prv is cleartext within the passphrase-sealed
+	// invite (like TempKey); a redeemer signs its redemption's RedeemProof with
+	// it, making passphrase + token possession publicly verifiable against the
+	// invite policy's anchored public half.  Empty on pre-ledger invites.
+	RedeemKey *safe.KeyPairRecord `protobuf:"bytes,28,opt,name=RedeemKey,proto3" json:"RedeemKey,omitempty"`
+	// The planet's hash policy (EpochTerms.EffectiveHashKit) — the digest kit a
+	// RedeemProof signs under, carried so a peerless acceptor needs no synced
+	// genesis to produce a verifiable proof.  Zero = the default kit.
+	HashKitID     safe.HashKitID `protobuf:"varint,29,opt,name=HashKitID,proto3,enum=safe.HashKitID" json:"HashKitID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4121,6 +4187,34 @@ func (x *PlanetInvite) GetExpiresAt() int64 {
 	return 0
 }
 
+func (x *PlanetInvite) GetMaxRedemptions() uint32 {
+	if x != nil {
+		return x.MaxRedemptions
+	}
+	return 0
+}
+
+func (x *PlanetInvite) GetGrantedAccess() Access {
+	if x != nil {
+		return x.GrantedAccess
+	}
+	return Access_NotAllowed
+}
+
+func (x *PlanetInvite) GetRedeemKey() *safe.KeyPairRecord {
+	if x != nil {
+		return x.RedeemKey
+	}
+	return nil
+}
+
+func (x *PlanetInvite) GetHashKitID() safe.HashKitID {
+	if x != nil {
+		return x.HashKitID
+	}
+	return safe.HashKitID(0)
+}
+
 // PlanetInviteOp is the client request to create or accept a member invite.
 // Sent as a TxOp body in the request to amp://~/home/invite/new (create) or invite/accept.
 type PlanetInviteOp struct {
@@ -4132,7 +4226,22 @@ type PlanetInviteOp struct {
 	Passphrase string `protobuf:"bytes,5,opt,name=Passphrase,proto3" json:"Passphrase,omitempty"`
 	// Encrypted PlanetInvite blob (accept only).
 	// On create this is empty; the response returns the encrypted blob.
-	SealedInvite  []byte `protobuf:"bytes,10,opt,name=SealedInvite,proto3" json:"SealedInvite,omitempty"`
+	SealedInvite []byte `protobuf:"bytes,10,opt,name=SealedInvite,proto3" json:"SealedInvite,omitempty"`
+	// Redemption ceiling for the invite being issued.  0 = unset → single-use
+	// pre-minted slot (today's behavior); > 0 → multi-use self-mint policy.
+	MaxRedemptions uint32 `protobuf:"varint,15,opt,name=MaxRedemptions,proto3" json:"MaxRedemptions,omitempty"`
+	// Access granted to each redeemer (issue).  NotAllowed (0) = unset → the
+	// planet's default member access.
+	GrantedAccess Access `protobuf:"varint,16,opt,name=GrantedAccess,proto3,enum=amp.Access" json:"GrantedAccess,omitempty"`
+	// Expiry override, unix seconds (issue).  0 = unset → the planet's
+	// bootstrap TTL.
+	ExpiresAt int64 `protobuf:"varint,17,opt,name=ExpiresAt,proto3" json:"ExpiresAt,omitempty"`
+	// Invite ID — the sealed-body hash — addressing an existing policy
+	// (revoke / list).
+	InviteTag *Tag `protobuf:"bytes,18,opt,name=InviteTag,proto3" json:"InviteTag,omitempty"`
+	// The member a redemption minted (redeem response) — the self-minted
+	// identity now seated on the planet.
+	MemberTag     *Tag `protobuf:"bytes,19,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4188,6 +4297,142 @@ func (x *PlanetInviteOp) GetSealedInvite() []byte {
 	return nil
 }
 
+func (x *PlanetInviteOp) GetMaxRedemptions() uint32 {
+	if x != nil {
+		return x.MaxRedemptions
+	}
+	return 0
+}
+
+func (x *PlanetInviteOp) GetGrantedAccess() Access {
+	if x != nil {
+		return x.GrantedAccess
+	}
+	return Access_NotAllowed
+}
+
+func (x *PlanetInviteOp) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
+}
+
+func (x *PlanetInviteOp) GetInviteTag() *Tag {
+	if x != nil {
+		return x.InviteTag
+	}
+	return nil
+}
+
+func (x *PlanetInviteOp) GetMemberTag() *Tag {
+	if x != nil {
+		return x.MemberTag
+	}
+	return nil
+}
+
+// PlanetInviteRedemption is the durable, signed record of one invite redemption —
+// the audit / legal trail of who joined via which invite and when.  The app.invite
+// redemption engine (a future workstream) writes one per redemption to the planet's
+// invite-audit channel; carried on the wire now but not yet produced or enforced.
+// Kept LAST in the file so adding it shifts no other message's generated type index.
+type PlanetInviteRedemption struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The original invite that was redeemed, keyed by the hash of its sealed body
+	// (stable across copies).
+	Invite *Tag `protobuf:"bytes,1,opt,name=Invite,proto3" json:"Invite,omitempty"`
+	// Member identity that joined via this redemption — self-minted by the redeemer
+	// for a multi-use invite, or the invite's pre-assigned member for single-use.
+	Member *Tag `protobuf:"bytes,2,opt,name=Member,proto3" json:"Member,omitempty"`
+	// Redemption NowID — a time-ordered UID that both uniquely stamps this
+	// redemption and encodes when it happened.
+	RedeemedAt_0 uint64 `protobuf:"fixed64,3,opt,name=RedeemedAt_0,json=RedeemedAt0,proto3" json:"RedeemedAt_0,omitempty"` // bytes 0..7
+	RedeemedAt_1 uint64 `protobuf:"fixed64,4,opt,name=RedeemedAt_1,json=RedeemedAt1,proto3" json:"RedeemedAt_1,omitempty"` // bytes 8..15
+	// Access granted at redemption — a snapshot of the invite's GrantedAccess so the
+	// record stands alone as the authoritative grant proof.
+	GrantedAccess Access `protobuf:"varint,5,opt,name=GrantedAccess,proto3,enum=amp.Access" json:"GrantedAccess,omitempty"`
+	// Domain-separated RedeemKey signature (safe.SigningDomain amp.sig.invite.v1)
+	// over (planet, invite, member, RedeemedAt, member signing key) — proves the
+	// redeemer opened the sealed token, verifiable by any third party against the
+	// policy's anchored RedeemKey.  A record without a valid proof is void.
+	RedeemProof   []byte `protobuf:"bytes,6,opt,name=RedeemProof,proto3" json:"RedeemProof,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlanetInviteRedemption) Reset() {
+	*x = PlanetInviteRedemption{}
+	mi := &file_amp_amp_core_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlanetInviteRedemption) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlanetInviteRedemption) ProtoMessage() {}
+
+func (x *PlanetInviteRedemption) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlanetInviteRedemption.ProtoReflect.Descriptor instead.
+func (*PlanetInviteRedemption) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *PlanetInviteRedemption) GetInvite() *Tag {
+	if x != nil {
+		return x.Invite
+	}
+	return nil
+}
+
+func (x *PlanetInviteRedemption) GetMember() *Tag {
+	if x != nil {
+		return x.Member
+	}
+	return nil
+}
+
+func (x *PlanetInviteRedemption) GetRedeemedAt_0() uint64 {
+	if x != nil {
+		return x.RedeemedAt_0
+	}
+	return 0
+}
+
+func (x *PlanetInviteRedemption) GetRedeemedAt_1() uint64 {
+	if x != nil {
+		return x.RedeemedAt_1
+	}
+	return 0
+}
+
+func (x *PlanetInviteRedemption) GetGrantedAccess() Access {
+	if x != nil {
+		return x.GrantedAccess
+	}
+	return Access_NotAllowed
+}
+
+func (x *PlanetInviteRedemption) GetRedeemProof() []byte {
+	if x != nil {
+		return x.RedeemProof
+	}
+	return nil
+}
+
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
 // Exactly one of the body fields is set per message — peers detect by nil pointer.
 type SyncMsg struct {
@@ -4201,7 +4446,7 @@ type SyncMsg struct {
 
 func (x *SyncMsg) Reset() {
 	*x = SyncMsg{}
-	mi := &file_amp_amp_core_proto_msgTypes[30]
+	mi := &file_amp_amp_core_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4213,7 +4458,7 @@ func (x *SyncMsg) String() string {
 func (*SyncMsg) ProtoMessage() {}
 
 func (x *SyncMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[30]
+	mi := &file_amp_amp_core_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4226,7 +4471,7 @@ func (x *SyncMsg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncMsg.ProtoReflect.Descriptor instead.
 func (*SyncMsg) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{30}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *SyncMsg) GetWatchList() *SyncWatchList {
@@ -4261,7 +4506,7 @@ type SyncWatchList struct {
 
 func (x *SyncWatchList) Reset() {
 	*x = SyncWatchList{}
-	mi := &file_amp_amp_core_proto_msgTypes[31]
+	mi := &file_amp_amp_core_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4273,7 +4518,7 @@ func (x *SyncWatchList) String() string {
 func (*SyncWatchList) ProtoMessage() {}
 
 func (x *SyncWatchList) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[31]
+	mi := &file_amp_amp_core_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4286,7 +4531,7 @@ func (x *SyncWatchList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncWatchList.ProtoReflect.Descriptor instead.
 func (*SyncWatchList) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{31}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SyncWatchList) GetPlanets() []*SyncPlanetStatus {
@@ -4309,7 +4554,7 @@ type SyncPlanetStatus struct {
 
 func (x *SyncPlanetStatus) Reset() {
 	*x = SyncPlanetStatus{}
-	mi := &file_amp_amp_core_proto_msgTypes[32]
+	mi := &file_amp_amp_core_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4321,7 +4566,7 @@ func (x *SyncPlanetStatus) String() string {
 func (*SyncPlanetStatus) ProtoMessage() {}
 
 func (x *SyncPlanetStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[32]
+	mi := &file_amp_amp_core_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4334,7 +4579,7 @@ func (x *SyncPlanetStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncPlanetStatus.ProtoReflect.Descriptor instead.
 func (*SyncPlanetStatus) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{32}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SyncPlanetStatus) GetPlanetID_0() uint64 {
@@ -4384,7 +4629,7 @@ type SyncRangeOffer struct {
 
 func (x *SyncRangeOffer) Reset() {
 	*x = SyncRangeOffer{}
-	mi := &file_amp_amp_core_proto_msgTypes[33]
+	mi := &file_amp_amp_core_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4396,7 +4641,7 @@ func (x *SyncRangeOffer) String() string {
 func (*SyncRangeOffer) ProtoMessage() {}
 
 func (x *SyncRangeOffer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[33]
+	mi := &file_amp_amp_core_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4409,7 +4654,7 @@ func (x *SyncRangeOffer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRangeOffer.ProtoReflect.Descriptor instead.
 func (*SyncRangeOffer) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{33}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *SyncRangeOffer) GetPlanetID_0() uint64 {
@@ -4482,7 +4727,7 @@ type SyncRangeRequest struct {
 
 func (x *SyncRangeRequest) Reset() {
 	*x = SyncRangeRequest{}
-	mi := &file_amp_amp_core_proto_msgTypes[34]
+	mi := &file_amp_amp_core_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4494,7 +4739,7 @@ func (x *SyncRangeRequest) String() string {
 func (*SyncRangeRequest) ProtoMessage() {}
 
 func (x *SyncRangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[34]
+	mi := &file_amp_amp_core_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4507,7 +4752,7 @@ func (x *SyncRangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRangeRequest.ProtoReflect.Descriptor instead.
 func (*SyncRangeRequest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{34}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *SyncRangeRequest) GetPlanetID_0() uint64 {
@@ -4563,7 +4808,7 @@ type Artifact struct {
 
 func (x *Artifact) Reset() {
 	*x = Artifact{}
-	mi := &file_amp_amp_core_proto_msgTypes[35]
+	mi := &file_amp_amp_core_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4575,7 +4820,7 @@ func (x *Artifact) String() string {
 func (*Artifact) ProtoMessage() {}
 
 func (x *Artifact) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[35]
+	mi := &file_amp_amp_core_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4588,7 +4833,7 @@ func (x *Artifact) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Artifact.ProtoReflect.Descriptor instead.
 func (*Artifact) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{35}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *Artifact) GetNodeID_0() uint64 {
@@ -4687,7 +4932,7 @@ type PlanetOrigin struct {
 
 func (x *PlanetOrigin) Reset() {
 	*x = PlanetOrigin{}
-	mi := &file_amp_amp_core_proto_msgTypes[36]
+	mi := &file_amp_amp_core_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4699,7 +4944,7 @@ func (x *PlanetOrigin) String() string {
 func (*PlanetOrigin) ProtoMessage() {}
 
 func (x *PlanetOrigin) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[36]
+	mi := &file_amp_amp_core_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4712,7 +4957,7 @@ func (x *PlanetOrigin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetOrigin.ProtoReflect.Descriptor instead.
 func (*PlanetOrigin) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{36}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *PlanetOrigin) GetFromPlanet() *Tag {
@@ -4778,7 +5023,7 @@ type UIDRange struct {
 
 func (x *UIDRange) Reset() {
 	*x = UIDRange{}
-	mi := &file_amp_amp_core_proto_msgTypes[37]
+	mi := &file_amp_amp_core_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4790,7 +5035,7 @@ func (x *UIDRange) String() string {
 func (*UIDRange) ProtoMessage() {}
 
 func (x *UIDRange) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[37]
+	mi := &file_amp_amp_core_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4803,7 +5048,7 @@ func (x *UIDRange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UIDRange.ProtoReflect.Descriptor instead.
 func (*UIDRange) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{37}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *UIDRange) GetStart_0() uint64 {
@@ -4854,7 +5099,7 @@ type BlobEntry struct {
 
 func (x *BlobEntry) Reset() {
 	*x = BlobEntry{}
-	mi := &file_amp_amp_core_proto_msgTypes[38]
+	mi := &file_amp_amp_core_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4866,7 +5111,7 @@ func (x *BlobEntry) String() string {
 func (*BlobEntry) ProtoMessage() {}
 
 func (x *BlobEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[38]
+	mi := &file_amp_amp_core_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4879,7 +5124,7 @@ func (x *BlobEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BlobEntry.ProtoReflect.Descriptor instead.
 func (*BlobEntry) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{38}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *BlobEntry) GetBlobID_0() uint64 {
@@ -4929,7 +5174,7 @@ type CodexManifest struct {
 
 func (x *CodexManifest) Reset() {
 	*x = CodexManifest{}
-	mi := &file_amp_amp_core_proto_msgTypes[39]
+	mi := &file_amp_amp_core_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4941,7 +5186,7 @@ func (x *CodexManifest) String() string {
 func (*CodexManifest) ProtoMessage() {}
 
 func (x *CodexManifest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[39]
+	mi := &file_amp_amp_core_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4954,7 +5199,7 @@ func (x *CodexManifest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CodexManifest.ProtoReflect.Descriptor instead.
 func (*CodexManifest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{39}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *CodexManifest) GetAttributeKinds() []*Tag {
@@ -4997,7 +5242,7 @@ type CodexHeader struct {
 
 func (x *CodexHeader) Reset() {
 	*x = CodexHeader{}
-	mi := &file_amp_amp_core_proto_msgTypes[40]
+	mi := &file_amp_amp_core_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5009,7 +5254,7 @@ func (x *CodexHeader) String() string {
 func (*CodexHeader) ProtoMessage() {}
 
 func (x *CodexHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[40]
+	mi := &file_amp_amp_core_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5022,7 +5267,7 @@ func (x *CodexHeader) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CodexHeader.ProtoReflect.Descriptor instead.
 func (*CodexHeader) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{40}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *CodexHeader) GetSourcePlanet() *Tag {
@@ -5100,7 +5345,7 @@ type ChronicleCompactPoint struct {
 
 func (x *ChronicleCompactPoint) Reset() {
 	*x = ChronicleCompactPoint{}
-	mi := &file_amp_amp_core_proto_msgTypes[41]
+	mi := &file_amp_amp_core_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5112,7 +5357,7 @@ func (x *ChronicleCompactPoint) String() string {
 func (*ChronicleCompactPoint) ProtoMessage() {}
 
 func (x *ChronicleCompactPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[41]
+	mi := &file_amp_amp_core_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5125,7 +5370,7 @@ func (x *ChronicleCompactPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChronicleCompactPoint.ProtoReflect.Descriptor instead.
 func (*ChronicleCompactPoint) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{41}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *ChronicleCompactPoint) GetUpToTxID_0() uint64 {
@@ -5181,7 +5426,7 @@ type ChronicleCompactHistory struct {
 
 func (x *ChronicleCompactHistory) Reset() {
 	*x = ChronicleCompactHistory{}
-	mi := &file_amp_amp_core_proto_msgTypes[42]
+	mi := &file_amp_amp_core_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5193,7 +5438,7 @@ func (x *ChronicleCompactHistory) String() string {
 func (*ChronicleCompactHistory) ProtoMessage() {}
 
 func (x *ChronicleCompactHistory) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[42]
+	mi := &file_amp_amp_core_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5206,7 +5451,7 @@ func (x *ChronicleCompactHistory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChronicleCompactHistory.ProtoReflect.Descriptor instead.
 func (*ChronicleCompactHistory) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{42}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *ChronicleCompactHistory) GetPoints() []*ChronicleCompactPoint {
@@ -5237,7 +5482,7 @@ type ChronicleCompact struct {
 
 func (x *ChronicleCompact) Reset() {
 	*x = ChronicleCompact{}
-	mi := &file_amp_amp_core_proto_msgTypes[43]
+	mi := &file_amp_amp_core_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5249,7 +5494,7 @@ func (x *ChronicleCompact) String() string {
 func (*ChronicleCompact) ProtoMessage() {}
 
 func (x *ChronicleCompact) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[43]
+	mi := &file_amp_amp_core_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5262,7 +5507,7 @@ func (x *ChronicleCompact) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChronicleCompact.ProtoReflect.Descriptor instead.
 func (*ChronicleCompact) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{43}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *ChronicleCompact) GetUpToTxID_0() uint64 {
@@ -5310,7 +5555,7 @@ type ChronicleManifest struct {
 
 func (x *ChronicleManifest) Reset() {
 	*x = ChronicleManifest{}
-	mi := &file_amp_amp_core_proto_msgTypes[44]
+	mi := &file_amp_amp_core_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5322,7 +5567,7 @@ func (x *ChronicleManifest) String() string {
 func (*ChronicleManifest) ProtoMessage() {}
 
 func (x *ChronicleManifest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[44]
+	mi := &file_amp_amp_core_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5335,7 +5580,7 @@ func (x *ChronicleManifest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChronicleManifest.ProtoReflect.Descriptor instead.
 func (*ChronicleManifest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{44}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{45}
 }
 
 // ChronicleHeader is the first protobuf record in chronicle.bin after
@@ -5373,7 +5618,7 @@ type ChronicleHeader struct {
 
 func (x *ChronicleHeader) Reset() {
 	*x = ChronicleHeader{}
-	mi := &file_amp_amp_core_proto_msgTypes[45]
+	mi := &file_amp_amp_core_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5385,7 +5630,7 @@ func (x *ChronicleHeader) String() string {
 func (*ChronicleHeader) ProtoMessage() {}
 
 func (x *ChronicleHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[45]
+	mi := &file_amp_amp_core_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5398,7 +5643,7 @@ func (x *ChronicleHeader) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChronicleHeader.ProtoReflect.Descriptor instead.
 func (*ChronicleHeader) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{45}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ChronicleHeader) GetSourcePlanet() *Tag {
@@ -5478,7 +5723,7 @@ type AppTarget struct {
 
 func (x *AppTarget) Reset() {
 	*x = AppTarget{}
-	mi := &file_amp_amp_core_proto_msgTypes[46]
+	mi := &file_amp_amp_core_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5490,7 +5735,7 @@ func (x *AppTarget) String() string {
 func (*AppTarget) ProtoMessage() {}
 
 func (x *AppTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[46]
+	mi := &file_amp_amp_core_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5503,7 +5748,7 @@ func (x *AppTarget) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppTarget.ProtoReflect.Descriptor instead.
 func (*AppTarget) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{46}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *AppTarget) GetPlatform() PlatformID {
@@ -5552,7 +5797,7 @@ type AppLink struct {
 
 func (x *AppLink) Reset() {
 	*x = AppLink{}
-	mi := &file_amp_amp_core_proto_msgTypes[47]
+	mi := &file_amp_amp_core_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5564,7 +5809,7 @@ func (x *AppLink) String() string {
 func (*AppLink) ProtoMessage() {}
 
 func (x *AppLink) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[47]
+	mi := &file_amp_amp_core_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5577,7 +5822,7 @@ func (x *AppLink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AppLink.ProtoReflect.Descriptor instead.
 func (*AppLink) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{47}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *AppLink) GetLabel() string {
@@ -5610,7 +5855,7 @@ type CrateRef struct {
 
 func (x *CrateRef) Reset() {
 	*x = CrateRef{}
-	mi := &file_amp_amp_core_proto_msgTypes[48]
+	mi := &file_amp_amp_core_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5622,7 +5867,7 @@ func (x *CrateRef) String() string {
 func (*CrateRef) ProtoMessage() {}
 
 func (x *CrateRef) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[48]
+	mi := &file_amp_amp_core_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5635,7 +5880,7 @@ func (x *CrateRef) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CrateRef.ProtoReflect.Descriptor instead.
 func (*CrateRef) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{48}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *CrateRef) GetCrateURI() string {
@@ -5698,7 +5943,7 @@ type Brand struct {
 
 func (x *Brand) Reset() {
 	*x = Brand{}
-	mi := &file_amp_amp_core_proto_msgTypes[49]
+	mi := &file_amp_amp_core_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5710,7 +5955,7 @@ func (x *Brand) String() string {
 func (*Brand) ProtoMessage() {}
 
 func (x *Brand) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[49]
+	mi := &file_amp_amp_core_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5723,7 +5968,7 @@ func (x *Brand) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Brand.ProtoReflect.Descriptor instead.
 func (*Brand) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{49}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *Brand) GetAppName() string {
@@ -5839,7 +6084,7 @@ type Address struct {
 
 func (x *Address) Reset() {
 	*x = Address{}
-	mi := &file_amp_amp_core_proto_msgTypes[50]
+	mi := &file_amp_amp_core_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5851,7 +6096,7 @@ func (x *Address) String() string {
 func (*Address) ProtoMessage() {}
 
 func (x *Address) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[50]
+	mi := &file_amp_amp_core_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5864,7 +6109,7 @@ func (x *Address) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Address.ProtoReflect.Descriptor instead.
 func (*Address) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{50}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *Address) GetPlanetID_0() uint64 {
@@ -5952,7 +6197,7 @@ type VaultAddr struct {
 
 func (x *VaultAddr) Reset() {
 	*x = VaultAddr{}
-	mi := &file_amp_amp_core_proto_msgTypes[51]
+	mi := &file_amp_amp_core_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5964,7 +6209,7 @@ func (x *VaultAddr) String() string {
 func (*VaultAddr) ProtoMessage() {}
 
 func (x *VaultAddr) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[51]
+	mi := &file_amp_amp_core_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5977,7 +6222,7 @@ func (x *VaultAddr) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VaultAddr.ProtoReflect.Descriptor instead.
 func (*VaultAddr) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{51}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *VaultAddr) GetTransport() string {
@@ -6023,7 +6268,7 @@ type NameServiceRecord struct {
 
 func (x *NameServiceRecord) Reset() {
 	*x = NameServiceRecord{}
-	mi := &file_amp_amp_core_proto_msgTypes[52]
+	mi := &file_amp_amp_core_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6035,7 +6280,7 @@ func (x *NameServiceRecord) String() string {
 func (*NameServiceRecord) ProtoMessage() {}
 
 func (x *NameServiceRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[52]
+	mi := &file_amp_amp_core_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6048,7 +6293,7 @@ func (x *NameServiceRecord) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NameServiceRecord.ProtoReflect.Descriptor instead.
 func (*NameServiceRecord) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{52}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *NameServiceRecord) GetFQDN() string {
@@ -6113,7 +6358,7 @@ type FederationPeer struct {
 
 func (x *FederationPeer) Reset() {
 	*x = FederationPeer{}
-	mi := &file_amp_amp_core_proto_msgTypes[53]
+	mi := &file_amp_amp_core_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6125,7 +6370,7 @@ func (x *FederationPeer) String() string {
 func (*FederationPeer) ProtoMessage() {}
 
 func (x *FederationPeer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[53]
+	mi := &file_amp_amp_core_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6138,7 +6383,7 @@ func (x *FederationPeer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FederationPeer.ProtoReflect.Descriptor instead.
 func (*FederationPeer) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{53}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *FederationPeer) GetFederationID() *Tag {
@@ -6178,7 +6423,7 @@ type FederationDirectory struct {
 
 func (x *FederationDirectory) Reset() {
 	*x = FederationDirectory{}
-	mi := &file_amp_amp_core_proto_msgTypes[54]
+	mi := &file_amp_amp_core_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6190,7 +6435,7 @@ func (x *FederationDirectory) String() string {
 func (*FederationDirectory) ProtoMessage() {}
 
 func (x *FederationDirectory) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[54]
+	mi := &file_amp_amp_core_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6203,12 +6448,123 @@ func (x *FederationDirectory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FederationDirectory.ProtoReflect.Descriptor instead.
 func (*FederationDirectory) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{54}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *FederationDirectory) GetPeers() []*FederationPeer {
 	if x != nil {
 		return x.Peers
+	}
+	return nil
+}
+
+// PlanetInvitePolicy is the governed, planet-side twin of a sealed PlanetInvite
+// token: the founder/admin-authored rules an invite is redeemed under.  Lives
+// planet-public at (PlanetInvites channel, PlanetInvitePolicy, inviteID) where
+// inviteID is the hash of the sealed token body — computable identically by
+// issuer, redeemer, and the ACC gate.  Kept last in the file with
+// PlanetInviteRedemption; keep new messages after it.
+type PlanetInvitePolicy struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The invite this policy governs, keyed by the hash of its sealed body.
+	Invite *Tag `protobuf:"bytes,1,opt,name=Invite,proto3" json:"Invite,omitempty"`
+	// Max redemptions.  0 = unset → single-use pre-minted slot (Member below
+	// pins the slot); > 0 → multi-use self-mint.
+	MaxRedemptions uint32 `protobuf:"varint,2,opt,name=MaxRedemptions,proto3" json:"MaxRedemptions,omitempty"`
+	// Expiry, unix seconds.  The policy is authoritative over the token's own
+	// ExpiresAt at redemption; 0 = no expiry (intentional issuer opt-out).
+	ExpiresAt int64 `protobuf:"varint,3,opt,name=ExpiresAt,proto3" json:"ExpiresAt,omitempty"`
+	// Access granted to each redeemer.  NotAllowed (0) = unset → the planet's
+	// default member access.  A redemption claiming more than this is rejected.
+	GrantedAccess Access `protobuf:"varint,4,opt,name=GrantedAccess,proto3,enum=amp.Access" json:"GrantedAccess,omitempty"`
+	// Lifecycle state; see InviteStatus.
+	Status InviteStatus `protobuf:"varint,5,opt,name=Status,proto3,enum=amp.InviteStatus" json:"Status,omitempty"`
+	// Public half of the token's RedeemKey — the anchor every RedeemProof is
+	// verified against.  Chain of authority: genesis → founder-gated policy →
+	// proof → redemption → member.
+	RedeemKey *safe.KeyRef `protobuf:"bytes,6,opt,name=RedeemKey,proto3" json:"RedeemKey,omitempty"`
+	// Single-use only: the pre-minted member this invite admits.  Empty for
+	// multi-use (each redeemer self-mints).
+	Member        *Tag `protobuf:"bytes,7,opt,name=Member,proto3" json:"Member,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlanetInvitePolicy) Reset() {
+	*x = PlanetInvitePolicy{}
+	mi := &file_amp_amp_core_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlanetInvitePolicy) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlanetInvitePolicy) ProtoMessage() {}
+
+func (x *PlanetInvitePolicy) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlanetInvitePolicy.ProtoReflect.Descriptor instead.
+func (*PlanetInvitePolicy) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *PlanetInvitePolicy) GetInvite() *Tag {
+	if x != nil {
+		return x.Invite
+	}
+	return nil
+}
+
+func (x *PlanetInvitePolicy) GetMaxRedemptions() uint32 {
+	if x != nil {
+		return x.MaxRedemptions
+	}
+	return 0
+}
+
+func (x *PlanetInvitePolicy) GetExpiresAt() int64 {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return 0
+}
+
+func (x *PlanetInvitePolicy) GetGrantedAccess() Access {
+	if x != nil {
+		return x.GrantedAccess
+	}
+	return Access_NotAllowed
+}
+
+func (x *PlanetInvitePolicy) GetStatus() InviteStatus {
+	if x != nil {
+		return x.Status
+	}
+	return InviteStatus_InviteActive
+}
+
+func (x *PlanetInvitePolicy) GetRedeemKey() *safe.KeyRef {
+	if x != nil {
+		return x.RedeemKey
+	}
+	return nil
+}
+
+func (x *PlanetInvitePolicy) GetMember() *Tag {
+	if x != nil {
+		return x.Member
 	}
 	return nil
 }
@@ -6472,7 +6828,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"Delegation\x18\b \x01(\v2\f.amp.AddressR\n" +
 	"Delegation\x12\x1c\n" +
-	"\tRationale\x18\x0f \x01(\tR\tRationale\"\xb4\x02\n" +
+	"\tRationale\x18\x0f \x01(\tR\tRationale\"\xf1\x03\n" +
 	"\fPlanetInvite\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12$\n" +
 	"\bEpochTag\x18\x02 \x01(\v2\b.amp.TagR\bEpochTag\x12&\n" +
@@ -6482,14 +6838,30 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"VaultAddrs\x18\x0f \x03(\v2\x0e.amp.VaultAddrR\n" +
 	"VaultAddrs\x121\n" +
 	"\bEpochKey\x18\x14 \x01(\v2\x15.safe.EncryptedSymKeyR\bEpochKey\x12\x1c\n" +
-	"\tExpiresAt\x18\x19 \x01(\x03R\tExpiresAt\"|\n" +
+	"\tExpiresAt\x18\x19 \x01(\x03R\tExpiresAt\x12&\n" +
+	"\x0eMaxRedemptions\x18\x1a \x01(\rR\x0eMaxRedemptions\x121\n" +
+	"\rGrantedAccess\x18\x1b \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x121\n" +
+	"\tRedeemKey\x18\x1c \x01(\v2\x13.safe.KeyPairRecordR\tRedeemKey\x12-\n" +
+	"\tHashKitID\x18\x1d \x01(\x0e2\x0f.safe.HashKitIDR\tHashKitID\"\xc5\x02\n" +
 	"\x0ePlanetInviteOp\x12&\n" +
 	"\tPlanetTag\x18\x01 \x01(\v2\b.amp.TagR\tPlanetTag\x12\x1e\n" +
 	"\n" +
 	"Passphrase\x18\x05 \x01(\tR\n" +
 	"Passphrase\x12\"\n" +
 	"\fSealedInvite\x18\n" +
-	" \x01(\fR\fSealedInvite\"\xab\x01\n" +
+	" \x01(\fR\fSealedInvite\x12&\n" +
+	"\x0eMaxRedemptions\x18\x0f \x01(\rR\x0eMaxRedemptions\x121\n" +
+	"\rGrantedAccess\x18\x10 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x12\x1c\n" +
+	"\tExpiresAt\x18\x11 \x01(\x03R\tExpiresAt\x12&\n" +
+	"\tInviteTag\x18\x12 \x01(\v2\b.amp.TagR\tInviteTag\x12&\n" +
+	"\tMemberTag\x18\x13 \x01(\v2\b.amp.TagR\tMemberTag\"\xf7\x01\n" +
+	"\x16PlanetInviteRedemption\x12 \n" +
+	"\x06Invite\x18\x01 \x01(\v2\b.amp.TagR\x06Invite\x12 \n" +
+	"\x06Member\x18\x02 \x01(\v2\b.amp.TagR\x06Member\x12!\n" +
+	"\fRedeemedAt_0\x18\x03 \x01(\x06R\vRedeemedAt0\x12!\n" +
+	"\fRedeemedAt_1\x18\x04 \x01(\x06R\vRedeemedAt1\x121\n" +
+	"\rGrantedAccess\x18\x05 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x12 \n" +
+	"\vRedeemProof\x18\x06 \x01(\fR\vRedeemProof\"\xab\x01\n" +
 	"\aSyncMsg\x120\n" +
 	"\tWatchList\x18\x01 \x01(\v2\x12.amp.SyncWatchListR\tWatchList\x123\n" +
 	"\n" +
@@ -6676,7 +7048,15 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"VaultAddrs\x12\x14\n" +
 	"\x05Label\x18\x03 \x01(\tR\x05LabelJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"@\n" +
 	"\x13FederationDirectory\x12)\n" +
-	"\x05Peers\x18\x01 \x03(\v2\x13.amp.FederationPeerR\x05Peers*?\n" +
+	"\x05Peers\x18\x01 \x03(\v2\x13.amp.FederationPeerR\x05Peers\"\xa8\x02\n" +
+	"\x12PlanetInvitePolicy\x12 \n" +
+	"\x06Invite\x18\x01 \x01(\v2\b.amp.TagR\x06Invite\x12&\n" +
+	"\x0eMaxRedemptions\x18\x02 \x01(\rR\x0eMaxRedemptions\x12\x1c\n" +
+	"\tExpiresAt\x18\x03 \x01(\x03R\tExpiresAt\x121\n" +
+	"\rGrantedAccess\x18\x04 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x12)\n" +
+	"\x06Status\x18\x05 \x01(\x0e2\x11.amp.InviteStatusR\x06Status\x12*\n" +
+	"\tRedeemKey\x18\x06 \x01(\v2\f.safe.KeyRefR\tRedeemKey\x12 \n" +
+	"\x06Member\x18\a \x01(\v2\b.amp.TagR\x06Member*?\n" +
 	"\tTxOpFlags\x12\x0e\n" +
 	"\n" +
 	"Unassigned\x10\x00\x12\n" +
@@ -6820,7 +7200,10 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"TrustState\x12\r\n" +
 	"\tUnchecked\x10\x00\x12\f\n" +
 	"\bVerified\x10\x01\x12\v\n" +
-	"\aRefuted\x10\x02B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
+	"\aRefuted\x10\x02*3\n" +
+	"\fInviteStatus\x12\x10\n" +
+	"\fInviteActive\x10\x00\x12\x11\n" +
+	"\rInviteRevoked\x10\x01B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_amp_core_proto_rawDescOnce sync.Once
@@ -6834,8 +7217,8 @@ func file_amp_amp_core_proto_rawDescGZIP() []byte {
 	return file_amp_amp_core_proto_rawDescData
 }
 
-var file_amp_amp_core_proto_enumTypes = make([]protoimpl.EnumInfo, 18)
-var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 55)
+var file_amp_amp_core_proto_enumTypes = make([]protoimpl.EnumInfo, 19)
+var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 57)
 var file_amp_amp_core_proto_goTypes = []any{
 	(TxOpFlags)(0),                  // 0: amp.TxOpFlags
 	(TxField)(0),                    // 1: amp.TxField
@@ -6855,191 +7238,208 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(WithdrawReason)(0),             // 15: amp.WithdrawReason
 	(PlatformID)(0),                 // 16: amp.PlatformID
 	(TrustState)(0),                 // 17: amp.TrustState
-	(*TxEnvelope)(nil),              // 18: amp.TxEnvelope
-	(*TxHeader)(nil),                // 19: amp.TxHeader
-	(*Login)(nil),                   // 20: amp.Login
-	(*LoginChallenge)(nil),          // 21: amp.LoginChallenge
-	(*LoginResponse)(nil),           // 22: amp.LoginResponse
-	(*LoginCheckpoint)(nil),         // 23: amp.LoginCheckpoint
-	(*PinRequest)(nil),              // 24: amp.PinRequest
-	(*ItemSelector)(nil),            // 25: amp.ItemSelector
-	(*ItemSpan)(nil),                // 26: amp.ItemSpan
-	(*Tag)(nil),                     // 27: amp.Tag
-	(*Tags)(nil),                    // 28: amp.Tags
-	(*AuthContext)(nil),             // 29: amp.AuthContext
-	(*AccessGrant)(nil),             // 30: amp.AccessGrant
-	(*AccessGrants)(nil),            // 31: amp.AccessGrants
-	(*ChannelEpoch)(nil),            // 32: amp.ChannelEpoch
-	(*BlobRef)(nil),                 // 33: amp.BlobRef
-	(*PlanetStorageOpts)(nil),       // 34: amp.PlanetStorageOpts
-	(*VaultConfig)(nil),             // 35: amp.VaultConfig
-	(*BrandMark)(nil),               // 36: amp.BrandMark
-	(*PlanetCharter)(nil),           // 37: amp.PlanetCharter
-	(*EpochTerms)(nil),              // 38: amp.EpochTerms
-	(*PlanetEpoch)(nil),             // 39: amp.PlanetEpoch
-	(*CoSignature)(nil),             // 40: amp.CoSignature
-	(*WrappedKey)(nil),              // 41: amp.WrappedKey
-	(*MemberEpoch)(nil),             // 42: amp.MemberEpoch
-	(*Attestation)(nil),             // 43: amp.Attestation
-	(*Equivalence)(nil),             // 44: amp.Equivalence
-	(*Withdraw)(nil),                // 45: amp.Withdraw
-	(*PlanetInvite)(nil),            // 46: amp.PlanetInvite
-	(*PlanetInviteOp)(nil),          // 47: amp.PlanetInviteOp
-	(*SyncMsg)(nil),                 // 48: amp.SyncMsg
-	(*SyncWatchList)(nil),           // 49: amp.SyncWatchList
-	(*SyncPlanetStatus)(nil),        // 50: amp.SyncPlanetStatus
-	(*SyncRangeOffer)(nil),          // 51: amp.SyncRangeOffer
-	(*SyncRangeRequest)(nil),        // 52: amp.SyncRangeRequest
-	(*Artifact)(nil),                // 53: amp.Artifact
-	(*PlanetOrigin)(nil),            // 54: amp.PlanetOrigin
-	(*UIDRange)(nil),                // 55: amp.UIDRange
-	(*BlobEntry)(nil),               // 56: amp.BlobEntry
-	(*CodexManifest)(nil),           // 57: amp.CodexManifest
-	(*CodexHeader)(nil),             // 58: amp.CodexHeader
-	(*ChronicleCompactPoint)(nil),   // 59: amp.ChronicleCompactPoint
-	(*ChronicleCompactHistory)(nil), // 60: amp.ChronicleCompactHistory
-	(*ChronicleCompact)(nil),        // 61: amp.ChronicleCompact
-	(*ChronicleManifest)(nil),       // 62: amp.ChronicleManifest
-	(*ChronicleHeader)(nil),         // 63: amp.ChronicleHeader
-	(*AppTarget)(nil),               // 64: amp.AppTarget
-	(*AppLink)(nil),                 // 65: amp.AppLink
-	(*CrateRef)(nil),                // 66: amp.CrateRef
-	(*Brand)(nil),                   // 67: amp.Brand
-	(*Address)(nil),                 // 68: amp.Address
-	(*VaultAddr)(nil),               // 69: amp.VaultAddr
-	(*NameServiceRecord)(nil),       // 70: amp.NameServiceRecord
-	(*FederationPeer)(nil),          // 71: amp.FederationPeer
-	(*FederationDirectory)(nil),     // 72: amp.FederationDirectory
-	(safe.HashKitID)(0),             // 73: safe.HashKitID
-	(safe.KeyRole)(0),               // 74: safe.KeyRole
-	(*safe.KeyRef)(nil),             // 75: safe.KeyRef
-	(*safe.KeyPairRecord)(nil),      // 76: safe.KeyPairRecord
-	(*safe.EncryptedSymKey)(nil),    // 77: safe.EncryptedSymKey
+	(InviteStatus)(0),               // 18: amp.InviteStatus
+	(*TxEnvelope)(nil),              // 19: amp.TxEnvelope
+	(*TxHeader)(nil),                // 20: amp.TxHeader
+	(*Login)(nil),                   // 21: amp.Login
+	(*LoginChallenge)(nil),          // 22: amp.LoginChallenge
+	(*LoginResponse)(nil),           // 23: amp.LoginResponse
+	(*LoginCheckpoint)(nil),         // 24: amp.LoginCheckpoint
+	(*PinRequest)(nil),              // 25: amp.PinRequest
+	(*ItemSelector)(nil),            // 26: amp.ItemSelector
+	(*ItemSpan)(nil),                // 27: amp.ItemSpan
+	(*Tag)(nil),                     // 28: amp.Tag
+	(*Tags)(nil),                    // 29: amp.Tags
+	(*AuthContext)(nil),             // 30: amp.AuthContext
+	(*AccessGrant)(nil),             // 31: amp.AccessGrant
+	(*AccessGrants)(nil),            // 32: amp.AccessGrants
+	(*ChannelEpoch)(nil),            // 33: amp.ChannelEpoch
+	(*BlobRef)(nil),                 // 34: amp.BlobRef
+	(*PlanetStorageOpts)(nil),       // 35: amp.PlanetStorageOpts
+	(*VaultConfig)(nil),             // 36: amp.VaultConfig
+	(*BrandMark)(nil),               // 37: amp.BrandMark
+	(*PlanetCharter)(nil),           // 38: amp.PlanetCharter
+	(*EpochTerms)(nil),              // 39: amp.EpochTerms
+	(*PlanetEpoch)(nil),             // 40: amp.PlanetEpoch
+	(*CoSignature)(nil),             // 41: amp.CoSignature
+	(*WrappedKey)(nil),              // 42: amp.WrappedKey
+	(*MemberEpoch)(nil),             // 43: amp.MemberEpoch
+	(*Attestation)(nil),             // 44: amp.Attestation
+	(*Equivalence)(nil),             // 45: amp.Equivalence
+	(*Withdraw)(nil),                // 46: amp.Withdraw
+	(*PlanetInvite)(nil),            // 47: amp.PlanetInvite
+	(*PlanetInviteOp)(nil),          // 48: amp.PlanetInviteOp
+	(*PlanetInviteRedemption)(nil),  // 49: amp.PlanetInviteRedemption
+	(*SyncMsg)(nil),                 // 50: amp.SyncMsg
+	(*SyncWatchList)(nil),           // 51: amp.SyncWatchList
+	(*SyncPlanetStatus)(nil),        // 52: amp.SyncPlanetStatus
+	(*SyncRangeOffer)(nil),          // 53: amp.SyncRangeOffer
+	(*SyncRangeRequest)(nil),        // 54: amp.SyncRangeRequest
+	(*Artifact)(nil),                // 55: amp.Artifact
+	(*PlanetOrigin)(nil),            // 56: amp.PlanetOrigin
+	(*UIDRange)(nil),                // 57: amp.UIDRange
+	(*BlobEntry)(nil),               // 58: amp.BlobEntry
+	(*CodexManifest)(nil),           // 59: amp.CodexManifest
+	(*CodexHeader)(nil),             // 60: amp.CodexHeader
+	(*ChronicleCompactPoint)(nil),   // 61: amp.ChronicleCompactPoint
+	(*ChronicleCompactHistory)(nil), // 62: amp.ChronicleCompactHistory
+	(*ChronicleCompact)(nil),        // 63: amp.ChronicleCompact
+	(*ChronicleManifest)(nil),       // 64: amp.ChronicleManifest
+	(*ChronicleHeader)(nil),         // 65: amp.ChronicleHeader
+	(*AppTarget)(nil),               // 66: amp.AppTarget
+	(*AppLink)(nil),                 // 67: amp.AppLink
+	(*CrateRef)(nil),                // 68: amp.CrateRef
+	(*Brand)(nil),                   // 69: amp.Brand
+	(*Address)(nil),                 // 70: amp.Address
+	(*VaultAddr)(nil),               // 71: amp.VaultAddr
+	(*NameServiceRecord)(nil),       // 72: amp.NameServiceRecord
+	(*FederationPeer)(nil),          // 73: amp.FederationPeer
+	(*FederationDirectory)(nil),     // 74: amp.FederationDirectory
+	(*PlanetInvitePolicy)(nil),      // 75: amp.PlanetInvitePolicy
+	(safe.HashKitID)(0),             // 76: safe.HashKitID
+	(safe.KeyRole)(0),               // 77: safe.KeyRole
+	(*safe.KeyRef)(nil),             // 78: safe.KeyRef
+	(*safe.KeyPairRecord)(nil),      // 79: safe.KeyPairRecord
+	(*safe.EncryptedSymKey)(nil),    // 80: safe.EncryptedSymKey
 }
 var file_amp_amp_core_proto_depIdxs = []int32{
-	27,  // 0: amp.TxEnvelope.Planet:type_name -> amp.Tag
-	27,  // 1: amp.TxEnvelope.Epoch:type_name -> amp.Tag
+	28,  // 0: amp.TxEnvelope.Planet:type_name -> amp.Tag
+	28,  // 1: amp.TxEnvelope.Epoch:type_name -> amp.Tag
 	4,   // 2: amp.TxHeader.Status:type_name -> amp.PinStatus
-	24,  // 3: amp.TxHeader.Request:type_name -> amp.PinRequest
-	29,  // 4: amp.TxHeader.AuthContexts:type_name -> amp.AuthContext
-	27,  // 5: amp.Login.Member:type_name -> amp.Tag
-	27,  // 6: amp.Login.Planet:type_name -> amp.Tag
-	27,  // 7: amp.Login.Device:type_name -> amp.Tag
-	23,  // 8: amp.Login.Checkpoint:type_name -> amp.LoginCheckpoint
+	25,  // 3: amp.TxHeader.Request:type_name -> amp.PinRequest
+	30,  // 4: amp.TxHeader.AuthContexts:type_name -> amp.AuthContext
+	28,  // 5: amp.Login.Member:type_name -> amp.Tag
+	28,  // 6: amp.Login.Planet:type_name -> amp.Tag
+	28,  // 7: amp.Login.Device:type_name -> amp.Tag
+	24,  // 8: amp.Login.Checkpoint:type_name -> amp.LoginCheckpoint
 	5,   // 9: amp.PinRequest.Mode:type_name -> amp.PinMode
-	25,  // 10: amp.PinRequest.Selector:type_name -> amp.ItemSelector
-	26,  // 11: amp.ItemSelector.Spans:type_name -> amp.ItemSpan
+	26,  // 10: amp.PinRequest.Selector:type_name -> amp.ItemSelector
+	27,  // 11: amp.ItemSelector.Spans:type_name -> amp.ItemSpan
 	8,   // 12: amp.Tag.Units:type_name -> amp.Units
-	27,  // 13: amp.Tags.Head:type_name -> amp.Tag
-	27,  // 14: amp.Tags.SubTags:type_name -> amp.Tag
-	28,  // 15: amp.Tags.Children:type_name -> amp.Tags
-	27,  // 16: amp.AccessGrant.MemberTag:type_name -> amp.Tag
+	28,  // 13: amp.Tags.Head:type_name -> amp.Tag
+	28,  // 14: amp.Tags.SubTags:type_name -> amp.Tag
+	29,  // 15: amp.Tags.Children:type_name -> amp.Tags
+	28,  // 16: amp.AccessGrant.MemberTag:type_name -> amp.Tag
 	9,   // 17: amp.AccessGrant.Access:type_name -> amp.Access
-	30,  // 18: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
-	27,  // 19: amp.ChannelEpoch.Channel:type_name -> amp.Tag
-	27,  // 20: amp.ChannelEpoch.Parent:type_name -> amp.Tag
-	27,  // 21: amp.ChannelEpoch.ChType:type_name -> amp.Tag
+	31,  // 18: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
+	28,  // 19: amp.ChannelEpoch.Channel:type_name -> amp.Tag
+	28,  // 20: amp.ChannelEpoch.Parent:type_name -> amp.Tag
+	28,  // 21: amp.ChannelEpoch.ChType:type_name -> amp.Tag
 	10,  // 22: amp.ChannelEpoch.ContentPolicy:type_name -> amp.ContentPolicy
-	31,  // 23: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
-	31,  // 24: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
-	68,  // 25: amp.ChannelEpoch.Cites:type_name -> amp.Address
-	73,  // 26: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
-	27,  // 27: amp.BlobRef.AssetTag:type_name -> amp.Tag
-	27,  // 28: amp.BlobRef.BlobTag:type_name -> amp.Tag
-	69,  // 29: amp.VaultConfig.VaultAddrs:type_name -> amp.VaultAddr
-	27,  // 30: amp.BrandMark.NamedBy:type_name -> amp.Tag
-	28,  // 31: amp.BrandMark.Glyphs:type_name -> amp.Tags
-	27,  // 32: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
-	27,  // 33: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
-	27,  // 34: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
-	54,  // 35: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
+	32,  // 23: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
+	32,  // 24: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
+	70,  // 25: amp.ChannelEpoch.Cites:type_name -> amp.Address
+	76,  // 26: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
+	28,  // 27: amp.BlobRef.AssetTag:type_name -> amp.Tag
+	28,  // 28: amp.BlobRef.BlobTag:type_name -> amp.Tag
+	71,  // 29: amp.VaultConfig.VaultAddrs:type_name -> amp.VaultAddr
+	28,  // 30: amp.BrandMark.NamedBy:type_name -> amp.Tag
+	29,  // 31: amp.BrandMark.Glyphs:type_name -> amp.Tags
+	28,  // 32: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
+	28,  // 33: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
+	28,  // 34: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
+	56,  // 35: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
 	12,  // 36: amp.PlanetCharter.Privacy:type_name -> amp.PrivacyMode
-	28,  // 37: amp.PlanetCharter.Declaration:type_name -> amp.Tags
-	27,  // 38: amp.PlanetCharter.Founders:type_name -> amp.Tag
-	27,  // 39: amp.EpochTerms.EpochTag:type_name -> amp.Tag
-	27,  // 40: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
-	73,  // 41: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
-	36,  // 42: amp.EpochTerms.Mark:type_name -> amp.BrandMark
-	27,  // 43: amp.EpochTerms.Foyer:type_name -> amp.Tag
-	27,  // 44: amp.EpochTerms.Index:type_name -> amp.Tag
-	27,  // 45: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
+	29,  // 37: amp.PlanetCharter.Declaration:type_name -> amp.Tags
+	28,  // 38: amp.PlanetCharter.Founders:type_name -> amp.Tag
+	28,  // 39: amp.EpochTerms.EpochTag:type_name -> amp.Tag
+	28,  // 40: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
+	76,  // 41: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
+	37,  // 42: amp.EpochTerms.Mark:type_name -> amp.BrandMark
+	28,  // 43: amp.EpochTerms.Foyer:type_name -> amp.Tag
+	28,  // 44: amp.EpochTerms.Index:type_name -> amp.Tag
+	28,  // 45: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
 	11,  // 46: amp.EpochTerms.Seal:type_name -> amp.SealState
-	68,  // 47: amp.EpochTerms.CodexEdition:type_name -> amp.Address
-	35,  // 48: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
-	27,  // 49: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
-	40,  // 50: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
-	40,  // 51: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
-	27,  // 52: amp.CoSignature.MemberTag:type_name -> amp.Tag
-	74,  // 53: amp.WrappedKey.Role:type_name -> safe.KeyRole
-	27,  // 54: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
-	27,  // 55: amp.MemberEpoch.Node:type_name -> amp.Tag
-	27,  // 56: amp.MemberEpoch.Epoch:type_name -> amp.Tag
-	41,  // 57: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
+	70,  // 47: amp.EpochTerms.CodexEdition:type_name -> amp.Address
+	36,  // 48: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
+	28,  // 49: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
+	41,  // 50: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
+	41,  // 51: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
+	28,  // 52: amp.CoSignature.MemberTag:type_name -> amp.Tag
+	77,  // 53: amp.WrappedKey.Role:type_name -> safe.KeyRole
+	28,  // 54: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
+	28,  // 55: amp.MemberEpoch.Node:type_name -> amp.Tag
+	28,  // 56: amp.MemberEpoch.Epoch:type_name -> amp.Tag
+	42,  // 57: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
 	13,  // 58: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
-	75,  // 59: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
-	75,  // 60: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
-	68,  // 61: amp.MemberEpoch.Cites:type_name -> amp.Address
-	27,  // 62: amp.MemberEpoch.Kind:type_name -> amp.Tag
-	68,  // 63: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
-	27,  // 64: amp.Attestation.Subject:type_name -> amp.Tag
+	78,  // 59: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
+	78,  // 60: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
+	70,  // 61: amp.MemberEpoch.Cites:type_name -> amp.Address
+	28,  // 62: amp.MemberEpoch.Kind:type_name -> amp.Tag
+	70,  // 63: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
+	28,  // 64: amp.Attestation.Subject:type_name -> amp.Tag
 	14,  // 65: amp.Attestation.Type:type_name -> amp.AttestationType
-	27,  // 66: amp.Attestation.ObserverID:type_name -> amp.Tag
-	27,  // 67: amp.Attestation.Modality:type_name -> amp.Tag
-	27,  // 68: amp.Equivalence.LeftAddress:type_name -> amp.Tag
-	27,  // 69: amp.Equivalence.RightAddress:type_name -> amp.Tag
-	27,  // 70: amp.Equivalence.Context:type_name -> amp.Tag
-	27,  // 71: amp.Equivalence.Strength:type_name -> amp.Tag
-	27,  // 72: amp.Withdraw.Subject:type_name -> amp.Tag
-	68,  // 73: amp.Withdraw.Withdrawn:type_name -> amp.Address
+	28,  // 66: amp.Attestation.ObserverID:type_name -> amp.Tag
+	28,  // 67: amp.Attestation.Modality:type_name -> amp.Tag
+	28,  // 68: amp.Equivalence.LeftAddress:type_name -> amp.Tag
+	28,  // 69: amp.Equivalence.RightAddress:type_name -> amp.Tag
+	28,  // 70: amp.Equivalence.Context:type_name -> amp.Tag
+	28,  // 71: amp.Equivalence.Strength:type_name -> amp.Tag
+	28,  // 72: amp.Withdraw.Subject:type_name -> amp.Tag
+	70,  // 73: amp.Withdraw.Withdrawn:type_name -> amp.Address
 	15,  // 74: amp.Withdraw.Reason:type_name -> amp.WithdrawReason
-	68,  // 75: amp.Withdraw.Delegation:type_name -> amp.Address
-	27,  // 76: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
-	27,  // 77: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
-	27,  // 78: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	76,  // 79: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	69,  // 80: amp.PlanetInvite.VaultAddrs:type_name -> amp.VaultAddr
-	77,  // 81: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
-	27,  // 82: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
-	49,  // 83: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	51,  // 84: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	52,  // 85: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	50,  // 86: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	33,  // 87: amp.Artifact.BlobValue:type_name -> amp.BlobRef
-	27,  // 88: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
-	27,  // 89: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
-	27,  // 90: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
-	27,  // 91: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
-	27,  // 92: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
-	54,  // 93: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
-	57,  // 94: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
-	73,  // 95: amp.CodexHeader.DigestHashKit:type_name -> safe.HashKitID
-	59,  // 96: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
-	27,  // 97: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
-	27,  // 98: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
-	55,  // 99: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
-	60,  // 100: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
-	73,  // 101: amp.ChronicleHeader.DigestHashKit:type_name -> safe.HashKitID
-	62,  // 102: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
-	16,  // 103: amp.AppTarget.Platform:type_name -> amp.PlatformID
-	64,  // 104: amp.Brand.Targets:type_name -> amp.AppTarget
-	65,  // 105: amp.Brand.Links:type_name -> amp.AppLink
-	66,  // 106: amp.Brand.BundledCrates:type_name -> amp.CrateRef
-	27,  // 107: amp.Brand.NamedBy:type_name -> amp.Tag
-	27,  // 108: amp.Brand.TemplateSet:type_name -> amp.Tag
-	27,  // 109: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
-	68,  // 110: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
-	67,  // 111: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
-	69,  // 112: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
-	27,  // 113: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
-	27,  // 114: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
-	27,  // 115: amp.FederationPeer.FederationID:type_name -> amp.Tag
-	69,  // 116: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
-	71,  // 117: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
-	118, // [118:118] is the sub-list for method output_type
-	118, // [118:118] is the sub-list for method input_type
-	118, // [118:118] is the sub-list for extension type_name
-	118, // [118:118] is the sub-list for extension extendee
-	0,   // [0:118] is the sub-list for field type_name
+	70,  // 75: amp.Withdraw.Delegation:type_name -> amp.Address
+	28,  // 76: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
+	28,  // 77: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
+	28,  // 78: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
+	79,  // 79: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	71,  // 80: amp.PlanetInvite.VaultAddrs:type_name -> amp.VaultAddr
+	80,  // 81: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	9,   // 82: amp.PlanetInvite.GrantedAccess:type_name -> amp.Access
+	79,  // 83: amp.PlanetInvite.RedeemKey:type_name -> safe.KeyPairRecord
+	76,  // 84: amp.PlanetInvite.HashKitID:type_name -> safe.HashKitID
+	28,  // 85: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	9,   // 86: amp.PlanetInviteOp.GrantedAccess:type_name -> amp.Access
+	28,  // 87: amp.PlanetInviteOp.InviteTag:type_name -> amp.Tag
+	28,  // 88: amp.PlanetInviteOp.MemberTag:type_name -> amp.Tag
+	28,  // 89: amp.PlanetInviteRedemption.Invite:type_name -> amp.Tag
+	28,  // 90: amp.PlanetInviteRedemption.Member:type_name -> amp.Tag
+	9,   // 91: amp.PlanetInviteRedemption.GrantedAccess:type_name -> amp.Access
+	51,  // 92: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	53,  // 93: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	54,  // 94: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	52,  // 95: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	34,  // 96: amp.Artifact.BlobValue:type_name -> amp.BlobRef
+	28,  // 97: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
+	28,  // 98: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
+	28,  // 99: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
+	28,  // 100: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
+	28,  // 101: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
+	56,  // 102: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
+	59,  // 103: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
+	76,  // 104: amp.CodexHeader.DigestHashKit:type_name -> safe.HashKitID
+	61,  // 105: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
+	28,  // 106: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
+	28,  // 107: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
+	57,  // 108: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
+	62,  // 109: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
+	76,  // 110: amp.ChronicleHeader.DigestHashKit:type_name -> safe.HashKitID
+	64,  // 111: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
+	16,  // 112: amp.AppTarget.Platform:type_name -> amp.PlatformID
+	66,  // 113: amp.Brand.Targets:type_name -> amp.AppTarget
+	67,  // 114: amp.Brand.Links:type_name -> amp.AppLink
+	68,  // 115: amp.Brand.BundledCrates:type_name -> amp.CrateRef
+	28,  // 116: amp.Brand.NamedBy:type_name -> amp.Tag
+	28,  // 117: amp.Brand.TemplateSet:type_name -> amp.Tag
+	28,  // 118: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
+	70,  // 119: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
+	69,  // 120: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
+	71,  // 121: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
+	28,  // 122: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
+	28,  // 123: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
+	28,  // 124: amp.FederationPeer.FederationID:type_name -> amp.Tag
+	71,  // 125: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
+	73,  // 126: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
+	28,  // 127: amp.PlanetInvitePolicy.Invite:type_name -> amp.Tag
+	9,   // 128: amp.PlanetInvitePolicy.GrantedAccess:type_name -> amp.Access
+	18,  // 129: amp.PlanetInvitePolicy.Status:type_name -> amp.InviteStatus
+	78,  // 130: amp.PlanetInvitePolicy.RedeemKey:type_name -> safe.KeyRef
+	28,  // 131: amp.PlanetInvitePolicy.Member:type_name -> amp.Tag
+	132, // [132:132] is the sub-list for method output_type
+	132, // [132:132] is the sub-list for method input_type
+	132, // [132:132] is the sub-list for extension type_name
+	132, // [132:132] is the sub-list for extension extendee
+	0,   // [0:132] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }
@@ -7052,8 +7452,8 @@ func file_amp_amp_core_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_amp_core_proto_rawDesc), len(file_amp_amp_core_proto_rawDesc)),
-			NumEnums:      18,
-			NumMessages:   55,
+			NumEnums:      19,
+			NumMessages:   57,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
