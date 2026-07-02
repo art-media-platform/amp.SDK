@@ -1,0 +1,69 @@
+{
+  "LoginRequest.email": {
+    "Scheme": "email",
+    "Email": "alice@example.com",
+    "Password": "hunter2-tide",
+    "PlanetTag": "amp.planet.demo"
+  },
+  "LoginRequest.wallet": {
+    "Scheme": "wallet",
+    "Address": "0x8ba1f109551bD432803012645Ac136ddd64DBA72",
+    "Signature": "0x5b1c8e2f4a9d3b7c6e0f1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f",
+    "Nonce": "srv-nonce-7f3a9c"
+  },
+  "LoginRequest.memberToken": {
+    "Scheme": "memberToken",
+    "MemberToken": "opaque-embed-sso-token"
+  },
+  "LoginRequest.yubikey": {
+    "Scheme": "yubikey",
+    "ChallengeResponse": "ykchal-b64-response"
+  },
+  "LoginRequest.did": {
+    "Scheme": "did",
+    "DID": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+    "Signature": "0x9e8d7c6b5a493827160f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69",
+    "Nonce": "srv-nonce-did-41b2"
+  },
+  "LoginResponse": {
+    "SessionToken": "5oQyDsW3vG7kThJ9mXaZcE1rB8uNfLpV",
+    "ExpiresAt": 1783000000,
+    "Member": {
+      "ID": "06efvw28sb2001248j248j248j",
+      "DisplayName": "Alice",
+      "Email": "alice@example.com",
+      "PlanetID": "06efvw28sb400248j248j248j2",
+      "Kind": "Person",
+      "Address": "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
+    }
+  },
+  "AmpMember.minimal": {
+    "ID": "06efvw28sb2001248j248j248j",
+    "PlanetID": "06efvw28sb400248j248j248j2"
+  },
+  "SessionResponse": {
+    "Member": {
+      "ID": "06efvw28sb2001248j248j248j",
+      "DisplayName": "Alice",
+      "PlanetID": "06efvw28sb400248j248j248j2"
+    },
+    "ExpiresAt": 1783000000
+  },
+  "EmailCredential.issue": {
+    "Email": "bob@example.com",
+    "Password": "initial-secret-9"
+  },
+  "EmailCredential.redeem": {
+    "Token": "recover-token-3f6b",
+    "NewPassword": "rotated-secret-4",
+    "PlanetTag": "amp.planet.demo"
+  },
+  "EmailIssueResponse": {
+    "MemberID": "06efvw28sb2001248j248j248j",
+    "Email": "bob@example.com"
+  },
+  "ErrorResponse": {
+    "Code": "AuthFailed",
+    "Message": "credentials rejected"
+  }
+}

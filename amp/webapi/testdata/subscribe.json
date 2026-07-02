@@ -1,0 +1,44 @@
+{
+  "SubscribeFrame.subscribe": {
+    "Type": "subscribe",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post"
+  },
+  "SubscribeFrame.update": {
+    "Type": "update",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "EditID": "06efvw28sb80048j248j248j24",
+    "FromID": "06efvw28sbb005bpbpbpbpbpbp",
+    "Value": {"Body": "hello world"},
+    "UpdatedAt": "2026-07-02T12:34:56Z"
+  },
+  "SubscribeFrame.delete": {
+    "Type": "delete",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "EditID": "06efvw28sb80048j248j248j24",
+    "FromID": "06efvw28sbb005bpbpbpbpbpbp"
+  },
+  "SubscribeFrame.withdraw": {
+    "Type": "withdraw",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "EditID": "06efvw28sb80048j248j248j24",
+    "FromID": "06efvw28sbb005bpbpbpbpbpbp",
+    "Withdraw": {
+      "Reason": "InviteRecall",
+      "WithdrawnAt": "2026-07-02T13:00:00Z",
+      "WithdrawnBy": "06efvw28sb2001248j248j248j"
+    }
+  },
+  "SubscribeFrame.error": {
+    "Type": "error",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "Error": "Forbidden"
+  }
+}

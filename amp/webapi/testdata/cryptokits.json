@@ -1,0 +1,8 @@
+{
+  "Kits": [
+    {"Name": "Unspecified", "TsKitID": 0, "GoUID": ""},
+    {"Name": "Poly25519", "TsKitID": 1, "GoUID": "32k4uchjtnv9rwt1sbu6xj5sg6"},
+    {"Name": "P256", "TsKitID": 2, "GoUID": "0sjr4krejutkyy482mz3zu784z"},
+    {"Name": "Secp256k1", "TsKitID": 3, "GoUID": "0t0vxg9y4br1b66b5t5q4h2hkn"}
+  ]
+}

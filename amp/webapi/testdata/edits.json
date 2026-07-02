@@ -1,0 +1,50 @@
+{
+  "EditEntry.upsert": {
+    "EditID": "06efvw28sb80048j248j248j24",
+    "CommitTx": "06efvw28sbd006dtm6dtm6dtm6",
+    "Author": "06efvw28sb2001248j248j248j",
+    "CommittedAt": "2026-07-02T12:34:56Z",
+    "Op": "upsert",
+    "Body": {"Title": "First post", "Body": "hello world"}
+  },
+  "EditEntry.withdraw": {
+    "EditID": "06efvw28sb80048j248j248j24",
+    "CommitTx": "06efvw28sbd006dtm6dtm6dtm6",
+    "Author": "06efvw28sb2001248j248j248j",
+    "CommittedAt": "2026-07-02T13:00:00Z",
+    "Op": "withdraw",
+    "Withdraw": {
+      "Reason": "Inaccuracy",
+      "Rationale": "superseded by corrected record"
+    }
+  },
+  "EditChainResponse": {
+    "Original": {
+      "_ItemID": "06efvw28sb60036dtm6dtm6dtm",
+      "_EditID": "06efvw28sb80048j248j248j24",
+      "_FromID": "06efvw28sbb005bpbpbpbpbpbp",
+      "_UpdatedAt": "2026-07-02T12:34:56Z",
+      "Value": {"Body": "hello world"}
+    },
+    "Edits": [
+      {
+        "EditID": "06efvw28sb80048j248j248j24",
+        "CommitTx": "06efvw28sbd006dtm6dtm6dtm6",
+        "Author": "06efvw28sb2001248j248j248j",
+        "CommittedAt": "2026-07-02T12:34:56Z",
+        "Op": "upsert",
+        "Body": {"Body": "hello world"}
+      },
+      {
+        "EditID": "06efvw28sbf007fxvrfxvrfxvr",
+        "CommitTx": "06efvw28sbd006dtm6dtm6dtm6",
+        "Author": "06efvw28sb2001248j248j248j",
+        "CommittedAt": "2026-07-02T13:00:00Z",
+        "Op": "withdraw",
+        "Withdraw": {
+          "Reason": "Retracted"
+        }
+      }
+    ]
+  }
+}

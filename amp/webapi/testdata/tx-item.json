@@ -1,0 +1,113 @@
+{
+  "TxOp.create": {
+    "Kind": "create",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "Value": {"Title": "First post", "Body": "hello world"}
+  },
+  "TxOp.upsert": {
+    "Kind": "upsert",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "Value": {"Title": "First post", "Body": "hello world, edited"}
+  },
+  "TxOp.remove": {
+    "Kind": "remove",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "ItemID": "06efvw28sb60036dtm6dtm6dtm"
+  },
+  "TxOp.withdraw": {
+    "Kind": "withdraw",
+    "Channel": "forums.general",
+    "Attr": "amp.app.forums.post",
+    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "Withdraw": {
+      "Reason": "Consent",
+      "Rationale": "author requested removal",
+      "Subject": "06efvw28sbk009m6dtm6dtm6dt",
+      "Delegation": "0tpvgh9318s00dtm6dtm6dtm6d36rey14d5400248j248j248j20duxrs4jhnn00bpbpbpbpbpbpb"
+    }
+  },
+  "TxRequest": {
+    "Ops": [
+      {
+        "Kind": "create",
+        "Channel": "forums.general",
+        "Attr": "amp.app.forums.post",
+        "Value": {"Body": "batched write"}
+      }
+    ],
+    "PlanetTag": "amp.planet.demo"
+  },
+  "TxRequest.invoke": {
+    "Ops": [
+      {
+        "Kind": "create",
+        "Channel": "forums.general",
+        "Attr": "amp.app.forums.post",
+        "Value": {"Body": "verb-routed write"}
+      }
+    ],
+    "InvokeURL": "amp://~/forums/post"
+  },
+  "TxOpResult": {
+    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "EditID": "06efvw28sb80048j248j248j24"
+  },
+  "TxOpResult.error": {
+    "ItemID": "",
+    "EditID": "",
+    "Error": "TxRejected"
+  },
+  "TxResponse": {
+    "TxID": "06efvw28sbd006dtm6dtm6dtm6",
+    "Results": [
+      {
+        "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+        "EditID": "06efvw28sb80048j248j248j24"
+      }
+    ]
+  },
+  "Item": {
+    "_ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "_EditID": "06efvw28sb80048j248j248j24",
+    "_FromID": "06efvw28sbb005bpbpbpbpbpbp",
+    "_UpdatedAt": "2026-07-02T12:34:56Z",
+    "Value": {"Title": "First post", "Body": "hello world"}
+  },
+  "Item.withdrawn": {
+    "_ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "_EditID": "06efvw28sb80048j248j248j24",
+    "_FromID": "06efvw28sbb005bpbpbpbpbpbp",
+    "_UpdatedAt": "2026-07-02T12:34:56Z",
+    "Value": {"Title": "First post", "Body": "hello world"},
+    "_Withdrawn": {
+      "Reason": "Forgotten",
+      "WithdrawnAt": "2026-07-02T13:00:00Z",
+      "WithdrawnBy": "06efvw28sb2001248j248j248j"
+    }
+  },
+  "WithdrawNote.response": {
+    "Reason": "Consent",
+    "Rationale": "author requested removal",
+    "Subject": "06efvw28sbk009m6dtm6dtm6dt",
+    "Delegation": "0tpvgh9318s00dtm6dtm6dtm6d36rey14d5400248j248j248j20duxrs4jhnn00bpbpbpbpbpbpb",
+    "WithdrawnAt": "2026-07-02T13:00:00Z",
+    "WithdrawnBy": "06efvw28sb2001248j248j248j"
+  },
+  "ListResponse": {
+    "Items": [
+      {
+        "_ItemID": "06efvw28sb60036dtm6dtm6dtm",
+        "_EditID": "06efvw28sb80048j248j248j24",
+        "_FromID": "06efvw28sbb005bpbpbpbpbpbp",
+        "_UpdatedAt": "2026-07-02T12:34:56Z",
+        "Value": {"Body": "hello world"}
+      }
+    ],
+    "HasMore": true,
+    "Next": "06efvw28sb60036dtm6dtm6dtm"
+  }
+}

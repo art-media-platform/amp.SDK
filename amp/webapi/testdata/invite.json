@@ -1,0 +1,66 @@
+{
+  "InviteIssueRequest": {
+    "Planet": "06efvw28sb400248j248j248j2",
+    "Passphrase": "correct-horse-battery",
+    "MaxRedemptions": 5,
+    "Access": "ReadWrite",
+    "ExpiresAt": 1785000000,
+    "VaultAddrs": ["prod.plan.tools:5192"]
+  },
+  "InviteIssueRequest.singleUse": {
+    "Planet": "06efvw28sb400248j248j248j2",
+    "Passphrase": "correct-horse-battery"
+  },
+  "InviteIssueResponse": {
+    "PlanetID": "06efvw28sb400248j248j248j2",
+    "InviteID": "06efvw28sbf007fxvrfxvrfxvr",
+    "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
+  },
+  "InviteAcceptRequest": {
+    "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6",
+    "Passphrase": "correct-horse-battery"
+  },
+  "InviteAcceptResponse": {
+    "PlanetID": "06efvw28sb400248j248j248j2",
+    "MemberID": "06efvw28sbn00bpbpbpbpbpbpb"
+  },
+  "InviteRevokeRequest": {
+    "Planet": "06efvw28sb400248j248j248j2",
+    "InviteID": "06efvw28sbf007fxvrfxvrfxvr",
+    "Rotate": true
+  },
+  "InviteRevokeRequest.byText": {
+    "Planet": "06efvw28sb400248j248j248j2",
+    "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
+  },
+  "InviteListResponse": {
+    "Policies": [
+      {
+        "InviteID": "06efvw28sbf007fxvrfxvrfxvr",
+        "MaxRedemptions": 5,
+        "GrantedAccess": "ReadWrite",
+        "Status": "InviteActive",
+        "ExpiresAt": 1785000000,
+        "Redemptions": [
+          {
+            "Member": "06efvw28sbn00bpbpbpbpbpbpb",
+            "RedeemedAt": 1782900000,
+            "Rank": 1,
+            "InRank": true
+          },
+          {
+            "Member": "06efvw28sbk009m6dtm6dtm6dt",
+            "RedeemedAt": 1782950000,
+            "Rank": 6,
+            "InRank": false
+          }
+        ]
+      },
+      {
+        "InviteID": "06efvw28sbh008j248j248j248",
+        "MaxRedemptions": 0,
+        "Status": "InviteRevoked"
+      }
+    ]
+  }
+}

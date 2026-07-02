@@ -1,0 +1,18 @@
+{
+  "MediaResolveRequest": {
+    "PlanetTag": "amp.planet.demo",
+    "Blob": {
+      "UID": "06efvw28sb60036dtm6dtm6dtm",
+      "I": 1048576,
+      "Units": 2,
+      "ContentTypeRaw": "audio/mpeg"
+    }
+  },
+  "Tag.mediaResponse": {
+    "UID": "06efvw28sb60036dtm6dtm6dtm",
+    "I": 1048576,
+    "Units": 2,
+    "ContentTypeRaw": "audio/mpeg",
+    "URI": "/www/06efvw28sb60036dtm6dtm6dtm"
+  }
+}

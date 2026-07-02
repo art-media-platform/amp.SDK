@@ -13,7 +13,7 @@
 
 export interface AmpMember {
   ID: string;            // member tag.UID, base32
-  DisplayName: string;
+  DisplayName?: string;
   Email?: string;        // present when the auth scheme exposes it
   PlanetID: string;      // planet tag.UID, base32
   Kind?: string;         // tag.UID resolving to a LawMemberKind_* (Person / Group / Agent / Memorial)
@@ -252,7 +252,7 @@ export interface AmpMutationResult {
 export interface BlobRef {
   UID: string;             // blob tag.UID, base32
   URI?: string;            // /www/{UID} stream URL — set by upload + resolve
-  ContentType?: string;
+  ContentTypeRaw?: string;
   I?: number;              // plaintext byte length (when Units = Bytes)
   Units?: number;
 }

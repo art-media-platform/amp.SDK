@@ -291,7 +291,7 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 POST   /api/v1/upload
        Content-Type: multipart/form-data
        Fields: file (required), channel, attr, planetTag (optional)
-       Response: amp.Tag (UID + URI + ContentType + I/Units=Bytes)
+       Response: amp.Tag (UID + URI + ContentTypeRaw + I/Units=Bytes)
 
 POST   /api/v1/media/resolve
        Body: { PlanetTag?, Blob: amp.Tag }
@@ -307,7 +307,8 @@ GET    /www/{UID}
 interface BlobRef {
   UID: string;             // blob content hash (leading 16 bytes), base32
   URI?: string;            // server-populated stream URL (/www/{UID})
-  ContentType?: string;    // MIME type
+  ContentTypeRaw?: string; // MIME type (empty ⇒ text/plain); the wire key is
+                           // ContentTypeRaw — amp.Tag's raw content-type field
   I?: number;              // plaintext byte length (when Units = Bytes)
   Units?: number;
 }
@@ -1236,6 +1237,29 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **TrustState** | A resolve verdict — `Verified` / `Refuted` / `Unchecked` — from checking the planet's `Brand` back-edge against the answering federation. The UI must not silently pick when it isn't `Verified`. |
 
 ---
+
+## Wire-Contract Drift Guard
+
+The JSON wire shapes in this SDK are hand-mirrored between Go
+(`amp/webapi/webapi.types.go`) and TypeScript (`src/types.ts`).  Shared golden
+fixtures pin the contract so drift on either side fails tests instead of
+shipping:
+
+- **Fixtures** — `amp/webapi/testdata/*.json`: login (all credential schemes),
+  tx/item (`_ItemID`/`_EditID`/`_FromID` metadata keys), subscribe frames,
+  edit chains, the full invite family (issue/accept/revoke/list with ledger
+  rank), vault endpoints (base64 `Address` — opaque bytes, not a UID),
+  media/Tag shapes (`ContentTypeRaw`), enum-name goldens (AccessLevel /
+  WithdrawReason / InviteStatus / TrustState), and the CryptoKitID small-int ↔
+  `tag.UID` mapping.
+- **Go side** — `go test ./amp/webapi/` decodes every fixture with
+  `DisallowUnknownFields` and asserts a lossless re-marshal.
+- **TS side** — `npx vitest run src/drift.test.ts` checks every fixture
+  against hand-listed per-interface key tables (the tables ARE the drift
+  guard) plus the enum and kit-mapping goldens.
+
+When a shape changes intentionally, update the fixture and both tables in the
+same change — the fixture is the contract; Go is the reference implementation.
 
 ## 14. Deploying amp: topologies, identity & versioning
 

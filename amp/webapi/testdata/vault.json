@@ -1,0 +1,55 @@
+{
+  "VaultEndpoint": {
+    "Transport": "tcp",
+    "Address": "cHJvZC5wbGFuLnRvb2xzOjUxOTI="
+  },
+  "ResolveRequest": {
+    "FQDN": "plan.tools"
+  },
+  "ResolveResponse": {
+    "FQDN": "plan.tools",
+    "PlanetID": "06efvw28sb400248j248j248j2",
+    "AnsweredBy": "06efvw28sbh008j248j248j248",
+    "VaultAddrs": [
+      {
+        "Transport": "tcp",
+        "Address": "cHJvZC5wbGFuLnRvb2xzOjUxOTI="
+      }
+    ],
+    "TrustState": "Verified",
+    "PinPrecedence": true,
+    "Ambiguous": false,
+    "Hops": 2
+  },
+  "SearchRequest": {
+    "Query": "plan",
+    "Limit": 10
+  },
+  "SearchResponse": {
+    "Matches": [
+      {
+        "PlanetID": "06efvw28sb400248j248j248j2",
+        "FQDN": "plan.tools",
+        "AnsweredBy": "06efvw28sbh008j248j248j248",
+        "Score": 0.875,
+        "AppName": "PLAN 3D",
+        "AppDesc": "crisis-resilient offline-first coordination",
+        "Platforms": ["web", "unity"]
+      }
+    ]
+  },
+  "FederationPeersResponse": {
+    "Peers": [
+      {
+        "FederationID": "06efvw28sb400248j248j248j2",
+        "VaultAddrs": [
+          {
+            "Transport": "tcp",
+            "Address": "cHJvZC5wbGFuLnRvb2xzOjUxOTI="
+          }
+        ],
+        "Label": "Plan Federation"
+      }
+    ]
+  }
+}

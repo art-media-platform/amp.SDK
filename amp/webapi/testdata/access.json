@@ -1,0 +1,6 @@
+{
+  "AccessLevels": ["ReadOnly", "ReadWrite", "Moderator", "Admin"],
+  "WithdrawReasons": ["Consent", "Inaccuracy", "Outdated", "Coerced", "Forgotten", "Departed", "InviteRecall", "Retracted"],
+  "InviteStatuses": ["InviteActive", "InviteRevoked"],
+  "TrustStates": ["Unchecked", "Verified", "Refuted"]
+}
