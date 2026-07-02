@@ -143,8 +143,14 @@ type Session interface {
 	// WatchPlanet starts syncing a planet's journal without joining as a member —
 	// the "pin" half of resolve→pin: a consumer that resolved a name (or holds a
 	// planet UID) watches it so its planet-public records stream in.  Distinct from
-	// SessionPlanets.SetPlanet, which joins with an epoch + keys.  No-op without a vault transport.
+	// HostSession.SetPlanet, which joins with an epoch + keys.  No-op without a vault transport.
 	WatchPlanet(planetID tag.UID) error
+
+	// Privileged returns this session's host-privileged capabilities, or nil when
+	// the session is not the in-process host session (test doubles, and future
+	// out-of-process app sandboxes, return nil).  First-party governance apps
+	// require it and fail closed when absent.
+	Privileged() HostSession
 
 	// PlanetMember returns the member identity this session has adopted on
 	// planetID.  For planets the session founded or owns, this is the login
@@ -195,17 +201,12 @@ type Session interface {
 	OpenBlob(planetID tag.UID, ref *BlobRef) (data.AssetReader, error)
 }
 
-// SessionKeys is the privileged key-store blackboard a Session holds but keeps OFF the
-// public amp.Session interface.  Key material is reachable only by a deliberate
-// downcast, sound only while all apps are first-party — convention, not
-// enforcement.  The home app WRITES the member's Enclave + EpochKeyStore here
-// during MakeReady; the members app READS them to unwrap MemberEpoch
-// WrappedKeys.  Reach it with a single deliberate assertion:
-//
-//	keys, ok := sess.(amp.SessionKeys)
-//
-// The host's session is the sole implementation.
-type SessionKeys interface {
+// HostSession is the host's privileged session surface, deliberately OFF the
+// public read/write Session API — one authoritative interface replacing the
+// per-concern downcast seams.  The host's session is the sole implementation.
+type HostSession interface {
+
+	// key custody
 
 	// Returns the session's Enclave (identity key store), or nil if not yet initialized.
 	Enclave() safe.Enclave
@@ -218,22 +219,16 @@ type SessionKeys interface {
 
 	// Sets the session's EpochKeyStore. Called by the home app after opening/creating it.
 	SetEpochKeys(eks safe.EpochKeyStore)
-}
 
-// SessionPlanets is privileged planet/epoch control a Session holds but keeps OFF the public
-// amp.Session interface: only first-party governance apps (home, members) install epochs +
-// adopted identities and notify the vault.  Reach it with a single deliberate assertion:
-//
-//	planets, ok := sess.(amp.SessionPlanets)
-type SessionPlanets interface {
+	// planet / epoch control
 
 	// Registers or updates a planet's epoch in this session.
 	// First call for a given planetID also joins the planet on the vault controller.
 	//
 	// Rotation-receipt atomicity contract — epoch installation MUST follow:
 	//   (a) EpochKeyStore.PutKey for the new epoch's keys
-	//   (b) SessionPlanets.SetPlanet (this call)
-	//   (c) SessionPlanets.OnEpochKeyArrived
+	//   (b) HostSession.SetPlanet (this call)
+	//   (c) HostSession.OnEpochKeyArrived
 	// Any encrypted op dispatched after SetPlanet expects its key to already
 	// be resolvable; inverting (a)/(b) is a latent race even on synchronous paths.
 	SetPlanet(planetID tag.UID, epoch *PlanetEpoch)
@@ -252,17 +247,8 @@ type SessionPlanets interface {
 	// Called by the vault controller after signature verification succeeds.
 	// Routes the TxMsg to all registered governance handlers for epoch key extraction.
 	OnGovernanceTx(planetID tag.UID, tx *TxMsg)
-}
 
-// SessionVault is host-held vault/journal introspection a Session keeps OFF the public
-// amp.Session interface — non-secret sync metadata that only first-party governance code
-// (the home app) consults at genesis and for reporting.  Reach it with a single deliberate
-// assertion, mirroring SessionKeys/SessionPlanets:
-//
-//	vault, ok := sess.(amp.SessionVault)
-//
-// The host's session is the sole implementation.
-type SessionVault interface {
+	// journal introspection
 
 	// Returns the local journal's high-water TxID and entry count for planetID —
 	// metadata only (never plaintext), so it needs no epoch key.
@@ -272,6 +258,19 @@ type SessionVault interface {
 	// home-planet governance (EpochTerms.VaultConfig.VaultAddrs) at genesis so a
 	// peerless acceptor can dial onto the planet.  Empty when no vault is configured.
 	VaultHomeAddrs() []string
+
+	// GenesisEpoch reads planetID's genesis PlanetEpoch — the immutable
+	// PlanetCharter (privacy mode, founder set, genesis quorum) frozen at
+	// genesis — from the journal, the authoritative founder source: the
+	// session's planet registry holds only a lightweight Terms-stub epoch for
+	// restored or invite-joined planets.  Fails when the node does not hold
+	// the planet.
+	GenesisEpoch(planetID tag.UID) (*PlanetEpoch, error)
+
+	// access control
+
+	// ACC returns the host's access-control engine.
+	ACC() ACCEngine
 }
 
 // ACCEngine is the host's access-control resolver: it answers "who may do what" from a
@@ -309,23 +308,6 @@ type ACCEngine interface {
 	// by RedeemedAt item ID.  Rank over it is the redemption count.
 	InviteRedemptions(planetID, inviteID tag.UID) map[tag.UID]*PlanetInviteRedemption
 }
-
-// SessionACC exposes the host's ACCEngine off the public amp.Session interface, mirroring
-// SessionKeys/SessionPlanets/SessionVault.  Reach it with a single deliberate assertion:
-//
-//	acc, ok := sess.(amp.SessionACC)
-type SessionACC interface {
-	ACC() ACCEngine
-}
-
-// SessionKeysOf, SessionPlanetsOf, SessionVaultOf, and SessionACCOf are the sanctioned
-// downcasts from a Session to its privileged seams.  They panic if sess is not a host
-// session — an in-process invariant, since the host's session is the only implementation
-// of Session.
-func SessionKeysOf(sess Session) SessionKeys       { return sess.(SessionKeys) }
-func SessionPlanetsOf(sess Session) SessionPlanets { return sess.(SessionPlanets) }
-func SessionVaultOf(sess Session) SessionVault     { return sess.(SessionVault) }
-func SessionACCOf(sess Session) SessionACC         { return sess.(SessionACC) }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient range queries.
 // This is the primary storage for the vault sync engine — it preserves the original wire-format
