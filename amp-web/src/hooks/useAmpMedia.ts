@@ -30,7 +30,7 @@ export function useAmpMedia(blobUID: string, planetTag?: string): AmpMediaResult
       .then((blob) => {
         if (cancelled) return;
         setUrl(blob.URI ?? adapter.mediaUrl(blobUID));
-        setContentType(blob.ContentType ?? null);
+        setContentType(blob.ContentTypeRaw ?? null);
         setByteSize(blob.I ?? null);
         setLoading(false);
       })
