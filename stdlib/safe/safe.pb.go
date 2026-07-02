@@ -568,9 +568,9 @@ type KeyRef struct {
 	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"` // Keyring UID, bytes 0..7
 	KeyringID_1   uint64                 `protobuf:"fixed64,2,opt,name=KeyringID_1,json=KeyringID1,proto3" json:"KeyringID_1,omitempty"` // Keyring UID, bytes 8..15
 	Kit_0         uint64                 `protobuf:"fixed64,3,opt,name=Kit_0,json=Kit0,proto3" json:"Kit_0,omitempty"`                   // CryptoKit UID (which suite produced this key), bytes 0..7
-	Kit_1         uint64                 `protobuf:"fixed64,6,opt,name=Kit_1,json=Kit1,proto3" json:"Kit_1,omitempty"`                   // CryptoKit UID, bytes 8..15
+	Kit_1         uint64                 `protobuf:"fixed64,4,opt,name=Kit_1,json=Kit1,proto3" json:"Kit_1,omitempty"`                   // CryptoKit UID, bytes 8..15
 	Type          KeyType                `protobuf:"varint,5,opt,name=Type,proto3,enum=safe.KeyType" json:"Type,omitempty"`              // SigningKey / AsymmetricKey / SymmetricKey
-	PubKey        []byte                 `protobuf:"bytes,4,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                             // Pub key prefix (lookup) or full pub key bytes (wire)
+	PubKey        []byte                 `protobuf:"bytes,6,opt,name=PubKey,proto3" json:"PubKey,omitempty"`                             // Pub key prefix (lookup) or full pub key bytes (wire)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1164,9 +1164,9 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\vKeyringID_1\x18\x02 \x01(\x06R\n" +
 	"KeyringID1\x12\x13\n" +
 	"\x05Kit_0\x18\x03 \x01(\x06R\x04Kit0\x12\x13\n" +
-	"\x05Kit_1\x18\x06 \x01(\x06R\x04Kit1\x12!\n" +
+	"\x05Kit_1\x18\x04 \x01(\x06R\x04Kit1\x12!\n" +
 	"\x04Type\x18\x05 \x01(\x0e2\r.safe.KeyTypeR\x04Type\x12\x16\n" +
-	"\x06PubKey\x18\x04 \x01(\fR\x06PubKey\"\xaa\x02\n" +
+	"\x06PubKey\x18\x06 \x01(\fR\x06PubKey\"\xaa\x02\n" +
 	"\rKeyPairRecord\x12\x1f\n" +
 	"\vKeyringID_0\x18\x01 \x01(\x06R\n" +
 	"KeyringID0\x12\x1f\n" +

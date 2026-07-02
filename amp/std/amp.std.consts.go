@@ -122,15 +122,6 @@ var Attr = struct {
 	LawEquivalenceStrength_Translation tag.Name
 	LawEquivalenceStrength_Approximate tag.Name
 	LawEquivalenceStrength_Analogous   tag.Name
-	LawWithdrawReason                  tag.Name
-	LawWithdrawReason_Consent          tag.Name
-	LawWithdrawReason_Inaccuracy       tag.Name
-	LawWithdrawReason_Outdated         tag.Name
-	LawWithdrawReason_Coerced          tag.Name
-	LawWithdrawReason_Forgotten        tag.Name
-	LawWithdrawReason_Departed         tag.Name
-	LawWithdrawReason_InviteRecall     tag.Name
-	LawWithdrawReason_Retracted        tag.Name
 	LedgerAttr                         tag.Name
 	LedgerAttestation                  tag.Name
 	ArbitrateAttr                      tag.Name
@@ -316,18 +307,6 @@ var Attr = struct {
 	LawEquivalenceStrength_Translation: tag.Name{ID: tag.UID{0x8D295A1372FA2C5D, 0x10798077BE8E1B1A}, Text: "amp.law.EquivalenceStrength.Translation"}, // 4e55e16wru5jfj0yd0fyz8w6su
 	LawEquivalenceStrength_Approximate: tag.Name{ID: tag.UID{0x90E61D55697A0D3C, 0xA6613FC42F78EF78}, Text: "amp.law.EquivalenceStrength.Approximate"}, // 4hwsfpbucu1nybds9zshrrjvvs
 	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x112A5CA73BB8C091, 0x8A80533CC1EC7186}, Text: "amp.law.EquivalenceStrength.Analogous"},   // 0j59fbffxss28sp02m7m0yswd6
-	// Withdrawal reasons (AOM SD-withdrawal-consent.md).  Withdraw.Reason is a Tag resolving
-	// to one of these UIDs.  Zero UID = unspecified.
-	LawWithdrawReason: tag.Name{ID: tag.UID{0x72FDAD1F33EAB71A, 0x6643A4A97C032829}, Text: "amp.law.WithdrawReason"}, // 3kzqqjydzbqwe6dhx4p5y06b19
-
-	LawWithdrawReason_Consent:      tag.Name{ID: tag.UID{0x4AD66B3839C79795, 0x6DD78A8C11DC59F0}, Text: "amp.law.WithdrawReason.Consent"},      // 2butpmhff7kybqvpwbjh8xsqgh
-	LawWithdrawReason_Inaccuracy:   tag.Name{ID: tag.UID{0x17501A166D3A425C, 0xA91DD4F561E2CB93}, Text: "amp.law.WithdrawReason.Inaccuracy"},   // 0rb0e1dv9u89fbk7fnyphy5kwm
-	LawWithdrawReason_Outdated:     tag.Name{ID: tag.UID{0xAAC00FC9DDCE0FCB, 0xE6859461FE7A1D4F}, Text: "amp.law.WithdrawReason.Outdated"},     // 5bs07wmrff1z5ye1dnd7z7n7bg
-	LawWithdrawReason_Coerced:      tag.Name{ID: tag.UID{0xF49C167CF4CAFF70, 0xEB1DCBB71E6D98A1}, Text: "amp.law.WithdrawReason.Coerced"},      // 7nmhc7tx6bzxsfq7fcqwg6v651
-	LawWithdrawReason_Forgotten:    tag.Name{ID: tag.UID{0x8E3232ED30CC6260, 0x0BE1A6A4E66AEE93}, Text: "amp.law.WithdrawReason.Forgotten"},    // 4f68tfud6dd9h0rse6nmm6pvnm
-	LawWithdrawReason_Departed:     tag.Name{ID: tag.UID{0x13C1FB18E732E44E, 0x5EE266E36A490A3A}, Text: "amp.law.WithdrawReason.Departed"},     // 0ms7xjjttkwj75xsm6wep4k2ju
-	LawWithdrawReason_InviteRecall: tag.Name{ID: tag.UID{0x1E4FCBCAB504D83C, 0xF6B5D654AF78F091}, Text: "amp.law.WithdrawReason.InviteRecall"}, // 0y9z5wpe84v0ygeefqbkrrjw4j
-	LawWithdrawReason_Retracted:    tag.Name{ID: tag.UID{0xD9CBFFFA74C3D8E7, 0x77AC984C332610A6}, Text: "amp.law.WithdrawReason.Retracted"},    // 6ttgzznx63v3mrgc4s9htkd456
 
 	// ─── Planet ledger — durable record of observations and citations. ───
 	// Attestations (strikes, endorsements, witness records, audits, amnesties)

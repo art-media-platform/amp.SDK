@@ -12,6 +12,15 @@ import "stdlib/safe/safe.proto";
 // Tells protoc that a .proto file importing amp.proto what package import to use within Go.
 option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
+// ── Closed-vocabulary convention ──────────────────────────────────────────
+// Two encodings, split by who owns the vocabulary:
+//   - protocol-semantic (code branches on the value)  → proto enum
+//     (Access, PinStatus, MemberStatus, WithdrawReason, AttestationType, …)
+//   - community-open (the protocol records, communities interpret) → Tag UID
+//     resolving to an SDL Law* definition or any community/app's consts
+//     (Attestation.Modality, MemberEpoch.Kind, Equivalence.Strength, …)
+// Never encode one vocabulary both ways.
+
 option csharp_namespace = "art.media.platform";
 
 
@@ -342,14 +351,13 @@ message Login {
     // Checkpoint allows the client to resume an auth session.
     LoginCheckpoint    Checkpoint = 12;
 
-    // SigningPubKey carries the client's raw signing public key so a remotely
+    // SigningKey carries the client's signing identity — pubkey + suite + type
+    // in the same wire shape MemberEpoch publishes (safe.KeyRef) — so a remotely
     // self-generated identity can be bound to a Member.  The host verifies the
     // challenge-response signature against the key it holds for Member; when the
-    // host has no key recorded yet it may adopt this one if trust-on-first-use (TOFU)
-    // is set.
-    bytes              SigningPubKey        = 14;
-    fixed64            SigningCryptoKitID_0 = 15;   // Client's signing-suite UID, bytes 0..7
-    fixed64            SigningCryptoKitID_1 = 16;   // Client's signing-suite UID, bytes 8..15
+    // host has no key recorded yet it may adopt this one if trust-on-first-use
+    // (TOFU) is set.
+    safe.KeyRef        SigningKey = 17;
 
 }
 

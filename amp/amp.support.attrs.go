@@ -286,12 +286,28 @@ func (terms *EpochTerms) SetCryptoKitID(uid safe.CryptoKitID) {
 
 // SigningCryptoKitID returns the client's declared signing-suite UID.
 func (req *Login) SigningCryptoKitID() safe.CryptoKitID {
-	return tag.UID{req.SigningCryptoKitID_0, req.SigningCryptoKitID_1}
+	if req.SigningKey == nil {
+		return safe.CryptoKitID{}
+	}
+	return req.SigningKey.Kit()
 }
 
-// SetSigningCryptoKitID sets the client's declared signing-suite UID.
-func (req *Login) SetSigningCryptoKitID(uid safe.CryptoKitID) {
-	req.SigningCryptoKitID_0, req.SigningCryptoKitID_1 = uid[0], uid[1]
+// SigningPubKey returns the client's declared signing public key bytes.
+func (req *Login) SigningPubKey() []byte {
+	if req.SigningKey == nil {
+		return nil
+	}
+	return req.SigningKey.PubKey
+}
+
+// SetSigningKey sets the client's signing identity (pubkey + suite).
+func (req *Login) SetSigningKey(kitID safe.CryptoKitID, pubKey []byte) {
+	req.SigningKey = &safe.KeyRef{
+		Kit_0:  kitID[0],
+		Kit_1:  kitID[1],
+		Type:   safe.KeyType_SigningKey,
+		PubKey: pubKey,
+	}
 }
 
 // EffectiveHashKit returns the HashKitID in force for this epoch — the per-epoch

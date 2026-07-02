@@ -122,9 +122,9 @@ message KeyRef {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
     fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15
     fixed64     Kit_0               = 3;    // CryptoKit UID (which suite produced this key), bytes 0..7
-    fixed64     Kit_1               = 6;    // CryptoKit UID, bytes 8..15
+    fixed64     Kit_1               = 4;    // CryptoKit UID, bytes 8..15
     KeyType     Type                = 5;    // SigningKey / AsymmetricKey / SymmetricKey
-    bytes       PubKey              = 4;    // Pub key prefix (lookup) or full pub key bytes (wire)
+    bytes       PubKey              = 6;    // Pub key prefix (lookup) or full pub key bytes (wire)
 }
 
 

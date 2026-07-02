@@ -181,18 +181,6 @@ tags Attr {
             LawEquivalenceStrength_Analogous   "Analogous"
         }
 
-        // Withdrawal reasons (AOM SD-withdrawal-consent.md).  Withdraw.Reason is a Tag resolving
-        // to one of these UIDs.  Zero UID = unspecified.
-        LawWithdrawReason "WithdrawReason" {
-            LawWithdrawReason_Consent      "Consent"
-            LawWithdrawReason_Inaccuracy   "Inaccuracy"
-            LawWithdrawReason_Outdated     "Outdated"
-            LawWithdrawReason_Coerced      "Coerced"
-            LawWithdrawReason_Forgotten    "Forgotten"
-            LawWithdrawReason_Departed     "Departed"
-            LawWithdrawReason_InviteRecall "InviteRecall"
-            LawWithdrawReason_Retracted    "Retracted"
-        }
     }
 
     // Planet ledger — durable record of observations and citations.
