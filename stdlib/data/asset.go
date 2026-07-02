@@ -1,3 +1,6 @@
+// Package data is a grab-bag of small data helpers: streamable Asset publishing,
+// media-recording segmentation, process-seeded hashing, a []byte-keyed map, and
+// proto / zig-zag encoding utilities.
 package data
 
 import (

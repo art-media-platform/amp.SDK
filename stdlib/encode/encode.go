@@ -1,3 +1,7 @@
+// Package encode implements amp-base32: unpadded base32 over the geohash
+// alphabet (lower case is the canonic form), used wherever amp renders binary
+// as human-readable text — tag.UID strings, invite tokens, file-safe suffixes —
+// with a decoder that tolerates hand-transcription noise.
 package encode
 
 import (
@@ -8,16 +12,13 @@ import (
 )
 
 const (
-	// Base32Alphabet is a base32 (5-bit) based symbol set also used by geohash.
-	// It chooses ascii chatacters that are visually distinct and easy to read.
+	// The amp-base32 alphabet: a base32 (5-bit) symbol set also used by geohash,
+	// choosing ascii characters that are visually distinct and easy to read.
 	//
 	// https://en.wikipedia.org/wiki/Geohash
 	//
 	Base32Alphabet_Upper = "0123456789BCDEFGHJKMNPQRSTUVWXYZ"
 	Base32Alphabet_Lower = "0123456789bcdefghjkmnpqrstuvwxyz"
-
-	// IDEA: GeoH3Alphabet = "0123456_"  just use hex except _ also maps to ffffff..
-	// TODO: 7 sub hexes correspond to outward, larger hexes (1-2 resloutions higher)
 )
 
 var (
@@ -114,7 +115,9 @@ func (san *sanitizer) Read(dst []byte) (int, error) {
 	return count, nil
 }
 
-// DebugLabel returns a base32 encoding of a binary string, limiting it to a short number of character for debugging and logging.
+// DebugLabel returns a short display form of a byte string for debugging and logging:
+// printable ASCII passes through as-is, anything else is base32-encoded;
+// input beyond 12 bytes is elided with an ellipsis.
 func DebugLabel(in []byte) string {
 	if len(in) == 0 {
 		return "null"

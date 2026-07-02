@@ -403,9 +403,10 @@ func (l *logger) Infof(level int32, f string, a ...any) {
 
 // ────────────────────────── interrupt handling ──────────────────────────
 
-// AwaitInterrupt returns two channels: the first closes on SIGINT/SIGTERM, the
-// second closes on a sustained burst (3 signals within 3 seconds) so long-running
-// programs can distinguish graceful shutdown from user demanding exit now.
+// AwaitInterrupt returns two channels: the first closes on SIGINT/SIGTERM; the
+// second closes when a 3rd (or later) signal arrives more than 3 seconds after the
+// first, so long-running programs can distinguish graceful shutdown from a user
+// demanding exit now.
 func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 	onFirst := make(chan struct{})
 	onRepeated := make(chan struct{})

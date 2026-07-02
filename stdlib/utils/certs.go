@@ -1,3 +1,4 @@
+// Package utils provides file, permission, TLS-certificate, and HTTP helpers.
 package utils
 
 import (

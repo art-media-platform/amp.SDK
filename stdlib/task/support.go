@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Periodically calls PrintContextTree() to the context's logger.
+// Periodically renders PrintContextTree() to the context's logger, emitting only when the tree has changed.
 func PrintTreePeriodically(ctx Context, period time.Duration, logLevel int32) {
 	block := [32]byte{}
 	var text []byte

@@ -1,3 +1,4 @@
+// Package platform provides OS-integration helpers.
 package platform
 
 import (
@@ -12,9 +13,7 @@ var Stdout io.Writer = os.Stdout
 // Stderr is the io.Writer to which executed commands write standard error.
 var Stderr io.Writer = os.Stderr
 
-// LaunchURL() pushes an OS-level event to open the given URL using the user's default / primary browser.
-//
-// For future-proofing, use this instead of browser.OpenURL().
+// LaunchURL pushes an OS-level event to open the given URL using the user's default / primary browser.
 func LaunchURL(url string) error {
 	return runCmd("open", url)
 }

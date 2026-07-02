@@ -5,7 +5,8 @@ import (
 	"sync/atomic"
 )
 
-// Wrapper is a reference counted io.Closer where the wrapped Closer is closed when its reference count reaches zero.
+// Wrapper is a reference-counted io.Closer: PushOpen increments the reference count
+// and Close decrements it, closing the underlying resource when the count reaches zero.
 type Wrapper interface {
 
 	// PushOpen atomically increments the reference count.
@@ -13,7 +14,7 @@ type Wrapper interface {
 
 	// Close atomically "pops" the pushed open count.
 	// If the ref count > 0, nil is always returned.
-	// IF the ref count == 0, the wrapped Closer is closed and its error is returned.
+	// If the ref count == 0, the wrapped Closer is closed and its error is returned.
 	Close() error
 }
 

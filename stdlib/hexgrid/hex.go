@@ -1,3 +1,5 @@
+// Package hexgrid provides hex-grid math in cube / axial coordinates,
+// after http://www.redblobgames.com/grids/hexagons/
 package hexgrid
 
 import (
@@ -64,7 +66,7 @@ func (h Hex) String() string {
 	return fmt.Sprintf("(%d,%d)", h.q, h.r)
 }
 
-// fractionHex provides a more precise representation for hexagons when precision is required.
+// fractionalHex is the float64 form of Hex, used when precision is required.
 // It's also represented in Cube Coordinates
 type fractionalHex struct {
 	q float64
@@ -117,7 +119,7 @@ func HexSubtract(a, b Hex) Hex {
 	return NewHex(a.q-b.q, a.r-b.r)
 }
 
-// Scales an hexagon by a k factor. If factor k is 1 there's no change
+// Scales a hexagon by factor k
 func HexScale(a Hex, k int) Hex {
 	return NewHex(a.q*k, a.r*k)
 }

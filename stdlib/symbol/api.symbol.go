@@ -1,3 +1,4 @@
+// Package symbol provides value interning: a Table maps byte string values to compact integer IDs and back.
 package symbol
 
 import (
@@ -11,8 +12,7 @@ import (
 type Table interface {
 	closer.Wrapper
 
-	// Returns the Issuer being used by this Table (passed via TableOpts.Issuer or auto-created if no TableOpts.Issuer was given)
-	// Note that retained references should make use of generics.RefCloser to ensure proper closure.
+	// Returns the Issuer this Table uses to mint new IDs.
 	Issuer() Issuer
 
 	// Returns the symbol ID associated with the given string/buffer value.
@@ -34,8 +34,7 @@ type Table interface {
 type Issuer interface {
 	closer.Wrapper
 
-	// Issues the next sequentual unique ID, however that may be defined in the context.
-	// 4 x (2^192) bits should be enough address space for anyone.
+	// Issues the next sequential unique ID, however that may be defined in the context.
 	MintNext() (ID, error)
 }
 
@@ -48,11 +47,11 @@ func (id ID) Ord() uint32 {
 	return uint32(id)
 }
 
-// IDSz is the byte size of a symbol.ID (big endian)
+// IDSz is the byte size of a symbol.ID (big endian).
 // The tradeoff is between key bytes idle (wasted) in a massive db and exponentially more IDs available.
 //
-// The thinking of a 4 byte ID is that an symbol table exceeding 100 million entries is impractical and inefficient.
-// If a billion symbol IDs is "not enough"  then you are issuing IDs for the wrong purpose.
+// A 4 byte ID reflects that a symbol table exceeding 100 million entries is impractical and inefficient.
+// If a billion symbol IDs is "not enough", then IDs are being issued for the wrong purpose.
 const IDSz = 4
 
 // DefaultIssuerMin specifies the default minimum ID value for newly issued IDs.

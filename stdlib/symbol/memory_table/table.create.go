@@ -10,7 +10,7 @@ func (opts TableOpts) CreateTable() (symbol.Table, error) {
 }
 
 type TableOpts struct {
-	symbol.Issuer             // How this table will issue new IDs.  If nil, this table's db will be used as the Issuer
+	symbol.Issuer             // How this table will issue new IDs.  If nil, a volatile Issuer is created, starting at IssuerInitsAt
 	IssuerInitsAt   symbol.ID // The floor ID to start issuing from if initializing a new Issuer.
 	WorkingSizeHint int       // anticipated number of entries in working set
 	PoolSz          int32     // Value backing buffer allocation pool sz

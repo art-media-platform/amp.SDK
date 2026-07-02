@@ -1,3 +1,7 @@
+// Package status provides Status, an error type carried on the wire: a stable
+// numeric Code (declared in status.proto; values are wire-frozen), an optional
+// human-readable message, and a TimeID for ordering and deduplication.
+// It also declares shared error values and error-wrapping helpers.
 package status
 
 import (
@@ -56,7 +60,7 @@ var (
 	ErrEpochKeyNotFound = Code_KeyringNotFound.Error("epoch key not found")
 )
 
-// Error makes our custom error type conform to a standard Go error
+// Error implements the standard Go error interface, returning the message or the Code name when the message is empty.
 func (v *Status) Error() string {
 	codeStr, exists := Code_name[int32(v.Code)]
 	if !exists {
@@ -85,7 +89,7 @@ func GetCode(err error) Code {
 	return Code_Unnamed
 }
 
-// IsError tests if the given error is a Error error code (below).
+// IsError reports whether err is a *Status carrying one of the given Codes.
 // If err == nil, this returns false.
 func IsError(err error, errCodes ...Code) bool {
 	if err == nil {
@@ -112,7 +116,8 @@ func AsStatus(v error) *Status {
 	return status
 }
 
-// Error returns an *Error with the given error code
+// Error returns a *Status with the given code and msg, stamped with a fresh TimeID.
+// Returns nil if code == Code_Nil.
 func (code Code) Error(msg string) error {
 	if code == Code_Nil {
 		return nil
@@ -126,8 +131,8 @@ func (code Code) Error(msg string) error {
 	}
 }
 
-// Errorf returns an *Error with the given error code and msg.
-// If one or more args are given, msg is used as a format string.
+// Errorf returns a *Status with the given code and msg.
+// If one or more args are given, format is used as a format string.
 func (code Code) Errorf(format string, msgArgs ...any) error {
 	if code == Code_Nil {
 		return nil
@@ -141,7 +146,8 @@ func (code Code) Errorf(format string, msgArgs ...any) error {
 	return code.Error(msg)
 }
 
-// Wrap returns a ReqErr with the given error code and "cause" error
+// Wrap returns a *Status with the given code and cause's message text; the cause chain is not retained.
+// Returns nil if cause == nil.
 func (code Code) Wrap(cause error) error {
 	if cause == nil {
 		return nil
@@ -149,7 +155,7 @@ func (code Code) Wrap(cause error) error {
 	return code.Error(cause.Error())
 }
 
-// Emits a generic error that wraps this std.Code_Code
+// Err returns a *Status with this code and no message; nil if code == Code_Nil.
 func (code Code) Err() error {
 	if code == Code_Nil {
 		return nil

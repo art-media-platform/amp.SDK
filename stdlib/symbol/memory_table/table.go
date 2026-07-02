@@ -79,7 +79,7 @@ type symbolTable struct {
 	opts          TableOpts
 	refCount      atomic.Int32
 	valueCacheMu  sync.RWMutex          // Protects valueCache and the buf pools (curBufPool*, bufPools)
-	valueCache    map[uint64]kvEntry    // Maps a entry value hash to a kvEntry
+	valueCache    map[uint64]kvEntry    // Maps an entry value hash to a kvEntry
 	tokenCacheMu  sync.RWMutex          // Protects tokenCache
 	tokenCache    map[symbol.ID]kvEntry // Maps an ID ("token") to an entry
 	curBufPool    []byte
@@ -170,19 +170,12 @@ func (st *symbolTable) SetSymbolID(val []byte, symID symbol.ID) (symbol.ID, bool
 	return st.getsetValueIDPair(val, symID, symID == 0)
 }
 
-// getsetValueIDPair loads and returns the ID for the given value, and/or writes the ID and value assignment to the db,
-// also updating the cache in the process.
+// getsetValueIDPair binds the given value to an ID, updating both lookup caches.
+// Callers check for an existing binding first; this fn does not.
 //
-//	if symID == 0:
-//	  if the given value has an existing value-ID association:
-//	      the existing ID is cached and returned (autoIssue is ignored).
-//	  if the given value does NOT have an existing value-ID association:
-//	      if autoIssue == false, the call has no effect and 0 is returned.
-//	      if autoIssue == true, a new ID is issued and new value-to-ID and ID-to-value assignments are written,
-//
-//	if symID != 0:
-//	    if autoIssue == false, a new value-to-ID assignment is (over)written and any existing ID-to-value assignment remains.
-//	    if autoIssue == true, both value-to-ID and ID-to-value assignments are (over)written.
+//	if symID == 0 && autoIssue == false: no effect; 0 is returned.
+//	if symID == 0 && autoIssue == true:  a new ID is issued and bound to the value.
+//	if symID != 0: the value is (re)bound to symID (both value-to-ID and ID-to-value).
 func (st *symbolTable) getsetValueIDPair(val []byte, symID symbol.ID, autoIssue bool) (symbol.ID, bool) {
 
 	// The empty string is always mapped to ID 0
@@ -218,7 +211,7 @@ func (st *symbolTable) GetSymbol(symID symbol.ID, io []byte) []byte {
 	st.valueCacheMu.RLock()
 	defer st.valueCacheMu.RUnlock()
 
-	// At this point, if symID wasn't found, kv will be zero and causing nil to be returned
+	// If symID wasn't found, kv is zero, causing nil to be returned
 	symBuf := st.bufForEntry(kv)
 	if symBuf == nil {
 		return nil

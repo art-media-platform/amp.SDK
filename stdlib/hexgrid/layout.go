@@ -45,7 +45,7 @@ var (
 	OrientationFlat   = Orientation{3. / 2., 0., math.Sqrt(3.) / 2., math.Sqrt(3.), 2. / 3., 0., -1. / 3., math.Sqrt(3.) / 3., 0.}
 )
 
-// HexToPixel returns the center pixel for a given hexagon an a certain layout
+// HexToPixel returns the center pixel for a given hexagon on a certain layout
 func HexToPixel(l Layout, h Hex) Point {
 	M := l.Orientation
 	size := l.Size

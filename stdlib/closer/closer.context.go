@@ -1,3 +1,6 @@
+// Package closer provides two independent lifecycle primitives:
+// Context, a context.Context that can be closed explicitly, and
+// Wrapper, a reference-counted io.Closer.
 package closer
 
 import (
@@ -8,7 +11,8 @@ import (
 	"time"
 )
 
-// A lightweight context.Context that can be closed explicitly.
+// Context is a lightweight context.Context that can be closed explicitly with an error,
+// and carries a mutable url.Values string map exposed via Value().
 //
 // All methods are concurrency safe.
 type Context interface {
@@ -16,10 +20,10 @@ type Context interface {
 	// Use whenever a context.Context is needed
 	context.Context
 
-	// Accesses string value map exposed via Context.Value(), returning a copy entry for the requested key.
+	// Returns a copy of the value-map entries for the requested key (see MergeValues).
 	Values(key string) []string
 
-	// Replaces entries to existing value map exposed via Context.Value()
+	// Merges src into the value map exposed via Value() and Values(), replacing entries per key.
 	MergeValues(src url.Values)
 
 	// Close signals Done() and assigns the value that Err() will return.
@@ -28,7 +32,6 @@ type Context interface {
 	Close(err error)
 }
 
-// ctx implements closer.Context
 var _ Context = (*ctx)(nil)
 
 // ctx implements closer.Context
@@ -51,8 +54,8 @@ func (p *ctx) Close(err error) {
 	})
 }
 
-// Returns a new closer.Context that signals Done() once when either: the input context signals, or if Close() is called.
-// If existing == nil, the returned context only closes once Close() is called.
+// Returns a new closer.Context that signals Done() once when either: the input context signals, or Close() is called.
+// If input == nil, the returned context only closes once Close() is called.
 func WrapContext(input context.Context) Context {
 	p := &ctx{
 		closed: make(chan struct{}),
@@ -74,7 +77,7 @@ func WrapContext(input context.Context) Context {
 	return p
 }
 
-// Done returns a channel that is closed when the signal is closed
+// Done returns a channel that is closed when this Context is closed
 func (p *ctx) Done() <-chan struct{} {
 	return p.closed
 }

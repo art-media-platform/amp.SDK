@@ -134,16 +134,6 @@ func RespondJSON(resp http.ResponseWriter, data interface{}) {
 	}
 }
 
-// func UnrestrictedCors(handler http.Handler) http.Handler {
-// 	return cors.New(cors.Options{
-// 		AllowOriginFunc:  func(string) bool { return true },
-// 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "AUTHORIZE", "SUBSCRIBE", "ACK", "OPTIONS", "HEAD"},
-// 		AllowedHeaders:   []string{"*"},
-// 		ExposedHeaders:   []string{"*"},
-// 		AllowCredentials: true,
-// 	}).Handler(handler)
-// }
-
 func SniffContentType(filename string, data io.Reader) (string, error) {
 	// Only the first 512 bytes are used to sniff the content type.
 	buffer := make([]byte, 512)
@@ -153,7 +143,7 @@ func SniffContentType(filename string, data io.Reader) (string, error) {
 		return "", err
 	}
 
-	// Use the net/http package's handy DectectContentType function. Always returns a valid
+	// Use the net/http package's handy DetectContentType function. Always returns a valid
 	// content-type by returning "application/octet-stream" if no others seemed to match.
 	contentType := http.DetectContentType(buffer)
 

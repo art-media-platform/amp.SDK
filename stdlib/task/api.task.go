@@ -1,4 +1,5 @@
-// Features task.Context, a wrapper for goroutines inspired by a conventional parent-child process model
+// Package task provides task.Context, a goroutine lifecycle wrapper modeled on a
+// conventional parent-child process tree: close propagation, idle-close, and integrated logging.
 package task
 
 import (
@@ -83,7 +84,7 @@ type Task struct {
 	OnClosed       func()                  // Called after Close() and all children have completed Close() (but immediately before Done() is released).
 }
 
-// Context is an expanded form of a context.Context offering, featuring:
+// Context is an expanded context.Context, featuring:
 //   - integrated logging, removing guesswork of which Context logged what
 //   - "child" Contexts such that Close() will cause a Context's children to close
 //   - automatic idle-close of Contexts after a period of inactivity

@@ -5,10 +5,13 @@ import (
 	"hash/maphash"
 )
 
+// MapEntry is a BufMap element; MapKey returns its lookup key.
 type MapEntry interface {
 	MapKey() []byte
 }
 
+// BufMap maps []byte keys to entries, open-addressing over a 64-bit maphash.
+// Not safe for concurrent use.
 type BufMap struct {
 	hashMap map[uint64]MapEntry
 	hasher  maphash.Hash

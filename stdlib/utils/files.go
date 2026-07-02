@@ -252,7 +252,7 @@ var remapCharset = map[rune]rune{
 }
 
 // MakeFSFriendly makes a given string safe to use for a file system.
-// If suffix is given, the hex encoding of those bytes are appended after a space.
+// If suffix is given, the amp-base32 encoding of those bytes is appended after a space.
 func MakeFSFriendly(name string, suffix []byte) string {
 
 	var b strings.Builder
@@ -275,8 +275,9 @@ func MakeFSFriendly(name string, suffix []byte) string {
 	return friendlyName
 }
 
-// CreateTemp creates a temporary file with the given file mode flags using the given name pattern.
-// The name pattern should contain a '*' to where a random alphanumeric should go.
+// CreateTemp creates a temporary file with the given open-file flags using the given name pattern.
+// The pattern's '*' (or its end when absent) marks where a time-derived unique token goes.
+// If dir is empty, os.TempDir() is used.
 func CreateTemp(dir, pattern string, fileFlags int) (ofile *os.File, err error) {
 	if dir == "" {
 		dir = os.TempDir()

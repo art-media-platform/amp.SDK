@@ -1,12 +1,10 @@
-// Package bucket provides a steady-rate + burst token-bucket limiter — a pure
-// sync+time primitive shared across amp apps (outbound email dispatch, forum
-// write budgets, campaign pacing).
+// Package bucket provides a steady-rate + burst token-bucket rate limiter — a
+// pure sync+time primitive with a blocking gate (Take) and a non-blocking
+// reject gate (TryTake).
 //
-// Why token-bucket over fixed-window sleeps: provider and abuse thresholds care
-// about *bursts* as well as steady-state rate.  A token-bucket lets a caller
-// burn through a small reserve (a warm-up batch, a member's first few posts)
-// then settle into a steady cadence; fixed-window sleeps stall the whole queue
-// every period boundary.
+// A token bucket bounds bursts as well as steady-state rate: a caller may burn
+// a small reserve, then settles into the refill cadence — where fixed-window
+// sleeps would stall the whole queue at every period boundary.
 package bucket
 
 import (
@@ -38,16 +36,14 @@ func NewTokenBucket(capacity, refillRatePerSec float64) *TokenBucket {
 }
 
 // Take blocks until one token is available, then consumes it.  Returns the
-// context's error if it is cancelled before a token frees up.  Callers wrap
-// this around each dispatch: idle drains hold the lock for milliseconds, not
-// seconds.
+// context's error if it is cancelled before a token frees up.
 func (b *TokenBucket) Take(ctx context.Context) error {
 	for {
 		wait := b.consume()
 		if wait <= 0 {
 			return nil
 		}
-		// Wake a hair early so float64 drift doesn't oversleep.
+		// Sleep out the deficit, then re-check; another taker may have raced us.
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -58,7 +54,6 @@ func (b *TokenBucket) Take(ctx context.Context) error {
 
 // TryTake consumes one token without blocking.  Returns true when a token was
 // available (the action is admitted), false when the bucket is empty (reject).
-// This is the reject-style gate a request path applies before accepting a write.
 func (b *TokenBucket) TryTake() bool {
 	return b.consume() <= 0
 }
@@ -84,9 +79,7 @@ func (b *TokenBucket) consume() time.Duration {
 	return time.Duration(deficit / b.refillRate * float64(time.Second))
 }
 
-// Reset re-initialises the bucket to `prefill` tokens (capped at capacity).
-// Useful before a long run so the first batch can burn the burst budget without
-// artificial throttling.
+// Reset re-initializes the bucket to `prefill` tokens (capped at capacity).
 func (b *TokenBucket) Reset(prefill float64) {
 	b.mu.Lock()
 	if prefill > b.capacity {

@@ -24,7 +24,7 @@ func Zero(buf []byte) {
 	}
 }
 
-// Encodes a int64 to a zig-zag uint64
+// Encodes an int64 to a zig-zag uint64
 func ToZigZag(x int64) uint64 {
 	ux := uint64(x) << 1
 	if x < 0 {
@@ -33,7 +33,7 @@ func ToZigZag(x int64) uint64 {
 	return ux
 }
 
-// Decodes a zig-zag uint64 to a int64
+// Decodes a zig-zag uint64 to an int64
 func FromZigZag(ux uint64) int64 {
 	x := ux >> 1
 	if ux&1 != 0 {

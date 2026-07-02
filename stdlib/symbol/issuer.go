@@ -4,6 +4,7 @@ import (
 	"sync/atomic"
 )
 
+// NewVolatileIssuer returns an in-memory Issuer that starts issuing at startAt; state is not persisted.
 func NewVolatileIssuer(startAt ID) Issuer {
 	iss := &atomicIssuer{}
 	iss.nextID.Store(uint32(startAt))
