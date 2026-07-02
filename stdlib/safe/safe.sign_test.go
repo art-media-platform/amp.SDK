@@ -52,6 +52,39 @@ func TestSigningDigest_TagIsLengthPrefixed(t *testing.T) {
 	}
 }
 
+// TestSigningDigest_SplitDiffers: every part is individually u32-BE
+// length-framed, so different part-splits of the same concatenated bytes must
+// yield different digests — split ambiguity is structurally impossible.
+func TestSigningDigest_SplitDiffers(t *testing.T) {
+	a := []byte("member-id-16by")
+	b := []byte("challenge nonce bytes")
+	ab := append(append([]byte(nil), a...), b...)
+
+	joined, err := safe.SigningDigest(0, safe.SigningDomain_Login, ab)
+	if err != nil {
+		t.Fatal(err)
+	}
+	split, err := safe.SigningDigest(0, safe.SigningDomain_Login, a, b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(joined, split) {
+		t.Fatal("SigningDigest([ab]) must differ from SigningDigest([a],[b])")
+	}
+
+	// A different split point of the same bytes must also differ.
+	otherSplit, err := safe.SigningDigest(0, safe.SigningDomain_Login, ab[:3], ab[3:])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Equal(split, otherSplit) {
+		t.Fatal("SigningDigest([a],[b]) must differ from SigningDigest split at another point")
+	}
+	if bytes.Equal(joined, otherSplit) {
+		t.Fatal("SigningDigest([ab]) must differ from any two-part split")
+	}
+}
+
 // TestSignVerifyDomain_RoundTripAndCrossReject: a domain signature verifies in
 // its own context and is REJECTED when checked under any other domain.
 func TestSignVerifyDomain_RoundTripAndCrossReject(t *testing.T) {

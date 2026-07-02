@@ -1,5 +1,12 @@
 package safe
 
+import (
+	"encoding/binary"
+	"math"
+
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
+)
+
 // safe.sign.go — domain separation for signatures.
 //
 // One signing key authors several distinct things: a login proof, a TxMsg author
@@ -44,9 +51,7 @@ var AllSigningDomains = []SigningDomain{
 // SigningDomainTag returns the length-prefixed domain bytes that prefix every
 // signed payload for domain — u8(len) || domain.  The length prefix makes the
 // boundary between the tag and the payload unambiguous, so no domain can be a
-// prefix of another's message.  Callers that hash through a CryptoProvider (the
-// TxMsg author path) prepend this as the first hashed segment; SigningDigest
-// applies it directly — both yield the same bytes.
+// prefix of another's message.
 func SigningDomainTag(domain SigningDomain) []byte {
 	tag := make([]byte, 0, 1+len(domain))
 	tag = append(tag, byte(len(domain)))
@@ -54,21 +59,49 @@ func SigningDomainTag(domain SigningDomain) []byte {
 	return tag
 }
 
+// SigningParts returns the exact byte segments a domain-separated signature
+// digest covers: SigningDomainTag(domain) first, then each part as a u32
+// big-endian byte-length prefix followed by the part bytes.  This is the one
+// authoritative framing site — SigningDigest hashes exactly these segments,
+// and a caller that hashes through its own hasher (a CryptoProvider) feeds
+// them verbatim, so both paths yield identical bytes.  Errors if a part
+// exceeds the u32 frame.
+func SigningParts(domain SigningDomain, parts ...[]byte) ([][]byte, error) {
+	framed := make([][]byte, 0, 1+2*len(parts))
+	framed = append(framed, SigningDomainTag(domain))
+	for _, part := range parts {
+		if uint64(len(part)) > math.MaxUint32 {
+			return nil, status.Code_BadRequest.Errorf("safe: signing part exceeds u32 length frame (%d bytes)", len(part))
+		}
+		lenPrefix := make([]byte, 4)
+		binary.BigEndian.PutUint32(lenPrefix, uint32(len(part)))
+		framed = append(framed, lenPrefix, part)
+	}
+	return framed, nil
+}
+
 // SigningDigest binds domain into a fixed 32-byte digest over parts under
-// hashKit (0 = default Blake2s_256): H( SigningDomainTag(domain) || parts... ).
-// It is the one authoritative definition of what a domain-separated signature
-// covers — the signer passes the result to Enclave.SignRaw, the verifier to
-// VerifySignature.  Fixed-size so it is kit-agnostic (every CryptoKit signs a
-// 32-byte digest, re-hashing internally) and cheap for large payloads (the wire
-// is hashed once here, not again in full by the kit).
+// hashKit (0 = default Blake2s_256):
+// H( SigningDomainTag(domain) || u32BE(len(part)) || part ... ).
+// Every part is individually u32-BE length-framed (SigningParts), so no
+// concatenation of different part-splits can collide; callers need no framing
+// discipline of their own.  It is the one authoritative definition of what a
+// domain-separated signature covers — the signer passes the result to
+// Enclave.SignRaw, the verifier to VerifySignature.  Fixed-size so it is
+// kit-agnostic (every CryptoKit signs a 32-byte digest, re-hashing internally)
+// and cheap for large payloads (the wire is hashed once here, not again in
+// full by the kit).
 func SigningDigest(hashKit HashKitID, domain SigningDomain, parts ...[]byte) ([]byte, error) {
+	framed, err := SigningParts(domain, parts...)
+	if err != nil {
+		return nil, err
+	}
 	hk, err := NewHashKit(hashKit)
 	if err != nil {
 		return nil, err
 	}
-	hk.Hasher.Write(SigningDomainTag(domain))
-	for _, part := range parts {
-		hk.Hasher.Write(part)
+	for _, segment := range framed {
+		hk.Hasher.Write(segment)
 	}
 	return hk.Hasher.Sum(nil), nil
 }

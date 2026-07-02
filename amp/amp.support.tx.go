@@ -683,9 +683,14 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 	binary.BigEndian.PutUint16(buf[12:14], uint16(sigSize))
 
 	// --- Sign: domain-separated digest over the wire before signature → append ---
-	// The SigningDomain_TxAuthor tag (safe.sign.go) prefixes the hashed bytes so an
-	// author seal can never be produced or accepted in another signing context.
-	digest, err := crypto.HashDigest(safe.SigningDomainTag(safe.SigningDomain_TxAuthor), buf)
+	// safe.SigningParts frames the wire under SigningDomain_TxAuthor — the same
+	// segments SigningDigest hashes — so this seal is byte-identical to what
+	// TxSignedDigest derives on the verify side.
+	framed, err := safe.SigningParts(safe.SigningDomain_TxAuthor, buf)
+	if err != nil {
+		return err
+	}
+	digest, err := crypto.HashDigest(framed...)
 	if err != nil {
 		return err
 	}
@@ -813,7 +818,11 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 		signedData := wire[:sigOfs]
 		sig := wire[sigOfs:]
 
-		digest, err := crypto.HashDigest(safe.SigningDomainTag(safe.SigningDomain_TxAuthor), signedData)
+		framed, err := safe.SigningParts(safe.SigningDomain_TxAuthor, signedData)
+		if err != nil {
+			return nil, err
+		}
+		digest, err := crypto.HashDigest(framed...)
 		if err != nil {
 			return nil, err
 		}
