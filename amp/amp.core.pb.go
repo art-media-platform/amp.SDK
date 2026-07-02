@@ -28,306 +28,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// TxOpFlags are 8 available bit flags that describe a TxOp.
-type TxOpFlags int32
-
-const (
-	TxOpFlags_Unassigned TxOpFlags = 0 // invalid state
-	TxOpFlags_MetaOp     TxOpFlags = 1 // op is out of band and/or should not persist
-	TxOpFlags_Upsert     TxOpFlags = 4 // write value at [Address]
-	TxOpFlags_Delete     TxOpFlags = 8 // drop value at [Address]
-)
-
-// Enum value maps for TxOpFlags.
-var (
-	TxOpFlags_name = map[int32]string{
-		0: "Unassigned",
-		1: "MetaOp",
-		4: "Upsert",
-		8: "Delete",
-	}
-	TxOpFlags_value = map[string]int32{
-		"Unassigned": 0,
-		"MetaOp":     1,
-		"Upsert":     4,
-		"Delete":     8,
-	}
-)
-
-func (x TxOpFlags) Enum() *TxOpFlags {
-	p := new(TxOpFlags)
-	*p = x
-	return p
-}
-
-func (x TxOpFlags) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (TxOpFlags) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[0].Descriptor()
-}
-
-func (TxOpFlags) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[0]
-}
-
-func (x TxOpFlags) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use TxOpFlags.Descriptor instead.
-func (TxOpFlags) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{0}
-}
-
-// TxField maps a fixed count of int64 payload fields.
-//
-// Why not a proto message? Compression is much better since values usually repeat.
-type TxField int32
-
-const (
-	TxField_Nil       TxField = 0
-	TxField_NodeID_0  TxField = 1
-	TxField_NodeID_1  TxField = 2
-	TxField_AttrID_0  TxField = 4
-	TxField_AttrID_1  TxField = 5
-	TxField_ItemID_0  TxField = 6
-	TxField_ItemID_1  TxField = 7
-	TxField_EditID_0  TxField = 10
-	TxField_EditID_1  TxField = 11
-	TxField_MaxFields TxField = 16
-)
-
-// Enum value maps for TxField.
-var (
-	TxField_name = map[int32]string{
-		0:  "Nil",
-		1:  "NodeID_0",
-		2:  "NodeID_1",
-		4:  "AttrID_0",
-		5:  "AttrID_1",
-		6:  "ItemID_0",
-		7:  "ItemID_1",
-		10: "EditID_0",
-		11: "EditID_1",
-		16: "MaxFields",
-	}
-	TxField_value = map[string]int32{
-		"Nil":       0,
-		"NodeID_0":  1,
-		"NodeID_1":  2,
-		"AttrID_0":  4,
-		"AttrID_1":  5,
-		"ItemID_0":  6,
-		"ItemID_1":  7,
-		"EditID_0":  10,
-		"EditID_1":  11,
-		"MaxFields": 16,
-	}
-)
-
-func (x TxField) Enum() *TxField {
-	p := new(TxField)
-	*p = x
-	return p
-}
-
-func (x TxField) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (TxField) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[1].Descriptor()
-}
-
-func (TxField) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[1]
-}
-
-func (x TxField) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use TxField.Descriptor instead.
-func (TxField) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{1}
-}
-
-// The first byte of a serialized proto.Message for future-proofing:
-//
-//	0x0F   which inline 16 byte (4 UID literals) that immediately follow
-//	0xF0   flags that do not affect value header size.
-type ValueHeaderFlags int32
-
-const (
-	ValueHeaderFlags_None   ValueHeaderFlags = 0
-	ValueHeaderFlags_FromID ValueHeaderFlags = 1 // author or other originator
-	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // tx that publishes this entry
-	ValueHeaderFlags_UID_C  ValueHeaderFlags = 4 // reserved
-	ValueHeaderFlags_UID_D  ValueHeaderFlags = 8 // reserved
-)
-
-// Enum value maps for ValueHeaderFlags.
-var (
-	ValueHeaderFlags_name = map[int32]string{
-		0: "None",
-		1: "FromID",
-		2: "TxID",
-		4: "UID_C",
-		8: "UID_D",
-	}
-	ValueHeaderFlags_value = map[string]int32{
-		"None":   0,
-		"FromID": 1,
-		"TxID":   2,
-		"UID_C":  4,
-		"UID_D":  8,
-	}
-)
-
-func (x ValueHeaderFlags) Enum() *ValueHeaderFlags {
-	p := new(ValueHeaderFlags)
-	*p = x
-	return p
-}
-
-func (x ValueHeaderFlags) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (ValueHeaderFlags) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[2].Descriptor()
-}
-
-func (ValueHeaderFlags) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[2]
-}
-
-func (x ValueHeaderFlags) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use ValueHeaderFlags.Descriptor instead.
-func (ValueHeaderFlags) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{2}
-}
-
-// Expresses the status of an amp.Pin.
-type PinStatus int32
-
-const (
-	PinStatus_Inactive PinStatus = 0  // no op
-	PinStatus_Started  PinStatus = 2  // pin now on service
-	PinStatus_TxCommit PinStatus = 6  // tx commit complete / failed
-	PinStatus_Syncing  PinStatus = 8  // state sync in progress
-	PinStatus_Synced   PinStatus = 9  // state is synchronized; drives UI updates requiring a stable state.
-	PinStatus_Complete PinStatus = 16 // pin complete / closed / failed
-)
-
-// Enum value maps for PinStatus.
-var (
-	PinStatus_name = map[int32]string{
-		0:  "Inactive",
-		2:  "Started",
-		6:  "TxCommit",
-		8:  "Syncing",
-		9:  "Synced",
-		16: "Complete",
-	}
-	PinStatus_value = map[string]int32{
-		"Inactive": 0,
-		"Started":  2,
-		"TxCommit": 6,
-		"Syncing":  8,
-		"Synced":   9,
-		"Complete": 16,
-	}
-)
-
-func (x PinStatus) Enum() *PinStatus {
-	p := new(PinStatus)
-	*p = x
-	return p
-}
-
-func (x PinStatus) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (PinStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[3].Descriptor()
-}
-
-func (PinStatus) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[3]
-}
-
-func (x PinStatus) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use PinStatus.Descriptor instead.
-func (PinStatus) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{3}
-}
-
-// Determines how much a Pin emits to its client Requester.
-type PinMode int32
-
-const (
-	// If set, no state is emitted to the client.
-	// Used when only writing via CommitTx()
-	PinMode_Commit PinMode = 0
-	// Send requested attrs, then auto-close this request
-	// Used when instantaneous state is sufficient (e.g. applying a setting)
-	PinMode_Snapshot PinMode = 1
-	// If set, the request will remain open after the initial state snapshot is sent.
-	// Requester will receive state updates until this request is closed.
-	PinMode_MaintainSync PinMode = 2
-)
-
-// Enum value maps for PinMode.
-var (
-	PinMode_name = map[int32]string{
-		0: "Commit",
-		1: "Snapshot",
-		2: "MaintainSync",
-	}
-	PinMode_value = map[string]int32{
-		"Commit":       0,
-		"Snapshot":     1,
-		"MaintainSync": 2,
-	}
-)
-
-func (x PinMode) Enum() *PinMode {
-	p := new(PinMode)
-	*p = x
-	return p
-}
-
-func (x PinMode) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (PinMode) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[4].Descriptor()
-}
-
-func (PinMode) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[4]
-}
-
-func (x PinMode) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use PinMode.Descriptor instead.
-func (PinMode) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{4}
-}
-
 type UriScheme int32
 
 const (
@@ -373,11 +73,11 @@ func (x UriScheme) String() string {
 }
 
 func (UriScheme) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[5].Descriptor()
+	return file_amp_amp_core_proto_enumTypes[0].Descriptor()
 }
 
 func (UriScheme) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[5]
+	return &file_amp_amp_core_proto_enumTypes[0]
 }
 
 func (x UriScheme) Number() protoreflect.EnumNumber {
@@ -386,7 +86,7 @@ func (x UriScheme) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use UriScheme.Descriptor instead.
 func (UriScheme) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{5}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{0}
 }
 
 // Units specifies a standard units convention.
@@ -450,11 +150,11 @@ func (x Units) String() string {
 }
 
 func (Units) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[6].Descriptor()
+	return file_amp_amp_core_proto_enumTypes[1].Descriptor()
 }
 
 func (Units) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[6]
+	return &file_amp_amp_core_proto_enumTypes[1]
 }
 
 func (x Units) Number() protoreflect.EnumNumber {
@@ -463,7 +163,463 @@ func (x Units) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Units.Descriptor instead.
 func (Units) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{1}
+}
+
+// TxOpFlags are 8 available bit flags that describe a TxOp.
+type TxOpFlags int32
+
+const (
+	TxOpFlags_Unassigned TxOpFlags = 0 // invalid state
+	TxOpFlags_MetaOp     TxOpFlags = 1 // op is out of band and/or should not persist
+	TxOpFlags_Upsert     TxOpFlags = 4 // write value at [Address]
+	TxOpFlags_Delete     TxOpFlags = 8 // drop value at [Address]
+)
+
+// Enum value maps for TxOpFlags.
+var (
+	TxOpFlags_name = map[int32]string{
+		0: "Unassigned",
+		1: "MetaOp",
+		4: "Upsert",
+		8: "Delete",
+	}
+	TxOpFlags_value = map[string]int32{
+		"Unassigned": 0,
+		"MetaOp":     1,
+		"Upsert":     4,
+		"Delete":     8,
+	}
+)
+
+func (x TxOpFlags) Enum() *TxOpFlags {
+	p := new(TxOpFlags)
+	*p = x
+	return p
+}
+
+func (x TxOpFlags) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TxOpFlags) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[2].Descriptor()
+}
+
+func (TxOpFlags) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[2]
+}
+
+func (x TxOpFlags) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TxOpFlags.Descriptor instead.
+func (TxOpFlags) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{2}
+}
+
+// TxField maps a fixed count of int64 payload fields.
+//
+// Why not a proto message? Compression is much better since values usually repeat.
+type TxField int32
+
+const (
+	TxField_Nil       TxField = 0
+	TxField_NodeID_0  TxField = 1
+	TxField_NodeID_1  TxField = 2
+	TxField_AttrID_0  TxField = 4
+	TxField_AttrID_1  TxField = 5
+	TxField_ItemID_0  TxField = 6
+	TxField_ItemID_1  TxField = 7
+	TxField_EditID_0  TxField = 10
+	TxField_EditID_1  TxField = 11
+	TxField_MaxFields TxField = 16
+)
+
+// Enum value maps for TxField.
+var (
+	TxField_name = map[int32]string{
+		0:  "Nil",
+		1:  "NodeID_0",
+		2:  "NodeID_1",
+		4:  "AttrID_0",
+		5:  "AttrID_1",
+		6:  "ItemID_0",
+		7:  "ItemID_1",
+		10: "EditID_0",
+		11: "EditID_1",
+		16: "MaxFields",
+	}
+	TxField_value = map[string]int32{
+		"Nil":       0,
+		"NodeID_0":  1,
+		"NodeID_1":  2,
+		"AttrID_0":  4,
+		"AttrID_1":  5,
+		"ItemID_0":  6,
+		"ItemID_1":  7,
+		"EditID_0":  10,
+		"EditID_1":  11,
+		"MaxFields": 16,
+	}
+)
+
+func (x TxField) Enum() *TxField {
+	p := new(TxField)
+	*p = x
+	return p
+}
+
+func (x TxField) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TxField) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[3].Descriptor()
+}
+
+func (TxField) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[3]
+}
+
+func (x TxField) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TxField.Descriptor instead.
+func (TxField) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{3}
+}
+
+// The first byte of a serialized proto.Message for future-proofing:
+//
+//	0x0F   which inline 16 byte (4 UID literals) that immediately follow
+//	0xF0   flags that do not affect value header size.
+type ValueHeaderFlags int32
+
+const (
+	ValueHeaderFlags_None   ValueHeaderFlags = 0
+	ValueHeaderFlags_FromID ValueHeaderFlags = 1 // author or other originator
+	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // tx that publishes this entry
+	ValueHeaderFlags_UID_C  ValueHeaderFlags = 4 // reserved
+	ValueHeaderFlags_UID_D  ValueHeaderFlags = 8 // reserved
+)
+
+// Enum value maps for ValueHeaderFlags.
+var (
+	ValueHeaderFlags_name = map[int32]string{
+		0: "None",
+		1: "FromID",
+		2: "TxID",
+		4: "UID_C",
+		8: "UID_D",
+	}
+	ValueHeaderFlags_value = map[string]int32{
+		"None":   0,
+		"FromID": 1,
+		"TxID":   2,
+		"UID_C":  4,
+		"UID_D":  8,
+	}
+)
+
+func (x ValueHeaderFlags) Enum() *ValueHeaderFlags {
+	p := new(ValueHeaderFlags)
+	*p = x
+	return p
+}
+
+func (x ValueHeaderFlags) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ValueHeaderFlags) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[4].Descriptor()
+}
+
+func (ValueHeaderFlags) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[4]
+}
+
+func (x ValueHeaderFlags) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ValueHeaderFlags.Descriptor instead.
+func (ValueHeaderFlags) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{4}
+}
+
+// Expresses the status of an amp.Pin.
+type PinStatus int32
+
+const (
+	PinStatus_Inactive PinStatus = 0  // no op
+	PinStatus_Started  PinStatus = 2  // pin now on service
+	PinStatus_TxCommit PinStatus = 6  // tx commit complete / failed
+	PinStatus_Syncing  PinStatus = 8  // state sync in progress
+	PinStatus_Synced   PinStatus = 9  // state is synchronized; drives UI updates requiring a stable state.
+	PinStatus_Complete PinStatus = 16 // pin complete / closed / failed
+)
+
+// Enum value maps for PinStatus.
+var (
+	PinStatus_name = map[int32]string{
+		0:  "Inactive",
+		2:  "Started",
+		6:  "TxCommit",
+		8:  "Syncing",
+		9:  "Synced",
+		16: "Complete",
+	}
+	PinStatus_value = map[string]int32{
+		"Inactive": 0,
+		"Started":  2,
+		"TxCommit": 6,
+		"Syncing":  8,
+		"Synced":   9,
+		"Complete": 16,
+	}
+)
+
+func (x PinStatus) Enum() *PinStatus {
+	p := new(PinStatus)
+	*p = x
+	return p
+}
+
+func (x PinStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PinStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[5].Descriptor()
+}
+
+func (PinStatus) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[5]
+}
+
+func (x PinStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PinStatus.Descriptor instead.
+func (PinStatus) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{5}
+}
+
+// Determines how much a Pin emits to its client Requester.
+type PinMode int32
+
+const (
+	// If set, no state is emitted to the client.
+	// Used when only writing via CommitTx()
+	PinMode_Commit PinMode = 0
+	// Send requested attrs, then auto-close this request
+	// Used when instantaneous state is sufficient (e.g. applying a setting)
+	PinMode_Snapshot PinMode = 1
+	// If set, the request will remain open after the initial state snapshot is sent.
+	// Requester will receive state updates until this request is closed.
+	PinMode_MaintainSync PinMode = 2
+)
+
+// Enum value maps for PinMode.
+var (
+	PinMode_name = map[int32]string{
+		0: "Commit",
+		1: "Snapshot",
+		2: "MaintainSync",
+	}
+	PinMode_value = map[string]int32{
+		"Commit":       0,
+		"Snapshot":     1,
+		"MaintainSync": 2,
+	}
+)
+
+func (x PinMode) Enum() *PinMode {
+	p := new(PinMode)
+	*p = x
+	return p
+}
+
+func (x PinMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PinMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[6].Descriptor()
+}
+
+func (PinMode) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[6]
+}
+
+func (x PinMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PinMode.Descriptor instead.
+func (PinMode) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{6}
+}
+
+// SealState is the planet's lifecycle posture as asserted by the signing quorum
+// of one epoch (it lives in EpochTerms, never a top-level admin field, because
+// pausing or terminating a planet is a governance act).
+type SealState int32
+
+const (
+	SealState_Open   SealState = 0 // live: normal read/write under this epoch
+	SealState_Paused SealState = 1 // write-frozen, but a later quorum epoch (Open) may resume
+	SealState_Sealed SealState = 2 // permanently sealed: no successor epoch chaining off this one is valid
+)
+
+// Enum value maps for SealState.
+var (
+	SealState_name = map[int32]string{
+		0: "Open",
+		1: "Paused",
+		2: "Sealed",
+	}
+	SealState_value = map[string]int32{
+		"Open":   0,
+		"Paused": 1,
+		"Sealed": 2,
+	}
+)
+
+func (x SealState) Enum() *SealState {
+	p := new(SealState)
+	*p = x
+	return p
+}
+
+func (x SealState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SealState) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[7].Descriptor()
+}
+
+func (SealState) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[7]
+}
+
+func (x SealState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SealState.Descriptor instead.
+func (SealState) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{7}
+}
+
+// PrivacyMode is a planet's lifetime-fixed payload-confidentiality posture, set
+// at genesis in PlanetCharter and never changed (a planet that wants to switch
+// forks instead).  Confidential and Public are the endpoints; the reserved 1–6
+// gap leaves room for graduated intermediate modes without disturbing them.
+type PrivacyMode int32
+
+const (
+	PrivacyMode_Confidential PrivacyMode = 0 // members-only: payloads are encrypted; only members author and view
+	PrivacyMode_Public       PrivacyMode = 7 // signature-only: no payload encryption; anyone may syndicate/view, only members author
+)
+
+// Enum value maps for PrivacyMode.
+var (
+	PrivacyMode_name = map[int32]string{
+		0: "Confidential",
+		7: "Public",
+	}
+	PrivacyMode_value = map[string]int32{
+		"Confidential": 0,
+		"Public":       7,
+	}
+)
+
+func (x PrivacyMode) Enum() *PrivacyMode {
+	p := new(PrivacyMode)
+	*p = x
+	return p
+}
+
+func (x PrivacyMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PrivacyMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[8].Descriptor()
+}
+
+func (PrivacyMode) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[8]
+}
+
+func (x PrivacyMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PrivacyMode.Descriptor instead.
+func (PrivacyMode) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{8}
+}
+
+// MemberStatus is the member's lifecycle state as of this MemberEpoch.
+// Transitions are one-way: Active → Suspended → Revoked.  Suspended is a
+// reversible pause (e.g. key rotation pending).  Revoked is permanent and
+// starts the MaxGracePeriod clock after which the member's signatures are
+// no longer accepted.
+type MemberStatus int32
+
+const (
+	MemberStatus_Active    MemberStatus = 0
+	MemberStatus_Suspended MemberStatus = 1
+	MemberStatus_Revoked   MemberStatus = 2
+)
+
+// Enum value maps for MemberStatus.
+var (
+	MemberStatus_name = map[int32]string{
+		0: "Active",
+		1: "Suspended",
+		2: "Revoked",
+	}
+	MemberStatus_value = map[string]int32{
+		"Active":    0,
+		"Suspended": 1,
+		"Revoked":   2,
+	}
+)
+
+func (x MemberStatus) Enum() *MemberStatus {
+	p := new(MemberStatus)
+	*p = x
+	return p
+}
+
+func (x MemberStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MemberStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[9].Descriptor()
+}
+
+func (MemberStatus) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[9]
+}
+
+func (x MemberStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MemberStatus.Descriptor instead.
+func (MemberStatus) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{9}
 }
 
 // Access levels ordered by privilege (higher = more access).
@@ -512,11 +668,11 @@ func (x Access) String() string {
 }
 
 func (Access) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[7].Descriptor()
+	return file_amp_amp_core_proto_enumTypes[10].Descriptor()
 }
 
 func (Access) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[7]
+	return &file_amp_amp_core_proto_enumTypes[10]
 }
 
 func (x Access) Number() protoreflect.EnumNumber {
@@ -525,7 +681,7 @@ func (x Access) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Access.Descriptor instead.
 func (Access) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{7}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{10}
 }
 
 // ContentPolicy constrains HOW a channel's content cells may be written — orthogonal
@@ -564,11 +720,11 @@ func (x ContentPolicy) String() string {
 }
 
 func (ContentPolicy) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[8].Descriptor()
+	return file_amp_amp_core_proto_enumTypes[11].Descriptor()
 }
 
 func (ContentPolicy) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[8]
+	return &file_amp_amp_core_proto_enumTypes[11]
 }
 
 func (x ContentPolicy) Number() protoreflect.EnumNumber {
@@ -577,162 +733,6 @@ func (x ContentPolicy) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ContentPolicy.Descriptor instead.
 func (ContentPolicy) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{8}
-}
-
-// SealState is the planet's lifecycle posture as asserted by the signing quorum
-// of one epoch (it lives in EpochTerms, never a top-level admin field, because
-// pausing or terminating a planet is a governance act).
-type SealState int32
-
-const (
-	SealState_Open   SealState = 0 // live: normal read/write under this epoch
-	SealState_Paused SealState = 1 // write-frozen, but a later quorum epoch (Open) may resume
-	SealState_Sealed SealState = 2 // permanently sealed: no successor epoch chaining off this one is valid
-)
-
-// Enum value maps for SealState.
-var (
-	SealState_name = map[int32]string{
-		0: "Open",
-		1: "Paused",
-		2: "Sealed",
-	}
-	SealState_value = map[string]int32{
-		"Open":   0,
-		"Paused": 1,
-		"Sealed": 2,
-	}
-)
-
-func (x SealState) Enum() *SealState {
-	p := new(SealState)
-	*p = x
-	return p
-}
-
-func (x SealState) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (SealState) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[9].Descriptor()
-}
-
-func (SealState) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[9]
-}
-
-func (x SealState) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use SealState.Descriptor instead.
-func (SealState) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{9}
-}
-
-// PrivacyMode is a planet's lifetime-fixed payload-confidentiality posture, set
-// at genesis in PlanetCharter and never changed (a planet that wants to switch
-// forks instead).  Confidential and Public are the endpoints; the reserved 1–6
-// gap leaves room for graduated intermediate modes without disturbing them.
-type PrivacyMode int32
-
-const (
-	PrivacyMode_Confidential PrivacyMode = 0 // members-only: payloads are encrypted; only members author and view
-	PrivacyMode_Public       PrivacyMode = 7 // signature-only: no payload encryption; anyone may syndicate/view, only members author
-)
-
-// Enum value maps for PrivacyMode.
-var (
-	PrivacyMode_name = map[int32]string{
-		0: "Confidential",
-		7: "Public",
-	}
-	PrivacyMode_value = map[string]int32{
-		"Confidential": 0,
-		"Public":       7,
-	}
-)
-
-func (x PrivacyMode) Enum() *PrivacyMode {
-	p := new(PrivacyMode)
-	*p = x
-	return p
-}
-
-func (x PrivacyMode) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (PrivacyMode) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[10].Descriptor()
-}
-
-func (PrivacyMode) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[10]
-}
-
-func (x PrivacyMode) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use PrivacyMode.Descriptor instead.
-func (PrivacyMode) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{10}
-}
-
-// MemberStatus is the member's lifecycle state as of this MemberEpoch.
-// Transitions are one-way: Active → Suspended → Revoked.  Suspended is a
-// reversible pause (e.g. key rotation pending).  Revoked is permanent and
-// starts the MaxGracePeriod clock after which the member's signatures are
-// no longer accepted.
-type MemberStatus int32
-
-const (
-	MemberStatus_Active    MemberStatus = 0
-	MemberStatus_Suspended MemberStatus = 1
-	MemberStatus_Revoked   MemberStatus = 2
-)
-
-// Enum value maps for MemberStatus.
-var (
-	MemberStatus_name = map[int32]string{
-		0: "Active",
-		1: "Suspended",
-		2: "Revoked",
-	}
-	MemberStatus_value = map[string]int32{
-		"Active":    0,
-		"Suspended": 1,
-		"Revoked":   2,
-	}
-)
-
-func (x MemberStatus) Enum() *MemberStatus {
-	p := new(MemberStatus)
-	*p = x
-	return p
-}
-
-func (x MemberStatus) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (MemberStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[11].Descriptor()
-}
-
-func (MemberStatus) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[11]
-}
-
-func (x MemberStatus) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use MemberStatus.Descriptor instead.
-func (MemberStatus) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{11}
 }
 
@@ -869,6 +869,55 @@ func (WithdrawReason) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{13}
 }
 
+// InviteStatus is an invite policy's lifecycle state.  Revoked is terminal —
+// the ACC invite rule rejects an un-revoke; reissue instead, so the redemption
+// ledger's legal reading stays monotonic.
+type InviteStatus int32
+
+const (
+	InviteStatus_InviteActive  InviteStatus = 0
+	InviteStatus_InviteRevoked InviteStatus = 1
+)
+
+// Enum value maps for InviteStatus.
+var (
+	InviteStatus_name = map[int32]string{
+		0: "InviteActive",
+		1: "InviteRevoked",
+	}
+	InviteStatus_value = map[string]int32{
+		"InviteActive":  0,
+		"InviteRevoked": 1,
+	}
+)
+
+func (x InviteStatus) Enum() *InviteStatus {
+	p := new(InviteStatus)
+	*p = x
+	return p
+}
+
+func (x InviteStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (InviteStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[14].Descriptor()
+}
+
+func (InviteStatus) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[14]
+}
+
+func (x InviteStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use InviteStatus.Descriptor instead.
+func (InviteStatus) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{14}
+}
+
 // PlatformID identifies a build/install target.  Values mirror Unity's
 // RuntimePlatform enum directly so amp ↔ Unity conversion is a cast.  Values
 // >= 100 are amp-specific variants Unity doesn't enumerate (e.g. de-Googled
@@ -915,11 +964,11 @@ func (x PlatformID) String() string {
 }
 
 func (PlatformID) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[14].Descriptor()
+	return file_amp_amp_core_proto_enumTypes[15].Descriptor()
 }
 
 func (PlatformID) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[14]
+	return &file_amp_amp_core_proto_enumTypes[15]
 }
 
 func (x PlatformID) Number() protoreflect.EnumNumber {
@@ -928,7 +977,7 @@ func (x PlatformID) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PlatformID.Descriptor instead.
 func (PlatformID) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{14}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{15}
 }
 
 // TrustState is the three-state verdict for a NameService record's §3.3 back-edge
@@ -967,11 +1016,11 @@ func (x TrustState) String() string {
 }
 
 func (TrustState) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[15].Descriptor()
+	return file_amp_amp_core_proto_enumTypes[16].Descriptor()
 }
 
 func (TrustState) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[15]
+	return &file_amp_amp_core_proto_enumTypes[16]
 }
 
 func (x TrustState) Number() protoreflect.EnumNumber {
@@ -980,56 +1029,375 @@ func (x TrustState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TrustState.Descriptor instead.
 func (TrustState) EnumDescriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{15}
-}
-
-// InviteStatus is an invite policy's lifecycle state.  Revoked is terminal —
-// the ACC invite rule rejects an un-revoke; reissue instead, so the redemption
-// ledger's legal reading stays monotonic.
-type InviteStatus int32
-
-const (
-	InviteStatus_InviteActive  InviteStatus = 0
-	InviteStatus_InviteRevoked InviteStatus = 1
-)
-
-// Enum value maps for InviteStatus.
-var (
-	InviteStatus_name = map[int32]string{
-		0: "InviteActive",
-		1: "InviteRevoked",
-	}
-	InviteStatus_value = map[string]int32{
-		"InviteActive":  0,
-		"InviteRevoked": 1,
-	}
-)
-
-func (x InviteStatus) Enum() *InviteStatus {
-	p := new(InviteStatus)
-	*p = x
-	return p
-}
-
-func (x InviteStatus) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (InviteStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_amp_core_proto_enumTypes[16].Descriptor()
-}
-
-func (InviteStatus) Type() protoreflect.EnumType {
-	return &file_amp_amp_core_proto_enumTypes[16]
-}
-
-func (x InviteStatus) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use InviteStatus.Descriptor instead.
-func (InviteStatus) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{16}
+}
+
+// Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
+//
+// All fields are optional and their meaning is contextual.
+type Tag struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// / open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
+	// /
+	UID_0 uint64 `protobuf:"fixed64,3,opt,name=UID_0,json=UID0,proto3" json:"UID_0,omitempty"`
+	UID_1 uint64 `protobuf:"fixed64,4,opt,name=UID_1,json=UID1,proto3" json:"UID_1,omitempty"`
+	I     int64  `protobuf:"varint,16,opt,name=I,proto3" json:"I,omitempty"`
+	J     int64  `protobuf:"varint,17,opt,name=J,proto3" json:"J,omitempty"`
+	K     int64  `protobuf:"varint,18,opt,name=K,proto3" json:"K,omitempty"`
+	Units Units  `protobuf:"varint,21,opt,name=Units,proto3,enum=amp.Units" json:"Units,omitempty"` // units for (i,j,k)
+	// / open-use non-inline fields
+	// /
+	ContentTypeRaw string `protobuf:"bytes,24,opt,name=ContentTypeRaw,proto3" json:"ContentTypeRaw,omitempty"` // IANA media type; access via Tag.ContentType() e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
+	URI            string `protobuf:"bytes,26,opt,name=URI,proto3" json:"URI,omitempty"`                       // IANA RFC 1738 URL or unix pathname
+	Text           string `protobuf:"bytes,28,opt,name=Text,proto3" json:"Text,omitempty"`                     // UTF8 plain-text, XML, RTF
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Tag) Reset() {
+	*x = Tag{}
+	mi := &file_amp_amp_core_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Tag) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Tag) ProtoMessage() {}
+
+func (x *Tag) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Tag.ProtoReflect.Descriptor instead.
+func (*Tag) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Tag) GetUID_0() uint64 {
+	if x != nil {
+		return x.UID_0
+	}
+	return 0
+}
+
+func (x *Tag) GetUID_1() uint64 {
+	if x != nil {
+		return x.UID_1
+	}
+	return 0
+}
+
+func (x *Tag) GetI() int64 {
+	if x != nil {
+		return x.I
+	}
+	return 0
+}
+
+func (x *Tag) GetJ() int64 {
+	if x != nil {
+		return x.J
+	}
+	return 0
+}
+
+func (x *Tag) GetK() int64 {
+	if x != nil {
+		return x.K
+	}
+	return 0
+}
+
+func (x *Tag) GetUnits() Units {
+	if x != nil {
+		return x.Units
+	}
+	return Units_Unitless
+}
+
+func (x *Tag) GetContentTypeRaw() string {
+	if x != nil {
+		return x.ContentTypeRaw
+	}
+	return ""
+}
+
+func (x *Tag) GetURI() string {
+	if x != nil {
+		return x.URI
+	}
+	return ""
+}
+
+func (x *Tag) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
+// Tags is a multi-purpose, serializable, and customizable tree of tags.
+//
+// All fields are optional and their meaning is contextual.
+type Tags struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Head          *Tag                   `protobuf:"bytes,1,opt,name=Head,proto3" json:"Head,omitempty"`         // identifies this branch
+	SubTags       []*Tag                 `protobuf:"bytes,4,rep,name=SubTags,proto3" json:"SubTags,omitempty"`   // amplifying attributes or values
+	Children      []*Tags                `protobuf:"bytes,6,rep,name=Children,proto3" json:"Children,omitempty"` // sequential sub trees
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Tags) Reset() {
+	*x = Tags{}
+	mi := &file_amp_amp_core_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Tags) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Tags) ProtoMessage() {}
+
+func (x *Tags) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Tags.ProtoReflect.Descriptor instead.
+func (*Tags) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Tags) GetHead() *Tag {
+	if x != nil {
+		return x.Head
+	}
+	return nil
+}
+
+func (x *Tags) GetSubTags() []*Tag {
+	if x != nil {
+		return x.SubTags
+	}
+	return nil
+}
+
+func (x *Tags) GetChildren() []*Tags {
+	if x != nil {
+		return x.Children
+	}
+	return nil
+}
+
+// Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID, ItemID, EditID)
+// tuple addressing a single CRDT cell across any planet.  PlanetID = 0 means
+// "this planet" (the planet of the containing TxMsg), matching Citation's convention.
+// Used to cite a specific TxOp address across planets without dereferencing.
+type Address struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	NodeID_0      uint64                 `protobuf:"fixed64,3,opt,name=NodeID_0,json=NodeID0,proto3" json:"NodeID_0,omitempty"`
+	NodeID_1      uint64                 `protobuf:"fixed64,4,opt,name=NodeID_1,json=NodeID1,proto3" json:"NodeID_1,omitempty"`
+	AttrID_0      uint64                 `protobuf:"fixed64,5,opt,name=AttrID_0,json=AttrID0,proto3" json:"AttrID_0,omitempty"`
+	AttrID_1      uint64                 `protobuf:"fixed64,6,opt,name=AttrID_1,json=AttrID1,proto3" json:"AttrID_1,omitempty"`
+	ItemID_0      uint64                 `protobuf:"fixed64,7,opt,name=ItemID_0,json=ItemID0,proto3" json:"ItemID_0,omitempty"`
+	ItemID_1      uint64                 `protobuf:"fixed64,8,opt,name=ItemID_1,json=ItemID1,proto3" json:"ItemID_1,omitempty"`
+	EditID_0      uint64                 `protobuf:"fixed64,9,opt,name=EditID_0,json=EditID0,proto3" json:"EditID_0,omitempty"`
+	EditID_1      uint64                 `protobuf:"fixed64,10,opt,name=EditID_1,json=EditID1,proto3" json:"EditID_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Address) Reset() {
+	*x = Address{}
+	mi := &file_amp_amp_core_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Address) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Address) ProtoMessage() {}
+
+func (x *Address) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Address.ProtoReflect.Descriptor instead.
+func (*Address) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Address) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *Address) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *Address) GetNodeID_0() uint64 {
+	if x != nil {
+		return x.NodeID_0
+	}
+	return 0
+}
+
+func (x *Address) GetNodeID_1() uint64 {
+	if x != nil {
+		return x.NodeID_1
+	}
+	return 0
+}
+
+func (x *Address) GetAttrID_0() uint64 {
+	if x != nil {
+		return x.AttrID_0
+	}
+	return 0
+}
+
+func (x *Address) GetAttrID_1() uint64 {
+	if x != nil {
+		return x.AttrID_1
+	}
+	return 0
+}
+
+func (x *Address) GetItemID_0() uint64 {
+	if x != nil {
+		return x.ItemID_0
+	}
+	return 0
+}
+
+func (x *Address) GetItemID_1() uint64 {
+	if x != nil {
+		return x.ItemID_1
+	}
+	return 0
+}
+
+func (x *Address) GetEditID_0() uint64 {
+	if x != nil {
+		return x.EditID_0
+	}
+	return 0
+}
+
+func (x *Address) GetEditID_1() uint64 {
+	if x != nil {
+		return x.EditID_1
+	}
+	return 0
+}
+
+// UIDRange is an inclusive range of tag.UIDs — [Start, End] — used to bound
+// chronicle slices, Merkle sync ranges, journal scans, and similar spans.
+type UIDRange struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Start_0       uint64                 `protobuf:"fixed64,1,opt,name=Start_0,json=Start0,proto3" json:"Start_0,omitempty"`
+	Start_1       uint64                 `protobuf:"fixed64,2,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
+	End_0         uint64                 `protobuf:"fixed64,3,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"`
+	End_1         uint64                 `protobuf:"fixed64,4,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UIDRange) Reset() {
+	*x = UIDRange{}
+	mi := &file_amp_amp_core_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UIDRange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UIDRange) ProtoMessage() {}
+
+func (x *UIDRange) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UIDRange.ProtoReflect.Descriptor instead.
+func (*UIDRange) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UIDRange) GetStart_0() uint64 {
+	if x != nil {
+		return x.Start_0
+	}
+	return 0
+}
+
+func (x *UIDRange) GetStart_1() uint64 {
+	if x != nil {
+		return x.Start_1
+	}
+	return 0
+}
+
+func (x *UIDRange) GetEnd_0() uint64 {
+	if x != nil {
+		return x.End_0
+	}
+	return 0
+}
+
+func (x *UIDRange) GetEnd_1() uint64 {
+	if x != nil {
+		return x.End_1
+	}
+	return 0
 }
 
 // TxEnvelope carries the cleartext routing/decryption fields of a tx; all
@@ -1083,7 +1451,7 @@ type TxEnvelope struct {
 
 func (x *TxEnvelope) Reset() {
 	*x = TxEnvelope{}
-	mi := &file_amp_amp_core_proto_msgTypes[0]
+	mi := &file_amp_amp_core_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1095,7 +1463,7 @@ func (x *TxEnvelope) String() string {
 func (*TxEnvelope) ProtoMessage() {}
 
 func (x *TxEnvelope) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[0]
+	mi := &file_amp_amp_core_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1108,7 +1476,7 @@ func (x *TxEnvelope) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TxEnvelope.ProtoReflect.Descriptor instead.
 func (*TxEnvelope) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{0}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *TxEnvelope) GetTxID_0() uint64 {
@@ -1191,7 +1559,7 @@ type TxHeader struct {
 
 func (x *TxHeader) Reset() {
 	*x = TxHeader{}
-	mi := &file_amp_amp_core_proto_msgTypes[1]
+	mi := &file_amp_amp_core_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1203,7 +1571,7 @@ func (x *TxHeader) String() string {
 func (*TxHeader) ProtoMessage() {}
 
 func (x *TxHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[1]
+	mi := &file_amp_amp_core_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1216,7 +1584,7 @@ func (x *TxHeader) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TxHeader.ProtoReflect.Descriptor instead.
 func (*TxHeader) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{1}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *TxHeader) GetContextID_0() uint64 {
@@ -1266,290 +1634,6 @@ func (x *TxHeader) GetRequest() *PinRequest {
 		return x.Request
 	}
 	return nil
-}
-
-// Login -- STEP 1: client -> host
-type Login struct {
-	state  protoimpl.MessageState `protogen:"open.v1"`
-	Member *Tag                   `protobuf:"bytes,1,opt,name=Member,proto3" json:"Member,omitempty"`
-	Planet *Tag                   `protobuf:"bytes,2,opt,name=Planet,proto3" json:"Planet,omitempty"`
-	Device *Tag                   `protobuf:"bytes,5,opt,name=Device,proto3" json:"Device,omitempty"`
-	// HostAddress is the network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
-	// amp.Host uses this as the host name when serving URLs for the client to consume.
-	HostAddress string `protobuf:"bytes,8,opt,name=HostAddress,proto3" json:"HostAddress,omitempty"`
-	// Checkpoint allows the client to resume an auth session.
-	Checkpoint *LoginCheckpoint `protobuf:"bytes,12,opt,name=Checkpoint,proto3" json:"Checkpoint,omitempty"`
-	// SigningPubKey carries the client's raw signing public key so a remotely
-	// self-generated identity can be bound to a Member.  The host verifies the
-	// challenge-response signature against the key it holds for Member; when the
-	// host has no key recorded yet it may adopt this one if trust-on-first-use (TOFU)
-	// is set.
-	SigningPubKey        []byte `protobuf:"bytes,14,opt,name=SigningPubKey,proto3" json:"SigningPubKey,omitempty"`
-	SigningCryptoKitID_0 uint64 `protobuf:"fixed64,15,opt,name=SigningCryptoKitID_0,json=SigningCryptoKitID0,proto3" json:"SigningCryptoKitID_0,omitempty"` // Client's signing-suite UID, bytes 0..7
-	SigningCryptoKitID_1 uint64 `protobuf:"fixed64,16,opt,name=SigningCryptoKitID_1,json=SigningCryptoKitID1,proto3" json:"SigningCryptoKitID_1,omitempty"` // Client's signing-suite UID, bytes 8..15
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
-}
-
-func (x *Login) Reset() {
-	*x = Login{}
-	mi := &file_amp_amp_core_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Login) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Login) ProtoMessage() {}
-
-func (x *Login) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Login.ProtoReflect.Descriptor instead.
-func (*Login) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *Login) GetMember() *Tag {
-	if x != nil {
-		return x.Member
-	}
-	return nil
-}
-
-func (x *Login) GetPlanet() *Tag {
-	if x != nil {
-		return x.Planet
-	}
-	return nil
-}
-
-func (x *Login) GetDevice() *Tag {
-	if x != nil {
-		return x.Device
-	}
-	return nil
-}
-
-func (x *Login) GetHostAddress() string {
-	if x != nil {
-		return x.HostAddress
-	}
-	return ""
-}
-
-func (x *Login) GetCheckpoint() *LoginCheckpoint {
-	if x != nil {
-		return x.Checkpoint
-	}
-	return nil
-}
-
-func (x *Login) GetSigningPubKey() []byte {
-	if x != nil {
-		return x.SigningPubKey
-	}
-	return nil
-}
-
-func (x *Login) GetSigningCryptoKitID_0() uint64 {
-	if x != nil {
-		return x.SigningCryptoKitID_0
-	}
-	return 0
-}
-
-func (x *Login) GetSigningCryptoKitID_1() uint64 {
-	if x != nil {
-		return x.SigningCryptoKitID_1
-	}
-	return 0
-}
-
-// LoginChallenge -- STEP 2: host -> client
-type LoginChallenge struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Hash          []byte                 `protobuf:"bytes,1,opt,name=Hash,proto3" json:"Hash,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LoginChallenge) Reset() {
-	*x = LoginChallenge{}
-	mi := &file_amp_amp_core_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LoginChallenge) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LoginChallenge) ProtoMessage() {}
-
-func (x *LoginChallenge) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LoginChallenge.ProtoReflect.Descriptor instead.
-func (*LoginChallenge) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *LoginChallenge) GetHash() []byte {
-	if x != nil {
-		return x.Hash
-	}
-	return nil
-}
-
-// LoginResponse -- STEP 3: client -> host
-type LoginResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	HashResponse  []byte                 `protobuf:"bytes,1,opt,name=HashResponse,proto3" json:"HashResponse,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LoginResponse) Reset() {
-	*x = LoginResponse{}
-	mi := &file_amp_amp_core_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LoginResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LoginResponse) ProtoMessage() {}
-
-func (x *LoginResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
-func (*LoginResponse) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *LoginResponse) GetHashResponse() []byte {
-	if x != nil {
-		return x.HashResponse
-	}
-	return nil
-}
-
-// LoginCheckpoint wraps oauth2 -- see oauth2.Token
-type LoginCheckpoint struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TokenType     string                 `protobuf:"bytes,1,opt,name=TokenType,proto3" json:"TokenType,omitempty"`
-	AccessToken   string                 `protobuf:"bytes,2,opt,name=AccessToken,proto3" json:"AccessToken,omitempty"`
-	RefreshToken  string                 `protobuf:"bytes,3,opt,name=RefreshToken,proto3" json:"RefreshToken,omitempty"`
-	Expiry        int64                  `protobuf:"varint,4,opt,name=Expiry,proto3" json:"Expiry,omitempty"` // unix UTC seconds
-	UserID        string                 `protobuf:"bytes,11,opt,name=UserID,proto3" json:"UserID,omitempty"`
-	URI           string                 `protobuf:"bytes,12,opt,name=URI,proto3" json:"URI,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LoginCheckpoint) Reset() {
-	*x = LoginCheckpoint{}
-	mi := &file_amp_amp_core_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LoginCheckpoint) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LoginCheckpoint) ProtoMessage() {}
-
-func (x *LoginCheckpoint) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LoginCheckpoint.ProtoReflect.Descriptor instead.
-func (*LoginCheckpoint) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *LoginCheckpoint) GetTokenType() string {
-	if x != nil {
-		return x.TokenType
-	}
-	return ""
-}
-
-func (x *LoginCheckpoint) GetAccessToken() string {
-	if x != nil {
-		return x.AccessToken
-	}
-	return ""
-}
-
-func (x *LoginCheckpoint) GetRefreshToken() string {
-	if x != nil {
-		return x.RefreshToken
-	}
-	return ""
-}
-
-func (x *LoginCheckpoint) GetExpiry() int64 {
-	if x != nil {
-		return x.Expiry
-	}
-	return 0
-}
-
-func (x *LoginCheckpoint) GetUserID() string {
-	if x != nil {
-		return x.UserID
-	}
-	return ""
-}
-
-func (x *LoginCheckpoint) GetURI() string {
-	if x != nil {
-		return x.URI
-	}
-	return ""
 }
 
 // PinRequest is a peer request to "pin" a set of element IDs, where selected attrs and items will be pushed to the peer.
@@ -1808,42 +1892,43 @@ func (x *ItemSpan) GetEditsPerItem() int64 {
 	return 0
 }
 
-// Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
-//
-// All fields are optional and their meaning is contextual.
-type Tag struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// / open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
-	// /
-	UID_0 uint64 `protobuf:"fixed64,3,opt,name=UID_0,json=UID0,proto3" json:"UID_0,omitempty"`
-	UID_1 uint64 `protobuf:"fixed64,4,opt,name=UID_1,json=UID1,proto3" json:"UID_1,omitempty"`
-	I     int64  `protobuf:"varint,16,opt,name=I,proto3" json:"I,omitempty"`
-	J     int64  `protobuf:"varint,17,opt,name=J,proto3" json:"J,omitempty"`
-	K     int64  `protobuf:"varint,18,opt,name=K,proto3" json:"K,omitempty"`
-	Units Units  `protobuf:"varint,21,opt,name=Units,proto3,enum=amp.Units" json:"Units,omitempty"` // units for (i,j,k)
-	// / open-use non-inline fields
-	// /
-	ContentTypeRaw string `protobuf:"bytes,24,opt,name=ContentTypeRaw,proto3" json:"ContentTypeRaw,omitempty"` // IANA media type; access via Tag.ContentType() e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
-	URI            string `protobuf:"bytes,26,opt,name=URI,proto3" json:"URI,omitempty"`                       // IANA RFC 1738 URL or unix pathname
-	Text           string `protobuf:"bytes,28,opt,name=Text,proto3" json:"Text,omitempty"`                     // UTF8 plain-text, XML, RTF
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+// Login -- STEP 1: client -> host
+type Login struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Member *Tag                   `protobuf:"bytes,1,opt,name=Member,proto3" json:"Member,omitempty"`
+	Planet *Tag                   `protobuf:"bytes,2,opt,name=Planet,proto3" json:"Planet,omitempty"`
+	Device *Tag                   `protobuf:"bytes,5,opt,name=Device,proto3" json:"Device,omitempty"`
+	// HostAddress is the network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
+	// amp.Host uses this as the host name when serving URLs for the client to consume.
+	HostAddress string `protobuf:"bytes,8,opt,name=HostAddress,proto3" json:"HostAddress,omitempty"`
+	// Checkpoint allows the client to resume an auth session.
+	Checkpoint *LoginCheckpoint `protobuf:"bytes,12,opt,name=Checkpoint,proto3" json:"Checkpoint,omitempty"`
+	// SigningPubKey carries the client's raw signing public key so a remotely
+	// self-generated identity can be bound to a Member.  The host verifies the
+	// challenge-response signature against the key it holds for Member; when the
+	// host has no key recorded yet it may adopt this one if trust-on-first-use (TOFU)
+	// is set.
+	SigningPubKey        []byte `protobuf:"bytes,14,opt,name=SigningPubKey,proto3" json:"SigningPubKey,omitempty"`
+	SigningCryptoKitID_0 uint64 `protobuf:"fixed64,15,opt,name=SigningCryptoKitID_0,json=SigningCryptoKitID0,proto3" json:"SigningCryptoKitID_0,omitempty"` // Client's signing-suite UID, bytes 0..7
+	SigningCryptoKitID_1 uint64 `protobuf:"fixed64,16,opt,name=SigningCryptoKitID_1,json=SigningCryptoKitID1,proto3" json:"SigningCryptoKitID_1,omitempty"` // Client's signing-suite UID, bytes 8..15
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
 }
 
-func (x *Tag) Reset() {
-	*x = Tag{}
+func (x *Login) Reset() {
+	*x = Login{}
 	mi := &file_amp_amp_core_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Tag) String() string {
+func (x *Login) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Tag) ProtoMessage() {}
+func (*Login) ProtoMessage() {}
 
-func (x *Tag) ProtoReflect() protoreflect.Message {
+func (x *Login) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_amp_core_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1855,273 +1940,293 @@ func (x *Tag) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Tag.ProtoReflect.Descriptor instead.
-func (*Tag) Descriptor() ([]byte, []int) {
+// Deprecated: Use Login.ProtoReflect.Descriptor instead.
+func (*Login) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *Tag) GetUID_0() uint64 {
+func (x *Login) GetMember() *Tag {
 	if x != nil {
-		return x.UID_0
+		return x.Member
 	}
-	return 0
+	return nil
 }
 
-func (x *Tag) GetUID_1() uint64 {
+func (x *Login) GetPlanet() *Tag {
 	if x != nil {
-		return x.UID_1
+		return x.Planet
 	}
-	return 0
+	return nil
 }
 
-func (x *Tag) GetI() int64 {
+func (x *Login) GetDevice() *Tag {
 	if x != nil {
-		return x.I
+		return x.Device
 	}
-	return 0
+	return nil
 }
 
-func (x *Tag) GetJ() int64 {
+func (x *Login) GetHostAddress() string {
 	if x != nil {
-		return x.J
-	}
-	return 0
-}
-
-func (x *Tag) GetK() int64 {
-	if x != nil {
-		return x.K
-	}
-	return 0
-}
-
-func (x *Tag) GetUnits() Units {
-	if x != nil {
-		return x.Units
-	}
-	return Units_Unitless
-}
-
-func (x *Tag) GetContentTypeRaw() string {
-	if x != nil {
-		return x.ContentTypeRaw
+		return x.HostAddress
 	}
 	return ""
 }
 
-func (x *Tag) GetURI() string {
+func (x *Login) GetCheckpoint() *LoginCheckpoint {
+	if x != nil {
+		return x.Checkpoint
+	}
+	return nil
+}
+
+func (x *Login) GetSigningPubKey() []byte {
+	if x != nil {
+		return x.SigningPubKey
+	}
+	return nil
+}
+
+func (x *Login) GetSigningCryptoKitID_0() uint64 {
+	if x != nil {
+		return x.SigningCryptoKitID_0
+	}
+	return 0
+}
+
+func (x *Login) GetSigningCryptoKitID_1() uint64 {
+	if x != nil {
+		return x.SigningCryptoKitID_1
+	}
+	return 0
+}
+
+// LoginChallenge -- STEP 2: host -> client
+type LoginChallenge struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Hash          []byte                 `protobuf:"bytes,1,opt,name=Hash,proto3" json:"Hash,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginChallenge) Reset() {
+	*x = LoginChallenge{}
+	mi := &file_amp_amp_core_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginChallenge) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginChallenge) ProtoMessage() {}
+
+func (x *LoginChallenge) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginChallenge.ProtoReflect.Descriptor instead.
+func (*LoginChallenge) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *LoginChallenge) GetHash() []byte {
+	if x != nil {
+		return x.Hash
+	}
+	return nil
+}
+
+// LoginResponse -- STEP 3: client -> host
+type LoginResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HashResponse  []byte                 `protobuf:"bytes,1,opt,name=HashResponse,proto3" json:"HashResponse,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginResponse) Reset() {
+	*x = LoginResponse{}
+	mi := &file_amp_amp_core_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginResponse) ProtoMessage() {}
+
+func (x *LoginResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginResponse.ProtoReflect.Descriptor instead.
+func (*LoginResponse) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *LoginResponse) GetHashResponse() []byte {
+	if x != nil {
+		return x.HashResponse
+	}
+	return nil
+}
+
+// LoginCheckpoint wraps oauth2 -- see oauth2.Token
+type LoginCheckpoint struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TokenType     string                 `protobuf:"bytes,1,opt,name=TokenType,proto3" json:"TokenType,omitempty"`
+	AccessToken   string                 `protobuf:"bytes,2,opt,name=AccessToken,proto3" json:"AccessToken,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,3,opt,name=RefreshToken,proto3" json:"RefreshToken,omitempty"`
+	Expiry        int64                  `protobuf:"varint,4,opt,name=Expiry,proto3" json:"Expiry,omitempty"` // unix UTC seconds
+	UserID        string                 `protobuf:"bytes,11,opt,name=UserID,proto3" json:"UserID,omitempty"`
+	URI           string                 `protobuf:"bytes,12,opt,name=URI,proto3" json:"URI,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginCheckpoint) Reset() {
+	*x = LoginCheckpoint{}
+	mi := &file_amp_amp_core_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginCheckpoint) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginCheckpoint) ProtoMessage() {}
+
+func (x *LoginCheckpoint) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginCheckpoint.ProtoReflect.Descriptor instead.
+func (*LoginCheckpoint) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *LoginCheckpoint) GetTokenType() string {
+	if x != nil {
+		return x.TokenType
+	}
+	return ""
+}
+
+func (x *LoginCheckpoint) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *LoginCheckpoint) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *LoginCheckpoint) GetExpiry() int64 {
+	if x != nil {
+		return x.Expiry
+	}
+	return 0
+}
+
+func (x *LoginCheckpoint) GetUserID() string {
+	if x != nil {
+		return x.UserID
+	}
+	return ""
+}
+
+func (x *LoginCheckpoint) GetURI() string {
 	if x != nil {
 		return x.URI
 	}
 	return ""
 }
 
-func (x *Tag) GetText() string {
-	if x != nil {
-		return x.Text
-	}
-	return ""
-}
-
-// Tags is a multi-purpose, serializable, and customizable tree of tags.
+// BrandMark is a planet's QUORUM-SIGNED public identity — the impersonation
+// surface.  It is embedded in EpochTerms (quorum-signed), NOT the admin-mutable
+// Brand attr, so changing a planet's public face requires convening the
+// governing quorum.  This is the anti-spoof boundary: a lone admin key cannot
+// silently rename "Pentagon" to "Mercenaries of Death".
 //
-// All fields are optional and their meaning is contextual.
-type Tags struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Head          *Tag                   `protobuf:"bytes,1,opt,name=Head,proto3" json:"Head,omitempty"`         // identifies this branch
-	SubTags       []*Tag                 `protobuf:"bytes,4,rep,name=SubTags,proto3" json:"SubTags,omitempty"`   // amplifying attributes or values
-	Children      []*Tags                `protobuf:"bytes,6,rep,name=Children,proto3" json:"Children,omitempty"` // sequential sub trees
+// The separate Brand attr remains the admin-mutable record for NON-identity,
+// cosmetic/operational fields (home URLs, link lists, install targets, and the
+// content-addressed BundledCrates SBOM — hash-pinned + change-logged).  When the
+// two disagree, BrandMark (here, quorum-signed) is the authoritative identity.
+type BrandMark struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Public name of the planet ("Tunr", "Pentagon", "The Martinez treehouse").
+	// The canonical display name; renaming requires the quorum.
+	AppName string `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`
+	// Operator / sponsoring organization name ("SoundSpectrum").
+	OrgName string `protobuf:"bytes,2,opt,name=OrgName,proto3" json:"OrgName,omitempty"`
+	// Canonical domain the planet presents as ("spaces.soundspectrum.com").
+	// A domain claim is part of the impersonation surface, so it is quorum-signed.
+	AppDomain string `protobuf:"bytes,3,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"`
+	// Human-readable description of the planet.
+	AppDesc string `protobuf:"bytes,4,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
+	// Deep-link / custom URL schemes this planet answers to (["tunr"]).  Quorum
+	// -signed because a scheme claim is an identity / impersonation surface.
+	URLSchemes []string `protobuf:"bytes,5,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"`
+	// The federation that names this planet — the AOM DD-name-service.md §3.3 back-edge
+	// the planet acknowledges as its current namer.  Single-valued (one namer at
+	// a time, may roam).  Quorum-signed so federation affiliation cannot be spoofed.
+	NamedBy *Tag `protobuf:"bytes,6,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
+	// Visual glyph variants (HTML <picture>-shaped Tags tree): size/theme/density/
+	// content-type variants consumers pick from.  The visual impersonation
+	// surface, hence quorum-signed.
+	Glyphs        *Tags `protobuf:"bytes,7,opt,name=Glyphs,proto3" json:"Glyphs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Tags) Reset() {
-	*x = Tags{}
-	mi := &file_amp_amp_core_proto_msgTypes[10]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Tags) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Tags) ProtoMessage() {}
-
-func (x *Tags) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[10]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Tags.ProtoReflect.Descriptor instead.
-func (*Tags) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *Tags) GetHead() *Tag {
-	if x != nil {
-		return x.Head
-	}
-	return nil
-}
-
-func (x *Tags) GetSubTags() []*Tag {
-	if x != nil {
-		return x.SubTags
-	}
-	return nil
-}
-
-func (x *Tags) GetChildren() []*Tags {
-	if x != nil {
-		return x.Children
-	}
-	return nil
-}
-
-// AccessGrant maps a member (or default, if MemberTag is nil) to an Access level.
-type AccessGrant struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	MemberTag     *Tag                   `protobuf:"bytes,1,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"` // Member identity (nil = default grant)
-	Access        Access                 `protobuf:"varint,2,opt,name=Access,proto3,enum=amp.Access" json:"Access,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AccessGrant) Reset() {
-	*x = AccessGrant{}
-	mi := &file_amp_amp_core_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AccessGrant) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AccessGrant) ProtoMessage() {}
-
-func (x *AccessGrant) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AccessGrant.ProtoReflect.Descriptor instead.
-func (*AccessGrant) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *AccessGrant) GetMemberTag() *Tag {
-	if x != nil {
-		return x.MemberTag
-	}
-	return nil
-}
-
-func (x *AccessGrant) GetAccess() Access {
-	if x != nil {
-		return x.Access
-	}
-	return Access_NotAllowed
-}
-
-// AccessGrants is a set of per-member access grants.
-type AccessGrants struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Grants        []*AccessGrant         `protobuf:"bytes,1,rep,name=Grants,proto3" json:"Grants,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AccessGrants) Reset() {
-	*x = AccessGrants{}
-	mi := &file_amp_amp_core_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AccessGrants) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AccessGrants) ProtoMessage() {}
-
-func (x *AccessGrants) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AccessGrants.ProtoReflect.Descriptor instead.
-func (*AccessGrants) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *AccessGrants) GetGrants() []*AccessGrant {
-	if x != nil {
-		return x.Grants
-	}
-	return nil
-}
-
-// Governing unit of amp channel permissions and security.
-type ChannelEpoch struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Channel       *Tag                   `protobuf:"bytes,1,opt,name=Channel,proto3" json:"Channel,omitempty"`                                     // channel this record applies to
-	Parent        *Tag                   `protobuf:"bytes,2,opt,name=Parent,proto3" json:"Parent,omitempty"`                                       // parent legislating channel whose grants are inherited; if nil, Channel legislates itself
-	ChType        *Tag                   `protobuf:"bytes,6,opt,name=ChType,proto3" json:"ChType,omitempty"`                                       // channel type name and/or ID
-	ContentPolicy ContentPolicy          `protobuf:"varint,7,opt,name=ContentPolicy,proto3,enum=amp.ContentPolicy" json:"ContentPolicy,omitempty"` // how content cells may be written (orthogonal to the grants axis)
-	Label         string                 `protobuf:"bytes,10,opt,name=Label,proto3" json:"Label,omitempty"`                                        // debugging
-	LegacyURI     string                 `protobuf:"bytes,11,opt,name=LegacyURI,proto3" json:"LegacyURI,omitempty"`
-	// Per-member permissions for this channel (or ACC).
-	MemberGrants *AccessGrants `protobuf:"bytes,20,opt,name=MemberGrants,proto3" json:"MemberGrants,omitempty"`
-	// Default permissions for members not listed in MemberGrants.
-	DefaultGrants *AccessGrants `protobuf:"bytes,21,opt,name=DefaultGrants,proto3" json:"DefaultGrants,omitempty"`
-	// Attestations cited as the basis for this grant — votes, audits, witness
-	// records, or prior epochs that informed the access decision, making every
-	// governance act reviewable and appealable.  Empty for routine grants.
-	// Informational: protocol does not gate access on Cites.  Mirrors
-	// MemberEpoch.Cites.  AttrID and EditID may be left zero when citing an item
-	// rather than a specific edit (the common case).
-	Cites         []*Address `protobuf:"bytes,22,rep,name=Cites,proto3" json:"Cites,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChannelEpoch) Reset() {
-	*x = ChannelEpoch{}
+func (x *BrandMark) Reset() {
+	*x = BrandMark{}
 	mi := &file_amp_amp_core_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ChannelEpoch) String() string {
+func (x *BrandMark) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ChannelEpoch) ProtoMessage() {}
+func (*BrandMark) ProtoMessage() {}
 
-func (x *ChannelEpoch) ProtoReflect() protoreflect.Message {
+func (x *BrandMark) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_amp_core_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2133,290 +2238,58 @@ func (x *ChannelEpoch) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ChannelEpoch.ProtoReflect.Descriptor instead.
-func (*ChannelEpoch) Descriptor() ([]byte, []int) {
+// Deprecated: Use BrandMark.ProtoReflect.Descriptor instead.
+func (*BrandMark) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *ChannelEpoch) GetChannel() *Tag {
+func (x *BrandMark) GetAppName() string {
 	if x != nil {
-		return x.Channel
-	}
-	return nil
-}
-
-func (x *ChannelEpoch) GetParent() *Tag {
-	if x != nil {
-		return x.Parent
-	}
-	return nil
-}
-
-func (x *ChannelEpoch) GetChType() *Tag {
-	if x != nil {
-		return x.ChType
-	}
-	return nil
-}
-
-func (x *ChannelEpoch) GetContentPolicy() ContentPolicy {
-	if x != nil {
-		return x.ContentPolicy
-	}
-	return ContentPolicy_Unbound
-}
-
-func (x *ChannelEpoch) GetLabel() string {
-	if x != nil {
-		return x.Label
+		return x.AppName
 	}
 	return ""
 }
 
-func (x *ChannelEpoch) GetLegacyURI() string {
+func (x *BrandMark) GetOrgName() string {
 	if x != nil {
-		return x.LegacyURI
+		return x.OrgName
 	}
 	return ""
 }
 
-func (x *ChannelEpoch) GetMemberGrants() *AccessGrants {
+func (x *BrandMark) GetAppDomain() string {
 	if x != nil {
-		return x.MemberGrants
+		return x.AppDomain
+	}
+	return ""
+}
+
+func (x *BrandMark) GetAppDesc() string {
+	if x != nil {
+		return x.AppDesc
+	}
+	return ""
+}
+
+func (x *BrandMark) GetURLSchemes() []string {
+	if x != nil {
+		return x.URLSchemes
 	}
 	return nil
 }
 
-func (x *ChannelEpoch) GetDefaultGrants() *AccessGrants {
+func (x *BrandMark) GetNamedBy() *Tag {
 	if x != nil {
-		return x.DefaultGrants
+		return x.NamedBy
 	}
 	return nil
 }
 
-func (x *ChannelEpoch) GetCites() []*Address {
+func (x *BrandMark) GetGlyphs() *Tags {
 	if x != nil {
-		return x.Cites
+		return x.Glyphs
 	}
 	return nil
-}
-
-// BlobRef is a content-addressed reference to a media blob stored outside a TxMsg.
-// It binds two content addresses: AssetTag names WHAT the content is (the plaintext
-// identity), BlobTag names HOW its bytes are stored (the on-disk / on-wire identity).
-// For a planet-public blob the stored bytes are the plaintext, so BlobTag.UID ==
-// AssetTag.UID; for an epoch-sealed blob the stored bytes are ciphertext, so the two
-// diverge and EpochID is set.  A relay routes, stores, and integrity-checks against
-// BlobTag without decrypting or learning the asset; AssetTag stays member-side.
-type BlobRef struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Planet this blob belongs to.
-	PlanetID_0 uint64 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
-	PlanetID_1 uint64 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	// Hash algorithm used for blob integrity (default: Blake2s_256).
-	// Each BlobRef is self-describing — the validator reads this field
-	// to select the correct HashKit for verification.
-	HashKitID safe.HashKitID `protobuf:"varint,8,opt,name=HashKitID,proto3,enum=safe.HashKitID" json:"HashKitID,omitempty"`
-	// HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
-	// This is the asset's full hash; AssetTag.UID is its leading 16 bytes.  Lets a
-	// member validate content after decryption regardless of how it was stored.
-	Hash_0 uint64 `protobuf:"fixed64,10,opt,name=Hash_0,json=Hash0,proto3" json:"Hash_0,omitempty"`
-	Hash_1 uint64 `protobuf:"fixed64,11,opt,name=Hash_1,json=Hash1,proto3" json:"Hash_1,omitempty"`
-	Hash_2 uint64 `protobuf:"fixed64,12,opt,name=Hash_2,json=Hash2,proto3" json:"Hash_2,omitempty"`
-	Hash_3 uint64 `protobuf:"fixed64,13,opt,name=Hash_3,json=Hash3,proto3" json:"Hash_3,omitempty"`
-	// WHAT it is — the plaintext asset identity.  Member-side.
-	//
-	//	AssetTag.UID         — leading 16 bytes of the plaintext hash (Hash_0..3).
-	//	AssetTag.ContentType — MIME type (e.g. "image/jpeg", "audio/mpeg").
-	//	AssetTag.Text        — caller-supplied label (e.g. the source file name).
-	//	AssetTag.I (Units=Bytes) — authoritative plaintext byte length.
-	AssetTag *Tag `protobuf:"bytes,16,opt,name=AssetTag,proto3" json:"AssetTag,omitempty"`
-	// HOW it is stored — the on-disk / on-wire byte identity.  Lean, relay-facing.
-	//
-	//	BlobTag.UID         — leading 16 bytes of hash(stored bytes): ciphertext for a
-	//	                      sealed blob, == AssetTag.UID for a planet-public one.
-	//	BlobTag.I (Units=Bytes) — stored byte length.  No ContentType / label.
-	BlobTag *Tag `protobuf:"bytes,17,opt,name=BlobTag,proto3" json:"BlobTag,omitempty"`
-	// Epoch key used to seal this blob (zero = unsealed / planet-public ⇒ BlobTag.UID == AssetTag.UID).
-	// Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
-	EpochID_0     uint64 `protobuf:"fixed64,20,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`
-	EpochID_1     uint64 `protobuf:"fixed64,21,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BlobRef) Reset() {
-	*x = BlobRef{}
-	mi := &file_amp_amp_core_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlobRef) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlobRef) ProtoMessage() {}
-
-func (x *BlobRef) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlobRef.ProtoReflect.Descriptor instead.
-func (*BlobRef) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *BlobRef) GetPlanetID_0() uint64 {
-	if x != nil {
-		return x.PlanetID_0
-	}
-	return 0
-}
-
-func (x *BlobRef) GetPlanetID_1() uint64 {
-	if x != nil {
-		return x.PlanetID_1
-	}
-	return 0
-}
-
-func (x *BlobRef) GetHashKitID() safe.HashKitID {
-	if x != nil {
-		return x.HashKitID
-	}
-	return safe.HashKitID(0)
-}
-
-func (x *BlobRef) GetHash_0() uint64 {
-	if x != nil {
-		return x.Hash_0
-	}
-	return 0
-}
-
-func (x *BlobRef) GetHash_1() uint64 {
-	if x != nil {
-		return x.Hash_1
-	}
-	return 0
-}
-
-func (x *BlobRef) GetHash_2() uint64 {
-	if x != nil {
-		return x.Hash_2
-	}
-	return 0
-}
-
-func (x *BlobRef) GetHash_3() uint64 {
-	if x != nil {
-		return x.Hash_3
-	}
-	return 0
-}
-
-func (x *BlobRef) GetAssetTag() *Tag {
-	if x != nil {
-		return x.AssetTag
-	}
-	return nil
-}
-
-func (x *BlobRef) GetBlobTag() *Tag {
-	if x != nil {
-		return x.BlobTag
-	}
-	return nil
-}
-
-func (x *BlobRef) GetEpochID_0() uint64 {
-	if x != nil {
-		return x.EpochID_0
-	}
-	return 0
-}
-
-func (x *BlobRef) GetEpochID_1() uint64 {
-	if x != nil {
-		return x.EpochID_1
-	}
-	return 0
-}
-
-// PlanetStorageOpts configures per-planet storage priority and budgets.
-// Stored as a home planet attribute alongside PlanetBinding, keyed by planet UID.
-// Drives cache eviction: lower-priority planets have their decrypted cache evicted first.
-type PlanetStorageOpts struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Storage priority (higher = more important, 0 = default).
-	// Drives cache eviction ordering: lowest-priority planets evicted first.
-	Priority int32 `protobuf:"varint,1,opt,name=Priority,proto3" json:"Priority,omitempty"`
-	// Max encrypted blob storage for this planet in bytes (0 = unlimited).
-	MaxBlobBytes int64 `protobuf:"varint,2,opt,name=MaxBlobBytes,proto3" json:"MaxBlobBytes,omitempty"`
-	// Max decrypted cache for this planet in bytes (0 = unlimited).
-	MaxCacheBytes int64 `protobuf:"varint,3,opt,name=MaxCacheBytes,proto3" json:"MaxCacheBytes,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *PlanetStorageOpts) Reset() {
-	*x = PlanetStorageOpts{}
-	mi := &file_amp_amp_core_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PlanetStorageOpts) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PlanetStorageOpts) ProtoMessage() {}
-
-func (x *PlanetStorageOpts) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PlanetStorageOpts.ProtoReflect.Descriptor instead.
-func (*PlanetStorageOpts) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *PlanetStorageOpts) GetPriority() int32 {
-	if x != nil {
-		return x.Priority
-	}
-	return 0
-}
-
-func (x *PlanetStorageOpts) GetMaxBlobBytes() int64 {
-	if x != nil {
-		return x.MaxBlobBytes
-	}
-	return 0
-}
-
-func (x *PlanetStorageOpts) GetMaxCacheBytes() int64 {
-	if x != nil {
-		return x.MaxCacheBytes
-	}
-	return 0
 }
 
 // VaultConfig bundles the per-planet workload tunables that relay vaults enforce.
@@ -2486,7 +2359,7 @@ type VaultConfig struct {
 
 func (x *VaultConfig) Reset() {
 	*x = VaultConfig{}
-	mi := &file_amp_amp_core_proto_msgTypes[16]
+	mi := &file_amp_amp_core_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2498,7 +2371,7 @@ func (x *VaultConfig) String() string {
 func (*VaultConfig) ProtoMessage() {}
 
 func (x *VaultConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[16]
+	mi := &file_amp_amp_core_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2511,7 +2384,7 @@ func (x *VaultConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VaultConfig.ProtoReflect.Descriptor instead.
 func (*VaultConfig) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{16}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *VaultConfig) GetMaxTxMsgSize() int64 {
@@ -2605,122 +2478,6 @@ func (x *VaultConfig) GetVaultAddrs() []*VaultAddr {
 	return nil
 }
 
-// BrandMark is a planet's QUORUM-SIGNED public identity — the impersonation
-// surface.  It is embedded in EpochTerms (quorum-signed), NOT the admin-mutable
-// Brand attr, so changing a planet's public face requires convening the
-// governing quorum.  This is the anti-spoof boundary: a lone admin key cannot
-// silently rename "Pentagon" to "Mercenaries of Death".
-//
-// The separate Brand attr remains the admin-mutable record for NON-identity,
-// cosmetic/operational fields (home URLs, link lists, install targets, and the
-// content-addressed BundledCrates SBOM — hash-pinned + change-logged).  When the
-// two disagree, BrandMark (here, quorum-signed) is the authoritative identity.
-type BrandMark struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Public name of the planet ("Tunr", "Pentagon", "The Martinez treehouse").
-	// The canonical display name; renaming requires the quorum.
-	AppName string `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`
-	// Operator / sponsoring organization name ("SoundSpectrum").
-	OrgName string `protobuf:"bytes,2,opt,name=OrgName,proto3" json:"OrgName,omitempty"`
-	// Canonical domain the planet presents as ("spaces.soundspectrum.com").
-	// A domain claim is part of the impersonation surface, so it is quorum-signed.
-	AppDomain string `protobuf:"bytes,3,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"`
-	// Human-readable description of the planet.
-	AppDesc string `protobuf:"bytes,4,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
-	// Deep-link / custom URL schemes this planet answers to (["tunr"]).  Quorum
-	// -signed because a scheme claim is an identity / impersonation surface.
-	URLSchemes []string `protobuf:"bytes,5,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"`
-	// The federation that names this planet — the AOM DD-name-service.md §3.3 back-edge
-	// the planet acknowledges as its current namer.  Single-valued (one namer at
-	// a time, may roam).  Quorum-signed so federation affiliation cannot be spoofed.
-	NamedBy *Tag `protobuf:"bytes,6,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
-	// Visual glyph variants (HTML <picture>-shaped Tags tree): size/theme/density/
-	// content-type variants consumers pick from.  The visual impersonation
-	// surface, hence quorum-signed.
-	Glyphs        *Tags `protobuf:"bytes,7,opt,name=Glyphs,proto3" json:"Glyphs,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BrandMark) Reset() {
-	*x = BrandMark{}
-	mi := &file_amp_amp_core_proto_msgTypes[17]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BrandMark) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BrandMark) ProtoMessage() {}
-
-func (x *BrandMark) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[17]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BrandMark.ProtoReflect.Descriptor instead.
-func (*BrandMark) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *BrandMark) GetAppName() string {
-	if x != nil {
-		return x.AppName
-	}
-	return ""
-}
-
-func (x *BrandMark) GetOrgName() string {
-	if x != nil {
-		return x.OrgName
-	}
-	return ""
-}
-
-func (x *BrandMark) GetAppDomain() string {
-	if x != nil {
-		return x.AppDomain
-	}
-	return ""
-}
-
-func (x *BrandMark) GetAppDesc() string {
-	if x != nil {
-		return x.AppDesc
-	}
-	return ""
-}
-
-func (x *BrandMark) GetURLSchemes() []string {
-	if x != nil {
-		return x.URLSchemes
-	}
-	return nil
-}
-
-func (x *BrandMark) GetNamedBy() *Tag {
-	if x != nil {
-		return x.NamedBy
-	}
-	return nil
-}
-
-func (x *BrandMark) GetGlyphs() *Tags {
-	if x != nil {
-		return x.Glyphs
-	}
-	return nil
-}
-
 // PlanetCharter holds a planet's lifetime-IMMUTABLE founding terms.  It is
 // marshaled exactly once at genesis, stored verbatim in PlanetEpoch.Charter, and
 // carried byte-identically on every epoch for the planet's whole life.
@@ -2780,7 +2537,7 @@ type PlanetCharter struct {
 
 func (x *PlanetCharter) Reset() {
 	*x = PlanetCharter{}
-	mi := &file_amp_amp_core_proto_msgTypes[18]
+	mi := &file_amp_amp_core_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2792,7 +2549,7 @@ func (x *PlanetCharter) String() string {
 func (*PlanetCharter) ProtoMessage() {}
 
 func (x *PlanetCharter) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[18]
+	mi := &file_amp_amp_core_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2805,7 +2562,7 @@ func (x *PlanetCharter) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetCharter.ProtoReflect.Descriptor instead.
 func (*PlanetCharter) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{18}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *PlanetCharter) GetCharterSchema() uint32 {
@@ -2947,7 +2704,7 @@ type EpochTerms struct {
 
 func (x *EpochTerms) Reset() {
 	*x = EpochTerms{}
-	mi := &file_amp_amp_core_proto_msgTypes[19]
+	mi := &file_amp_amp_core_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2959,7 +2716,7 @@ func (x *EpochTerms) String() string {
 func (*EpochTerms) ProtoMessage() {}
 
 func (x *EpochTerms) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[19]
+	mi := &file_amp_amp_core_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2972,7 +2729,7 @@ func (x *EpochTerms) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochTerms.ProtoReflect.Descriptor instead.
 func (*EpochTerms) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{19}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *EpochTerms) GetTermsSchema() uint32 {
@@ -3151,7 +2908,7 @@ type PlanetEpoch struct {
 
 func (x *PlanetEpoch) Reset() {
 	*x = PlanetEpoch{}
-	mi := &file_amp_amp_core_proto_msgTypes[20]
+	mi := &file_amp_amp_core_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3163,7 +2920,7 @@ func (x *PlanetEpoch) String() string {
 func (*PlanetEpoch) ProtoMessage() {}
 
 func (x *PlanetEpoch) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[20]
+	mi := &file_amp_amp_core_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3176,7 +2933,7 @@ func (x *PlanetEpoch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetEpoch.ProtoReflect.Descriptor instead.
 func (*PlanetEpoch) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{20}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *PlanetEpoch) GetCharter() []byte {
@@ -3236,7 +2993,7 @@ type CoSignature struct {
 
 func (x *CoSignature) Reset() {
 	*x = CoSignature{}
-	mi := &file_amp_amp_core_proto_msgTypes[21]
+	mi := &file_amp_amp_core_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3248,7 +3005,7 @@ func (x *CoSignature) String() string {
 func (*CoSignature) ProtoMessage() {}
 
 func (x *CoSignature) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[21]
+	mi := &file_amp_amp_core_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3261,7 +3018,7 @@ func (x *CoSignature) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CoSignature.ProtoReflect.Descriptor instead.
 func (*CoSignature) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{21}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CoSignature) GetMemberTag() *Tag {
@@ -3276,6 +3033,109 @@ func (x *CoSignature) GetSignature() []byte {
 		return x.Signature
 	}
 	return nil
+}
+
+// PlanetOrigin is a forward-only provenance pointer recording that this planet
+// was forked from another.  Carries no authority over this planet; the origin
+// is informational.  Stored as a planet-public attribute
+// (HeadNodeID / std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
+type PlanetOrigin struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The planet this fork came from.
+	FromPlanet *Tag `protobuf:"bytes,1,opt,name=FromPlanet,proto3" json:"FromPlanet,omitempty"`
+	// The epoch active on FromPlanet at fork time.
+	FromEpoch *Tag `protobuf:"bytes,2,opt,name=FromEpoch,proto3" json:"FromEpoch,omitempty"`
+	// FromPlanet's chronicle head (TxID) at fork time — the most recent TxMsg
+	// included in the source Codex.  Informational; useful for forensics.
+	FromChronicleHead_0 uint64 `protobuf:"fixed64,3,opt,name=FromChronicleHead_0,json=FromChronicleHead0,proto3" json:"FromChronicleHead_0,omitempty"`
+	FromChronicleHead_1 uint64 `protobuf:"fixed64,4,opt,name=FromChronicleHead_1,json=FromChronicleHead1,proto3" json:"FromChronicleHead_1,omitempty"`
+	// Wall-clock fork time (UTC seconds).  Not trusted; informational.
+	ForkTime int64 `protobuf:"varint,5,opt,name=ForkTime,proto3" json:"ForkTime,omitempty"`
+	// Optional human-readable reason.  Not interpreted by the protocol.
+	Label string `protobuf:"bytes,6,opt,name=Label,proto3" json:"Label,omitempty"`
+	// Version for future extensions.
+	Version       int32 `protobuf:"varint,100,opt,name=Version,proto3" json:"Version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlanetOrigin) Reset() {
+	*x = PlanetOrigin{}
+	mi := &file_amp_amp_core_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlanetOrigin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlanetOrigin) ProtoMessage() {}
+
+func (x *PlanetOrigin) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlanetOrigin.ProtoReflect.Descriptor instead.
+func (*PlanetOrigin) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *PlanetOrigin) GetFromPlanet() *Tag {
+	if x != nil {
+		return x.FromPlanet
+	}
+	return nil
+}
+
+func (x *PlanetOrigin) GetFromEpoch() *Tag {
+	if x != nil {
+		return x.FromEpoch
+	}
+	return nil
+}
+
+func (x *PlanetOrigin) GetFromChronicleHead_0() uint64 {
+	if x != nil {
+		return x.FromChronicleHead_0
+	}
+	return 0
+}
+
+func (x *PlanetOrigin) GetFromChronicleHead_1() uint64 {
+	if x != nil {
+		return x.FromChronicleHead_1
+	}
+	return 0
+}
+
+func (x *PlanetOrigin) GetForkTime() int64 {
+	if x != nil {
+		return x.ForkTime
+	}
+	return 0
+}
+
+func (x *PlanetOrigin) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *PlanetOrigin) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
 }
 
 // WrappedKey carries one role-tagged symmetric key, sealed to a specific member's
@@ -3305,7 +3165,7 @@ type WrappedKey struct {
 
 func (x *WrappedKey) Reset() {
 	*x = WrappedKey{}
-	mi := &file_amp_amp_core_proto_msgTypes[22]
+	mi := &file_amp_amp_core_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3317,7 +3177,7 @@ func (x *WrappedKey) String() string {
 func (*WrappedKey) ProtoMessage() {}
 
 func (x *WrappedKey) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[22]
+	mi := &file_amp_amp_core_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3330,7 +3190,7 @@ func (x *WrappedKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WrappedKey.ProtoReflect.Descriptor instead.
 func (*WrappedKey) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{22}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *WrappedKey) GetRole() safe.KeyRole {
@@ -3407,7 +3267,7 @@ type MemberEpoch struct {
 
 func (x *MemberEpoch) Reset() {
 	*x = MemberEpoch{}
-	mi := &file_amp_amp_core_proto_msgTypes[23]
+	mi := &file_amp_amp_core_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3419,7 +3279,7 @@ func (x *MemberEpoch) String() string {
 func (*MemberEpoch) ProtoMessage() {}
 
 func (x *MemberEpoch) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[23]
+	mi := &file_amp_amp_core_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3432,7 +3292,7 @@ func (x *MemberEpoch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MemberEpoch.ProtoReflect.Descriptor instead.
 func (*MemberEpoch) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{23}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *MemberEpoch) GetMemberTag() *Tag {
@@ -3505,6 +3365,221 @@ func (x *MemberEpoch) GetContinuesFrom() []*Address {
 	return nil
 }
 
+// AccessGrant maps a member (or default, if MemberTag is nil) to an Access level.
+type AccessGrant struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	MemberTag     *Tag                   `protobuf:"bytes,1,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"` // Member identity (nil = default grant)
+	Access        Access                 `protobuf:"varint,2,opt,name=Access,proto3,enum=amp.Access" json:"Access,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AccessGrant) Reset() {
+	*x = AccessGrant{}
+	mi := &file_amp_amp_core_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AccessGrant) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AccessGrant) ProtoMessage() {}
+
+func (x *AccessGrant) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AccessGrant.ProtoReflect.Descriptor instead.
+func (*AccessGrant) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *AccessGrant) GetMemberTag() *Tag {
+	if x != nil {
+		return x.MemberTag
+	}
+	return nil
+}
+
+func (x *AccessGrant) GetAccess() Access {
+	if x != nil {
+		return x.Access
+	}
+	return Access_NotAllowed
+}
+
+// AccessGrants is a set of per-member access grants.
+type AccessGrants struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Grants        []*AccessGrant         `protobuf:"bytes,1,rep,name=Grants,proto3" json:"Grants,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AccessGrants) Reset() {
+	*x = AccessGrants{}
+	mi := &file_amp_amp_core_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AccessGrants) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AccessGrants) ProtoMessage() {}
+
+func (x *AccessGrants) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AccessGrants.ProtoReflect.Descriptor instead.
+func (*AccessGrants) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *AccessGrants) GetGrants() []*AccessGrant {
+	if x != nil {
+		return x.Grants
+	}
+	return nil
+}
+
+// Governing unit of amp channel permissions and security.
+type ChannelEpoch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Channel       *Tag                   `protobuf:"bytes,1,opt,name=Channel,proto3" json:"Channel,omitempty"`                                     // channel this record applies to
+	Parent        *Tag                   `protobuf:"bytes,2,opt,name=Parent,proto3" json:"Parent,omitempty"`                                       // parent legislating channel whose grants are inherited; if nil, Channel legislates itself
+	ChType        *Tag                   `protobuf:"bytes,6,opt,name=ChType,proto3" json:"ChType,omitempty"`                                       // channel type name and/or ID
+	ContentPolicy ContentPolicy          `protobuf:"varint,7,opt,name=ContentPolicy,proto3,enum=amp.ContentPolicy" json:"ContentPolicy,omitempty"` // how content cells may be written (orthogonal to the grants axis)
+	Label         string                 `protobuf:"bytes,10,opt,name=Label,proto3" json:"Label,omitempty"`                                        // debugging
+	LegacyURI     string                 `protobuf:"bytes,11,opt,name=LegacyURI,proto3" json:"LegacyURI,omitempty"`
+	// Per-member permissions for this channel (or ACC).
+	MemberGrants *AccessGrants `protobuf:"bytes,20,opt,name=MemberGrants,proto3" json:"MemberGrants,omitempty"`
+	// Default permissions for members not listed in MemberGrants.
+	DefaultGrants *AccessGrants `protobuf:"bytes,21,opt,name=DefaultGrants,proto3" json:"DefaultGrants,omitempty"`
+	// Attestations cited as the basis for this grant — votes, audits, witness
+	// records, or prior epochs that informed the access decision, making every
+	// governance act reviewable and appealable.  Empty for routine grants.
+	// Informational: protocol does not gate access on Cites.  Mirrors
+	// MemberEpoch.Cites.  AttrID and EditID may be left zero when citing an item
+	// rather than a specific edit (the common case).
+	Cites         []*Address `protobuf:"bytes,22,rep,name=Cites,proto3" json:"Cites,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChannelEpoch) Reset() {
+	*x = ChannelEpoch{}
+	mi := &file_amp_amp_core_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChannelEpoch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChannelEpoch) ProtoMessage() {}
+
+func (x *ChannelEpoch) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChannelEpoch.ProtoReflect.Descriptor instead.
+func (*ChannelEpoch) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ChannelEpoch) GetChannel() *Tag {
+	if x != nil {
+		return x.Channel
+	}
+	return nil
+}
+
+func (x *ChannelEpoch) GetParent() *Tag {
+	if x != nil {
+		return x.Parent
+	}
+	return nil
+}
+
+func (x *ChannelEpoch) GetChType() *Tag {
+	if x != nil {
+		return x.ChType
+	}
+	return nil
+}
+
+func (x *ChannelEpoch) GetContentPolicy() ContentPolicy {
+	if x != nil {
+		return x.ContentPolicy
+	}
+	return ContentPolicy_Unbound
+}
+
+func (x *ChannelEpoch) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *ChannelEpoch) GetLegacyURI() string {
+	if x != nil {
+		return x.LegacyURI
+	}
+	return ""
+}
+
+func (x *ChannelEpoch) GetMemberGrants() *AccessGrants {
+	if x != nil {
+		return x.MemberGrants
+	}
+	return nil
+}
+
+func (x *ChannelEpoch) GetDefaultGrants() *AccessGrants {
+	if x != nil {
+		return x.DefaultGrants
+	}
+	return nil
+}
+
+func (x *ChannelEpoch) GetCites() []*Address {
+	if x != nil {
+		return x.Cites
+	}
+	return nil
+}
+
 // Attestation is a durable observation referencing a specific TxMsg as evidence.
 // Attestations live in the planet ledger (well-known channel amp.ledger) and are
 // written as ordinary TxOps — signed, synced, and journaled by the vault machinery.
@@ -3548,7 +3623,7 @@ type Attestation struct {
 
 func (x *Attestation) Reset() {
 	*x = Attestation{}
-	mi := &file_amp_amp_core_proto_msgTypes[24]
+	mi := &file_amp_amp_core_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3560,7 +3635,7 @@ func (x *Attestation) String() string {
 func (*Attestation) ProtoMessage() {}
 
 func (x *Attestation) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[24]
+	mi := &file_amp_amp_core_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3573,7 +3648,7 @@ func (x *Attestation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Attestation.ProtoReflect.Descriptor instead.
 func (*Attestation) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{24}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *Attestation) GetSubject() *Tag {
@@ -3669,7 +3744,7 @@ type Equivalence struct {
 
 func (x *Equivalence) Reset() {
 	*x = Equivalence{}
-	mi := &file_amp_amp_core_proto_msgTypes[25]
+	mi := &file_amp_amp_core_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3681,7 +3756,7 @@ func (x *Equivalence) String() string {
 func (*Equivalence) ProtoMessage() {}
 
 func (x *Equivalence) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[25]
+	mi := &file_amp_amp_core_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3694,7 +3769,7 @@ func (x *Equivalence) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Equivalence.ProtoReflect.Descriptor instead.
 func (*Equivalence) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{25}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *Equivalence) GetLeftAddress() *Tag {
@@ -3769,7 +3844,7 @@ type Withdraw struct {
 
 func (x *Withdraw) Reset() {
 	*x = Withdraw{}
-	mi := &file_amp_amp_core_proto_msgTypes[26]
+	mi := &file_amp_amp_core_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3781,7 +3856,7 @@ func (x *Withdraw) String() string {
 func (*Withdraw) ProtoMessage() {}
 
 func (x *Withdraw) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[26]
+	mi := &file_amp_amp_core_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3794,7 +3869,7 @@ func (x *Withdraw) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Withdraw.ProtoReflect.Descriptor instead.
 func (*Withdraw) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{26}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *Withdraw) GetSubject() *Tag {
@@ -3884,7 +3959,7 @@ type PlanetInvite struct {
 
 func (x *PlanetInvite) Reset() {
 	*x = PlanetInvite{}
-	mi := &file_amp_amp_core_proto_msgTypes[27]
+	mi := &file_amp_amp_core_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3896,7 +3971,7 @@ func (x *PlanetInvite) String() string {
 func (*PlanetInvite) ProtoMessage() {}
 
 func (x *PlanetInvite) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[27]
+	mi := &file_amp_amp_core_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3909,7 +3984,7 @@ func (x *PlanetInvite) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetInvite.ProtoReflect.Descriptor instead.
 func (*PlanetInvite) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{27}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *PlanetInvite) GetPlanetTag() *Tag {
@@ -4026,7 +4101,7 @@ type PlanetInviteOp struct {
 
 func (x *PlanetInviteOp) Reset() {
 	*x = PlanetInviteOp{}
-	mi := &file_amp_amp_core_proto_msgTypes[28]
+	mi := &file_amp_amp_core_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4038,7 +4113,7 @@ func (x *PlanetInviteOp) String() string {
 func (*PlanetInviteOp) ProtoMessage() {}
 
 func (x *PlanetInviteOp) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[28]
+	mi := &file_amp_amp_core_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4051,7 +4126,7 @@ func (x *PlanetInviteOp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetInviteOp.ProtoReflect.Descriptor instead.
 func (*PlanetInviteOp) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{28}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *PlanetInviteOp) GetPlanetTag() *Tag {
@@ -4124,2031 +4199,6 @@ func (x *PlanetInviteOp) GetMemberID_1() uint64 {
 	return 0
 }
 
-// SyncMsg is the envelope for all delta sync control messages between vault peers.
-// Exactly one of the body fields is set per message — peers detect by nil pointer.
-type SyncMsg struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	WatchList     *SyncWatchList         `protobuf:"bytes,1,opt,name=WatchList,proto3" json:"WatchList,omitempty"`
-	RangeOffer    *SyncRangeOffer        `protobuf:"bytes,2,opt,name=RangeOffer,proto3" json:"RangeOffer,omitempty"`
-	RangeRequest  *SyncRangeRequest      `protobuf:"bytes,3,opt,name=RangeRequest,proto3" json:"RangeRequest,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SyncMsg) Reset() {
-	*x = SyncMsg{}
-	mi := &file_amp_amp_core_proto_msgTypes[29]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SyncMsg) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SyncMsg) ProtoMessage() {}
-
-func (x *SyncMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[29]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SyncMsg.ProtoReflect.Descriptor instead.
-func (*SyncMsg) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{29}
-}
-
-func (x *SyncMsg) GetWatchList() *SyncWatchList {
-	if x != nil {
-		return x.WatchList
-	}
-	return nil
-}
-
-func (x *SyncMsg) GetRangeOffer() *SyncRangeOffer {
-	if x != nil {
-		return x.RangeOffer
-	}
-	return nil
-}
-
-func (x *SyncMsg) GetRangeRequest() *SyncRangeRequest {
-	if x != nil {
-		return x.RangeRequest
-	}
-	return nil
-}
-
-// SyncWatchList announces which planets a peer has data for, with high-water marks.
-// Sent on peer connect and whenever the watch list changes.
-type SyncWatchList struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Planets       []*SyncPlanetStatus    `protobuf:"bytes,1,rep,name=Planets,proto3" json:"Planets,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SyncWatchList) Reset() {
-	*x = SyncWatchList{}
-	mi := &file_amp_amp_core_proto_msgTypes[30]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SyncWatchList) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SyncWatchList) ProtoMessage() {}
-
-func (x *SyncWatchList) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[30]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SyncWatchList.ProtoReflect.Descriptor instead.
-func (*SyncWatchList) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{30}
-}
-
-func (x *SyncWatchList) GetPlanets() []*SyncPlanetStatus {
-	if x != nil {
-		return x.Planets
-	}
-	return nil
-}
-
-// SyncPlanetStatus carries a planet UID and the peer's current high-water mark.
-type SyncPlanetStatus struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
-	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	HighWater_0   uint64                 `protobuf:"fixed64,3,opt,name=HighWater_0,json=HighWater0,proto3" json:"HighWater_0,omitempty"` // most recent TxTimeID
-	HighWater_1   uint64                 `protobuf:"fixed64,4,opt,name=HighWater_1,json=HighWater1,proto3" json:"HighWater_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SyncPlanetStatus) Reset() {
-	*x = SyncPlanetStatus{}
-	mi := &file_amp_amp_core_proto_msgTypes[31]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SyncPlanetStatus) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SyncPlanetStatus) ProtoMessage() {}
-
-func (x *SyncPlanetStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[31]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SyncPlanetStatus.ProtoReflect.Descriptor instead.
-func (*SyncPlanetStatus) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{31}
-}
-
-func (x *SyncPlanetStatus) GetPlanetID_0() uint64 {
-	if x != nil {
-		return x.PlanetID_0
-	}
-	return 0
-}
-
-func (x *SyncPlanetStatus) GetPlanetID_1() uint64 {
-	if x != nil {
-		return x.PlanetID_1
-	}
-	return 0
-}
-
-func (x *SyncPlanetStatus) GetHighWater_0() uint64 {
-	if x != nil {
-		return x.HighWater_0
-	}
-	return 0
-}
-
-func (x *SyncPlanetStatus) GetHighWater_1() uint64 {
-	if x != nil {
-		return x.HighWater_1
-	}
-	return 0
-}
-
-// SyncRangeOffer carries a hash over a TxTimeID range for a planet.
-// Used in the Merkle bisection protocol to identify divergence between peers.
-type SyncRangeOffer struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	PlanetID_0 uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
-	PlanetID_1 uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	Start_0    uint64                 `protobuf:"fixed64,3,opt,name=Start_0,json=Start0,proto3" json:"Start_0,omitempty"` // range start (inclusive)
-	Start_1    uint64                 `protobuf:"fixed64,4,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
-	End_0      uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // range end (inclusive)
-	End_1      uint64                 `protobuf:"fixed64,6,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
-	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End].
-	RangeHash_0   uint64 `protobuf:"fixed64,10,opt,name=RangeHash_0,json=RangeHash0,proto3" json:"RangeHash_0,omitempty"`
-	RangeHash_1   uint64 `protobuf:"fixed64,11,opt,name=RangeHash_1,json=RangeHash1,proto3" json:"RangeHash_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SyncRangeOffer) Reset() {
-	*x = SyncRangeOffer{}
-	mi := &file_amp_amp_core_proto_msgTypes[32]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SyncRangeOffer) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SyncRangeOffer) ProtoMessage() {}
-
-func (x *SyncRangeOffer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[32]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SyncRangeOffer.ProtoReflect.Descriptor instead.
-func (*SyncRangeOffer) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{32}
-}
-
-func (x *SyncRangeOffer) GetPlanetID_0() uint64 {
-	if x != nil {
-		return x.PlanetID_0
-	}
-	return 0
-}
-
-func (x *SyncRangeOffer) GetPlanetID_1() uint64 {
-	if x != nil {
-		return x.PlanetID_1
-	}
-	return 0
-}
-
-func (x *SyncRangeOffer) GetStart_0() uint64 {
-	if x != nil {
-		return x.Start_0
-	}
-	return 0
-}
-
-func (x *SyncRangeOffer) GetStart_1() uint64 {
-	if x != nil {
-		return x.Start_1
-	}
-	return 0
-}
-
-func (x *SyncRangeOffer) GetEnd_0() uint64 {
-	if x != nil {
-		return x.End_0
-	}
-	return 0
-}
-
-func (x *SyncRangeOffer) GetEnd_1() uint64 {
-	if x != nil {
-		return x.End_1
-	}
-	return 0
-}
-
-func (x *SyncRangeOffer) GetRangeHash_0() uint64 {
-	if x != nil {
-		return x.RangeHash_0
-	}
-	return 0
-}
-
-func (x *SyncRangeOffer) GetRangeHash_1() uint64 {
-	if x != nil {
-		return x.RangeHash_1
-	}
-	return 0
-}
-
-// SyncRangeRequest asks a peer to stream all TxMsgs in a range for a planet.
-// Sent when a range hash mismatch is detected after bisection converges.
-type SyncRangeRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
-	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	After_0       uint64                 `protobuf:"fixed64,3,opt,name=After_0,json=After0,proto3" json:"After_0,omitempty"` // stream TxMsgs with TxTimeID > After
-	After_1       uint64                 `protobuf:"fixed64,4,opt,name=After_1,json=After1,proto3" json:"After_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SyncRangeRequest) Reset() {
-	*x = SyncRangeRequest{}
-	mi := &file_amp_amp_core_proto_msgTypes[33]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SyncRangeRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SyncRangeRequest) ProtoMessage() {}
-
-func (x *SyncRangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[33]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SyncRangeRequest.ProtoReflect.Descriptor instead.
-func (*SyncRangeRequest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{33}
-}
-
-func (x *SyncRangeRequest) GetPlanetID_0() uint64 {
-	if x != nil {
-		return x.PlanetID_0
-	}
-	return 0
-}
-
-func (x *SyncRangeRequest) GetPlanetID_1() uint64 {
-	if x != nil {
-		return x.PlanetID_1
-	}
-	return 0
-}
-
-func (x *SyncRangeRequest) GetAfter_0() uint64 {
-	if x != nil {
-		return x.After_0
-	}
-	return 0
-}
-
-func (x *SyncRangeRequest) GetAfter_1() uint64 {
-	if x != nil {
-		return x.After_1
-	}
-	return 0
-}
-
-// Artifact is one addressable unit in a planet: a (NodeID, AttrID, ItemID)
-// triple plus its resolved value.  Appears in Codex entries.
-type Artifact struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Address within the planet's CRDT space.
-	NodeID_0 uint64 `protobuf:"fixed64,1,opt,name=NodeID_0,json=NodeID0,proto3" json:"NodeID_0,omitempty"`
-	NodeID_1 uint64 `protobuf:"fixed64,2,opt,name=NodeID_1,json=NodeID1,proto3" json:"NodeID_1,omitempty"`
-	AttrID_0 uint64 `protobuf:"fixed64,3,opt,name=AttrID_0,json=AttrID0,proto3" json:"AttrID_0,omitempty"`
-	AttrID_1 uint64 `protobuf:"fixed64,4,opt,name=AttrID_1,json=AttrID1,proto3" json:"AttrID_1,omitempty"`
-	ItemID_0 uint64 `protobuf:"fixed64,5,opt,name=ItemID_0,json=ItemID0,proto3" json:"ItemID_0,omitempty"`
-	ItemID_1 uint64 `protobuf:"fixed64,6,opt,name=ItemID_1,json=ItemID1,proto3" json:"ItemID_1,omitempty"`
-	// Logical EditID (latest write's TxID) — informational only.
-	// On import, this is replaced by the importing TxMsg's TxID.
-	EditID_0 uint64 `protobuf:"fixed64,7,opt,name=EditID_0,json=EditID0,proto3" json:"EditID_0,omitempty"`
-	EditID_1 uint64 `protobuf:"fixed64,8,opt,name=EditID_1,json=EditID1,proto3" json:"EditID_1,omitempty"`
-	// The value.  Exactly one of these is set.  Threshold between inline and
-	// blob is a writer policy (default 64 KiB); importers accept either form.
-	InlineValue   []byte   `protobuf:"bytes,10,opt,name=InlineValue,proto3" json:"InlineValue,omitempty"`
-	BlobValue     *BlobRef `protobuf:"bytes,11,opt,name=BlobValue,proto3" json:"BlobValue,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Artifact) Reset() {
-	*x = Artifact{}
-	mi := &file_amp_amp_core_proto_msgTypes[34]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Artifact) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Artifact) ProtoMessage() {}
-
-func (x *Artifact) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[34]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Artifact.ProtoReflect.Descriptor instead.
-func (*Artifact) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{34}
-}
-
-func (x *Artifact) GetNodeID_0() uint64 {
-	if x != nil {
-		return x.NodeID_0
-	}
-	return 0
-}
-
-func (x *Artifact) GetNodeID_1() uint64 {
-	if x != nil {
-		return x.NodeID_1
-	}
-	return 0
-}
-
-func (x *Artifact) GetAttrID_0() uint64 {
-	if x != nil {
-		return x.AttrID_0
-	}
-	return 0
-}
-
-func (x *Artifact) GetAttrID_1() uint64 {
-	if x != nil {
-		return x.AttrID_1
-	}
-	return 0
-}
-
-func (x *Artifact) GetItemID_0() uint64 {
-	if x != nil {
-		return x.ItemID_0
-	}
-	return 0
-}
-
-func (x *Artifact) GetItemID_1() uint64 {
-	if x != nil {
-		return x.ItemID_1
-	}
-	return 0
-}
-
-func (x *Artifact) GetEditID_0() uint64 {
-	if x != nil {
-		return x.EditID_0
-	}
-	return 0
-}
-
-func (x *Artifact) GetEditID_1() uint64 {
-	if x != nil {
-		return x.EditID_1
-	}
-	return 0
-}
-
-func (x *Artifact) GetInlineValue() []byte {
-	if x != nil {
-		return x.InlineValue
-	}
-	return nil
-}
-
-func (x *Artifact) GetBlobValue() *BlobRef {
-	if x != nil {
-		return x.BlobValue
-	}
-	return nil
-}
-
-// PlanetOrigin is a forward-only provenance pointer recording that this planet
-// was forked from another.  Carries no authority over this planet; the origin
-// is informational.  Stored as a planet-public attribute
-// (HeadNodeID / std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
-type PlanetOrigin struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The planet this fork came from.
-	FromPlanet *Tag `protobuf:"bytes,1,opt,name=FromPlanet,proto3" json:"FromPlanet,omitempty"`
-	// The epoch active on FromPlanet at fork time.
-	FromEpoch *Tag `protobuf:"bytes,2,opt,name=FromEpoch,proto3" json:"FromEpoch,omitempty"`
-	// FromPlanet's chronicle head (TxID) at fork time — the most recent TxMsg
-	// included in the source Codex.  Informational; useful for forensics.
-	FromChronicleHead_0 uint64 `protobuf:"fixed64,3,opt,name=FromChronicleHead_0,json=FromChronicleHead0,proto3" json:"FromChronicleHead_0,omitempty"`
-	FromChronicleHead_1 uint64 `protobuf:"fixed64,4,opt,name=FromChronicleHead_1,json=FromChronicleHead1,proto3" json:"FromChronicleHead_1,omitempty"`
-	// Wall-clock fork time (UTC seconds).  Not trusted; informational.
-	ForkTime int64 `protobuf:"varint,5,opt,name=ForkTime,proto3" json:"ForkTime,omitempty"`
-	// Optional human-readable reason.  Not interpreted by the protocol.
-	Label string `protobuf:"bytes,6,opt,name=Label,proto3" json:"Label,omitempty"`
-	// Version for future extensions.
-	Version       int32 `protobuf:"varint,100,opt,name=Version,proto3" json:"Version,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *PlanetOrigin) Reset() {
-	*x = PlanetOrigin{}
-	mi := &file_amp_amp_core_proto_msgTypes[35]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *PlanetOrigin) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PlanetOrigin) ProtoMessage() {}
-
-func (x *PlanetOrigin) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[35]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PlanetOrigin.ProtoReflect.Descriptor instead.
-func (*PlanetOrigin) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{35}
-}
-
-func (x *PlanetOrigin) GetFromPlanet() *Tag {
-	if x != nil {
-		return x.FromPlanet
-	}
-	return nil
-}
-
-func (x *PlanetOrigin) GetFromEpoch() *Tag {
-	if x != nil {
-		return x.FromEpoch
-	}
-	return nil
-}
-
-func (x *PlanetOrigin) GetFromChronicleHead_0() uint64 {
-	if x != nil {
-		return x.FromChronicleHead_0
-	}
-	return 0
-}
-
-func (x *PlanetOrigin) GetFromChronicleHead_1() uint64 {
-	if x != nil {
-		return x.FromChronicleHead_1
-	}
-	return 0
-}
-
-func (x *PlanetOrigin) GetForkTime() int64 {
-	if x != nil {
-		return x.ForkTime
-	}
-	return 0
-}
-
-func (x *PlanetOrigin) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
-func (x *PlanetOrigin) GetVersion() int32 {
-	if x != nil {
-		return x.Version
-	}
-	return 0
-}
-
-// UIDRange is an inclusive range of tag.UIDs — [Start, End] — used to bound
-// chronicle slices, Merkle sync ranges, journal scans, and similar spans.
-type UIDRange struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Start_0       uint64                 `protobuf:"fixed64,1,opt,name=Start_0,json=Start0,proto3" json:"Start_0,omitempty"`
-	Start_1       uint64                 `protobuf:"fixed64,2,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
-	End_0         uint64                 `protobuf:"fixed64,3,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"`
-	End_1         uint64                 `protobuf:"fixed64,4,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *UIDRange) Reset() {
-	*x = UIDRange{}
-	mi := &file_amp_amp_core_proto_msgTypes[36]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *UIDRange) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*UIDRange) ProtoMessage() {}
-
-func (x *UIDRange) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[36]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use UIDRange.ProtoReflect.Descriptor instead.
-func (*UIDRange) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{36}
-}
-
-func (x *UIDRange) GetStart_0() uint64 {
-	if x != nil {
-		return x.Start_0
-	}
-	return 0
-}
-
-func (x *UIDRange) GetStart_1() uint64 {
-	if x != nil {
-		return x.Start_1
-	}
-	return 0
-}
-
-func (x *UIDRange) GetEnd_0() uint64 {
-	if x != nil {
-		return x.End_0
-	}
-	return 0
-}
-
-func (x *UIDRange) GetEnd_1() uint64 {
-	if x != nil {
-		return x.End_1
-	}
-	return 0
-}
-
-// BlobEntry describes one blob in a sibling content-addressed store.
-// Shared between Chronicle and Codex manifests — same shape, same semantics.
-type BlobEntry struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Blob identity (leading 16 bytes of plaintext hash).
-	BlobID_0 uint64 `protobuf:"fixed64,1,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
-	BlobID_1 uint64 `protobuf:"fixed64,2,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
-	// Plaintext byte length.
-	Size int64 `protobuf:"varint,3,opt,name=Size,proto3" json:"Size,omitempty"`
-	// MIME type (e.g. "image/jpeg"), if known.
-	ContentType string `protobuf:"bytes,4,opt,name=ContentType,proto3" json:"ContentType,omitempty"`
-	// Path relative to the export root (e.g. "blobs/ab/cd/<blobtag>.bin").
-	// Implementations MAY flatten the tree; content addressing is by BlobID.
-	RelativePath  string `protobuf:"bytes,5,opt,name=RelativePath,proto3" json:"RelativePath,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *BlobEntry) Reset() {
-	*x = BlobEntry{}
-	mi := &file_amp_amp_core_proto_msgTypes[37]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BlobEntry) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BlobEntry) ProtoMessage() {}
-
-func (x *BlobEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[37]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use BlobEntry.ProtoReflect.Descriptor instead.
-func (*BlobEntry) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{37}
-}
-
-func (x *BlobEntry) GetBlobID_0() uint64 {
-	if x != nil {
-		return x.BlobID_0
-	}
-	return 0
-}
-
-func (x *BlobEntry) GetBlobID_1() uint64 {
-	if x != nil {
-		return x.BlobID_1
-	}
-	return 0
-}
-
-func (x *BlobEntry) GetSize() int64 {
-	if x != nil {
-		return x.Size
-	}
-	return 0
-}
-
-func (x *BlobEntry) GetContentType() string {
-	if x != nil {
-		return x.ContentType
-	}
-	return ""
-}
-
-func (x *BlobEntry) GetRelativePath() string {
-	if x != nil {
-		return x.RelativePath
-	}
-	return ""
-}
-
-// CodexManifest carries schema introspection for a Codex.  Entry counts are
-// authoritative in the export trailer, not in this up-front header.
-type CodexManifest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Attribute kinds present in the Codex (for fast schema introspection).
-	AttributeKinds []*Tag `protobuf:"bytes,1,rep,name=AttributeKinds,proto3" json:"AttributeKinds,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
-}
-
-func (x *CodexManifest) Reset() {
-	*x = CodexManifest{}
-	mi := &file_amp_amp_core_proto_msgTypes[38]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CodexManifest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CodexManifest) ProtoMessage() {}
-
-func (x *CodexManifest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[38]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CodexManifest.ProtoReflect.Descriptor instead.
-func (*CodexManifest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{38}
-}
-
-func (x *CodexManifest) GetAttributeKinds() []*Tag {
-	if x != nil {
-		return x.AttributeKinds
-	}
-	return nil
-}
-
-// CodexHeader is the first protobuf record in codex.bin after the preamble.
-// A Codex carries resolved state only — no TxMsgs, no source authority.
-type CodexHeader struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The planet this Codex was exported from.  May be a synthetic tag for
-	// external-source imports (e.g. "amp-gen2/prod.plan.tools").
-	SourcePlanet *Tag `protobuf:"bytes,1,opt,name=SourcePlanet,proto3" json:"SourcePlanet,omitempty"`
-	// The epoch active on SourcePlanet at export time.  Informational.
-	SourceEpoch *Tag `protobuf:"bytes,2,opt,name=SourceEpoch,proto3" json:"SourceEpoch,omitempty"`
-	// Wall-clock time of export (UTC seconds since epoch).
-	CodexTime int64 `protobuf:"varint,3,opt,name=CodexTime,proto3" json:"CodexTime,omitempty"`
-	// Provenance pointer to materialize as PlanetOrigin on the importing planet's
-	// genesis.  Nil for external-source imports with no amp origin.
-	Origin *PlanetOrigin `protobuf:"bytes,4,opt,name=Origin,proto3" json:"Origin,omitempty"`
-	// Summary for pre-flight validation.
-	Manifest *CodexManifest `protobuf:"bytes,5,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
-	// Optional exporter-provided label.
-	Label string `protobuf:"bytes,6,opt,name=Label,proto3" json:"Label,omitempty"`
-	// HashKit that computed the container integrity digest (the trailing digest
-	// over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
-	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
-	// Content-model epoch: the SDK proto semantics governing artifact payloads (the
-	// Tag/Tags content model).  An importer whose host epoch differs MUST refuse,
-	// not silently mis-decode persisted bytes (DD-chronicle-and-codex.md §5.5).
-	// Orthogonal to FormatVersion (on-disk layout) — this is payload meaning.  Bump
-	// on each wire-incompatible content-model change; amp.ContentModelEpoch is current.
-	ContentModelEpoch uint32 `protobuf:"varint,8,opt,name=ContentModelEpoch,proto3" json:"ContentModelEpoch,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *CodexHeader) Reset() {
-	*x = CodexHeader{}
-	mi := &file_amp_amp_core_proto_msgTypes[39]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CodexHeader) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CodexHeader) ProtoMessage() {}
-
-func (x *CodexHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[39]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CodexHeader.ProtoReflect.Descriptor instead.
-func (*CodexHeader) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{39}
-}
-
-func (x *CodexHeader) GetSourcePlanet() *Tag {
-	if x != nil {
-		return x.SourcePlanet
-	}
-	return nil
-}
-
-func (x *CodexHeader) GetSourceEpoch() *Tag {
-	if x != nil {
-		return x.SourceEpoch
-	}
-	return nil
-}
-
-func (x *CodexHeader) GetCodexTime() int64 {
-	if x != nil {
-		return x.CodexTime
-	}
-	return 0
-}
-
-func (x *CodexHeader) GetOrigin() *PlanetOrigin {
-	if x != nil {
-		return x.Origin
-	}
-	return nil
-}
-
-func (x *CodexHeader) GetManifest() *CodexManifest {
-	if x != nil {
-		return x.Manifest
-	}
-	return nil
-}
-
-func (x *CodexHeader) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
-func (x *CodexHeader) GetDigestHashKit() safe.HashKitID {
-	if x != nil {
-		return x.DigestHashKit
-	}
-	return safe.HashKitID(0)
-}
-
-func (x *CodexHeader) GetContentModelEpoch() uint32 {
-	if x != nil {
-		return x.ContentModelEpoch
-	}
-	return 0
-}
-
-// ChronicleCompactPoint records one rebase event in the lineage chain.
-type ChronicleCompactPoint struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// Chronicle up to this TxID was rebased; older TxMsgs are discardable.
-	UpToTxID_0 uint64 `protobuf:"fixed64,1,opt,name=UpToTxID_0,json=UpToTxID0,proto3" json:"UpToTxID_0,omitempty"`
-	UpToTxID_1 uint64 `protobuf:"fixed64,2,opt,name=UpToTxID_1,json=UpToTxID1,proto3" json:"UpToTxID_1,omitempty"`
-	// Wall-clock rebase time (UTC seconds).
-	CompactTime int64 `protobuf:"varint,3,opt,name=CompactTime,proto3" json:"CompactTime,omitempty"`
-	// Digest of the compacted slice — detects rebase-result divergence.
-	CompactedDigest []byte `protobuf:"bytes,4,opt,name=CompactedDigest,proto3" json:"CompactedDigest,omitempty"`
-	// TxID of the ChronicleCompact governance TxMsg itself.
-	CompactTxID_0 uint64 `protobuf:"fixed64,5,opt,name=CompactTxID_0,json=CompactTxID0,proto3" json:"CompactTxID_0,omitempty"`
-	CompactTxID_1 uint64 `protobuf:"fixed64,6,opt,name=CompactTxID_1,json=CompactTxID1,proto3" json:"CompactTxID_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChronicleCompactPoint) Reset() {
-	*x = ChronicleCompactPoint{}
-	mi := &file_amp_amp_core_proto_msgTypes[40]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ChronicleCompactPoint) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChronicleCompactPoint) ProtoMessage() {}
-
-func (x *ChronicleCompactPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[40]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChronicleCompactPoint.ProtoReflect.Descriptor instead.
-func (*ChronicleCompactPoint) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{40}
-}
-
-func (x *ChronicleCompactPoint) GetUpToTxID_0() uint64 {
-	if x != nil {
-		return x.UpToTxID_0
-	}
-	return 0
-}
-
-func (x *ChronicleCompactPoint) GetUpToTxID_1() uint64 {
-	if x != nil {
-		return x.UpToTxID_1
-	}
-	return 0
-}
-
-func (x *ChronicleCompactPoint) GetCompactTime() int64 {
-	if x != nil {
-		return x.CompactTime
-	}
-	return 0
-}
-
-func (x *ChronicleCompactPoint) GetCompactedDigest() []byte {
-	if x != nil {
-		return x.CompactedDigest
-	}
-	return nil
-}
-
-func (x *ChronicleCompactPoint) GetCompactTxID_0() uint64 {
-	if x != nil {
-		return x.CompactTxID_0
-	}
-	return 0
-}
-
-func (x *ChronicleCompactPoint) GetCompactTxID_1() uint64 {
-	if x != nil {
-		return x.CompactTxID_1
-	}
-	return 0
-}
-
-// ChronicleCompactHistory is the ordered lineage of rebase points for a planet.
-// Oldest first.  Empty if the chronicle has never been rebased.
-type ChronicleCompactHistory struct {
-	state         protoimpl.MessageState   `protogen:"open.v1"`
-	Points        []*ChronicleCompactPoint `protobuf:"bytes,1,rep,name=Points,proto3" json:"Points,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChronicleCompactHistory) Reset() {
-	*x = ChronicleCompactHistory{}
-	mi := &file_amp_amp_core_proto_msgTypes[41]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ChronicleCompactHistory) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChronicleCompactHistory) ProtoMessage() {}
-
-func (x *ChronicleCompactHistory) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[41]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChronicleCompactHistory.ProtoReflect.Descriptor instead.
-func (*ChronicleCompactHistory) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{41}
-}
-
-func (x *ChronicleCompactHistory) GetPoints() []*ChronicleCompactPoint {
-	if x != nil {
-		return x.Points
-	}
-	return nil
-}
-
-// ChronicleCompact is the governance TxMsg that declares a chronicle compact.
-// Signed by the governance quorum.  Peers with the full chronicle may keep it
-// for forensics; peers syncing fresh after rebase receive only the compacted
-// form plus post-rebase TxMsgs.  See AOM DD-chronicle-and-codex.md §4.7.
-type ChronicleCompact struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// TxID up to which the chronicle has been rebased; older TxMsgs discardable.
-	UpToTxID_0 uint64 `protobuf:"fixed64,1,opt,name=UpToTxID_0,json=UpToTxID0,proto3" json:"UpToTxID_0,omitempty"`
-	UpToTxID_1 uint64 `protobuf:"fixed64,2,opt,name=UpToTxID_1,json=UpToTxID1,proto3" json:"UpToTxID_1,omitempty"`
-	// Digest of the compacted chronicle at the time of rebase.
-	CompactedDigest []byte `protobuf:"bytes,3,opt,name=CompactedDigest,proto3" json:"CompactedDigest,omitempty"`
-	// Wall-clock rebase time (UTC seconds).
-	CompactTime int64 `protobuf:"varint,4,opt,name=CompactTime,proto3" json:"CompactTime,omitempty"`
-	// Optional rationale for audit trails.
-	Label         string `protobuf:"bytes,5,opt,name=Label,proto3" json:"Label,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChronicleCompact) Reset() {
-	*x = ChronicleCompact{}
-	mi := &file_amp_amp_core_proto_msgTypes[42]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ChronicleCompact) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChronicleCompact) ProtoMessage() {}
-
-func (x *ChronicleCompact) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[42]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChronicleCompact.ProtoReflect.Descriptor instead.
-func (*ChronicleCompact) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{42}
-}
-
-func (x *ChronicleCompact) GetUpToTxID_0() uint64 {
-	if x != nil {
-		return x.UpToTxID_0
-	}
-	return 0
-}
-
-func (x *ChronicleCompact) GetUpToTxID_1() uint64 {
-	if x != nil {
-		return x.UpToTxID_1
-	}
-	return 0
-}
-
-func (x *ChronicleCompact) GetCompactedDigest() []byte {
-	if x != nil {
-		return x.CompactedDigest
-	}
-	return nil
-}
-
-func (x *ChronicleCompact) GetCompactTime() int64 {
-	if x != nil {
-		return x.CompactTime
-	}
-	return 0
-}
-
-func (x *ChronicleCompact) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
-// ChronicleManifest carries Chronicle schema introspection (none defined yet).
-// Entry counts are authoritative in the export trailer, not in this header.
-type ChronicleManifest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChronicleManifest) Reset() {
-	*x = ChronicleManifest{}
-	mi := &file_amp_amp_core_proto_msgTypes[43]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ChronicleManifest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChronicleManifest) ProtoMessage() {}
-
-func (x *ChronicleManifest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[43]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChronicleManifest.ProtoReflect.Descriptor instead.
-func (*ChronicleManifest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{43}
-}
-
-// ChronicleHeader is the first protobuf record in chronicle.bin after
-// the preamble.  The portable realization of a planet's Chronicle.  The
-// embedded GenesisEpoch TxMsg lets any receiver with the founders' pubkeys
-// verify every TxMsg in this chronicle offline — no network required.
-type ChronicleHeader struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// The planet this chronicle was exported from.
-	SourcePlanet *Tag `protobuf:"bytes,1,opt,name=SourcePlanet,proto3" json:"SourcePlanet,omitempty"`
-	// Governance snapshot: the epoch active on SourcePlanet at export time.
-	SourceEpoch *Tag `protobuf:"bytes,2,opt,name=SourceEpoch,proto3" json:"SourceEpoch,omitempty"`
-	// The genesis PlanetEpoch TxMsg, embedded verbatim (raw signed bytes) so
-	// any receiver with the founders' pubkeys can verify every TxMsg in this
-	// chronicle offline.
-	GenesisEpoch []byte `protobuf:"bytes,3,opt,name=GenesisEpoch,proto3" json:"GenesisEpoch,omitempty"`
-	// TxID range included, inclusive on both ends.  Whole-planet export:
-	// Range.Start is the genesis TxID, Range.End is the chronicle head at
-	// export time.  Slice: Range bounds the slice.
-	Range *UIDRange `protobuf:"bytes,4,opt,name=Range,proto3" json:"Range,omitempty"`
-	// Wall-clock time of export (UTC seconds since epoch).
-	ExportTime int64 `protobuf:"varint,5,opt,name=ExportTime,proto3" json:"ExportTime,omitempty"`
-	// Compact lineage.  Nil if this chronicle has never been compacted.
-	CompactHistory *ChronicleCompactHistory `protobuf:"bytes,6,opt,name=CompactHistory,proto3" json:"CompactHistory,omitempty"`
-	// HashKit that computed the container integrity digest.  0 = Blake2s_256
-	// (the back-compat default).
-	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
-	// Summary for pre-flight validation.
-	Manifest *ChronicleManifest `protobuf:"bytes,20,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
-	// Optional exporter-provided label ("nightly-backup 2026-04-23").
-	Label         string `protobuf:"bytes,21,opt,name=Label,proto3" json:"Label,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ChronicleHeader) Reset() {
-	*x = ChronicleHeader{}
-	mi := &file_amp_amp_core_proto_msgTypes[44]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ChronicleHeader) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ChronicleHeader) ProtoMessage() {}
-
-func (x *ChronicleHeader) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[44]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ChronicleHeader.ProtoReflect.Descriptor instead.
-func (*ChronicleHeader) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{44}
-}
-
-func (x *ChronicleHeader) GetSourcePlanet() *Tag {
-	if x != nil {
-		return x.SourcePlanet
-	}
-	return nil
-}
-
-func (x *ChronicleHeader) GetSourceEpoch() *Tag {
-	if x != nil {
-		return x.SourceEpoch
-	}
-	return nil
-}
-
-func (x *ChronicleHeader) GetGenesisEpoch() []byte {
-	if x != nil {
-		return x.GenesisEpoch
-	}
-	return nil
-}
-
-func (x *ChronicleHeader) GetRange() *UIDRange {
-	if x != nil {
-		return x.Range
-	}
-	return nil
-}
-
-func (x *ChronicleHeader) GetExportTime() int64 {
-	if x != nil {
-		return x.ExportTime
-	}
-	return 0
-}
-
-func (x *ChronicleHeader) GetCompactHistory() *ChronicleCompactHistory {
-	if x != nil {
-		return x.CompactHistory
-	}
-	return nil
-}
-
-func (x *ChronicleHeader) GetDigestHashKit() safe.HashKitID {
-	if x != nil {
-		return x.DigestHashKit
-	}
-	return safe.HashKitID(0)
-}
-
-func (x *ChronicleHeader) GetManifest() *ChronicleManifest {
-	if x != nil {
-		return x.Manifest
-	}
-	return nil
-}
-
-func (x *ChronicleHeader) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
-// AppTarget describes where to obtain the app for one PlatformID.
-type AppTarget struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Platform      PlatformID             `protobuf:"varint,1,opt,name=Platform,proto3,enum=amp.PlatformID" json:"Platform,omitempty"`
-	DownloadURL   string                 `protobuf:"bytes,3,opt,name=DownloadURL,proto3" json:"DownloadURL,omitempty"`   // store URL, HTTPS download, magnet link, etc.
-	BundleID      string                 `protobuf:"bytes,4,opt,name=BundleID,proto3" json:"BundleID,omitempty"`         // "org.plan.tunr" (iOS/Android bundle ID)
-	MinOSVersion  string                 `protobuf:"bytes,5,opt,name=MinOSVersion,proto3" json:"MinOSVersion,omitempty"` // minimum OS version, e.g. "14.0"
-	AppleTeamID   string                 `protobuf:"bytes,6,opt,name=AppleTeamID,proto3" json:"AppleTeamID,omitempty"`   // Apple Developer Team ID; AASA appID is "{AppleTeamID}.{BundleID}"
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AppTarget) Reset() {
-	*x = AppTarget{}
-	mi := &file_amp_amp_core_proto_msgTypes[45]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AppTarget) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AppTarget) ProtoMessage() {}
-
-func (x *AppTarget) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[45]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AppTarget.ProtoReflect.Descriptor instead.
-func (*AppTarget) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{45}
-}
-
-func (x *AppTarget) GetPlatform() PlatformID {
-	if x != nil {
-		return x.Platform
-	}
-	return PlatformID_Universal
-}
-
-func (x *AppTarget) GetDownloadURL() string {
-	if x != nil {
-		return x.DownloadURL
-	}
-	return ""
-}
-
-func (x *AppTarget) GetBundleID() string {
-	if x != nil {
-		return x.BundleID
-	}
-	return ""
-}
-
-func (x *AppTarget) GetMinOSVersion() string {
-	if x != nil {
-		return x.MinOSVersion
-	}
-	return ""
-}
-
-func (x *AppTarget) GetAppleTeamID() string {
-	if x != nil {
-		return x.AppleTeamID
-	}
-	return ""
-}
-
-// AppLink is one curated entry point — typically an amp:// or https:// URL with a label.
-type AppLink struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Label         string                 `protobuf:"bytes,1,opt,name=Label,proto3" json:"Label,omitempty"`
-	URL           string                 `protobuf:"bytes,2,opt,name=URL,proto3" json:"URL,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *AppLink) Reset() {
-	*x = AppLink{}
-	mi := &file_amp_amp_core_proto_msgTypes[46]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *AppLink) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*AppLink) ProtoMessage() {}
-
-func (x *AppLink) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[46]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use AppLink.ProtoReflect.Descriptor instead.
-func (*AppLink) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{46}
-}
-
-func (x *AppLink) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
-func (x *AppLink) GetURL() string {
-	if x != nil {
-		return x.URL
-	}
-	return ""
-}
-
-// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
-// Used wherever a brand or manifest needs to cite a crate without embedding its full
-// CrateInfo (e.g. Brand.BundledCrates).  BlobID is the leading 16 bytes of the built
-// crate's plaintext hash, matching the AssetEntry/BundleManifest convention; zero =
-// unknown / not pinned.
-type CrateRef struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	CrateURI      string                 `protobuf:"bytes,1,opt,name=CrateURI,proto3" json:"CrateURI,omitempty"` // "asset:{PublisherID}/{CrateID}"
-	BlobID_0      uint64                 `protobuf:"fixed64,2,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
-	BlobID_1      uint64                 `protobuf:"fixed64,3,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CrateRef) Reset() {
-	*x = CrateRef{}
-	mi := &file_amp_amp_core_proto_msgTypes[47]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CrateRef) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CrateRef) ProtoMessage() {}
-
-func (x *CrateRef) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[47]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CrateRef.ProtoReflect.Descriptor instead.
-func (*CrateRef) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{47}
-}
-
-func (x *CrateRef) GetCrateURI() string {
-	if x != nil {
-		return x.CrateURI
-	}
-	return ""
-}
-
-func (x *CrateRef) GetBlobID_0() uint64 {
-	if x != nil {
-		return x.BlobID_0
-	}
-	return 0
-}
-
-func (x *CrateRef) GetBlobID_1() uint64 {
-	if x != nil {
-		return x.BlobID_1
-	}
-	return 0
-}
-
-// Brand is a planet's identity record: name, domain, schemes, install targets,
-// curated entry points, the per-planet bundled crate set, and the publishing
-// federation.  Lives at a single CRDT address per planet
-//
-//	(PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=*)
-//
-// All fields admin-signable; founders may include a Brand TxOp in the genesis
-// envelope as the first record (EditID=0) or defer to a later admin-signed
-// channel write.  AOM DD-name-service.md §2.
-type Brand struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	AppName          string                 `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`     // "Tunr"
-	AppDomain        string                 `protobuf:"bytes,2,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"` // "spaces.soundspectrum.com"
-	AppDesc          string                 `protobuf:"bytes,3,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
-	OrgName          string                 `protobuf:"bytes,5,opt,name=OrgName,proto3" json:"OrgName,omitempty"` // "SoundSpectrum"
-	OrgHomeURL       string                 `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"`
-	AppHomeURL       string                 `protobuf:"bytes,7,opt,name=AppHomeURL,proto3" json:"AppHomeURL,omitempty"`
-	URLSchemes       []string               `protobuf:"bytes,10,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"` // ["soundspectrum", "tunr"]
-	Targets          []*AppTarget           `protobuf:"bytes,15,rep,name=Targets,proto3" json:"Targets,omitempty"`
-	CrateSnapshotURL string                 `protobuf:"bytes,20,opt,name=CrateSnapshotURL,proto3" json:"CrateSnapshotURL,omitempty"`
-	Links            []*AppLink             `protobuf:"bytes,25,rep,name=Links,proto3" json:"Links,omitempty"`
-	BundledCrates    []*CrateRef            `protobuf:"bytes,26,rep,name=BundledCrates,proto3" json:"BundledCrates,omitempty"`
-	// NamedBy is the federation that names this planet — the §3.3 back-edge the
-	// planet acknowledges as its current namer.  Single-valued: a planet is named
-	// through one federation at a time but may roam.  Read by NameService
-	// consumers to enforce the canonic-binding invariant of AOM DD-name-service.md §3.3.
-	NamedBy *Tag `protobuf:"bytes,30,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
-	// TemplateSet selects which portal template set renders this planet's HTTP
-	// surfaces — names a template-set channel (NodeID) on the naming federation
-	// planet that app.www reads template Segments from.  Empty = the federation's
-	// default set.  Members select among federation-published sets; the markup is
-	// federation-authored (DD-name-service.md §12.3).
-	TemplateSet   *Tag `protobuf:"bytes,31,opt,name=TemplateSet,proto3" json:"TemplateSet,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Brand) Reset() {
-	*x = Brand{}
-	mi := &file_amp_amp_core_proto_msgTypes[48]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Brand) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Brand) ProtoMessage() {}
-
-func (x *Brand) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[48]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Brand.ProtoReflect.Descriptor instead.
-func (*Brand) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{48}
-}
-
-func (x *Brand) GetAppName() string {
-	if x != nil {
-		return x.AppName
-	}
-	return ""
-}
-
-func (x *Brand) GetAppDomain() string {
-	if x != nil {
-		return x.AppDomain
-	}
-	return ""
-}
-
-func (x *Brand) GetAppDesc() string {
-	if x != nil {
-		return x.AppDesc
-	}
-	return ""
-}
-
-func (x *Brand) GetOrgName() string {
-	if x != nil {
-		return x.OrgName
-	}
-	return ""
-}
-
-func (x *Brand) GetOrgHomeURL() string {
-	if x != nil {
-		return x.OrgHomeURL
-	}
-	return ""
-}
-
-func (x *Brand) GetAppHomeURL() string {
-	if x != nil {
-		return x.AppHomeURL
-	}
-	return ""
-}
-
-func (x *Brand) GetURLSchemes() []string {
-	if x != nil {
-		return x.URLSchemes
-	}
-	return nil
-}
-
-func (x *Brand) GetTargets() []*AppTarget {
-	if x != nil {
-		return x.Targets
-	}
-	return nil
-}
-
-func (x *Brand) GetCrateSnapshotURL() string {
-	if x != nil {
-		return x.CrateSnapshotURL
-	}
-	return ""
-}
-
-func (x *Brand) GetLinks() []*AppLink {
-	if x != nil {
-		return x.Links
-	}
-	return nil
-}
-
-func (x *Brand) GetBundledCrates() []*CrateRef {
-	if x != nil {
-		return x.BundledCrates
-	}
-	return nil
-}
-
-func (x *Brand) GetNamedBy() *Tag {
-	if x != nil {
-		return x.NamedBy
-	}
-	return nil
-}
-
-func (x *Brand) GetTemplateSet() *Tag {
-	if x != nil {
-		return x.TemplateSet
-	}
-	return nil
-}
-
-// Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID, ItemID, EditID)
-// tuple addressing a single CRDT cell across any planet.  PlanetID = 0 means
-// "this planet" (the planet of the containing TxMsg), matching Citation's convention.
-// Used to cite a specific TxOp address across planets without dereferencing.
-type Address struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
-	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	NodeID_0      uint64                 `protobuf:"fixed64,3,opt,name=NodeID_0,json=NodeID0,proto3" json:"NodeID_0,omitempty"`
-	NodeID_1      uint64                 `protobuf:"fixed64,4,opt,name=NodeID_1,json=NodeID1,proto3" json:"NodeID_1,omitempty"`
-	AttrID_0      uint64                 `protobuf:"fixed64,5,opt,name=AttrID_0,json=AttrID0,proto3" json:"AttrID_0,omitempty"`
-	AttrID_1      uint64                 `protobuf:"fixed64,6,opt,name=AttrID_1,json=AttrID1,proto3" json:"AttrID_1,omitempty"`
-	ItemID_0      uint64                 `protobuf:"fixed64,7,opt,name=ItemID_0,json=ItemID0,proto3" json:"ItemID_0,omitempty"`
-	ItemID_1      uint64                 `protobuf:"fixed64,8,opt,name=ItemID_1,json=ItemID1,proto3" json:"ItemID_1,omitempty"`
-	EditID_0      uint64                 `protobuf:"fixed64,9,opt,name=EditID_0,json=EditID0,proto3" json:"EditID_0,omitempty"`
-	EditID_1      uint64                 `protobuf:"fixed64,10,opt,name=EditID_1,json=EditID1,proto3" json:"EditID_1,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *Address) Reset() {
-	*x = Address{}
-	mi := &file_amp_amp_core_proto_msgTypes[49]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *Address) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Address) ProtoMessage() {}
-
-func (x *Address) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[49]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Address.ProtoReflect.Descriptor instead.
-func (*Address) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{49}
-}
-
-func (x *Address) GetPlanetID_0() uint64 {
-	if x != nil {
-		return x.PlanetID_0
-	}
-	return 0
-}
-
-func (x *Address) GetPlanetID_1() uint64 {
-	if x != nil {
-		return x.PlanetID_1
-	}
-	return 0
-}
-
-func (x *Address) GetNodeID_0() uint64 {
-	if x != nil {
-		return x.NodeID_0
-	}
-	return 0
-}
-
-func (x *Address) GetNodeID_1() uint64 {
-	if x != nil {
-		return x.NodeID_1
-	}
-	return 0
-}
-
-func (x *Address) GetAttrID_0() uint64 {
-	if x != nil {
-		return x.AttrID_0
-	}
-	return 0
-}
-
-func (x *Address) GetAttrID_1() uint64 {
-	if x != nil {
-		return x.AttrID_1
-	}
-	return 0
-}
-
-func (x *Address) GetItemID_0() uint64 {
-	if x != nil {
-		return x.ItemID_0
-	}
-	return 0
-}
-
-func (x *Address) GetItemID_1() uint64 {
-	if x != nil {
-		return x.ItemID_1
-	}
-	return 0
-}
-
-func (x *Address) GetEditID_0() uint64 {
-	if x != nil {
-		return x.EditID_0
-	}
-	return 0
-}
-
-func (x *Address) GetEditID_1() uint64 {
-	if x != nil {
-		return x.EditID_1
-	}
-	return 0
-}
-
-// VaultAddr is a transport-tagged vault endpoint.  Used by NameService records
-// and federation pointers to hint where a planet can be pinned.  Reuses the
-// envelope shape of AOM SD-security-sync.md §7.2 VaultAddresses; transports
-// advertise themselves via the Transport string so future kits land without
-// proto changes.
-type VaultAddr struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Transport     string                 `protobuf:"bytes,1,opt,name=Transport,proto3" json:"Transport,omitempty"` // "tcp", "udp", "reticulum", etc.
-	Address       []byte                 `protobuf:"bytes,2,opt,name=Address,proto3" json:"Address,omitempty"`     // transport-specific encoding
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *VaultAddr) Reset() {
-	*x = VaultAddr{}
-	mi := &file_amp_amp_core_proto_msgTypes[50]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *VaultAddr) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*VaultAddr) ProtoMessage() {}
-
-func (x *VaultAddr) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[50]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use VaultAddr.ProtoReflect.Descriptor instead.
-func (*VaultAddr) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{50}
-}
-
-func (x *VaultAddr) GetTransport() string {
-	if x != nil {
-		return x.Transport
-	}
-	return ""
-}
-
-func (x *VaultAddr) GetAddress() []byte {
-	if x != nil {
-		return x.Address
-	}
-	return nil
-}
-
-// NameServiceRecord — one FQDN → PlanetID record published by a federation.
-// Lives in a NameService channel at
-//
-//	(NodeID = channel_node, AttrID = amp.name.service.record, ItemID = hash(fqdn)).
-//
-// Signed under the publishing federation's epoch admin.  AOM DD-name-service.md §3.1.
-type NameServiceRecord struct {
-	state    protoimpl.MessageState `protogen:"open.v1"`
-	FQDN     string                 `protobuf:"bytes,1,opt,name=FQDN,proto3" json:"FQDN,omitempty"`         // "spaces.plan.tools" — exact-match key for Resolve
-	PlanetID *Tag                   `protobuf:"bytes,2,opt,name=PlanetID,proto3" json:"PlanetID,omitempty"` // target planet UID
-	// First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=0).
-	// Consumers may dereference this to read the founders-signed first Brand
-	// record when one was published in the genesis envelope; absent that, the
-	// first admin-signed Brand edit fills this slot.
-	BrandAddr *Address `protobuf:"bytes,3,opt,name=BrandAddr,proto3" json:"BrandAddr,omitempty"`
-	// Full Brand snapshot for offline Search ranking — copy of the latest
-	// Brand at the time the record was registered.  A federation refreshes
-	// this when the target planet's Brand operationally updates.
-	BrandSnapshot *Brand `protobuf:"bytes,4,opt,name=BrandSnapshot,proto3" json:"BrandSnapshot,omitempty"`
-	// Where the target planet can be pinned for bootstrap.
-	VaultAddrs    []*VaultAddr `protobuf:"bytes,7,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
-	RegisteredAt  *Tag         `protobuf:"bytes,8,opt,name=RegisteredAt,proto3" json:"RegisteredAt,omitempty"` // TxID of registering TxMsg (initial Upsert)
-	RegisteredBy  *Tag         `protobuf:"bytes,9,opt,name=RegisteredBy,proto3" json:"RegisteredBy,omitempty"` // signing member's MemberID (federation admin)
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NameServiceRecord) Reset() {
-	*x = NameServiceRecord{}
-	mi := &file_amp_amp_core_proto_msgTypes[51]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NameServiceRecord) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NameServiceRecord) ProtoMessage() {}
-
-func (x *NameServiceRecord) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[51]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NameServiceRecord.ProtoReflect.Descriptor instead.
-func (*NameServiceRecord) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{51}
-}
-
-func (x *NameServiceRecord) GetFQDN() string {
-	if x != nil {
-		return x.FQDN
-	}
-	return ""
-}
-
-func (x *NameServiceRecord) GetPlanetID() *Tag {
-	if x != nil {
-		return x.PlanetID
-	}
-	return nil
-}
-
-func (x *NameServiceRecord) GetBrandAddr() *Address {
-	if x != nil {
-		return x.BrandAddr
-	}
-	return nil
-}
-
-func (x *NameServiceRecord) GetBrandSnapshot() *Brand {
-	if x != nil {
-		return x.BrandSnapshot
-	}
-	return nil
-}
-
-func (x *NameServiceRecord) GetVaultAddrs() []*VaultAddr {
-	if x != nil {
-		return x.VaultAddrs
-	}
-	return nil
-}
-
-func (x *NameServiceRecord) GetRegisteredAt() *Tag {
-	if x != nil {
-		return x.RegisteredAt
-	}
-	return nil
-}
-
-func (x *NameServiceRecord) GetRegisteredBy() *Tag {
-	if x != nil {
-		return x.RegisteredBy
-	}
-	return nil
-}
-
-// FederationPeer — peer of a FederationDirectory.
-// AOM DD-name-service.md §4.4.
-type FederationPeer struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FederationID  *Tag                   `protobuf:"bytes,1,opt,name=FederationID,proto3" json:"FederationID,omitempty"` // the peer federation's planet UID
-	VaultAddrs    []*VaultAddr           `protobuf:"bytes,2,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`     // where peer federation is pinnable
-	Label         string                 `protobuf:"bytes,3,opt,name=Label,proto3" json:"Label,omitempty"`               // human-readable, informational
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *FederationPeer) Reset() {
-	*x = FederationPeer{}
-	mi := &file_amp_amp_core_proto_msgTypes[52]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FederationPeer) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FederationPeer) ProtoMessage() {}
-
-func (x *FederationPeer) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[52]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FederationPeer.ProtoReflect.Descriptor instead.
-func (*FederationPeer) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{52}
-}
-
-func (x *FederationPeer) GetFederationID() *Tag {
-	if x != nil {
-		return x.FederationID
-	}
-	return nil
-}
-
-func (x *FederationPeer) GetVaultAddrs() []*VaultAddr {
-	if x != nil {
-		return x.VaultAddrs
-	}
-	return nil
-}
-
-func (x *FederationPeer) GetLabel() string {
-	if x != nil {
-		return x.Label
-	}
-	return ""
-}
-
-// FederationDirectory — federation peer pointers, NS-record style cross-federation
-// forwarding (AOM DD-name-service.md §4.4).  Lives at
-//
-//	(HeadNodeID, amp.federation.directory, amp.federation.directory.UID)
-//
-// on a federation planet.  Single CRDT item per federation; admin-signed like
-// any governance change.  Analogous to DNS NS records — bounded, opt-in.
-type FederationDirectory struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Peers         []*FederationPeer      `protobuf:"bytes,1,rep,name=Peers,proto3" json:"Peers,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *FederationDirectory) Reset() {
-	*x = FederationDirectory{}
-	mi := &file_amp_amp_core_proto_msgTypes[53]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *FederationDirectory) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*FederationDirectory) ProtoMessage() {}
-
-func (x *FederationDirectory) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[53]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use FederationDirectory.ProtoReflect.Descriptor instead.
-func (*FederationDirectory) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{53}
-}
-
-func (x *FederationDirectory) GetPeers() []*FederationPeer {
-	if x != nil {
-		return x.Peers
-	}
-	return nil
-}
-
 // PlanetInvitePolicy is the governed, planet-side twin of a sealed PlanetInvite
 // token: the founder/admin-authored rules an invite is redeemed under.  Lives
 // planet-public at (PlanetInvites channel, PlanetInvitePolicy, inviteID) where
@@ -6184,7 +4234,7 @@ type PlanetInvitePolicy struct {
 
 func (x *PlanetInvitePolicy) Reset() {
 	*x = PlanetInvitePolicy{}
-	mi := &file_amp_amp_core_proto_msgTypes[54]
+	mi := &file_amp_amp_core_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6196,7 +4246,7 @@ func (x *PlanetInvitePolicy) String() string {
 func (*PlanetInvitePolicy) ProtoMessage() {}
 
 func (x *PlanetInvitePolicy) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[54]
+	mi := &file_amp_amp_core_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6209,7 +4259,7 @@ func (x *PlanetInvitePolicy) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetInvitePolicy.ProtoReflect.Descriptor instead.
 func (*PlanetInvitePolicy) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{54}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *PlanetInvitePolicy) GetInviteID_0() uint64 {
@@ -6312,7 +4362,7 @@ type PlanetInviteRedemption struct {
 
 func (x *PlanetInviteRedemption) Reset() {
 	*x = PlanetInviteRedemption{}
-	mi := &file_amp_amp_core_proto_msgTypes[55]
+	mi := &file_amp_amp_core_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6324,7 +4374,7 @@ func (x *PlanetInviteRedemption) String() string {
 func (*PlanetInviteRedemption) ProtoMessage() {}
 
 func (x *PlanetInviteRedemption) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[55]
+	mi := &file_amp_amp_core_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6337,7 +4387,7 @@ func (x *PlanetInviteRedemption) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetInviteRedemption.ProtoReflect.Descriptor instead.
 func (*PlanetInviteRedemption) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{55}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *PlanetInviteRedemption) GetInviteID_0() uint64 {
@@ -6403,11 +4453,1995 @@ func (x *PlanetInviteRedemption) GetRedeemProof() []byte {
 	return nil
 }
 
+// BlobRef is a content-addressed reference to a media blob stored outside a TxMsg.
+// It binds two content addresses: AssetTag names WHAT the content is (the plaintext
+// identity), BlobTag names HOW its bytes are stored (the on-disk / on-wire identity).
+// For a planet-public blob the stored bytes are the plaintext, so BlobTag.UID ==
+// AssetTag.UID; for an epoch-sealed blob the stored bytes are ciphertext, so the two
+// diverge and EpochID is set.  A relay routes, stores, and integrity-checks against
+// BlobTag without decrypting or learning the asset; AssetTag stays member-side.
+type BlobRef struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Planet this blob belongs to.
+	PlanetID_0 uint64 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1 uint64 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	// Hash algorithm used for blob integrity (default: Blake2s_256).
+	// Each BlobRef is self-describing — the validator reads this field
+	// to select the correct HashKit for verification.
+	HashKitID safe.HashKitID `protobuf:"varint,8,opt,name=HashKitID,proto3,enum=safe.HashKitID" json:"HashKitID,omitempty"`
+	// HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
+	// This is the asset's full hash; AssetTag.UID is its leading 16 bytes.  Lets a
+	// member validate content after decryption regardless of how it was stored.
+	Hash_0 uint64 `protobuf:"fixed64,10,opt,name=Hash_0,json=Hash0,proto3" json:"Hash_0,omitempty"`
+	Hash_1 uint64 `protobuf:"fixed64,11,opt,name=Hash_1,json=Hash1,proto3" json:"Hash_1,omitempty"`
+	Hash_2 uint64 `protobuf:"fixed64,12,opt,name=Hash_2,json=Hash2,proto3" json:"Hash_2,omitempty"`
+	Hash_3 uint64 `protobuf:"fixed64,13,opt,name=Hash_3,json=Hash3,proto3" json:"Hash_3,omitempty"`
+	// WHAT it is — the plaintext asset identity.  Member-side.
+	//
+	//	AssetTag.UID         — leading 16 bytes of the plaintext hash (Hash_0..3).
+	//	AssetTag.ContentType — MIME type (e.g. "image/jpeg", "audio/mpeg").
+	//	AssetTag.Text        — caller-supplied label (e.g. the source file name).
+	//	AssetTag.I (Units=Bytes) — authoritative plaintext byte length.
+	AssetTag *Tag `protobuf:"bytes,16,opt,name=AssetTag,proto3" json:"AssetTag,omitempty"`
+	// HOW it is stored — the on-disk / on-wire byte identity.  Lean, relay-facing.
+	//
+	//	BlobTag.UID         — leading 16 bytes of hash(stored bytes): ciphertext for a
+	//	                      sealed blob, == AssetTag.UID for a planet-public one.
+	//	BlobTag.I (Units=Bytes) — stored byte length.  No ContentType / label.
+	BlobTag *Tag `protobuf:"bytes,17,opt,name=BlobTag,proto3" json:"BlobTag,omitempty"`
+	// Epoch key used to seal this blob (zero = unsealed / planet-public ⇒ BlobTag.UID == AssetTag.UID).
+	// Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
+	EpochID_0     uint64 `protobuf:"fixed64,20,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`
+	EpochID_1     uint64 `protobuf:"fixed64,21,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BlobRef) Reset() {
+	*x = BlobRef{}
+	mi := &file_amp_amp_core_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BlobRef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BlobRef) ProtoMessage() {}
+
+func (x *BlobRef) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BlobRef.ProtoReflect.Descriptor instead.
+func (*BlobRef) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *BlobRef) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *BlobRef) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *BlobRef) GetHashKitID() safe.HashKitID {
+	if x != nil {
+		return x.HashKitID
+	}
+	return safe.HashKitID(0)
+}
+
+func (x *BlobRef) GetHash_0() uint64 {
+	if x != nil {
+		return x.Hash_0
+	}
+	return 0
+}
+
+func (x *BlobRef) GetHash_1() uint64 {
+	if x != nil {
+		return x.Hash_1
+	}
+	return 0
+}
+
+func (x *BlobRef) GetHash_2() uint64 {
+	if x != nil {
+		return x.Hash_2
+	}
+	return 0
+}
+
+func (x *BlobRef) GetHash_3() uint64 {
+	if x != nil {
+		return x.Hash_3
+	}
+	return 0
+}
+
+func (x *BlobRef) GetAssetTag() *Tag {
+	if x != nil {
+		return x.AssetTag
+	}
+	return nil
+}
+
+func (x *BlobRef) GetBlobTag() *Tag {
+	if x != nil {
+		return x.BlobTag
+	}
+	return nil
+}
+
+func (x *BlobRef) GetEpochID_0() uint64 {
+	if x != nil {
+		return x.EpochID_0
+	}
+	return 0
+}
+
+func (x *BlobRef) GetEpochID_1() uint64 {
+	if x != nil {
+		return x.EpochID_1
+	}
+	return 0
+}
+
+// PlanetStorageOpts configures per-planet storage priority and budgets.
+// Stored as a home planet attribute alongside PlanetBinding, keyed by planet UID.
+// Drives cache eviction: lower-priority planets have their decrypted cache evicted first.
+type PlanetStorageOpts struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Storage priority (higher = more important, 0 = default).
+	// Drives cache eviction ordering: lowest-priority planets evicted first.
+	Priority int32 `protobuf:"varint,1,opt,name=Priority,proto3" json:"Priority,omitempty"`
+	// Max encrypted blob storage for this planet in bytes (0 = unlimited).
+	MaxBlobBytes int64 `protobuf:"varint,2,opt,name=MaxBlobBytes,proto3" json:"MaxBlobBytes,omitempty"`
+	// Max decrypted cache for this planet in bytes (0 = unlimited).
+	MaxCacheBytes int64 `protobuf:"varint,3,opt,name=MaxCacheBytes,proto3" json:"MaxCacheBytes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlanetStorageOpts) Reset() {
+	*x = PlanetStorageOpts{}
+	mi := &file_amp_amp_core_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlanetStorageOpts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlanetStorageOpts) ProtoMessage() {}
+
+func (x *PlanetStorageOpts) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlanetStorageOpts.ProtoReflect.Descriptor instead.
+func (*PlanetStorageOpts) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *PlanetStorageOpts) GetPriority() int32 {
+	if x != nil {
+		return x.Priority
+	}
+	return 0
+}
+
+func (x *PlanetStorageOpts) GetMaxBlobBytes() int64 {
+	if x != nil {
+		return x.MaxBlobBytes
+	}
+	return 0
+}
+
+func (x *PlanetStorageOpts) GetMaxCacheBytes() int64 {
+	if x != nil {
+		return x.MaxCacheBytes
+	}
+	return 0
+}
+
+// BlobEntry describes one blob in a sibling content-addressed store.
+// Shared between Chronicle and Codex manifests — same shape, same semantics.
+type BlobEntry struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Blob identity (leading 16 bytes of plaintext hash).
+	BlobID_0 uint64 `protobuf:"fixed64,1,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
+	BlobID_1 uint64 `protobuf:"fixed64,2,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
+	// Plaintext byte length.
+	Size int64 `protobuf:"varint,3,opt,name=Size,proto3" json:"Size,omitempty"`
+	// MIME type (e.g. "image/jpeg"), if known.
+	ContentType string `protobuf:"bytes,4,opt,name=ContentType,proto3" json:"ContentType,omitempty"`
+	// Path relative to the export root (e.g. "blobs/ab/cd/<blobtag>.bin").
+	// Implementations MAY flatten the tree; content addressing is by BlobID.
+	RelativePath  string `protobuf:"bytes,5,opt,name=RelativePath,proto3" json:"RelativePath,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BlobEntry) Reset() {
+	*x = BlobEntry{}
+	mi := &file_amp_amp_core_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BlobEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BlobEntry) ProtoMessage() {}
+
+func (x *BlobEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BlobEntry.ProtoReflect.Descriptor instead.
+func (*BlobEntry) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *BlobEntry) GetBlobID_0() uint64 {
+	if x != nil {
+		return x.BlobID_0
+	}
+	return 0
+}
+
+func (x *BlobEntry) GetBlobID_1() uint64 {
+	if x != nil {
+		return x.BlobID_1
+	}
+	return 0
+}
+
+func (x *BlobEntry) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *BlobEntry) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *BlobEntry) GetRelativePath() string {
+	if x != nil {
+		return x.RelativePath
+	}
+	return ""
+}
+
+// Artifact is one addressable unit in a planet: a (NodeID, AttrID, ItemID)
+// triple plus its resolved value.  Appears in Codex entries.
+type Artifact struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Address within the planet's CRDT space.
+	NodeID_0 uint64 `protobuf:"fixed64,1,opt,name=NodeID_0,json=NodeID0,proto3" json:"NodeID_0,omitempty"`
+	NodeID_1 uint64 `protobuf:"fixed64,2,opt,name=NodeID_1,json=NodeID1,proto3" json:"NodeID_1,omitempty"`
+	AttrID_0 uint64 `protobuf:"fixed64,3,opt,name=AttrID_0,json=AttrID0,proto3" json:"AttrID_0,omitempty"`
+	AttrID_1 uint64 `protobuf:"fixed64,4,opt,name=AttrID_1,json=AttrID1,proto3" json:"AttrID_1,omitempty"`
+	ItemID_0 uint64 `protobuf:"fixed64,5,opt,name=ItemID_0,json=ItemID0,proto3" json:"ItemID_0,omitempty"`
+	ItemID_1 uint64 `protobuf:"fixed64,6,opt,name=ItemID_1,json=ItemID1,proto3" json:"ItemID_1,omitempty"`
+	// Logical EditID (latest write's TxID) — informational only.
+	// On import, this is replaced by the importing TxMsg's TxID.
+	EditID_0 uint64 `protobuf:"fixed64,7,opt,name=EditID_0,json=EditID0,proto3" json:"EditID_0,omitempty"`
+	EditID_1 uint64 `protobuf:"fixed64,8,opt,name=EditID_1,json=EditID1,proto3" json:"EditID_1,omitempty"`
+	// The value.  Exactly one of these is set.  Threshold between inline and
+	// blob is a writer policy (default 64 KiB); importers accept either form.
+	InlineValue   []byte   `protobuf:"bytes,10,opt,name=InlineValue,proto3" json:"InlineValue,omitempty"`
+	BlobValue     *BlobRef `protobuf:"bytes,11,opt,name=BlobValue,proto3" json:"BlobValue,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Artifact) Reset() {
+	*x = Artifact{}
+	mi := &file_amp_amp_core_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Artifact) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Artifact) ProtoMessage() {}
+
+func (x *Artifact) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Artifact.ProtoReflect.Descriptor instead.
+func (*Artifact) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *Artifact) GetNodeID_0() uint64 {
+	if x != nil {
+		return x.NodeID_0
+	}
+	return 0
+}
+
+func (x *Artifact) GetNodeID_1() uint64 {
+	if x != nil {
+		return x.NodeID_1
+	}
+	return 0
+}
+
+func (x *Artifact) GetAttrID_0() uint64 {
+	if x != nil {
+		return x.AttrID_0
+	}
+	return 0
+}
+
+func (x *Artifact) GetAttrID_1() uint64 {
+	if x != nil {
+		return x.AttrID_1
+	}
+	return 0
+}
+
+func (x *Artifact) GetItemID_0() uint64 {
+	if x != nil {
+		return x.ItemID_0
+	}
+	return 0
+}
+
+func (x *Artifact) GetItemID_1() uint64 {
+	if x != nil {
+		return x.ItemID_1
+	}
+	return 0
+}
+
+func (x *Artifact) GetEditID_0() uint64 {
+	if x != nil {
+		return x.EditID_0
+	}
+	return 0
+}
+
+func (x *Artifact) GetEditID_1() uint64 {
+	if x != nil {
+		return x.EditID_1
+	}
+	return 0
+}
+
+func (x *Artifact) GetInlineValue() []byte {
+	if x != nil {
+		return x.InlineValue
+	}
+	return nil
+}
+
+func (x *Artifact) GetBlobValue() *BlobRef {
+	if x != nil {
+		return x.BlobValue
+	}
+	return nil
+}
+
+// CodexManifest carries schema introspection for a Codex.  Entry counts are
+// authoritative in the export trailer, not in this up-front header.
+type CodexManifest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Attribute kinds present in the Codex (for fast schema introspection).
+	AttributeKinds []*Tag `protobuf:"bytes,1,rep,name=AttributeKinds,proto3" json:"AttributeKinds,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *CodexManifest) Reset() {
+	*x = CodexManifest{}
+	mi := &file_amp_amp_core_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CodexManifest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CodexManifest) ProtoMessage() {}
+
+func (x *CodexManifest) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CodexManifest.ProtoReflect.Descriptor instead.
+func (*CodexManifest) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *CodexManifest) GetAttributeKinds() []*Tag {
+	if x != nil {
+		return x.AttributeKinds
+	}
+	return nil
+}
+
+// CodexHeader is the first protobuf record in codex.bin after the preamble.
+// A Codex carries resolved state only — no TxMsgs, no source authority.
+type CodexHeader struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The planet this Codex was exported from.  May be a synthetic tag for
+	// external-source imports (e.g. "amp-gen2/prod.plan.tools").
+	SourcePlanet *Tag `protobuf:"bytes,1,opt,name=SourcePlanet,proto3" json:"SourcePlanet,omitempty"`
+	// The epoch active on SourcePlanet at export time.  Informational.
+	SourceEpoch *Tag `protobuf:"bytes,2,opt,name=SourceEpoch,proto3" json:"SourceEpoch,omitempty"`
+	// Wall-clock time of export (UTC seconds since epoch).
+	CodexTime int64 `protobuf:"varint,3,opt,name=CodexTime,proto3" json:"CodexTime,omitempty"`
+	// Provenance pointer to materialize as PlanetOrigin on the importing planet's
+	// genesis.  Nil for external-source imports with no amp origin.
+	Origin *PlanetOrigin `protobuf:"bytes,4,opt,name=Origin,proto3" json:"Origin,omitempty"`
+	// Summary for pre-flight validation.
+	Manifest *CodexManifest `protobuf:"bytes,5,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
+	// Optional exporter-provided label.
+	Label string `protobuf:"bytes,6,opt,name=Label,proto3" json:"Label,omitempty"`
+	// HashKit that computed the container integrity digest (the trailing digest
+	// over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
+	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
+	// Content-model epoch: the SDK proto semantics governing artifact payloads (the
+	// Tag/Tags content model).  An importer whose host epoch differs MUST refuse,
+	// not silently mis-decode persisted bytes (DD-chronicle-and-codex.md §5.5).
+	// Orthogonal to FormatVersion (on-disk layout) — this is payload meaning.  Bump
+	// on each wire-incompatible content-model change; amp.ContentModelEpoch is current.
+	ContentModelEpoch uint32 `protobuf:"varint,8,opt,name=ContentModelEpoch,proto3" json:"ContentModelEpoch,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *CodexHeader) Reset() {
+	*x = CodexHeader{}
+	mi := &file_amp_amp_core_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CodexHeader) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CodexHeader) ProtoMessage() {}
+
+func (x *CodexHeader) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CodexHeader.ProtoReflect.Descriptor instead.
+func (*CodexHeader) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *CodexHeader) GetSourcePlanet() *Tag {
+	if x != nil {
+		return x.SourcePlanet
+	}
+	return nil
+}
+
+func (x *CodexHeader) GetSourceEpoch() *Tag {
+	if x != nil {
+		return x.SourceEpoch
+	}
+	return nil
+}
+
+func (x *CodexHeader) GetCodexTime() int64 {
+	if x != nil {
+		return x.CodexTime
+	}
+	return 0
+}
+
+func (x *CodexHeader) GetOrigin() *PlanetOrigin {
+	if x != nil {
+		return x.Origin
+	}
+	return nil
+}
+
+func (x *CodexHeader) GetManifest() *CodexManifest {
+	if x != nil {
+		return x.Manifest
+	}
+	return nil
+}
+
+func (x *CodexHeader) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *CodexHeader) GetDigestHashKit() safe.HashKitID {
+	if x != nil {
+		return x.DigestHashKit
+	}
+	return safe.HashKitID(0)
+}
+
+func (x *CodexHeader) GetContentModelEpoch() uint32 {
+	if x != nil {
+		return x.ContentModelEpoch
+	}
+	return 0
+}
+
+// ChronicleCompactPoint records one rebase event in the lineage chain.
+type ChronicleCompactPoint struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Chronicle up to this TxID was rebased; older TxMsgs are discardable.
+	UpToTxID_0 uint64 `protobuf:"fixed64,1,opt,name=UpToTxID_0,json=UpToTxID0,proto3" json:"UpToTxID_0,omitempty"`
+	UpToTxID_1 uint64 `protobuf:"fixed64,2,opt,name=UpToTxID_1,json=UpToTxID1,proto3" json:"UpToTxID_1,omitempty"`
+	// Wall-clock rebase time (UTC seconds).
+	CompactTime int64 `protobuf:"varint,3,opt,name=CompactTime,proto3" json:"CompactTime,omitempty"`
+	// Digest of the compacted slice — detects rebase-result divergence.
+	CompactedDigest []byte `protobuf:"bytes,4,opt,name=CompactedDigest,proto3" json:"CompactedDigest,omitempty"`
+	// TxID of the ChronicleCompact governance TxMsg itself.
+	CompactTxID_0 uint64 `protobuf:"fixed64,5,opt,name=CompactTxID_0,json=CompactTxID0,proto3" json:"CompactTxID_0,omitempty"`
+	CompactTxID_1 uint64 `protobuf:"fixed64,6,opt,name=CompactTxID_1,json=CompactTxID1,proto3" json:"CompactTxID_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChronicleCompactPoint) Reset() {
+	*x = ChronicleCompactPoint{}
+	mi := &file_amp_amp_core_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChronicleCompactPoint) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChronicleCompactPoint) ProtoMessage() {}
+
+func (x *ChronicleCompactPoint) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChronicleCompactPoint.ProtoReflect.Descriptor instead.
+func (*ChronicleCompactPoint) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *ChronicleCompactPoint) GetUpToTxID_0() uint64 {
+	if x != nil {
+		return x.UpToTxID_0
+	}
+	return 0
+}
+
+func (x *ChronicleCompactPoint) GetUpToTxID_1() uint64 {
+	if x != nil {
+		return x.UpToTxID_1
+	}
+	return 0
+}
+
+func (x *ChronicleCompactPoint) GetCompactTime() int64 {
+	if x != nil {
+		return x.CompactTime
+	}
+	return 0
+}
+
+func (x *ChronicleCompactPoint) GetCompactedDigest() []byte {
+	if x != nil {
+		return x.CompactedDigest
+	}
+	return nil
+}
+
+func (x *ChronicleCompactPoint) GetCompactTxID_0() uint64 {
+	if x != nil {
+		return x.CompactTxID_0
+	}
+	return 0
+}
+
+func (x *ChronicleCompactPoint) GetCompactTxID_1() uint64 {
+	if x != nil {
+		return x.CompactTxID_1
+	}
+	return 0
+}
+
+// ChronicleCompactHistory is the ordered lineage of rebase points for a planet.
+// Oldest first.  Empty if the chronicle has never been rebased.
+type ChronicleCompactHistory struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Points        []*ChronicleCompactPoint `protobuf:"bytes,1,rep,name=Points,proto3" json:"Points,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChronicleCompactHistory) Reset() {
+	*x = ChronicleCompactHistory{}
+	mi := &file_amp_amp_core_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChronicleCompactHistory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChronicleCompactHistory) ProtoMessage() {}
+
+func (x *ChronicleCompactHistory) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChronicleCompactHistory.ProtoReflect.Descriptor instead.
+func (*ChronicleCompactHistory) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{39}
+}
+
+func (x *ChronicleCompactHistory) GetPoints() []*ChronicleCompactPoint {
+	if x != nil {
+		return x.Points
+	}
+	return nil
+}
+
+// ChronicleCompact is the governance TxMsg that declares a chronicle compact.
+// Signed by the governance quorum.  Peers with the full chronicle may keep it
+// for forensics; peers syncing fresh after rebase receive only the compacted
+// form plus post-rebase TxMsgs.  See AOM DD-chronicle-and-codex.md §4.7.
+type ChronicleCompact struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// TxID up to which the chronicle has been rebased; older TxMsgs discardable.
+	UpToTxID_0 uint64 `protobuf:"fixed64,1,opt,name=UpToTxID_0,json=UpToTxID0,proto3" json:"UpToTxID_0,omitempty"`
+	UpToTxID_1 uint64 `protobuf:"fixed64,2,opt,name=UpToTxID_1,json=UpToTxID1,proto3" json:"UpToTxID_1,omitempty"`
+	// Digest of the compacted chronicle at the time of rebase.
+	CompactedDigest []byte `protobuf:"bytes,3,opt,name=CompactedDigest,proto3" json:"CompactedDigest,omitempty"`
+	// Wall-clock rebase time (UTC seconds).
+	CompactTime int64 `protobuf:"varint,4,opt,name=CompactTime,proto3" json:"CompactTime,omitempty"`
+	// Optional rationale for audit trails.
+	Label         string `protobuf:"bytes,5,opt,name=Label,proto3" json:"Label,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChronicleCompact) Reset() {
+	*x = ChronicleCompact{}
+	mi := &file_amp_amp_core_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChronicleCompact) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChronicleCompact) ProtoMessage() {}
+
+func (x *ChronicleCompact) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChronicleCompact.ProtoReflect.Descriptor instead.
+func (*ChronicleCompact) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *ChronicleCompact) GetUpToTxID_0() uint64 {
+	if x != nil {
+		return x.UpToTxID_0
+	}
+	return 0
+}
+
+func (x *ChronicleCompact) GetUpToTxID_1() uint64 {
+	if x != nil {
+		return x.UpToTxID_1
+	}
+	return 0
+}
+
+func (x *ChronicleCompact) GetCompactedDigest() []byte {
+	if x != nil {
+		return x.CompactedDigest
+	}
+	return nil
+}
+
+func (x *ChronicleCompact) GetCompactTime() int64 {
+	if x != nil {
+		return x.CompactTime
+	}
+	return 0
+}
+
+func (x *ChronicleCompact) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+// ChronicleManifest carries Chronicle schema introspection (none defined yet).
+// Entry counts are authoritative in the export trailer, not in this header.
+type ChronicleManifest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChronicleManifest) Reset() {
+	*x = ChronicleManifest{}
+	mi := &file_amp_amp_core_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChronicleManifest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChronicleManifest) ProtoMessage() {}
+
+func (x *ChronicleManifest) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChronicleManifest.ProtoReflect.Descriptor instead.
+func (*ChronicleManifest) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{41}
+}
+
+// ChronicleHeader is the first protobuf record in chronicle.bin after
+// the preamble.  The portable realization of a planet's Chronicle.  The
+// embedded GenesisEpoch TxMsg lets any receiver with the founders' pubkeys
+// verify every TxMsg in this chronicle offline — no network required.
+type ChronicleHeader struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The planet this chronicle was exported from.
+	SourcePlanet *Tag `protobuf:"bytes,1,opt,name=SourcePlanet,proto3" json:"SourcePlanet,omitempty"`
+	// Governance snapshot: the epoch active on SourcePlanet at export time.
+	SourceEpoch *Tag `protobuf:"bytes,2,opt,name=SourceEpoch,proto3" json:"SourceEpoch,omitempty"`
+	// The genesis PlanetEpoch TxMsg, embedded verbatim (raw signed bytes) so
+	// any receiver with the founders' pubkeys can verify every TxMsg in this
+	// chronicle offline.
+	GenesisEpoch []byte `protobuf:"bytes,3,opt,name=GenesisEpoch,proto3" json:"GenesisEpoch,omitempty"`
+	// TxID range included, inclusive on both ends.  Whole-planet export:
+	// Range.Start is the genesis TxID, Range.End is the chronicle head at
+	// export time.  Slice: Range bounds the slice.
+	Range *UIDRange `protobuf:"bytes,4,opt,name=Range,proto3" json:"Range,omitempty"`
+	// Wall-clock time of export (UTC seconds since epoch).
+	ExportTime int64 `protobuf:"varint,5,opt,name=ExportTime,proto3" json:"ExportTime,omitempty"`
+	// Compact lineage.  Nil if this chronicle has never been compacted.
+	CompactHistory *ChronicleCompactHistory `protobuf:"bytes,6,opt,name=CompactHistory,proto3" json:"CompactHistory,omitempty"`
+	// HashKit that computed the container integrity digest.  0 = Blake2s_256
+	// (the back-compat default).
+	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
+	// Summary for pre-flight validation.
+	Manifest *ChronicleManifest `protobuf:"bytes,20,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
+	// Optional exporter-provided label ("nightly-backup 2026-04-23").
+	Label         string `protobuf:"bytes,21,opt,name=Label,proto3" json:"Label,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChronicleHeader) Reset() {
+	*x = ChronicleHeader{}
+	mi := &file_amp_amp_core_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChronicleHeader) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChronicleHeader) ProtoMessage() {}
+
+func (x *ChronicleHeader) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChronicleHeader.ProtoReflect.Descriptor instead.
+func (*ChronicleHeader) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *ChronicleHeader) GetSourcePlanet() *Tag {
+	if x != nil {
+		return x.SourcePlanet
+	}
+	return nil
+}
+
+func (x *ChronicleHeader) GetSourceEpoch() *Tag {
+	if x != nil {
+		return x.SourceEpoch
+	}
+	return nil
+}
+
+func (x *ChronicleHeader) GetGenesisEpoch() []byte {
+	if x != nil {
+		return x.GenesisEpoch
+	}
+	return nil
+}
+
+func (x *ChronicleHeader) GetRange() *UIDRange {
+	if x != nil {
+		return x.Range
+	}
+	return nil
+}
+
+func (x *ChronicleHeader) GetExportTime() int64 {
+	if x != nil {
+		return x.ExportTime
+	}
+	return 0
+}
+
+func (x *ChronicleHeader) GetCompactHistory() *ChronicleCompactHistory {
+	if x != nil {
+		return x.CompactHistory
+	}
+	return nil
+}
+
+func (x *ChronicleHeader) GetDigestHashKit() safe.HashKitID {
+	if x != nil {
+		return x.DigestHashKit
+	}
+	return safe.HashKitID(0)
+}
+
+func (x *ChronicleHeader) GetManifest() *ChronicleManifest {
+	if x != nil {
+		return x.Manifest
+	}
+	return nil
+}
+
+func (x *ChronicleHeader) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+// AppTarget describes where to obtain the app for one PlatformID.
+type AppTarget struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Platform      PlatformID             `protobuf:"varint,1,opt,name=Platform,proto3,enum=amp.PlatformID" json:"Platform,omitempty"`
+	DownloadURL   string                 `protobuf:"bytes,3,opt,name=DownloadURL,proto3" json:"DownloadURL,omitempty"`   // store URL, HTTPS download, magnet link, etc.
+	BundleID      string                 `protobuf:"bytes,4,opt,name=BundleID,proto3" json:"BundleID,omitempty"`         // "org.plan.tunr" (iOS/Android bundle ID)
+	MinOSVersion  string                 `protobuf:"bytes,5,opt,name=MinOSVersion,proto3" json:"MinOSVersion,omitempty"` // minimum OS version, e.g. "14.0"
+	AppleTeamID   string                 `protobuf:"bytes,6,opt,name=AppleTeamID,proto3" json:"AppleTeamID,omitempty"`   // Apple Developer Team ID; AASA appID is "{AppleTeamID}.{BundleID}"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AppTarget) Reset() {
+	*x = AppTarget{}
+	mi := &file_amp_amp_core_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AppTarget) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AppTarget) ProtoMessage() {}
+
+func (x *AppTarget) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AppTarget.ProtoReflect.Descriptor instead.
+func (*AppTarget) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *AppTarget) GetPlatform() PlatformID {
+	if x != nil {
+		return x.Platform
+	}
+	return PlatformID_Universal
+}
+
+func (x *AppTarget) GetDownloadURL() string {
+	if x != nil {
+		return x.DownloadURL
+	}
+	return ""
+}
+
+func (x *AppTarget) GetBundleID() string {
+	if x != nil {
+		return x.BundleID
+	}
+	return ""
+}
+
+func (x *AppTarget) GetMinOSVersion() string {
+	if x != nil {
+		return x.MinOSVersion
+	}
+	return ""
+}
+
+func (x *AppTarget) GetAppleTeamID() string {
+	if x != nil {
+		return x.AppleTeamID
+	}
+	return ""
+}
+
+// AppLink is one curated entry point — typically an amp:// or https:// URL with a label.
+type AppLink struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Label         string                 `protobuf:"bytes,1,opt,name=Label,proto3" json:"Label,omitempty"`
+	URL           string                 `protobuf:"bytes,2,opt,name=URL,proto3" json:"URL,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AppLink) Reset() {
+	*x = AppLink{}
+	mi := &file_amp_amp_core_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AppLink) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AppLink) ProtoMessage() {}
+
+func (x *AppLink) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AppLink.ProtoReflect.Descriptor instead.
+func (*AppLink) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *AppLink) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *AppLink) GetURL() string {
+	if x != nil {
+		return x.URL
+	}
+	return ""
+}
+
+// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
+// Used wherever a brand or manifest needs to cite a crate without embedding its full
+// CrateInfo (e.g. Brand.BundledCrates).  BlobID is the leading 16 bytes of the built
+// crate's plaintext hash, matching the AssetEntry/BundleManifest convention; zero =
+// unknown / not pinned.
+type CrateRef struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CrateURI      string                 `protobuf:"bytes,1,opt,name=CrateURI,proto3" json:"CrateURI,omitempty"` // "asset:{PublisherID}/{CrateID}"
+	BlobID_0      uint64                 `protobuf:"fixed64,2,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
+	BlobID_1      uint64                 `protobuf:"fixed64,3,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CrateRef) Reset() {
+	*x = CrateRef{}
+	mi := &file_amp_amp_core_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CrateRef) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CrateRef) ProtoMessage() {}
+
+func (x *CrateRef) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CrateRef.ProtoReflect.Descriptor instead.
+func (*CrateRef) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *CrateRef) GetCrateURI() string {
+	if x != nil {
+		return x.CrateURI
+	}
+	return ""
+}
+
+func (x *CrateRef) GetBlobID_0() uint64 {
+	if x != nil {
+		return x.BlobID_0
+	}
+	return 0
+}
+
+func (x *CrateRef) GetBlobID_1() uint64 {
+	if x != nil {
+		return x.BlobID_1
+	}
+	return 0
+}
+
+// Brand is a planet's identity record: name, domain, schemes, install targets,
+// curated entry points, the per-planet bundled crate set, and the publishing
+// federation.  Lives at a single CRDT address per planet
+//
+//	(PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=*)
+//
+// All fields admin-signable; founders may include a Brand TxOp in the genesis
+// envelope as the first record (EditID=0) or defer to a later admin-signed
+// channel write.  AOM DD-name-service.md §2.
+type Brand struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	AppName          string                 `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`     // "Tunr"
+	AppDomain        string                 `protobuf:"bytes,2,opt,name=AppDomain,proto3" json:"AppDomain,omitempty"` // "spaces.soundspectrum.com"
+	AppDesc          string                 `protobuf:"bytes,3,opt,name=AppDesc,proto3" json:"AppDesc,omitempty"`
+	OrgName          string                 `protobuf:"bytes,5,opt,name=OrgName,proto3" json:"OrgName,omitempty"` // "SoundSpectrum"
+	OrgHomeURL       string                 `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"`
+	AppHomeURL       string                 `protobuf:"bytes,7,opt,name=AppHomeURL,proto3" json:"AppHomeURL,omitempty"`
+	URLSchemes       []string               `protobuf:"bytes,10,rep,name=URLSchemes,proto3" json:"URLSchemes,omitempty"` // ["soundspectrum", "tunr"]
+	Targets          []*AppTarget           `protobuf:"bytes,15,rep,name=Targets,proto3" json:"Targets,omitempty"`
+	CrateSnapshotURL string                 `protobuf:"bytes,20,opt,name=CrateSnapshotURL,proto3" json:"CrateSnapshotURL,omitempty"`
+	Links            []*AppLink             `protobuf:"bytes,25,rep,name=Links,proto3" json:"Links,omitempty"`
+	BundledCrates    []*CrateRef            `protobuf:"bytes,26,rep,name=BundledCrates,proto3" json:"BundledCrates,omitempty"`
+	// NamedBy is the federation that names this planet — the §3.3 back-edge the
+	// planet acknowledges as its current namer.  Single-valued: a planet is named
+	// through one federation at a time but may roam.  Read by NameService
+	// consumers to enforce the canonic-binding invariant of AOM DD-name-service.md §3.3.
+	NamedBy *Tag `protobuf:"bytes,30,opt,name=NamedBy,proto3" json:"NamedBy,omitempty"`
+	// TemplateSet selects which portal template set renders this planet's HTTP
+	// surfaces — names a template-set channel (NodeID) on the naming federation
+	// planet that app.www reads template Segments from.  Empty = the federation's
+	// default set.  Members select among federation-published sets; the markup is
+	// federation-authored (DD-name-service.md §12.3).
+	TemplateSet   *Tag `protobuf:"bytes,31,opt,name=TemplateSet,proto3" json:"TemplateSet,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Brand) Reset() {
+	*x = Brand{}
+	mi := &file_amp_amp_core_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Brand) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Brand) ProtoMessage() {}
+
+func (x *Brand) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Brand.ProtoReflect.Descriptor instead.
+func (*Brand) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *Brand) GetAppName() string {
+	if x != nil {
+		return x.AppName
+	}
+	return ""
+}
+
+func (x *Brand) GetAppDomain() string {
+	if x != nil {
+		return x.AppDomain
+	}
+	return ""
+}
+
+func (x *Brand) GetAppDesc() string {
+	if x != nil {
+		return x.AppDesc
+	}
+	return ""
+}
+
+func (x *Brand) GetOrgName() string {
+	if x != nil {
+		return x.OrgName
+	}
+	return ""
+}
+
+func (x *Brand) GetOrgHomeURL() string {
+	if x != nil {
+		return x.OrgHomeURL
+	}
+	return ""
+}
+
+func (x *Brand) GetAppHomeURL() string {
+	if x != nil {
+		return x.AppHomeURL
+	}
+	return ""
+}
+
+func (x *Brand) GetURLSchemes() []string {
+	if x != nil {
+		return x.URLSchemes
+	}
+	return nil
+}
+
+func (x *Brand) GetTargets() []*AppTarget {
+	if x != nil {
+		return x.Targets
+	}
+	return nil
+}
+
+func (x *Brand) GetCrateSnapshotURL() string {
+	if x != nil {
+		return x.CrateSnapshotURL
+	}
+	return ""
+}
+
+func (x *Brand) GetLinks() []*AppLink {
+	if x != nil {
+		return x.Links
+	}
+	return nil
+}
+
+func (x *Brand) GetBundledCrates() []*CrateRef {
+	if x != nil {
+		return x.BundledCrates
+	}
+	return nil
+}
+
+func (x *Brand) GetNamedBy() *Tag {
+	if x != nil {
+		return x.NamedBy
+	}
+	return nil
+}
+
+func (x *Brand) GetTemplateSet() *Tag {
+	if x != nil {
+		return x.TemplateSet
+	}
+	return nil
+}
+
+// VaultAddr is a transport-tagged vault endpoint.  Used by NameService records
+// and federation pointers to hint where a planet can be pinned.  Reuses the
+// envelope shape of AOM SD-security-sync.md §7.2 VaultAddresses; transports
+// advertise themselves via the Transport string so future kits land without
+// proto changes.
+type VaultAddr struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Transport     string                 `protobuf:"bytes,1,opt,name=Transport,proto3" json:"Transport,omitempty"` // "tcp", "udp", "reticulum", etc.
+	Address       []byte                 `protobuf:"bytes,2,opt,name=Address,proto3" json:"Address,omitempty"`     // transport-specific encoding
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VaultAddr) Reset() {
+	*x = VaultAddr{}
+	mi := &file_amp_amp_core_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VaultAddr) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VaultAddr) ProtoMessage() {}
+
+func (x *VaultAddr) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VaultAddr.ProtoReflect.Descriptor instead.
+func (*VaultAddr) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *VaultAddr) GetTransport() string {
+	if x != nil {
+		return x.Transport
+	}
+	return ""
+}
+
+func (x *VaultAddr) GetAddress() []byte {
+	if x != nil {
+		return x.Address
+	}
+	return nil
+}
+
+// NameServiceRecord — one FQDN → PlanetID record published by a federation.
+// Lives in a NameService channel at
+//
+//	(NodeID = channel_node, AttrID = amp.name.service.record, ItemID = hash(fqdn)).
+//
+// Signed under the publishing federation's epoch admin.  AOM DD-name-service.md §3.1.
+type NameServiceRecord struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	FQDN     string                 `protobuf:"bytes,1,opt,name=FQDN,proto3" json:"FQDN,omitempty"`         // "spaces.plan.tools" — exact-match key for Resolve
+	PlanetID *Tag                   `protobuf:"bytes,2,opt,name=PlanetID,proto3" json:"PlanetID,omitempty"` // target planet UID
+	// First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=0).
+	// Consumers may dereference this to read the founders-signed first Brand
+	// record when one was published in the genesis envelope; absent that, the
+	// first admin-signed Brand edit fills this slot.
+	BrandAddr *Address `protobuf:"bytes,3,opt,name=BrandAddr,proto3" json:"BrandAddr,omitempty"`
+	// Full Brand snapshot for offline Search ranking — copy of the latest
+	// Brand at the time the record was registered.  A federation refreshes
+	// this when the target planet's Brand operationally updates.
+	BrandSnapshot *Brand `protobuf:"bytes,4,opt,name=BrandSnapshot,proto3" json:"BrandSnapshot,omitempty"`
+	// Where the target planet can be pinned for bootstrap.
+	VaultAddrs    []*VaultAddr `protobuf:"bytes,7,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
+	RegisteredAt  *Tag         `protobuf:"bytes,8,opt,name=RegisteredAt,proto3" json:"RegisteredAt,omitempty"` // TxID of registering TxMsg (initial Upsert)
+	RegisteredBy  *Tag         `protobuf:"bytes,9,opt,name=RegisteredBy,proto3" json:"RegisteredBy,omitempty"` // signing member's MemberID (federation admin)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *NameServiceRecord) Reset() {
+	*x = NameServiceRecord{}
+	mi := &file_amp_amp_core_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NameServiceRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NameServiceRecord) ProtoMessage() {}
+
+func (x *NameServiceRecord) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NameServiceRecord.ProtoReflect.Descriptor instead.
+func (*NameServiceRecord) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *NameServiceRecord) GetFQDN() string {
+	if x != nil {
+		return x.FQDN
+	}
+	return ""
+}
+
+func (x *NameServiceRecord) GetPlanetID() *Tag {
+	if x != nil {
+		return x.PlanetID
+	}
+	return nil
+}
+
+func (x *NameServiceRecord) GetBrandAddr() *Address {
+	if x != nil {
+		return x.BrandAddr
+	}
+	return nil
+}
+
+func (x *NameServiceRecord) GetBrandSnapshot() *Brand {
+	if x != nil {
+		return x.BrandSnapshot
+	}
+	return nil
+}
+
+func (x *NameServiceRecord) GetVaultAddrs() []*VaultAddr {
+	if x != nil {
+		return x.VaultAddrs
+	}
+	return nil
+}
+
+func (x *NameServiceRecord) GetRegisteredAt() *Tag {
+	if x != nil {
+		return x.RegisteredAt
+	}
+	return nil
+}
+
+func (x *NameServiceRecord) GetRegisteredBy() *Tag {
+	if x != nil {
+		return x.RegisteredBy
+	}
+	return nil
+}
+
+// FederationPeer — peer of a FederationDirectory.
+// AOM DD-name-service.md §4.4.
+type FederationPeer struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	FederationID  *Tag                   `protobuf:"bytes,1,opt,name=FederationID,proto3" json:"FederationID,omitempty"` // the peer federation's planet UID
+	VaultAddrs    []*VaultAddr           `protobuf:"bytes,2,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`     // where peer federation is pinnable
+	Label         string                 `protobuf:"bytes,3,opt,name=Label,proto3" json:"Label,omitempty"`               // human-readable, informational
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FederationPeer) Reset() {
+	*x = FederationPeer{}
+	mi := &file_amp_amp_core_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FederationPeer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FederationPeer) ProtoMessage() {}
+
+func (x *FederationPeer) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FederationPeer.ProtoReflect.Descriptor instead.
+func (*FederationPeer) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *FederationPeer) GetFederationID() *Tag {
+	if x != nil {
+		return x.FederationID
+	}
+	return nil
+}
+
+func (x *FederationPeer) GetVaultAddrs() []*VaultAddr {
+	if x != nil {
+		return x.VaultAddrs
+	}
+	return nil
+}
+
+func (x *FederationPeer) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+// FederationDirectory — federation peer pointers, NS-record style cross-federation
+// forwarding (AOM DD-name-service.md §4.4).  Lives at
+//
+//	(HeadNodeID, amp.federation.directory, amp.federation.directory.UID)
+//
+// on a federation planet.  Single CRDT item per federation; admin-signed like
+// any governance change.  Analogous to DNS NS records — bounded, opt-in.
+type FederationDirectory struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Peers         []*FederationPeer      `protobuf:"bytes,1,rep,name=Peers,proto3" json:"Peers,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FederationDirectory) Reset() {
+	*x = FederationDirectory{}
+	mi := &file_amp_amp_core_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FederationDirectory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FederationDirectory) ProtoMessage() {}
+
+func (x *FederationDirectory) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FederationDirectory.ProtoReflect.Descriptor instead.
+func (*FederationDirectory) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *FederationDirectory) GetPeers() []*FederationPeer {
+	if x != nil {
+		return x.Peers
+	}
+	return nil
+}
+
+// SyncMsg is the envelope for all delta sync control messages between vault peers.
+// Exactly one of the body fields is set per message — peers detect by nil pointer.
+type SyncMsg struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WatchList     *SyncWatchList         `protobuf:"bytes,1,opt,name=WatchList,proto3" json:"WatchList,omitempty"`
+	RangeOffer    *SyncRangeOffer        `protobuf:"bytes,2,opt,name=RangeOffer,proto3" json:"RangeOffer,omitempty"`
+	RangeRequest  *SyncRangeRequest      `protobuf:"bytes,3,opt,name=RangeRequest,proto3" json:"RangeRequest,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncMsg) Reset() {
+	*x = SyncMsg{}
+	mi := &file_amp_amp_core_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncMsg) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncMsg) ProtoMessage() {}
+
+func (x *SyncMsg) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncMsg.ProtoReflect.Descriptor instead.
+func (*SyncMsg) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *SyncMsg) GetWatchList() *SyncWatchList {
+	if x != nil {
+		return x.WatchList
+	}
+	return nil
+}
+
+func (x *SyncMsg) GetRangeOffer() *SyncRangeOffer {
+	if x != nil {
+		return x.RangeOffer
+	}
+	return nil
+}
+
+func (x *SyncMsg) GetRangeRequest() *SyncRangeRequest {
+	if x != nil {
+		return x.RangeRequest
+	}
+	return nil
+}
+
+// SyncWatchList announces which planets a peer has data for, with high-water marks.
+// Sent on peer connect and whenever the watch list changes.
+type SyncWatchList struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Planets       []*SyncPlanetStatus    `protobuf:"bytes,1,rep,name=Planets,proto3" json:"Planets,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncWatchList) Reset() {
+	*x = SyncWatchList{}
+	mi := &file_amp_amp_core_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncWatchList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncWatchList) ProtoMessage() {}
+
+func (x *SyncWatchList) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncWatchList.ProtoReflect.Descriptor instead.
+func (*SyncWatchList) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *SyncWatchList) GetPlanets() []*SyncPlanetStatus {
+	if x != nil {
+		return x.Planets
+	}
+	return nil
+}
+
+// SyncPlanetStatus carries a planet UID and the peer's current high-water mark.
+type SyncPlanetStatus struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	HighWater_0   uint64                 `protobuf:"fixed64,3,opt,name=HighWater_0,json=HighWater0,proto3" json:"HighWater_0,omitempty"` // most recent TxTimeID
+	HighWater_1   uint64                 `protobuf:"fixed64,4,opt,name=HighWater_1,json=HighWater1,proto3" json:"HighWater_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncPlanetStatus) Reset() {
+	*x = SyncPlanetStatus{}
+	mi := &file_amp_amp_core_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncPlanetStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncPlanetStatus) ProtoMessage() {}
+
+func (x *SyncPlanetStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncPlanetStatus.ProtoReflect.Descriptor instead.
+func (*SyncPlanetStatus) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *SyncPlanetStatus) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *SyncPlanetStatus) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *SyncPlanetStatus) GetHighWater_0() uint64 {
+	if x != nil {
+		return x.HighWater_0
+	}
+	return 0
+}
+
+func (x *SyncPlanetStatus) GetHighWater_1() uint64 {
+	if x != nil {
+		return x.HighWater_1
+	}
+	return 0
+}
+
+// SyncRangeOffer carries a hash over a TxTimeID range for a planet.
+// Used in the Merkle bisection protocol to identify divergence between peers.
+type SyncRangeOffer struct {
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	PlanetID_0 uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1 uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	Start_0    uint64                 `protobuf:"fixed64,3,opt,name=Start_0,json=Start0,proto3" json:"Start_0,omitempty"` // range start (inclusive)
+	Start_1    uint64                 `protobuf:"fixed64,4,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
+	End_0      uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // range end (inclusive)
+	End_1      uint64                 `protobuf:"fixed64,6,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
+	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End].
+	RangeHash_0   uint64 `protobuf:"fixed64,10,opt,name=RangeHash_0,json=RangeHash0,proto3" json:"RangeHash_0,omitempty"`
+	RangeHash_1   uint64 `protobuf:"fixed64,11,opt,name=RangeHash_1,json=RangeHash1,proto3" json:"RangeHash_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncRangeOffer) Reset() {
+	*x = SyncRangeOffer{}
+	mi := &file_amp_amp_core_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncRangeOffer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncRangeOffer) ProtoMessage() {}
+
+func (x *SyncRangeOffer) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncRangeOffer.ProtoReflect.Descriptor instead.
+func (*SyncRangeOffer) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *SyncRangeOffer) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetStart_0() uint64 {
+	if x != nil {
+		return x.Start_0
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetStart_1() uint64 {
+	if x != nil {
+		return x.Start_1
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetEnd_0() uint64 {
+	if x != nil {
+		return x.End_0
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetEnd_1() uint64 {
+	if x != nil {
+		return x.End_1
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetRangeHash_0() uint64 {
+	if x != nil {
+		return x.RangeHash_0
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetRangeHash_1() uint64 {
+	if x != nil {
+		return x.RangeHash_1
+	}
+	return 0
+}
+
+// SyncRangeRequest asks a peer to stream all TxMsgs in a range for a planet.
+// Sent when a range hash mismatch is detected after bisection converges.
+type SyncRangeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	After_0       uint64                 `protobuf:"fixed64,3,opt,name=After_0,json=After0,proto3" json:"After_0,omitempty"` // stream TxMsgs with TxTimeID > After
+	After_1       uint64                 `protobuf:"fixed64,4,opt,name=After_1,json=After1,proto3" json:"After_1,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncRangeRequest) Reset() {
+	*x = SyncRangeRequest{}
+	mi := &file_amp_amp_core_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncRangeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncRangeRequest) ProtoMessage() {}
+
+func (x *SyncRangeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncRangeRequest.ProtoReflect.Descriptor instead.
+func (*SyncRangeRequest) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{55}
+}
+
+func (x *SyncRangeRequest) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *SyncRangeRequest) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *SyncRangeRequest) GetAfter_0() uint64 {
+	if x != nil {
+		return x.After_0
+	}
+	return 0
+}
+
+func (x *SyncRangeRequest) GetAfter_1() uint64 {
+	if x != nil {
+		return x.After_1
+	}
+	return 0
+}
+
 var File_amp_amp_core_proto protoreflect.FileDescriptor
 
 const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
-	"\x12amp/amp.core.proto\x12\x03amp\x1a\x16stdlib/safe/safe.proto\"\x8c\x02\n" +
+	"\x12amp/amp.core.proto\x12\x03amp\x1a\x16stdlib/safe/safe.proto\"\xc9\x01\n" +
+	"\x03Tag\x12\x13\n" +
+	"\x05UID_0\x18\x03 \x01(\x06R\x04UID0\x12\x13\n" +
+	"\x05UID_1\x18\x04 \x01(\x06R\x04UID1\x12\f\n" +
+	"\x01I\x18\x10 \x01(\x03R\x01I\x12\f\n" +
+	"\x01J\x18\x11 \x01(\x03R\x01J\x12\f\n" +
+	"\x01K\x18\x12 \x01(\x03R\x01K\x12 \n" +
+	"\x05Units\x18\x15 \x01(\x0e2\n" +
+	".amp.UnitsR\x05Units\x12&\n" +
+	"\x0eContentTypeRaw\x18\x18 \x01(\tR\x0eContentTypeRaw\x12\x10\n" +
+	"\x03URI\x18\x1a \x01(\tR\x03URI\x12\x12\n" +
+	"\x04Text\x18\x1c \x01(\tR\x04Text\"o\n" +
+	"\x04Tags\x12\x1c\n" +
+	"\x04Head\x18\x01 \x01(\v2\b.amp.TagR\x04Head\x12\"\n" +
+	"\aSubTags\x18\x04 \x03(\v2\b.amp.TagR\aSubTags\x12%\n" +
+	"\bChildren\x18\x06 \x03(\v2\t.amp.TagsR\bChildren\"\x9f\x02\n" +
+	"\aAddress\x12\x1d\n" +
+	"\n" +
+	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
+	"\n" +
+	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x19\n" +
+	"\bNodeID_0\x18\x03 \x01(\x06R\aNodeID0\x12\x19\n" +
+	"\bNodeID_1\x18\x04 \x01(\x06R\aNodeID1\x12\x19\n" +
+	"\bAttrID_0\x18\x05 \x01(\x06R\aAttrID0\x12\x19\n" +
+	"\bAttrID_1\x18\x06 \x01(\x06R\aAttrID1\x12\x19\n" +
+	"\bItemID_0\x18\a \x01(\x06R\aItemID0\x12\x19\n" +
+	"\bItemID_1\x18\b \x01(\x06R\aItemID1\x12\x19\n" +
+	"\bEditID_0\x18\t \x01(\x06R\aEditID0\x12\x19\n" +
+	"\bEditID_1\x18\n" +
+	" \x01(\x06R\aEditID1\"f\n" +
+	"\bUIDRange\x12\x17\n" +
+	"\aStart_0\x18\x01 \x01(\x06R\x06Start0\x12\x17\n" +
+	"\aStart_1\x18\x02 \x01(\x06R\x06Start1\x12\x13\n" +
+	"\x05End_0\x18\x03 \x01(\x06R\x04End0\x12\x13\n" +
+	"\x05End_1\x18\x04 \x01(\x06R\x04End1\"\x8c\x02\n" +
 	"\n" +
 	"TxEnvelope\x12\x15\n" +
 	"\x06TxID_0\x18\x01 \x01(\x06R\x05TxID0\x12\x15\n" +
@@ -6429,29 +6463,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Status\x18\a \x01(\x0e2\x0e.amp.PinStatusR\x06Status\x12\x18\n" +
 	"\aOpCount\x18\n" +
 	" \x01(\x04R\aOpCount\x12)\n" +
-	"\aRequest\x18\f \x01(\v2\x0f.amp.PinRequestR\aRequest\"\xd1\x02\n" +
-	"\x05Login\x12 \n" +
-	"\x06Member\x18\x01 \x01(\v2\b.amp.TagR\x06Member\x12 \n" +
-	"\x06Planet\x18\x02 \x01(\v2\b.amp.TagR\x06Planet\x12 \n" +
-	"\x06Device\x18\x05 \x01(\v2\b.amp.TagR\x06Device\x12 \n" +
-	"\vHostAddress\x18\b \x01(\tR\vHostAddress\x124\n" +
-	"\n" +
-	"Checkpoint\x18\f \x01(\v2\x14.amp.LoginCheckpointR\n" +
-	"Checkpoint\x12$\n" +
-	"\rSigningPubKey\x18\x0e \x01(\fR\rSigningPubKey\x121\n" +
-	"\x14SigningCryptoKitID_0\x18\x0f \x01(\x06R\x13SigningCryptoKitID0\x121\n" +
-	"\x14SigningCryptoKitID_1\x18\x10 \x01(\x06R\x13SigningCryptoKitID1\"$\n" +
-	"\x0eLoginChallenge\x12\x12\n" +
-	"\x04Hash\x18\x01 \x01(\fR\x04Hash\"3\n" +
-	"\rLoginResponse\x12\"\n" +
-	"\fHashResponse\x18\x01 \x01(\fR\fHashResponse\"\xb7\x01\n" +
-	"\x0fLoginCheckpoint\x12\x1c\n" +
-	"\tTokenType\x18\x01 \x01(\tR\tTokenType\x12 \n" +
-	"\vAccessToken\x18\x02 \x01(\tR\vAccessToken\x12\"\n" +
-	"\fRefreshToken\x18\x03 \x01(\tR\fRefreshToken\x12\x16\n" +
-	"\x06Expiry\x18\x04 \x01(\x03R\x06Expiry\x12\x16\n" +
-	"\x06UserID\x18\v \x01(\tR\x06UserID\x12\x10\n" +
-	"\x03URI\x18\f \x01(\tR\x03URI\"\xb5\x01\n" +
+	"\aRequest\x18\f \x01(\v2\x0f.amp.PinRequestR\aRequest\"\xb5\x01\n" +
 	"\n" +
 	"PinRequest\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12 \n" +
@@ -6479,57 +6491,39 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\fItemID_Max_1\x18\r \x01(\x06R\n" +
 	"ItemIDMax1\x12\"\n" +
 	"\fItemsPerAttr\x18\x0e \x01(\x03R\fItemsPerAttr\x12\"\n" +
-	"\fEditsPerItem\x18\x0f \x01(\x03R\fEditsPerItem\"\xc9\x01\n" +
-	"\x03Tag\x12\x13\n" +
-	"\x05UID_0\x18\x03 \x01(\x06R\x04UID0\x12\x13\n" +
-	"\x05UID_1\x18\x04 \x01(\x06R\x04UID1\x12\f\n" +
-	"\x01I\x18\x10 \x01(\x03R\x01I\x12\f\n" +
-	"\x01J\x18\x11 \x01(\x03R\x01J\x12\f\n" +
-	"\x01K\x18\x12 \x01(\x03R\x01K\x12 \n" +
-	"\x05Units\x18\x15 \x01(\x0e2\n" +
-	".amp.UnitsR\x05Units\x12&\n" +
-	"\x0eContentTypeRaw\x18\x18 \x01(\tR\x0eContentTypeRaw\x12\x10\n" +
-	"\x03URI\x18\x1a \x01(\tR\x03URI\x12\x12\n" +
-	"\x04Text\x18\x1c \x01(\tR\x04Text\"o\n" +
-	"\x04Tags\x12\x1c\n" +
-	"\x04Head\x18\x01 \x01(\v2\b.amp.TagR\x04Head\x12\"\n" +
-	"\aSubTags\x18\x04 \x03(\v2\b.amp.TagR\aSubTags\x12%\n" +
-	"\bChildren\x18\x06 \x03(\v2\t.amp.TagsR\bChildren\"Z\n" +
-	"\vAccessGrant\x12&\n" +
-	"\tMemberTag\x18\x01 \x01(\v2\b.amp.TagR\tMemberTag\x12#\n" +
-	"\x06Access\x18\x02 \x01(\x0e2\v.amp.AccessR\x06Access\"8\n" +
-	"\fAccessGrants\x12(\n" +
-	"\x06Grants\x18\x01 \x03(\v2\x10.amp.AccessGrantR\x06Grants\"\xf8\x02\n" +
-	"\fChannelEpoch\x12\"\n" +
-	"\aChannel\x18\x01 \x01(\v2\b.amp.TagR\aChannel\x12 \n" +
-	"\x06Parent\x18\x02 \x01(\v2\b.amp.TagR\x06Parent\x12 \n" +
-	"\x06ChType\x18\x06 \x01(\v2\b.amp.TagR\x06ChType\x128\n" +
-	"\rContentPolicy\x18\a \x01(\x0e2\x12.amp.ContentPolicyR\rContentPolicy\x12\x14\n" +
-	"\x05Label\x18\n" +
-	" \x01(\tR\x05Label\x12\x1c\n" +
-	"\tLegacyURI\x18\v \x01(\tR\tLegacyURI\x125\n" +
-	"\fMemberGrants\x18\x14 \x01(\v2\x11.amp.AccessGrantsR\fMemberGrants\x127\n" +
-	"\rDefaultGrants\x18\x15 \x01(\v2\x11.amp.AccessGrantsR\rDefaultGrants\x12\"\n" +
-	"\x05Cites\x18\x16 \x03(\v2\f.amp.AddressR\x05Cites\"\xd6\x02\n" +
-	"\aBlobRef\x12\x1d\n" +
+	"\fEditsPerItem\x18\x0f \x01(\x03R\fEditsPerItem\"\xd1\x02\n" +
+	"\x05Login\x12 \n" +
+	"\x06Member\x18\x01 \x01(\v2\b.amp.TagR\x06Member\x12 \n" +
+	"\x06Planet\x18\x02 \x01(\v2\b.amp.TagR\x06Planet\x12 \n" +
+	"\x06Device\x18\x05 \x01(\v2\b.amp.TagR\x06Device\x12 \n" +
+	"\vHostAddress\x18\b \x01(\tR\vHostAddress\x124\n" +
 	"\n" +
-	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
+	"Checkpoint\x18\f \x01(\v2\x14.amp.LoginCheckpointR\n" +
+	"Checkpoint\x12$\n" +
+	"\rSigningPubKey\x18\x0e \x01(\fR\rSigningPubKey\x121\n" +
+	"\x14SigningCryptoKitID_0\x18\x0f \x01(\x06R\x13SigningCryptoKitID0\x121\n" +
+	"\x14SigningCryptoKitID_1\x18\x10 \x01(\x06R\x13SigningCryptoKitID1\"$\n" +
+	"\x0eLoginChallenge\x12\x12\n" +
+	"\x04Hash\x18\x01 \x01(\fR\x04Hash\"3\n" +
+	"\rLoginResponse\x12\"\n" +
+	"\fHashResponse\x18\x01 \x01(\fR\fHashResponse\"\xb7\x01\n" +
+	"\x0fLoginCheckpoint\x12\x1c\n" +
+	"\tTokenType\x18\x01 \x01(\tR\tTokenType\x12 \n" +
+	"\vAccessToken\x18\x02 \x01(\tR\vAccessToken\x12\"\n" +
+	"\fRefreshToken\x18\x03 \x01(\tR\fRefreshToken\x12\x16\n" +
+	"\x06Expiry\x18\x04 \x01(\x03R\x06Expiry\x12\x16\n" +
+	"\x06UserID\x18\v \x01(\tR\x06UserID\x12\x10\n" +
+	"\x03URI\x18\f \x01(\tR\x03URI\"\xde\x01\n" +
+	"\tBrandMark\x12\x18\n" +
+	"\aAppName\x18\x01 \x01(\tR\aAppName\x12\x18\n" +
+	"\aOrgName\x18\x02 \x01(\tR\aOrgName\x12\x1c\n" +
+	"\tAppDomain\x18\x03 \x01(\tR\tAppDomain\x12\x18\n" +
+	"\aAppDesc\x18\x04 \x01(\tR\aAppDesc\x12\x1e\n" +
 	"\n" +
-	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12-\n" +
-	"\tHashKitID\x18\b \x01(\x0e2\x0f.safe.HashKitIDR\tHashKitID\x12\x15\n" +
-	"\x06Hash_0\x18\n" +
-	" \x01(\x06R\x05Hash0\x12\x15\n" +
-	"\x06Hash_1\x18\v \x01(\x06R\x05Hash1\x12\x15\n" +
-	"\x06Hash_2\x18\f \x01(\x06R\x05Hash2\x12\x15\n" +
-	"\x06Hash_3\x18\r \x01(\x06R\x05Hash3\x12$\n" +
-	"\bAssetTag\x18\x10 \x01(\v2\b.amp.TagR\bAssetTag\x12\"\n" +
-	"\aBlobTag\x18\x11 \x01(\v2\b.amp.TagR\aBlobTag\x12\x1b\n" +
-	"\tEpochID_0\x18\x14 \x01(\x06R\bEpochID0\x12\x1b\n" +
-	"\tEpochID_1\x18\x15 \x01(\x06R\bEpochID1\"y\n" +
-	"\x11PlanetStorageOpts\x12\x1a\n" +
-	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
-	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
-	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\xff\x04\n" +
+	"URLSchemes\x18\x05 \x03(\tR\n" +
+	"URLSchemes\x12\"\n" +
+	"\aNamedBy\x18\x06 \x01(\v2\b.amp.TagR\aNamedBy\x12!\n" +
+	"\x06Glyphs\x18\a \x01(\v2\t.amp.TagsR\x06Glyphs\"\xff\x04\n" +
 	"\vVaultConfig\x12\"\n" +
 	"\fMaxTxMsgSize\x18\x01 \x01(\x03R\fMaxTxMsgSize\x12,\n" +
 	"\x11MaxBytesPerWindow\x18\x02 \x01(\x03R\x11MaxBytesPerWindow\x12&\n" +
@@ -6546,17 +6540,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x15MaxBlobBytesPerObject\x18\r \x01(\x03R\x15MaxBlobBytesPerObject\x12.\n" +
 	"\n" +
 	"VaultAddrs\x18\f \x03(\v2\x0e.amp.VaultAddrR\n" +
-	"VaultAddrs\"\xde\x01\n" +
-	"\tBrandMark\x12\x18\n" +
-	"\aAppName\x18\x01 \x01(\tR\aAppName\x12\x18\n" +
-	"\aOrgName\x18\x02 \x01(\tR\aOrgName\x12\x1c\n" +
-	"\tAppDomain\x18\x03 \x01(\tR\tAppDomain\x12\x18\n" +
-	"\aAppDesc\x18\x04 \x01(\tR\aAppDesc\x12\x1e\n" +
-	"\n" +
-	"URLSchemes\x18\x05 \x03(\tR\n" +
-	"URLSchemes\x12\"\n" +
-	"\aNamedBy\x18\x06 \x01(\v2\b.amp.TagR\aNamedBy\x12!\n" +
-	"\x06Glyphs\x18\a \x01(\v2\t.amp.TagsR\x06Glyphs\"\x9f\x03\n" +
+	"VaultAddrs\"\x9f\x03\n" +
 	"\rPlanetCharter\x12$\n" +
 	"\rCharterSchema\x18\x01 \x01(\rR\rCharterSchema\x12$\n" +
 	"\bPlanetID\x18\x02 \x01(\v2\b.amp.TagR\bPlanetID\x12,\n" +
@@ -6599,7 +6583,17 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tLocalOnly\x18\x06 \x01(\bR\tLocalOnly\"S\n" +
 	"\vCoSignature\x12&\n" +
 	"\tMemberTag\x18\x01 \x01(\v2\b.amp.TagR\tMemberTag\x12\x1c\n" +
-	"\tSignature\x18\x02 \x01(\fR\tSignature\"M\n" +
+	"\tSignature\x18\x02 \x01(\fR\tSignature\"\x8e\x02\n" +
+	"\fPlanetOrigin\x12(\n" +
+	"\n" +
+	"FromPlanet\x18\x01 \x01(\v2\b.amp.TagR\n" +
+	"FromPlanet\x12&\n" +
+	"\tFromEpoch\x18\x02 \x01(\v2\b.amp.TagR\tFromEpoch\x12/\n" +
+	"\x13FromChronicleHead_0\x18\x03 \x01(\x06R\x12FromChronicleHead0\x12/\n" +
+	"\x13FromChronicleHead_1\x18\x04 \x01(\x06R\x12FromChronicleHead1\x12\x1a\n" +
+	"\bForkTime\x18\x05 \x01(\x03R\bForkTime\x12\x14\n" +
+	"\x05Label\x18\x06 \x01(\tR\x05Label\x12\x18\n" +
+	"\aVersion\x18d \x01(\x05R\aVersion\"M\n" +
 	"\n" +
 	"WrappedKey\x12!\n" +
 	"\x04Role\x18\x01 \x01(\x0e2\r.safe.KeyRoleR\x04Role\x12\x1c\n" +
@@ -6618,7 +6612,23 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"EncryptKey\x12\"\n" +
 	"\x05Cites\x18\x14 \x03(\v2\f.amp.AddressR\x05Cites\x12\x1c\n" +
 	"\x04Kind\x18! \x01(\v2\b.amp.TagR\x04Kind\x122\n" +
-	"\rContinuesFrom\x18\" \x03(\v2\f.amp.AddressR\rContinuesFrom\"\xcf\x02\n" +
+	"\rContinuesFrom\x18\" \x03(\v2\f.amp.AddressR\rContinuesFrom\"Z\n" +
+	"\vAccessGrant\x12&\n" +
+	"\tMemberTag\x18\x01 \x01(\v2\b.amp.TagR\tMemberTag\x12#\n" +
+	"\x06Access\x18\x02 \x01(\x0e2\v.amp.AccessR\x06Access\"8\n" +
+	"\fAccessGrants\x12(\n" +
+	"\x06Grants\x18\x01 \x03(\v2\x10.amp.AccessGrantR\x06Grants\"\xf8\x02\n" +
+	"\fChannelEpoch\x12\"\n" +
+	"\aChannel\x18\x01 \x01(\v2\b.amp.TagR\aChannel\x12 \n" +
+	"\x06Parent\x18\x02 \x01(\v2\b.amp.TagR\x06Parent\x12 \n" +
+	"\x06ChType\x18\x06 \x01(\v2\b.amp.TagR\x06ChType\x128\n" +
+	"\rContentPolicy\x18\a \x01(\x0e2\x12.amp.ContentPolicyR\rContentPolicy\x12\x14\n" +
+	"\x05Label\x18\n" +
+	" \x01(\tR\x05Label\x12\x1c\n" +
+	"\tLegacyURI\x18\v \x01(\tR\tLegacyURI\x125\n" +
+	"\fMemberGrants\x18\x14 \x01(\v2\x11.amp.AccessGrantsR\fMemberGrants\x127\n" +
+	"\rDefaultGrants\x18\x15 \x01(\v2\x11.amp.AccessGrantsR\rDefaultGrants\x12\"\n" +
+	"\x05Cites\x18\x16 \x03(\v2\f.amp.AddressR\x05Cites\"\xcf\x02\n" +
 	"\vAttestation\x12\"\n" +
 	"\aSubject\x18\x01 \x01(\v2\b.amp.TagR\aSubject\x12(\n" +
 	"\x04Type\x18\x02 \x01(\x0e2\x14.amp.AttestationTypeR\x04Type\x12\x1f\n" +
@@ -6681,45 +6691,62 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"MemberID_0\x18\x16 \x01(\x06R\tMemberID0\x12\x1d\n" +
 	"\n" +
-	"MemberID_1\x18\x17 \x01(\x06R\tMemberID1\"\xab\x01\n" +
-	"\aSyncMsg\x120\n" +
-	"\tWatchList\x18\x01 \x01(\v2\x12.amp.SyncWatchListR\tWatchList\x123\n" +
+	"MemberID_1\x18\x17 \x01(\x06R\tMemberID1\"\xe0\x02\n" +
+	"\x12PlanetInvitePolicy\x12\x1d\n" +
 	"\n" +
-	"RangeOffer\x18\x02 \x01(\v2\x13.amp.SyncRangeOfferR\n" +
-	"RangeOffer\x129\n" +
-	"\fRangeRequest\x18\x03 \x01(\v2\x15.amp.SyncRangeRequestR\fRangeRequest\"@\n" +
-	"\rSyncWatchList\x12/\n" +
-	"\aPlanets\x18\x01 \x03(\v2\x15.amp.SyncPlanetStatusR\aPlanets\"\x92\x01\n" +
-	"\x10SyncPlanetStatus\x12\x1d\n" +
+	"InviteID_0\x18\b \x01(\x06R\tInviteID0\x12\x1d\n" +
+	"\n" +
+	"InviteID_1\x18\t \x01(\x06R\tInviteID1\x12&\n" +
+	"\x0eMaxRedemptions\x18\x02 \x01(\rR\x0eMaxRedemptions\x12\x1c\n" +
+	"\tExpiresAt\x18\x03 \x01(\x03R\tExpiresAt\x121\n" +
+	"\rGrantedAccess\x18\x04 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x12)\n" +
+	"\x06Status\x18\x05 \x01(\x0e2\x11.amp.InviteStatusR\x06Status\x12*\n" +
+	"\tRedeemKey\x18\x06 \x01(\v2\f.safe.KeyRefR\tRedeemKey\x12\x1d\n" +
+	"\n" +
+	"MemberID_0\x18\n" +
+	" \x01(\x06R\tMemberID0\x12\x1d\n" +
+	"\n" +
+	"MemberID_1\x18\v \x01(\x06R\tMemberID1\"\xe9\x02\n" +
+	"\x16PlanetInviteRedemption\x12\x1d\n" +
+	"\n" +
+	"InviteID_0\x18\a \x01(\x06R\tInviteID0\x12\x1d\n" +
+	"\n" +
+	"InviteID_1\x18\b \x01(\x06R\tInviteID1\x12\x1d\n" +
+	"\n" +
+	"MemberID_0\x18\t \x01(\x06R\tMemberID0\x12\x1d\n" +
+	"\n" +
+	"MemberID_1\x18\n" +
+	" \x01(\x06R\tMemberID1\x12!\n" +
+	"\fRedeemedAt_0\x18\x03 \x01(\x06R\vRedeemedAt0\x12!\n" +
+	"\fRedeemedAt_1\x18\x04 \x01(\x06R\vRedeemedAt1\x121\n" +
+	"\rGrantedAccess\x18\x05 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x128\n" +
+	"\x10MemberSigningKey\x18\v \x01(\v2\f.safe.KeyRefR\x10MemberSigningKey\x12 \n" +
+	"\vRedeemProof\x18\x06 \x01(\fR\vRedeemProof\"\xd6\x02\n" +
+	"\aBlobRef\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
 	"\n" +
-	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x1f\n" +
-	"\vHighWater_0\x18\x03 \x01(\x06R\n" +
-	"HighWater0\x12\x1f\n" +
-	"\vHighWater_1\x18\x04 \x01(\x06R\n" +
-	"HighWater1\"\xec\x01\n" +
-	"\x0eSyncRangeOffer\x12\x1d\n" +
-	"\n" +
-	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
-	"\n" +
-	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x17\n" +
-	"\aStart_0\x18\x03 \x01(\x06R\x06Start0\x12\x17\n" +
-	"\aStart_1\x18\x04 \x01(\x06R\x06Start1\x12\x13\n" +
-	"\x05End_0\x18\x05 \x01(\x06R\x04End0\x12\x13\n" +
-	"\x05End_1\x18\x06 \x01(\x06R\x04End1\x12\x1f\n" +
-	"\vRangeHash_0\x18\n" +
-	" \x01(\x06R\n" +
-	"RangeHash0\x12\x1f\n" +
-	"\vRangeHash_1\x18\v \x01(\x06R\n" +
-	"RangeHash1\"\x82\x01\n" +
-	"\x10SyncRangeRequest\x12\x1d\n" +
-	"\n" +
-	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
-	"\n" +
-	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x17\n" +
-	"\aAfter_0\x18\x03 \x01(\x06R\x06After0\x12\x17\n" +
-	"\aAfter_1\x18\x04 \x01(\x06R\x06After1\"\xb0\x02\n" +
+	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12-\n" +
+	"\tHashKitID\x18\b \x01(\x0e2\x0f.safe.HashKitIDR\tHashKitID\x12\x15\n" +
+	"\x06Hash_0\x18\n" +
+	" \x01(\x06R\x05Hash0\x12\x15\n" +
+	"\x06Hash_1\x18\v \x01(\x06R\x05Hash1\x12\x15\n" +
+	"\x06Hash_2\x18\f \x01(\x06R\x05Hash2\x12\x15\n" +
+	"\x06Hash_3\x18\r \x01(\x06R\x05Hash3\x12$\n" +
+	"\bAssetTag\x18\x10 \x01(\v2\b.amp.TagR\bAssetTag\x12\"\n" +
+	"\aBlobTag\x18\x11 \x01(\v2\b.amp.TagR\aBlobTag\x12\x1b\n" +
+	"\tEpochID_0\x18\x14 \x01(\x06R\bEpochID0\x12\x1b\n" +
+	"\tEpochID_1\x18\x15 \x01(\x06R\bEpochID1\"y\n" +
+	"\x11PlanetStorageOpts\x12\x1a\n" +
+	"\bPriority\x18\x01 \x01(\x05R\bPriority\x12\"\n" +
+	"\fMaxBlobBytes\x18\x02 \x01(\x03R\fMaxBlobBytes\x12$\n" +
+	"\rMaxCacheBytes\x18\x03 \x01(\x03R\rMaxCacheBytes\"\x9b\x01\n" +
+	"\tBlobEntry\x12\x19\n" +
+	"\bBlobID_0\x18\x01 \x01(\x06R\aBlobID0\x12\x19\n" +
+	"\bBlobID_1\x18\x02 \x01(\x06R\aBlobID1\x12\x12\n" +
+	"\x04Size\x18\x03 \x01(\x03R\x04Size\x12 \n" +
+	"\vContentType\x18\x04 \x01(\tR\vContentType\x12\"\n" +
+	"\fRelativePath\x18\x05 \x01(\tR\fRelativePath\"\xb0\x02\n" +
 	"\bArtifact\x12\x19\n" +
 	"\bNodeID_0\x18\x01 \x01(\x06R\aNodeID0\x12\x19\n" +
 	"\bNodeID_1\x18\x02 \x01(\x06R\aNodeID1\x12\x19\n" +
@@ -6731,28 +6758,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\bEditID_1\x18\b \x01(\x06R\aEditID1\x12 \n" +
 	"\vInlineValue\x18\n" +
 	" \x01(\fR\vInlineValue\x12*\n" +
-	"\tBlobValue\x18\v \x01(\v2\f.amp.BlobRefR\tBlobValue\"\x8e\x02\n" +
-	"\fPlanetOrigin\x12(\n" +
-	"\n" +
-	"FromPlanet\x18\x01 \x01(\v2\b.amp.TagR\n" +
-	"FromPlanet\x12&\n" +
-	"\tFromEpoch\x18\x02 \x01(\v2\b.amp.TagR\tFromEpoch\x12/\n" +
-	"\x13FromChronicleHead_0\x18\x03 \x01(\x06R\x12FromChronicleHead0\x12/\n" +
-	"\x13FromChronicleHead_1\x18\x04 \x01(\x06R\x12FromChronicleHead1\x12\x1a\n" +
-	"\bForkTime\x18\x05 \x01(\x03R\bForkTime\x12\x14\n" +
-	"\x05Label\x18\x06 \x01(\tR\x05Label\x12\x18\n" +
-	"\aVersion\x18d \x01(\x05R\aVersion\"f\n" +
-	"\bUIDRange\x12\x17\n" +
-	"\aStart_0\x18\x01 \x01(\x06R\x06Start0\x12\x17\n" +
-	"\aStart_1\x18\x02 \x01(\x06R\x06Start1\x12\x13\n" +
-	"\x05End_0\x18\x03 \x01(\x06R\x04End0\x12\x13\n" +
-	"\x05End_1\x18\x04 \x01(\x06R\x04End1\"\x9b\x01\n" +
-	"\tBlobEntry\x12\x19\n" +
-	"\bBlobID_0\x18\x01 \x01(\x06R\aBlobID0\x12\x19\n" +
-	"\bBlobID_1\x18\x02 \x01(\x06R\aBlobID1\x12\x12\n" +
-	"\x04Size\x18\x03 \x01(\x03R\x04Size\x12 \n" +
-	"\vContentType\x18\x04 \x01(\tR\vContentType\x12\"\n" +
-	"\fRelativePath\x18\x05 \x01(\tR\fRelativePath\"A\n" +
+	"\tBlobValue\x18\v \x01(\v2\f.amp.BlobRefR\tBlobValue\"A\n" +
 	"\rCodexManifest\x120\n" +
 	"\x0eAttributeKinds\x18\x01 \x03(\v2\b.amp.TagR\x0eAttributeKinds\"\xdb\x02\n" +
 	"\vCodexHeader\x12,\n" +
@@ -6831,21 +6837,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x05Links\x18\x19 \x03(\v2\f.amp.AppLinkR\x05Links\x123\n" +
 	"\rBundledCrates\x18\x1a \x03(\v2\r.amp.CrateRefR\rBundledCrates\x12\"\n" +
 	"\aNamedBy\x18\x1e \x01(\v2\b.amp.TagR\aNamedBy\x12*\n" +
-	"\vTemplateSet\x18\x1f \x01(\v2\b.amp.TagR\vTemplateSet\"\x9f\x02\n" +
-	"\aAddress\x12\x1d\n" +
-	"\n" +
-	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
-	"\n" +
-	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x19\n" +
-	"\bNodeID_0\x18\x03 \x01(\x06R\aNodeID0\x12\x19\n" +
-	"\bNodeID_1\x18\x04 \x01(\x06R\aNodeID1\x12\x19\n" +
-	"\bAttrID_0\x18\x05 \x01(\x06R\aAttrID0\x12\x19\n" +
-	"\bAttrID_1\x18\x06 \x01(\x06R\aAttrID1\x12\x19\n" +
-	"\bItemID_0\x18\a \x01(\x06R\aItemID0\x12\x19\n" +
-	"\bItemID_1\x18\b \x01(\x06R\aItemID1\x12\x19\n" +
-	"\bEditID_0\x18\t \x01(\x06R\aEditID0\x12\x19\n" +
-	"\bEditID_1\x18\n" +
-	" \x01(\x06R\aEditID1\"C\n" +
+	"\vTemplateSet\x18\x1f \x01(\v2\b.amp.TagR\vTemplateSet\"C\n" +
 	"\tVaultAddr\x12\x1c\n" +
 	"\tTransport\x18\x01 \x01(\tR\tTransport\x12\x18\n" +
 	"\aAddress\x18\x02 \x01(\fR\aAddress\"\xc9\x02\n" +
@@ -6868,37 +6860,73 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"VaultAddrs\x12\x14\n" +
 	"\x05Label\x18\x03 \x01(\tR\x05LabelJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"@\n" +
 	"\x13FederationDirectory\x12)\n" +
-	"\x05Peers\x18\x01 \x03(\v2\x13.amp.FederationPeerR\x05Peers\"\xe0\x02\n" +
-	"\x12PlanetInvitePolicy\x12\x1d\n" +
+	"\x05Peers\x18\x01 \x03(\v2\x13.amp.FederationPeerR\x05Peers\"\xab\x01\n" +
+	"\aSyncMsg\x120\n" +
+	"\tWatchList\x18\x01 \x01(\v2\x12.amp.SyncWatchListR\tWatchList\x123\n" +
 	"\n" +
-	"InviteID_0\x18\b \x01(\x06R\tInviteID0\x12\x1d\n" +
+	"RangeOffer\x18\x02 \x01(\v2\x13.amp.SyncRangeOfferR\n" +
+	"RangeOffer\x129\n" +
+	"\fRangeRequest\x18\x03 \x01(\v2\x15.amp.SyncRangeRequestR\fRangeRequest\"@\n" +
+	"\rSyncWatchList\x12/\n" +
+	"\aPlanets\x18\x01 \x03(\v2\x15.amp.SyncPlanetStatusR\aPlanets\"\x92\x01\n" +
+	"\x10SyncPlanetStatus\x12\x1d\n" +
 	"\n" +
-	"InviteID_1\x18\t \x01(\x06R\tInviteID1\x12&\n" +
-	"\x0eMaxRedemptions\x18\x02 \x01(\rR\x0eMaxRedemptions\x12\x1c\n" +
-	"\tExpiresAt\x18\x03 \x01(\x03R\tExpiresAt\x121\n" +
-	"\rGrantedAccess\x18\x04 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x12)\n" +
-	"\x06Status\x18\x05 \x01(\x0e2\x11.amp.InviteStatusR\x06Status\x12*\n" +
-	"\tRedeemKey\x18\x06 \x01(\v2\f.safe.KeyRefR\tRedeemKey\x12\x1d\n" +
+	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
 	"\n" +
-	"MemberID_0\x18\n" +
-	" \x01(\x06R\tMemberID0\x12\x1d\n" +
+	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x1f\n" +
+	"\vHighWater_0\x18\x03 \x01(\x06R\n" +
+	"HighWater0\x12\x1f\n" +
+	"\vHighWater_1\x18\x04 \x01(\x06R\n" +
+	"HighWater1\"\xec\x01\n" +
+	"\x0eSyncRangeOffer\x12\x1d\n" +
 	"\n" +
-	"MemberID_1\x18\v \x01(\x06R\tMemberID1\"\xe9\x02\n" +
-	"\x16PlanetInviteRedemption\x12\x1d\n" +
+	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
 	"\n" +
-	"InviteID_0\x18\a \x01(\x06R\tInviteID0\x12\x1d\n" +
+	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x17\n" +
+	"\aStart_0\x18\x03 \x01(\x06R\x06Start0\x12\x17\n" +
+	"\aStart_1\x18\x04 \x01(\x06R\x06Start1\x12\x13\n" +
+	"\x05End_0\x18\x05 \x01(\x06R\x04End0\x12\x13\n" +
+	"\x05End_1\x18\x06 \x01(\x06R\x04End1\x12\x1f\n" +
+	"\vRangeHash_0\x18\n" +
+	" \x01(\x06R\n" +
+	"RangeHash0\x12\x1f\n" +
+	"\vRangeHash_1\x18\v \x01(\x06R\n" +
+	"RangeHash1\"\x82\x01\n" +
+	"\x10SyncRangeRequest\x12\x1d\n" +
 	"\n" +
-	"InviteID_1\x18\b \x01(\x06R\tInviteID1\x12\x1d\n" +
+	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
 	"\n" +
-	"MemberID_0\x18\t \x01(\x06R\tMemberID0\x12\x1d\n" +
+	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x17\n" +
+	"\aAfter_0\x18\x03 \x01(\x06R\x06After0\x12\x17\n" +
+	"\aAfter_1\x18\x04 \x01(\x06R\x06After1*_\n" +
+	"\tUriScheme\x12\x0f\n" +
+	"\vUnspecified\x10\x00\x12\b\n" +
+	"\x04Http\x10\x05\x12\t\n" +
+	"\x05Https\x10\x06\x12\b\n" +
+	"\x04Data\x10\a\x12\b\n" +
+	"\x04File\x10\t\x12\t\n" +
+	"\x05Asset\x10\x0f\x12\r\n" +
+	"\tAppNative\x10\x10*\xb0\x01\n" +
+	"\x05Units\x12\f\n" +
+	"\bUnitless\x10\x00\x12\x0e\n" +
 	"\n" +
-	"MemberID_1\x18\n" +
-	" \x01(\x06R\tMemberID1\x12!\n" +
-	"\fRedeemedAt_0\x18\x03 \x01(\x06R\vRedeemedAt0\x12!\n" +
-	"\fRedeemedAt_1\x18\x04 \x01(\x06R\vRedeemedAt1\x121\n" +
-	"\rGrantedAccess\x18\x05 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x128\n" +
-	"\x10MemberSigningKey\x18\v \x01(\v2\f.safe.KeyRefR\x10MemberSigningKey\x12 \n" +
-	"\vRedeemProof\x18\x06 \x01(\fR\vRedeemProof*?\n" +
+	"Operations\x10\x01\x12\t\n" +
+	"\x05Bytes\x10\x02\x12\n" +
+	"\n" +
+	"\x06Pixels\x10\x03\x12\v\n" +
+	"\aSeconds\x10\x04\x12\n" +
+	"\n" +
+	"\x06Planck\x10\x05\x12\v\n" +
+	"\aSamples\x10\x06\x12\x0f\n" +
+	"\vBitrateKbps\x10\a\x12\x0e\n" +
+	"\n" +
+	"Nanometers\x10\b\x12\x0f\n" +
+	"\vMillimeters\x10\n" +
+	"\x12\n" +
+	"\n" +
+	"\x06Meters\x10\v\x12\x0e\n" +
+	"\n" +
+	"LightYears\x10\x10*?\n" +
 	"\tTxOpFlags\x12\x0e\n" +
 	"\n" +
 	"Unassigned\x10\x00\x12\n" +
@@ -6939,49 +6967,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Commit\x10\x00\x12\f\n" +
 	"\bSnapshot\x10\x01\x12\x10\n" +
-	"\fMaintainSync\x10\x02*_\n" +
-	"\tUriScheme\x12\x0f\n" +
-	"\vUnspecified\x10\x00\x12\b\n" +
-	"\x04Http\x10\x05\x12\t\n" +
-	"\x05Https\x10\x06\x12\b\n" +
-	"\x04Data\x10\a\x12\b\n" +
-	"\x04File\x10\t\x12\t\n" +
-	"\x05Asset\x10\x0f\x12\r\n" +
-	"\tAppNative\x10\x10*\xb0\x01\n" +
-	"\x05Units\x12\f\n" +
-	"\bUnitless\x10\x00\x12\x0e\n" +
-	"\n" +
-	"Operations\x10\x01\x12\t\n" +
-	"\x05Bytes\x10\x02\x12\n" +
-	"\n" +
-	"\x06Pixels\x10\x03\x12\v\n" +
-	"\aSeconds\x10\x04\x12\n" +
-	"\n" +
-	"\x06Planck\x10\x05\x12\v\n" +
-	"\aSamples\x10\x06\x12\x0f\n" +
-	"\vBitrateKbps\x10\a\x12\x0e\n" +
-	"\n" +
-	"Nanometers\x10\b\x12\x0f\n" +
-	"\vMillimeters\x10\n" +
-	"\x12\n" +
-	"\n" +
-	"\x06Meters\x10\v\x12\x0e\n" +
-	"\n" +
-	"LightYears\x10\x10*h\n" +
-	"\x06Access\x12\x0e\n" +
-	"\n" +
-	"NotAllowed\x10\x00\x12\n" +
-	"\n" +
-	"\x06Invite\x10\x01\x12\v\n" +
-	"\aPrivate\x10\x03\x12\f\n" +
-	"\bReadOnly\x10\x04\x12\r\n" +
-	"\tReadWrite\x10\x06\x12\r\n" +
-	"\tModerator\x10\b\x12\t\n" +
-	"\x05Admin\x10\n" +
-	"*-\n" +
-	"\rContentPolicy\x12\v\n" +
-	"\aUnbound\x10\x00\x12\x0f\n" +
-	"\vAuthorBound\x10\x01*-\n" +
+	"\fMaintainSync\x10\x02*-\n" +
 	"\tSealState\x12\b\n" +
 	"\x04Open\x10\x00\x12\n" +
 	"\n" +
@@ -6996,7 +6982,21 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Active\x10\x00\x12\r\n" +
 	"\tSuspended\x10\x01\x12\v\n" +
-	"\aRevoked\x10\x02*e\n" +
+	"\aRevoked\x10\x02*h\n" +
+	"\x06Access\x12\x0e\n" +
+	"\n" +
+	"NotAllowed\x10\x00\x12\n" +
+	"\n" +
+	"\x06Invite\x10\x01\x12\v\n" +
+	"\aPrivate\x10\x03\x12\f\n" +
+	"\bReadOnly\x10\x04\x12\r\n" +
+	"\tReadWrite\x10\x06\x12\r\n" +
+	"\tModerator\x10\b\x12\t\n" +
+	"\x05Admin\x10\n" +
+	"*-\n" +
+	"\rContentPolicy\x12\v\n" +
+	"\aUnbound\x10\x00\x12\x0f\n" +
+	"\vAuthorBound\x10\x01*e\n" +
 	"\x0fAttestationType\x12\x10\n" +
 	"\fNotSpecified\x10\x00\x12\n" +
 	"\n" +
@@ -7015,7 +7015,10 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tForgotten\x10\x05\x12\f\n" +
 	"\bDeparted\x10\x06\x12\x10\n" +
 	"\fInviteRecall\x10\a\x12\r\n" +
-	"\tRetracted\x10\b*T\n" +
+	"\tRetracted\x10\b*3\n" +
+	"\fInviteStatus\x12\x10\n" +
+	"\fInviteActive\x10\x00\x12\x11\n" +
+	"\rInviteRevoked\x10\x01*T\n" +
 	"\n" +
 	"PlatformID\x12\r\n" +
 	"\tUniversal\x10\x00\x12\t\n" +
@@ -7028,10 +7031,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"TrustState\x12\r\n" +
 	"\tUnchecked\x10\x00\x12\f\n" +
 	"\bVerified\x10\x01\x12\v\n" +
-	"\aRefuted\x10\x02*3\n" +
-	"\fInviteStatus\x12\x10\n" +
-	"\fInviteActive\x10\x00\x12\x11\n" +
-	"\rInviteRevoked\x10\x01B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
+	"\aRefuted\x10\x02B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_amp_core_proto_rawDescOnce sync.Once
@@ -7048,79 +7048,79 @@ func file_amp_amp_core_proto_rawDescGZIP() []byte {
 var file_amp_amp_core_proto_enumTypes = make([]protoimpl.EnumInfo, 17)
 var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 56)
 var file_amp_amp_core_proto_goTypes = []any{
-	(TxOpFlags)(0),                  // 0: amp.TxOpFlags
-	(TxField)(0),                    // 1: amp.TxField
-	(ValueHeaderFlags)(0),           // 2: amp.ValueHeaderFlags
-	(PinStatus)(0),                  // 3: amp.PinStatus
-	(PinMode)(0),                    // 4: amp.PinMode
-	(UriScheme)(0),                  // 5: amp.UriScheme
-	(Units)(0),                      // 6: amp.Units
-	(Access)(0),                     // 7: amp.Access
-	(ContentPolicy)(0),              // 8: amp.ContentPolicy
-	(SealState)(0),                  // 9: amp.SealState
-	(PrivacyMode)(0),                // 10: amp.PrivacyMode
-	(MemberStatus)(0),               // 11: amp.MemberStatus
+	(UriScheme)(0),                  // 0: amp.UriScheme
+	(Units)(0),                      // 1: amp.Units
+	(TxOpFlags)(0),                  // 2: amp.TxOpFlags
+	(TxField)(0),                    // 3: amp.TxField
+	(ValueHeaderFlags)(0),           // 4: amp.ValueHeaderFlags
+	(PinStatus)(0),                  // 5: amp.PinStatus
+	(PinMode)(0),                    // 6: amp.PinMode
+	(SealState)(0),                  // 7: amp.SealState
+	(PrivacyMode)(0),                // 8: amp.PrivacyMode
+	(MemberStatus)(0),               // 9: amp.MemberStatus
+	(Access)(0),                     // 10: amp.Access
+	(ContentPolicy)(0),              // 11: amp.ContentPolicy
 	(AttestationType)(0),            // 12: amp.AttestationType
 	(WithdrawReason)(0),             // 13: amp.WithdrawReason
-	(PlatformID)(0),                 // 14: amp.PlatformID
-	(TrustState)(0),                 // 15: amp.TrustState
-	(InviteStatus)(0),               // 16: amp.InviteStatus
-	(*TxEnvelope)(nil),              // 17: amp.TxEnvelope
-	(*TxHeader)(nil),                // 18: amp.TxHeader
-	(*Login)(nil),                   // 19: amp.Login
-	(*LoginChallenge)(nil),          // 20: amp.LoginChallenge
-	(*LoginResponse)(nil),           // 21: amp.LoginResponse
-	(*LoginCheckpoint)(nil),         // 22: amp.LoginCheckpoint
+	(InviteStatus)(0),               // 14: amp.InviteStatus
+	(PlatformID)(0),                 // 15: amp.PlatformID
+	(TrustState)(0),                 // 16: amp.TrustState
+	(*Tag)(nil),                     // 17: amp.Tag
+	(*Tags)(nil),                    // 18: amp.Tags
+	(*Address)(nil),                 // 19: amp.Address
+	(*UIDRange)(nil),                // 20: amp.UIDRange
+	(*TxEnvelope)(nil),              // 21: amp.TxEnvelope
+	(*TxHeader)(nil),                // 22: amp.TxHeader
 	(*PinRequest)(nil),              // 23: amp.PinRequest
 	(*ItemSelector)(nil),            // 24: amp.ItemSelector
 	(*ItemSpan)(nil),                // 25: amp.ItemSpan
-	(*Tag)(nil),                     // 26: amp.Tag
-	(*Tags)(nil),                    // 27: amp.Tags
-	(*AccessGrant)(nil),             // 28: amp.AccessGrant
-	(*AccessGrants)(nil),            // 29: amp.AccessGrants
-	(*ChannelEpoch)(nil),            // 30: amp.ChannelEpoch
-	(*BlobRef)(nil),                 // 31: amp.BlobRef
-	(*PlanetStorageOpts)(nil),       // 32: amp.PlanetStorageOpts
-	(*VaultConfig)(nil),             // 33: amp.VaultConfig
-	(*BrandMark)(nil),               // 34: amp.BrandMark
-	(*PlanetCharter)(nil),           // 35: amp.PlanetCharter
-	(*EpochTerms)(nil),              // 36: amp.EpochTerms
-	(*PlanetEpoch)(nil),             // 37: amp.PlanetEpoch
-	(*CoSignature)(nil),             // 38: amp.CoSignature
-	(*WrappedKey)(nil),              // 39: amp.WrappedKey
-	(*MemberEpoch)(nil),             // 40: amp.MemberEpoch
-	(*Attestation)(nil),             // 41: amp.Attestation
-	(*Equivalence)(nil),             // 42: amp.Equivalence
-	(*Withdraw)(nil),                // 43: amp.Withdraw
-	(*PlanetInvite)(nil),            // 44: amp.PlanetInvite
-	(*PlanetInviteOp)(nil),          // 45: amp.PlanetInviteOp
-	(*SyncMsg)(nil),                 // 46: amp.SyncMsg
-	(*SyncWatchList)(nil),           // 47: amp.SyncWatchList
-	(*SyncPlanetStatus)(nil),        // 48: amp.SyncPlanetStatus
-	(*SyncRangeOffer)(nil),          // 49: amp.SyncRangeOffer
-	(*SyncRangeRequest)(nil),        // 50: amp.SyncRangeRequest
-	(*Artifact)(nil),                // 51: amp.Artifact
-	(*PlanetOrigin)(nil),            // 52: amp.PlanetOrigin
-	(*UIDRange)(nil),                // 53: amp.UIDRange
-	(*BlobEntry)(nil),               // 54: amp.BlobEntry
-	(*CodexManifest)(nil),           // 55: amp.CodexManifest
-	(*CodexHeader)(nil),             // 56: amp.CodexHeader
-	(*ChronicleCompactPoint)(nil),   // 57: amp.ChronicleCompactPoint
-	(*ChronicleCompactHistory)(nil), // 58: amp.ChronicleCompactHistory
-	(*ChronicleCompact)(nil),        // 59: amp.ChronicleCompact
-	(*ChronicleManifest)(nil),       // 60: amp.ChronicleManifest
-	(*ChronicleHeader)(nil),         // 61: amp.ChronicleHeader
-	(*AppTarget)(nil),               // 62: amp.AppTarget
-	(*AppLink)(nil),                 // 63: amp.AppLink
-	(*CrateRef)(nil),                // 64: amp.CrateRef
-	(*Brand)(nil),                   // 65: amp.Brand
-	(*Address)(nil),                 // 66: amp.Address
-	(*VaultAddr)(nil),               // 67: amp.VaultAddr
-	(*NameServiceRecord)(nil),       // 68: amp.NameServiceRecord
-	(*FederationPeer)(nil),          // 69: amp.FederationPeer
-	(*FederationDirectory)(nil),     // 70: amp.FederationDirectory
-	(*PlanetInvitePolicy)(nil),      // 71: amp.PlanetInvitePolicy
-	(*PlanetInviteRedemption)(nil),  // 72: amp.PlanetInviteRedemption
+	(*Login)(nil),                   // 26: amp.Login
+	(*LoginChallenge)(nil),          // 27: amp.LoginChallenge
+	(*LoginResponse)(nil),           // 28: amp.LoginResponse
+	(*LoginCheckpoint)(nil),         // 29: amp.LoginCheckpoint
+	(*BrandMark)(nil),               // 30: amp.BrandMark
+	(*VaultConfig)(nil),             // 31: amp.VaultConfig
+	(*PlanetCharter)(nil),           // 32: amp.PlanetCharter
+	(*EpochTerms)(nil),              // 33: amp.EpochTerms
+	(*PlanetEpoch)(nil),             // 34: amp.PlanetEpoch
+	(*CoSignature)(nil),             // 35: amp.CoSignature
+	(*PlanetOrigin)(nil),            // 36: amp.PlanetOrigin
+	(*WrappedKey)(nil),              // 37: amp.WrappedKey
+	(*MemberEpoch)(nil),             // 38: amp.MemberEpoch
+	(*AccessGrant)(nil),             // 39: amp.AccessGrant
+	(*AccessGrants)(nil),            // 40: amp.AccessGrants
+	(*ChannelEpoch)(nil),            // 41: amp.ChannelEpoch
+	(*Attestation)(nil),             // 42: amp.Attestation
+	(*Equivalence)(nil),             // 43: amp.Equivalence
+	(*Withdraw)(nil),                // 44: amp.Withdraw
+	(*PlanetInvite)(nil),            // 45: amp.PlanetInvite
+	(*PlanetInviteOp)(nil),          // 46: amp.PlanetInviteOp
+	(*PlanetInvitePolicy)(nil),      // 47: amp.PlanetInvitePolicy
+	(*PlanetInviteRedemption)(nil),  // 48: amp.PlanetInviteRedemption
+	(*BlobRef)(nil),                 // 49: amp.BlobRef
+	(*PlanetStorageOpts)(nil),       // 50: amp.PlanetStorageOpts
+	(*BlobEntry)(nil),               // 51: amp.BlobEntry
+	(*Artifact)(nil),                // 52: amp.Artifact
+	(*CodexManifest)(nil),           // 53: amp.CodexManifest
+	(*CodexHeader)(nil),             // 54: amp.CodexHeader
+	(*ChronicleCompactPoint)(nil),   // 55: amp.ChronicleCompactPoint
+	(*ChronicleCompactHistory)(nil), // 56: amp.ChronicleCompactHistory
+	(*ChronicleCompact)(nil),        // 57: amp.ChronicleCompact
+	(*ChronicleManifest)(nil),       // 58: amp.ChronicleManifest
+	(*ChronicleHeader)(nil),         // 59: amp.ChronicleHeader
+	(*AppTarget)(nil),               // 60: amp.AppTarget
+	(*AppLink)(nil),                 // 61: amp.AppLink
+	(*CrateRef)(nil),                // 62: amp.CrateRef
+	(*Brand)(nil),                   // 63: amp.Brand
+	(*VaultAddr)(nil),               // 64: amp.VaultAddr
+	(*NameServiceRecord)(nil),       // 65: amp.NameServiceRecord
+	(*FederationPeer)(nil),          // 66: amp.FederationPeer
+	(*FederationDirectory)(nil),     // 67: amp.FederationDirectory
+	(*SyncMsg)(nil),                 // 68: amp.SyncMsg
+	(*SyncWatchList)(nil),           // 69: amp.SyncWatchList
+	(*SyncPlanetStatus)(nil),        // 70: amp.SyncPlanetStatus
+	(*SyncRangeOffer)(nil),          // 71: amp.SyncRangeOffer
+	(*SyncRangeRequest)(nil),        // 72: amp.SyncRangeRequest
 	(safe.HashKitID)(0),             // 73: safe.HashKitID
 	(safe.KeyRole)(0),               // 74: safe.KeyRole
 	(*safe.KeyRef)(nil),             // 75: safe.KeyRef
@@ -7128,132 +7128,132 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(*safe.EncryptedSymKey)(nil),    // 77: safe.EncryptedSymKey
 }
 var file_amp_amp_core_proto_depIdxs = []int32{
-	26,  // 0: amp.TxEnvelope.Planet:type_name -> amp.Tag
-	26,  // 1: amp.TxEnvelope.Epoch:type_name -> amp.Tag
-	3,   // 2: amp.TxHeader.Status:type_name -> amp.PinStatus
-	23,  // 3: amp.TxHeader.Request:type_name -> amp.PinRequest
-	26,  // 4: amp.Login.Member:type_name -> amp.Tag
-	26,  // 5: amp.Login.Planet:type_name -> amp.Tag
-	26,  // 6: amp.Login.Device:type_name -> amp.Tag
-	22,  // 7: amp.Login.Checkpoint:type_name -> amp.LoginCheckpoint
-	4,   // 8: amp.PinRequest.Mode:type_name -> amp.PinMode
+	1,   // 0: amp.Tag.Units:type_name -> amp.Units
+	17,  // 1: amp.Tags.Head:type_name -> amp.Tag
+	17,  // 2: amp.Tags.SubTags:type_name -> amp.Tag
+	18,  // 3: amp.Tags.Children:type_name -> amp.Tags
+	17,  // 4: amp.TxEnvelope.Planet:type_name -> amp.Tag
+	17,  // 5: amp.TxEnvelope.Epoch:type_name -> amp.Tag
+	5,   // 6: amp.TxHeader.Status:type_name -> amp.PinStatus
+	23,  // 7: amp.TxHeader.Request:type_name -> amp.PinRequest
+	6,   // 8: amp.PinRequest.Mode:type_name -> amp.PinMode
 	24,  // 9: amp.PinRequest.Selector:type_name -> amp.ItemSelector
 	25,  // 10: amp.ItemSelector.Spans:type_name -> amp.ItemSpan
-	6,   // 11: amp.Tag.Units:type_name -> amp.Units
-	26,  // 12: amp.Tags.Head:type_name -> amp.Tag
-	26,  // 13: amp.Tags.SubTags:type_name -> amp.Tag
-	27,  // 14: amp.Tags.Children:type_name -> amp.Tags
-	26,  // 15: amp.AccessGrant.MemberTag:type_name -> amp.Tag
-	7,   // 16: amp.AccessGrant.Access:type_name -> amp.Access
-	28,  // 17: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
-	26,  // 18: amp.ChannelEpoch.Channel:type_name -> amp.Tag
-	26,  // 19: amp.ChannelEpoch.Parent:type_name -> amp.Tag
-	26,  // 20: amp.ChannelEpoch.ChType:type_name -> amp.Tag
-	8,   // 21: amp.ChannelEpoch.ContentPolicy:type_name -> amp.ContentPolicy
-	29,  // 22: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
-	29,  // 23: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
-	66,  // 24: amp.ChannelEpoch.Cites:type_name -> amp.Address
-	73,  // 25: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
-	26,  // 26: amp.BlobRef.AssetTag:type_name -> amp.Tag
-	26,  // 27: amp.BlobRef.BlobTag:type_name -> amp.Tag
-	67,  // 28: amp.VaultConfig.VaultAddrs:type_name -> amp.VaultAddr
-	26,  // 29: amp.BrandMark.NamedBy:type_name -> amp.Tag
-	27,  // 30: amp.BrandMark.Glyphs:type_name -> amp.Tags
-	26,  // 31: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
-	26,  // 32: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
-	26,  // 33: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
-	52,  // 34: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
-	10,  // 35: amp.PlanetCharter.Privacy:type_name -> amp.PrivacyMode
-	27,  // 36: amp.PlanetCharter.Declaration:type_name -> amp.Tags
-	26,  // 37: amp.PlanetCharter.Founders:type_name -> amp.Tag
-	26,  // 38: amp.EpochTerms.EpochTag:type_name -> amp.Tag
-	26,  // 39: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
-	73,  // 40: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
-	34,  // 41: amp.EpochTerms.Mark:type_name -> amp.BrandMark
-	26,  // 42: amp.EpochTerms.Foyer:type_name -> amp.Tag
-	26,  // 43: amp.EpochTerms.Index:type_name -> amp.Tag
-	26,  // 44: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
-	9,   // 45: amp.EpochTerms.Seal:type_name -> amp.SealState
-	66,  // 46: amp.EpochTerms.CodexEdition:type_name -> amp.Address
-	33,  // 47: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
-	26,  // 48: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
-	38,  // 49: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
-	38,  // 50: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
-	26,  // 51: amp.CoSignature.MemberTag:type_name -> amp.Tag
-	74,  // 52: amp.WrappedKey.Role:type_name -> safe.KeyRole
-	26,  // 53: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
-	26,  // 54: amp.MemberEpoch.Node:type_name -> amp.Tag
-	26,  // 55: amp.MemberEpoch.Epoch:type_name -> amp.Tag
-	39,  // 56: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
-	11,  // 57: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
-	75,  // 58: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
-	75,  // 59: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
-	66,  // 60: amp.MemberEpoch.Cites:type_name -> amp.Address
-	26,  // 61: amp.MemberEpoch.Kind:type_name -> amp.Tag
-	66,  // 62: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
-	26,  // 63: amp.Attestation.Subject:type_name -> amp.Tag
-	12,  // 64: amp.Attestation.Type:type_name -> amp.AttestationType
-	26,  // 65: amp.Attestation.ObserverID:type_name -> amp.Tag
-	26,  // 66: amp.Attestation.Modality:type_name -> amp.Tag
-	26,  // 67: amp.Equivalence.LeftAddress:type_name -> amp.Tag
-	26,  // 68: amp.Equivalence.RightAddress:type_name -> amp.Tag
-	26,  // 69: amp.Equivalence.Context:type_name -> amp.Tag
-	26,  // 70: amp.Equivalence.Strength:type_name -> amp.Tag
-	26,  // 71: amp.Withdraw.Subject:type_name -> amp.Tag
-	66,  // 72: amp.Withdraw.Withdrawn:type_name -> amp.Address
-	13,  // 73: amp.Withdraw.Reason:type_name -> amp.WithdrawReason
-	66,  // 74: amp.Withdraw.Delegation:type_name -> amp.Address
-	26,  // 75: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
-	26,  // 76: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
-	26,  // 77: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	76,  // 78: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	67,  // 79: amp.PlanetInvite.VaultAddrs:type_name -> amp.VaultAddr
-	77,  // 80: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
-	7,   // 81: amp.PlanetInvite.GrantedAccess:type_name -> amp.Access
-	76,  // 82: amp.PlanetInvite.RedeemKey:type_name -> safe.KeyPairRecord
-	73,  // 83: amp.PlanetInvite.HashKitID:type_name -> safe.HashKitID
-	26,  // 84: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
-	7,   // 85: amp.PlanetInviteOp.GrantedAccess:type_name -> amp.Access
-	47,  // 86: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	49,  // 87: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	50,  // 88: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	48,  // 89: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	31,  // 90: amp.Artifact.BlobValue:type_name -> amp.BlobRef
-	26,  // 91: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
-	26,  // 92: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
-	26,  // 93: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
-	26,  // 94: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
-	26,  // 95: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
-	52,  // 96: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
-	55,  // 97: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
-	73,  // 98: amp.CodexHeader.DigestHashKit:type_name -> safe.HashKitID
-	57,  // 99: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
-	26,  // 100: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
-	26,  // 101: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
-	53,  // 102: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
-	58,  // 103: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
-	73,  // 104: amp.ChronicleHeader.DigestHashKit:type_name -> safe.HashKitID
-	60,  // 105: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
-	14,  // 106: amp.AppTarget.Platform:type_name -> amp.PlatformID
-	62,  // 107: amp.Brand.Targets:type_name -> amp.AppTarget
-	63,  // 108: amp.Brand.Links:type_name -> amp.AppLink
-	64,  // 109: amp.Brand.BundledCrates:type_name -> amp.CrateRef
-	26,  // 110: amp.Brand.NamedBy:type_name -> amp.Tag
-	26,  // 111: amp.Brand.TemplateSet:type_name -> amp.Tag
-	26,  // 112: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
-	66,  // 113: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
-	65,  // 114: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
-	67,  // 115: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
-	26,  // 116: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
-	26,  // 117: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
-	26,  // 118: amp.FederationPeer.FederationID:type_name -> amp.Tag
-	67,  // 119: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
-	69,  // 120: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
-	7,   // 121: amp.PlanetInvitePolicy.GrantedAccess:type_name -> amp.Access
-	16,  // 122: amp.PlanetInvitePolicy.Status:type_name -> amp.InviteStatus
-	75,  // 123: amp.PlanetInvitePolicy.RedeemKey:type_name -> safe.KeyRef
-	7,   // 124: amp.PlanetInviteRedemption.GrantedAccess:type_name -> amp.Access
-	75,  // 125: amp.PlanetInviteRedemption.MemberSigningKey:type_name -> safe.KeyRef
+	17,  // 11: amp.Login.Member:type_name -> amp.Tag
+	17,  // 12: amp.Login.Planet:type_name -> amp.Tag
+	17,  // 13: amp.Login.Device:type_name -> amp.Tag
+	29,  // 14: amp.Login.Checkpoint:type_name -> amp.LoginCheckpoint
+	17,  // 15: amp.BrandMark.NamedBy:type_name -> amp.Tag
+	18,  // 16: amp.BrandMark.Glyphs:type_name -> amp.Tags
+	64,  // 17: amp.VaultConfig.VaultAddrs:type_name -> amp.VaultAddr
+	17,  // 18: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
+	17,  // 19: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
+	17,  // 20: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
+	36,  // 21: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
+	8,   // 22: amp.PlanetCharter.Privacy:type_name -> amp.PrivacyMode
+	18,  // 23: amp.PlanetCharter.Declaration:type_name -> amp.Tags
+	17,  // 24: amp.PlanetCharter.Founders:type_name -> amp.Tag
+	17,  // 25: amp.EpochTerms.EpochTag:type_name -> amp.Tag
+	17,  // 26: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
+	73,  // 27: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
+	30,  // 28: amp.EpochTerms.Mark:type_name -> amp.BrandMark
+	17,  // 29: amp.EpochTerms.Foyer:type_name -> amp.Tag
+	17,  // 30: amp.EpochTerms.Index:type_name -> amp.Tag
+	17,  // 31: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
+	7,   // 32: amp.EpochTerms.Seal:type_name -> amp.SealState
+	19,  // 33: amp.EpochTerms.CodexEdition:type_name -> amp.Address
+	31,  // 34: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
+	17,  // 35: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
+	35,  // 36: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
+	35,  // 37: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
+	17,  // 38: amp.CoSignature.MemberTag:type_name -> amp.Tag
+	17,  // 39: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
+	17,  // 40: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
+	74,  // 41: amp.WrappedKey.Role:type_name -> safe.KeyRole
+	17,  // 42: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
+	17,  // 43: amp.MemberEpoch.Node:type_name -> amp.Tag
+	17,  // 44: amp.MemberEpoch.Epoch:type_name -> amp.Tag
+	37,  // 45: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
+	9,   // 46: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
+	75,  // 47: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
+	75,  // 48: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
+	19,  // 49: amp.MemberEpoch.Cites:type_name -> amp.Address
+	17,  // 50: amp.MemberEpoch.Kind:type_name -> amp.Tag
+	19,  // 51: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
+	17,  // 52: amp.AccessGrant.MemberTag:type_name -> amp.Tag
+	10,  // 53: amp.AccessGrant.Access:type_name -> amp.Access
+	39,  // 54: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
+	17,  // 55: amp.ChannelEpoch.Channel:type_name -> amp.Tag
+	17,  // 56: amp.ChannelEpoch.Parent:type_name -> amp.Tag
+	17,  // 57: amp.ChannelEpoch.ChType:type_name -> amp.Tag
+	11,  // 58: amp.ChannelEpoch.ContentPolicy:type_name -> amp.ContentPolicy
+	40,  // 59: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
+	40,  // 60: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
+	19,  // 61: amp.ChannelEpoch.Cites:type_name -> amp.Address
+	17,  // 62: amp.Attestation.Subject:type_name -> amp.Tag
+	12,  // 63: amp.Attestation.Type:type_name -> amp.AttestationType
+	17,  // 64: amp.Attestation.ObserverID:type_name -> amp.Tag
+	17,  // 65: amp.Attestation.Modality:type_name -> amp.Tag
+	17,  // 66: amp.Equivalence.LeftAddress:type_name -> amp.Tag
+	17,  // 67: amp.Equivalence.RightAddress:type_name -> amp.Tag
+	17,  // 68: amp.Equivalence.Context:type_name -> amp.Tag
+	17,  // 69: amp.Equivalence.Strength:type_name -> amp.Tag
+	17,  // 70: amp.Withdraw.Subject:type_name -> amp.Tag
+	19,  // 71: amp.Withdraw.Withdrawn:type_name -> amp.Address
+	13,  // 72: amp.Withdraw.Reason:type_name -> amp.WithdrawReason
+	19,  // 73: amp.Withdraw.Delegation:type_name -> amp.Address
+	17,  // 74: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
+	17,  // 75: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
+	17,  // 76: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
+	76,  // 77: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	64,  // 78: amp.PlanetInvite.VaultAddrs:type_name -> amp.VaultAddr
+	77,  // 79: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	10,  // 80: amp.PlanetInvite.GrantedAccess:type_name -> amp.Access
+	76,  // 81: amp.PlanetInvite.RedeemKey:type_name -> safe.KeyPairRecord
+	73,  // 82: amp.PlanetInvite.HashKitID:type_name -> safe.HashKitID
+	17,  // 83: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	10,  // 84: amp.PlanetInviteOp.GrantedAccess:type_name -> amp.Access
+	10,  // 85: amp.PlanetInvitePolicy.GrantedAccess:type_name -> amp.Access
+	14,  // 86: amp.PlanetInvitePolicy.Status:type_name -> amp.InviteStatus
+	75,  // 87: amp.PlanetInvitePolicy.RedeemKey:type_name -> safe.KeyRef
+	10,  // 88: amp.PlanetInviteRedemption.GrantedAccess:type_name -> amp.Access
+	75,  // 89: amp.PlanetInviteRedemption.MemberSigningKey:type_name -> safe.KeyRef
+	73,  // 90: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
+	17,  // 91: amp.BlobRef.AssetTag:type_name -> amp.Tag
+	17,  // 92: amp.BlobRef.BlobTag:type_name -> amp.Tag
+	49,  // 93: amp.Artifact.BlobValue:type_name -> amp.BlobRef
+	17,  // 94: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
+	17,  // 95: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
+	17,  // 96: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
+	36,  // 97: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
+	53,  // 98: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
+	73,  // 99: amp.CodexHeader.DigestHashKit:type_name -> safe.HashKitID
+	55,  // 100: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
+	17,  // 101: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
+	17,  // 102: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
+	20,  // 103: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
+	56,  // 104: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
+	73,  // 105: amp.ChronicleHeader.DigestHashKit:type_name -> safe.HashKitID
+	58,  // 106: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
+	15,  // 107: amp.AppTarget.Platform:type_name -> amp.PlatformID
+	60,  // 108: amp.Brand.Targets:type_name -> amp.AppTarget
+	61,  // 109: amp.Brand.Links:type_name -> amp.AppLink
+	62,  // 110: amp.Brand.BundledCrates:type_name -> amp.CrateRef
+	17,  // 111: amp.Brand.NamedBy:type_name -> amp.Tag
+	17,  // 112: amp.Brand.TemplateSet:type_name -> amp.Tag
+	17,  // 113: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
+	19,  // 114: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
+	63,  // 115: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
+	64,  // 116: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
+	17,  // 117: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
+	17,  // 118: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
+	17,  // 119: amp.FederationPeer.FederationID:type_name -> amp.Tag
+	64,  // 120: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
+	66,  // 121: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
+	69,  // 122: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	71,  // 123: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	72,  // 124: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	70,  // 125: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
 	126, // [126:126] is the sub-list for method output_type
 	126, // [126:126] is the sub-list for method input_type
 	126, // [126:126] is the sub-list for extension type_name
