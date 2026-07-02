@@ -21,6 +21,8 @@ tags Attr {
         LoginChallenge    "LoginChallenge"
         LoginResponse     "LoginResponse"
         LoginCheckpoint   "LoginCheckpoint"
+        TxSealChallenge   "TxSealChallenge"
+        TxSealResponse    "TxSealResponse"
         MintMemberToken   "MintMemberToken"
         MemberToken       "MemberToken"
         SessionStatus     "Status"
