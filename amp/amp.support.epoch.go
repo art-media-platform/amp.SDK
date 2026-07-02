@@ -97,24 +97,36 @@ func (t *EpochTerms) IsGenesis() bool {
 	return prev == nil || prev.UID().IsNil()
 }
 
-// VerifyCoSignature checks that cosig is a valid signature over this envelope's
-// FRAME using signerPubKey under signerKit.  Returns nil on success.
+// CoSignatureDigest returns the domain-separated digest a founder/admin signs and
+// a verifier checks for this epoch — SigningDomain_EpochCoSign (safe.sign.go) bound
+// over the FRAME under the epoch's hash policy.  The single authoritative epoch
+// cosign digest (the epoch twin of TxSignedDigest): the producer signs it, the
+// verifier checks it, and no site re-derives what an epoch co-signature covers.
+// The domain tag keeps a founder's epoch signature from being reused as a TxMsg
+// author seal, and the fixed 32-byte digest keeps every CryptoKit's input uniform.
+func (pe *PlanetEpoch) CoSignatureDigest() ([]byte, error) {
+	frame, err := pe.SignedBytes()
+	if err != nil {
+		return nil, err
+	}
+	terms, err := pe.ParsedTerms()
+	if err != nil {
+		return nil, err
+	}
+	return safe.SigningDigest(terms.EffectiveHashKit(), safe.SigningDomain_EpochCoSign, frame)
+}
+
+// VerifyCoSignature checks that cosig is a valid signature over this epoch's
+// CoSignatureDigest using signerPubKey under signerKit.  Returns nil on success.
 func (pe *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []byte, signerKit safe.CryptoKitID) error {
 	if cosig == nil || len(cosig.Signature) == 0 {
 		return status.Code_BadRequest.Error("amp: empty CoSignature")
 	}
-	kit, err := safe.CryptoKit(signerKit)
+	digest, err := pe.CoSignatureDigest()
 	if err != nil {
 		return err
 	}
-	if kit.Signing == nil || kit.Signing.Verify == nil {
-		return status.Code_Unimplemented.Errorf("CryptoKit %s does not support verification", signerKit.String())
-	}
-	frame, err := pe.SignedBytes()
-	if err != nil {
-		return err
-	}
-	return kit.Signing.Verify(cosig.Signature, frame, signerPubKey)
+	return safe.VerifySignature(signerKit, cosig.Signature, digest, signerPubKey)
 }
 
 // AssembleEpoch marshals charter + terms exactly ONCE, binds the Charter hash

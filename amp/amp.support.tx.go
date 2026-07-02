@@ -660,8 +660,10 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 	sigSize := crypto.SignatureSize()
 	binary.BigEndian.PutUint16(buf[12:14], uint16(sigSize))
 
-	// --- Sign: hash(wire before signature) → append signature ---
-	digest, err := crypto.HashDigest(buf)
+	// --- Sign: domain-separated digest over the wire before signature → append ---
+	// The SigningDomain_TxAuthor tag (safe.sign.go) prefixes the hashed bytes so an
+	// author seal can never be produced or accepted in another signing context.
+	digest, err := crypto.HashDigest(safe.SigningDomainTag(safe.SigningDomain_TxAuthor), buf)
 	if err != nil {
 		return err
 	}
@@ -691,23 +693,22 @@ func TxSigOffset(raw []byte) (sigOfs int, err error) {
 	return len(raw) - sigLen, nil
 }
 
-// TxSignedDigest parses a sealed TxMsg wire image and returns the digest a verifier checks —
-// hashKitID run over the bytes preceding the signature — together with the trailing signature
-// bytes.  Verifiers pass these to their chosen backend (safe.VerifySignature, a CryptoProvider's
-// VerifyDigest, …); the parse + digest live in one place so the wire contract is not
-// re-implemented per caller.
+// TxSignedDigest parses a sealed TxMsg wire image and returns the domain-separated
+// digest a verifier checks — SigningDomain_TxAuthor bound into hashKitID run over
+// the bytes preceding the signature — together with the trailing signature bytes.
+// Verifiers pass these to their chosen backend (safe.VerifySignature, a
+// CryptoProvider's VerifyDigest, …); the parse + digest live in one place so the
+// wire contract is never re-implemented per caller (SealTx binds the same domain).
 func TxSignedDigest(raw []byte, hashKitID safe.HashKitID) (digest, sig []byte, err error) {
 	sigOfs, err := TxSigOffset(raw)
 	if err != nil {
 		return nil, nil, err
 	}
-	hashKit, err := safe.NewHashKit(hashKitID)
+	digest, err = safe.SigningDigest(hashKitID, safe.SigningDomain_TxAuthor, raw[:sigOfs])
 	if err != nil {
 		return nil, nil, err
 	}
-	hashKit.Hasher.Reset()
-	hashKit.Hasher.Write(raw[:sigOfs])
-	return hashKit.Hasher.Sum(nil), raw[sigOfs:], nil
+	return digest, raw[sigOfs:], nil
 }
 
 // OpenTx verifies the signature and decrypts a sealed wire-format TxMsg.
@@ -790,7 +791,7 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 		signedData := wire[:sigOfs]
 		sig := wire[sigOfs:]
 
-		digest, err := crypto.HashDigest(signedData)
+		digest, err := crypto.HashDigest(safe.SigningDomainTag(safe.SigningDomain_TxAuthor), signedData)
 		if err != nil {
 			return nil, err
 		}

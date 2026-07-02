@@ -37,12 +37,12 @@ func TestPlanetEpoch_SignVerify_Roundtrip(t *testing.T) {
 	epoch := makeTestEpoch(t)
 	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 
-	frame, err := epoch.SignedBytes()
+	digest, err := epoch.CoSignatureDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sig, err := kit.Signing.Sign(frame, prv)
+	sig, err := kit.Signing.Sign(digest, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,11 +66,11 @@ func TestPlanetEpoch_Verify_RejectsTampered(t *testing.T) {
 	epoch := makeTestEpoch(t)
 	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 
-	frame, err := epoch.SignedBytes()
+	digest, err := epoch.CoSignatureDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
-	sig, err := kit.Signing.Sign(frame, prv)
+	sig, err := kit.Signing.Sign(digest, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	epoch := makeTestEpoch(t)
 
-	frame, err := epoch.SignedBytes()
+	digest, err := epoch.CoSignatureDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,11 +119,11 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 	polyKit, polyPub, polyPrv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
 	p256Kit, p256Pub, p256Prv := freshKeyPair(t, safe.Crypto.P256.ID)
 
-	polySig, err := polyKit.Signing.Sign(frame, polyPrv)
+	polySig, err := polyKit.Signing.Sign(digest, polyPrv)
 	if err != nil {
 		t.Fatal(err)
 	}
-	p256Sig, err := p256Kit.Signing.Sign(frame, p256Prv)
+	p256Sig, err := p256Kit.Signing.Sign(digest, p256Prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,11 +195,11 @@ func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 
 	honest := mkEnv("We, Alice and Bob, found this planet for our shared art practice.")
 	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
-	frame, err := honest.SignedBytes()
+	digest, err := honest.CoSignatureDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
-	sig, err := kit.Signing.Sign(frame, prv)
+	sig, err := kit.Signing.Sign(digest, prv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,11 +255,11 @@ func TestPlanetEpoch_Witnesses_VerifyOverSameFrame(t *testing.T) {
 	epoch := makeTestEpoch(t)
 
 	kit, pub, prv := freshKeyPair(t, safe.Crypto.Poly25519.ID)
-	frame, err := epoch.SignedBytes()
+	digest, err := epoch.CoSignatureDigest()
 	if err != nil {
 		t.Fatal(err)
 	}
-	witnessSig, err := kit.Signing.Sign(frame, prv)
+	witnessSig, err := kit.Signing.Sign(digest, prv)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -47,16 +47,16 @@ func TestEpochVerbatim_Roundtrip(t *testing.T) {
 		t.Fatalf("AssembleEpoch: %v", err)
 	}
 
-	// 2) Sign the FRAME (the stored bytes), append a CoSignature.
-	frame, err := env.SignedBytes()
+	// 2) Sign the epoch cosign digest (domain-separated over the FRAME), append a CoSignature.
+	digest, err := env.CoSignatureDigest()
 	if err != nil {
-		t.Fatalf("SignedBytes: %v", err)
+		t.Fatalf("CoSignatureDigest: %v", err)
 	}
 	kp := safe.KeyPair{Pub: safe.PubKey{CryptoKitID: kitID, KeyType: safe.KeyType_SigningKey}}
 	if err := kit.Signing.Generate(rand.Reader, &kp); err != nil {
 		t.Fatalf("Generate: %v", err)
 	}
-	sig, err := kit.Signing.Sign(frame, kp.Prv)
+	sig, err := kit.Signing.Sign(digest, kp.Prv)
 	if err != nil {
 		t.Fatalf("Sign: %v", err)
 	}
