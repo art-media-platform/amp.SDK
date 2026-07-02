@@ -24,7 +24,7 @@ var (
 // CLI flag, user input) so an inbound base32 UID round-trips intact
 // instead of being re-hashed.
 //
-// See the package README for the Parse vs NameFrom distinction and the
+// See the package README for the Parse vs HashName distinction and the
 // silent-failure footgun if you pick wrong.  Mirrors C# TagName.Parse.
 func Parse(s string) (Name, error) {
 	if strings.IndexByte(s, CanonicSeparatorChar) >= 0 || PathStart(s) >= 0 {
@@ -43,15 +43,13 @@ func ParseUID(s string) UID {
 	return name.ID
 }
 
-// NameFrom canonizes s as a tag-name expression, ALWAYS hashing — even
-// a 26-char base32 string the caller may have meant as a UID.  Use only on
-// hardcoded canonic expressions you constructed yourself (`"eth:" + addr`,
-// `"amp.member.profile"`).
-//
-// For ANY wire / file / user-input string use Parse — NameFrom on an
-// inbound base32 UID re-hashes the string and silently produces the wrong
-// UID.  See the package README.
-func NameFrom(s string) Name {
+// HashName HASHES its input: it canonizes s as a tag-name expression and
+// ALWAYS hashes — even a 26-char base32 string the caller may have meant as
+// a UID.  Parsing an inbound base32 UID with it silently mints a different
+// UID.  Use only on hardcoded canonic expressions you constructed yourself
+// (`"eth:" + addr`, `"amp.member.profile"`); wire input uses Parse /
+// UID_ParseBase32.  See the package README.
+func HashName(s string) Name {
 	return Name{}.With(s)
 }
 
@@ -366,7 +364,7 @@ func Wildcard() Name {
 // canonization, no commutative fold.  Use for opaque-bytes identity
 // (content hashes, raw blob digests, fixed-format binary tokens).  For
 // human-readable text or scheme:identifier expressions where
-// canonization is the point, use [NameFrom] (or [Parse] for
+// canonization is the point, use [HashName] (or [Parse] for
 // outside-the-program inputs).
 func UID_HashLiteral(literal []byte) UID {
 
@@ -500,7 +498,7 @@ func (id UID) Midpoint(oth UID) UID {
 // UID is the atomic hash of its canonic string — order significant); canonicID
 // still uses it to combine the name part with a scheme:identifier part, and its
 // commutativity there is what keeps scheme:identifier UIDs (eth:, did:) stable.
-// Also the UID-arithmetic chaining primitive behind WithName/WithLiteral.
+// Also the UID-arithmetic chaining primitive behind WithName/HashLiteral.
 func (id UID) With(other UID) UID {
 	return id.Add(other)
 }
@@ -564,19 +562,19 @@ func (id *UID) Decrement() bool {
 // followed by the canonized name's UID bytes.  Order-preserving — parent
 // then child — and collision-resistant (full hash, no commutative fold).
 func (id UID) WithName(name string) UID {
-	return id.WithLiteral(UID_FromName(name).AppendTo(nil))
+	return id.HashLiteral(UID_FromName(name).AppendTo(nil))
 }
 
-// WithString derives a child UID from this UID + a literal token, atomically.
-func (id UID) WithString(tagToken string) UID {
-	return id.WithLiteral([]byte(tagToken))
+// HashString derives a child UID by HASHING this UID + a literal token, atomically.
+func (id UID) HashString(tagToken string) UID {
+	return id.HashLiteral([]byte(tagToken))
 }
 
-// WithLiteral derives a child UID by atomically hashing this UID's 16 bytes
+// HashLiteral derives a child UID by atomically hashing this UID's 16 bytes
 // followed by the literal — order-significant (parent precedes literal) and
 // collision-resistant.  Use for hierarchical derivation (parent UID + name →
 // child UID), e.g. filesystem item IDs.  No commutative fold.
-func (id UID) WithLiteral(tagLiteral []byte) UID {
+func (id UID) HashLiteral(tagLiteral []byte) UID {
 	buf := id.AppendTo(make([]byte, 0, 2*8+len(tagLiteral)))
 	buf = append(buf, tagLiteral...)
 	return UID_HashLiteral(buf)
@@ -623,7 +621,8 @@ func (id UID) Int63() int64 {
 	return int64(u64 >> 1)
 }
 
-// Base16 smartly encodes the given byte slice to a hex string prefixed with "0x" if appropriate.
+// Base16 encodes this UID as a "0x"-prefixed hex string with leading zeros
+// trimmed; the zero UID encodes as "0" (no prefix).
 func (id UID) Base16() string {
 	const HexChars = "0123456789ABCDEF"
 
@@ -677,7 +676,7 @@ func (id UID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON decodes a quoted base32 (or canonic name expression) into
 // a UID via Parse — so an inbound base32 UID round-trips intact instead of
-// being re-hashed by NameFrom-style canonization.  null and "" both
+// being re-hashed by HashName-style canonization.  null and "" both
 // decode to the zero UID.
 func (id *UID) UnmarshalJSON(b []byte) error {
 	if len(b) == 0 || string(b) == "null" {
@@ -730,7 +729,7 @@ func (id UID) IsWildcard() bool {
 	return false
 }
 
-// Returns true if this UID is non-nil and valid and less than UID.MaxID()
+// IsSet returns true if this UID is non-nil and ≤ MaxID (reserved sentinels excluded).
 func (id UID) IsSet() bool {
 	return (id[0] != 0 || id[1] != 0) && (id[0] < UID_0_Max || id[1] <= UID_1_Max)
 }

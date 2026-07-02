@@ -68,9 +68,9 @@ func TestTag(t *testing.T) {
 	}
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
-		holyExpr := tag.NameFrom(Genesis)
+		holyExpr := tag.HashName(Genesis)
 		if holyExpr.ID.Base32() != "3evfmjwnbj2wg7qb93xk3zyr2b" {
-			t.Fatalf("tag.NameFrom() failed: got %v", holyExpr.ID.Base32())
+			t.Fatalf("tag.HashName() failed: got %v", holyExpr.ID.Base32())
 		}
 
 		// Order is significant: reordered literals yield a DISTINCT UID (the
@@ -82,7 +82,7 @@ func TestTag(t *testing.T) {
 				parts[i], parts[j] = parts[j], parts[i]
 			})
 			tryExpr := strings.Join(parts, ".")
-			try := tag.NameFrom(tryExpr)
+			try := tag.HashName(tryExpr)
 			if tryExpr == holyExpr.Text {
 				if try.ID != holyExpr.ID {
 					t.Fatalf("identity permutation changed UID: got %v", try)
@@ -116,15 +116,15 @@ func TestTag(t *testing.T) {
 
 func TestNameOrderAndIdentity(t *testing.T) {
 	// Plain multi-word names are order-significant (no commutative fold).
-	if tag.NameFrom("spaces.plan.tools").ID == tag.NameFrom("tools.plan.spaces").ID {
+	if tag.HashName("spaces.plan.tools").ID == tag.HashName("tools.plan.spaces").ID {
 		t.Fatal("plain-name UID must depend on word order")
 	}
-	if tag.NameFrom("hello world").ID == tag.NameFrom("world hello").ID {
+	if tag.HashName("hello world").ID == tag.HashName("world hello").ID {
 		t.Fatal("plain-name UID must depend on word order")
 	}
 
 	// A single literal hashes atomically — identity unchanged.
-	if tag.NameFrom("hello").ID != tag.UID_HashLiteral([]byte("hello")) {
+	if tag.HashName("hello").ID != tag.UID_HashLiteral([]byte("hello")) {
 		t.Fatal("single-literal name must equal HashLiteral(word)")
 	}
 
@@ -138,7 +138,7 @@ func TestNameOrderAndIdentity(t *testing.T) {
 		"did:pkh:eip155:1:0xabcdef1234567890abcdef1234567890abcdef12",
 		"https://example.com/path",
 	} {
-		name := tag.NameFrom(expr)
+		name := tag.HashName(expr)
 		split := tag.PathStart(name.Text)
 		if split < 0 {
 			t.Fatalf("%q: expected a URL split in canonic %q", expr, name.Text)

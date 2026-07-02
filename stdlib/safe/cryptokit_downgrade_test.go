@@ -50,7 +50,7 @@ func TestCryptoKit_DowngradeFailsClosed(t *testing.T) {
 
 	// Downgrade attempt: the identical signature presented under a different,
 	// unregistered suite UID must fail closed (Code_ItemNotFound).
-	bogus := tag.NameFrom("net.attacker.downgrade").ID
+	bogus := tag.HashName("net.attacker.downgrade").ID
 	if err := safe.VerifySignature(bogus, sig, digest, kp.Pub.Bytes); status.GetCode(err) != status.Code_ItemNotFound {
 		t.Fatalf("downgrade under an unregistered suite must fail closed (ItemNotFound); got %v", err)
 	}

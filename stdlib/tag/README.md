@@ -65,9 +65,9 @@ Pre-computing tag UIDs at build time — so they're literals in your binary, not
 Two ways to produce a `Name` from a string, and the choice matters:
 
 - **`tag.Parse(str)`** — for ANY string that came from outside the program (wire, file, CLI flag, user input). Auto-detects format: a 26-char Base32 string decodes back to its original UID; anything else is canonized. **Inbound UIDs round-trip intact** — they're not re-hashed.
-- **`tag.NameFrom(str)`** — for hardcoded canonic expressions you constructed yourself (`"eth:" + addr`, `"a.profile.context"`). Always hashes through the canonic word fold.
+- **`tag.HashName(str)`** — for hardcoded canonic expressions you constructed yourself (`"eth:" + addr`, `"a.profile.context"`). Always hashes through the canonic word fold — hashing is in the verb.
 
-Warning: calling `NameFrom` on an inbound Base32 string re-hashes the *string* instead of decoding it as a UID — and the failure is silent (you just get the wrong UID). When in doubt, use `Parse`.
+Warning: calling `HashName` on an inbound Base32 string re-hashes the *string* instead of decoding it as a UID — and the failure is silent (you just get the wrong UID). When in doubt, use `Parse`.
 
 ## Canonic Forms
 

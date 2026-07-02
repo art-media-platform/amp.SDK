@@ -12,7 +12,7 @@ import (
 )
 
 func TestTagJSONBase32(t *testing.T) {
-	uid := tag.NameFrom("spaces.plan.tools").ID
+	uid := tag.HashName("spaces.plan.tools").ID
 	in := &amp.Tag{UID_0: uid[0], UID_1: uid[1], ContentTypeRaw: "image/png", URI: "amp://x/y"}
 
 	data, err := json.Marshal(in)
@@ -36,7 +36,7 @@ func TestTagJSONBase32(t *testing.T) {
 }
 
 func TestCrateRefJSONBase32(t *testing.T) {
-	uid := tag.NameFrom("crate.blob").ID
+	uid := tag.HashName("crate.blob").ID
 	in := &amp.CrateRef{CrateURI: "asset:pub/crate", BlobID_0: uid[0], BlobID_1: uid[1]}
 
 	data, err := json.Marshal(in)
@@ -57,11 +57,11 @@ func TestCrateRefJSONBase32(t *testing.T) {
 }
 
 func TestAddressJSONPackedBase32(t *testing.T) {
-	node := tag.NameFrom("the.node").ID
-	attr := tag.NameFrom("the.attr").ID
-	item := tag.NameFrom("the.item").ID
+	node := tag.HashName("the.node").ID
+	attr := tag.HashName("the.attr").ID
+	item := tag.HashName("the.item").ID
 	edit := tag.NowID()
-	planet := tag.NameFrom("the.planet").ID
+	planet := tag.HashName("the.planet").ID
 
 	cases := []struct {
 		name string
