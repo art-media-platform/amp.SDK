@@ -133,6 +133,7 @@ var Attr = struct {
 	LawWithdrawReason_Retracted        tag.Name
 	LedgerAttr                         tag.Name
 	LedgerAttestation                  tag.Name
+	ArbitrateAttr                      tag.Name
 	MemberAttr                         tag.Name
 	PlanetInvite                       tag.Name
 	PlanetInviteOp                     tag.Name
@@ -335,6 +336,11 @@ var Attr = struct {
 	LedgerAttr: tag.Name{ID: tag.UID{0x82BC4E1F6FB05241, 0x03CA388E1C44C848}, Text: "amp.ledger"}, // 42rj71yvxhb90h7kjsjsf49k28
 
 	LedgerAttestation: tag.Name{ID: tag.UID{0x3C774A8A36241368, 0x2074703AFA0EF846}, Text: "amp.ledger.Attestation"}, // 1wfx58nej42en20x3h7cx0xy26
+
+	// ─── Planet arbitration channel — dispute proceedings, appeals, and formal ───
+	// rulings.  Peer institution to the ACC (which legislates) and the Ledger
+	// (which records the evidence).
+	ArbitrateAttr: tag.Name{ID: tag.UID{0xDF2729755E06E633, 0xFCEAF9377C838C59}, Text: "amp.arbitrate"}, // 6z4wnrbrh6wstzturt6xy8732t
 
 	// ─── Member lifecycle ───────────────────────────────────────────
 	MemberAttr: tag.Name{ID: tag.UID{0x4CCC7C4A23169DBF, 0x2EC0059288020E9F}, Text: "amp.member"}, // 2dtjy4n8sqmqzkxh05kb4043nz

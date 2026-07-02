@@ -160,7 +160,13 @@ func (tx *TxMsg) LoadValue(want *tag.Address, dst proto.Message) error {
 	tx.Normalize(false)
 
 	if want.ItemID.IsWildcard() {
-		panic("TODO") // add ItemID wildcard support; replicate code in amp.3D.client
+		for i := range tx.Ops {
+			addr := &tx.Ops[i].Addr
+			if addr.NodeID == want.NodeID && addr.AttrID == want.AttrID {
+				return tx.UnmarshalOpValue(i, dst)
+			}
+		}
+		return status.ErrAttrNotFound
 	}
 
 	N := len(tx.Ops)
@@ -589,6 +595,12 @@ type CryptoProvider interface {
 //
 // If crypto is nil, the TxMsg is marshaled without encryption or signing (local session use).
 func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
+	if crypto == nil {
+		// No crypto — standard marshal (local session traffic)
+		tx.MarshalHeadAndOps(dst)
+		return nil
+	}
+
 	buf := *dst
 	if cap(buf) < 2048 {
 		buf = make([]byte, 2048)
@@ -597,18 +609,7 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 	// --- Marshal the payload (TxHeader + TxOps) without preamble or envelope ---
 	tx.OpCount = uint64(len(tx.Ops))
 	tx.TxEnvelope.HeaderOffset = 0
-
-	// Marshal TxEnvelope to a temp buffer so we can measure it
-	envBuf, _ := writePb(nil, &tx.TxEnvelope)
-
-	// Marshal payload: TxHeader + TxOps
 	payload := marshalPayload(tx, nil)
-
-	if crypto == nil {
-		// No crypto — standard marshal (local session traffic)
-		tx.MarshalHeadAndOps(dst)
-		return nil
-	}
 
 	// --- Encrypt payload if epoch is set (private planet/channel) ---
 	isPublic := tx.TxEnvelope.IsPublic()
@@ -637,8 +638,8 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 
 	// --- Build the wire buffer: Preamble | Envelope | Payload [| DataStore] | Signature ---
 
-	// Re-marshal envelope now that MemberProof is set
-	envBuf, _ = writePb(nil, &tx.TxEnvelope)
+	// Marshal the envelope (MemberProof, when sealed, is set above)
+	envBuf, _ := writePb(nil, &tx.TxEnvelope)
 
 	buf = buf[:TxPreambleSize]
 	copy(buf[:4], TxPreambleSignature)

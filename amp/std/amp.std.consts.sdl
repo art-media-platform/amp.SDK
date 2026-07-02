@@ -203,6 +203,12 @@ tags Attr {
         LedgerAttestation "Attestation"
     }
 
+    // Planet arbitration channel — dispute proceedings, appeals, and formal
+    // rulings.  Peer institution to the ACC (which legislates) and the Ledger
+    // (which records the evidence).
+    ArbitrateAttr "amp.arbitrate" {
+    }
+
     // Member lifecycle
     MemberAttr "amp.member" {
         PlanetInvite    "PlanetInvite"

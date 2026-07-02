@@ -43,7 +43,7 @@ var LedgerNodeID = Attr.LedgerAttr.ID
 // ArbitrateNodeID is the well-known channel UID of the planet arbitration channel —
 // reserved for dispute proceedings, appeals, and formal rulings.  Peer institution
 // to the ACC (which legislates) and the Ledger (which records the evidence).
-var ArbitrateNodeID = tag.Name{}.With("amp.arbitrate").ID
+var ArbitrateNodeID = Attr.ArbitrateAttr.ID
 
 func PushSessionOp(sess amp.Session, attrID tag.UID, value proto.Message) error {
 	return PushMetaOp(attrID, value, sess, sess, SessionContextID, amp.PinStatus_Synced)
