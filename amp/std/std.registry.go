@@ -123,4 +123,3 @@ func (reg *registry) NewValue(attrID tag.UID) (proto.Message, error) {
 	}
 	return data.NewLike(def.Prototype), nil
 }
-

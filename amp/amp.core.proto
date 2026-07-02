@@ -1097,7 +1097,8 @@ message PlanetInvite {
     // Proof-signing keypair.  Prv is cleartext within the passphrase-sealed
     // invite (like TempKey); a redeemer signs its redemption's RedeemProof with
     // it, making passphrase + token possession publicly verifiable against the
-    // invite policy's anchored public half.  Empty on pre-ledger invites.
+    // invite policy's anchored public half.  Empty ⇒ the accept leaves no
+    // redemption record.
     safe.KeyPairRecord  RedeemKey = 28;
 
     // The planet's hash policy (EpochTerms.EffectiveHashKit) — the digest kit a
@@ -1118,12 +1119,14 @@ message PlanetInviteOp {
     // or to decrypt an incoming encrypted invite blob (accept).
     string              Passphrase = 5;
 
-    // Encrypted PlanetInvite blob (accept only).
-    // On create this is empty; the response returns the encrypted blob.
+    // The invite artifact being redeemed/accepted, as the string the caller
+    // holds: the full invite URL or its amp-base32 body (either carrier decodes
+    // to the sealed token — one codec, invite.DecodeCarrier).  Empty on issue;
+    // the issue response returns the sealed token bytes here.
     bytes               SealedInvite = 10;
 
     // Redemption ceiling for the invite being issued.  0 = unset → single-use
-    // pre-minted slot (today's behavior); > 0 → multi-use self-mint policy.
+    // pre-minted slot; > 0 → multi-use self-mint policy.
     uint32              MaxRedemptions = 15;
 
     // Access granted to each redeemer (issue).  NotAllowed (0) = unset → the
@@ -1136,45 +1139,14 @@ message PlanetInviteOp {
 
     // Invite ID — the sealed-body hash — addressing an existing policy
     // (revoke / list).
-    Tag                 InviteTag = 18;
+    fixed64             InviteID_0 = 20;
+    fixed64             InviteID_1 = 21;
 
     // The member a redemption minted (redeem response) — the self-minted
     // identity now seated on the planet.
-    Tag                 MemberTag = 19;
+    fixed64             MemberID_0 = 22;
+    fixed64             MemberID_1 = 23;
 }
-
-
-// PlanetInviteRedemption is the durable, signed record of one invite redemption —
-// the audit / legal trail of who joined via which invite and when.  The app.invite
-// redemption engine (a future workstream) writes one per redemption to the planet's
-// invite-audit channel; carried on the wire now but not yet produced or enforced.
-// Kept LAST in the file so adding it shifts no other message's generated type index.
-message PlanetInviteRedemption {
-
-    // The original invite that was redeemed, keyed by the hash of its sealed body
-    // (stable across copies).
-    Tag                 Invite = 1;
-
-    // Member identity that joined via this redemption — self-minted by the redeemer
-    // for a multi-use invite, or the invite's pre-assigned member for single-use.
-    Tag                 Member = 2;
-
-    // Redemption NowID — a time-ordered UID that both uniquely stamps this
-    // redemption and encodes when it happened.
-    fixed64             RedeemedAt_0 = 3;   // bytes 0..7
-    fixed64             RedeemedAt_1 = 4;   // bytes 8..15
-
-    // Access granted at redemption — a snapshot of the invite's GrantedAccess so the
-    // record stands alone as the authoritative grant proof.
-    Access              GrantedAccess = 5;
-
-    // Domain-separated RedeemKey signature (safe.SigningDomain amp.sig.invite.v1)
-    // over (planet, invite, member, RedeemedAt, member signing key) — proves the
-    // redeemer opened the sealed token, verifiable by any third party against the
-    // policy's anchored RedeemKey.  A record without a valid proof is void.
-    bytes               RedeemProof = 6;
-}
-
 
 
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
@@ -1689,12 +1661,12 @@ enum InviteStatus {
 // token: the founder/admin-authored rules an invite is redeemed under.  Lives
 // planet-public at (PlanetInvites channel, PlanetInvitePolicy, inviteID) where
 // inviteID is the hash of the sealed token body — computable identically by
-// issuer, redeemer, and the ACC gate.  Kept last in the file with
-// PlanetInviteRedemption; keep new messages after it.
+// issuer, redeemer, and the ACC gate.
 message PlanetInvitePolicy {
 
     // The invite this policy governs, keyed by the hash of its sealed body.
-    Tag                 Invite = 1;
+    fixed64             InviteID_0 = 8;
+    fixed64             InviteID_1 = 9;
 
     // Max redemptions.  0 = unset → single-use pre-minted slot (Member below
     // pins the slot); > 0 → multi-use self-mint.
@@ -1716,8 +1688,47 @@ message PlanetInvitePolicy {
     // proof → redemption → member.
     safe.KeyRef         RedeemKey = 6;
 
-    // Single-use only: the pre-minted member this invite admits.  Empty for
+    // Single-use only: the pre-minted member this invite admits.  Zero for
     // multi-use (each redeemer self-mints).
-    Tag                 Member = 7;
+    fixed64             MemberID_0 = 10;
+    fixed64             MemberID_1 = 11;
 }
 
+
+// PlanetInviteRedemption is the durable, signed record of one invite redemption —
+// the audit / legal trail of who joined via which invite and when.  The redeem
+// and accept engines write one per redemption in the same tx as the joining
+// MemberEpoch; the ACC invite rule gates its admission on every vault, and
+// in-rank records project root-channel member grants (SD-invite-governance §6).
+message PlanetInviteRedemption {
+
+    // The redeemed invite, keyed by the hash of its sealed body (stable across
+    // copies).
+    fixed64             InviteID_0 = 7;
+    fixed64             InviteID_1 = 8;
+
+    // Member identity that joined via this redemption — self-minted by the redeemer
+    // for a multi-use invite, or the invite's pre-assigned member for single-use.
+    fixed64             MemberID_0 = 9;
+    fixed64             MemberID_1 = 10;
+
+    // Redemption NowID — a time-ordered UID that both uniquely stamps this
+    // redemption and encodes when it happened.
+    fixed64             RedeemedAt_0 = 3;   // bytes 0..7
+    fixed64             RedeemedAt_1 = 4;   // bytes 8..15
+
+    // Access granted at redemption — a snapshot of the invite's GrantedAccess so the
+    // record stands alone as the authoritative grant proof.
+    Access              GrantedAccess = 5;
+
+    // The member signing key the RedeemProof binds — carried so the record
+    // verifies standalone after the member later rotates keys.  Must equal the
+    // same-tx MemberEpoch.SigningKey at admission.
+    safe.KeyRef         MemberSigningKey = 11;
+
+    // Domain-separated RedeemKey signature (safe.SigningDomain amp.sig.invite.v1)
+    // over (planet, invite, member, RedeemedAt, member signing key) — proves the
+    // redeemer opened the sealed token, verifiable by any third party against the
+    // policy's anchored RedeemKey.  A record without a valid proof is void.
+    bytes               RedeemProof = 6;
+}
