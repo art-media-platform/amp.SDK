@@ -115,7 +115,7 @@ message UIDRange {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Tx framing & ops
+// Tx & Ledger
 // ══════════════════════════════════════════════════════════════════════
 
 // TxOpFlags are 8 available bit flags that describe a TxOp.
@@ -194,14 +194,17 @@ message TxEnvelope {
     fixed64             TxID_0 = 1;
     fixed64             TxID_1 = 2;
 
-    // Which planet this tx should be applied to.
-    Tag                 Planet = 6;
+    // Which planet this tx should be applied to.  Fixed-size by design: the
+    // envelope is the cleartext, relay-parsed, pre-authentication surface.
+    fixed64             Planet_0 = 3;
+    fixed64             Planet_1 = 4;
 
-    // Which epoch (planet or channel) this tx was created within.
-    // Determines which epoch keyring to use for encryption/decryption.
-    // Works for both planet-level and channel-level encryption.
-    // A single TxMsg is encrypted under exactly one epoch — never mixed.
-    Tag                 Epoch = 7;
+    // Which epoch (planet or channel) this tx was created within — selects the
+    // epoch keyring for encryption/decryption (planet- or channel-level).  A
+    // single TxMsg is encrypted under exactly one epoch — never mixed.
+    // Zero denotes planet-public (unencrypted).
+    fixed64             Epoch_0 = 8;
+    fixed64             Epoch_1 = 9;
 
     // Proves sender is a planet/channel member without revealing identity, so
     // relay vaults can reject spam without decrypting content.
@@ -376,7 +379,7 @@ message LoginCheckpoint {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Planet genesis & epochs
+// Planet Genesis & Epochs
 // ══════════════════════════════════════════════════════════════════════
 
 // SealState is the planet's lifecycle posture as asserted by the signing quorum
@@ -759,7 +762,7 @@ message PlanetOrigin {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Members & governance
+// Members & Governance
 // ══════════════════════════════════════════════════════════════════════
 
 // MemberStatus is the member's lifecycle state as of this MemberEpoch.
@@ -928,7 +931,7 @@ message ChannelEpoch {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Ledger & attestation
+// Ledger & Attestation
 // ══════════════════════════════════════════════════════════════════════
 
 // AttestationType names the kind of observation being recorded in the planet ledger.

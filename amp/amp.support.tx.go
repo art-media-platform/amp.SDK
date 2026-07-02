@@ -47,9 +47,34 @@ func (tx *TxEnvelope) SetTxID(ID tag.UID) {
 	tx.TxID_1 = ID[1]
 }
 
+// PlanetID returns the planet this tx applies to.
+func (tx *TxEnvelope) PlanetID() tag.UID {
+	return tag.UID{tx.Planet_0, tx.Planet_1}
+}
+
+// SetPlanetID sets the planet this tx applies to — the routing lever.
+func (tx *TxEnvelope) SetPlanetID(planetID tag.UID) {
+	tx.Planet_0 = planetID[0]
+	tx.Planet_1 = planetID[1]
+}
+
+// EpochID returns the epoch (planet or channel) keying this tx's payload;
+// zero = planet-public.
+func (tx *TxEnvelope) EpochID() tag.UID {
+	return tag.UID{tx.Epoch_0, tx.Epoch_1}
+}
+
+// SetEpochID sets the epoch that keys this tx's payload — the privacy lever,
+// independent of routing (Planet) and author (FromID).  Zero leaves the tx
+// planet-public.
+func (tx *TxEnvelope) SetEpochID(epochID tag.UID) {
+	tx.Epoch_0 = epochID[0]
+	tx.Epoch_1 = epochID[1]
+}
+
 // IsPublic returns true if this Tx is planet-public (unencrypted).
 func (tx *TxEnvelope) IsPublic() bool {
-	return tx.Epoch == nil || tx.Epoch.IsNil()
+	return tx.Epoch_0 == 0 && tx.Epoch_1 == 0
 }
 
 // PlanetEpochUID returns the planet epoch UID recorded in this envelope.
