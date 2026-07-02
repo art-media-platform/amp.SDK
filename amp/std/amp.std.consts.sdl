@@ -10,74 +10,75 @@ option csharp_namespace = "art.media.platform.std";
 
 tags Attr {
 
-    // App-centric tags
-    App "app" {
-        AppState "state"
-    }
+    // App-centric tags — the app-registry root (module names fold under it)
+    App "app"
 
     // Session management
     SessionAttr "session" {
-        Login             "Login"
-        LoginChallenge    "LoginChallenge"
-        LoginResponse     "LoginResponse"
-        LoginCheckpoint   "LoginCheckpoint"
-        TxSealChallenge   "TxSealChallenge"
-        TxSealResponse    "TxSealResponse"
-        MintMemberToken   "MintMemberToken"
-        MemberToken       "MemberToken"
-        SessionStatus     "status"
-        SessionTag "Tag" {
-            LaunchWeb     "www"
-            LaunchOAuth   "oauth"
+        Login           "Login"
+        LoginChallenge  "LoginChallenge"
+        LoginResponse   "LoginResponse"
+        LoginCheckpoint "LoginCheckpoint"
+        TxSealChallenge "tx.seal.LoginChallenge"
+        TxSealResponse  "tx.seal.CoSignature"
+        MintMemberToken "member.token.mint"
+        MemberToken     "member.token"
+        SessionStatus   "status"
+        Launch "launch" {
+            LaunchWeb   "www"
+            LaunchOAuth "oauth"
         }
+        AppState "app.state"
     }
 
     // Item attributes
     ItemAttr "item" {
-        ChildLink          "child.link.id"
-        ItemLabels         "Labels"
-        ItemTextTag "text.Tag" {
-            ItemLabel        "label"
-            ItemCaption      "caption"
-            ItemCollection   "collection"
-            ItemSynopsis     "synopsis"
+        ChildLink  "child.link.id"
+        ItemLabels "Labels"
+        ItemTextTag "text" {
+            ItemLabel      "label"
+            ItemCaption    "caption"
+            ItemCollection "collection"
+            ItemSynopsis   "synopsis"
         }
-        ItemFileInfo     "FileInfo"
-        MainLink         "Tag.link.main"
+        ItemFileInfo      "FileInfo"
+        MainLink          "link.main"
 
-        ItemVis          "Tag.vis"
-        ItemBehaviors    "Tags.behaviors"
-        ItemGlyphs       "Tags.glyphs"
-        ItemLinks        "Tags.links"
-        ItemCameraState    "CameraState"
-        ItemCameraOptions  "CameraOptions"
-        ItemAtmosphere     "AtmosphereSpec"   // 4-category atmosphere composition (sky/sun/night/fog)
-        ItemFSInfo         "FSInfo"
-        GlyphTag           "glyph.Tag"
+        ItemVis           "vis"
+        ItemBehaviors     "behaviors.Tags"
+        ItemGlyphs        "glyphs.Tags"
+        ItemLinks         "links.Tags"
+        ItemCameraState   "CameraState"
+        ItemCameraOptions "CameraOptions"
+        ItemAtmosphere    "AtmosphereSpec" // 4-category atmosphere composition (sky/sun/night/fog)
+        GlyphTag          "glyph"
         TileAttr "tile" {
-            TileLayout "Tag.layout"
+            TileLayout "layout"
         }
         ItemSeries "series" {
             SeriesTRS      "TRS"
             SeriesLabels   "Labels"
-            SeriesAssetTag "Tag.asset"
-            SeriesHeadLink "Tag.link"
-            SeriesLinkTree "Tags.link.tree"
+            SeriesAssetTag "asset"
+            SeriesHeadLink "link"
+            SeriesLinkTree "link.tree.Tags"
             SeriesS2R      "s2.r.mm"
             SeriesS2T      "s2.utc64"
         }
 
-        MediaLink        "media.link.Tag"
-        MediaRelease     "media.release"
-        MediaInfo        "MediaInfo"
-        MediaPlaylist    "MediaPlaylist"
+        MediaLink    "media.link"
+        MediaRelease "media.release"
+        MediaInfo    "MediaInfo"
     }
 
     // Channel metadata and catalog
     ChannelAttr "channel" {
-        ChannelCatalog "catalog.ChannelEpoch"
-        ChannelEpochs  "ChannelEpoch"
-        ChannelPropertySeries "property.series.JsonValue" {
+        ChannelCatalog        "catalog.ChannelEpoch"
+        ChannelEpochs         "ChannelEpoch"
+        ChannelPropertySeries "property.series.JsonValue"
+
+        // Channel-property ITEM keys — ItemIDs within the property series,
+        // scoped by (NodeID, AttrID) at runtime; never AttrIDs themselves.
+        ChannelProperty "property" {
             ChannelPropertyLabel       "label"
             ChannelPropertyDescription "description"
             ChannelPropertyGlyph       "glyph"
@@ -102,7 +103,7 @@ tags Attr {
             ChannelTypePicker       "picker"
             ChannelTypePlanetPicker "planetpicker"
             ChannelTypeBrand        "brand"
-            ChannelTypeNameService  "name.service"
+            ChannelTypeNameService  "nameservice"
             ChannelTypeTerminal     "terminal"
         }
     }
@@ -147,13 +148,13 @@ tags Attr {
         // resolving to one of these UIDs.  Communities + apps may register
         // additional Kinds in their own consts.sdl.  Zero UID = unspecified.
         LawMemberKind "memberkind" {
-            LawMemberKind_Person     "person"
-            LawMemberKind_Group      "group"
-            LawMemberKind_Agent      "agent"
-            LawMemberKind_Instance   "instance"
-            LawMemberKind_Successor  "successor"
-            LawMemberKind_Memorial   "memorial"
-            LawMemberKind_Process    "process"
+            LawMemberKind_Person    "person"
+            LawMemberKind_Group     "group"
+            LawMemberKind_Agent     "agent"
+            LawMemberKind_Instance  "instance"
+            LawMemberKind_Successor "successor"
+            LawMemberKind_Memorial  "memorial"
+            LawMemberKind_Process   "process"
         }
 
         // Modal Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a
@@ -199,14 +200,14 @@ tags Attr {
 
     // Member lifecycle
     MemberAttr "amp.member" {
-        PlanetInvite    "PlanetInvite"
-        PlanetInviteOp  "PlanetInviteOp"
+        PlanetInvite   "PlanetInvite"
+        PlanetInviteOp "PlanetInviteOp"
     }
 
     // Home planet attributes
     HomeAttr "amp.home" {
-        PlanetBinding      "planet.binding.Tag"
-        PlanetStorageOpts  "planet.storage.PlanetStorageOpts"
+        PlanetBinding     "planet.binding"
+        PlanetStorageOpts "planet.storage.PlanetStorageOpts"
     }
 
     // System properties
@@ -218,8 +219,8 @@ tags Attr {
 
     // Blob storage
     BlobAttr "amp.blob" {
-        BlobRef    "ref"
-        NodeBlobs  "node.BlobRefs"
+        BlobRef   "ref"
+        NodeBlobs "node.BlobRef"
     }
 
     // Tile-server registry — list of available raster / terrain / vector

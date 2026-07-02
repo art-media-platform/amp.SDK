@@ -8,7 +8,6 @@ import "github.com/art-media-platform/amp.SDK/stdlib/tag"
 
 var Attr = struct {
 	App                                tag.Name
-	AppState                           tag.Name
 	SessionAttr                        tag.Name
 	Login                              tag.Name
 	LoginChallenge                     tag.Name
@@ -19,9 +18,10 @@ var Attr = struct {
 	MintMemberToken                    tag.Name
 	MemberToken                        tag.Name
 	SessionStatus                      tag.Name
-	SessionTag                         tag.Name
+	Launch                             tag.Name
 	LaunchWeb                          tag.Name
 	LaunchOAuth                        tag.Name
+	AppState                           tag.Name
 	ItemAttr                           tag.Name
 	ChildLink                          tag.Name
 	ItemLabels                         tag.Name
@@ -39,7 +39,6 @@ var Attr = struct {
 	ItemCameraState                    tag.Name
 	ItemCameraOptions                  tag.Name
 	ItemAtmosphere                     tag.Name
-	ItemFSInfo                         tag.Name
 	GlyphTag                           tag.Name
 	TileAttr                           tag.Name
 	TileLayout                         tag.Name
@@ -54,11 +53,11 @@ var Attr = struct {
 	MediaLink                          tag.Name
 	MediaRelease                       tag.Name
 	MediaInfo                          tag.Name
-	MediaPlaylist                      tag.Name
 	ChannelAttr                        tag.Name
 	ChannelCatalog                     tag.Name
 	ChannelEpochs                      tag.Name
 	ChannelPropertySeries              tag.Name
+	ChannelProperty                    tag.Name
 	ChannelPropertyLabel               tag.Name
 	ChannelPropertyDescription         tag.Name
 	ChannelPropertyGlyph               tag.Name
@@ -141,66 +140,63 @@ var Attr = struct {
 	TileServerAttr                     tag.Name
 	TileServer                         tag.Name
 }{
-	// ─── App-centric tags ───────────────────────────────────────────
+	// ─── App-centric tags — the app-registry root (module names fold under it) ───
 	App: tag.Name{ID: tag.UID{0x9FC2012FD63F847A, 0x51AA55A31D90CD25}, Text: "app"}, // 4zs80kzpjzhjx53bkpndft1m95
-
-	AppState: tag.Name{ID: tag.UID{0xFAA5BBA978628672, 0x22BC2C65BFDD460C}, Text: "app.state"}, // 7unqxuky32htt25g1ddqzxujhd
 
 	// ─── Session management ─────────────────────────────────────────
 	SessionAttr: tag.Name{ID: tag.UID{0x5948CA6969CBDF2F, 0x01C92A44FA60AB24}, Text: "session"}, // 2t9356kufcvwrh3k9b8mx61bt4
 
-	Login:           tag.Name{ID: tag.UID{0x761CD041F19A871E, 0x588D714F3B7C0369}, Text: "session.Login"},           // 3q3m843wduhwg5j3cj9wxrs0v9
-	LoginChallenge:  tag.Name{ID: tag.UID{0x4CDE92F1C346D9A6, 0x3DBC5E21F58B7690}, Text: "session.LoginChallenge"},  // 2dvu9g3hu6v6m3vg2y47usqxnh
-	LoginResponse:   tag.Name{ID: tag.UID{0xD5D931DCBF32B11B, 0x845B0B9940F8F258}, Text: "session.LoginResponse"},   // 6pv4sxtgtkq4es8qscm50gjwks
-	LoginCheckpoint: tag.Name{ID: tag.UID{0xD1FD78AD2D86A001, 0x89D5922FF13EB7CE}, Text: "session.LoginCheckpoint"}, // 6jzpwbucd6n00smpdk5zsmxeyf
-	TxSealChallenge: tag.Name{ID: tag.UID{0x0872A06875D1753D, 0xCD5CDFBD577F9160}, Text: "session.TxSealChallenge"}, // 08fbh6hxfjfnywur6zrpcrz4c0
-	TxSealResponse:  tag.Name{ID: tag.UID{0x15630FB8CE71DFA2, 0xD1C9EE7D8E7C5368}, Text: "session.TxSealResponse"},  // 0pdd7vjmmjvyje3kgfgq77snv8
-	MintMemberToken: tag.Name{ID: tag.UID{0xDC73A73FD82C3B2C, 0xD9B03922FF778D57}, Text: "session.MintMemberToken"}, // 6wffmmzq1d7dqemd1t4czrg3br
-	MemberToken:     tag.Name{ID: tag.UID{0xADEE675024C4539A, 0x0A8F425BA8732A9B}, Text: "session.MemberToken"},     // 5extmp0964bfe0p3u2cfn76bnv
-	SessionStatus:   tag.Name{ID: tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, Text: "session.status"},          // 3zqf0vt3ejmdnf7v345guq2p9c
-	SessionTag:      tag.Name{ID: tag.UID{0xCCE00314A1263502, 0x7A38CD68C10DC759}, Text: "session.Tag"},             // 6dw01j98966n17nf6ee30hvjut
+	Login:           tag.Name{ID: tag.UID{0x761CD041F19A871E, 0x588D714F3B7C0369}, Text: "session.Login"},                  // 3q3m843wduhwg5j3cj9wxrs0v9
+	LoginChallenge:  tag.Name{ID: tag.UID{0x4CDE92F1C346D9A6, 0x3DBC5E21F58B7690}, Text: "session.LoginChallenge"},         // 2dvu9g3hu6v6m3vg2y47usqxnh
+	LoginResponse:   tag.Name{ID: tag.UID{0xD5D931DCBF32B11B, 0x845B0B9940F8F258}, Text: "session.LoginResponse"},          // 6pv4sxtgtkq4es8qscm50gjwks
+	LoginCheckpoint: tag.Name{ID: tag.UID{0xD1FD78AD2D86A001, 0x89D5922FF13EB7CE}, Text: "session.LoginCheckpoint"},        // 6jzpwbucd6n00smpdk5zsmxeyf
+	TxSealChallenge: tag.Name{ID: tag.UID{0xF2A1AE33AC1B3803, 0xFB2C5214CE23F9CC}, Text: "session.tx.seal.LoginChallenge"}, // 7kn6r37c0v701zqc2k2m727yfd
+	TxSealResponse:  tag.Name{ID: tag.UID{0x981B0B30B1025607, 0x2311EFEAF48865A6}, Text: "session.tx.seal.CoSignature"},    // 4s3d5m1d82bs3k64ggxcu8hte6
+	MintMemberToken: tag.Name{ID: tag.UID{0xB4AF6AC0E35022CA, 0x3DE4C884B11ED5FC}, Text: "session.member.token.mint"},      // 5npxpd1suh4c53vt68hksjxpgw
+	MemberToken:     tag.Name{ID: tag.UID{0xE9D3FCC961BD5AC5, 0x2ED6449E239C95D9}, Text: "session.member.token"},           // 79ugydksexcc2kxpk4msjtt5ft
+	SessionStatus:   tag.Name{ID: tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, Text: "session.status"},                 // 3zqf0vt3ejmdnf7v345guq2p9c
+	Launch:          tag.Name{ID: tag.UID{0x5E5631E663B817F3, 0xC16D35F3AAEE7AF8}, Text: "session.launch"},                 // 2ybssydsxs2ztw2v9pyfpfwyrs
 
-	LaunchWeb:   tag.Name{ID: tag.UID{0x7900A4A514A3C61B, 0x69753310BD7BA8BB}, Text: "session.Tag.www"},   // 3t02kbb553sseqkx9m22yrrb5v
-	LaunchOAuth: tag.Name{ID: tag.UID{0x230B9C43F0F6149B, 0xF1FD67764E068928}, Text: "session.Tag.oauth"}, // 131ff47w7q2kez3zc7ft70e298
+	LaunchWeb:   tag.Name{ID: tag.UID{0x1761ACB92FA48247, 0x4AE07FA9E592507B}, Text: "session.launch.www"},   // 0rd6qckcx4h93nps3zp7kt4n3v
+	LaunchOAuth: tag.Name{ID: tag.UID{0xB242A46847218BE1, 0x440A7FBD769F64BD}, Text: "session.launch.oauth"}, // 5k8bk6hjt1jghn82mzrpv9yt5x
+	AppState:    tag.Name{ID: tag.UID{0xDCADE486065A91A2, 0x845AB70CFB680921}, Text: "session.app.state"},    // 6wprk8d1kuk6j88qpr1mxqh291
 
 	// ─── Item attributes ────────────────────────────────────────────
 	ItemAttr: tag.Name{ID: tag.UID{0xE8D8BECA5B3BBEB3, 0x1308458DB27C3504}, Text: "item"}, // 78v2zdnqtvrutj6225jqt7se84
 
 	ChildLink:   tag.Name{ID: tag.UID{0xE206EF98B802A494, 0x651C394153CA1C0E}, Text: "item.child.link.id"}, // 720vrtjf02nkb6b71t859wn70f
 	ItemLabels:  tag.Name{ID: tag.UID{0x89DC7C30D083C0B7, 0xCCB62B4FAAB34B4D}, Text: "item.Labels"},        // 49vjy31n43s2vwtejc9ypc6kue
-	ItemTextTag: tag.Name{ID: tag.UID{0xF2CECA12B7434121, 0x9CB04C216D399967}, Text: "item.text.Tag"},      // 7ktv515eu384httd2d45qmm6c7
+	ItemTextTag: tag.Name{ID: tag.UID{0xE961CE2BB0D11C6F, 0x77C2DB21D0B1B894}, Text: "item.text"},          // 79d772rd6j3jrrghqv478c3f4n
 
-	ItemLabel:         tag.Name{ID: tag.UID{0x75508F13447213B1, 0x8AA3D9367709DC8D}, Text: "item.text.Tag.label"},      // 3pb27j6j3k2fssp8yt6tvhmr4e
-	ItemCaption:       tag.Name{ID: tag.UID{0x3B12033B6C89B7E1, 0x60495EEB57BA257B}, Text: "item.text.Tag.caption"},    // 1v281mqv49qzhq0kbyxecvn9cv
-	ItemCollection:    tag.Name{ID: tag.UID{0xC2D5B84FCDB6AC3C, 0x2A31CC7CB71E75FB}, Text: "item.text.Tag.collection"}, // 62uqw4zmeqphy2ndfdgkvjwxgv
-	ItemSynopsis:      tag.Name{ID: tag.UID{0xEA2B06C4B8C0A28E, 0xD3824B8511203663}, Text: "item.text.Tag.synopsis"},   // 7b5d3d9f60nb7e70kchn8k0em3
-	ItemFileInfo:      tag.Name{ID: tag.UID{0x37F1C92B7B61AFDE, 0x319025BC546E254F}, Text: "item.FileInfo"},            // 1ry74kqyv1pzg33415rjb6w9bg
-	MainLink:          tag.Name{ID: tag.UID{0x37B0FE6AE6B37D2A, 0xC3CE3A24E57524FC}, Text: "item.Tag.link.main"},       // 1rq3z6ptpmgnpd7mju4mkrb97w
-	ItemVis:           tag.Name{ID: tag.UID{0x5B54B02DB28E8EF9, 0x0AE7886178A1CA4E}, Text: "item.Tag.vis"},             // 2vbks2vdnfjvwhptw8d5wb3kkf
-	ItemBehaviors:     tag.Name{ID: tag.UID{0xB75CB32EA769E591, 0x0021078330DAE19E}, Text: "item.Tags.behaviors"},      // 5rcktkx9v9wq8h0887hdsepsdy
-	ItemGlyphs:        tag.Name{ID: tag.UID{0xEE43A6D5936D0774, 0x688B4FDE07BA993C}, Text: "item.Tags.glyphs"},         // 7f8fmec4ve0xu6j2ugvs3vp69w
-	ItemLinks:         tag.Name{ID: tag.UID{0xE89203E570B3684E, 0xC9088CEB810A9572}, Text: "item.Tags.links"},          // 78k81ybw5me17dk24dxf0hp5ck
-	ItemCameraState:   tag.Name{ID: tag.UID{0x18E764034A5B20FD, 0x53FEC933E18782D4}, Text: "item.CameraState"},         // 0swxk06kkv43yp7zq96ghsg0qn
-	ItemCameraOptions: tag.Name{ID: tag.UID{0xEF9DCA7B29C45C47, 0xBB03A56AA33F6432}, Text: "item.CameraOptions"},       // 7gmr57qbf4cj3vq0x5ebjmyt1k
-	ItemAtmosphere:    tag.Name{ID: tag.UID{0x8718C93E8B1E2B4C, 0xB09A9629ED2B9B9B}, Text: "item.AtmosphereSpec"},      // 47334mx2sy5e6c16nq57qkr6wv
-	ItemFSInfo:        tag.Name{ID: tag.UID{0xA1E0C4997B686974, 0x8D3FE7CCD220FE74}, Text: "item.FSInfo"},              // 51w329kyv8e5u8ugz7tm921zmn
-	GlyphTag:          tag.Name{ID: tag.UID{0x1D8CBE271B52879E, 0x85F5B26AEA77F435}, Text: "item.glyph.Tag"},           // 0xjkz2f6ukhyg8cxekecp7gx1p
-	TileAttr:          tag.Name{ID: tag.UID{0xBF3216B40F0EE8E3, 0x9E0C1A4B0E2789C8}, Text: "item.tile"},                // 5z68cc83sfx3jtw30u9d72g2f8
+	ItemLabel:         tag.Name{ID: tag.UID{0x2C7D43B6BE2447FB, 0x74CA6C57F66C410A}, Text: "item.text.label"},      // 1dgp1vegj48zxr9kmdbzv6sh8b
+	ItemCaption:       tag.Name{ID: tag.UID{0xB330E87E9A28EB77, 0xA018D644DEF92611}, Text: "item.text.caption"},    // 5m63n7x6j8xevu066q8mggk9hj
+	ItemCollection:    tag.Name{ID: tag.UID{0x1DCAC5A8C8C8B091, 0x26EA7EA851731566}, Text: "item.text.collection"}, // 0xtc2ujk68q28keumyp18r65c6
+	ItemSynopsis:      tag.Name{ID: tag.UID{0x8A88F6B1100EFE46, 0x3A1BC9DE57654D14}, Text: "item.text.synopsis"},   // 4bj3vc240fzt33n6y9vtcqbm8n
+	ItemFileInfo:      tag.Name{ID: tag.UID{0x37F1C92B7B61AFDE, 0x319025BC546E254F}, Text: "item.FileInfo"},        // 1ry74kqyv1pzg33415rjb6w9bg
+	MainLink:          tag.Name{ID: tag.UID{0x5A3769261A0D85A5, 0xE6AFAB056C263106}, Text: "item.link.main"},       // 2u6xnkd6hehqkyecxc0pq2dd86
+	ItemVis:           tag.Name{ID: tag.UID{0x1AFE5A24A2B62326, 0xFF0BAF5A27280015}, Text: "item.vis"},             // 0uzte298pq4dmgy2xgc8mkh00p
+	ItemBehaviors:     tag.Name{ID: tag.UID{0x9B7A8FB1F44DCCD9, 0xFD513A52A6D1C0A6}, Text: "item.behaviors.Tags"},  // 4vgb7v3x2etmdzun9ubbme3h56
+	ItemGlyphs:        tag.Name{ID: tag.UID{0x2193FA68B12BFE25, 0x55BF4085B9819FAD}, Text: "item.glyphs.Tags"},     // 11kgx6jd9czskpcgu0hqws37xe
+	ItemLinks:         tag.Name{ID: tag.UID{0x551458A1B9F8478D, 0xD97A4BC2495B2AE3}, Text: "item.links.Tags"},      // 2p2jdb3fgs8y6xkykcs94pqbr3
+	ItemCameraState:   tag.Name{ID: tag.UID{0x18E764034A5B20FD, 0x53FEC933E18782D4}, Text: "item.CameraState"},     // 0swxk06kkv43yp7zq96ghsg0qn
+	ItemCameraOptions: tag.Name{ID: tag.UID{0xEF9DCA7B29C45C47, 0xBB03A56AA33F6432}, Text: "item.CameraOptions"},   // 7gmr57qbf4cj3vq0x5ebjmyt1k
+	ItemAtmosphere:    tag.Name{ID: tag.UID{0x8718C93E8B1E2B4C, 0xB09A9629ED2B9B9B}, Text: "item.AtmosphereSpec"},  // 47334mx2sy5e6c16nq57qkr6wv
+	GlyphTag:          tag.Name{ID: tag.UID{0x06C02A2A38C49776, 0x72F2BE4813F9D331}, Text: "item.glyph"},           // 06s0p2nf64kxv75wpy909zmntj
+	TileAttr:          tag.Name{ID: tag.UID{0xBF3216B40F0EE8E3, 0x9E0C1A4B0E2789C8}, Text: "item.tile"},            // 5z68cc83sfx3jtw30u9d72g2f8
 
-	TileLayout: tag.Name{ID: tag.UID{0x0D7B88E4A44AC047, 0xABD63B92B2AB46D7}, Text: "item.tile.Tag.layout"}, // 0egf4f992bs13urpjvkbtbqjqr
-	ItemSeries: tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Text: "item.series"},          // 34gdqg3rws34egz178n0bwgh5v
+	TileLayout: tag.Name{ID: tag.UID{0xB7D616ECEEBEB769, 0x3CF2E7E8D9F68B2F}, Text: "item.tile.layout"}, // 5ruscftvpyqxnmtwr7x3dze2tg
+	ItemSeries: tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Text: "item.series"},      // 34gdqg3rws34egz178n0bwgh5v
 
 	SeriesTRS:      tag.Name{ID: tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, Text: "item.series.TRS"},            // 3cxm3sbf4f7qg2c5dg5mqe00hu
 	SeriesLabels:   tag.Name{ID: tag.UID{0x64DF54E7607F2F0E, 0xE02A46D568115245}, Text: "item.series.Labels"},         // 34vxbffs3z5w7f0bk6upn12nk5
-	SeriesAssetTag: tag.Name{ID: tag.UID{0x6A38B0B69A67BFE2, 0x046DD022E5743226}, Text: "item.series.Tag.asset"},      // 3b72sce6m7rzj08vfh4ckr8dj6
-	SeriesHeadLink: tag.Name{ID: tag.UID{0xB53FF14221D2395A, 0x13E86D2EBB019E3F}, Text: "item.series.Tag.link"},       // 5p7zsn48fk75e17u3e5uxh37jz
-	SeriesLinkTree: tag.Name{ID: tag.UID{0xDB22686C45264AF3, 0x33E6E69F1A5D9E7C}, Text: "item.series.Tags.link.tree"}, // 6v49n6sj969ctm7tr6mwe5v7mw
+	SeriesAssetTag: tag.Name{ID: tag.UID{0xE6CBD611A5D8F2B4, 0x7225242754FEEF84}, Text: "item.series.asset"},          // 76tgc139fsybu749944xbgxvw4
+	SeriesHeadLink: tag.Name{ID: tag.UID{0x7C5BCE2FA99EDEF1, 0x7CCD5E2480849265}, Text: "item.series.link"},           // 3wcg72zbdyvvsrtmby4k0894m5
+	SeriesLinkTree: tag.Name{ID: tag.UID{0x5B51B3B938C3C87F, 0xB429C4C1470DD710}, Text: "item.series.link.tree.Tags"}, // 2vb6tvkf63t1zv8bf4s53hvpsh
 	SeriesS2R:      tag.Name{ID: tag.UID{0xD2A50441318749C3, 0x0420EAA0456C39F9}, Text: "item.series.s2.r.mm"},        // 6knn242dd7971h887bn12qsfgt
 	SeriesS2T:      tag.Name{ID: tag.UID{0x749CA29A38DAA5BF, 0x7139081806CBF2C5}, Text: "item.series.s2.utc64"},       // 3nmkj9nf6unqzr2f88303drwq5
-	MediaLink:      tag.Name{ID: tag.UID{0x4DED4FC2D91C296A, 0x44D348001E677047}, Text: "item.media.link.Tag"},        // 2exp7w5q8w55p49nu800g6fw27
+	MediaLink:      tag.Name{ID: tag.UID{0x3976FD2CE678D479, 0xBE23FCEE0CAACDF9}, Text: "item.media.link"},            // 1tfvykttmsujwvw8zwxs6bpmgt
 	MediaRelease:   tag.Name{ID: tag.UID{0x6C5BC935E454FEC6, 0x6F4F5F1B04975D0E}, Text: "item.media.release"},         // 3dcg4mct2nzv36ymuz3d29fr8f
 	MediaInfo:      tag.Name{ID: tag.UID{0x9C7620B0D5488458, 0xDD6F3D4B07305E88}, Text: "item.MediaInfo"},             // 4wfshc1pb8hjdeuvtx9d3m0rn8
-	MediaPlaylist:  tag.Name{ID: tag.UID{0x3DAB9BFD75B29097, 0x7EE88C07BE024476}, Text: "item.MediaPlaylist"},         // 1xpfezuxekk2crxu4d0yz04j3q
 
 	// ─── Channel metadata and catalog ───────────────────────────────
 	ChannelAttr: tag.Name{ID: tag.UID{0x3C0BCCB260A85864, 0xC4DF8E1CD985DD60}, Text: "channel"}, // 1w1g6c4s58c1kd9rwf3mdscrc0
@@ -208,13 +204,16 @@ var Attr = struct {
 	ChannelCatalog:        tag.Name{ID: tag.UID{0x2677628531BECA52, 0x034FC22E4BB05B8C}, Text: "channel.catalog.ChannelEpoch"},      // 16fxj8bdeyt9906my25t5v0qwd
 	ChannelEpochs:         tag.Name{ID: tag.UID{0x46671B0AF50329A0, 0x6C63540862D1B521}, Text: "channel.ChannelEpoch"},              // 26dwehpx8356h6ssun11je3e91
 	ChannelPropertySeries: tag.Name{ID: tag.UID{0x35C4FC8DB15756BE, 0x94B84BDA369A0177}, Text: "channel.property.series.JsonValue"}, // 1psmy8vdbrbuz99f2cv8v9n0cr
+	// Channel-property ITEM keys — ItemIDs within the property series,
+	// scoped by (NodeID, AttrID) at runtime; never AttrIDs themselves.
+	ChannelProperty: tag.Name{ID: tag.UID{0xF1F847BE12B003CC, 0xBB2C4346207C50DA}, Text: "channel.property"}, // 7jz13vw4ph0g6cqc238sh7sn6u
 
-	ChannelPropertyLabel:       tag.Name{ID: tag.UID{0xF7C87A5DC3025A6B, 0x62451D178A230942}, Text: "channel.property.series.JsonValue.label"},       // 7rt1x5vhs2c9pq4j8x2y5262b2
-	ChannelPropertyDescription: tag.Name{ID: tag.UID{0xD26B185D4D0E180D, 0x10CC7625CBD6B999}, Text: "channel.property.series.JsonValue.description"}, // 6kedd5um8f306j1m3q4r5xefdt
-	ChannelPropertyGlyph:       tag.Name{ID: tag.UID{0xAE095B7DD0477B81, 0x9D2209318CB11B4A}, Text: "channel.property.series.JsonValue.glyph"},       // 5f15ervn27gf0tu8h9666c26ub
-	ChannelPropertySkybox:      tag.Name{ID: tag.UID{0xFBDB14B7FE48F62B, 0x902F51D9718AF1C0}, Text: "channel.property.series.JsonValue.skybox"},      // 7vvdbcgzk8yspt0cujv5sspwf0
-	ChannelPropertyGrid:        tag.Name{ID: tag.UID{0x4128F9AAC9CC12E3, 0xFEDEA64C3C3FDF40}, Text: "channel.property.series.JsonValue.grid"},        // 2153wupkfd2cjzxrp69hy3zru0
-	ChannelType:                tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Text: "channel.type"},                                  // 71evhnqj9kwy382tpe69352teh
+	ChannelPropertyLabel:       tag.Name{ID: tag.UID{0xAF4AA413D0ED026C, 0xE04F4B2A77D76B02}, Text: "channel.property.label"},       // 5g9bk17n7e09qf0muc59vxfus2
+	ChannelPropertyDescription: tag.Name{ID: tag.UID{0x267F564E36A001F0, 0xDDA05C2E868CF0E1}, Text: "channel.property.description"}, // 16gxc4wep007sev82w5u38tw71
+	ChannelPropertyGlyph:       tag.Name{ID: tag.UID{0xD0E035657968E8A3, 0xA92F31B7179E06DB}, Text: "channel.property.glyph"},       // 6hw0uqbyc8x2jukctjqwctw1qv
+	ChannelPropertySkybox:      tag.Name{ID: tag.UID{0x3DE032C924E7EC82, 0x5FFF404B037126D4}, Text: "channel.property.skybox"},      // 1xw0tdk977xk15zzu09d1r29qn
+	ChannelPropertyGrid:        tag.Name{ID: tag.UID{0x94EFC317CF34165F, 0xCAB7BCDADD7C784D}, Text: "channel.property.grid"},        // 4nxz1jgmtn2tgwpexwvcfrsy2e
+	ChannelType:                tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Text: "channel.type"},                 // 71evhnqj9kwy382tpe69352teh
 
 	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x1C0062A36805F2FB, 0xC37F9A8B51C0A909}, Text: "channel.type.spreadsheet"},  // 0w01jb6u05ycxw6zwuje8w1b89
 	ChannelTypeMessages:     tag.Name{ID: tag.UID{0x0B6D6A2421321CA6, 0xFBA2073C02B917A6}, Text: "channel.type.messages"},     // 0cepp2889k3kmgr8h77h1ck5x6
@@ -233,7 +232,7 @@ var Attr = struct {
 	ChannelTypePicker:       tag.Name{ID: tag.UID{0xD2EBF18403D0BFF7, 0x94A830AA64236EE9}, Text: "channel.type.picker"},       // 6kxgss80yhrzvt9b1hp9k26vr9
 	ChannelTypePlanetPicker: tag.Name{ID: tag.UID{0x235A1464B1A9B829, 0xA3F82B96FE207780}, Text: "channel.type.planetpicker"}, // 13c8b69de9r0nu7y1ckvz20xw0
 	ChannelTypeBrand:        tag.Name{ID: tag.UID{0xB65147BCC3C55E4C, 0x9BE811A46788AFF8}, Text: "channel.type.brand"},        // 5qb53vthy5ct69ru0jnjmsjczs
-	ChannelTypeNameService:  tag.Name{ID: tag.UID{0xE2BA6A5DBCA4EC87, 0x3B64FA486677CFBA}, Text: "channel.type.name.service"}, // 72r9p5vg54xk3mqt7u91m7gmxu
+	ChannelTypeNameService:  tag.Name{ID: tag.UID{0x7F92C1A4067E91BF, 0x9ED36CF793A42DBF}, Text: "channel.type.nameservice"},  // 3zkc0u81myk6ztxnvdyy9u8cez
 	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.terminal"},     // 52nz89dr5zw7120g6rzq8mekvv
 
 	// ─── Brand — substrate-native planet identity (AOM DD-name-service.md §2). ───
@@ -330,7 +329,7 @@ var Attr = struct {
 	// ─── Home planet attributes ─────────────────────────────────────
 	HomeAttr: tag.Name{ID: tag.UID{0x45A5C59F62D1113F, 0x73AEED98C41EFBFA}, Text: "amp.home"}, // 25nr2tysqj24zr7crem321xyzu
 
-	PlanetBinding:     tag.Name{ID: tag.UID{0xD1107652908E11D6, 0x1B2B3BC082553787}, Text: "amp.home.planet.binding.Tag"},               // 6j21v5544f27c1qbtvs215bew7
+	PlanetBinding:     tag.Name{ID: tag.UID{0x5388DF50C7C8FFC8, 0x75657739E44998B2}, Text: "amp.home.planet.binding"},                   // 2mj3gp1jy8zz47btcr77k4m65k
 	PlanetStorageOpts: tag.Name{ID: tag.UID{0x69BFD182C13A9A31, 0xF66973A8296693D5}, Text: "amp.home.planet.storage.PlanetStorageOpts"}, // 39rz8s5h9um8szducmp0nqe4yp
 
 	// ─── System properties ──────────────────────────────────────────
@@ -343,8 +342,8 @@ var Attr = struct {
 	// ─── Blob storage ───────────────────────────────────────────────
 	BlobAttr: tag.Name{ID: tag.UID{0x43839888952F19F9, 0xB576A64453AD2634}, Text: "amp.blob"}, // 23hfd8j59g37wvbxp68j9uu9jn
 
-	BlobRef:   tag.Name{ID: tag.UID{0xAEE1E83EB38BBF5D, 0x17C1EF094E5F4850}, Text: "amp.blob.ref"},           // 5fw7n3xdwcrxfjghgg1575yk2h
-	NodeBlobs: tag.Name{ID: tag.UID{0x306CC090FC4E717C, 0xFECED441B9B156B5}, Text: "amp.blob.node.BlobRefs"}, // 1hem091z2ff5ygxmqn86wv2ppp
+	BlobRef:   tag.Name{ID: tag.UID{0xAEE1E83EB38BBF5D, 0x17C1EF094E5F4850}, Text: "amp.blob.ref"},          // 5fw7n3xdwcrxfjghgg1575yk2h
+	NodeBlobs: tag.Name{ID: tag.UID{0xAD0BA6086B8A5202, 0xB15FFA7352307DEF}, Text: "amp.blob.node.BlobRef"}, // 5e1fm0huwbb81c2rzufe930zgg
 
 	// ─── Tile-server registry — list of available raster / terrain / vector ───
 	// tile backends.  Each entry is a TileServer proto stored as one item
