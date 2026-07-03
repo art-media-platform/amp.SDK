@@ -69,17 +69,26 @@ func (name *Name) GoString() string {
 }
 
 // AsLabel returns a compact label for logging / debugging — the human Text when
-// present (elided to "first16…last15" on rune boundaries when over 31 runes),
-// else the compact "first1…last4" base32 form of the UID.
+// present (elided to 32 runes), else the compact "first1…last4" base32 form of
+// the UID.
 func (name Name) AsLabel() string {
 	if name.Text == "" {
 		return name.ID.AsLabel()
 	}
-	runes := []rune(name.Text)
-	if len(runes) < 32 {
-		return name.Text
+	return Elide(name.Text, 32)
+}
+
+// Elide caps s at maxRunes on rune boundaries, folding the middle into a single
+// '…' (leading half, ellipsis, trailing remainder) — the one display trim label
+// call sites share.
+func Elide(s string, maxRunes int) string {
+	runes := []rune(s)
+	if len(runes) <= maxRunes || maxRunes < 2 {
+		return s
 	}
-	return string(runes[:16]) + "…" + string(runes[len(runes)-15:])
+	head := maxRunes / 2
+	tail := maxRunes - head - 1
+	return string(runes[:head]) + "…" + string(runes[len(runes)-tail:])
 }
 
 func (name Name) IsWildcard() bool {
