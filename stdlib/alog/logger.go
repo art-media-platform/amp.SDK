@@ -206,10 +206,11 @@ func (l *logger) GetLogPrefix() string { return l.prefix }
 // wrapper that forwards through another method passes 2.
 func (l *logger) emit(sev severity, depth int, msg string) {
 	// Build the bracket interior before taking the lock; its width drives alignment
-	// under gOutMu, and the padding goes inside the brackets so the closing ']'
-	// right-justifies against the message column.  The interior leads with idLabel
-	// when present; the second token is the label, or — when unlabeled — the log
-	// call-site file:line, so an anonymous logger still names its origin.
+	// under gOutMu.  The bracket hugs the label; the alignment pad moves to the gutter
+	// after ']' so the message column stays aligned without a space inside the brackets.
+	// The interior leads with idLabel when present; the second token is the label, or —
+	// when unlabeled — the log call-site file:line, so an anonymous logger still names
+	// its origin.
 	var second string
 	if l.label != "" {
 		second = capColumn(l.label)
@@ -246,12 +247,12 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 	sb.WriteByte(' ')
 	sb.WriteByte('[')
 	sb.WriteString(source)
-	writePad(&sb, sourceWidth-sourceCols)
 	sb.WriteByte(']')
 	if useColor && entry.ansi != "" {
 		sb.WriteString(ansiReset)
 	}
 	sb.WriteByte(' ')
+	writePad(&sb, sourceWidth-sourceCols)
 	sb.WriteString(msg)
 	if !strings.HasSuffix(msg, "\n") {
 		sb.WriteByte('\n')
