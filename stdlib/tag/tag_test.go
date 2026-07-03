@@ -53,7 +53,7 @@ func TestTag(t *testing.T) {
 		t.Fatalf("chained ID != HashLiteral(Text): %v", name.ID)
 	}
 	base32 := name.ID.Base32()
-	if base32 != "5eez7jtvnt1d42251gsu28mqy9" {
+	if base32 != "5eez7j-tvnt1-d4225-1gsu2-8mqy9" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	parsed, err := tag.Parse(base32)
@@ -69,7 +69,7 @@ func TestTag(t *testing.T) {
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
 		holyExpr := tag.HashName(Genesis)
-		if holyExpr.ID.Base32() != "3evfmjwnbj2wg7qb93xk3zyr2b" {
+		if holyExpr.ID.Base32() != "3evfmj-wnbj2-wg7qb-93xk3-zyr2b" {
 			t.Fatalf("tag.HashName() failed: got %v", holyExpr.ID.Base32())
 		}
 
@@ -106,7 +106,7 @@ func TestTag(t *testing.T) {
 	if tid.AsLabel() != "7…trrh" {
 		t.Errorf("tag.UID.AsLabel() failed: got %q", tid.AsLabel())
 	}
-	if tid.Base32() != "7rfxvrfxvrfxvj4e2qg2ectrrh" {
+	if tid.Base32() != "7rfxvr-fxvrf-xvj4e-2qg2e-ctrrh" {
 		t.Errorf("tag.UID.Base32() failed: got %v", tid.Base32())
 	}
 	if b16 := tid.Base16(); b16 != "0xF777777777777777123456789ABCDEF0" {
@@ -114,26 +114,31 @@ func TestTag(t *testing.T) {
 	}
 }
 
-func TestBase32Grouped(t *testing.T) {
+func TestBase32Grouping(t *testing.T) {
 	// Geometry golden (6-5-5-5-5) — shared verbatim with the C# mirror test so
 	// the two formatters cannot drift.
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
-	grouped := tid.Base32Grouped()
+	grouped := tid.Base32()
 	if grouped != "7rfxvr-fxvrf-xvj4e-2qg2e-ctrrh" {
-		t.Fatalf("tag.UID.Base32Grouped() failed: got %q", grouped)
+		t.Fatalf("tag.UID.Base32() failed: got %q", grouped)
+	}
+	if len(grouped) != tag.UID_Base32GroupedLength {
+		t.Fatalf("Base32() length: got %d, want %d", len(grouped), tag.UID_Base32GroupedLength)
 	}
 
-	// Lossless: the grouped form parses back to the same UID (decoders strip '-').
+	// Lossless: both the grouped and the solid form parse to the same UID
+	// (decoders strip '-' and whitespace).
 	parsed, err := tag.Parse(grouped)
 	if err != nil || parsed.ID != tid {
 		t.Fatalf("Parse(grouped) failed: got %v, err=%v", parsed, err)
 	}
-	if uid, err := tag.UID_ParseBase32(grouped); err != nil || uid != tid {
-		t.Fatalf("UID_ParseBase32(grouped) failed: got %v, err=%v", uid, err)
+	solid := strings.ReplaceAll(grouped, "-", "")
+	if uid, err := tag.UID_ParseBase32(solid); err != nil || uid != tid {
+		t.Fatalf("UID_ParseBase32(solid) failed: got %v, err=%v", uid, err)
 	}
 
-	if zero := (tag.UID{}).Base32Grouped(); zero != "0" {
-		t.Fatalf("zero UID Base32Grouped() failed: got %q", zero)
+	if zero := (tag.UID{}).Base32(); zero != "0" {
+		t.Fatalf("zero UID Base32() failed: got %q", zero)
 	}
 }
 

@@ -54,7 +54,7 @@ func TestRegistry(t *testing.T) {
 		t.Fatalf("tag.Name{}.Base32() failed")
 	}
 	base32 := spec.ID.Base32()
-	if base32 != "2ue627eb7ut34rqh99825exhjf" {
+	if base32 != "2ue627-eb7ut-34rqh-99825-exhjf" {
 		t.Errorf("tag.UID.Base32() failed: %v", base32)
 	}
 	if str := spec.ID.Base16(); str != "0x5A698476A8FAC8C97B4129408ADEC22E" {

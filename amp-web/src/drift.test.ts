@@ -324,7 +324,7 @@ describe('CryptoKitID table matches the golden', () => {
         expect(kit.GoUID).toBe('');
         continue;
       }
-      expect(kit.GoUID).toMatch(/^[0-9a-z]{26}$/);
+      expect(kit.GoUID).toMatch(/^[0-9a-z]{6}(?:-[0-9a-z]{5}){4}$/);
     }
   });
 });

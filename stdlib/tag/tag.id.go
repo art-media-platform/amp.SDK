@@ -589,15 +589,23 @@ func (id UID) HashLiteral(tagLiteral []byte) UID {
 	return UID_HashLiteral(buf)
 }
 
-// Returns this tag.UID in canonic Base32 form (lowercase geohash alphabet,
-// matching the lowercase tag canonic fold; UID_ParseBase32 decodes either case).
+// Returns this tag.UID in canonic Base32 text form: 26 lowercase geohash
+// digits grouped 6-5-5-5-5 with '-' separators (SD-canonization-spec §1.7).
+// Decoding strips '-' and whitespace and accepts either case, so grouping
+// carries no identity weight.  The dash after digit 16 marks the NowID
+// time/entropy boundary (EntropyBits = 50 = the last 10 digits), so
+// same-session IDs read as an identical head and a differing tail.
 func (id UID) Base32() string {
 	x0 := id[0] // MSB
 	x1 := id[1] // LSB
-	out := make([]byte, UID_Base32Length)
+	out := make([]byte, UID_Base32GroupedLength)
 
 	isZero := true
 	for i := len(out) - 1; i >= 0; i-- {
+		if i > 0 && i%6 == 0 {
+			out[i] = '-'
+			continue
+		}
 		b32 := byte(x1) & 0x1F // take the least significant 5 bits
 		if b32 != 0 {
 			isZero = false
@@ -613,20 +621,6 @@ func (id UID) Base32() string {
 	}
 
 	return string(out)
-}
-
-// Base32Grouped returns Base32() grouped 6-5-5-5-5 with '-' separators — a
-// display-only device for human-facing labels; the canonic form stays solid
-// and every decoder strips the dashes (SD-canonization-spec §1.7).  The dash
-// after digit 16 lands on the NowID time/entropy boundary: EntropyBits (50)
-// spans exactly the last 10 digits, so same-session IDs read as an identical
-// head and a differing tail.
-func (id UID) Base32Grouped() string {
-	full := id.Base32()
-	if len(full) < UID_Base32Length {
-		return full // zero UID stays "0"
-	}
-	return full[:6] + "-" + full[6:11] + "-" + full[11:16] + "-" + full[16:21] + "-" + full[21:]
 }
 
 // AsLabel returns a compact "first1…last4" base32 label for debugging / logging.
@@ -690,7 +684,7 @@ func (id UID) MarshalJSON() ([]byte, error) {
 	if id.IsNil() {
 		return []byte(`""`), nil
 	}
-	out := make([]byte, 0, UID_Base32Length+2)
+	out := make([]byte, 0, UID_Base32GroupedLength+2)
 	out = append(out, '"')
 	out = append(out, id.Base32()...)
 	out = append(out, '"')

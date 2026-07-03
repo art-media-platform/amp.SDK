@@ -1,6 +1,6 @@
 {
   "InviteIssueRequest": {
-    "Planet": "06efvw28sb400248j248j248j2",
+    "Planet": "06efvw-28sb4-00248-j248j-248j2",
     "Passphrase": "correct-horse-battery",
     "MaxRedemptions": 5,
     "Access": "ReadWrite",
@@ -8,12 +8,12 @@
     "VaultAddrs": ["prod.plan.tools:5192"]
   },
   "InviteIssueRequest.singleUse": {
-    "Planet": "06efvw28sb400248j248j248j2",
+    "Planet": "06efvw-28sb4-00248-j248j-248j2",
     "Passphrase": "correct-horse-battery"
   },
   "InviteIssueResponse": {
-    "PlanetID": "06efvw28sb400248j248j248j2",
-    "InviteID": "06efvw28sbf007fxvrfxvrfxvr",
+    "PlanetID": "06efvw-28sb4-00248-j248j-248j2",
+    "InviteID": "06efvw-28sbf-007fx-vrfxv-rfxvr",
     "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
   },
   "InviteAcceptRequest": {
@@ -21,35 +21,35 @@
     "Passphrase": "correct-horse-battery"
   },
   "InviteAcceptResponse": {
-    "PlanetID": "06efvw28sb400248j248j248j2",
-    "MemberID": "06efvw28sbn00bpbpbpbpbpbpb"
+    "PlanetID": "06efvw-28sb4-00248-j248j-248j2",
+    "MemberID": "06efvw-28sbn-00bpb-pbpbp-bpbpb"
   },
   "InviteRevokeRequest": {
-    "Planet": "06efvw28sb400248j248j248j2",
-    "InviteID": "06efvw28sbf007fxvrfxvrfxvr",
+    "Planet": "06efvw-28sb4-00248-j248j-248j2",
+    "InviteID": "06efvw-28sbf-007fx-vrfxv-rfxvr",
     "Rotate": true
   },
   "InviteRevokeRequest.byText": {
-    "Planet": "06efvw28sb400248j248j248j2",
+    "Planet": "06efvw-28sb4-00248-j248j-248j2",
     "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
   },
   "InviteListResponse": {
     "Policies": [
       {
-        "InviteID": "06efvw28sbf007fxvrfxvrfxvr",
+        "InviteID": "06efvw-28sbf-007fx-vrfxv-rfxvr",
         "MaxRedemptions": 5,
         "GrantedAccess": "ReadWrite",
         "Status": "InviteActive",
         "ExpiresAt": 1785000000,
         "Redemptions": [
           {
-            "Member": "06efvw28sbn00bpbpbpbpbpbpb",
+            "Member": "06efvw-28sbn-00bpb-pbpbp-bpbpb",
             "RedeemedAt": 1782900000,
             "Rank": 1,
             "InRank": true
           },
           {
-            "Member": "06efvw28sbk009m6dtm6dtm6dt",
+            "Member": "06efvw-28sbk-009m6-dtm6d-tm6dt",
             "RedeemedAt": 1782950000,
             "Rank": 6,
             "InRank": false
@@ -57,7 +57,7 @@
         ]
       },
       {
-        "InviteID": "06efvw28sbh008j248j248j248",
+        "InviteID": "06efvw-28sbh-008j2-48j24-8j248",
         "MaxRedemptions": 0,
         "Status": "InviteRevoked"
       }

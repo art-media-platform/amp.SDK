@@ -9,24 +9,24 @@
     "Kind": "upsert",
     "Channel": "forums.general",
     "Attr": "amp.app.forums.post",
-    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
     "Value": {"Title": "First post", "Body": "hello world, edited"}
   },
   "TxOp.remove": {
     "Kind": "remove",
     "Channel": "forums.general",
     "Attr": "amp.app.forums.post",
-    "ItemID": "06efvw28sb60036dtm6dtm6dtm"
+    "ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm"
   },
   "TxOp.withdraw": {
     "Kind": "withdraw",
     "Channel": "forums.general",
     "Attr": "amp.app.forums.post",
-    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
+    "ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
     "Withdraw": {
       "Reason": "Consent",
       "Rationale": "author requested removal",
-      "Subject": "06efvw28sbk009m6dtm6dtm6dt",
+      "Subject": "06efvw-28sbk-009m6-dtm6d-tm6dt",
       "Delegation": "0tpvgh9318s00dtm6dtm6dtm6d36rey14d5400248j248j248j20duxrs4jhnn00bpbpbpbpbpbpb"
     }
   },
@@ -53,8 +53,8 @@
     "InvokeURL": "amp://~/forums/post"
   },
   "TxOpResult": {
-    "ItemID": "06efvw28sb60036dtm6dtm6dtm",
-    "EditID": "06efvw28sb80048j248j248j24"
+    "ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
+    "EditID": "06efvw-28sb8-0048j-248j2-48j24"
   },
   "TxOpResult.error": {
     "ItemID": "",
@@ -62,52 +62,52 @@
     "Error": "TxRejected"
   },
   "TxResponse": {
-    "TxID": "06efvw28sbd006dtm6dtm6dtm6",
+    "TxID": "06efvw-28sbd-006dt-m6dtm-6dtm6",
     "Results": [
       {
-        "ItemID": "06efvw28sb60036dtm6dtm6dtm",
-        "EditID": "06efvw28sb80048j248j248j24"
+        "ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
+        "EditID": "06efvw-28sb8-0048j-248j2-48j24"
       }
     ]
   },
   "Item": {
-    "_ItemID": "06efvw28sb60036dtm6dtm6dtm",
-    "_EditID": "06efvw28sb80048j248j248j24",
-    "_FromID": "06efvw28sbb005bpbpbpbpbpbp",
+    "_ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
+    "_EditID": "06efvw-28sb8-0048j-248j2-48j24",
+    "_FromID": "06efvw-28sbb-005bp-bpbpb-pbpbp",
     "_UpdatedAt": "2026-07-02T12:34:56Z",
     "Value": {"Title": "First post", "Body": "hello world"}
   },
   "Item.withdrawn": {
-    "_ItemID": "06efvw28sb60036dtm6dtm6dtm",
-    "_EditID": "06efvw28sb80048j248j248j24",
-    "_FromID": "06efvw28sbb005bpbpbpbpbpbp",
+    "_ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
+    "_EditID": "06efvw-28sb8-0048j-248j2-48j24",
+    "_FromID": "06efvw-28sbb-005bp-bpbpb-pbpbp",
     "_UpdatedAt": "2026-07-02T12:34:56Z",
     "Value": {"Title": "First post", "Body": "hello world"},
     "_Withdrawn": {
       "Reason": "Forgotten",
       "WithdrawnAt": "2026-07-02T13:00:00Z",
-      "WithdrawnBy": "06efvw28sb2001248j248j248j"
+      "WithdrawnBy": "06efvw-28sb2-00124-8j248-j248j"
     }
   },
   "WithdrawNote.response": {
     "Reason": "Consent",
     "Rationale": "author requested removal",
-    "Subject": "06efvw28sbk009m6dtm6dtm6dt",
+    "Subject": "06efvw-28sbk-009m6-dtm6d-tm6dt",
     "Delegation": "0tpvgh9318s00dtm6dtm6dtm6d36rey14d5400248j248j248j20duxrs4jhnn00bpbpbpbpbpbpb",
     "WithdrawnAt": "2026-07-02T13:00:00Z",
-    "WithdrawnBy": "06efvw28sb2001248j248j248j"
+    "WithdrawnBy": "06efvw-28sb2-00124-8j248-j248j"
   },
   "ListResponse": {
     "Items": [
       {
-        "_ItemID": "06efvw28sb60036dtm6dtm6dtm",
-        "_EditID": "06efvw28sb80048j248j248j24",
-        "_FromID": "06efvw28sbb005bpbpbpbpbpbp",
+        "_ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
+        "_EditID": "06efvw-28sb8-0048j-248j2-48j24",
+        "_FromID": "06efvw-28sbb-005bp-bpbpb-pbpbp",
         "_UpdatedAt": "2026-07-02T12:34:56Z",
         "Value": {"Body": "hello world"}
       }
     ],
     "HasMore": true,
-    "Next": "06efvw28sb60036dtm6dtm6dtm"
+    "Next": "06efvw-28sb6-0036d-tm6dt-m6dtm"
   }
 }

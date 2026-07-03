@@ -1,31 +1,31 @@
-                               . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-  3zyz3jr4rg6t26zepx29xzc2vf   ✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+                                 . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
+3zyz3j-r4rg6-t26ze-px29x-zc2vf   ✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
-                               amp.university.open.courses
-  7zvg87s0fcvuvcr226fd9mr59r   amp.university.open.courses
+                                 amp.university.open.courses
+7zvg87-s0fcv-uvcr2-26fd9-mr59r   amp.university.open.courses
 
-                               amp.dev.archive.us-en
-  403db6z162fnmv5w6dd2tnd85x   amp.dev.archive.us.en
+                                 amp.dev.archive.us-en
+403db6-z162f-nmv5w-6dd2t-nd85x   amp.dev.archive.us.en
 
 
-                               amp.university.courses.open.arts.science.history.101.Once.upon.a.Time {
-  6e8xfhdn42r88k4xweuw6d331k   amp.university.courses.open.arts.science.history.101.once.upon.a.time
-                               	L01.Rise of Physical Sciences, Engineering, Steampower, and Mechanical Engineering, feat. Peter Wang
-  4g3s925y8jmkd8mut5m6m8fm22   l01.rise.of.physical.sciences.engineering.steampower.and.mechanical.engineering.feat.peter.wang
-                               	L02.Planetary Motion and Numerical Computation & Modeling
-  5v1yv0kg12dpw3ncyw9pq5mz0d   l02.planetary.motion.and.numerical.computation.modeling
-                               	L03.A New Science 1: Introduction to cryptography, code breaking, and war fighting
-  7yxsnynpyygbnv06dk5nh1qvur   l03.a.new.science.1: Introduction to cryptography, code breaking, and war fighting
-                               	L04.A New Science 2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
-  3b271wm5355yk16ppmfvfqqy6q   l04.a.new.science.2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
-                               	L05.A New Science 3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
-  5f5zzy9crefsw496h5h55ndkvm   l05.a.new.science.3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
-                               	L06.A New Science 4: Community-Centric systems
-  4b31xwb6dm8qucpw0tp7psmjtx   l06.a.new.science.4: Community-Centric systems
-                               	L07.Physics Unbound 1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
-  2wbh6355wzcnuwqqbj1swy4enn   l07.physics.unbound.1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
-                               	L08.Physics Unbound 2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
-  1mu9srhnnkbj9qn32pvgve6h89   l08.physics.unbound.2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
+                                 amp.university.courses.open.arts.science.history.101.Once.upon.a.Time {
+6e8xfh-dn42r-88k4x-weuw6-d331k   amp.university.courses.open.arts.science.history.101.once.upon.a.time
+                                 	L01.Rise of Physical Sciences, Engineering, Steampower, and Mechanical Engineering, feat. Peter Wang
+4g3s92-5y8jm-kd8mu-t5m6m-8fm22   l01.rise.of.physical.sciences.engineering.steampower.and.mechanical.engineering.feat.peter.wang
+                                 	L02.Planetary Motion and Numerical Computation & Modeling
+5v1yv0-kg12d-pw3nc-yw9pq-5mz0d   l02.planetary.motion.and.numerical.computation.modeling
+                                 	L03.A New Science 1: Introduction to cryptography, code breaking, and war fighting
+7yxsny-npyyg-bnv06-dk5nh-1qvur   l03.a.new.science.1: Introduction to cryptography, code breaking, and war fighting
+                                 	L04.A New Science 2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
+3b271w-m5355-yk16p-pmfvf-qqy6q   l04.a.new.science.2: The Microcomputer Revolution, Arpanet, interpreters, numerical methods, and rise of computer science
+                                 	L05.A New Science 3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
+5f5zzy-9cref-sw496-h5h55-ndkvm   l05.a.new.science.3: Miniaturization of PC & mobile hardware, computerization of securities markets and exchanges, video games
+                                 	L06.A New Science 4: Community-Centric systems
+4b31xw-b6dm8-qucpw-0tp7p-smjtx   l06.a.new.science.4: Community-Centric systems
+                                 	L07.Physics Unbound 1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
+2wbh63-55wzc-nuwqq-bj1sw-y4enn   l07.physics.unbound.1: Rise of General Relativity, Quantum Theory in a Newtonian world hungry for answers, feat. Sean Carroll, PhD, Theoretical Physicist, Caltech
+                                 	L08.Physics Unbound 2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
+1mu9sr-hnnkb-j9qn3-2pvgv-e6h89   l08.physics.unbound.2: Black Holes, Origins of Life & The Physical Universe (Big Bang), Quantum Theory, and open mysteries in modern physics
 
 
 
