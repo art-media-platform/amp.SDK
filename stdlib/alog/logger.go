@@ -130,8 +130,9 @@ const (
 
 	// widthRelaxLines is how long a width persists before the column relaxes toward the
 	// widest source actually seen in that window (never to zero) — long enough that the
-	// gutter settles instead of fighting between narrow and wide.
-	widthRelaxLines = 512
+	// gutter settles instead of fighting between narrow and wide, short enough that one
+	// wide label doesn't hold the pad hostage for pages.
+	widthRelaxLines = 100
 )
 
 // spacer supplies right-padding without per-line allocation; writePad repeats it

@@ -81,7 +81,7 @@ export interface AmpAdapter {
 
   // ── Federation invites ────────────────────────────────────────────
 
-  /** Redeem a sealed amp-invite-v1 token to join its federation planet (Bearer; see SKILL §4.7). */
+  /** Redeem a sealed invite (universal URL or bare amp-base32 body) to join its federation planet (Bearer; see SKILL §4.7). */
   acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult>;
 
   // ── Subscriptions ─────────────────────────────────────────────────

@@ -484,7 +484,7 @@ AMP_TOKEN=$(curl -sX POST https://prod.plan.tools/api/v1/login \
 curl -sX POST https://prod.plan.tools/api/v1/invite/accept \
   -H "Authorization: Bearer $AMP_TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"InviteText":"amp-invite-v1:…","Passphrase":"…"}'
+  -d '{"InviteText":"https://prod.plan.tools/invite#…","Passphrase":"…"}'
 ```
 
 ---
@@ -1326,9 +1326,9 @@ For end-to-end tests without a production vault, point the client at a local `am
 
 > **Accepting an invite to *join* a federation does not require running your own vault — that's a web-client call (§4.7).** This section is the heavier, self-hosting path: running your **own** `ampd` so your planets are independently hosted and discoverable. A web app on an operated node needs none of it.
 
-When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. Two ways to federate, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
+When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. A parent federation is itself founded operator-custodially from the CLI — `amp federation found "<label>" --invite-pass … --invite-max … --fqdn <fqdn>` seals the genesis with the operator's own key and emits the multi-use onboarding invite in one act. Two ways to federate with one, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
 
-- **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner accepts (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port`. Their names resolve to their planets, carrying their own vault as the bootstrap address.
+- **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner accepts (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp --planet <parent-fed> name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port` (the global `--planet` binds the session to the federation — required from a fresh CLI session). Their names resolve to their planets, carrying their own vault as the bootstrap address.
 - **Peer two federations.** The partner runs their *own* federation; the parent links it in with `amp federation peer <partner-fed-UID> --vault tcp:their-host:port`. A resolver then forwards across the directory hop (`ResolveVia`) into the partner's federation. Either side can peer the other.
 
 **Following a federation at boot.** A self-hosted node pins the federations it follows with `ampd -federation <UID>@tcp:host:port` — it dials the bootstrap peer and watches that federation's NameService channel at startup, so its names are carried without a manual resolve-and-pin each boot (connectivity otherwise rides `-vault.peers`).
