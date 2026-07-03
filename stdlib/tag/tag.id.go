@@ -606,6 +606,20 @@ func (id UID) Base32() string {
 	return string(out)
 }
 
+// Base32Grouped returns Base32() grouped 6-5-5-5-5 with '-' separators — a
+// display-only device for human-facing labels; the canonic form stays solid
+// and every decoder strips the dashes (SD-canonization-spec §1.7).  The dash
+// after digit 16 lands on the NowID time/entropy boundary: EntropyBits (50)
+// spans exactly the last 10 digits, so same-session IDs read as an identical
+// head and a differing tail.
+func (id UID) Base32Grouped() string {
+	full := id.Base32()
+	if len(full) < UID_Base32Length {
+		return full // zero UID stays "0"
+	}
+	return full[:6] + "-" + full[6:11] + "-" + full[11:16] + "-" + full[16:21] + "-" + full[21:]
+}
+
 // AsLabel returns a compact "first1…last4" base32 label for debugging / logging.
 func (id UID) AsLabel() string {
 	full := id.Base32()

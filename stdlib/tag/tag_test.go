@@ -114,6 +114,29 @@ func TestTag(t *testing.T) {
 	}
 }
 
+func TestBase32Grouped(t *testing.T) {
+	// Geometry golden (6-5-5-5-5) — shared verbatim with the C# mirror test so
+	// the two formatters cannot drift.
+	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
+	grouped := tid.Base32Grouped()
+	if grouped != "7rfxvr-fxvrf-xvj4e-2qg2e-ctrrh" {
+		t.Fatalf("tag.UID.Base32Grouped() failed: got %q", grouped)
+	}
+
+	// Lossless: the grouped form parses back to the same UID (decoders strip '-').
+	parsed, err := tag.Parse(grouped)
+	if err != nil || parsed.ID != tid {
+		t.Fatalf("Parse(grouped) failed: got %v, err=%v", parsed, err)
+	}
+	if uid, err := tag.UID_ParseBase32(grouped); err != nil || uid != tid {
+		t.Fatalf("UID_ParseBase32(grouped) failed: got %v, err=%v", uid, err)
+	}
+
+	if zero := (tag.UID{}).Base32Grouped(); zero != "0" {
+		t.Fatalf("zero UID Base32Grouped() failed: got %q", zero)
+	}
+}
+
 func TestNameOrderAndIdentity(t *testing.T) {
 	// Plain multi-word names are order-significant (no commutative fold).
 	if tag.HashName("spaces.plan.tools").ID == tag.HashName("tools.plan.spaces").ID {
