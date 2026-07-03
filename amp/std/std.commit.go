@@ -3,6 +3,8 @@ package std
 import (
 	"context"
 
+	"time"
+
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/closer"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
@@ -108,7 +110,7 @@ func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
 
 	req := &localCommit{
 		Context:  appCtx,
-		onCommit: make(chan error),
+		onCommit: make(chan error, 1), // buffered: a completion racing the timeout must never block its sender
 	}
 
 	ctx := closer.WrapContext(appCtx)
@@ -123,6 +125,8 @@ func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
 
 	select {
 	case err = <-req.onCommit:
+	case <-time.After(CommitTimeout):
+		err = status.Code_Timeout.Errorf("commit did not complete within %v — is the target planet attached to this session? (AOM O5 §5.11)", CommitTimeout)
 	case <-appCtx.Closing():
 		err = appCtx.Err()
 	}
@@ -130,6 +134,12 @@ func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
 	ctx.Close(err)
 	return err
 }
+
+// CommitTimeout bounds how long Commit blocks awaiting completion.  A commit
+// that can never complete — e.g. its target planet is not attached to the
+// session — otherwise hangs its app verb silently; the bound converts that
+// class into a diagnosable error (AOM O5 §5.11).
+var CommitTimeout = 30 * time.Second
 
 type localCommit struct {
 	context.Context
@@ -142,7 +152,10 @@ func (req *localCommit) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 
 func (req *localCommit) RecvEvent(evt amp.PinEvent) {
 	if evt.Status == amp.PinStatus_TxCommit {
-		req.onCommit <- evt.Error
+		select {
+		case req.onCommit <- evt.Error:
+		default: // listener already timed out / left; drop rather than block the pipeline
+		}
 	}
 }
 
