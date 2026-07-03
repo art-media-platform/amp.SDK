@@ -74,7 +74,8 @@ export function createAmpCrypto(): AmpCrypto {
     },
     getEncryptPub() {
       if (!keyPair) return null;
-      return { kit: keyPair.kit, pub: keyPair.pub };
+      // Copy the buffer — callers must not be able to mutate the installed key.
+      return { kit: keyPair.kit, pub: new Uint8Array(keyPair.pub) };
     },
   };
 }

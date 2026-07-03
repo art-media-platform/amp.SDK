@@ -154,9 +154,11 @@ Start with the overview, then dip in as questions arise:
 
 **Beta, pre-v400.** Breaking changes are possible between minor revisions, and
 there is no public npm channel yet — you integrate a versioned bundle
-(`amp-web-SDK-vNNN[.P].zip`). The bundle label, this package's `version`, and the
-`amp.SDK` release tag are the **same revision** — one source of truth. **Pin the
-bundle you integrated** (vendor it, or commit the version) rather than floating;
+(`amp-web-SDK-vNNN[.P].zip`). The `amp.SDK` git tag is the single source of truth:
+`pack.sh` stamps the bundle label and the packaged `package.json` version from it
+at build time (the committed `package.json` carries only the `0.0.0-dev`
+placeholder). **Pin the bundle you integrated** (vendor it, or commit the version)
+rather than floating;
 upgrade deliberately and re-run your contract tests. At v400 ("Production Ready")
 the SDK moves to public GitHub Releases under an open license with a semver
 compatibility promise.

@@ -1192,7 +1192,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 
 ## 12. What NOT to do
 
-1. **Never bypass `@art-media-platform/web`** to call `/api/v1/*` directly from app code. The client wraps the wire shape with retry, session refresh, and sealed-box helpers; raw fetches will accumulate bugs.
+1. **Prefer `@art-media-platform/web`** over raw `/api/v1/*` fetches for every endpoint it wraps — login, tx, channels, upload, media, tag-resolve, invites, subscriptions. The client wraps the wire shape with retry, session refresh, and sealed-box helpers; raw fetches will accumulate bugs. A handful of operator/consumer endpoints have no client method yet (`/resolve`, `/search`, `/federation/peers` §4.6; `/governance/grant` §14.4) — those you call directly against the wire contract until a wrapper lands.
 2. **Never store user-supplied secrets unsealed** in channel items. Run `seal()` before `upsert`. Plaintext API keys in `users/api_keys_overrides` is the single most common security mistake.
 3. **Never assume immediate consistency.** Writes propagate over WebSocket; design UI optimistically.
 4. **Never push SecurityEvent telemetry** to a replicated channel. Audit logs and rate-limit notifications are local-only.

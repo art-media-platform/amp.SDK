@@ -13,7 +13,7 @@
 
 import type { AmpAdapter } from './adapter.js';
 import { createAmpCrypto } from './crypto/index.js';
-import { ampErrorFromResponse } from './errors.js';
+import { AmpError, AmpErrorCode, ampErrorFromResponse } from './errors.js';
 import { EmbedBridge } from './embed-bridge.js';
 import {
   type EncryptKeyStorage,
@@ -206,17 +206,20 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   async logout(): Promise<void> {
-    if (this.sessionToken) {
-      await fetch(this.apiUrl('/logout'), {
-        method: 'POST',
-        headers: this.headers(),
-      }).catch(() => {});
-    }
+    // Clear local secrets FIRST — a slow/hung /logout must not leave the Bearer
+    // and the in-memory device key resident for the round-trip.
+    const token = this.sessionToken;
     this.sessionToken = null;
     this.member = null;
     this.crypto.setEncryptKey(null);
     this.disconnectWs();
     this.authListeners.forEach(cb => cb(null));
+    if (token) {
+      await fetch(this.apiUrl('/logout'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
   }
 
   getSession(): AmpMember | null {
@@ -458,8 +461,20 @@ export class AmpWebClient implements AmpAdapter {
     // subscriptions resume on a client that has one.
     if (typeof WebSocket === 'undefined') return;
 
-    const protocol = this.vaultUrl.startsWith('https') ? 'wss' : 'ws';
+    const secure = this.vaultUrl.startsWith('https');
     const host = this.vaultUrl.replace(/^https?:\/\//, '');
+    // The Bearer rides the WS URL query (browsers can't set headers on the
+    // upgrade), so a cleartext ws:// would leak it on the wire and into proxy
+    // logs.  Refuse unless the host is loopback (local dev over http is fine).
+    const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])(:|$)/.test(host);
+    if (!secure && !isLocal) {
+      throw new AmpError(
+        0,
+        AmpErrorCode.BadRequest,
+        `refusing insecure WebSocket to ${host}: the session token would travel in cleartext — use https:// (wss://)`,
+      );
+    }
+    const protocol = secure ? 'wss' : 'ws';
     const url = `${protocol}://${host}/ws?token=${encodeURIComponent(this.sessionToken ?? '')}`;
 
     this.ws = new WebSocket(url);
