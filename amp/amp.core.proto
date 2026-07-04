@@ -1763,9 +1763,11 @@ message FederationDirectory {
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
 // Exactly one of the body fields is set per message — peers detect by nil pointer.
 message SyncMsg {
-    SyncWatchList    WatchList    = 1;
-    SyncRangeOffer   RangeOffer   = 2;
-    SyncRangeRequest RangeRequest = 3;
+    SyncWatchList       WatchList       = 1;
+    SyncRangeOffer      RangeOffer      = 2;
+    SyncRangeRequest    RangeRequest    = 3;
+    SyncNodeSpanRequest NodeSpanRequest = 4; // lazy-subtree span query (§9.4) — reserved for v-c
+    SyncNodeSpans       NodeSpans       = 5; // lazy-subtree span answer (§9.4) — reserved for v-c
 }
 
 
@@ -1776,12 +1778,30 @@ message SyncWatchList {
 }
 
 
-// SyncPlanetStatus carries a planet UID and the peer's current high-water mark.
+// ArchiveMode is a peer's replication posture for a planet: how much of the journal it
+// holds and advertises.  Archive (the zero value) is total replication — a peer that
+// sends no ArchiveMode reads as a full holder.  Suffix holds only a recent txTimeID
+// window (§9).  The reserved 1–6 / 8+ gaps leave room for segmented / subtree modes.
+enum ArchiveMode {
+    Archive = 0; // full replication / totality — the default; an unset field reads as this
+    Suffix  = 7; // holds only a recent txTimeID suffix (opt-in; enables suffix eviction)
+}
+
+
+// SyncPlanetStatus carries a planet UID and the peer's current high-water mark, plus
+// (partial replication, §9) its held-range manifest.
 message SyncPlanetStatus {
     fixed64             PlanetID_0  = 1;
     fixed64             PlanetID_1  = 2;
     fixed64             HighWater_0 = 3;  // most recent TxTimeID
     fixed64             HighWater_1 = 4;
+    // The peer holds and advertises [HoldSince, HighWater]; Held lists pinned segments
+    // below HoldSince; ArchiveMode Suffix opts into suffix eviction (Archive/unset = full
+    // holder, so a pre-manifest peer reads as totality) (§9.1–9.2).
+    fixed64             HoldSince_0 = 5;
+    fixed64             HoldSince_1 = 6;
+    repeated UIDRange   Held        = 7;
+    ArchiveMode         ArchiveMode = 8;
 }
 
 
@@ -1805,6 +1825,31 @@ message SyncRangeOffer {
 message SyncRangeRequest {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
-    fixed64             After_0 = 3;      // stream TxMsgs with TxTimeID > After
+    fixed64             After_0 = 3;      // stream TxMsgs with TxTimeID > After (exclusive)
     fixed64             After_1 = 4;
+    fixed64             End_0   = 5;      // inclusive upper bound; the window is (After, End] — 0 = unbounded tail (§9.2)
+    fixed64             End_1   = 6;
+}
+
+
+// SyncNodeSpanRequest asks a peer that materialized a subtree to answer, from its 'N'
+// index, the txTimeID spans covering NodeID — the bootstrap for lazy subtree
+// materialization when the local node never held the subtree (§9.4).  Reserved for v-c.
+message SyncNodeSpanRequest {
+    fixed64             PlanetID_0 = 1;
+    fixed64             PlanetID_1 = 2;
+    fixed64             NodeID_0   = 3;
+    fixed64             NodeID_1   = 4;
+}
+
+
+// SyncNodeSpans answers SyncNodeSpanRequest with the coalesced txTimeID ranges that touch
+// NodeID (capped; Complete=false when truncated) (§9.4).  Reserved for v-c.
+message SyncNodeSpans {
+    fixed64             PlanetID_0 = 1;
+    fixed64             PlanetID_1 = 2;
+    fixed64             NodeID_0   = 3;
+    fixed64             NodeID_1   = 4;
+    repeated UIDRange   Spans      = 5;
+    bool                Complete   = 6;
 }
