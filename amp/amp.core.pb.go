@@ -6335,7 +6335,13 @@ type SyncRangeOffer struct {
 	Start_1    uint64                 `protobuf:"fixed64,4,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
 	End_0      uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // range end (inclusive)
 	End_1      uint64                 `protobuf:"fixed64,6,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
-	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End].
+	// Combined marks RangeHash as a fold of the sender's per-day bucket digests over [Start, End]
+	// — one "converged over this whole span?" probe; a mismatch drills down to per-bucket offers
+	// (§9.2).  An old/unset peer reads it as a plain RangeHash offer and bisects — still converges,
+	// just without the O(1) fast path.
+	Combined bool `protobuf:"varint,7,opt,name=Combined,proto3" json:"Combined,omitempty"`
+	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End] (or, when Combined,
+	// the fold of that span's per-day bucket digests).
 	RangeHash_0   uint64 `protobuf:"fixed64,10,opt,name=RangeHash_0,json=RangeHash0,proto3" json:"RangeHash_0,omitempty"`
 	RangeHash_1   uint64 `protobuf:"fixed64,11,opt,name=RangeHash_1,json=RangeHash1,proto3" json:"RangeHash_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -6412,6 +6418,13 @@ func (x *SyncRangeOffer) GetEnd_1() uint64 {
 		return x.End_1
 	}
 	return 0
+}
+
+func (x *SyncRangeOffer) GetCombined() bool {
+	if x != nil {
+		return x.Combined
+	}
+	return false
 }
 
 func (x *SyncRangeOffer) GetRangeHash_0() uint64 {
@@ -7145,7 +7158,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vHoldSince_1\x18\x06 \x01(\x06R\n" +
 	"HoldSince1\x12!\n" +
 	"\x04Held\x18\a \x03(\v2\r.amp.UIDRangeR\x04Held\x122\n" +
-	"\vArchiveMode\x18\b \x01(\x0e2\x10.amp.ArchiveModeR\vArchiveMode\"\xec\x01\n" +
+	"\vArchiveMode\x18\b \x01(\x0e2\x10.amp.ArchiveModeR\vArchiveMode\"\x88\x02\n" +
 	"\x0eSyncRangeOffer\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -7154,7 +7167,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\aStart_0\x18\x03 \x01(\x06R\x06Start0\x12\x17\n" +
 	"\aStart_1\x18\x04 \x01(\x06R\x06Start1\x12\x13\n" +
 	"\x05End_0\x18\x05 \x01(\x06R\x04End0\x12\x13\n" +
-	"\x05End_1\x18\x06 \x01(\x06R\x04End1\x12\x1f\n" +
+	"\x05End_1\x18\x06 \x01(\x06R\x04End1\x12\x1a\n" +
+	"\bCombined\x18\a \x01(\bR\bCombined\x12\x1f\n" +
 	"\vRangeHash_0\x18\n" +
 	" \x01(\x06R\n" +
 	"RangeHash0\x12\x1f\n" +

@@ -1814,7 +1814,13 @@ message SyncRangeOffer {
     fixed64             Start_1     = 4;
     fixed64             End_0       = 5;  // range end (inclusive)
     fixed64             End_1       = 6;
-    // 128-bit fingerprint: leading 16 bytes of the digest over [Start, End].
+    // Combined marks RangeHash as a fold of the sender's per-day bucket digests over [Start, End]
+    // — one "converged over this whole span?" probe; a mismatch drills down to per-bucket offers
+    // (§9.2).  An old/unset peer reads it as a plain RangeHash offer and bisects — still converges,
+    // just without the O(1) fast path.
+    bool                Combined    = 7;
+    // 128-bit fingerprint: leading 16 bytes of the digest over [Start, End] (or, when Combined,
+    // the fold of that span's per-day bucket digests).
     fixed64             RangeHash_0 = 10;
     fixed64             RangeHash_1 = 11;
 }
