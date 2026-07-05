@@ -30,9 +30,10 @@ evaluators and partners under the terms below. It is NOT yet open-source.
    implication or estoppel.
 
 5. PATH TO OPEN SOURCE
-   AMP intends to release this SDK under a permissive open-source license
-   (e.g., Apache-2.0) at general availability (target: the v400 milestone). Until
-   then, these beta terms govern.
+   AMP intends to release this SDK under an open-source license when resources
+   allow and the business is more stable. No particular license, timeline, or
+   release milestone is committed. Unless and until such a release occurs,
+   these beta terms govern.
 
 6. NO WARRANTY
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR

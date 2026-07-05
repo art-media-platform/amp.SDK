@@ -6,9 +6,10 @@ Talks the `ampd` `app.www` wire contract — defined in
 [`amp.SDK/amp/webapi`](https://github.com/art-media-platform/amp.SDK/tree/main/amp/webapi),
 and copied into this SDK bundle at [`webapi/webapi.types.go`](webapi/webapi.types.go).
 
-> **Beta (pre-v400).** Distributed in the `amp-web-SDK` bundle — not yet on npm.
-> Get the latest by building it (`make amp-web-SDK`) or from your amp contact. At
-> v400 (Production Ready) it flips to public GitHub Releases + an open license.
+> **Beta.** Distributed in the `amp-web-SDK` bundle — not yet on npm.
+> Get the latest by building it (`make amp-web-SDK`) or from your amp contact.
+> AMP intends to move to public releases under an open license when resources
+> allow and the business is more stable; no timeline is committed.
 
 > **You connect to an operated node — you do not run one.** The vault (`ampd`) is
 > server software an operator runs; this package is a browser / Node **client**
@@ -152,16 +153,16 @@ Start with the overview, then dip in as questions arise:
 
 ## Versioning & Stability
 
-**Beta, pre-v400.** Breaking changes are possible between minor revisions, and
+**Beta.** Breaking changes are possible between minor revisions, and
 there is no public npm channel yet — you integrate a versioned bundle
 (`amp-web-SDK-vNNN[.P].zip`). The `amp.SDK` git tag is the single source of truth:
 `pack.sh` stamps the bundle label and the packaged `package.json` version from it
 at build time (the committed `package.json` carries only the `0.0.0-dev`
 placeholder). **Pin the bundle you integrated** (vendor it, or commit the version)
 rather than floating;
-upgrade deliberately and re-run your contract tests. At v400 ("Production Ready")
-the SDK moves to public GitHub Releases under an open license with a semver
-compatibility promise.
+upgrade deliberately and re-run your contract tests. AMP intends to move the SDK
+to public releases under an open license, with a semver compatibility promise,
+when resources allow and the business is more stable.
 
 Deployment topologies, offline-auth, device identity, and membership-tier
 guidance live in [`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md) §14.
