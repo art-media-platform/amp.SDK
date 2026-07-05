@@ -252,6 +252,67 @@ func (crate *CrateRef) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// --- amp.BlobRef ------------------------------------------------------------
+//
+// A BlobRef rides the JSON wire as its compact render identity: the base32
+// storage blobID (what a media resolve keys on — StorageUID) plus the display
+// metadata its AssetTag carries.  PlanetID is intentionally dropped: a JSON
+// consumer resolves a blob against its channel's planet.  The full 32-byte
+// content hash and HashKitID are not representable in this form — binary
+// transport carries the full proto, and blob opens tolerate a degraded ref.
+
+type blobRefJSON struct {
+	BlobID      string `json:"BlobID,omitempty"`      // base32 StorageUID
+	ContentType string `json:"ContentType,omitempty"` // AssetTag content type
+	Name        string `json:"Name,omitempty"`        // AssetTag.Text — original filename
+	Size        int64  `json:"Size,omitempty"`        // AssetTag.I — plaintext byte length
+	EpochID     string `json:"EpochID,omitempty"`     // base32; "" = planet-public
+}
+
+func (ref *BlobRef) MarshalJSON() ([]byte, error) {
+	blobID := ref.StorageUID()
+	wire := blobRefJSON{
+		BlobID:  uidToBase32(blobID[0], blobID[1]),
+		EpochID: uidToBase32(ref.EpochID_0, ref.EpochID_1),
+	}
+	if asset := ref.AssetTag; asset != nil {
+		wire.ContentType = asset.ContentType()
+		wire.Name = asset.Text
+		wire.Size = asset.I
+	}
+	return json.Marshal(wire)
+}
+
+func (ref *BlobRef) UnmarshalJSON(data []byte) error {
+	wire := blobRefJSON{}
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+	blobID, err := uidFromBase32(wire.BlobID)
+	if err != nil {
+		return err
+	}
+	epochID, err := uidFromBase32(wire.EpochID)
+	if err != nil {
+		return err
+	}
+	*ref = BlobRef{}
+	if blobID.IsSet() {
+		asset := TagFromUID(blobID)
+		asset.ContentTypeRaw = wire.ContentType
+		asset.Text = wire.Name
+		asset.I = wire.Size
+		asset.Units = Units_Bytes
+		ref.AssetTag = asset
+
+		ref.BlobTag = TagFromUID(blobID)
+		ref.BlobTag.I = wire.Size
+		ref.BlobTag.Units = Units_Bytes
+	}
+	ref.EpochID_0, ref.EpochID_1 = epochID[0], epochID[1]
+	return nil
+}
+
 // --- amp.Address ----------------------------------------------------------
 //
 // An Address is up to five UIDs (PlanetID, NodeID, AttrID, ItemID, EditID).

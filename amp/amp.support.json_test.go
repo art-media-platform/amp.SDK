@@ -56,6 +56,86 @@ func TestCrateRefJSONBase32(t *testing.T) {
 	}
 }
 
+func TestBlobRefJSONBase32(t *testing.T) {
+	blobID := tag.HashName("photo.blob").ID
+	in := &amp.BlobRef{
+		PlanetID_0: 7, // dropped on the JSON wire — resolution is by channel planet
+		PlanetID_1: 9,
+		Hash_0:     blobID[0],
+		Hash_1:     blobID[1],
+		Hash_2:     3,
+		Hash_3:     4,
+		AssetTag: &amp.Tag{
+			UID_0:          blobID[0],
+			UID_1:          blobID[1],
+			ContentTypeRaw: "image/png",
+			Text:           "photo.png",
+			I:              512,
+			Units:          amp.Units_Bytes,
+		},
+		BlobTag: &amp.Tag{
+			UID_0: blobID[0],
+			UID_1: blobID[1],
+			I:     512,
+			Units: amp.Units_Bytes,
+		},
+	}
+
+	data, err := json.Marshal(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `"BlobID":"`+blobID.Base32()+`"`) {
+		t.Fatalf("BlobRef JSON not base32: %s", data)
+	}
+	for _, leaked := range []string{"PlanetID", "Hash_0", "Hash0", "HashKit"} {
+		if strings.Contains(string(data), leaked) {
+			t.Fatalf("BlobRef JSON leaked %s: %s", leaked, data)
+		}
+	}
+	if !strings.Contains(string(data), `"ContentType":"image/png"`) ||
+		!strings.Contains(string(data), `"Name":"photo.png"`) ||
+		!strings.Contains(string(data), `"Size":512`) {
+		t.Fatalf("BlobRef JSON missing render metadata: %s", data)
+	}
+	if strings.Contains(string(data), "EpochID") { // public blob → omitempty drops it
+		t.Fatalf("BlobRef JSON carries an empty EpochID: %s", data)
+	}
+
+	// Round-trip restores the compact identity: storage UID + render metadata
+	// (the full hash / HashKitID / PlanetID are not representable — see blobRefJSON).
+	out := &amp.BlobRef{}
+	if err := json.Unmarshal(data, out); err != nil {
+		t.Fatal(err)
+	}
+	if out.StorageUID() != in.StorageUID() {
+		t.Fatalf("BlobRef round-trip StorageUID mismatch: %+v", out)
+	}
+	if out.AssetTag == nil || out.AssetTag.ContentType() != "image/png" ||
+		out.AssetTag.Text != "photo.png" || out.AssetTag.I != 512 {
+		t.Fatalf("BlobRef round-trip AssetTag mismatch: %+v", out.AssetTag)
+	}
+	if out.PlanetID_0 != 0 || out.PlanetID_1 != 0 {
+		t.Fatalf("BlobRef round-trip resurrected a PlanetID: %+v", out)
+	}
+
+	// The empty ref marshals to {} and round-trips empty.
+	empty, err := json.Marshal(&amp.BlobRef{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(empty) != "{}" {
+		t.Fatalf("empty BlobRef JSON = %s, want {}", empty)
+	}
+	blank := &amp.BlobRef{}
+	if err := json.Unmarshal(empty, blank); err != nil {
+		t.Fatal(err)
+	}
+	if blank.AssetTag != nil || blank.BlobTag != nil || blank.StorageUID().IsSet() {
+		t.Fatalf("empty BlobRef round-trip not empty: %+v", blank)
+	}
+}
+
 func TestAddressJSONPackedBase32(t *testing.T) {
 	node := tag.HashName("the.node").ID
 	attr := tag.HashName("the.attr").ID
