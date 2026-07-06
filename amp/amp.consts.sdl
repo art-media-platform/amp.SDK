@@ -2,6 +2,7 @@
 //
 // Compiled by `forge consts` into .go and .cs files.
 // DO NOT hand-edit generated output files.
+// amp:gen=csharp
 //
 
 option go_package = "github.com/art-media-platform/amp.SDK/amp";
