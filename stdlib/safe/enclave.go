@@ -273,6 +273,13 @@ func (enc *enclave) SignRaw(ref *KeyRef, msg []byte) ([]byte, error) {
 	if kit.Signing == nil || kit.Signing.Sign == nil {
 		return nil, status.Code_Unimplemented.Errorf("Kit %s does not support signing", kit.ID.String())
 	}
+	// A public-only adopted key (PrvKey nil — a TOFU-declared peer key) must
+	// refuse here: signing with an empty private half yields a garbage
+	// signature or a kit panic, never a usable one.  Callers gate on CanSign;
+	// this is the enclave's own floor.
+	if len(rec.PrvKey) == 0 {
+		return nil, status.Code_AuthFailed.Error("SignRaw: key is held public-only (no private half)")
+	}
 	return kit.Signing.Sign(msg, rec.PrvKey)
 }
 

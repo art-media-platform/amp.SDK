@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
@@ -60,5 +61,13 @@ func TestEnclave_CanSign(t *testing.T) {
 	}
 	if enc.CanSign(pubRef) {
 		t.Fatal("CanSign must be FALSE for a public-only adopted key (no private half) — the durable signing gate")
+	}
+
+	// (3) SignRaw on the public-only key refuses loudly — never a garbage
+	// signature (or kit panic) from an empty private half.
+	if _, err := enc.SignRaw(pubRef, make([]byte, 32)); err == nil {
+		t.Fatal("SignRaw must refuse a public-only key")
+	} else if !strings.Contains(err.Error(), "public-only") {
+		t.Fatalf("SignRaw refusal must name the public-only key state: %v", err)
 	}
 }
