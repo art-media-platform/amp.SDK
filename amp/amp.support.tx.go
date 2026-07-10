@@ -540,7 +540,25 @@ func readOps(tx *TxMsg, src []byte) error {
 func (tx *TxMsg) reconstructEditIDs() {
 	txID := tx.TxID()
 	for i := range tx.Ops {
-		tx.Ops[i].Addr.EditID = txID
+		op := &tx.Ops[i]
+		op.Addr.EditID = txID
+
+		if op.DataLen == 0 || op.DataOfs >= uint64(len(tx.DataStore)) {
+			continue
+		}
+		headerFlags := ValueHeaderFlags(tx.DataStore[op.DataOfs])
+		if headerFlags&ValueHeaderFlags_TxID == 0 {
+			continue
+		}
+		txIDOfs := op.DataOfs + 1 // inline UIDs follow in ascending flag-bit order
+		if headerFlags&ValueHeaderFlags_FromID != 0 {
+			txIDOfs += uint64(tag.UID_Size)
+		}
+		if txIDOfs+uint64(tag.UID_Size) > op.DataOfs+op.DataLen || txIDOfs+uint64(tag.UID_Size) > uint64(len(tx.DataStore)) {
+			continue // malformed header: hold the envelope identity; ingest rejects upstream
+		}
+		op.Addr.EditID[0] = binary.BigEndian.Uint64(tx.DataStore[txIDOfs:])
+		op.Addr.EditID[1] = binary.BigEndian.Uint64(tx.DataStore[txIDOfs+8:])
 	}
 }
 
