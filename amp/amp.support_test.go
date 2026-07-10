@@ -29,7 +29,6 @@ func TestTxSerialize(t *testing.T) {
 					AttrID: tag.UID{111312232, 22232334444},
 					ItemID: tag.UID{73833773, 76549},
 				},
-				EditID: tag.UID{4435435, 83849854543},
 			},
 		}
 
@@ -46,8 +45,6 @@ func TestTxSerialize(t *testing.T) {
 		op.Addr.NodeID[1] += 37733773
 		op.Addr.AttrID[0] -= 50454123
 		op.Addr.ItemID[1] *= 745983
-		op.Addr.EditID[0] += 123456789
-		op.Addr.EditID[1] *= 0xbeef
 
 		data := []byte("hello-world")
 		for i := 0; i < 7; i++ {
@@ -63,16 +60,13 @@ func TestTxSerialize(t *testing.T) {
 
 		for i := 0; i < 5500; i++ {
 			op.Addr.ItemID[0] = uint64(i)
-			if i%5 == 0 {
-				op.Addr.EditID[1] += 37
-			}
 			tx.MarshalOp(&op, &LoginResponse{
 				HashResponse: append(data, fmt.Sprintf("-%d", i)...),
 			})
 		}
 
 		op.Addr.ItemID[0] = 111111
-		op.Addr.EditID[1] = 55445544
+		op.Addr.EditID = tag.UID{} // MarshalOpAndData appends verbatim; decode reconstructs
 		tx.MarshalOpAndData(&op, nil)
 	}
 
@@ -108,9 +102,15 @@ func TestTxSerialize(t *testing.T) {
 	if !bytes.Equal(tx.DataStore, t2.DataStore) {
 		t.Errorf("ReadTxMsg failed: DataStore mismatch")
 	}
+	txID := tx.TxID()
 	for i, op1 := range tx.Ops {
 		op2 := t2.Ops[i]
 
+		// The op wire carries no EditID; decode reconstructs it (SD-edit-resolution §6.1).
+		if op2.Addr.EditID != txID {
+			t.Errorf("ReadTxMsg failed: op %d EditID not reconstructed to envelope TxID", i)
+		}
+		op1.Addr.EditID = txID
 		if op1.Flags != op2.Flags || op1 != op2 || op1.DataOfs != op2.DataOfs || op1.DataLen != op2.DataLen {
 			t.Errorf("ReadTxMsg failed: TxOp mismatch")
 		}

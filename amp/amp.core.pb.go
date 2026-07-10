@@ -223,47 +223,43 @@ func (TxOpFlags) EnumDescriptor() ([]byte, []int) {
 //
 // Why not a proto message? Compression is much better since values usually repeat.
 // TxField indexes the per-op u64 slots in the hand-rolled TxOp codec.
-// Bit order = change frequency: EditID differs on EVERY op (derived from TxID),
-// so it sits in the low bits and the common-case hasFields mask stays a 1-byte
-// uvarint.  Slots 8..15 are reserved headroom: readers scan MaxFields slots, so
-// a post-freeze writer may assign a new u64 field there and old readers carry
-// it losslessly.
+// Bit order = change frequency: the hasFields mask is a uvarint sized by its
+// highest set bit, so ItemID (differs on nearly every op) sits in the low bits
+// and NodeID (rarely differs) sits high.  An op's EditID is not a wire field:
+// it is reconstructed at decode — the envelope TxID, unless the op's value
+// header carries an authoring TxID (ValueHeaderFlags_TxID).  Slots 6..15 are
+// reserved headroom: readers scan MaxFields slots, so a post-freeze writer may
+// assign a new u64 field there and old readers carry it losslessly.
 type TxField int32
 
 const (
-	TxField_EditID_0  TxField = 0
-	TxField_EditID_1  TxField = 1
-	TxField_ItemID_0  TxField = 2
-	TxField_ItemID_1  TxField = 3
-	TxField_AttrID_0  TxField = 4
-	TxField_AttrID_1  TxField = 5
-	TxField_NodeID_0  TxField = 6
-	TxField_NodeID_1  TxField = 7
+	TxField_ItemID_0  TxField = 0
+	TxField_ItemID_1  TxField = 1
+	TxField_AttrID_0  TxField = 2
+	TxField_AttrID_1  TxField = 3
+	TxField_NodeID_0  TxField = 4
+	TxField_NodeID_1  TxField = 5
 	TxField_MaxFields TxField = 16
 )
 
 // Enum value maps for TxField.
 var (
 	TxField_name = map[int32]string{
-		0:  "EditID_0",
-		1:  "EditID_1",
-		2:  "ItemID_0",
-		3:  "ItemID_1",
-		4:  "AttrID_0",
-		5:  "AttrID_1",
-		6:  "NodeID_0",
-		7:  "NodeID_1",
+		0:  "ItemID_0",
+		1:  "ItemID_1",
+		2:  "AttrID_0",
+		3:  "AttrID_1",
+		4:  "NodeID_0",
+		5:  "NodeID_1",
 		16: "MaxFields",
 	}
 	TxField_value = map[string]int32{
-		"EditID_0":  0,
-		"EditID_1":  1,
-		"ItemID_0":  2,
-		"ItemID_1":  3,
-		"AttrID_0":  4,
-		"AttrID_1":  5,
-		"NodeID_0":  6,
-		"NodeID_1":  7,
+		"ItemID_0":  0,
+		"ItemID_1":  1,
+		"AttrID_0":  2,
+		"AttrID_1":  3,
+		"NodeID_0":  4,
+		"NodeID_1":  5,
 		"MaxFields": 16,
 	}
 )
@@ -304,7 +300,7 @@ type ValueHeaderFlags int32
 const (
 	ValueHeaderFlags_None   ValueHeaderFlags = 0
 	ValueHeaderFlags_FromID ValueHeaderFlags = 1 // author or other originator
-	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // tx that publishes this entry
+	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // authoring tx (op EditID); materialize-stamped, read on serve (SD-edit-resolution §6.1)
 	ValueHeaderFlags_UID_C  ValueHeaderFlags = 4 // reserved
 	ValueHeaderFlags_UID_D  ValueHeaderFlags = 8 // reserved
 )
@@ -7235,16 +7231,14 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Upsert\x10\x04\x12\n" +
 	"\n" +
-	"\x06Delete\x10\b*\x88\x01\n" +
+	"\x06Delete\x10\b*l\n" +
 	"\aTxField\x12\f\n" +
-	"\bEditID_0\x10\x00\x12\f\n" +
-	"\bEditID_1\x10\x01\x12\f\n" +
-	"\bItemID_0\x10\x02\x12\f\n" +
-	"\bItemID_1\x10\x03\x12\f\n" +
-	"\bAttrID_0\x10\x04\x12\f\n" +
-	"\bAttrID_1\x10\x05\x12\f\n" +
-	"\bNodeID_0\x10\x06\x12\f\n" +
-	"\bNodeID_1\x10\a\x12\r\n" +
+	"\bItemID_0\x10\x00\x12\f\n" +
+	"\bItemID_1\x10\x01\x12\f\n" +
+	"\bAttrID_0\x10\x02\x12\f\n" +
+	"\bAttrID_1\x10\x03\x12\f\n" +
+	"\bNodeID_0\x10\x04\x12\f\n" +
+	"\bNodeID_1\x10\x05\x12\r\n" +
 	"\tMaxFields\x10\x10*H\n" +
 	"\x10ValueHeaderFlags\x12\b\n" +
 	"\x04None\x10\x00\x12\n" +

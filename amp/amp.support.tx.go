@@ -234,9 +234,9 @@ func (tx *TxMsg) Delete(elemID tag.ElementID, val proto.Message) error {
 //   - TxOp is appended to TxMsg.Ops
 func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 
-	// Derive EditID from the TxID (matching C# TxMsg.MarshalOp behavior)
-	txID := tx.TxID()
-	op.Addr.EditID = txID.DeriveID(op.Addr.EditID)
+	// EditID == TxID on every write (SD-edit-resolution §6.1); in-memory /
+	// cabinet-key identity only — the op wire does not carry it.
+	op.Addr.EditID = tx.TxID()
 
 	// START
 	ds := tx.DataStore
@@ -324,6 +324,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 		return nil, err
 	}
 
+	tx.reconstructEditIDs()
 	return tx, nil
 }
 
@@ -413,9 +414,6 @@ func appendOps(dst []byte, ops []TxOp) []byte {
 		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
 
 		// detect repeated fields and write only what changes (with corresponding flags)
-		op_cur[TxField_EditID_0] = op.Addr.EditID[0]
-		op_cur[TxField_EditID_1] = op.Addr.EditID[1]
-
 		op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
 		op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
 
@@ -519,9 +517,6 @@ func readOps(tx *TxMsg, src []byte) error {
 			}
 		}
 
-		op.Addr.EditID[0] = op_cur[TxField_EditID_0]
-		op.Addr.EditID[1] = op_cur[TxField_EditID_1]
-
 		op.Addr.ItemID[0] = op_cur[TxField_ItemID_0]
 		op.Addr.ItemID[1] = op_cur[TxField_ItemID_1]
 
@@ -534,6 +529,19 @@ func readOps(tx *TxMsg, src []byte) error {
 		tx.Ops = append(tx.Ops, op)
 	}
 	return nil
+}
+
+// reconstructEditIDs restores each op's identity after decode — the ONE
+// authoritative site (SD-edit-resolution §6.1): the envelope TxID, unless the
+// op's value header carries an authoring TxID (ValueHeaderFlags_TxID, stamped
+// at materialize so served ops survive session-tx re-bundling).  Called only
+// at decode exits where the DataStore is populated; nothing downstream ever
+// derives identity.
+func (tx *TxMsg) reconstructEditIDs() {
+	txID := tx.TxID()
+	for i := range tx.Ops {
+		tx.Ops[i].Addr.EditID = txID
+	}
 }
 
 func (tx *TxMsg) UnmarshalHead(src []byte) error {
@@ -786,6 +794,7 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 			tx.DataStore = make([]byte, dataLen)
 			copy(tx.DataStore, wire[headLen:headLen+dataLen])
 		}
+		tx.reconstructEditIDs()
 		return tx, nil
 	}
 
@@ -888,6 +897,7 @@ func openTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 	}
 
 	tx.Normalized = false
+	tx.reconstructEditIDs()
 	return tx, nil
 }
 
