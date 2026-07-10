@@ -399,6 +399,20 @@ enum SealState {
 }
 
 
+// MemberAdmission is the planet's per-epoch member-admission posture: how an
+// identity that has proven control of its key may be SEATED as a member (a
+// MemberEpoch minted on its behalf).  It lives in EpochTerms, like SealState,
+// because who may join is a governance act.  Unset resolves to
+// DefaultMemberAdmission (AdmissionInviteOnly) via EffectiveAdmission — the
+// invite-first doctrine is the default; open registration is opt-in per epoch
+// (O4 §4.9, SD-security-sync §8.5).
+enum MemberAdmission {
+    AdmissionUnset      = 0; // unset → DefaultMemberAdmission at point of use
+    AdmissionInviteOnly = 1; // seat only an invite/allowlist-covered identity
+    AdmissionOpen       = 2; // open registration: seat any proof-of-control identity
+}
+
+
 // PrivacyMode is a planet's lifetime-fixed payload-confidentiality posture, set
 // at genesis in PlanetCharter and never changed (a planet that wants to switch
 // forks instead).  Confidential and Public are the endpoints; the reserved 1–6
@@ -668,6 +682,10 @@ message EpochTerms {
 
     // Lifecycle posture asserted by this epoch's quorum (Open / Paused / Sealed).
     SealState           Seal = 20;
+
+    // Member-admission posture asserted by this epoch's quorum (see
+    // MemberAdmission).  Unset resolves via EffectiveAdmission.
+    MemberAdmission     Admission = 21;
 
     // Address of the immutable Codex edition this epoch publishes / seals against
     // ("the printed edition").  Typically set on a Paused/Sealed sealing epoch.
@@ -1157,6 +1175,14 @@ message PlanetInvite {
     // RedeemProof signs under, carried so a peerless acceptor needs no synced
     // genesis to produce a verifiable proof.  Zero = the default kit.
     safe.HashKitID      HashKitID = 29;
+
+    // Founder fingerprint of the invited planet (amp.fp.founders.v1;
+    // amp.FounderFingerprint), stamped at issue from the planet's verified
+    // genesis.  The acceptor registers it as the planet's expected founder
+    // root BEFORE first sync, so a forged genesis delivered ahead of the real
+    // one is refused at the engine's founder scan.  Empty = unpinned
+    // (first-sight TOFU).  SD-channel-governance.md §8.
+    bytes               FounderFingerprint = 30;
 }
 
 
@@ -1676,6 +1702,16 @@ message NameServiceRecord {
     // Brand at the time the record was registered.  A federation refreshes
     // this when the target planet's Brand operationally updates.
     Brand               BrandSnapshot = 4;
+
+    // Founder fingerprint of the target planet — the commitment to its genesis
+    // founder authority root: Hash(sorted founder signing keys ‖
+    // GenesisRequiredSignatures) under the fixed v1 kit (amp.fp.founders.v1;
+    // amp.FounderFingerprint).  Stamped host-side by the registering federation
+    // from the target's verified genesis; empty = unpinned (first contact stays
+    // TOFU via the trusted federation, DD-name-service.md §3.2).  A consumer
+    // syncing the target corroborates its genesis against this pin at the
+    // founder scan and refuses a mismatch (SD-channel-governance.md §8).
+    bytes               FounderFingerprint = 5;
 
     // Where the target planet can be pinned for bootstrap.
     repeated VaultAddr  VaultAddrs    = 7;

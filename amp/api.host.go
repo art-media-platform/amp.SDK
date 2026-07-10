@@ -267,10 +267,29 @@ type HostSession interface {
 	// the planet.
 	GenesisEpoch(planetID tag.UID) (*PlanetEpoch, error)
 
+	// KeyAdmission returns the login boundary's member-signing-key custody
+	// ruling for this session, computed once in the host's login handler
+	// before app.home MakeReady (SD-security-sync §8.5).
+	KeyAdmission() KeyAdmission
+
 	// access control
 
 	// ACC returns the host's access-control engine.
 	ACC() ACCEngine
+}
+
+// KeyAdmission is the login boundary's ruling on member-signing-key custody
+// for one session.  At most one of AdoptDeclared / MintNodeKey is acted on by
+// app.home's key-ensure; when neither is set an unknown member is refused
+// cleanly — the Enclave stays signing-keyless, the login challenge verify
+// rejects, and nothing about the rejected first contact persists.  Both
+// AdoptDeclared and ChallengeRequired derive from the same transport predicate
+// in the login handler, so "adoption ⇒ verified proof-of-possession" holds
+// structurally, never by flag convention (SD-security-sync §8.5).
+type KeyAdmission struct {
+	ChallengeRequired bool // a challenge is issued AND verified this login
+	AdoptDeclared     bool // import the client-declared pubkey, pub-only
+	MintNodeKey       bool // generate a node-held keypair (node-custodial only)
 }
 
 // ACCEngine is the host's access-control resolver: it answers "who may do what" from a
@@ -294,6 +313,22 @@ type ACCEngine interface {
 	// IsFounder reports whether memberID is a founder of planetID — PlanetCharter.Founders,
 	// verified from the immutable genesis envelope (the root of governance authority).
 	IsFounder(planetID, memberID tag.UID) bool
+
+	// IsMember reports whether memberID holds an admitted MemberEpoch on planetID.
+	IsMember(planetID, memberID tag.UID) bool
+
+	// FounderFingerprint returns planetID's resolved founder fingerprint — the
+	// commitment to its genesis founder authority root (FounderFingerprint fn;
+	// SD-channel-governance §8) — or nil until the genesis resolves.
+	FounderFingerprint(planetID tag.UID) []byte
+
+	// PinFounderFingerprint registers the founder fingerprint planetID's
+	// genesis is EXPECTED to match — carried in from a PlanetInvite or
+	// NameServiceRecord before first sync.  The engine's founder scan skips a
+	// genesis that mismatches a registered pin.  Empty is a no-op; a pin that
+	// conflicts with an existing pin or an already-resolved fingerprint errors
+	// (fail-closed; the first pin holds).
+	PinFounderFingerprint(planetID tag.UID, expected []byte) error
 
 	// InvitePolicy returns the latest admitted invite policy for inviteID on
 	// planetID, or nil — the gated view app.invite reads and the invite ACC

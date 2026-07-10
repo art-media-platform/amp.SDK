@@ -24,11 +24,28 @@ import "amp/amp.core.proto";
 // PlanetCharter.Privacy = Public. Per-member private planets are auto-genesisd
 // by app.home on first login and don't need this surface.
 //
-// Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when omitted,
-// the server synthesizes a minimal Brand whose Identity.AppName derives from Tag.
+// Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when
+// omitted, no Brand is authored (the planet resolves Unchecked until one is);
+// author one post-genesis via POST /api/v1/admin/planet/brand.
 message PlanetCreateRequest {
     amp.Tag             Tag   = 1;
     amp.Brand           Brand = 2;
+}
+
+
+// BrandSetRequest is the body of POST /api/v1/admin/planet/brand — the
+// operator write half of the Brand lifecycle (AOM DD-name-service.md §2.2).
+// Brand is the COMPLETE desired Brand (latest-wins replace at the planet's
+// single Brand address), not a delta.
+message BrandSetRequest {
+    amp.Tag             Planet = 1;
+    amp.Brand           Brand  = 2;
+}
+
+
+// BrandSetResponse is the body of a successful Brand write.
+message BrandSetResponse {
+    string              PlanetID = 1;
 }
 
 

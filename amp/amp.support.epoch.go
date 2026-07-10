@@ -3,9 +3,11 @@ package amp
 import (
 	"bytes"
 	"encoding/binary"
+	"sort"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -257,4 +259,37 @@ func hashBytes(kitID safe.HashKitID, data []byte) ([]byte, error) {
 	kit.Hasher.Reset()
 	kit.Hasher.Write(data)
 	return kit.Hasher.Sum(nil), nil
+}
+
+// FounderFingerprint returns the 32-byte commitment to a planet's founder
+// authority root — the pin a NameServiceRecord / PlanetInvite carries so a
+// cold consumer corroborates a first-seen genesis against the founder set it
+// was told to expect (SD-channel-governance §8).  Each founder contributes one
+// entry — CryptoKitID (16 bytes) ‖ signing pubkey bytes — and entries are
+// sorted lexicographically so the commitment is founder-order independent; the
+// charter's raw GenesisRequiredSignatures rides as a u32-BE trailer part.
+// Digested under the fixed v1 kit via SigningDomain_FounderSet: the consumer
+// holds no epoch yet, so the kit cannot be per-planet; a kit migration mints a
+// v2 domain and a new wire slot.  Errors on an empty founder set or a founder
+// with no key bytes.
+func FounderFingerprint(founderKeys map[tag.UID]safe.PubKey, requiredSignatures int32) ([]byte, error) {
+	if len(founderKeys) == 0 {
+		return nil, status.Code_BadRequest.Error("amp: FounderFingerprint: empty founder set")
+	}
+	entries := make([][]byte, 0, len(founderKeys))
+	for founderID, pub := range founderKeys {
+		if len(pub.Bytes) == 0 {
+			return nil, status.Code_BadRequest.Errorf("amp: FounderFingerprint: founder %s has no signing key bytes", founderID.AsLabel())
+		}
+		entry := pub.CryptoKitID.AppendTo(make([]byte, 0, 16+len(pub.Bytes)))
+		entry = append(entry, pub.Bytes...)
+		entries = append(entries, entry)
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return bytes.Compare(entries[i], entries[j]) < 0
+	})
+	quorum := make([]byte, 4)
+	binary.BigEndian.PutUint32(quorum, uint32(requiredSignatures))
+	parts := append(entries, quorum)
+	return safe.SigningDigest(safe.HashKitID_Blake2s_256, safe.SigningDomain_FounderSet, parts...)
 }

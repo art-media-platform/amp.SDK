@@ -70,6 +70,11 @@ const (
 
 	// DefaultBlobRateLimitWindow is the default blob byte-budget window in seconds (24h).
 	DefaultBlobRateLimitWindow int64 = 24 * 60 * 60
+
+	// DefaultMemberAdmission is the admission posture an epoch with an unset
+	// Admission field resolves to: invite-only — admission is invite-first and
+	// open registration is opt-in per epoch (O4 §4.9, SD-security-sync §8.5).
+	DefaultMemberAdmission MemberAdmission = MemberAdmission_AdmissionInviteOnly
 )
 
 // PlaintextUID is the asset (plaintext) identity: the leading 16 bytes of the plaintext hash.
@@ -321,6 +326,16 @@ func (terms *EpochTerms) EffectiveHashKit() safe.HashKitID {
 		return safe.HashKitID_Blake2s_256
 	}
 	return terms.HashKit
+}
+
+// EffectiveAdmission returns the member-admission posture in force for this
+// epoch's terms, resolving nil terms or an unset field to
+// DefaultMemberAdmission (invite-only).
+func (terms *EpochTerms) EffectiveAdmission() MemberAdmission {
+	if terms == nil || terms.Admission == MemberAdmission_AdmissionUnset {
+		return DefaultMemberAdmission
+	}
+	return terms.Admission
 }
 
 // PlanetEpoch's verbatim sign/verify (SignedBytes, VerifyCoSignature,

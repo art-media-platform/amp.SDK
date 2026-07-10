@@ -39,8 +39,9 @@ const (
 // PlanetCharter.Privacy = Public. Per-member private planets are auto-genesisd
 // by app.home on first login and don't need this surface.
 //
-// Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when omitted,
-// the server synthesizes a minimal Brand whose Identity.AppName derives from Tag.
+// Brand is the founding Brand (AOM DD-name-service.md §2).  Optional — when
+// omitted, no Brand is authored (the planet resolves Unchecked until one is);
+// author one post-genesis via POST /api/v1/admin/planet/brand.
 type PlanetCreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Tag           *amp.Tag               `protobuf:"bytes,1,opt,name=Tag,proto3" json:"Tag,omitempty"`
@@ -93,6 +94,107 @@ func (x *PlanetCreateRequest) GetBrand() *amp.Brand {
 	return nil
 }
 
+// BrandSetRequest is the body of POST /api/v1/admin/planet/brand — the
+// operator write half of the Brand lifecycle (AOM DD-name-service.md §2.2).
+// Brand is the COMPLETE desired Brand (latest-wins replace at the planet's
+// single Brand address), not a delta.
+type BrandSetRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Planet        *amp.Tag               `protobuf:"bytes,1,opt,name=Planet,proto3" json:"Planet,omitempty"`
+	Brand         *amp.Brand             `protobuf:"bytes,2,opt,name=Brand,proto3" json:"Brand,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BrandSetRequest) Reset() {
+	*x = BrandSetRequest{}
+	mi := &file_amp_webapi_webapi_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BrandSetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BrandSetRequest) ProtoMessage() {}
+
+func (x *BrandSetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_webapi_webapi_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BrandSetRequest.ProtoReflect.Descriptor instead.
+func (*BrandSetRequest) Descriptor() ([]byte, []int) {
+	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *BrandSetRequest) GetPlanet() *amp.Tag {
+	if x != nil {
+		return x.Planet
+	}
+	return nil
+}
+
+func (x *BrandSetRequest) GetBrand() *amp.Brand {
+	if x != nil {
+		return x.Brand
+	}
+	return nil
+}
+
+// BrandSetResponse is the body of a successful Brand write.
+type BrandSetResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlanetID      string                 `protobuf:"bytes,1,opt,name=PlanetID,proto3" json:"PlanetID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BrandSetResponse) Reset() {
+	*x = BrandSetResponse{}
+	mi := &file_amp_webapi_webapi_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BrandSetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BrandSetResponse) ProtoMessage() {}
+
+func (x *BrandSetResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_webapi_webapi_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BrandSetResponse.ProtoReflect.Descriptor instead.
+func (*BrandSetResponse) Descriptor() ([]byte, []int) {
+	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *BrandSetResponse) GetPlanetID() string {
+	if x != nil {
+		return x.PlanetID
+	}
+	return ""
+}
+
 // PlanetCreateResponse is the body of a successful planet create.
 //
 // PlanetID is the base32 UID of the new planet.  Tag mirrors the canonized
@@ -109,7 +211,7 @@ type PlanetCreateResponse struct {
 
 func (x *PlanetCreateResponse) Reset() {
 	*x = PlanetCreateResponse{}
-	mi := &file_amp_webapi_webapi_proto_msgTypes[1]
+	mi := &file_amp_webapi_webapi_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -121,7 +223,7 @@ func (x *PlanetCreateResponse) String() string {
 func (*PlanetCreateResponse) ProtoMessage() {}
 
 func (x *PlanetCreateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_webapi_webapi_proto_msgTypes[1]
+	mi := &file_amp_webapi_webapi_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -134,7 +236,7 @@ func (x *PlanetCreateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlanetCreateResponse.ProtoReflect.Descriptor instead.
 func (*PlanetCreateResponse) Descriptor() ([]byte, []int) {
-	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{1}
+	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PlanetCreateResponse) GetPlanetID() string {
@@ -181,7 +283,7 @@ type EmailCredential struct {
 
 func (x *EmailCredential) Reset() {
 	*x = EmailCredential{}
-	mi := &file_amp_webapi_webapi_proto_msgTypes[2]
+	mi := &file_amp_webapi_webapi_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -193,7 +295,7 @@ func (x *EmailCredential) String() string {
 func (*EmailCredential) ProtoMessage() {}
 
 func (x *EmailCredential) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_webapi_webapi_proto_msgTypes[2]
+	mi := &file_amp_webapi_webapi_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -206,7 +308,7 @@ func (x *EmailCredential) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmailCredential.ProtoReflect.Descriptor instead.
 func (*EmailCredential) Descriptor() ([]byte, []int) {
-	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{2}
+	return file_amp_webapi_webapi_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *EmailCredential) GetEmail() string {
@@ -252,7 +354,13 @@ const file_amp_webapi_webapi_proto_rawDesc = "" +
 	"\x13PlanetCreateRequest\x12\x1a\n" +
 	"\x03Tag\x18\x01 \x01(\v2\b.amp.TagR\x03Tag\x12 \n" +
 	"\x05Brand\x18\x02 \x01(\v2\n" +
-	".amp.BrandR\x05Brand\"\\\n" +
+	".amp.BrandR\x05Brand\"U\n" +
+	"\x0fBrandSetRequest\x12 \n" +
+	"\x06Planet\x18\x01 \x01(\v2\b.amp.TagR\x06Planet\x12 \n" +
+	"\x05Brand\x18\x02 \x01(\v2\n" +
+	".amp.BrandR\x05Brand\".\n" +
+	"\x10BrandSetResponse\x12\x1a\n" +
+	"\bPlanetID\x18\x01 \x01(\tR\bPlanetID\"\\\n" +
 	"\x14PlanetCreateResponse\x12\x1a\n" +
 	"\bPlanetID\x18\x01 \x01(\tR\bPlanetID\x12\x10\n" +
 	"\x03Tag\x18\x02 \x01(\tR\x03Tag\x12\x16\n" +
@@ -276,22 +384,26 @@ func file_amp_webapi_webapi_proto_rawDescGZIP() []byte {
 	return file_amp_webapi_webapi_proto_rawDescData
 }
 
-var file_amp_webapi_webapi_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_amp_webapi_webapi_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_amp_webapi_webapi_proto_goTypes = []any{
 	(*PlanetCreateRequest)(nil),  // 0: webapi.PlanetCreateRequest
-	(*PlanetCreateResponse)(nil), // 1: webapi.PlanetCreateResponse
-	(*EmailCredential)(nil),      // 2: webapi.EmailCredential
-	(*amp.Tag)(nil),              // 3: amp.Tag
-	(*amp.Brand)(nil),            // 4: amp.Brand
+	(*BrandSetRequest)(nil),      // 1: webapi.BrandSetRequest
+	(*BrandSetResponse)(nil),     // 2: webapi.BrandSetResponse
+	(*PlanetCreateResponse)(nil), // 3: webapi.PlanetCreateResponse
+	(*EmailCredential)(nil),      // 4: webapi.EmailCredential
+	(*amp.Tag)(nil),              // 5: amp.Tag
+	(*amp.Brand)(nil),            // 6: amp.Brand
 }
 var file_amp_webapi_webapi_proto_depIdxs = []int32{
-	3, // 0: webapi.PlanetCreateRequest.Tag:type_name -> amp.Tag
-	4, // 1: webapi.PlanetCreateRequest.Brand:type_name -> amp.Brand
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	5, // 0: webapi.PlanetCreateRequest.Tag:type_name -> amp.Tag
+	6, // 1: webapi.PlanetCreateRequest.Brand:type_name -> amp.Brand
+	5, // 2: webapi.BrandSetRequest.Planet:type_name -> amp.Tag
+	6, // 3: webapi.BrandSetRequest.Brand:type_name -> amp.Brand
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_amp_webapi_webapi_proto_init() }
@@ -305,7 +417,7 @@ func file_amp_webapi_webapi_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_webapi_webapi_proto_rawDesc), len(file_amp_webapi_webapi_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

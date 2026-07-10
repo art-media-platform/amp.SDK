@@ -34,6 +34,7 @@ const (
 	SigningDomain_MemberToken  SigningDomain = "amp.sig.token.v1"  // SSO bearer token — signed as a text MESSAGE (external-wallet SIWE compatible), not a SigningDigest (app.www)
 	SigningDomain_VaultNode    SigningDomain = "amp.sig.vault.v1"  // node/device vault-transport handshake proof (vault.identity)
 	SigningDomain_InviteRedeem SigningDomain = "amp.sig.invite.v1" // invite redemption proof — RedeemKey binds a redemption to its invite policy (app.invite)
+	SigningDomain_FounderSet   SigningDomain = "amp.fp.founders.v1" // founder-set fingerprint — hash commitment to a planet's genesis founder authority root (amp.FounderFingerprint)
 )
 
 // AllSigningDomains enumerates every registered SigningDomain — the audit
@@ -46,6 +47,7 @@ var AllSigningDomains = []SigningDomain{
 	SigningDomain_MemberToken,
 	SigningDomain_VaultNode,
 	SigningDomain_InviteRedeem,
+	SigningDomain_FounderSet,
 }
 
 // SigningDomainTag returns the length-prefixed domain bytes that prefix every
