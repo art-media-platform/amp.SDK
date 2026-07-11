@@ -2626,9 +2626,9 @@ func (x *VaultConfig) GetVaultAddrs() []*VaultAddr {
 // message grows additively (new fields take the next free number).
 type PlanetCharter struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Layout version of this Charter.  1 at the v250 freeze.  A future
-	// incompatible layout (should never happen post-freeze) increments this so a
-	// reader refuses rather than misparses.
+	// Layout version of this Charter.  A future incompatible layout (should
+	// never happen post-freeze) increments this so a reader refuses rather
+	// than misparses.
 	CharterSchema uint32 `protobuf:"varint,1,opt,name=CharterSchema,proto3" json:"CharterSchema,omitempty"`
 	// Permanent identity of the planet itself (not the epoch).  Equals the
 	// genesis planet UID.  Binds the Charter bytes to one planet so a Charter
@@ -2776,7 +2776,7 @@ func (x *PlanetCharter) GetGenesisRequiredSignatures() int32 {
 // hash-pinned BundledCrates) stay on the admin-mutable Brand attr.
 type EpochTerms struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Layout version of this EpochTerms.  1 at the v250 freeze.
+	// Layout version of this EpochTerms.
 	TermsSchema uint32 `protobuf:"varint,1,opt,name=TermsSchema,proto3" json:"TermsSchema,omitempty"`
 	// Identity of this epoch (time-ordered UID).  Matches PlanetEpoch.EpochTag and
 	// every MemberEpoch.Epoch published alongside it.
