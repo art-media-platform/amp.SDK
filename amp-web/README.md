@@ -7,7 +7,8 @@ Talks the `ampd` `app.www` wire contract — defined in
 and copied into this SDK bundle at [`webapi/webapi.types.go`](webapi/webapi.types.go).
 
 > **Beta.** Distributed in the `amp-web-SDK` bundle — not yet on npm.
-> Get the latest by building it (`make amp-web-SDK`) or from your amp contact.
+> Get the latest from your amp contact, or build it from an `amp.SDK`
+> checkout: `amp-web/pack.sh` → `dist/amp-web-SDK-vNNN[.P].zip`.
 > AMP intends to move to public releases under an open license when resources
 > allow and the business is more stable; no timeline is committed.
 
@@ -18,10 +19,11 @@ and copied into this SDK bundle at [`webapi/webapi.types.go`](webapi/webapi.type
 
 ## Install
 
-Install from the client directory shipped in the bundle — it resolves under its
-package name, `@art-media-platform/web`:
+Unzip the bundle **inside your project directory** and install it by path — it
+resolves under its package name, `@art-media-platform/web`:
 
 ```bash
+unzip amp-web-SDK-vNNN.zip   # → ./amp-web-SDK
 npm install ./amp-web-SDK
 ```
 
@@ -31,13 +33,26 @@ Or pin it as a path dependency in your `package.json`:
 { "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
 ```
 
-Peer dependency: `react` (>= 18). Runtime deps are three pure-JS `@noble/*`
-packages (the sealed-box crypto); networking is native `fetch` + `WebSocket`.
+Two install traps to know up front (fixes and symptoms in
+[`docs/install-troubleshooting.md`](docs/install-troubleshooting.md)):
+
+- **Keep the bundle inside your project.** npm links a path dependency as a
+  symlink; from a directory outside the project the bundle's `@noble/*`
+  runtime deps do not resolve through the link (`Cannot find package
+  '@noble/curves'`). If the bundle must live elsewhere, run `npm install`
+  once inside `amp-web-SDK/` so it carries its own `node_modules`.
+- **`react` (>= 18) is required even headless.** The package entry imports
+  the React hooks, so Node / SSR consumers need `react` installed too.
+  npm >= 7 installs peer dependencies automatically; with yarn or pnpm add
+  `react` explicitly.
+
+Runtime deps are three pure-JS `@noble/*` packages (the sealed-box crypto);
+networking is native `fetch` + `WebSocket`.
 
 ## Quick Start
 
 ```tsx
-import { AmpProvider, AmpWebClient, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
+import { AmpProvider, AmpWebClient, useAmpAuth, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
 
 // 1. Point the client at the operated amp node + your planet (you don't run the node).
 const client = new AmpWebClient({

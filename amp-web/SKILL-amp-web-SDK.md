@@ -114,7 +114,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 
 ### Install
 
-**Beta (pre-v400)** — distributed in the `amp-web-SDK` bundle, not yet on npm. Build it (`make amp-web-SDK`) or get it from your amp contact, then install the local package:
+**Beta (pre-v400)** — distributed in the `amp-web-SDK` bundle, not yet on npm. Get it from your amp contact (or build it from an `amp.SDK` checkout: `amp-web/pack.sh`), unzip it **inside your project directory**, and install the local package:
 
 ```bash
 npm install ./amp-web-SDK
@@ -124,7 +124,7 @@ npm install ./amp-web-SDK
 { "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
 ```
 
-Publishing to npm as `@art-media-platform/web` lands at v400 — until then, install the versioned bundle locally (above).
+Publishing to npm as `@art-media-platform/web` lands at v400 — until then, install the versioned bundle locally (above). Keep the bundle **inside** the project: npm links a path dependency as a symlink, and from an outside directory the bundle's `@noble/*` runtime deps don't resolve through the link. `react` (>= 18) is a peer dependency the package entry imports even in headless Node use — npm >= 7 installs it automatically; yarn / pnpm users add it explicitly. Symptoms + fixes: [`docs/install-troubleshooting.md`](docs/install-troubleshooting.md).
 
 ### Provider Configuration
 
