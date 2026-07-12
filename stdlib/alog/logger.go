@@ -3,14 +3,16 @@
 // a bracketed source token, then the message, all space-separated and vertically
 // aligned:
 //
-//	I 2026-05-24 15:04:05.123 [0..1234 app.www] some message
+//	I 2026-05-24 15:04:05.123 [0..1234 app.www    ·   ] some message
 //
 // The source token leads with the logger's owner id (a task.Context's id, say) when
 // it has one, then the label; a logger with no label shows the log call-site file:line
 // in the label's place, so every line still names either its context or its origin.
-// The interior is right-padded to a sticky width: it grows to fit, holds a floor so
-// short labels stay aligned, caps so one wide label can't swallow the message column,
-// and relaxes toward the widest token recently seen rather than snapping narrow.
+// The interior is right-padded to a sticky width that steps in fours: a guide
+// dot falls every fourth column and ']' lands where the next dot would, so the
+// rails read vertically.  The width holds a floor so short labels stay aligned,
+// caps so one wide label can't swallow the message column, and relaxes toward
+// the widest token seen rather than snapping narrow.
 // Optional ANSI color on TTY stderr; plain text when tee'd to a file.
 //
 // Verbosity: Info(n, …) / Infof(n, …) only print when n == 0 (unconditional)
@@ -121,12 +123,13 @@ const (
 
 	// labelColumnMin is the floor the source column pads to: the gutter never narrows
 	// below this, so short labels stay aligned and the column doesn't start from zero
-	// and creep wider line by line.
-	labelColumnMin = 24
+	// and creep wider line by line.  A dot-grid stop (see gridWidth).
+	labelColumnMin = 23
 
 	// labelColumnMax caps the source column so one wide label can't swallow the message
 	// column; a source longer than this overflows without realigning the rest.
-	labelColumnMax = 44
+	// A dot-grid stop, like labelColumnMin (see gridWidth).
+	labelColumnMax = 43
 
 	// widthRelaxLines is how long a width persists before the column relaxes toward the
 	// widest source actually seen in that window (never to zero) — long enough that the
@@ -135,11 +138,11 @@ const (
 	widthRelaxLines = 100
 )
 
-// spacer supplies right-padding without per-line allocation; writePad repeats it
-// for pads wider than its length.
-const spacer = "                                "
-
 const ellipsis = "…"
+
+// gutterDot is the guide dot laid on every fourth column of a wide bracket
+// gutter (see writeGutter); like ellipsis, one display column wide.
+const gutterDot = "·"
 
 func init() {
 	gUseColor.Store(isTTY(os.Stderr))
@@ -206,8 +209,9 @@ func (l *logger) GetLogPrefix() string { return l.prefix }
 // wrapper that forwards through another method passes 2.
 func (l *logger) emit(sev severity, depth int, msg string) {
 	// Build the bracket interior before taking the lock; its width drives alignment
-	// under gOutMu.  The bracket hugs the label; the alignment pad moves to the gutter
-	// after ']' so the message column stays aligned without a space inside the brackets.
+	// under gOutMu.  The interior is right-padded to that width before ']' so every
+	// line's closing bracket lands at the same column, then a single space separates
+	// ']' from the message.
 	// The interior leads with idLabel when present; the second token is the label, or —
 	// when unlabeled — the log call-site file:line, so an anonymous logger still names
 	// its origin.
@@ -247,12 +251,12 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 	sb.WriteByte(' ')
 	sb.WriteByte('[')
 	sb.WriteString(source)
+	writeGutter(&sb, sourceCols, sourceWidth)
 	sb.WriteByte(']')
 	if useColor && entry.ansi != "" {
 		sb.WriteString(ansiReset)
 	}
 	sb.WriteByte(' ')
-	writePad(&sb, sourceWidth-sourceCols)
 	sb.WriteString(msg)
 	if !strings.HasSuffix(msg, "\n") {
 		sb.WriteByte('\n')
@@ -277,7 +281,8 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 // caps at labelColumnMax so one wide label can't swallow the message column, and once
 // every widthRelaxLines relaxes toward the widest interior actually seen in that window
 // — never to zero, so the gutter settles instead of snapping narrow and re-widening.
-// Callers must hold gOutMu.
+// The result snaps up to the dot grid so ']' lands on a rail and the column
+// resizes in steps of four; see gridWidth.  Callers must hold gOutMu.
 func (w *columnWidths) observe(sourceCols int) (sourceWidth int) {
 	if sourceCols > w.windowMax {
 		w.windowMax = sourceCols
@@ -297,7 +302,14 @@ func (w *columnWidths) observe(sourceCols int) (sourceWidth int) {
 	if w.source < labelColumnMin {
 		w.source = labelColumnMin
 	}
-	return w.source
+	return gridWidth(w.source)
+}
+
+// gridWidth rounds a column count up to the next dot-grid stop (interior col
+// where col%4==3, a guide-dot column), so a bracket closed at that width lands
+// ']' where the next dot would fall and the column resizes in steps of 4.
+func gridWidth(cols int) int {
+	return ((cols + 4) &^ 3) - 1
 }
 
 // capColumn bounds a column value to columnHardCap bytes, replacing the overflow
@@ -314,16 +326,19 @@ func capColumn(value string) string {
 	return value[:cut] + ellipsis
 }
 
-// writePad appends n spaces (clamped to the spacer's length) to sb.
-func writePad(sb *strings.Builder, n int) {
-	if n <= 0 {
-		return
+// writeGutter fills the gutter [from, to) with spaces, laying a guide dot on
+// every fourth interior column so a wide gutter reads as vertical rails.  The
+// grid is anchored to interior column 0 (a fixed screen column) so dots align
+// down the page; the first pad column is always a space so no dot hugs the
+// label.  from >= to writes nothing (an over-cap source hugs ']').
+func writeGutter(sb *strings.Builder, from, to int) {
+	for col := from; col < to; col++ {
+		if col != from && col&3 == 3 {
+			sb.WriteString(gutterDot)
+		} else {
+			sb.WriteByte(' ')
+		}
 	}
-	for n > len(spacer) {
-		sb.WriteString(spacer)
-		n -= len(spacer)
-	}
-	sb.WriteString(spacer[:n])
 }
 
 func callerFileLine(skip int) (string, int) {
