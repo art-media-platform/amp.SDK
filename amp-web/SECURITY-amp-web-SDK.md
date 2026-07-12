@@ -76,6 +76,34 @@ shorter-lived, capability-scoped card token is the intended direction.
 
 ---
 
+## Session persistence — the Bearer at rest
+
+The SDK persists the session (Bearer token + member record) in IndexedDB, keyed
+by vault URL, so a page reload rehydrates instead of logging the member out.
+The stored token is re-validated against `GET /api/v1/session` before it is
+trusted; a host-rejected token is cleared on the spot.
+
+What that storage means:
+
+- **Same trust boundary as the device EncryptKey** (below): the token is
+  readable by any same-origin JavaScript and by a local-device compromise.
+  An XSS payload that can read it holds the member's full session until it
+  expires or is revoked — your app's CSP / XSS posture is part of the session
+  trust boundary. Ship a strict CSP.
+- **The server bounds the blast radius, not the client.** The token is an
+  opaque 128-bit random Bearer with a host-side expiry (`ExpiresAt`); logout
+  drops it server-side, and the SDK clears the persisted copy on `logout()`
+  and on any 401. A JS string cannot be zeroized in place — expiry and
+  revocation are the real backstops.
+- **No key material rides with it.** The session record is the Bearer + public
+  member facts; the EncryptKey lives in its own store and never enters the
+  session record.
+- **Opting out**: inject `sessionStore: new MemorySessionStore()` — sessions
+  then live for the tab only, and a reload requires a fresh login. Consider it
+  for shared-terminal deployments.
+
+---
+
 ## Sealed-box BYOK — the #1 rule
 
 User-supplied secrets (API keys for Cesium Ion, OpenRouter, Mapbox, …) **must be
@@ -161,7 +189,8 @@ device-local.
 - Run behind a TLS terminator in production. The plaintext-over-wire guarantee
   assumes the transport is TLS.
 
-**Client-side:** `vaultUrl` MUST be `https://` in any non-localhost deployment — the
-SDK derives `wss://` from it and otherwise falls back to plaintext `ws://`, which would
-expose the Bearer (and all "TLS-protected" traffic) in the clear. The SDK does not
-enforce this; your `vaultUrl` config is the control point.
+**Client-side:** `vaultUrl` MUST be `https://` in any non-localhost deployment. The
+SDK derives `wss://` from it and **refuses** a cleartext `ws://` upgrade to any
+non-loopback host (the Bearer rides the WS URL). REST traffic has no such guard —
+an `http://` vaultUrl sends the Bearer header in the clear — so your `vaultUrl`
+config remains the control point.

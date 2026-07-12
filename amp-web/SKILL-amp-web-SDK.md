@@ -182,6 +182,12 @@ GET  /api/v1/me
   Response: AmpMember
 ```
 
+SDK: `client.fetchSession()` wraps `GET /session` (returns `AmpSession`) and
+`client.me()` wraps `GET /me`; both throw `AmpError(401)` when no session is
+bound. The client persists the session on login and rehydrates it across page
+reloads — see §5.1 (Session persistence) and SECURITY (Session persistence)
+for the storage exposure.
+
 `LoginCredentials` is a discriminated union.  Keys are PascalCase like every
 wire field; the `Scheme` *values* stay lowercase (the server dispatches on
 them verbatim):
@@ -496,12 +502,30 @@ Thin wrappers over §4. Hooks share a single `AmpWebClient` via `<AmpProvider>`.
 ### 5.1 `useAmpAuth()`
 
 ```tsx
-const { member, login, logout, isAuthenticated, loading } = useAmpAuth();
+const { member, login, logout, isAuthenticated, loading, restoring } = useAmpAuth();
 
 await login({ Scheme: 'email', Email: email, Password: password });
 await login({ Scheme: 'wallet', Address: address, Signature: signature, Nonce: nonce });
 await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: nonce });
 ```
+
+**Session persistence — a reload lands authenticated.** `login()` persists the
+session (Bearer + member, IndexedDB in the browser); on mount `<AmpProvider>`
+calls `client.restoreSession()`, which re-validates the stored token against
+`GET /api/v1/session` and restores the authed client — member, device
+EncryptKey, WebSocket. No SPA-side code needed. The moving parts:
+
+- `restoring` is true until that first restore settles; `loading` folds it in,
+  so gating the login screen on `loading` (or `restoring`) avoids a signed-out
+  flash on reload.
+- A host-rejected token (401) clears the stored session; a transport failure
+  keeps it for the next load — a flaky network never signs the member out.
+- `logout()` and a 401 on **any** authed call drop the session everywhere:
+  in-memory secrets, the persisted record, and `onAuthChange(null)` fires so
+  the app lands signed out.
+- Storage is per vault URL. Override with
+  `new AmpWebClient({ …, sessionStore })` — e.g. `new MemorySessionStore()`
+  opts out of durable sessions (SSR/Node fall back to it automatically).
 
 > Imperative calls below — `getWalletChallenge`, `getDIDChallenge`, `resolveTag` — live on the adapter. Get it in any component with `const client = useAmpClient();`.
 
@@ -1192,7 +1216,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 
 ## 12. What NOT to do
 
-1. **Prefer `@art-media-platform/web`** over raw `/api/v1/*` fetches for every endpoint it wraps — login, tx, channels, upload, media, tag-resolve, invites, subscriptions. The client wraps the wire shape with retry, session refresh, and sealed-box helpers; raw fetches will accumulate bugs. A handful of operator/consumer endpoints have no client method yet (`/resolve`, `/search`, `/federation/peers` §4.6; `/governance/grant` §14.4) — those you call directly against the wire contract until a wrapper lands.
+1. **Prefer `@art-media-platform/web`** over raw `/api/v1/*` fetches for every endpoint it wraps — login, tx, channels, upload, media, tag-resolve, invites, subscriptions. The client wraps the wire shape with typed errors, durable session rehydration, and sealed-box helpers; raw fetches will accumulate bugs. A handful of operator/consumer endpoints have no client method yet (`/resolve`, `/search`, `/federation/peers` §4.6; `/governance/grant` §14.4) — those you call directly against the wire contract until a wrapper lands.
 2. **Never store user-supplied secrets unsealed** in channel items. Run `seal()` before `upsert`. Plaintext API keys in `users/api_keys_overrides` is the single most common security mistake.
 3. **Never assume immediate consistency.** Writes propagate over WebSocket; design UI optimistically.
 4. **Never push SecurityEvent telemetry** to a replicated channel. Audit logs and rate-limit notifications are local-only.
