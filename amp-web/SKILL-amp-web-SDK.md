@@ -52,7 +52,7 @@ const member    = await client.login({ Scheme: 'wallet', Address: addr, Signatur
 
 // Write your first transaction, then read it straight back.
 const itemID   = await client.create('hello', 'world', { msg: 'hi' });
-const { data } = await client.query('hello', 'world', { itemID });
+const { data } = await client.query<{ msg: string }>('hello', 'world', { itemID });
 console.log(data[0].msg);     // 'hi' — round-tripped through a real journal.  query flattens
                               // the item's Value to the top level, beside _ItemID/_FromID/… meta.
 ```
