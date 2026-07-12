@@ -1246,33 +1246,42 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 
 ## 13. Glossary
 
+AOM citations refer to the design docs shipped in the bundle's `AOM/`
+directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
+
 | Term | Meaning |
 |---|---|
-| **Planet** | A self-governing community with its own members, channels, and encryption keys. |
-| **Channel** | A named CRDT container within a planet; addressed by `tag.UID`. |
-| **Attribute (attr)** | A typed data field within a channel; addressed by `tag.UID`. |
+| **Planet** | A self-governing community with its own members, channels, and encryption keys (`AOM/DD-architecture-overview.md`). |
+| **Channel** | Precisely: a `(node, attr)` cell plus its behavior contract — channel ≈ NodeID + AttrID (`AOM/DD-architecture-overview.md` §0). The SDK's `channel` parameter names the node, itself a `tag.UID` — commonly resolved from a name, but ANY UID serves: the forums example writes posts under `Channel: topicID`. |
+| **Nodes-as-channels** | The idiom above — an item's own UID serving as the node its child data lives under (a topic's posts, a member's widget instances): nesting without schema (`docs/concepts-primer.md`). |
+| **Attribute (attr)** | A typed data field within a channel; addressed by `tag.UID` (`AOM/SD-content-substrate.md`). |
 | **Item** | A single CRDT record, identified by `tag.UID`. |
-| **Edit** | A versioned update to an item; CRDT-merged. |
+| **Edit** | A versioned update to an item; CRDT-merged (`AOM/SD-edit-resolution.md`). |
+| **Genesis** | The founding ceremony of a planet — the first TxMsg, welding the identity facts (founder signatures, epoch-key root, identity-tier `Brand` fields) that later edits cannot forge (`AOM/DD-name-service.md` §2). |
+| **Cabinet** | The substrate store a planet's channel items commit into — the destination of a normal `tx`. A verb-RPC (`invoke`) bypasses it; the app then authors the cabinet writes custodially. |
+| **Custodian** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums custodian founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
 | **TxMsg** | A signed, encrypted transaction containing one or more data ops. |
 | **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (`PinMode_Invoke`, not journaled) which authors the durable write custodially; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
+| **ACC** | **Access Control** — the per-channel grant engine deciding which TxOps may enter a planet: who may read, write, or govern each channel. Grants are committed as a `ChannelEpoch` via `POST /api/v1/governance/grant` (§14.4). |
+| **BYOK** | **Bring Your Own Key** — sealing user-supplied secrets client-side (`seal`/`open`, §6.2) under a device-local EncryptKey, so hosts, admins, and other members never see plaintext (`SECURITY-amp-web-SDK.md`). |
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
 | **Vault** | An `ampd` peer that stores and relays encrypted data; cannot read content. |
-| **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards). |
-| **Member** | An authenticated identity within a planet. Has `kind`: Person / Group / Agent / Memorial / etc. |
+| **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards) (`AOM/AD-app-www.md`). |
+| **Member** | An authenticated identity within a planet. Its `Kind` is a `tag.UID` resolving to a `LawMemberKind_*` (Person / Group / Agent / Memorial) — an identity taxonomy, never an entitlement (§6.5, §12; `AOM/SD-substrate-agnostic-members.md`). |
 | **MemberProof** | An HMAC of derived proof key over TxID; lets a relay verify membership without decryption. |
 | **WebRect** | A Unity 3D Pane that renders a web card. |
-| **Pane** | The host (Unity WebView panel or 2D drawer) of a card. |
-| **Panel** | Identical to Pane in principle, though it adheres to different UI handling. |
+| **Pane** | The surface hosting one card: a Unity WebRect or a 2D browser drawer. Cards target their Pane via `window.amp` (§8). |
+| **Panel** | A Unity-host UI region that arranges and manages Panes. Card authors never address a Panel directly — the Pane is the card's whole world. |
 | **Card** | A self-contained HTML document rendered as the detail view of a single item, opened on activation. Speaks to amp via `window.amp`. |
 | **Card manifest** | `<meta name="amp:card:*">` tags in a card's `<head>` declaring title, intents, focus model. |
 | **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque (use the base32 string as-is). Carries the element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. |
-| **Withdraw** | A signed signal that the signer no longer consents to a cited record. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
-| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registered host-side; see §6.4 / §10. |
+| **Withdraw** | A signed signal that the signer no longer consents to a cited record. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else (`AOM/SD-withdrawal-consent.md`). |
+| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
 | **Admin endpoint** | The operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no SDK client method** (§12); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
-| **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6. |
+| **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6; `AOM/DD-name-service.md`. |
 | **FQDN** | A fully-qualified domain name (`spaces.example.com`) registered in a federation's NameService and resolvable to a planet. |
 | **Federation** | A set of planets whose names a session resolves over once it has joined; the unit of namespace reachability. |
 | **TrustState** | A resolve verdict — `Verified` / `Refuted` / `Unchecked` — from checking the planet's `Brand` back-edge against the answering federation. The UI must not silently pick when it isn't `Verified`. |
