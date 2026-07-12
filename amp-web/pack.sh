@@ -114,6 +114,13 @@ else
   done
 fi
 
+# 3c. De-link pass: every relative link in every staged .md must resolve
+#     within the bundle.  A link to an AOM doc outside the allowlist is
+#     rewritten to the greppable `Text (internal)` token; any other dangling
+#     link (or an instruction-class line citing an unshipped doc) FAILS the
+#     pack — never warn-and-skip.  See README "Authoring Notes".
+node "$HERE/pack-delink.mjs" "$STAGE" "$AOM_SRC"
+
 # 4. Strip cruft.
 find "$STAGE" -name '.DS_Store' -delete 2>/dev/null || true
 

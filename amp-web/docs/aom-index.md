@@ -5,7 +5,8 @@ Operations Manual — background reading, **not the contract** (the
 contract is the README, `SKILL-amp-web-SDK.md`, and
 `webapi/webapi.types.go`). The docs are written for AMP engineers, so
 they reference internal chapters that are deliberately not shipped;
-treat a dangling link as "internal detail you don't need."
+those references are marked `(internal)` — background provenance, not
+required reading.
 
 ## Start Here
 

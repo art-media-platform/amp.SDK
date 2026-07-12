@@ -189,6 +189,26 @@ the private `amp.planet`). They are **not the contract**: this README,
 **[`docs/aom-index.md`](docs/aom-index.md)** is the reading guide — start at
 `AOM/DD-architecture-overview.md`, then dip in as questions arise.
 
+> References marked (internal) name AMP-internal design docs not shipped in this bundle — background provenance, not required reading.
+
+### Authoring Notes
+
+`pack.sh` runs a de-link pass over every staged `.md` (`pack-delink.mjs`): a
+relative link whose target ships in the bundle is kept; a link to an AOM doc
+outside the bundle allowlist is rewritten to the greppable token
+`Text (internal)`; any other dangling relative link fails the pack (file:line).
+The legend line above must stay in this section — the pack verifies it.
+
+Rules the pack enforces on partner-visible text:
+
+- "Prereading:" / "must read" lists name shipped docs only. A line that
+  instructs the reader to read a doc (`preread`, `must read`,
+  `required reading`, `read … first`) while citing one that does not ship
+  fails the pack — the `(internal)` token cannot rescue an instruction;
+  reword at source.
+- Cite an internal doc as background, never instruction:
+  `` Background (internal): `XYZ.md`. ``
+
 ## Versioning & Stability
 
 **Beta.** Breaking changes are possible between minor revisions, and
