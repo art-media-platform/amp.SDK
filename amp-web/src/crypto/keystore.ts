@@ -15,6 +15,7 @@
  * and is intentionally not built here.
  */
 
+import { ENCRYPT_KEYS_STORE, openAmpDB } from '../idb.js';
 import { getKit } from './index.js';
 import { CryptoKitID, type KeyPair } from './types.js';
 
@@ -31,9 +32,6 @@ export interface EncryptKeyStorage {
   save(memberID: string, keyPair: KeyPair): Promise<void>;
 }
 
-const DB_NAME = 'amp-web';
-const STORE_NAME = 'encryptKeys';
-
 /**
  * cloneKeyPair returns a deep copy with fresh byte buffers.  The session
  * crypto surface zeroizes a key's private bytes when it is replaced or cleared
@@ -48,42 +46,13 @@ function cloneKeyPair(keyPair: KeyPair): KeyPair {
   };
 }
 
-/** IndexedDB-backed storage — the browser default. */
+/** IndexedDB-backed storage — the browser default (shared amp-web DB, idb.ts). */
 export class IndexedDBKeyStorage implements EncryptKeyStorage {
-  private dbPromise: Promise<IDBDatabase> | null = null;
-
-  private openDB(): Promise<IDBDatabase> {
-    if (this.dbPromise) {
-      return this.dbPromise;
-    }
-    const promise = new Promise<IDBDatabase>((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME);
-        }
-      };
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error ?? new Error('amp-web: indexedDB open failed'));
-    });
-    // Don't cache a permanently-rejected handle — a transient open failure
-    // (private-mode quota, a blocked upgrade) must not disable BYOK for the
-    // tab's lifetime.  Clear it so the next call retries.
-    promise.catch(() => {
-      if (this.dbPromise === promise) {
-        this.dbPromise = null;
-      }
-    });
-    this.dbPromise = promise;
-    return promise;
-  }
-
   async load(memberID: string): Promise<KeyPair | null> {
-    const db = await this.openDB();
+    const db = await openAmpDB();
     return new Promise<KeyPair | null>((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const req = tx.objectStore(STORE_NAME).get(memberID);
+      const tx = db.transaction(ENCRYPT_KEYS_STORE, 'readonly');
+      const req = tx.objectStore(ENCRYPT_KEYS_STORE).get(memberID);
       req.onsuccess = () => {
         const rec = req.result as KeyPair | undefined;
         // Normalize to fresh Uint8Arrays — the structured-clone read already
@@ -95,10 +64,10 @@ export class IndexedDBKeyStorage implements EncryptKeyStorage {
   }
 
   async save(memberID: string, keyPair: KeyPair): Promise<void> {
-    const db = await this.openDB();
+    const db = await openAmpDB();
     return new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put(cloneKeyPair(keyPair), memberID);
+      const tx = db.transaction(ENCRYPT_KEYS_STORE, 'readwrite');
+      tx.objectStore(ENCRYPT_KEYS_STORE).put(cloneKeyPair(keyPair), memberID);
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error ?? new Error('amp-web: indexedDB put failed'));
     });
