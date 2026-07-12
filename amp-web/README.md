@@ -203,9 +203,9 @@ Rules the pack enforces on partner-visible text:
 
 - "Prereading:" / "must read" lists name shipped docs only. A line that
   instructs the reader to read a doc (`preread`, `must read`,
-  `required reading`, `read … first`) while citing one that does not ship
-  fails the pack — the `(internal)` token cannot rescue an instruction;
-  reword at source.
+  `required reading`, `read … first`) while citing one that does not ship —
+  by link or by code span — fails the pack; the `(internal)` token cannot
+  rescue an instruction; reword at source.
 - Cite an internal doc as background, never instruction:
   `` Background (internal): `XYZ.md`. ``
 
