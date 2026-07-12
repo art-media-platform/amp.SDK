@@ -187,13 +187,17 @@ export interface AmpItemMeta {
 
 // ── Query ───────────────────────────────────────────────────────────
 
+/**
+ * Query options.  amp is address-is-query: scope by (channel, attr), page by
+ * the server-enforced ItemID window (`after`/`limit`).  There is deliberately
+ * no server-side orderBy/filter — see SKILL "Address, don't filter"; name any
+ * client-side view transform presentationally (sortView/searchView).
+ */
 export interface AmpQueryOpts {
   itemID?: string;                      // fetch a single item by ID
   limit?: number;                       // page size (default: 50)
   after?: string;                       // cursor (itemID to start after)
-  orderBy?: string;                     // client-side ordering hint
-  filter?: Record<string, unknown>;     // client-side equality filter hint
-  planetTag?: string;                   // read a planet other than the session default
+  planetTag?: string;                   // per-call planet; overrides the client's constructor default
 }
 
 export interface AmpQueryResult<T> {

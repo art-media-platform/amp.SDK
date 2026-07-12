@@ -18,7 +18,7 @@ export function useAmpQuery<T>(
   const optsRef = useRef(opts);
   optsRef.current = opts;
 
-  // Serialize opts so a change to limit/after/filter/planetTag re-creates `fetch`
+  // Serialize opts so a change to limit/after/planetTag re-creates `fetch`
   // (and thus refetches) instead of being captured once through the ref.
   const optsKey = JSON.stringify(opts ?? {});
 

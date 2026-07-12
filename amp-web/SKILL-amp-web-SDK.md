@@ -58,6 +58,8 @@ console.log(data[0].msg);     // 'hi' — round-tripped through a real journal. 
 
 No Go, no node, no genesis ceremony — just a client and HTTPS.
 
+The constructor `planetTag` rides every call, so this round-trip targets the handed planet. A `403` on the write means your member isn't on that planet (yet): construct with `planetTag: ''` to work against your own auto-provisioned home planet, or accept the deploy's invite (§4.7) first. A wrong planet fails **loudly** — it never silently lands your data elsewhere.
+
 | Do | Don't |
 |---|---|
 | `npm install ./amp-web-SDK` (the bundle) | `git clone` / `go build` amp.planet or amp.SDK |
@@ -135,6 +137,9 @@ const client = new AmpWebClient({
   vaultUrl: import.meta.env.VITE_AMP_VAULT_URL,    // operated node — e.g. https://prod.plan.tools
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG,  // the planet your app reads/writes
 });
+// planetTag is the client's default planet: it rides every REST call unless a
+// per-call planetTag overrides it (§4.2/§4.3).  The server remains sole
+// authority on what the tag resolves to and whether the session may touch it.
 
 export default function App() {
   return (
@@ -241,7 +246,7 @@ GET  /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}
 URL query params (`?after=`, `?limit=`, `?planetTag=`) stay lowerCamelCase —
 they are URL params, not JSON body fields.
 
-`channel` and `attr` in the URL path can be either canonic names (`projects`, `labels`) or pre-resolved base32 UIDs — the server parses through `tag.Parse` so both forms work. `planetTag` defaults to the session's bound planet; pass it explicitly to read from the deploy's share planet (anonymous reads — see §6.4) or any other reachable planet.
+`channel` and `attr` in the URL path can be either canonic names (`projects`, `labels`) or pre-resolved base32 UIDs — the server parses through `tag.Parse` so both forms work. On the wire, an absent `planetTag` resolves to the session's bound planet. Through the SDK, the client sends its constructor `planetTag` on every call by default; a per-call `planetTag` (e.g. `query(ch, attr, { planetTag })`) overrides it for that call — the cross-planet read (§5.7), anonymous against a registered share planet (§6.4). Either way the server is sole authority: a tag the session can't touch fails the epoch/ACC gates.
 
 ```typescript
 interface Item {
@@ -279,7 +284,7 @@ DELETE /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}              ─ s
 POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ sugar: tx with one withdraw op
 ```
 
-`planetTag` on the canonical `/api/v1/tx` endpoint, and the `?planetTag=<...>` query param on the sugar verbs, target a planet other than the session default — the same way the read endpoints work.
+`planetTag` on the canonical `/api/v1/tx` endpoint, and the `?planetTag=<...>` query param on the sugar verbs, target a planet other than the session default — the same way the read endpoints work. The SDK fills it with the constructor `planetTag` by default; `tx(ops, planetTag)` / `invoke(verbURL, ops, planetTag)` override per call.
 
 **Atomicity contract.** All ops in a single `POST /api/v1/tx` ride one TxMsg under one encryption context. Batches that span encryption domains (a planet-public op alongside a private-channel op, or two different private channels) are rejected; split into separate `tx` calls.
 
@@ -359,6 +364,8 @@ Frame format (JSON):
 `FromID` is always the TxMsg signer (the member who authored the op). On a `withdraw` frame, `Withdraw.Subject` names whose consent is being withdrawn — equal to `FromID` in the common case (signer is the subject), distinct when an authorized delegate (Memorial, GDPR delegation) speaks on the subject's behalf. `Withdraw.Delegation` is a base32-packed `amp.Address` citing the record proving that authority. `Subject`/`WithdrawnBy` are plain base32 UID strings. See §7.
 
 Subscriptions are per-`(channel, attr)` and deliver every item event on that attr. To scope subscribe by item, partition the data into per-scope attrs at write time (e.g., `widgets/instance.{memberID}` rather than `widgets/instance` filtered by ownerID).
+
+Subscriptions bind the **session's planet**: the subscribe frame carries no planet field, so neither the client's constructor `planetTag` nor a per-call tag scopes a WebSocket subscription. Reading another planet (§5.7) is REST-only today — refetch to observe its changes.
 
 A subscribe the server rejects (no access to the channel/attr, or a malformed key) returns a `{Type:"error", Channel, Attr, Error}` frame on that `(channel, attr)`; the SDK surfaces it as a `{type:'error'}` `SubscriptionEvent` (and `useAmpQuery` sets its `error`) instead of silently never delivering. An error frame is protocol-level, not telemetry.
 
@@ -562,12 +569,18 @@ For `did:pkh:eip155` the signer is the same EVM-wallet `personal_sign` as above 
 const { data, loading, hasMore, loadMore, refetch } =
   useAmpQuery<ProjectSnapshot>('projects', 'snapshot', {
     limit: 50,
-    orderBy: '_UpdatedAt',
-    filter: { ownerID: member.ID },
   });
 ```
 
-The hook subscribes via WebSocket automatically and re-renders on updates. `data[i]` carries `ItemMeta` fields underscore-prefixed.
+The hook subscribes via WebSocket automatically and re-renders on updates. `data[i]` carries `ItemMeta` fields underscore-prefixed. Options are `itemID` (single-item read), `limit`/`after` (the server-enforced ItemID pagination window), and `planetTag` (per-call planet, overriding the constructor default).
+
+#### Address, don't filter
+
+amp is **address-is-query**: the `(channel, attr)` address *is* the scope, and the only ordering is the server-enforced ItemID window (`after`/`limit`, tag.UID byte order — §4.2). There is deliberately no server-side `orderBy` or `filter` predicate — a query option that *looks* scoped but isn't would ship pages rendering every member's rows while the developer believes they're filtered.
+
+- **Scope by address, at write time.** Data that will be read per-member (or per-room, per-project) is written to a per-scope attr — `widgets/instance.{memberID}`, `projects/meta.{ownerID}` — so the read and the subscribe are naturally scoped by the substrate, not by a client predicate (§4.5, §11).
+- **Order by the ItemID window.** Page with `after`/`limit`; the server enforces the window. Need an application ordering (recency, rank)? Derive the ItemID deterministically so byte order *is* your order, or sort the fetched page in view code.
+- **View transforms are presentation — name them that way.** Sorting or searching *fetched rows* client-side is fine, but keep it visibly presentational (`sortView(...)`, `searchView(...)` over `data`), never spelled like a server query — a reader must be able to tell "the substrate scoped this" from "this page rearranged what it happened to fetch."
 
 ### 5.3 `useAmpMutation()`
 
@@ -706,7 +719,7 @@ POST /api/v1/tag/resolve   Body: { Exprs: [...] }   → { Results: [{ Expr, Cano
 | Maplable concept | channel | attr | itemID convention | Notes |
 |---|---|---|---|---|
 | Project full state | `projects` | `snapshot` | server project UID | Per-entity item split recommended; see §6.3 |
-| Project listing metadata | `projects` | `meta` | same as snapshot itemID | `{ name, thumbnail, _UpdatedAt, ownerID, templatePlanet }` |
+| Project listing metadata | `projects` | `meta.{ownerID}` | same as snapshot itemID | `{ name, thumbnail, _UpdatedAt, templatePlanet }` — per-owner partition; the "my projects" list reads one attr (§5.2 Address, don't filter) |
 | Project share state | `projects` | `share` | same itemID | `{ isPublic, shareUrl, sharedAt, viewCount }` |
 | User profile | `users` | `profile` | member UID | `{ displayName, firstName, lastName, theme, accentColor }` |
 | User defaults | `users` | `defaults` | member UID | per-field `{value, ts}` for LWW |
@@ -827,7 +840,7 @@ Either form (canonic name or base32 UID) resolves to the same planet via `tag.Pa
 3. Anonymous viewers read the share planet via the channels-prefixed path above without `Authorization`. Only the share planet allows anonymous reads — the owner's main planet still requires auth.
 4. To unshare, the owner posts a `Withdraw` against the share planet's snapshot item; the public bytes survive in the share planet's journal but the consumer sees both the original and the withdrawal — see §7.
 
-A whitelabel deploy registers two planet tags in its config: the owner planet and the share planet. Each `AmpWebClient` binds one default `planetTag`; read another reachable planet by passing `planetTag` to `query` — anonymous against a registered share planet, authenticated otherwise.
+A whitelabel deploy registers two planet tags in its config: the owner planet and the share planet. Each `AmpWebClient` binds one default `planetTag` that rides its every call; read another reachable planet by passing a per-call `planetTag` to `query` — anonymous against a registered share planet, authenticated otherwise.
 
 ### 6.5 Identity & member shape
 
@@ -1154,10 +1167,10 @@ The durable model: per-deploy configuration is **signed, chronicle-tracked facts
 ### List with pagination
 
 ```tsx
-const { data, hasMore, loadMore, loading } = useAmpQuery<ProjectMeta>('projects', 'meta', {
+// Per-owner scope lives in the ADDRESS (attr partition), not a filter
+// predicate; pages ride the server-enforced ItemID window (§5.2).
+const { data, hasMore, loadMore, loading } = useAmpQuery<ProjectMeta>('projects', `meta.${member.ID}`, {
   limit: 20,
-  orderBy: '_UpdatedAt',
-  filter: { ownerID: member.ID },
 });
 
 return (
@@ -1196,7 +1209,9 @@ async function handleFile(file) {
 ### Anonymous public-share read
 
 ```tsx
-// Constructed without a session — the share planet is open-read.
+// Constructed without a session — the share planet is open-read.  The
+// constructor planetTag rides every query this client makes, so these reads
+// hit the SHARE planet (not a session planet — there is no session here).
 const shareClient = new AmpWebClient({ vaultUrl, planetTag: import.meta.env.VITE_AMP_PUBLIC_SHARE_PLANET_TAG });
 const { data } = await shareClient.query<{ snapshotChannel: string; snapshotAttr: string; snapshotItemID: string }>('shares', 'link', { itemID: slug });
 const link = data[0];
@@ -1224,6 +1239,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
 7. **Never name specific crypto algorithms** in code or docs. Use `seal/open`, `sign/verify`, `hash`, `safe.KeyRef`.
 8. **Never build on bulk namespace enumeration.** `/api/v1/search` is membership-gated, best-effort discovery over the federations you've joined — not a public directory dump, and never anonymous. Resolve exact FQDNs you already know; don't crawl. (§4.6)
+9. **Never call an operator verb (`/api/v1/admin/*`) from browser JS.** The operator Bearer is higher-privilege than a member session; putting it in XSS-exposed script is how an org gets its planet defaced and members mass-minted. These verbs deliberately have no SDK client method — drive them from server-side tooling (a Stripe webhook, an ops script, the `amp` CLI), where the admin Bearer lives (§14.4).
 
 ---
 
@@ -1253,7 +1269,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else. |
 | **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registered host-side; see §6.4 / §10. |
-| **Admin endpoint** | Bearer-authenticated server endpoint reserved for operator-driven substrate operations — currently `POST /api/v1/admin/planet/create` for share-planet genesis. |
+| **Admin endpoint** | The operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no SDK client method** (§12); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
 | **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6. |
 | **FQDN** | A fully-qualified domain name (`spaces.example.com`) registered in a federation's NameService and resolvable to a planet. |
@@ -1273,9 +1289,13 @@ shipping:
   tx/item (`_ItemID`/`_EditID`/`_FromID` metadata keys), subscribe frames,
   edit chains, the full invite family (issue/accept/revoke/list with ledger
   rank), vault endpoints (base64 `Address` — opaque bytes, not a UID),
-  media/Tag shapes (`ContentTypeRaw`), enum-name goldens (AccessLevel /
-  WithdrawReason / InviteStatus / TrustState), and the CryptoKitID small-int ↔
-  `tag.UID` mapping.
+  media/Tag shapes (`ContentTypeRaw`), the operator tier (planet
+  create/brand, forums reserve, email issue — `operator.json`), enum-name
+  goldens (AccessLevel / WithdrawReason / InviteStatus / TrustState), and the
+  CryptoKitID small-int ↔ `tag.UID` mapping.  `operator-go-only.json` is the
+  enforcing manifest for the operator tier: the Go side requires its shapes
+  registered in the drift guard; the TS side requires that NO client binding
+  exists for them (§12).
 - **Go side** — `go test ./amp/webapi/` decodes every fixture with
   `DisallowUnknownFields` and asserts a lossless re-marshal.
 - **TS side** — `npx vitest run src/drift.test.ts` checks every fixture

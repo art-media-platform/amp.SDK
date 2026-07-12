@@ -27,11 +27,12 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 )
 
-// goldenEnumFiles hold enum-name goldens, not struct shapes; they have their
-// own tests below.
-var goldenEnumFiles = map[string]bool{
-	"access.json":     true,
-	"cryptokits.json": true,
+// nonShapeFiles hold enum-name goldens and the operator manifest, not struct
+// shapes; each has its own test below.
+var nonShapeFiles = map[string]bool{
+	"access.json":           true,
+	"cryptokits.json":       true,
+	"operator-go-only.json": true,
 }
 
 // shapeCtors maps a fixture entry's shape prefix to its Go wire struct.
@@ -67,6 +68,15 @@ var shapeCtors = map[string]func() any{
 	"FederationPeersResponse": func() any { return &webapi.FederationPeersResponse{} },
 	"MediaResolveRequest":     func() any { return &webapi.MediaResolveRequest{} },
 	"Tag":                     func() any { return &amp.Tag{} },
+
+	// Operator tier (Go-only by design — see testdata/operator-go-only.json;
+	// TestOperatorGoOnlyManifest pins these registrations to that manifest).
+	"PlanetCreateRequest":   func() any { return &webapi.PlanetCreateRequest{} },
+	"PlanetCreateResponse":  func() any { return &webapi.PlanetCreateResponse{} },
+	"BrandSetRequest":       func() any { return &webapi.BrandSetRequest{} },
+	"BrandSetResponse":      func() any { return &webapi.BrandSetResponse{} },
+	"ForumsReserveRequest":  func() any { return &webapi.ForumsReserveRequest{} },
+	"ForumsReserveResponse": func() any { return &webapi.ForumsReserveResponse{} },
 }
 
 func TestWireFixturesRoundTrip(t *testing.T) {
@@ -80,7 +90,7 @@ func TestWireFixturesRoundTrip(t *testing.T) {
 
 	shapesSeen := map[string]bool{}
 	for _, file := range files {
-		if goldenEnumFiles[filepath.Base(file)] {
+		if nonShapeFiles[filepath.Base(file)] {
 			continue
 		}
 		raw, err := os.ReadFile(file)
@@ -161,6 +171,39 @@ func roundTrip(t *testing.T, label string, fixture json.RawMessage, target any) 
 	for key := range got {
 		if _, ok := want[key]; !ok {
 			t.Errorf("%s: round trip emitted key %q absent from the fixture (lost omitempty/omitzero, or fixture is missing a required field)", label, key)
+		}
+	}
+}
+
+// TestOperatorGoOnlyManifest pins the operator-tier manifest: every listed
+// verb's request/response shape must be registered in shapeCtors (and so
+// fixture-guarded by TestWireFixturesRoundTrip's reverse coverage).  The TS
+// side asserts the inverse against the same file — that NO client binding
+// exists for these verbs — so an operator verb cannot silently gain a browser
+// method or silently fall out of the drift guard.
+func TestOperatorGoOnlyManifest(t *testing.T) {
+	manifest := struct {
+		Comment string
+		Verbs   []struct {
+			Verb     string
+			Endpoint string
+			Request  string
+			Response string
+		}
+	}{}
+	loadJSON(t, filepath.Join("testdata", "operator-go-only.json"), &manifest)
+
+	if len(manifest.Verbs) == 0 {
+		t.Fatal("operator manifest lists no verbs")
+	}
+	for _, verb := range manifest.Verbs {
+		if verb.Verb == "" || !strings.HasPrefix(verb.Endpoint, "/api/v1/admin/") {
+			t.Errorf("manifest verb %q: endpoint %q is not an /api/v1/admin/ surface", verb.Verb, verb.Endpoint)
+		}
+		for _, shape := range []string{verb.Request, verb.Response} {
+			if shapeCtors[shape] == nil {
+				t.Errorf("manifest verb %q: shape %s not registered in shapeCtors — operator shape outside the drift guard", verb.Verb, shape)
+			}
 		}
 	}
 }

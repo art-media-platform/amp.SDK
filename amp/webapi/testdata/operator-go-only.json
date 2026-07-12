@@ -1,0 +1,29 @@
+{
+  "Comment": "Operator-tier verbs: Go/CLI-only by design — the operator Bearer must never enter browser JS. Both drift guards enforce this manifest: drift_test.go requires every shape here to be fixture-guarded in shapeCtors; drift.test.ts requires that NO client binding exists (no AmpWebClient method named per Verb, no admin Endpoint string in client source). Adding a TS binding for one of these verbs therefore forces a reviewed edit of this file.",
+  "Verbs": [
+    {
+      "Verb": "createPlanet",
+      "Endpoint": "/api/v1/admin/planet/create",
+      "Request": "PlanetCreateRequest",
+      "Response": "PlanetCreateResponse"
+    },
+    {
+      "Verb": "setBrand",
+      "Endpoint": "/api/v1/admin/planet/brand",
+      "Request": "BrandSetRequest",
+      "Response": "BrandSetResponse"
+    },
+    {
+      "Verb": "reserveForum",
+      "Endpoint": "/api/v1/admin/forums/reserve",
+      "Request": "ForumsReserveRequest",
+      "Response": "ForumsReserveResponse"
+    },
+    {
+      "Verb": "issueEmailCredential",
+      "Endpoint": "/api/v1/admin/credentials/email/issue",
+      "Request": "EmailCredential",
+      "Response": "EmailIssueResponse"
+    }
+  ]
+}

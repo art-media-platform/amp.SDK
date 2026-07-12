@@ -52,7 +52,17 @@ import type {
 
 export interface AmpWebClientOpts {
   vaultUrl: string;       // operated node URL — e.g. https://prod.plan.tools
-  planetTag: string;      // the planet this client reads/writes by default
+
+  /**
+   * The planet this client reads/writes by default — it rides every REST call
+   * (query/tx/invoke, the single-op item verbs, upload, media resolve) unless
+   * the call names its own planetTag.  Client-side default only: the server
+   * remains sole authority on what the tag resolves to and whether the session
+   * may touch it (resolvePlanet + epoch/ACC gates).  Empty = the session's
+   * bound planet.  WebSocket subscribe always binds the session planet — the
+   * ws subscribe vocabulary carries no planet field.
+   */
+  planetTag: string;
 
   /**
    * Where the member's device-local EncryptKey is held for BYOK seal/open.
@@ -150,8 +160,18 @@ export class AmpWebClient implements AmpAdapter {
     return path;
   }
 
+  /**
+   * The planet tag a call rides: an explicit per-call tag wins, else the
+   * constructor default; undefined when neither names a planet (the server
+   * then resolves the session's bound planet).
+   */
+  private planetTagFor(explicit?: string): string | undefined {
+    const tag = explicit || this.planetTag;
+    return tag || undefined;
+  }
+
   private planetQuery(planetTag?: string): string {
-    const tag = planetTag ?? '';
+    const tag = this.planetTagFor(planetTag);
     return tag ? `?planetTag=${encodeURIComponent(tag)}` : '';
   }
 
@@ -373,7 +393,8 @@ export class AmpWebClient implements AmpAdapter {
     const params = new URLSearchParams();
     if (opts?.limit) params.set('limit', String(opts.limit));
     if (opts?.after) params.set('after', opts.after);
-    if (opts?.planetTag) params.set('planetTag', opts.planetTag);
+    const planetTag = this.planetTagFor(opts?.planetTag);
+    if (planetTag) params.set('planetTag', planetTag);
     const qs = params.toString();
     const out = await this.apiFetch<{ Items: WireItem[]; HasMore: boolean; Next?: string }>(
       this.itemsPath(channel, attr) + (qs ? `?${qs}` : ''),
@@ -391,7 +412,7 @@ export class AmpWebClient implements AmpAdapter {
     );
     const out = await this.apiFetch<{ TxID: string; Results: TxResult[] }>('/tx', {
       method: 'POST',
-      body: JSON.stringify({ Ops: wireOps, PlanetTag: planetTag }),
+      body: JSON.stringify({ Ops: wireOps, PlanetTag: this.planetTagFor(planetTag) }),
     });
     return out.Results ?? [];
   }
@@ -404,35 +425,35 @@ export class AmpWebClient implements AmpAdapter {
         throw new Error(`embedded divert of ${verbURL} expects exactly one op, got ${ops.length}`);
       }
       const op = ops[0];
-      return this.embed.invoke(verbURL, op.Value, planetTag ?? this.planetTag, op.Channel);
+      return this.embed.invoke(verbURL, op.Value, this.planetTagFor(planetTag) ?? '', op.Channel);
     }
     const wireOps = ops.map(op =>
       op.Withdraw ? { ...op, Withdraw: withdrawNoteToWire(op.Withdraw) } : op,
     );
     const out = await this.apiFetch<{ TxID: string; Results: TxResult[] }>('/tx', {
       method: 'POST',
-      body: JSON.stringify({ Ops: wireOps, PlanetTag: planetTag, InvokeURL: verbURL }),
+      body: JSON.stringify({ Ops: wireOps, PlanetTag: this.planetTagFor(planetTag), InvokeURL: verbURL }),
     });
     return out.Results ?? [];
   }
 
   async create(channel: string, attr: string, value: Record<string, unknown>): Promise<string> {
     const out = await this.apiFetch<{ Results: TxResult[] }>(
-      this.itemsPath(channel, attr),
+      this.itemsPath(channel, attr) + this.planetQuery(),
       { method: 'POST', body: JSON.stringify(value) },
     );
     return out.Results?.[0]?.ItemID ?? '';
   }
 
   async upsert(channel: string, attr: string, itemID: string, value: Record<string, unknown>): Promise<void> {
-    await this.apiFetch(this.itemsPath(channel, attr, itemID), {
+    await this.apiFetch(this.itemsPath(channel, attr, itemID) + this.planetQuery(), {
       method: 'PUT',
       body: JSON.stringify(value),
     });
   }
 
   async remove(channel: string, attr: string, itemID: string): Promise<void> {
-    await this.apiFetch(this.itemsPath(channel, attr, itemID), { method: 'DELETE' });
+    await this.apiFetch(this.itemsPath(channel, attr, itemID) + this.planetQuery(), { method: 'DELETE' });
   }
 
   async withdraw(channel: string, attr: string, itemID: string, opts: WithdrawOpts): Promise<void> {
@@ -442,7 +463,7 @@ export class AmpWebClient implements AmpAdapter {
       Subject: opts.subject,
       Delegation: opts.delegation,
     });
-    await this.apiFetch(this.itemsPath(channel, attr, itemID, 'withdraw'), {
+    await this.apiFetch(this.itemsPath(channel, attr, itemID, 'withdraw') + this.planetQuery(), {
       method: 'POST',
       body: JSON.stringify(body),
     });
@@ -469,7 +490,8 @@ export class AmpWebClient implements AmpAdapter {
     form.append('file', file);
     form.append('channel', channel);
     if (opts?.attr) form.append('attr', opts.attr);
-    if (opts?.planetTag) form.append('planetTag', opts.planetTag);
+    const planetTag = this.planetTagFor(opts?.planetTag);
+    if (planetTag) form.append('planetTag', planetTag);
     if (opts?.metadata) form.append('metadata', JSON.stringify(opts.metadata));
 
     const hdrs: Record<string, string> = {};
@@ -492,7 +514,7 @@ export class AmpWebClient implements AmpAdapter {
   async resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef> {
     return this.apiFetch<BlobRef>('/media/resolve', {
       method: 'POST',
-      body: JSON.stringify({ Blob: blob, PlanetTag: planetTag }),
+      body: JSON.stringify({ Blob: blob, PlanetTag: this.planetTagFor(planetTag) }),
     });
   }
 

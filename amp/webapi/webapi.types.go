@@ -103,6 +103,31 @@ type EmailIssueResponse struct {
 	Email    string  `json:"Email"`
 }
 
+// Operator tier (POST /api/v1/admin/*) — node-custodial verbs gated by the
+// per-org admin allowlist, deliberately WITHOUT a browser-SDK binding: the
+// operator Bearer is higher-privilege than a member session and must never
+// normalize into XSS-exposed browser JS.  testdata/operator-go-only.json is
+// the enforcing manifest — the TS drift test asserts none of these verbs has
+// a client binding, so adding one forces a reviewed manifest edit.
+// PlanetCreate*/BrandSet* are proto messages (webapi.proto); EmailCredential /
+// EmailIssueResponse (above) double as the issueEmailCredential bodies; the
+// forums-reserve shapes below complete the tier.
+
+// ForumsReserveRequest is the body of POST /api/v1/admin/forums/reserve —
+// the admin allowlist row for an invite-only board.  Exactly one of Address
+// (an Eth wallet address; the member UID derives server-side) or MemberID
+// (base32 UID, any identity scheme).
+type ForumsReserveRequest struct {
+	Address  string `json:"Address,omitempty"`
+	MemberID string `json:"MemberID,omitempty"`
+}
+
+// ForumsReserveResponse echoes the reserved member UID so the caller can
+// persist the identity↔reservation mapping without re-hashing.
+type ForumsReserveResponse struct {
+	MemberID tag.UID `json:"MemberID"`
+}
+
 // WithdrawNote is the wire-shape carrier for AOM SD-withdrawal-consent.md withdrawal facts,
 // carried in TxOp.Withdraw / EditEntry.Withdraw / Item.Withdrawn /
 // SubscribeFrame.Withdraw.  It is never marshaled to binary, so its UID

@@ -14,12 +14,13 @@
  * Nested wire objects are checked recursively.
  */
 
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { CryptoKitID } from './crypto/types.js';
+import { AmpWebClient } from './web-client.js';
 import type { AccessLevel, InvitePolicyEntry, WithdrawReason } from './types.js';
 
 const testdataDir = join(
@@ -41,8 +42,10 @@ interface ShapeSpec {
 }
 
 const SHAPES: Record<string, ShapeSpec> = {
-  // DRIFT: types.ts LoginCredentials omits the optional PlanetTag that Go
-  // webapi.LoginRequest accepts on every scheme.
+  // types.ts LoginCredentials DELIBERATELY omits the optional PlanetTag the
+  // Go shape accepts: the TS client performs no login-planet bind — the
+  // constructor planetTag rides each call instead, and the server stays sole
+  // authority on planet resolution.
   LoginRequest: {
     required: ['Scheme'],
     optional: ['Address', 'Signature', 'Nonce', 'Email', 'Password',
@@ -182,6 +185,46 @@ const SHAPES: Record<string, ShapeSpec> = {
     required: [],
     optional: ['UID', 'I', 'J', 'K', 'Units', 'ContentTypeRaw', 'URI', 'Text'],
   },
+
+  // Operator tier — Go-only by ruling (see OPERATOR_GO_ONLY below): these
+  // assert the Go wire shape so the fixtures stay honest, and deliberately
+  // have NO types.ts interface and NO client method.
+  PlanetCreateRequest: {
+    required: [],
+    optional: ['Tag', 'Brand'],
+    nested: { Tag: 'Tag', Brand: 'Brand' },
+  },
+  PlanetCreateResponse: {
+    required: [],
+    optional: ['PlanetID', 'Tag', 'Public'],
+  },
+  BrandSetRequest: {
+    required: [],
+    optional: ['Planet', 'Brand'],
+    nested: { Planet: 'Tag', Brand: 'Brand' },
+  },
+  BrandSetResponse: {
+    required: [],
+    optional: ['PlanetID'],
+  },
+  ForumsReserveRequest: {
+    required: [],
+    optional: ['Address', 'MemberID'],
+  },
+  ForumsReserveResponse: { required: ['MemberID'] },
+  // amp.Brand / amp.BrandIdentity (proto-generated; every field omitempty).
+  // Targets/Links/BundledCrates elements are unexercised by fixtures today.
+  Brand: {
+    required: [],
+    optional: ['Identity', 'OrgHomeURL', 'AppHomeURL', 'Targets',
+      'CrateSnapshotURL', 'Links', 'BundledCrates', 'TemplateSet'],
+    nested: { Identity: 'BrandIdentity', TemplateSet: 'Tag' },
+  },
+  BrandIdentity: {
+    required: [],
+    optional: ['AppName', 'OrgName', 'AppDomain', 'AppDesc', 'URLSchemes', 'NamedBy'],
+    nested: { NamedBy: 'Tag' },
+  },
 };
 
 // Keys carrying app-defined payloads (json.RawMessage Go-side) — any inner
@@ -197,6 +240,7 @@ const FIXTURE_FILES = [
   'invite.json',
   'vault.json',
   'media.json',
+  'operator.json',
 ] as const;
 
 const shapesChecked = new Set<string>();
@@ -252,6 +296,76 @@ describe('wire fixtures match the Go shapes', () => {
   it('every shape table is exercised by a fixture', () => {
     for (const shape of Object.keys(SHAPES)) {
       expect(shapesChecked.has(shape), `shape ${shape} never checked — fixture entry deleted?`).toBe(true);
+    }
+  });
+});
+
+// ── OPERATOR_GO_ONLY — the operator tier has NO client binding ──────
+//
+// testdata/operator-go-only.json lists the /api/v1/admin/* verbs ruled
+// Go/CLI-only: the operator Bearer is higher-privilege than a member session
+// and must never normalize into XSS-exposed browser JS.  The Go side pins the
+// same manifest's shapes into its drift guard; this side asserts the INVERSE —
+// no AmpWebClient method for the verb, no admin endpoint string anywhere in
+// client source.  Adding a TS binding therefore fails here until the manifest
+// itself is edited (a reviewed act).
+
+interface OperatorVerb {
+  Verb: string;
+  Endpoint: string;
+  Request: string;
+  Response: string;
+}
+
+const OPERATOR_GO_ONLY = (loadFixture('operator-go-only.json') as unknown as {
+  Verbs: OperatorVerb[];
+}).Verbs;
+
+/** Every non-test source file under src/ (the shipped client surface). */
+function clientSourceFiles(): string[] {
+  const srcDir = dirname(fileURLToPath(import.meta.url));
+  return readdirSync(srcDir, { recursive: true, encoding: 'utf8' })
+    .filter(f => /\.(ts|tsx)$/.test(f) && !/\.test\.ts$/.test(f) && !f.endsWith('.d.ts'))
+    .map(f => join(srcDir, f));
+}
+
+describe('OPERATOR_GO_ONLY manifest — no client binding', () => {
+  it('manifest lists the operator tier', () => {
+    expect(OPERATOR_GO_ONLY.length).toBeGreaterThan(0);
+  });
+
+  it('every operator shape is drift-guarded (present in SHAPES)', () => {
+    for (const verb of OPERATOR_GO_ONLY) {
+      for (const shape of [verb.Request, verb.Response]) {
+        expect(SHAPES[shape], `operator shape ${shape} missing from SHAPES`).toBeDefined();
+      }
+    }
+  });
+
+  it('AmpWebClient exposes no method for an operator verb', () => {
+    const methods = new Set(Object.getOwnPropertyNames(AmpWebClient.prototype));
+    for (const verb of OPERATOR_GO_ONLY) {
+      expect(
+        methods.has(verb.Verb),
+        `AmpWebClient.${verb.Verb}() exists — operator verbs are Go-only; edit operator-go-only.json only via review`,
+      ).toBe(false);
+    }
+  });
+
+  it('no client CODE references an operator admin endpoint', () => {
+    const srcDir = dirname(fileURLToPath(import.meta.url));
+    for (const file of clientSourceFiles()) {
+      // Strip comments — an endpoint may be DOCUMENTED (e.g. the shared
+      // EmailCredential shape lists its three endpoints), never called.
+      const code = readFileSync(file, 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^\s*\/\/.*$/gm, '');
+      for (const verb of OPERATOR_GO_ONLY) {
+        expect(
+          code.includes(verb.Endpoint),
+          `${relative(srcDir, file)} references ${verb.Endpoint} — operator verbs are Go-only`,
+        ).toBe(false);
+      }
     }
   });
 });
