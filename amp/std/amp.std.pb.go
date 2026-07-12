@@ -68,6 +68,77 @@ func (TRS_Flags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{0}
 }
 
+// Camera framing mode ladder; 0 denotes unset.
+type CameraModeID int32
+
+const (
+	CameraModeID_CameraModeUnset   CameraModeID = 0
+	CameraModeID_FirstPerson       CameraModeID = 1 // eye-level inside / on the target
+	CameraModeID_ThirdPersonFollow CameraModeID = 2 // chase relation behind the target
+	CameraModeID_ThirdPersonOmni   CameraModeID = 3 // wide target-aware view
+	CameraModeID_Orbital           CameraModeID = 4 // sphere-anchored orbit
+	CameraModeID_Omniscient        CameraModeID = 5 // god-view; target optional
+	CameraModeID_Ortho             CameraModeID = 6 // top-down planar
+	CameraModeID_Driver            CameraModeID = 7 // first-person from inside vehicle
+	CameraModeID_Chase             CameraModeID = 8 // third-person follow at heading
+	CameraModeID_Free              CameraModeID = 9 // gesture-only; no rig framing
+)
+
+// Enum value maps for CameraModeID.
+var (
+	CameraModeID_name = map[int32]string{
+		0: "CameraModeUnset",
+		1: "FirstPerson",
+		2: "ThirdPersonFollow",
+		3: "ThirdPersonOmni",
+		4: "Orbital",
+		5: "Omniscient",
+		6: "Ortho",
+		7: "Driver",
+		8: "Chase",
+		9: "Free",
+	}
+	CameraModeID_value = map[string]int32{
+		"CameraModeUnset":   0,
+		"FirstPerson":       1,
+		"ThirdPersonFollow": 2,
+		"ThirdPersonOmni":   3,
+		"Orbital":           4,
+		"Omniscient":        5,
+		"Ortho":             6,
+		"Driver":            7,
+		"Chase":             8,
+		"Free":              9,
+	}
+)
+
+func (x CameraModeID) Enum() *CameraModeID {
+	p := new(CameraModeID)
+	*p = x
+	return p
+}
+
+func (x CameraModeID) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CameraModeID) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[1].Descriptor()
+}
+
+func (CameraModeID) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[1]
+}
+
+func (x CameraModeID) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CameraModeID.Descriptor instead.
+func (CameraModeID) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{1}
+}
+
 // ValueKind specifies the primary type of a JsonValue.
 type ValueKind int32
 
@@ -108,11 +179,11 @@ func (x ValueKind) String() string {
 }
 
 func (ValueKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[1].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[2].Descriptor()
 }
 
 func (ValueKind) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[1]
+	return &file_amp_std_amp_std_proto_enumTypes[2]
 }
 
 func (x ValueKind) Number() protoreflect.EnumNumber {
@@ -121,7 +192,7 @@ func (x ValueKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ValueKind.Descriptor instead.
 func (ValueKind) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{1}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{2}
 }
 
 type PointFormat int32
@@ -160,11 +231,11 @@ func (x PointFormat) String() string {
 }
 
 func (PointFormat) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[2].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[3].Descriptor()
 }
 
 func (PointFormat) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[2]
+	return &file_amp_std_amp_std_proto_enumTypes[3]
 }
 
 func (x PointFormat) Number() protoreflect.EnumNumber {
@@ -173,7 +244,7 @@ func (x PointFormat) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PointFormat.Descriptor instead.
 func (PointFormat) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{2}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{3}
 }
 
 type MediaFlags int32
@@ -235,11 +306,11 @@ func (x MediaFlags) String() string {
 }
 
 func (MediaFlags) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[3].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[4].Descriptor()
 }
 
 func (MediaFlags) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[3]
+	return &file_amp_std_amp_std_proto_enumTypes[4]
 }
 
 func (x MediaFlags) Number() protoreflect.EnumNumber {
@@ -248,7 +319,7 @@ func (x MediaFlags) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use MediaFlags.Descriptor instead.
 func (MediaFlags) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{3}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{4}
 }
 
 type ColormapFlags int32
@@ -287,11 +358,11 @@ func (x ColormapFlags) String() string {
 }
 
 func (ColormapFlags) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[4].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[5].Descriptor()
 }
 
 func (ColormapFlags) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[4]
+	return &file_amp_std_amp_std_proto_enumTypes[5]
 }
 
 func (x ColormapFlags) Number() protoreflect.EnumNumber {
@@ -300,7 +371,7 @@ func (x ColormapFlags) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ColormapFlags.Descriptor instead.
 func (ColormapFlags) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{4}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{5}
 }
 
 type SensorFlags int32
@@ -333,11 +404,11 @@ func (x SensorFlags) String() string {
 }
 
 func (SensorFlags) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[5].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[6].Descriptor()
 }
 
 func (SensorFlags) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[5]
+	return &file_amp_std_amp_std_proto_enumTypes[6]
 }
 
 func (x SensorFlags) Number() protoreflect.EnumNumber {
@@ -346,7 +417,7 @@ func (x SensorFlags) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SensorFlags.Descriptor instead.
 func (SensorFlags) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{5}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{6}
 }
 
 type AudioFlags int32
@@ -379,11 +450,11 @@ func (x AudioFlags) String() string {
 }
 
 func (AudioFlags) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[6].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[7].Descriptor()
 }
 
 func (AudioFlags) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[6]
+	return &file_amp_std_amp_std_proto_enumTypes[7]
 }
 
 func (x AudioFlags) Number() protoreflect.EnumNumber {
@@ -392,7 +463,7 @@ func (x AudioFlags) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AudioFlags.Descriptor instead.
 func (AudioFlags) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{6}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{7}
 }
 
 // TileEase controls how a TileBand's profile transitions from its inner to outer radius.
@@ -429,11 +500,11 @@ func (x TileEase) String() string {
 }
 
 func (TileEase) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[7].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[8].Descriptor()
 }
 
 func (TileEase) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[7]
+	return &file_amp_std_amp_std_proto_enumTypes[8]
 }
 
 func (x TileEase) Number() protoreflect.EnumNumber {
@@ -442,7 +513,7 @@ func (x TileEase) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileEase.Descriptor instead.
 func (TileEase) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{7}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{8}
 }
 
 // TileServerKind narrows what a tile backend serves so consumers can compose
@@ -499,11 +570,11 @@ func (x TileServerKind) String() string {
 }
 
 func (TileServerKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[8].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[9].Descriptor()
 }
 
 func (TileServerKind) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[8]
+	return &file_amp_std_amp_std_proto_enumTypes[9]
 }
 
 func (x TileServerKind) Number() protoreflect.EnumNumber {
@@ -512,7 +583,7 @@ func (x TileServerKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileServerKind.Descriptor instead.
 func (TileServerKind) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{8}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{9}
 }
 
 // TileProjection identifies the cartographic projection of the tile pyramid.
@@ -549,11 +620,11 @@ func (x TileProjection) String() string {
 }
 
 func (TileProjection) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[9].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[10].Descriptor()
 }
 
 func (TileProjection) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[9]
+	return &file_amp_std_amp_std_proto_enumTypes[10]
 }
 
 func (x TileProjection) Number() protoreflect.EnumNumber {
@@ -562,7 +633,7 @@ func (x TileProjection) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileProjection.Descriptor instead.
 func (TileProjection) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{9}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10}
 }
 
 // TileServerScheme identifies the (z, x, y) tile addressing convention.
@@ -602,11 +673,11 @@ func (x TileServerScheme) String() string {
 }
 
 func (TileServerScheme) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[10].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[11].Descriptor()
 }
 
 func (TileServerScheme) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[10]
+	return &file_amp_std_amp_std_proto_enumTypes[11]
 }
 
 func (x TileServerScheme) Number() protoreflect.EnumNumber {
@@ -615,7 +686,7 @@ func (x TileServerScheme) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileServerScheme.Descriptor instead.
 func (TileServerScheme) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11}
 }
 
 // TileServerAuth describes how a per-tile API key is delivered.
@@ -655,11 +726,11 @@ func (x TileServerAuth) String() string {
 }
 
 func (TileServerAuth) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[11].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[12].Descriptor()
 }
 
 func (TileServerAuth) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[11]
+	return &file_amp_std_amp_std_proto_enumTypes[12]
 }
 
 func (x TileServerAuth) Number() protoreflect.EnumNumber {
@@ -668,7 +739,7 @@ func (x TileServerAuth) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TileServerAuth.Descriptor instead.
 func (TileServerAuth) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{11}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{12}
 }
 
 // BodyEncoding is how an HTTP request body is encoded.
@@ -702,11 +773,11 @@ func (x BodyEncoding) String() string {
 }
 
 func (BodyEncoding) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[12].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[13].Descriptor()
 }
 
 func (BodyEncoding) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[12]
+	return &file_amp_std_amp_std_proto_enumTypes[13]
 }
 
 func (x BodyEncoding) Number() protoreflect.EnumNumber {
@@ -715,7 +786,7 @@ func (x BodyEncoding) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BodyEncoding.Descriptor instead.
 func (BodyEncoding) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{12}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{13}
 }
 
 type GeoPath_RenderType int32
@@ -751,11 +822,11 @@ func (x GeoPath_RenderType) String() string {
 }
 
 func (GeoPath_RenderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[13].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[14].Descriptor()
 }
 
 func (GeoPath_RenderType) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[13]
+	return &file_amp_std_amp_std_proto_enumTypes[14]
 }
 
 func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
@@ -1077,7 +1148,8 @@ type CameraState struct {
 	Fov           float32                `protobuf:"fixed32,13,opt,name=Fov,proto3" json:"Fov,omitempty"`             // field of view in degrees; 0 denotes orthographic camera
 	PixelsX       int32                  `protobuf:"varint,16,opt,name=PixelsX,proto3" json:"PixelsX,omitempty"`      // viewport width in pixels
 	PixelsY       int32                  `protobuf:"varint,17,opt,name=PixelsY,proto3" json:"PixelsY,omitempty"`      // viewport height in pixels
-	Mode          string                 `protobuf:"bytes,20,opt,name=Mode,proto3" json:"Mode,omitempty"`             // optional camera mode description
+	Mode          string                 `protobuf:"bytes,20,opt,name=Mode,proto3" json:"Mode,omitempty"`             // optional camera mode label; ModeID is authoritative when set
+	ModeID        CameraModeID           `protobuf:"varint,21,opt,name=ModeID,proto3,enum=std.CameraModeID" json:"ModeID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1194,6 +1266,13 @@ func (x *CameraState) GetMode() string {
 		return x.Mode
 	}
 	return ""
+}
+
+func (x *CameraState) GetModeID() CameraModeID {
+	if x != nil {
+		return x.ModeID
+	}
+	return CameraModeID_CameraModeUnset
 }
 
 type CameraOptions struct {
@@ -3000,7 +3079,7 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x03M30\x18\r \x01(\x01R\x03M30\x12\x10\n" +
 	"\x03M31\x18\x0e \x01(\x01R\x03M31\x12\x10\n" +
 	"\x03M32\x18\x0f \x01(\x01R\x03M32\x12\x10\n" +
-	"\x03M33\x18\x10 \x01(\x01R\x03M33\"\xbd\x02\n" +
+	"\x03M33\x18\x10 \x01(\x01R\x03M33\"\xe8\x02\n" +
 	"\vCameraState\x12&\n" +
 	"\tPlacement\x18\x01 \x01(\v2\b.std.TRSR\tPlacement\x12\x14\n" +
 	"\x05Pitch\x18\x02 \x01(\x02R\x05Pitch\x12\x10\n" +
@@ -3014,7 +3093,8 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x03Fov\x18\r \x01(\x02R\x03Fov\x12\x18\n" +
 	"\aPixelsX\x18\x10 \x01(\x05R\aPixelsX\x12\x18\n" +
 	"\aPixelsY\x18\x11 \x01(\x05R\aPixelsY\x12\x12\n" +
-	"\x04Mode\x18\x14 \x01(\tR\x04Mode\"{\n" +
+	"\x04Mode\x18\x14 \x01(\tR\x04Mode\x12)\n" +
+	"\x06ModeID\x18\x15 \x01(\x0e2\x11.std.CameraModeIDR\x06ModeID\"{\n" +
 	"\rCameraOptions\x12\x1c\n" +
 	"\tMoveSpeed\x18\x01 \x01(\x02R\tMoveSpeed\x12\x12\n" +
 	"\x04Mode\x18\x02 \x01(\tR\x04Mode\x12\x1a\n" +
@@ -3197,7 +3277,20 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\tTRS_Flags\x12\x0e\n" +
 	"\n" +
 	"FixedScale\x10\x00\x12\r\n" +
-	"\tAutoScale\x10\x01*B\n" +
+	"\tAutoScale\x10\x01*\xa9\x01\n" +
+	"\fCameraModeID\x12\x13\n" +
+	"\x0fCameraModeUnset\x10\x00\x12\x0f\n" +
+	"\vFirstPerson\x10\x01\x12\x15\n" +
+	"\x11ThirdPersonFollow\x10\x02\x12\x13\n" +
+	"\x0fThirdPersonOmni\x10\x03\x12\v\n" +
+	"\aOrbital\x10\x04\x12\x0e\n" +
+	"\n" +
+	"Omniscient\x10\x05\x12\t\n" +
+	"\x05Ortho\x10\x06\x12\n" +
+	"\n" +
+	"\x06Driver\x10\a\x12\t\n" +
+	"\x05Chase\x10\b\x12\b\n" +
+	"\x04Free\x10\t*B\n" +
 	"\tValueKind\x12\b\n" +
 	"\x04Null\x10\x00\x12\t\n" +
 	"\x05False\x10\x01\x12\b\n" +
@@ -3285,93 +3378,95 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 	return file_amp_std_amp_std_proto_rawDescData
 }
 
-var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
+var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 15)
 var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),           // 0: std.TRS_Flags
-	(ValueKind)(0),           // 1: std.ValueKind
-	(PointFormat)(0),         // 2: std.PointFormat
-	(MediaFlags)(0),          // 3: std.MediaFlags
-	(ColormapFlags)(0),       // 4: std.ColormapFlags
-	(SensorFlags)(0),         // 5: std.SensorFlags
-	(AudioFlags)(0),          // 6: std.AudioFlags
-	(TileEase)(0),            // 7: std.TileEase
-	(TileServerKind)(0),      // 8: std.TileServerKind
-	(TileProjection)(0),      // 9: std.TileProjection
-	(TileServerScheme)(0),    // 10: std.TileServerScheme
-	(TileServerAuth)(0),      // 11: std.TileServerAuth
-	(BodyEncoding)(0),        // 12: std.BodyEncoding
-	(GeoPath_RenderType)(0),  // 13: std.GeoPath.RenderType
-	(*TRS)(nil),              // 14: std.TRS
-	(*Matrix4X4)(nil),        // 15: std.Matrix4x4
-	(*CameraState)(nil),      // 16: std.CameraState
-	(*CameraOptions)(nil),    // 17: std.CameraOptions
-	(*FileInfo)(nil),         // 18: std.FileInfo
-	(*JsonValue)(nil),        // 19: std.JsonValue
-	(*Report)(nil),           // 20: std.Report
-	(*Labels)(nil),           // 21: std.Labels
-	(*ModuleRef)(nil),        // 22: std.ModuleRef
-	(*Rect)(nil),             // 23: std.Rect
-	(*GeoPath)(nil),          // 24: std.GeoPath
-	(*MediaInfo)(nil),        // 25: std.MediaInfo
-	(*Segment)(nil),          // 26: std.Segment
-	(*Arg)(nil),              // 27: std.Arg
-	(*VisPreset)(nil),        // 28: std.VisPreset
-	(*TileBand)(nil),         // 29: std.TileBand
-	(*TileMeshSpec)(nil),     // 30: std.TileMeshSpec
-	(*SkinSpec)(nil),         // 31: std.SkinSpec
-	(*AtmosphereEffect)(nil), // 32: std.AtmosphereEffect
-	(*AtmosphereSpec)(nil),   // 33: std.AtmosphereSpec
-	(*TileServer)(nil),       // 34: std.TileServer
-	(*LoginForm)(nil),        // 35: std.LoginForm
-	(*amp.Tag)(nil),          // 36: amp.Tag
-	(*amp.Tags)(nil),         // 37: amp.Tags
-	(amp.Units)(0),           // 38: amp.Units
-	(*amp.BlobRef)(nil),      // 39: amp.BlobRef
+	(CameraModeID)(0),        // 1: std.CameraModeID
+	(ValueKind)(0),           // 2: std.ValueKind
+	(PointFormat)(0),         // 3: std.PointFormat
+	(MediaFlags)(0),          // 4: std.MediaFlags
+	(ColormapFlags)(0),       // 5: std.ColormapFlags
+	(SensorFlags)(0),         // 6: std.SensorFlags
+	(AudioFlags)(0),          // 7: std.AudioFlags
+	(TileEase)(0),            // 8: std.TileEase
+	(TileServerKind)(0),      // 9: std.TileServerKind
+	(TileProjection)(0),      // 10: std.TileProjection
+	(TileServerScheme)(0),    // 11: std.TileServerScheme
+	(TileServerAuth)(0),      // 12: std.TileServerAuth
+	(BodyEncoding)(0),        // 13: std.BodyEncoding
+	(GeoPath_RenderType)(0),  // 14: std.GeoPath.RenderType
+	(*TRS)(nil),              // 15: std.TRS
+	(*Matrix4X4)(nil),        // 16: std.Matrix4x4
+	(*CameraState)(nil),      // 17: std.CameraState
+	(*CameraOptions)(nil),    // 18: std.CameraOptions
+	(*FileInfo)(nil),         // 19: std.FileInfo
+	(*JsonValue)(nil),        // 20: std.JsonValue
+	(*Report)(nil),           // 21: std.Report
+	(*Labels)(nil),           // 22: std.Labels
+	(*ModuleRef)(nil),        // 23: std.ModuleRef
+	(*Rect)(nil),             // 24: std.Rect
+	(*GeoPath)(nil),          // 25: std.GeoPath
+	(*MediaInfo)(nil),        // 26: std.MediaInfo
+	(*Segment)(nil),          // 27: std.Segment
+	(*Arg)(nil),              // 28: std.Arg
+	(*VisPreset)(nil),        // 29: std.VisPreset
+	(*TileBand)(nil),         // 30: std.TileBand
+	(*TileMeshSpec)(nil),     // 31: std.TileMeshSpec
+	(*SkinSpec)(nil),         // 32: std.SkinSpec
+	(*AtmosphereEffect)(nil), // 33: std.AtmosphereEffect
+	(*AtmosphereSpec)(nil),   // 34: std.AtmosphereSpec
+	(*TileServer)(nil),       // 35: std.TileServer
+	(*LoginForm)(nil),        // 36: std.LoginForm
+	(*amp.Tag)(nil),          // 37: amp.Tag
+	(*amp.Tags)(nil),         // 38: amp.Tags
+	(amp.Units)(0),           // 39: amp.Units
+	(*amp.BlobRef)(nil),      // 40: amp.BlobRef
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
-	14, // 1: std.CameraState.Placement:type_name -> std.TRS
-	1,  // 2: std.JsonValue.Kind:type_name -> std.ValueKind
-	19, // 3: std.JsonValue.Array:type_name -> std.JsonValue
-	36, // 4: std.Report.Title:type_name -> amp.Tag
-	36, // 5: std.Report.Caption:type_name -> amp.Tag
-	36, // 6: std.Report.Errors:type_name -> amp.Tag
-	36, // 7: std.Report.Warnings:type_name -> amp.Tag
-	36, // 8: std.Report.Messages:type_name -> amp.Tag
-	36, // 9: std.Report.Debug:type_name -> amp.Tag
-	36, // 10: std.ModuleRef.Module:type_name -> amp.Tag
-	21, // 11: std.ModuleRef.Labels:type_name -> std.Labels
-	37, // 12: std.ModuleRef.Tags:type_name -> amp.Tags
-	2,  // 13: std.Rect.Format:type_name -> std.PointFormat
-	13, // 14: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
-	2,  // 15: std.GeoPath.Format:type_name -> std.PointFormat
-	3,  // 16: std.MediaInfo.Flags:type_name -> std.MediaFlags
-	36, // 17: std.MediaInfo.Tag:type_name -> amp.Tag
-	38, // 18: std.Segment.Units:type_name -> amp.Units
-	39, // 19: std.Segment.Blob:type_name -> amp.BlobRef
-	36, // 20: std.VisPreset.Title:type_name -> amp.Tag
-	36, // 21: std.VisPreset.Collection:type_name -> amp.Tag
-	36, // 22: std.VisPreset.Credits:type_name -> amp.Tag
-	4,  // 23: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
-	5,  // 24: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
-	6,  // 25: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	27, // 26: std.VisPreset.Args:type_name -> std.Arg
-	7,  // 27: std.TileBand.YEase:type_name -> std.TileEase
-	29, // 28: std.TileMeshSpec.Bands:type_name -> std.TileBand
-	30, // 29: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
-	28, // 30: std.SkinSpec.Layers:type_name -> std.VisPreset
-	32, // 31: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
-	8,  // 32: std.TileServer.Kind:type_name -> std.TileServerKind
-	9,  // 33: std.TileServer.Projection:type_name -> std.TileProjection
-	10, // 34: std.TileServer.Scheme:type_name -> std.TileServerScheme
-	11, // 35: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
-	12, // 36: std.LoginForm.Encoding:type_name -> std.BodyEncoding
-	37, // [37:37] is the sub-list for method output_type
-	37, // [37:37] is the sub-list for method input_type
-	37, // [37:37] is the sub-list for extension type_name
-	37, // [37:37] is the sub-list for extension extendee
-	0,  // [0:37] is the sub-list for field type_name
+	15, // 1: std.CameraState.Placement:type_name -> std.TRS
+	1,  // 2: std.CameraState.ModeID:type_name -> std.CameraModeID
+	2,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
+	20, // 4: std.JsonValue.Array:type_name -> std.JsonValue
+	37, // 5: std.Report.Title:type_name -> amp.Tag
+	37, // 6: std.Report.Caption:type_name -> amp.Tag
+	37, // 7: std.Report.Errors:type_name -> amp.Tag
+	37, // 8: std.Report.Warnings:type_name -> amp.Tag
+	37, // 9: std.Report.Messages:type_name -> amp.Tag
+	37, // 10: std.Report.Debug:type_name -> amp.Tag
+	37, // 11: std.ModuleRef.Module:type_name -> amp.Tag
+	22, // 12: std.ModuleRef.Labels:type_name -> std.Labels
+	38, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
+	3,  // 14: std.Rect.Format:type_name -> std.PointFormat
+	14, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	3,  // 16: std.GeoPath.Format:type_name -> std.PointFormat
+	4,  // 17: std.MediaInfo.Flags:type_name -> std.MediaFlags
+	37, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
+	39, // 19: std.Segment.Units:type_name -> amp.Units
+	40, // 20: std.Segment.Blob:type_name -> amp.BlobRef
+	37, // 21: std.VisPreset.Title:type_name -> amp.Tag
+	37, // 22: std.VisPreset.Collection:type_name -> amp.Tag
+	37, // 23: std.VisPreset.Credits:type_name -> amp.Tag
+	5,  // 24: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
+	6,  // 25: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
+	7,  // 26: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
+	28, // 27: std.VisPreset.Args:type_name -> std.Arg
+	8,  // 28: std.TileBand.YEase:type_name -> std.TileEase
+	30, // 29: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	31, // 30: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	29, // 31: std.SkinSpec.Layers:type_name -> std.VisPreset
+	33, // 32: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	9,  // 33: std.TileServer.Kind:type_name -> std.TileServerKind
+	10, // 34: std.TileServer.Projection:type_name -> std.TileProjection
+	11, // 35: std.TileServer.Scheme:type_name -> std.TileServerScheme
+	12, // 36: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
+	13, // 37: std.LoginForm.Encoding:type_name -> std.BodyEncoding
+	38, // [38:38] is the sub-list for method output_type
+	38, // [38:38] is the sub-list for method input_type
+	38, // [38:38] is the sub-list for extension type_name
+	38, // [38:38] is the sub-list for extension extendee
+	0,  // [0:38] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -3384,7 +3479,7 @@ func file_amp_std_amp_std_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
-			NumEnums:      14,
+			NumEnums:      15,
 			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   0,

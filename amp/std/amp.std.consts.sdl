@@ -73,11 +73,12 @@ tags Attr {
         // Channel-property ITEM keys — ItemIDs within the property series,
         // scoped by (NodeID, AttrID) at runtime; never AttrIDs themselves.
         ChannelProperty "property" {
-            ChannelPropertyLabel       "label"
-            ChannelPropertyDescription "description"
-            ChannelPropertyGlyph       "glyph"
-            ChannelPropertySkybox      "skybox"
-            ChannelPropertyGrid        "grid"
+            ChannelPropertyLabel          "label"
+            ChannelPropertyDescription    "description"
+            ChannelPropertyGlyph          "glyph"
+            ChannelPropertySkybox         "skybox"
+            ChannelPropertyGrid           "grid"
+            ChannelPropertyCameraControls "camera.controls"
         }
         ChannelType "type" {
             ChannelTypeSpreadsheet  "spreadsheet"

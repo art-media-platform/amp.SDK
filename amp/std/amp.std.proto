@@ -63,6 +63,20 @@ message Matrix4x4 {
 
 }
 
+// Camera framing mode ladder; 0 denotes unset.
+enum CameraModeID {
+    CameraModeUnset   = 0;
+    FirstPerson       = 1; // eye-level inside / on the target
+    ThirdPersonFollow = 2; // chase relation behind the target
+    ThirdPersonOmni   = 3; // wide target-aware view
+    Orbital           = 4; // sphere-anchored orbit
+    Omniscient        = 5; // god-view; target optional
+    Ortho             = 6; // top-down planar
+    Driver            = 7; // first-person from inside vehicle
+    Chase             = 8; // third-person follow at heading
+    Free              = 9; // gesture-only; no rig framing
+}
+
 // General purpose Camera state
 message CameraState {
     TRS    Placement = 1;
@@ -79,7 +93,9 @@ message CameraState {
     int32  PixelsX   = 16; // viewport width in pixels
     int32  PixelsY   = 17; // viewport height in pixels
 
-    string Mode      = 20; // optional camera mode description
+    string Mode      = 20; // optional camera mode label; ModeID is authoritative when set
+
+    CameraModeID ModeID = 21;
 }
 
 message CameraOptions {

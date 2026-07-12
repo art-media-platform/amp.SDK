@@ -58,6 +58,7 @@ var Attr = struct {
 	ChannelPropertyGlyph               tag.Name
 	ChannelPropertySkybox              tag.Name
 	ChannelPropertyGrid                tag.Name
+	ChannelPropertyCameraControls      tag.Name
 	ChannelType                        tag.Name
 	ChannelTypeSpreadsheet             tag.Name
 	ChannelTypeMessages                tag.Name
@@ -197,12 +198,13 @@ var Attr = struct {
 	// scoped by (NodeID, AttrID) at runtime; never AttrIDs themselves.
 	ChannelProperty: tag.Name{ID: tag.UID{0xF1F847BE12B003CC, 0xBB2C4346207C50DA}, Text: "channel.property"}, // 7jz13vw4ph0g6cqc238sh7sn6u
 
-	ChannelPropertyLabel:       tag.Name{ID: tag.UID{0xAF4AA413D0ED026C, 0xE04F4B2A77D76B02}, Text: "channel.property.label"},       // 5g9bk17n7e09qf0muc59vxfus2
-	ChannelPropertyDescription: tag.Name{ID: tag.UID{0x267F564E36A001F0, 0xDDA05C2E868CF0E1}, Text: "channel.property.description"}, // 16gxc4wep007sev82w5u38tw71
-	ChannelPropertyGlyph:       tag.Name{ID: tag.UID{0xD0E035657968E8A3, 0xA92F31B7179E06DB}, Text: "channel.property.glyph"},       // 6hw0uqbyc8x2jukctjqwctw1qv
-	ChannelPropertySkybox:      tag.Name{ID: tag.UID{0x3DE032C924E7EC82, 0x5FFF404B037126D4}, Text: "channel.property.skybox"},      // 1xw0tdk977xk15zzu09d1r29qn
-	ChannelPropertyGrid:        tag.Name{ID: tag.UID{0x94EFC317CF34165F, 0xCAB7BCDADD7C784D}, Text: "channel.property.grid"},        // 4nxz1jgmtn2tgwpexwvcfrsy2e
-	ChannelType:                tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Text: "channel.type"},                 // 71evhnqj9kwy382tpe69352teh
+	ChannelPropertyLabel:          tag.Name{ID: tag.UID{0xAF4AA413D0ED026C, 0xE04F4B2A77D76B02}, Text: "channel.property.label"},           // 5g9bk17n7e09qf0muc59vxfus2
+	ChannelPropertyDescription:    tag.Name{ID: tag.UID{0x267F564E36A001F0, 0xDDA05C2E868CF0E1}, Text: "channel.property.description"},     // 16gxc4wep007sev82w5u38tw71
+	ChannelPropertyGlyph:          tag.Name{ID: tag.UID{0xD0E035657968E8A3, 0xA92F31B7179E06DB}, Text: "channel.property.glyph"},           // 6hw0uqbyc8x2jukctjqwctw1qv
+	ChannelPropertySkybox:         tag.Name{ID: tag.UID{0x3DE032C924E7EC82, 0x5FFF404B037126D4}, Text: "channel.property.skybox"},          // 1xw0tdk977xk15zzu09d1r29qn
+	ChannelPropertyGrid:           tag.Name{ID: tag.UID{0x94EFC317CF34165F, 0xCAB7BCDADD7C784D}, Text: "channel.property.grid"},            // 4nxz1jgmtn2tgwpexwvcfrsy2e
+	ChannelPropertyCameraControls: tag.Name{ID: tag.UID{0x6FCB7C32C026A452, 0xC4D5A0B4BB4DD5D7}, Text: "channel.property.camera.controls"}, // 3gtey35h16nj9d9pe0qkxnvpfr
+	ChannelType:                   tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Text: "channel.type"},                     // 71evhnqj9kwy382tpe69352teh
 
 	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x1C0062A36805F2FB, 0xC37F9A8B51C0A909}, Text: "channel.type.spreadsheet"},  // 0w01jb6u05ycxw6zwuje8w1b89
 	ChannelTypeMessages:     tag.Name{ID: tag.UID{0x0B6D6A2421321CA6, 0xFBA2073C02B917A6}, Text: "channel.type.messages"},     // 0cepp2889k3kmgr8h77h1ck5x6
