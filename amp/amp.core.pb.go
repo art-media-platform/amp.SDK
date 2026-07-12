@@ -5956,7 +5956,7 @@ func (x *VaultAddr) GetAddress() []byte {
 // NameServiceRecord — one FQDN → PlanetID record published by a federation.
 // Lives in a NameService channel at
 //
-//	(NodeID = channel_node, AttrID = amp.name.service.record, ItemID = hash(fqdn)).
+//	(NodeID = channel_node, AttrID = amp.name.service.NameServiceRecord, ItemID = hash(fqdn)).
 //
 // Signed under the publishing federation's epoch admin.  AOM DD-name-service.md §3.1.
 type NameServiceRecord struct {
@@ -6140,7 +6140,7 @@ func (x *FederationPeer) GetLabel() string {
 // FederationDirectory — federation peer pointers, NS-record style cross-federation
 // forwarding (AOM DD-name-service.md §4.4).  Lives at
 //
-//	(HeadNodeID, amp.federation.directory, amp.federation.directory.UID)
+//	(HeadNodeID, amp.FederationDirectory, its own UID)
 //
 // on a federation planet.  Single CRDT item per federation; admin-signed like
 // any governance change.  Analogous to DNS NS records — bounded, opt-in.

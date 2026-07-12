@@ -22,52 +22,45 @@ tags Attr {
         LoginCheckpoint "LoginCheckpoint"
         TxSealChallenge "tx.seal.LoginChallenge"
         TxSealResponse  "tx.seal.CoSignature"
-        MintMemberToken "member.token.mint"
-        MemberToken     "member.token"
-        SessionStatus   "status"
+        MemberToken     "member.token.Tag"
+        SessionStatus   "Status"
         Launch "launch" {
-            LaunchWeb   "www"
-            LaunchOAuth "oauth"
+            LaunchWeb   "www.Tag"
+            LaunchOAuth "oauth.Tag"
         }
-        AppState "app.state"
+        AppState "app.state.Tag"
     }
 
     // Item attributes
     ItemAttr "item" {
-        ChildLink  "child.link.id"
+        ChildLink  "child.link.UID"
         ItemLabels "Labels"
         ItemTextTag "text" {
-            ItemLabel      "label"
-            ItemCaption    "caption"
-            ItemCollection "collection"
-            ItemSynopsis   "synopsis"
+            ItemLabel      "label.Tag"
+            ItemCaption    "caption.Tag"
+            ItemCollection "collection.Tag"
+            ItemSynopsis   "synopsis.Tag"
         }
         ItemFileInfo      "FileInfo"
-        MainLink          "link.main"
-
-        ItemVis           "vis"
         ItemBehaviors     "behaviors.Tags"
         ItemGlyphs        "glyphs.Tags"
         ItemLinks         "links.Tags"
         ItemCameraState   "CameraState"
         ItemCameraOptions "CameraOptions"
         ItemAtmosphere    "AtmosphereSpec" // 4-category atmosphere composition (sky/sun/night/fog)
-        GlyphTag          "glyph"
-        TileAttr "tile" {
-            TileLayout "layout"
-        }
+        TileAttr          "tile"
         ItemSeries "series" {
             SeriesTRS      "TRS"
             SeriesLabels   "Labels"
-            SeriesAssetTag "asset"
-            SeriesHeadLink "link"
+            SeriesAssetTag "asset.Tag"
+            SeriesHeadLink "link.Tag"
             SeriesLinkTree "link.tree.Tags"
-            SeriesS2R      "s2.r.mm"
-            SeriesS2T      "s2.utc64"
+            SeriesS2R      "S2.radius.mm"
+            SeriesS2T      "S2.UTC64"
         }
 
-        MediaLink    "media.link"
-        MediaRelease "media.release"
+        MediaLink    "media.link.Tag"
+        MediaRelease "media.release.Tag"
         MediaInfo    "MediaInfo"
     }
 
@@ -110,7 +103,7 @@ tags Attr {
     }
 
     // Brand — substrate-native planet identity (AOM DD-name-service.md §2).
-    // Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
+    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the genesis
     // TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
     Brand "amp.Brand"
 
@@ -119,20 +112,20 @@ tags Attr {
     // Federations propagate their channel to members via normal CRDT sync.
     // Generalized beyond planet naming — any UID-bearing entity is namable.
     NameService "amp.name.service" {
-        NameServiceRecord "record"
+        NameServiceRecord "NameServiceRecord"
     }
 
     // Invite governance — policy + redemption ledger for governed multi-use invites
     // (app.invite).  Policies live at (PlanetInvites, PlanetInvitePolicy, inviteID);
     // each invite's ledger at (inviteID, PlanetInviteRedemption, RedeemedAt NowID).
     PlanetInvites "amp.planet.invites" {
-        PlanetInvitePolicy     "policy"
-        PlanetInviteRedemption "redemption"
+        PlanetInvitePolicy     "PlanetInvitePolicy"
+        PlanetInviteRedemption "PlanetInviteRedemption"
     }
 
     // Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.3).
     // NS-record-style cross-federation forwarding without DNS dependency.
-    FederationDirectory "amp.federation.directory"
+    FederationDirectory "amp.FederationDirectory"
 
     // Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate).
     // "Law" names the role concretely: this channel grants, revises, and revokes
@@ -207,7 +200,7 @@ tags Attr {
 
     // Home planet attributes
     HomeAttr "amp.home" {
-        PlanetBinding     "planet.binding"
+        PlanetBinding     "planet.binding.Tag"
         PlanetStorageOpts "planet.storage.PlanetStorageOpts"
     }
 
@@ -220,7 +213,7 @@ tags Attr {
 
     // Blob storage
     BlobAttr "amp.blob" {
-        BlobRef   "ref"
+        BlobRef   "BlobRef"
         NodeBlobs "node.BlobRef"
     }
 

@@ -15,7 +15,6 @@ var Attr = struct {
 	LoginCheckpoint                    tag.Name
 	TxSealChallenge                    tag.Name
 	TxSealResponse                     tag.Name
-	MintMemberToken                    tag.Name
 	MemberToken                        tag.Name
 	SessionStatus                      tag.Name
 	Launch                             tag.Name
@@ -31,17 +30,13 @@ var Attr = struct {
 	ItemCollection                     tag.Name
 	ItemSynopsis                       tag.Name
 	ItemFileInfo                       tag.Name
-	MainLink                           tag.Name
-	ItemVis                            tag.Name
 	ItemBehaviors                      tag.Name
 	ItemGlyphs                         tag.Name
 	ItemLinks                          tag.Name
 	ItemCameraState                    tag.Name
 	ItemCameraOptions                  tag.Name
 	ItemAtmosphere                     tag.Name
-	GlyphTag                           tag.Name
 	TileAttr                           tag.Name
-	TileLayout                         tag.Name
 	ItemSeries                         tag.Name
 	SeriesTRS                          tag.Name
 	SeriesLabels                       tag.Name
@@ -152,50 +147,44 @@ var Attr = struct {
 	LoginCheckpoint: tag.Name{ID: tag.UID{0xD1FD78AD2D86A001, 0x89D5922FF13EB7CE}, Text: "session.LoginCheckpoint"},        // 6jzpwbucd6n00smpdk5zsmxeyf
 	TxSealChallenge: tag.Name{ID: tag.UID{0xF2A1AE33AC1B3803, 0xFB2C5214CE23F9CC}, Text: "session.tx.seal.LoginChallenge"}, // 7kn6r37c0v701zqc2k2m727yfd
 	TxSealResponse:  tag.Name{ID: tag.UID{0x981B0B30B1025607, 0x2311EFEAF48865A6}, Text: "session.tx.seal.CoSignature"},    // 4s3d5m1d82bs3k64ggxcu8hte6
-	MintMemberToken: tag.Name{ID: tag.UID{0xB4AF6AC0E35022CA, 0x3DE4C884B11ED5FC}, Text: "session.member.token.mint"},      // 5npxpd1suh4c53vt68hksjxpgw
-	MemberToken:     tag.Name{ID: tag.UID{0xE9D3FCC961BD5AC5, 0x2ED6449E239C95D9}, Text: "session.member.token"},           // 79ugydksexcc2kxpk4msjtt5ft
-	SessionStatus:   tag.Name{ID: tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, Text: "session.status"},                 // 3zqf0vt3ejmdnf7v345guq2p9c
+	MemberToken:     tag.Name{ID: tag.UID{0x94BD26B80E00B5E7, 0xD81E9C5A91C2BB12}, Text: "session.member.token.Tag"},       // 4nrnmch3h0qrmxh7nwcb8w5fsk
+	SessionStatus:   tag.Name{ID: tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, Text: "session.Status"},                 // 3zqf0vt3ejmdnf7v345guq2p9c
 	Launch:          tag.Name{ID: tag.UID{0x5E5631E663B817F3, 0xC16D35F3AAEE7AF8}, Text: "session.launch"},                 // 2ybssydsxs2ztw2v9pyfpfwyrs
 
-	LaunchWeb:   tag.Name{ID: tag.UID{0x1761ACB92FA48247, 0x4AE07FA9E592507B}, Text: "session.launch.www"},   // 0rd6qckcx4h93nps3zp7kt4n3v
-	LaunchOAuth: tag.Name{ID: tag.UID{0xB242A46847218BE1, 0x440A7FBD769F64BD}, Text: "session.launch.oauth"}, // 5k8bk6hjt1jghn82mzrpv9yt5x
-	AppState:    tag.Name{ID: tag.UID{0xDCADE486065A91A2, 0x845AB70CFB680921}, Text: "session.app.state"},    // 6wprk8d1kuk6j88qpr1mxqh291
+	LaunchWeb:   tag.Name{ID: tag.UID{0x3802421A2E14913C, 0x65C142851DD9C039}, Text: "session.launch.www.Tag"},   // 1s0911nchnk4y6chb2hnfxmh1t
+	LaunchOAuth: tag.Name{ID: tag.UID{0x7BA5AAE91974706B, 0x8FC930B7716137D5}, Text: "session.launch.oauth.Tag"}, // 3vnqpfk6cnf1pszk9hqxsq2eyp
+	AppState:    tag.Name{ID: tag.UID{0x6CEB3696AB78B359, 0x08CF79D767A904E8}, Text: "session.app.state.Tag"},    // 3dxdv9ebvsqedhjmvtuxmuk178
 
 	// ─── Item attributes ────────────────────────────────────────────
 	ItemAttr: tag.Name{ID: tag.UID{0xE8D8BECA5B3BBEB3, 0x1308458DB27C3504}, Text: "item"}, // 78v2zdnqtvrutj6225jqt7se84
 
-	ChildLink:   tag.Name{ID: tag.UID{0xE206EF98B802A494, 0x651C394153CA1C0E}, Text: "item.child.link.id"}, // 720vrtjf02nkb6b71t859wn70f
-	ItemLabels:  tag.Name{ID: tag.UID{0x89DC7C30D083C0B7, 0xCCB62B4FAAB34B4D}, Text: "item.Labels"},        // 49vjy31n43s2vwtejc9ypc6kue
-	ItemTextTag: tag.Name{ID: tag.UID{0xE961CE2BB0D11C6F, 0x77C2DB21D0B1B894}, Text: "item.text"},          // 79d772rd6j3jrrghqv478c3f4n
+	ChildLink:   tag.Name{ID: tag.UID{0x1D7FCD10B1143140, 0xB45F595E9B29E11E}, Text: "item.child.link.UID"}, // 0xgz6j1d8n650c8rutcuekms8y
+	ItemLabels:  tag.Name{ID: tag.UID{0x89DC7C30D083C0B7, 0xCCB62B4FAAB34B4D}, Text: "item.Labels"},         // 49vjy31n43s2vwtejc9ypc6kue
+	ItemTextTag: tag.Name{ID: tag.UID{0xE961CE2BB0D11C6F, 0x77C2DB21D0B1B894}, Text: "item.text"},           // 79d772rd6j3jrrghqv478c3f4n
 
-	ItemLabel:         tag.Name{ID: tag.UID{0x2C7D43B6BE2447FB, 0x74CA6C57F66C410A}, Text: "item.text.label"},      // 1dgp1vegj48zxr9kmdbzv6sh8b
-	ItemCaption:       tag.Name{ID: tag.UID{0xB330E87E9A28EB77, 0xA018D644DEF92611}, Text: "item.text.caption"},    // 5m63n7x6j8xevu066q8mggk9hj
-	ItemCollection:    tag.Name{ID: tag.UID{0x1DCAC5A8C8C8B091, 0x26EA7EA851731566}, Text: "item.text.collection"}, // 0xtc2ujk68q28keumyp18r65c6
-	ItemSynopsis:      tag.Name{ID: tag.UID{0x8A88F6B1100EFE46, 0x3A1BC9DE57654D14}, Text: "item.text.synopsis"},   // 4bj3vc240fzt33n6y9vtcqbm8n
-	ItemFileInfo:      tag.Name{ID: tag.UID{0x37F1C92B7B61AFDE, 0x319025BC546E254F}, Text: "item.FileInfo"},        // 1ry74kqyv1pzg33415rjb6w9bg
-	MainLink:          tag.Name{ID: tag.UID{0x5A3769261A0D85A5, 0xE6AFAB056C263106}, Text: "item.link.main"},       // 2u6xnkd6hehqkyecxc0pq2dd86
-	ItemVis:           tag.Name{ID: tag.UID{0x1AFE5A24A2B62326, 0xFF0BAF5A27280015}, Text: "item.vis"},             // 0uzte298pq4dmgy2xgc8mkh00p
-	ItemBehaviors:     tag.Name{ID: tag.UID{0x9B7A8FB1F44DCCD9, 0xFD513A52A6D1C0A6}, Text: "item.behaviors.Tags"},  // 4vgb7v3x2etmdzun9ubbme3h56
-	ItemGlyphs:        tag.Name{ID: tag.UID{0x2193FA68B12BFE25, 0x55BF4085B9819FAD}, Text: "item.glyphs.Tags"},     // 11kgx6jd9czskpcgu0hqws37xe
-	ItemLinks:         tag.Name{ID: tag.UID{0x551458A1B9F8478D, 0xD97A4BC2495B2AE3}, Text: "item.links.Tags"},      // 2p2jdb3fgs8y6xkykcs94pqbr3
-	ItemCameraState:   tag.Name{ID: tag.UID{0x18E764034A5B20FD, 0x53FEC933E18782D4}, Text: "item.CameraState"},     // 0swxk06kkv43yp7zq96ghsg0qn
-	ItemCameraOptions: tag.Name{ID: tag.UID{0xEF9DCA7B29C45C47, 0xBB03A56AA33F6432}, Text: "item.CameraOptions"},   // 7gmr57qbf4cj3vq0x5ebjmyt1k
-	ItemAtmosphere:    tag.Name{ID: tag.UID{0x8718C93E8B1E2B4C, 0xB09A9629ED2B9B9B}, Text: "item.AtmosphereSpec"},  // 47334mx2sy5e6c16nq57qkr6wv
-	GlyphTag:          tag.Name{ID: tag.UID{0x06C02A2A38C49776, 0x72F2BE4813F9D331}, Text: "item.glyph"},           // 06s0p2nf64kxv75wpy909zmntj
-	TileAttr:          tag.Name{ID: tag.UID{0xBF3216B40F0EE8E3, 0x9E0C1A4B0E2789C8}, Text: "item.tile"},            // 5z68cc83sfx3jtw30u9d72g2f8
-
-	TileLayout: tag.Name{ID: tag.UID{0xB7D616ECEEBEB769, 0x3CF2E7E8D9F68B2F}, Text: "item.tile.layout"}, // 5ruscftvpyqxnmtwr7x3dze2tg
-	ItemSeries: tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Text: "item.series"},      // 34gdqg3rws34egz178n0bwgh5v
+	ItemLabel:         tag.Name{ID: tag.UID{0xF02E86C443B0CC5E, 0xBD0EB67840F71680}, Text: "item.text.label.Tag"},      // 7h5u3d8hxhtjgcu3pqg10gf5n0
+	ItemCaption:       tag.Name{ID: tag.UID{0x05D0FD10FDF9905E, 0x704796E74A32F7B6}, Text: "item.text.caption.Tag"},    // 05u3yj1zgtk1g70jwqwx535xxq
+	ItemCollection:    tag.Name{ID: tag.UID{0x0A3AA899D5279D78, 0xA3678ECDB5E2E4CC}, Text: "item.text.collection.Tag"}, // 0b7bn9mp97mpwb6twftquy5t6d
+	ItemSynopsis:      tag.Name{ID: tag.UID{0xA2F11E66566E2EE1, 0x631CF283FA7B3173}, Text: "item.text.synopsis.Tag"},   // 52y4g6dpmf5vhq677khgx7qdcm
+	ItemFileInfo:      tag.Name{ID: tag.UID{0x37F1C92B7B61AFDE, 0x319025BC546E254F}, Text: "item.FileInfo"},            // 1ry74kqyv1pzg33415rjb6w9bg
+	ItemBehaviors:     tag.Name{ID: tag.UID{0x9B7A8FB1F44DCCD9, 0xFD513A52A6D1C0A6}, Text: "item.behaviors.Tags"},      // 4vgb7v3x2etmdzun9ubbme3h56
+	ItemGlyphs:        tag.Name{ID: tag.UID{0x2193FA68B12BFE25, 0x55BF4085B9819FAD}, Text: "item.glyphs.Tags"},         // 11kgx6jd9czskpcgu0hqws37xe
+	ItemLinks:         tag.Name{ID: tag.UID{0x551458A1B9F8478D, 0xD97A4BC2495B2AE3}, Text: "item.links.Tags"},          // 2p2jdb3fgs8y6xkykcs94pqbr3
+	ItemCameraState:   tag.Name{ID: tag.UID{0x18E764034A5B20FD, 0x53FEC933E18782D4}, Text: "item.CameraState"},         // 0swxk06kkv43yp7zq96ghsg0qn
+	ItemCameraOptions: tag.Name{ID: tag.UID{0xEF9DCA7B29C45C47, 0xBB03A56AA33F6432}, Text: "item.CameraOptions"},       // 7gmr57qbf4cj3vq0x5ebjmyt1k
+	ItemAtmosphere:    tag.Name{ID: tag.UID{0x8718C93E8B1E2B4C, 0xB09A9629ED2B9B9B}, Text: "item.AtmosphereSpec"},      // 47334mx2sy5e6c16nq57qkr6wv
+	TileAttr:          tag.Name{ID: tag.UID{0xBF3216B40F0EE8E3, 0x9E0C1A4B0E2789C8}, Text: "item.tile"},                // 5z68cc83sfx3jtw30u9d72g2f8
+	ItemSeries:        tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Text: "item.series"},              // 34gdqg3rws34egz178n0bwgh5v
 
 	SeriesTRS:      tag.Name{ID: tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, Text: "item.series.TRS"},            // 3cxm3sbf4f7qg2c5dg5mqe00hu
 	SeriesLabels:   tag.Name{ID: tag.UID{0x64DF54E7607F2F0E, 0xE02A46D568115245}, Text: "item.series.Labels"},         // 34vxbffs3z5w7f0bk6upn12nk5
-	SeriesAssetTag: tag.Name{ID: tag.UID{0xE6CBD611A5D8F2B4, 0x7225242754FEEF84}, Text: "item.series.asset"},          // 76tgc139fsybu749944xbgxvw4
-	SeriesHeadLink: tag.Name{ID: tag.UID{0x7C5BCE2FA99EDEF1, 0x7CCD5E2480849265}, Text: "item.series.link"},           // 3wcg72zbdyvvsrtmby4k0894m5
+	SeriesAssetTag: tag.Name{ID: tag.UID{0x38365DC6227700FB, 0x39ACAA81B253C797}, Text: "item.series.asset.Tag"},      // 1s6tfwd8mr03xmmc5bh6t57jwr
+	SeriesHeadLink: tag.Name{ID: tag.UID{0x1F851D40FE1D382B, 0x5521D97B38F0236C}, Text: "item.series.link.Tag"},       // 0zhnfn1zhx70ppb8ftgdwg08vd
 	SeriesLinkTree: tag.Name{ID: tag.UID{0x5B51B3B938C3C87F, 0xB429C4C1470DD710}, Text: "item.series.link.tree.Tags"}, // 2vb6tvkf63t1zv8bf4s53hvpsh
-	SeriesS2R:      tag.Name{ID: tag.UID{0xD2A50441318749C3, 0x0420EAA0456C39F9}, Text: "item.series.s2.r.mm"},        // 6knn242dd7971h887bn12qsfgt
-	SeriesS2T:      tag.Name{ID: tag.UID{0x749CA29A38DAA5BF, 0x7139081806CBF2C5}, Text: "item.series.s2.utc64"},       // 3nmkj9nf6unqzr2f88303drwq5
-	MediaLink:      tag.Name{ID: tag.UID{0x3976FD2CE678D479, 0xBE23FCEE0CAACDF9}, Text: "item.media.link"},            // 1tfvykttmsujwvw8zwxs6bpmgt
-	MediaRelease:   tag.Name{ID: tag.UID{0x6C5BC935E454FEC6, 0x6F4F5F1B04975D0E}, Text: "item.media.release"},         // 3dcg4mct2nzv36ymuz3d29fr8f
+	SeriesS2R:      tag.Name{ID: tag.UID{0x0C89F9B0717A62A5, 0x79AA41CD3FA29CDD}, Text: "item.series.S2.radius.mm"},   // 0dj7wv0wcudbkrmbk1tnzu576x
+	SeriesS2T:      tag.Name{ID: tag.UID{0x749CA29A38DAA5BF, 0x7139081806CBF2C5}, Text: "item.series.S2.UTC64"},       // 3nmkj9nf6unqzr2f88303drwq5
+	MediaLink:      tag.Name{ID: tag.UID{0x4DED4FC2D91C296A, 0x44D348001E677047}, Text: "item.media.link.Tag"},        // 2exp7w5q8w55p49nu800g6fw27
+	MediaRelease:   tag.Name{ID: tag.UID{0x04F90C9DAC8B3A0C, 0x33799CAE0C2BCE31}, Text: "item.media.release.Tag"},     // 04z469vc4c78636ydwps62rmjj
 	MediaInfo:      tag.Name{ID: tag.UID{0x9C7620B0D5488458, 0xDD6F3D4B07305E88}, Text: "item.MediaInfo"},             // 4wfshc1pb8hjdeuvtx9d3m0rn8
 
 	// ─── Channel metadata and catalog ───────────────────────────────
@@ -236,7 +225,7 @@ var Attr = struct {
 	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.terminal"},     // 52nz89dr5zw7120g6rzq8mekvv
 
 	// ─── Brand — substrate-native planet identity (AOM DD-name-service.md §2). ───
-	// Single item per planet at (HeadNodeID, amp.brand, amp.brand.UID); the genesis
+	// Single item per planet at (HeadNodeID, amp.Brand, its own UID); the genesis
 	// TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
 	Brand: tag.Name{ID: tag.UID{0xB70889689791764B, 0xB554FC786AE221AE}, Text: "amp.Brand"}, // 5r124qj5wjft5vbp7wg1pf48ef
 
@@ -246,19 +235,19 @@ var Attr = struct {
 	// Generalized beyond planet naming — any UID-bearing entity is namable.
 	NameService: tag.Name{ID: tag.UID{0xB363152A99B543E3, 0x44B6A07DD731D29D}, Text: "amp.name.service"}, // 5mddbkp6ep8gjn9ep0grcm3nnx
 
-	NameServiceRecord: tag.Name{ID: tag.UID{0x46F3C16F52B61C22, 0x7C5C870E89180A36}, Text: "amp.name.service.record"}, // 26yg0qynpq3hj7sr471u4jh2jq
+	NameServiceRecord: tag.Name{ID: tag.UID{0x6E05972FB0B532A2, 0xB69FF72616AB00CC}, Text: "amp.name.service.NameServiceRecord"}, // 3f0qckzd5p6bjce7zr4scbq06d
 
 	// ─── Invite governance — policy + redemption ledger for governed multi-use invites ───
 	// (app.invite).  Policies live at (PlanetInvites, PlanetInvitePolicy, inviteID);
 	// each invite's ledger at (inviteID, PlanetInviteRedemption, RedeemedAt NowID).
 	PlanetInvites: tag.Name{ID: tag.UID{0x5402ED235E2EB7C4, 0xB00FB2AE73715FDA}, Text: "amp.planet.invites"}, // 2n0cqk6rjfqz2c03xkpttr2ryu
 
-	PlanetInvitePolicy:     tag.Name{ID: tag.UID{0x51E016640771A6BF, 0x8E46E8E8FE0D7A26}, Text: "amp.planet.invites.policy"},     // 2jw0c681vjnuzswjr8x3z0uyj6
-	PlanetInviteRedemption: tag.Name{ID: tag.UID{0xFF2E48158678787E, 0x9A7A2A10F4F9281F}, Text: "amp.planet.invites.redemption"}, // 7z5t41c1msg1z9nyjb23ugkb0z
+	PlanetInvitePolicy:     tag.Name{ID: tag.UID{0x35006E57AE1732A7, 0xD6B3A48D909DCD7B}, Text: "amp.planet.invites.PlanetInvitePolicy"},     // 1p01r5gchr6bmxedx4jq89vmcv
+	PlanetInviteRedemption: tag.Name{ID: tag.UID{0x8F5FB55B7D431CAC, 0x9764F863FE96B27C}, Text: "amp.planet.invites.PlanetInviteRedemption"}, // 4gcyupqzb33kq9ft7sdgz9edmw
 
 	// ─── Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.3). ───
 	// NS-record-style cross-federation forwarding without DNS dependency.
-	FederationDirectory: tag.Name{ID: tag.UID{0x9D75EA0B352ABCF1, 0xE8235D89C9A7D3F9}, Text: "amp.federation.directory"}, // 4xfrp0qe9brmsyh8uxj74ugnzt
+	FederationDirectory: tag.Name{ID: tag.UID{0x789DCD00BF6F38E2, 0x57A509477C47DA43}, Text: "amp.FederationDirectory"}, // 3smr6h1gvg73j5g9898xy4gqk3
 
 	// ─── Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate). ───
 	// "Law" names the role concretely: this channel grants, revises, and revokes
@@ -329,7 +318,7 @@ var Attr = struct {
 	// ─── Home planet attributes ─────────────────────────────────────
 	HomeAttr: tag.Name{ID: tag.UID{0x45A5C59F62D1113F, 0x73AEED98C41EFBFA}, Text: "amp.home"}, // 25nr2tysqj24zr7crem321xyzu
 
-	PlanetBinding:     tag.Name{ID: tag.UID{0x5388DF50C7C8FFC8, 0x75657739E44998B2}, Text: "amp.home.planet.binding"},                   // 2mj3gp1jy8zz47btcr77k4m65k
+	PlanetBinding:     tag.Name{ID: tag.UID{0xD1107652908E11D6, 0x1B2B3BC082553787}, Text: "amp.home.planet.binding.Tag"},               // 6j21v5544f27c1qbtvs215bew7
 	PlanetStorageOpts: tag.Name{ID: tag.UID{0x69BFD182C13A9A31, 0xF66973A8296693D5}, Text: "amp.home.planet.storage.PlanetStorageOpts"}, // 39rz8s5h9um8szducmp0nqe4yp
 
 	// ─── System properties ──────────────────────────────────────────
@@ -342,7 +331,7 @@ var Attr = struct {
 	// ─── Blob storage ───────────────────────────────────────────────
 	BlobAttr: tag.Name{ID: tag.UID{0x43839888952F19F9, 0xB576A64453AD2634}, Text: "amp.blob"}, // 23hfd8j59g37wvbxp68j9uu9jn
 
-	BlobRef:   tag.Name{ID: tag.UID{0xAEE1E83EB38BBF5D, 0x17C1EF094E5F4850}, Text: "amp.blob.ref"},          // 5fw7n3xdwcrxfjghgg1575yk2h
+	BlobRef:   tag.Name{ID: tag.UID{0xF390C57CD7C15B45, 0x13F1CF7F07D7A047}, Text: "amp.blob.BlobRef"},      // 7mk32rtpy1ce2j7wfggw3xg827
 	NodeBlobs: tag.Name{ID: tag.UID{0xAD0BA6086B8A5202, 0xB15FFA7352307DEF}, Text: "amp.blob.node.BlobRef"}, // 5e1fm0huwbb81c2rzufe930zgg
 
 	// ─── Tile-server registry — list of available raster / terrain / vector ───
