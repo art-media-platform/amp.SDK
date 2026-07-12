@@ -4,7 +4,7 @@ The **amp-web-SDK** TypeScript client — React hooks + a backend adapter for
 building web apps on [art.media.platform](https://github.com/art-media-platform).
 Talks the `ampd` `app.www` wire contract — defined in
 [`amp.SDK/amp/webapi`](https://github.com/art-media-platform/amp.SDK/tree/main/amp/webapi),
-and copied into this SDK bundle at [`webapi/webapi.types.go`](webapi/webapi.types.go).
+and copied into this SDK bundle at `webapi/webapi.types.go`.
 
 > **Beta.** Distributed in the `amp-web-SDK` bundle — not yet on npm.
 > Get the latest from your amp contact, or build it from an `amp.SDK`
@@ -159,8 +159,8 @@ against an operated node.
 
 `npm test` (inside `amp-web-SDK/`, after `npm install`) runs the SDK's own
 suite, including the wire-contract drift guard against the golden fixtures
-shipped in [`webapi/testdata/`](webapi/testdata/) — no server needed.
-`webapi/webapi.types.go` is the wire contract those fixtures pin.
+shipped in `webapi/testdata/` (repo: `amp/webapi/testdata/`) — no server
+needed. `webapi/webapi.types.go` is the wire contract those fixtures pin.
 
 ## Full API reference
 
