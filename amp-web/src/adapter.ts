@@ -14,6 +14,10 @@ import type {
   BlobRef,
   InviteAcceptOpts,
   InviteAcceptResult,
+  InviteIssueOpts,
+  InviteIssueResult,
+  InviteListResult,
+  InviteRevokeOpts,
   LoginCredentials,
   SubscriptionEvent,
   TagResolution,
@@ -96,9 +100,20 @@ export interface AmpAdapter {
   mediaUrl(blobUID: string): string;
 
   // ── Federation invites ────────────────────────────────────────────
+  // Member-session tier (planet-admin Bearer for issue/revoke/list) — NOT the
+  // operator tier, which deliberately has no client binding (SKILL §12).
+
+  /** Mint a sealed invite on a planet the session administers (SKILL §4.7). */
+  issueInvite(opts: InviteIssueOpts): Promise<InviteIssueResult>;
 
   /** Redeem a sealed invite (universal URL or bare amp-base32 body) to join its federation planet (Bearer; see SKILL §4.7). */
   acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult>;
+
+  /** Terminally revoke an invite policy (reissue rather than re-arm). */
+  revokeInvite(opts: InviteRevokeOpts): Promise<void>;
+
+  /** A planet's invite policies with their rank-adjudicated redemption state. */
+  listInvites(planet: string): Promise<InviteListResult>;
 
   // ── Subscriptions ─────────────────────────────────────────────────
 

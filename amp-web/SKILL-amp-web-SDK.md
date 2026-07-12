@@ -573,7 +573,7 @@ const { data, loading, hasMore, loadMore, refetch } =
   });
 ```
 
-The hook subscribes via WebSocket automatically and re-renders on updates. `data[i]` carries `ItemMeta` fields underscore-prefixed. Options are `itemID` (single-item read), `limit`/`after` (the server-enforced ItemID pagination window), and `planetTag` (per-call planet, overriding the constructor default).
+The hook subscribes via WebSocket automatically and re-renders on updates — **once a session exists**: the WS connects on login, so an anonymous client's reads are one-shot fetches with no live updates (refetch to observe changes). `data[i]` carries `ItemMeta` fields underscore-prefixed. Options are `itemID` (single-item read), `limit`/`after` (the server-enforced ItemID pagination window), and `planetTag` (per-call planet, overriding the constructor default).
 
 #### Address, don't filter
 
@@ -638,12 +638,21 @@ await upsert('projects', 'media', blobRef.UID, {
 });
 ```
 
+`progress` is a completion signal (0 while in flight, 100 on success), not a
+streamed byte percentage — the upload rides `fetch`, which exposes no upload
+progress events. Gate spinners on `uploading`.
+
 ### 5.5 `useAmpMedia()`
 
 ```tsx
-const { url, loading, contentType, byteSize } = useAmpMedia(blobUID);
+const { url, loading, contentType, byteSize } = useAmpMedia(blobUID, planetTag?);
 // url is /www/{UID}; pass to <img>, <video>, <audio>, or download <a>
 ```
+
+Resolves via `POST /api/v1/media/resolve` (`client.resolveMedia(blob,
+planetTag?)`); when resolve fails it falls back to the direct `/www/{UID}`
+URL — `error` stays null, and a truly missing blob surfaces on the media
+element, not the hook.
 
 ### 5.6 Sealed-box helpers (§6.2)
 
@@ -1357,7 +1366,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy, not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **Admin surface that exists today:** `POST /api/v1/admin/credentials/email/issue` (Bearer + the operator admin allowlist — operator-side gating config, §10) mints an email-scheme member and returns `{ MemberID, Email }`. This is what a Stripe webhook calls server-side to provision a paying customer. Sealed invites ride the same membership surface: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **The operator tier** (`POST /api/v1/admin/*`, Bearer + the operator admin allowlist — operator-side gating config, §10) is four verbs: `planet/create`, `planet/brand`, `forums/reserve`, and `credentials/email/issue` (mints an email-scheme member, returns `{ MemberID, Email }` — what a Stripe webhook calls server-side to provision a paying customer). None has an SDK client method, deliberately (§12); the wire shapes live in `webapi/webapi.types.go` under the `operator-go-only` drift manifest. Sealed invites are the *member-session* surface instead: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability

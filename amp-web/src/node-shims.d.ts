@@ -4,6 +4,7 @@
 // silently depend on node globals like Buffer/process — the live tests already cast
 // globalThis for process.env to keep node out of the public types).
 declare module 'node:fs' {
+  export function existsSync(path: string): boolean;
   export function readFileSync(path: string, encoding: string): string;
   export function readdirSync(
     path: string,

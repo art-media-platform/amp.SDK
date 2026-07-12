@@ -69,7 +69,8 @@ function App() {
   );
 }
 
-// 3. Use hooks (reads auto-subscribe over WebSocket).
+// 3. Use hooks (logged-in reads auto-subscribe over WebSocket;
+//    anonymous reads are one-shot fetches — no live updates without a session).
 function Labels() {
   const { data, loading } = useAmpQuery<{ title: string }>('projects', 'labels');
   const { create } = useAmpMutation();
@@ -121,18 +122,20 @@ Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.a
 |------|---------|
 | `useAmpAuth()` | Login, logout, auth state |
 | `useAmpClient()` | The adapter for imperative calls — login challenges, `resolveTag`, ad-hoc `query` |
-| `useAmpQuery<T>(channel, attr, opts?)` | Read items + live WebSocket subscription |
+| `useAmpQuery<T>(channel, attr, opts?)` | Read items + live WebSocket subscription (live once logged in) |
 | `useAmpMutation()` | `tx` (batched), `invoke` (verb-RPC), `create`, `upsert`, `remove`, `withdraw` |
-| `useAmpUpload()` | Blob upload with progress |
-| `useAmpMedia(blobUID)` | Resolve a blob to a streamable URL |
+| `useAmpUpload()` | Blob upload; `progress` signals completion (0 → 100), not streamed percent |
+| `useAmpMedia(blobUID, planetTag?)` | Resolve a blob to a streamable URL |
 | `useAmpCrypto()` | Sealed-box BYOK — `seal` / `open` against the session EncryptKey |
 
 The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
 `create` / `upsert` / `remove` / `withdraw` are single-op convenience wrappers.
 
-**Error convention:** read hooks (`useAmpQuery` / `useAmpMedia`) surface failures via
-`error` state; action hooks (`useAmpMutation` / `useAmpUpload`) set `error` **and**
-throw, so you can `try/catch` an awaited call.
+**Error convention:** `useAmpQuery` surfaces failures via `error` state; action
+hooks (`useAmpMutation` / `useAmpUpload`) set `error` **and** throw, so you can
+`try/catch` an awaited call. `useAmpMedia` is the exception: a failed resolve
+falls back to the direct `/www/{UID}` stream URL and its `error` stays null —
+a truly missing blob surfaces on the media element, not the hook.
 
 ## Canonic Names → tag.UIDs
 
