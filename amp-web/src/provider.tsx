@@ -1,6 +1,7 @@
 /**
  * AmpProvider — React context provider; inject your AmpWebClient (or any
- * AmpAdapter) via the `client` prop.
+ * AmpAdapter) via the `client` prop.  On mount it rehydrates a persisted
+ * session (adapter.restoreSession) so a page reload lands authenticated.
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -10,6 +11,8 @@ import type { AmpMember } from './types.js';
 interface AmpContextValue {
   adapter: AmpAdapter;
   member: AmpMember | null;
+  /** True while the initial restoreSession() pass is in flight. */
+  restoring: boolean;
   setMember: (member: AmpMember | null) => void;
 }
 
@@ -22,13 +25,21 @@ export interface AmpProviderProps {
 
 export function AmpProvider({ client, children }: AmpProviderProps) {
   const [member, setMember] = useState<AmpMember | null>(() => client.getSession());
+  const [restoring, setRestoring] = useState<boolean>(() => client.getSession() === null);
 
   useEffect(() => {
-    return client.onAuthChange(setMember);
+    const unsubscribe = client.onAuthChange(setMember);
+    // Rehydrate a persisted session — onAuthChange delivers the member.  A
+    // transport failure just ends the restoring state signed-out; the
+    // persisted record survives for the next load (see restoreSession).
+    client.restoreSession()
+      .catch(() => null)
+      .finally(() => setRestoring(false));
+    return unsubscribe;
   }, [client]);
 
   return (
-    <AmpContext.Provider value={{ adapter: client, member, setMember }}>
+    <AmpContext.Provider value={{ adapter: client, member, restoring, setMember }}>
       {children}
     </AmpContext.Provider>
   );

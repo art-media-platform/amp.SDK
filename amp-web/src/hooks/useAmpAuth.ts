@@ -3,7 +3,7 @@ import { useAmpContext } from '../provider.js';
 import type { AmpAuth, LoginCredentials } from '../types.js';
 
 export function useAmpAuth(): AmpAuth {
-  const { adapter, member } = useAmpContext();
+  const { adapter, member, restoring } = useAmpContext();
   const [loading, setLoading] = useState(false);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
@@ -29,7 +29,10 @@ export function useAmpAuth(): AmpAuth {
   return {
     member,
     isAuthenticated: member !== null,
-    loading,
+    // `loading` folds in the initial session restore, so an existing
+    // "if (loading) show spinner" gate is reload-flash-free with no change.
+    loading: loading || restoring,
+    restoring,
     login,
     logout,
   };

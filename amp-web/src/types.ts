@@ -54,10 +54,19 @@ export interface WalletChallenge {
   ExpiresAt?: number;   // unix seconds — when the challenge nonce expires (server-set)
 }
 
+/** The host-validated session — body of GET /api/v1/session (webapi.SessionResponse). */
+export interface AmpSession {
+  Member: AmpMember;
+  ExpiresAt: number;     // unix seconds
+}
+
 export interface AmpAuth {
   member: AmpMember | null;
   isAuthenticated: boolean;
+  /** True while a login/logout call OR the initial session restore is in flight. */
   loading: boolean;
+  /** True only during the initial restoreSession() pass — gate the login screen on this to avoid a signed-out flash on reload. */
+  restoring: boolean;
   login: (credentials: LoginCredentials) => Promise<AmpMember>;
   logout: () => Promise<void>;
 }

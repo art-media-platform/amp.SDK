@@ -21,10 +21,16 @@ import {
   resolveDeviceEncryptKey,
 } from './crypto/keystore.js';
 import type { AmpCrypto, KeyPair, PubKeyRef } from './crypto/types.js';
+import {
+  type SessionStore,
+  type StoredSession,
+  defaultSessionStore,
+} from './session-store.js';
 import type {
   AmpItemMeta,
   AmpMember,
   AmpQueryOpts,
+  AmpSession,
   BlobRef,
   InviteIssueOpts,
   InviteIssueResult,
@@ -54,6 +60,14 @@ export interface AmpWebClientOpts {
    * Inject a custom store (e.g. an OS keychain bridge) to override.
    */
   encryptKeyStorage?: EncryptKeyStorage;
+
+  /**
+   * Where the session (Bearer + member) persists so a reload rehydrates via
+   * restoreSession().  Defaults to IndexedDB in the browser and an in-memory
+   * store elsewhere.  Inject a custom store to override, or MemorySessionStore
+   * to opt out of durable sessions entirely.
+   */
+  sessionStore?: SessionStore;
 }
 
 /** The wire Item shape returned by list/read endpoints (webapi.Item). */
@@ -77,12 +91,15 @@ export class AmpWebClient implements AmpAdapter {
   private wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private crypto: AmpCrypto = createAmpCrypto();
   private keyStorage: EncryptKeyStorage;
+  private sessionStore: SessionStore;
+  private restorePromise: Promise<AmpMember | null> | null = null;
   private embed: EmbedBridge | null = null;
 
   constructor(opts: AmpWebClientOpts) {
     this.vaultUrl = opts.vaultUrl.replace(/\/$/, '');
     this.planetTag = opts.planetTag;
     this.keyStorage = opts.encryptKeyStorage ?? defaultEncryptKeyStorage();
+    this.sessionStore = opts.sessionStore ?? defaultSessionStore();
     // Pick up the host-injected embed context: in the Unity host, window.__amp advertises the
     // verbs it handles natively and carries the SSO memberToken (AD-app-forums.md §6.4).
     this.embed = (typeof window !== 'undefined' && window.__amp?.embed) ? new EmbedBridge(window.__amp) : null;
@@ -108,6 +125,13 @@ export class AmpWebClient implements AmpAdapter {
       headers: { ...this.headers(), ...(init?.headers as Record<string, string> ?? {}) },
     });
     if (!resp.ok) {
+      // A 401 outside the login surface means the host expired/revoked the
+      // session — drop the local session so the app lands signed-out; the
+      // typed AmpError still reaches the caller.  (A 401 from /login is a
+      // failed credential attempt and must not clobber a live session.)
+      if (resp.status === 401 && this.sessionToken && !path.startsWith('/login')) {
+        void this.dropSession();
+      }
       throw await ampErrorFromResponse(resp);
     }
     if (resp.status === 204) return undefined as T;
@@ -176,6 +200,15 @@ export class AmpWebClient implements AmpAdapter {
       PlanetID: data.Member.PlanetID || this.planetTag,
     };
 
+    // Persist the session so a reload rehydrates via restoreSession().
+    // Best-effort: a storage failure leaves the session in-memory only
+    // rather than failing the login.
+    await this.sessionStore.save(this.vaultUrl, {
+      SessionToken: data.SessionToken,
+      ExpiresAt: data.ExpiresAt,
+      Member: this.member,
+    }).catch(() => {});
+
     // Install the member's device-local EncryptKey so seal/open work without
     // an out-of-band setEncryptKey call.  Best-effort: a storage failure leaves
     // BYOK uninstalled (seal/open then throw a clear "no EncryptKey" error)
@@ -185,6 +218,85 @@ export class AmpWebClient implements AmpAdapter {
     this.authListeners.forEach(cb => cb(this.member));
     this.connectWs();
     return this.member;
+  }
+
+  /**
+   * Rehydrate a persisted session on a fresh load: read the stored token,
+   * re-validate it against GET /api/v1/session, and restore the authed client
+   * (member, device EncryptKey, WebSocket) — the reload path for an SPA.
+   * Resolves null when nothing usable is stored or the host rejects the token
+   * (the stale record is cleared).  A transport failure rethrows and leaves
+   * the record in place for the next attempt, so a flaky network never signs
+   * the member out.  Concurrent calls share one in-flight validation.
+   */
+  restoreSession(): Promise<AmpMember | null> {
+    if (this.member) {
+      return Promise.resolve(this.member);
+    }
+    if (!this.restorePromise) {
+      this.restorePromise = this.restoreSessionNow().finally(() => {
+        this.restorePromise = null;
+      });
+    }
+    return this.restorePromise;
+  }
+
+  private async restoreSessionNow(): Promise<AmpMember | null> {
+    let stored: StoredSession | null = null;
+    try {
+      stored = await this.sessionStore.load(this.vaultUrl);
+    } catch {
+      return null;   // unreadable storage = no persisted session
+    }
+    if (!stored?.SessionToken) {
+      return null;
+    }
+    if (stored.ExpiresAt > 0 && stored.ExpiresAt * 1000 <= Date.now()) {
+      await this.sessionStore.clear(this.vaultUrl).catch(() => {});
+      return null;
+    }
+
+    this.sessionToken = stored.SessionToken;
+    let sess: AmpSession;
+    try {
+      sess = await this.fetchSession();
+    } catch (err) {
+      if (err instanceof AmpError && (err.status === 401 || err.status === 403)) {
+        // Rejected token: apiFetch already dropped on 401; cover 403 too.
+        if (this.sessionToken) {
+          await this.dropSession();
+        }
+        return null;
+      }
+      this.sessionToken = null;
+      throw err;
+    }
+
+    this.member = {
+      ...sess.Member,
+      PlanetID: sess.Member.PlanetID || this.planetTag,
+    };
+    // Re-save so the record carries the host's current member + expiry.
+    await this.sessionStore.save(this.vaultUrl, {
+      SessionToken: stored.SessionToken,
+      ExpiresAt: sess.ExpiresAt,
+      Member: this.member,
+    }).catch(() => {});
+    await this.installDeviceEncryptKey(this.member.ID);
+
+    this.authListeners.forEach(cb => cb(this.member));
+    this.connectWs();
+    return this.member;
+  }
+
+  /** GET /api/v1/session — the host-validated session (Member + ExpiresAt).  AmpError(401) when none is bound. */
+  fetchSession(): Promise<AmpSession> {
+    return this.apiFetch<AmpSession>('/session');
+  }
+
+  /** GET /api/v1/me — the authenticated member's record.  AmpError(401) when unauthenticated. */
+  me(): Promise<AmpMember> {
+    return this.apiFetch<AmpMember>('/me');
   }
 
   /**
@@ -209,17 +321,28 @@ export class AmpWebClient implements AmpAdapter {
     // Clear local secrets FIRST — a slow/hung /logout must not leave the Bearer
     // and the in-memory device key resident for the round-trip.
     const token = this.sessionToken;
-    this.sessionToken = null;
-    this.member = null;
-    this.crypto.setEncryptKey(null);
-    this.disconnectWs();
-    this.authListeners.forEach(cb => cb(null));
+    await this.dropSession();
     if (token) {
       await fetch(this.apiUrl('/logout'), {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => {});
     }
+  }
+
+  /**
+   * Drop the local session: in-memory secrets synchronously (token, member,
+   * device EncryptKey, WebSocket), then the persisted record; notify listeners.
+   * The one authoritative clear path — logout and 401 handling both land here.
+   */
+  private dropSession(): Promise<void> {
+    this.sessionToken = null;
+    this.member = null;
+    this.crypto.setEncryptKey(null);
+    this.disconnectWs();
+    const cleared = this.sessionStore.clear(this.vaultUrl).catch(() => {});
+    this.authListeners.forEach(cb => cb(null));
+    return cleared;
   }
 
   getSession(): AmpMember | null {
@@ -357,6 +480,9 @@ export class AmpWebClient implements AmpAdapter {
 
     const resp = await fetch(this.apiUrl('/upload'), { method: 'POST', headers: hdrs, body: form });
     if (!resp.ok) {
+      if (resp.status === 401 && this.sessionToken) {
+        void this.dropSession();   // expired session — same policy as apiFetch
+      }
       throw await ampErrorFromResponse(resp);
     }
     opts?.onProgress?.(100);

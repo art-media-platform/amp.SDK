@@ -16,6 +16,7 @@ export type {
   AmpMutationResult,
   AmpQueryOpts,
   AmpQueryResult,
+  AmpSession,
   AmpUploadResult,
   Address,
   BlobRef,
@@ -72,6 +73,15 @@ export {
   resolveDeviceEncryptKey,
 } from './crypto/keystore.js';
 export type { EncryptKeyStorage } from './crypto/keystore.js';
+
+// Durable session storage (auto-managed on login; restoreSession() rehydrates
+// on reload; override via AmpWebClientOpts.sessionStore to customize)
+export {
+  IndexedDBSessionStore,
+  MemorySessionStore,
+  defaultSessionStore,
+} from './session-store.js';
+export type { SessionStore, StoredSession } from './session-store.js';
 
 // Card / WebRect bridge (window.amp) — types for card authors; the host (Unity
 // WebView / browser shim) injects the implementation.  Importing the package

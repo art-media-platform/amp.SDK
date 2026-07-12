@@ -10,6 +10,7 @@ import type {
   AmpItemMeta,
   AmpMember,
   AmpQueryOpts,
+  AmpSession,
   BlobRef,
   InviteAcceptOpts,
   InviteAcceptResult,
@@ -28,7 +29,22 @@ export interface AmpAdapter {
 
   login(credentials: LoginCredentials): Promise<AmpMember>;
   logout(): Promise<void>;
+
+  /** The locally-held member (sync, no I/O) — null on a fresh load until restoreSession(). */
   getSession(): AmpMember | null;
+
+  /**
+   * Rehydrate a persisted session on a fresh load, re-validated against the
+   * host; resolves the member, or null when signed out (AmpProvider calls
+   * this on mount so a reload lands authenticated).
+   */
+  restoreSession(): Promise<AmpMember | null>;
+
+  /** GET /api/v1/session — host-validated session state.  AmpError(401) when none is bound. */
+  fetchSession(): Promise<AmpSession>;
+
+  /** GET /api/v1/me — the authenticated member's record.  AmpError(401) when unauthenticated. */
+  me(): Promise<AmpMember>;
 
   /** Subscribe to auth state changes; returns unsubscribe function. */
   onAuthChange(callback: (member: AmpMember | null) => void): () => void;
