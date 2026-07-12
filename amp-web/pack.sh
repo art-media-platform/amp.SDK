@@ -62,6 +62,7 @@ node -e 'const fs=require("fs"),p=process.argv[1],v=process.argv[2];
 cp -R src     "$STAGE/src"
 cp -R dist    "$STAGE/dist"
 cp -R scripts "$STAGE/scripts"
+cp -R docs    "$STAGE/docs"
 
 # 3. Copy the canonical wire contract (the public source of truth) plus its
 #    golden fixtures, so the bundle's own drift guard (`npm test`,

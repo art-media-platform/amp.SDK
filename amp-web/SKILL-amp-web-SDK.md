@@ -20,7 +20,8 @@ stop — wrong path. Your whole footprint is one TypeScript package + HTTPS call
 - **Your server already exists.** You connect over HTTPS to an `ampd` node an
   **operator runs for you** — you do not run, build, or host one. For Maplable that
   node is **`https://prod.plan.tools`**. (`:5193`, seen elsewhere in this doc, is
-  only the local-dev default; an operated node is plain TLS on 443.)
+  only the local-dev default; an operated node is plain TLS on 443.) Where your
+  node and planet come from: [`docs/get-a-backend.md`](docs/get-a-backend.md).
 - **First goal — one round-trip:** log in → write one item → read it back (~20
   lines, below). If that round-trips, you're talking to the vault and the rest of
   this document is detail.
@@ -536,7 +537,7 @@ EncryptKey, WebSocket. No SPA-side code needed. The moving parts:
 
 > Imperative calls below — `getWalletChallenge`, `getDIDChallenge`, `resolveTag` — live on the adapter. Get it in any component with `const client = useAmpClient();`.
 
-**Wallet sign-in (SIWE + multi-wallet).** The `'wallet'` scheme is **EIP-4361 (Sign-In with Ethereum)** over any EVM wallet. Discover the user's wallet(s) with **EIP-6963** so the picker shows each by name + icon — the brand lives in the UI, never on the wire (MetaMask, Coinbase, Rainbow, … all flow through the same `personal_sign`):
+**Wallet sign-in (SIWE + multi-wallet).** The `'wallet'` scheme is **EIP-4361 (Sign-In with Ethereum)** over any EVM wallet — primer + a drop-in `useWalletLogin()` hook: [`docs/siwe-primer.md`](docs/siwe-primer.md). Discover the user's wallet(s) with **EIP-6963** so the picker shows each by name + icon — the brand lives in the UI, never on the wire (MetaMask, Coinbase, Rainbow, … all flow through the same `personal_sign`):
 
 ```tsx
 const client    = useAmpClient();   // adapter for the challenge fetch below

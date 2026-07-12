@@ -166,19 +166,25 @@ shipped in [`webapi/testdata/`](webapi/testdata/) — no server needed.
 - **[`SECURITY-amp-web-SDK.md`](SECURITY-amp-web-SDK.md)** — the security model a
   consumer relies on (encryption, identity, what a vault can and cannot see).
 
+## Onboarding Docs
+
+Shipped in [`docs/`](docs/) — read in this order when starting cold:
+
+- **[`docs/get-a-backend.md`](docs/get-a-backend.md)** — where your `ampd` node and planet come from (the question everything else assumes answered).
+- **[`docs/concepts-primer.md`](docs/concepts-primer.md)** — planet → node → attr → item → edit, and what "channel" precisely means.
+- **[`docs/first-channel.md`](docs/first-channel.md)** — from-zero tutorial: login, write, watch it update live.
+- **[`docs/siwe-primer.md`](docs/siwe-primer.md)** — wallet (SIWE) login without the web3 homework, plus a drop-in `useWalletLogin()`.
+- **[`docs/install-troubleshooting.md`](docs/install-troubleshooting.md)** — symptoms + fixes for the known install traps.
+
 ## Design References (AOM)
 
-The distributed bundle ships a small, curated set of design docs from AMP's
-**Operations Manual (AOM)** under [`AOM/`](AOM/) — background reading for deeper
-architectural context. They are **not the contract**: this README,
+The distributed bundle ships a curated set of design docs from AMP's
+**Operations Manual (AOM)** under `AOM/` — background reading for deeper
+architectural context (bundle view only; in the `amp.SDK` repo these live in
+the private `amp.planet`). They are **not the contract**: this README,
 [`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md), and `webapi/webapi.types.go` are.
-Start with the overview, then dip in as questions arise:
-
-- **[`AOM/DD-architecture-overview.md`](AOM/DD-architecture-overview.md)** — *start here*: the whole-stack design tour, written for partners.
-- **[`AOM/SD-content-substrate.md`](AOM/SD-content-substrate.md)** — the data model under channels/attrs: the `tag.UID`, and the `Tag` content tree behind item values.
-- **[`AOM/AD-app-www.md`](AOM/AD-app-www.md)** — `app.www`, the portal your client talks to: auth flow, REST + WebSocket surface, media, cards / WebRect, deep links.
-- **[`AOM/SD-edit-resolution.md`](AOM/SD-edit-resolution.md)** — CRDT concurrent-write semantics: who wins on a conflicting edit, and why both survive.
-- **[`AOM/0-amp-operations-manual.md`](AOM/0-amp-operations-manual.md)** — the AOM index/spine (node-operator oriented; included for orientation).
+**[`docs/aom-index.md`](docs/aom-index.md)** is the reading guide — start at
+`AOM/DD-architecture-overview.md`, then dip in as questions arise.
 
 ## Versioning & Stability
 
