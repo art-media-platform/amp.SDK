@@ -63,33 +63,54 @@ cp -R src     "$STAGE/src"
 cp -R dist    "$STAGE/dist"
 cp -R scripts "$STAGE/scripts"
 
-# 3. Copy the canonical wire contract (the public source of truth).
+# 3. Copy the canonical wire contract (the public source of truth) plus its
+#    golden fixtures, so the bundle's own drift guard (`npm test`,
+#    src/drift.test.ts) runs from the bundle view.
 cp "$SDK/amp/webapi/webapi.types.go" "$STAGE/webapi/webapi.types.go"
+cp -R "$SDK/amp/webapi/testdata" "$STAGE/webapi/testdata"
+
+# 3a. Ship the example app (the reference consumer).  Its file:../.. dependency
+#     resolves to the bundle root in this layout, same as in the repo.
+mkdir -p "$STAGE/examples"
+cp -R examples/forums "$STAGE/examples/forums"
+rm -rf "$STAGE/examples/forums/node_modules" \
+       "$STAGE/examples/forums/dist" \
+       "$STAGE/examples/forums/.env.local"
 
 # 3b. Bundle a curated set of AOM design docs (partner reference; see README
-#     "Design references").  These live in the PRIVATE amp.planet/AOM, so this is a
+#     "Design References").  These live in the PRIVATE amp.planet/AOM, so this is a
 #     reviewed carve-out of the public-inputs-only rule: an explicit allowlist (never
-#     cp -R, so operator/audit docs can't leak), guarded so a public/CI build without
-#     amp.planet still yields a valid bundle (just without these refs).
+#     cp -R, so operator/audit docs can't leak).  A partner bundle is deterministic:
+#     a listed doc that is missing FAILS the build — never warn-and-skip.  A
+#     public/CI build without amp.planet opts out explicitly with AMP_WEB_NO_AOM=1.
 AOM_SRC="$SDK/../amp.planet/AOM"
 AOM_DOCS=(
-  0-amp-operations-manual.md
   DD-architecture-overview.md
+  DD-name-service.md
   SD-content-substrate.md
-  AD-app-www.md
   SD-edit-resolution.md
+  SD-withdrawal-consent.md
+  SD-substrate-agnostic-members.md
+  SD-canonization-spec.md
+  SD-invite-governance.md
+  AD-app-www.md
+  AD-app-forums.md
 )
-if [ -d "$AOM_SRC" ]; then
+if [ -n "${AMP_WEB_NO_AOM:-}" ]; then
+  echo "!!! AMP_WEB_NO_AOM set — bundling without AOM design refs"
+elif [ ! -d "$AOM_SRC" ]; then
+  echo "ERROR: amp.planet/AOM not found at $AOM_SRC — a partner bundle ships the AOM refs." >&2
+  echo "       Set AMP_WEB_NO_AOM=1 to build without them (public/CI build)." >&2
+  exit 1
+else
   mkdir -p "$STAGE/AOM"
   for doc in "${AOM_DOCS[@]}"; do
-    if [ -f "$AOM_SRC/$doc" ]; then
-      cp "$AOM_SRC/$doc" "$STAGE/AOM/$doc"
-    else
-      echo "!!! AOM doc missing, skipped: $doc"
+    if [ ! -f "$AOM_SRC/$doc" ]; then
+      echo "ERROR: allowlisted AOM doc missing: $AOM_SRC/$doc" >&2
+      exit 1
     fi
+    cp "$AOM_SRC/$doc" "$STAGE/AOM/$doc"
   done
-else
-  echo "!!! amp.planet/AOM not found — bundling without AOM design refs (public/CI build)"
 fi
 
 # 4. Strip cruft.

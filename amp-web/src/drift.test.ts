@@ -14,7 +14,7 @@
  * Nested wire objects are checked recursively.
  */
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -23,10 +23,20 @@ import { CryptoKitID } from './crypto/types.js';
 import { AmpWebClient } from './web-client.js';
 import type { AccessLevel, InvitePolicyEntry, WithdrawReason } from './types.js';
 
-const testdataDir = join(
-  dirname(fileURLToPath(import.meta.url)),
-  '..', '..', 'amp', 'webapi', 'testdata',
-);
+// Fixture root, probed for both views this file ships in: the amp.SDK repo
+// (amp/webapi/testdata) and the amp-web-SDK bundle (pack.sh stages the same
+// fixtures at webapi/testdata).
+const HERE = dirname(fileURLToPath(import.meta.url));
+const TESTDATA_CANDIDATES = [
+  join(HERE, '..', '..', 'amp', 'webapi', 'testdata'),
+  join(HERE, '..', 'webapi', 'testdata'),
+];
+const testdataDir = TESTDATA_CANDIDATES.find(dir => existsSync(dir)) ?? '';
+if (!testdataDir) {
+  throw new Error(
+    `wire-contract fixtures not found; looked in:\n  ${TESTDATA_CANDIDATES.join('\n  ')}`,
+  );
+}
 
 function loadFixture(file: string): Record<string, unknown> {
   return JSON.parse(readFileSync(join(testdataDir, file), 'utf8'));

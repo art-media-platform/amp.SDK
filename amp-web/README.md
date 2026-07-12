@@ -145,6 +145,20 @@ non-trivial canonization. Don't reimplement it — two supported paths:
 - **Runtime:** `client.resolveTag(expr)` / `client.resolveTags(exprs)` resolve
   names server-side (anonymous, long-cacheable) — cache the results.
 
+## Example App
+
+[`examples/forums/`](examples/forums/) — a functional-complete forums SPA on
+this SDK: anonymous browse, invoke-based writes, login, live subscriptions.
+The best walk-through of the SDK in real use; its README covers running it
+against an operated node.
+
+## Verifying the Bundle
+
+`npm test` (inside `amp-web-SDK/`, after `npm install`) runs the SDK's own
+suite, including the wire-contract drift guard against the golden fixtures
+shipped in [`webapi/testdata/`](webapi/testdata/) — no server needed.
+`webapi/webapi.types.go` is the wire contract those fixtures pin.
+
 ## Full API reference
 
 - **[`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md)** — the complete SDK contract:

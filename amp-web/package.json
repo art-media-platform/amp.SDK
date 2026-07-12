@@ -17,6 +17,11 @@
   "files": [
     "dist",
     "src",
+    "webapi",
+    "AOM",
+    "docs",
+    "examples",
+    "scripts",
     "README.md",
     "LICENSE",
     "SKILL-amp-web-SDK.md",

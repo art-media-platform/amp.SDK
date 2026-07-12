@@ -1285,7 +1285,9 @@ The JSON wire shapes in this SDK are hand-mirrored between Go
 fixtures pin the contract so drift on either side fails tests instead of
 shipping:
 
-- **Fixtures** — `amp/webapi/testdata/*.json`: login (all credential schemes),
+- **Fixtures** — `amp/webapi/testdata/*.json` (shipped in the bundle at
+  `webapi/testdata/`, so `npm test` runs the TS guard from either view):
+  login (all credential schemes),
   tx/item (`_ItemID`/`_EditID`/`_FromID` metadata keys), subscribe frames,
   edit chains, the full invite family (issue/accept/revoke/list with ledger
   rank), vault endpoints (base64 `Address` — opaque bytes, not a UID),

@@ -1,10 +1,15 @@
-// End-to-end smoke test for @amp/web against a live `ampd` app.www portal.
+// End-to-end smoke test for @art-media-platform/web against a live `ampd`
+// app.www portal.
 //
 // Drives the compiled AmpWebClient (../dist) through the full wire surface:
 // wallet login → tx batch → list/read → upsert → subscribe → withdraw →
-// tag resolve → upload → media resolve.  Run against `cmd/www-smoke`.
+// tag resolve → upload → media resolve.
 //
-//   node scripts/smoke.mjs        (expects a portal on http://127.0.0.1:5193)
+//   VAULT_URL=<portal> node scripts/smoke.mjs   (default http://127.0.0.1:5193)
+//
+// Needs a portal with a wallet-login dev backend (an AMP-internal fixture;
+// SKILL §14.7).  The bundle's offline guard is `npm test` — the drift suite
+// runs against the shipped webapi/testdata fixtures with no server.
 
 import { secp256k1 } from '@noble/curves/secp256k1';
 import { keccak_256 } from '@noble/hashes/sha3';
