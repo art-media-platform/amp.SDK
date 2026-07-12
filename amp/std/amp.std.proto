@@ -234,7 +234,10 @@ message MediaInfo {
     double     Seconds    = 6; // playback duration in seconds
 
     float      Popularity = 16; // 0.0 to 1.0
-    float      Ordering   = 17; // items are sorted by this value
+
+    // Unused — order lives in item.MediaRank (AD-playlists §3); field number
+    // held until re-genesis.
+    float      Ordering   = 17;
 }
 
 
@@ -256,6 +259,64 @@ enum MediaFlags {
     // media items.
     SkipIsLikely        = 0x01000000;
 
+}
+
+// MediaTags is what the audio says about itself, on a TRACK node
+// (item.MediaTags).  Labels is DERIVED from this, never the reverse — a
+// display line is not a data source (AD-playlists §2).
+message MediaTags {
+    string Title       = 1;
+    string Artist      = 2;
+    string AlbumArtist = 3;
+    string Album       = 4;
+    string Genre       = 5;
+    string Date        = 6;  // ISO-8601 (ID3 TDRC)
+
+    int32  TrackNumber = 7;
+    int32  TrackTotal  = 8;
+    int32  DiscNumber  = 9;
+    int32  DiscTotal   = 10;
+
+    string Composer    = 11;
+    string Publisher   = 12;
+    string ISRC        = 13;
+    string Comment     = 14;
+
+    // Everything else, including unknown ID3 frames — lossless round-trip.
+    repeated MediaTag Extra = 20;
+}
+
+// MediaTag is one named media field — the ID3 frame, generalized.
+message MediaTag {
+    string    Name  = 1; // "TXXX:REPLAYGAIN_TRACK_GAIN", "MUSICBRAINZ_ALBUMID"
+    string    Text  = 2;
+    int64     I     = 3; // value (track 3 of 12; BPM)
+    int64     J     = 4; // total
+    amp.Units Units = 5;
+    string    Lang  = 6; // BCP-47 (ID3 COMM / USLT)
+    bytes     Data  = 7; // opaque payload, so a round-trip is lossless
+}
+
+// MediaEntry is one playlist row, keyed by entryID on the PLAYLIST node
+// (item.MediaEntry).  A row renders with no other cell loaded.  Ref decides
+// whether the row is a cache or the authority: a track NodeID projects that
+// node (N rows render from one pin, zero fanout); a blob asset UID or a URI
+// means there is no track node and these fields ARE the only metadata.
+message MediaEntry {
+    amp.Tag   Ref    = 1; // track NodeID | blob asset UID | URI
+    Labels    Labels = 2;
+    MediaInfo Info   = 3; // Seconds, Flags, StartAt
+    amp.Tags  Cover  = 4; // glyph variant tree
+}
+
+// MediaRank is a playlist row's position, keyed by entryID on the PLAYLIST
+// node (item.MediaRank) — its own cell, so a reorder and a metadata refresh
+// never collide (AD-playlists §4).  The rank is a fractional-index UID minted
+// by tag.RankBetween / tag.RanksAcross; render order is (Rank, entryID).
+// Absent => order by entryID; a single interactive append writes none.
+message MediaRank {
+    fixed64 Rank_0 = 1;
+    fixed64 Rank_1 = 2;
 }
 
 // Segment is one unit of content: an inline on-chain copy of the bytes and/or a

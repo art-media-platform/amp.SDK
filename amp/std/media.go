@@ -121,18 +121,18 @@ func PublishMediaStream(appCtx amp.AppContext, src MediaStreamSource, opts Media
 // and duration.  WriteMediaRecord writes these alongside the asset's BlobRef so the
 // node renders in the same media UI as any other std media item.
 type MediaRecord struct {
-	Label      string     // ItemLabel — the track/title line
-	Caption    string     // ItemCaption — the artist/subtitle line
-	Collection string     // ItemCollection — the album/show/station line
+	Label      string     // Labels.Title — the track/title line
+	Caption    string     // Labels.Caption — the artist/subtitle line
+	Collection string     // Labels.Collection — the album/show/station line
 	Seconds    float64    // MediaInfo playback duration in seconds
 	Flags      MediaFlags // MediaInfo flags (HasAudio, IsSeekable, ...)
 }
 
 // WriteMediaRecord upserts the standard media attributes for one stored asset onto
-// tx at node: the BlobRef (keyed by its asset UID), a MediaInfo, and the
-// label/caption/collection amp.Tag leaves.  It only builds the tx — the caller owns the
-// StoreBlob, any extra index entries, and the Commit — so an app composes this with
-// its own catalog without duplicating the std-attr layout.
+// tx at node: the BlobRef (keyed by its asset UID), a MediaInfo, and the bundled
+// item.Labels struct.  It only builds the tx — the caller owns the StoreBlob, any
+// extra index entries, and the Commit — so an app composes this with its own
+// catalog without duplicating the std-attr layout.
 func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRecord) error {
 	if ref == nil || ref.AssetTag == nil {
 		return fmt.Errorf("std: WriteMediaRecord requires a BlobRef with an AssetTag")
@@ -143,16 +143,12 @@ func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRe
 	if err := tx.Upsert(node, Attr.MediaInfo.ID, tag.UID{}, &MediaInfo{Flags: rec.Flags, Seconds: rec.Seconds}); err != nil {
 		return err
 	}
-	if err := tx.Upsert(node, Attr.ItemLabel.ID, tag.UID{}, amp.TagText("text/plain", rec.Label)); err != nil {
-		return err
+	labels := &Labels{
+		Title:      rec.Label,
+		Caption:    rec.Caption,
+		Collection: rec.Collection,
 	}
-	if err := tx.Upsert(node, Attr.ItemCaption.ID, tag.UID{}, amp.TagText("text/plain", rec.Caption)); err != nil {
-		return err
-	}
-	if err := tx.Upsert(node, Attr.ItemCollection.ID, tag.UID{}, amp.TagText("text/plain", rec.Collection)); err != nil {
-		return err
-	}
-	return nil
+	return tx.Upsert(node, Attr.ItemLabels.ID, tag.UID{}, labels)
 }
 
 // A MediaAsset is the parameter block for CommitMediaAsset: one streamed media blob

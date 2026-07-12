@@ -48,6 +48,11 @@ var Attr = struct {
 	MediaLink                          tag.Name
 	MediaRelease                       tag.Name
 	MediaInfo                          tag.Name
+	MediaSources                       tag.Name
+	MediaTags                          tag.Name
+	MediaEntry                         tag.Name
+	MediaRank                          tag.Name
+	MediaPlacement                     tag.Name
 	ChannelAttr                        tag.Name
 	ChannelCatalog                     tag.Name
 	ChannelEpochs                      tag.Name
@@ -187,6 +192,11 @@ var Attr = struct {
 	MediaLink:      tag.Name{ID: tag.UID{0x4DED4FC2D91C296A, 0x44D348001E677047}, Text: "item.media.link.Tag"},        // 2exp7w5q8w55p49nu800g6fw27
 	MediaRelease:   tag.Name{ID: tag.UID{0x04F90C9DAC8B3A0C, 0x33799CAE0C2BCE31}, Text: "item.media.release.Tag"},     // 04z469vc4c78636ydwps62rmjj
 	MediaInfo:      tag.Name{ID: tag.UID{0x9C7620B0D5488458, 0xDD6F3D4B07305E88}, Text: "item.MediaInfo"},             // 4wfshc1pb8hjdeuvtx9d3m0rn8
+	MediaSources:   tag.Name{ID: tag.UID{0xB77D26475E473898, 0xD8400E88158F067B}, Text: "item.media.sources.Tags"},    // 5rgnm4frk772dehh0fj0bsy1mv
+	MediaTags:      tag.Name{ID: tag.UID{0x22B7BB8BB0A9928E, 0x8A91770781138CE0}, Text: "item.MediaTags"},             // 12qyxsrd59kb78p4cr0y0j7370
+	MediaEntry:     tag.Name{ID: tag.UID{0x9089C4BFDC465D21, 0x890BC36C92D99049}, Text: "item.MediaEntry"},            // 4hj72czr26cnhsk2y3ek9em429
+	MediaRank:      tag.Name{ID: tag.UID{0x0995E622E38F0C6D, 0x060B93D94E8D8849}, Text: "item.MediaRank"},             // 09krm25swg1jqhd2wmv578v229
+	MediaPlacement: tag.Name{ID: tag.UID{0xB19F8503B3672658, 0xF4B30D7A52E84663}, Text: "item.media.placement.TRS"},   // 5jmy2h7dv74tdg9dseg99fhjm3
 
 	// ─── Channel metadata and catalog ───────────────────────────────
 	ChannelAttr: tag.Name{ID: tag.UID{0x3C0BCCB260A85864, 0xC4DF8E1CD985DD60}, Text: "channel"}, // 1w1g6c4s58c1kd9rwf3mdscrc0

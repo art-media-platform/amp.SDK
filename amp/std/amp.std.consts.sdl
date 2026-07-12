@@ -59,9 +59,14 @@ tags Attr {
             SeriesS2T      "S2.UTC64"
         }
 
-        MediaLink    "media.link.Tag"
-        MediaRelease "media.release.Tag"
-        MediaInfo    "MediaInfo"
+        MediaLink      "media.link.Tag"       // disposable cache of ONE resolved URL; authority = media.sources.Tags
+        MediaRelease   "media.release.Tag"
+        MediaInfo      "MediaInfo"
+        MediaSources   "media.sources.Tags"   // ways to get the bytes: blob UID / URL / provider scheme (AD-playlists §5)
+        MediaTags      "MediaTags"            // track node — what the audio says about itself
+        MediaEntry     "MediaEntry"           // playlist node, keyed by entryID — one row
+        MediaRank      "MediaRank"            // playlist node, keyed by entryID — 16-byte reorder cell
+        MediaPlacement "media.placement.TRS"  // optional free-placement cell, keyed by entryID (AD-playlists §7)
     }
 
     // Channel metadata and catalog
