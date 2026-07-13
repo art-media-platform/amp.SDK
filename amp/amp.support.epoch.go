@@ -3,6 +3,7 @@ package amp
 import (
 	"bytes"
 	"encoding/binary"
+	"io"
 	"sort"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
@@ -292,4 +293,90 @@ func FounderFingerprint(founderKeys map[tag.UID]safe.PubKey, requiredSignatures 
 	binary.BigEndian.PutUint32(quorum, uint32(requiredSignatures))
 	parts := append(entries, quorum)
 	return safe.SigningDigest(safe.HashKitID_Blake2s_256, safe.SigningDomain_FounderSet, parts...)
+}
+
+// ── EpochLink: prev-link epoch-key chain ──────────────────────────────────────
+//
+// An EpochLink publishes ToEpoch's planet ContentKey sealed under a subkey of
+// FromEpoch's, so holding any newer key transitively unlocks the archive back
+// to the nearest deliberate cut (SD-security-sync.md §5.6).  Seal and open live
+// here as the one authoritative pair; both epoch UIDs bind the AEAD as AAD so a
+// box cannot be transplanted onto a different link.
+
+// epochLinkPurpose is the domain-separation label an EpochLink subkey derives
+// under — distinct from the "content" / "member-proof" tx domains.
+const epochLinkPurpose = "epoch-link"
+
+// epochLinkAAD returns FromEpoch ‖ ToEpoch as the box's additional
+// authenticated data.  Identity is bytes (UID.AppendTo), never a render.
+func epochLinkAAD(fromEpoch, toEpoch tag.UID) []byte {
+	aad := fromEpoch.AppendTo(make([]byte, 0, 32))
+	return toEpoch.AppendTo(aad)
+}
+
+// SealEpochLinkBox seals toKey (an older epoch's ContentKey) under a subkey
+// derived from fromKey (a newer epoch's ContentKey), returning the box an
+// EpochLink publishes.  The box's EpochID self-describes the enclosed key
+// (ToEpoch) and its CryptoKitID stamps the kit the key installs under.
+func SealEpochLinkBox(rand io.Reader, fromKey, toKey safe.SymKey) (*safe.EncryptedSymKey, error) {
+	if fromKey.EpochID.IsNil() || toKey.EpochID.IsNil() || len(fromKey.Bytes) == 0 || len(toKey.Bytes) == 0 {
+		return nil, status.Code_BadRequest.Error("amp: SealEpochLinkBox: both keys must carry EpochID and key bytes")
+	}
+	if toKey.EpochID.CompareTo(fromKey.EpochID) >= 0 {
+		return nil, status.Code_BadRequest.Error("amp: SealEpochLinkBox: ToEpoch must predate FromEpoch")
+	}
+	subKey, err := safe.DeriveSubKey(fromKey.Bytes, epochLinkPurpose)
+	if err != nil {
+		return nil, err
+	}
+	defer safe.Zero(subKey)
+
+	nonce, cipherblob, err := safe.SealAEAD(rand, subKey, toKey.Bytes, epochLinkAAD(fromKey.EpochID, toKey.EpochID))
+	if err != nil {
+		return nil, err
+	}
+	return &safe.EncryptedSymKey{
+		CryptoKitID_0: toKey.CryptoKitID[0],
+		CryptoKitID_1: toKey.CryptoKitID[1],
+		EpochID_0:     toKey.EpochID[0],
+		EpochID_1:     toKey.EpochID[1],
+		Ciphertext:    append(nonce, cipherblob...),
+	}, nil
+}
+
+// OpenEpochLinkBox unseals link.Box with fromKey (the link's FromEpoch
+// ContentKey) and returns the enclosed older epoch's ContentKey, ready for
+// EpochKeyStore install.  Caller must Zero the returned key when done.
+func OpenEpochLinkBox(fromKey safe.SymKey, link *EpochLink) (safe.SymKey, error) {
+	fromEpoch := link.GetFromEpoch().UID()
+	toEpoch := link.GetToEpoch().UID()
+	box := link.GetBox()
+	if box == nil || fromEpoch.IsNil() || toEpoch.IsNil() {
+		return safe.SymKey{}, status.Code_BadRequest.Error("amp: OpenEpochLinkBox: malformed link")
+	}
+	if fromKey.EpochID != fromEpoch {
+		return safe.SymKey{}, status.Code_BadRequest.Error("amp: OpenEpochLinkBox: fromKey does not match link.FromEpoch")
+	}
+	if boxEpoch := (tag.UID{box.EpochID_0, box.EpochID_1}); boxEpoch != toEpoch {
+		return safe.SymKey{}, status.Code_BadRequest.Error("amp: OpenEpochLinkBox: box EpochID does not match link.ToEpoch")
+	}
+	if len(box.Ciphertext) < safe.NonceSize {
+		return safe.SymKey{}, status.Code_DecryptFailed.Error("amp: OpenEpochLinkBox: box too short")
+	}
+	subKey, err := safe.DeriveSubKey(fromKey.Bytes, epochLinkPurpose)
+	if err != nil {
+		return safe.SymKey{}, err
+	}
+	defer safe.Zero(subKey)
+
+	plain, err := safe.OpenAEAD(subKey, box.Ciphertext[:safe.NonceSize], box.Ciphertext[safe.NonceSize:], epochLinkAAD(fromEpoch, toEpoch))
+	if err != nil {
+		return safe.SymKey{}, err
+	}
+	return safe.SymKey{
+		CryptoKitID: safe.CryptoKitID{box.CryptoKitID_0, box.CryptoKitID_1},
+		EpochID:     toEpoch,
+		Role:        safe.KeyRole_ContentKey,
+		Bytes:       plain,
+	}, nil
 }

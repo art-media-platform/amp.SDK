@@ -796,6 +796,34 @@ message PlanetOrigin {
 }
 
 
+// EpochLink unlocks an older planet epoch for any holder of a newer one:
+// ToEpoch's planet ContentKey sealed under a subkey derived from FromEpoch's,
+// domain-separated ("epoch-link") with both epoch UIDs bound as AAD so a box
+// cannot be transplanted between links.  Published planet-public in the root
+// ACC channel at (HeadNodeID, LawEpochLink, ToEpoch) — one canonical link per
+// unlocked epoch — by the rotation that supersedes ToEpoch, or retroactively
+// by rotation-class authority holding ToEpoch's key — one record heals every
+// member and every future joiner.  Non-adjacent links are legal (a single
+// link may span many epochs).  A record with NO Box is a deliberate
+// history-cut tombstone: members joining after the cut never reach the
+// epochs behind it, and reconcilers honor it rather than re-bridging.  A
+// ToEpoch with no record at all is merely unlinked — heal-eligible by any
+// key-holder.  (AOM SD-security-sync.md §5.6.)
+message EpochLink {
+
+    // Newer epoch — the key a holder derives the unseal subkey from.
+    Tag                 FromEpoch = 2;
+
+    // Older epoch being unlocked; also this record's ItemID.
+    Tag                 ToEpoch = 3;
+
+    // ToEpoch's ContentKey, symmetrically sealed (nonce || cipherblob).
+    // CryptoKitID = the kit the enclosed key is stamped with on install;
+    // EpochID = ToEpoch (self-describing for the EpochKeyStore).
+    safe.EncryptedSymKey Box = 5;
+}
+
+
 // ══════════════════════════════════════════════════════════════════════
 // Members & Governance
 // ══════════════════════════════════════════════════════════════════════
