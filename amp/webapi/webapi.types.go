@@ -92,8 +92,9 @@ type SessionResponse struct {
 }
 
 // Email credential request/response shapes:
-//   - Request body for all three endpoints is the proto webapi.EmailCredential
-//     (defined in webapi.proto; decoded via encoding/json).
+//   - Request body for all four endpoints (admin issue, recover, redeem,
+//     account claim) is the proto webapi.EmailCredential (defined in
+//     webapi.proto; decoded via encoding/json).
 //   - EmailIssueResponse below echoes the seeded MemberID on /issue success.
 
 // EmailIssueResponse echoes the seeded MemberID so the caller (admin tool /
@@ -107,8 +108,10 @@ type EmailIssueResponse struct {
 // per-org admin allowlist, deliberately WITHOUT a browser-SDK binding: the
 // operator Bearer is higher-privilege than a member session and must never
 // normalize into XSS-exposed browser JS.  testdata/operator-go-only.json is
-// the enforcing manifest — the TS drift test asserts none of these verbs has
-// a client binding, so adding one forces a reviewed manifest edit.
+// the enforcing manifest — the TS drift test asserts the browser client has
+// no binding for these verbs (a NodeAdminModule verb binds only in the SDK's
+// Node-only admin module), so adding or relaxing a binding forces a reviewed
+// manifest edit.
 // PlanetCreate*/BrandSet* are proto messages (webapi.proto); EmailCredential /
 // EmailIssueResponse (above) double as the issueEmailCredential bodies; the
 // forums-reserve shapes below complete the tier.

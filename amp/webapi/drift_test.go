@@ -178,17 +178,19 @@ func roundTrip(t *testing.T, label string, fixture json.RawMessage, target any) 
 // TestOperatorGoOnlyManifest pins the operator-tier manifest: every listed
 // verb's request/response shape must be registered in shapeCtors (and so
 // fixture-guarded by TestWireFixturesRoundTrip's reverse coverage).  The TS
-// side asserts the inverse against the same file — that NO client binding
-// exists for these verbs — so an operator verb cannot silently gain a browser
-// method or silently fall out of the drift guard.
+// side asserts the inverse against the same file — that the browser client
+// has no binding for these verbs (NodeAdminModule=true verbs bind only in the
+// Node-only admin module) — so an operator verb cannot silently gain a
+// browser method or silently fall out of the drift guard.
 func TestOperatorGoOnlyManifest(t *testing.T) {
 	manifest := struct {
 		Comment string
 		Verbs   []struct {
-			Verb     string
-			Endpoint string
-			Request  string
-			Response string
+			Verb            string
+			Endpoint        string
+			Request         string
+			Response        string
+			NodeAdminModule bool
 		}
 	}{}
 	loadJSON(t, filepath.Join("testdata", "operator-go-only.json"), &manifest)

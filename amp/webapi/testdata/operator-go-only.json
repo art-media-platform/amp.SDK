@@ -1,5 +1,5 @@
 {
-  "Comment": "Operator-tier verbs: Go/CLI-only by design — the operator Bearer must never enter browser JS. Both drift guards enforce this manifest: drift_test.go requires every shape here to be fixture-guarded in shapeCtors; drift.test.ts requires that NO client binding exists (no AmpWebClient method named per Verb, no admin Endpoint string in client source). Adding a TS binding for one of these verbs therefore forces a reviewed edit of this file.",
+  "Comment": "Operator-tier verbs: the operator Bearer must never enter browser JS. Both drift guards enforce this manifest: drift_test.go requires every shape here to be fixture-guarded in shapeCtors; drift.test.ts requires that AmpWebClient (the browser client) has no method named per Verb and that no admin Endpoint string appears in client source. A verb with NodeAdminModule=true is the ruled exception: its binding lives ONLY in src/admin.ts (AmpAdminClient — Node-only subpath export, refuses to construct in a browser, never exported from the browser entry), and its endpoint string is confined to that module. Adding or relaxing a binding therefore forces a reviewed edit of this file.",
   "Verbs": [
     {
       "Verb": "createPlanet",
@@ -23,7 +23,8 @@
       "Verb": "issueEmailCredential",
       "Endpoint": "/api/v1/admin/credentials/email/issue",
       "Request": "EmailCredential",
-      "Response": "EmailIssueResponse"
+      "Response": "EmailIssueResponse",
+      "NodeAdminModule": true
     }
   ]
 }

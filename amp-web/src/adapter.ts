@@ -12,6 +12,7 @@ import type {
   AmpQueryOpts,
   AmpSession,
   BlobRef,
+  ClaimAccountOpts,
   InviteAcceptOpts,
   InviteAcceptResult,
   InviteIssueOpts,
@@ -19,6 +20,7 @@ import type {
   InviteListResult,
   InviteRevokeOpts,
   LoginCredentials,
+  RedeemEmailOpts,
   SubscriptionEvent,
   TagResolution,
   TxOp,
@@ -58,6 +60,19 @@ export interface AmpAdapter {
 
   /** Fetch the challenge bound to a DID URI to sign before login(scheme:'did'). */
   getDIDChallenge(did: string): Promise<WalletChallenge>;
+
+  /**
+   * Request an email recovery code — resolves on the uniform 202 whether or
+   * not the address is known (no existence oracle).  AmpError('Unsupported')
+   * when the host has no email credential store: fall back to wallet login.
+   */
+  recoverEmail(email: string): Promise<void>;
+
+  /** Redeem an emailed recovery code — sets the new password and mints the session (doubles as login). */
+  redeemEmail(opts: RedeemEmailOpts): Promise<AmpMember>;
+
+  /** Claim a legacy account via its emailed activation token (AD-app-forums §8.4) — first password + session. */
+  claimAccount(opts: ClaimAccountOpts): Promise<AmpMember>;
 
   // ── CRUD ──────────────────────────────────────────────────────────
 

@@ -32,6 +32,7 @@ import type {
   AmpQueryOpts,
   AmpSession,
   BlobRef,
+  ClaimAccountOpts,
   InviteIssueOpts,
   InviteIssueResult,
   InviteAcceptOpts,
@@ -39,6 +40,7 @@ import type {
   InviteRevokeOpts,
   InviteListResult,
   LoginCredentials,
+  RedeemEmailOpts,
   SubscriptionEvent,
   TagResolution,
   TxOp,
@@ -78,6 +80,13 @@ export interface AmpWebClientOpts {
    * to opt out of durable sessions entirely.
    */
   sessionStore?: SessionStore;
+}
+
+/** The wire LoginResponse shape every Bearer-issuing endpoint returns (webapi.LoginResponse). */
+interface WireLoginResponse {
+  SessionToken: string;
+  ExpiresAt: number;
+  Member: AmpMember;
 }
 
 /** The wire Item shape returned by list/read endpoints (webapi.Item). */
@@ -137,9 +146,11 @@ export class AmpWebClient implements AmpAdapter {
     if (!resp.ok) {
       // A 401 outside the login surface means the host expired/revoked the
       // session — drop the local session so the app lands signed-out; the
-      // typed AmpError still reaches the caller.  (A 401 from /login is a
-      // failed credential attempt and must not clobber a live session.)
-      if (resp.status === 401 && this.sessionToken && !path.startsWith('/login')) {
+      // typed AmpError still reaches the caller.  (A 401 from /login or
+      // /account/claim is a failed credential attempt and must not clobber a
+      // live session.)
+      if (resp.status === 401 && this.sessionToken
+        && !path.startsWith('/login') && !path.startsWith('/account/claim')) {
         void this.dropSession();
       }
       throw await ampErrorFromResponse(resp);
@@ -205,15 +216,20 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   async login(credentials: LoginCredentials): Promise<AmpMember> {
-    const data = await this.apiFetch<{
-      SessionToken: string;
-      ExpiresAt: number;
-      Member: AmpMember;
-    }>('/login', {
+    const data = await this.apiFetch<WireLoginResponse>('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
+    return this.installSession(data);
+  }
 
+  /**
+   * Install a freshly-minted session from any Bearer-issuing endpoint (login,
+   * email redeem, account claim) — the one authoritative install path: token +
+   * member in memory, persisted session record, device EncryptKey, listeners,
+   * WebSocket.
+   */
+  private async installSession(data: WireLoginResponse): Promise<AmpMember> {
     this.sessionToken = data.SessionToken;
     this.member = {
       ...data.Member,
@@ -238,6 +254,53 @@ export class AmpWebClient implements AmpAdapter {
     this.authListeners.forEach(cb => cb(this.member));
     this.connectWs();
     return this.member;
+  }
+
+  /**
+   * Request an email recovery code — POST /api/v1/login/email/recover.
+   * Resolves on the server's uniform 202 whether or not the address is bound
+   * to a member (the emailed code is the only existence side-channel).
+   * Throws AmpError code 'Unsupported' (501) when the host has no email
+   * credential store — treat that as "email is off, offer wallet login".
+   */
+  async recoverEmail(email: string): Promise<void> {
+    await this.apiFetch('/login/email/recover', {
+      method: 'POST',
+      body: JSON.stringify({ Email: email }),
+    });
+  }
+
+  /**
+   * Redeem an emailed recovery code — POST /api/v1/login/email/redeem.
+   * Sets the new password and installs the minted session (the redeem doubles
+   * as a login; no follow-up login() round-trip).  A bad/expired/consumed
+   * code is a uniform AmpError 401.
+   */
+  async redeemEmail(opts: RedeemEmailOpts): Promise<AmpMember> {
+    const data = await this.apiFetch<WireLoginResponse>('/login/email/redeem', {
+      method: 'POST',
+      body: JSON.stringify({ Token: opts.token, NewPassword: opts.newPassword }),
+    });
+    return this.installSession(data);
+  }
+
+  /**
+   * Claim a legacy account — POST /api/v1/account/claim (AD-app-forums §8.4).
+   * The email-bound activation token authorizes setting the FIRST password on
+   * a member with no prior credential; the claim binds email↔MemberID and
+   * installs the minted session.  An already-claimed account is AmpError 409
+   * 'Conflict' — route the member to sign-in / recovery instead.
+   */
+  async claimAccount(opts: ClaimAccountOpts): Promise<AmpMember> {
+    const data = await this.apiFetch<WireLoginResponse>('/account/claim', {
+      method: 'POST',
+      body: JSON.stringify({
+        Email: opts.email,
+        Token: opts.token,
+        NewPassword: opts.newPassword,
+      }),
+    });
+    return this.installSession(data);
   }
 
   /**

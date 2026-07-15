@@ -53,10 +53,18 @@
     "Email": "bob@example.com",
     "Password": "initial-secret-9"
   },
+  "EmailCredential.recover": {
+    "Email": "alice@example.com"
+  },
   "EmailCredential.redeem": {
     "Token": "recover-token-3f6b",
     "NewPassword": "rotated-secret-4",
     "PlanetTag": "amp.planet.demo"
+  },
+  "EmailCredential.claim": {
+    "Email": "carol@example.com",
+    "Token": "GEZDGNBV.GM4TSOJR",
+    "NewPassword": "first-secret-7"
   },
   "EmailIssueResponse": {
     "MemberID": "06efvw-28sb2-00124-8j248-j248j",

@@ -211,13 +211,26 @@ The unified `/api/v1/login` is **shipped**: `wallet`, `email`, `did`, and `membe
 
 **DID scheme (W3C DID 1.0 — login only).** `did` proves control of the key a DID URI names: fetch a challenge with `?did=<uri>`, sign it, and submit `{ Scheme: 'did', DID, Signature, Nonce }`.  Shipped methods: **`did:key`** (Ed25519) and **`did:pkh:eip155`** (Ethereum wallet).  A `did:pkh:eip155:*:0x…` login folds to the *same* MemberID as a `wallet` login over that address (`eth:lc(addr)`) — two URI spellings of one key, one member.  A DID whose method/curve isn't wired yet (e.g. `did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) returns the same 501 `Unsupported`.  This is DID-Auth — Verifiable Credentials (issuer-signed claims) are out of scope.
 
-**Email scheme additionally exposes recovery + admin-issue endpoints:**
+**Email scheme additionally exposes recovery, claim, and admin-issue endpoints:**
 
 ```
-POST /api/v1/login/email/recover     (anonymous; returns 202 uniformly)
-POST /api/v1/login/email/redeem      (anonymous; consumes token, mints session)
-POST /api/v1/admin/credentials/email/issue   (Bearer; admin-gated signup)
+POST /api/v1/login/email/recover     (anonymous; returns 202 uniformly)          → client.recoverEmail(email)
+POST /api/v1/login/email/redeem      (anonymous; consumes code, mints session)   → client.redeemEmail({ token, newPassword })
+POST /api/v1/account/claim           (anonymous; activation token → first pwd)   → client.claimAccount({ email, token, newPassword })
+POST /api/v1/admin/credentials/email/issue   (operator Bearer; admin-gated signup — Node-only AmpAdminClient, §12)
 ```
+
+`recoverEmail` emails a single-use recovery code and always resolves on the
+uniform 202 — the emailed code is the only existence side-channel.
+`redeemEmail` consumes it, swaps the password, and installs the minted session
+(it doubles as a login; no follow-up `login()`).  `claimAccount` is the legacy
+account-claim flow (AD-app-forums §8.4): an email-bound activation token admits
+a member with **no prior credential**, sets the first password, binds
+email↔MemberID, and installs the session; a replayed link on an
+already-claimed account is a 409 `Conflict` — route to sign-in / recovery.
+On a host with no email credential store these throw `AmpError` code
+`Unsupported` (501): hide the email form and offer wallet login — never
+dead-end the user.
 
 MemberID for the email scheme = `tag.NameFrom("email:lc(addr)").ID` — mirror of the wallet path's `tag.NameFrom("eth:lc(addr)").ID` rule.  Failure modes (unknown email, wrong password) return a single 401 envelope with timing-uniform KDF cost so the response carries no existence oracle.  Bulk email (campaigns, white-label outreach) routes through `app.email`'s queue channel.
 
@@ -510,12 +523,22 @@ Thin wrappers over §4. Hooks share a single `AmpWebClient` via `<AmpProvider>`.
 ### 5.1 `useAmpAuth()`
 
 ```tsx
-const { member, login, logout, isAuthenticated, loading, restoring } = useAmpAuth();
+const { member, login, logout, isAuthenticated, loading, restoring,
+        recoverEmail, redeemEmail, claimAccount } = useAmpAuth();
 
 await login({ Scheme: 'email', Email: email, Password: password });
 await login({ Scheme: 'wallet', Address: address, Signature: signature, Nonce: nonce });
 await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: nonce });
+
+await recoverEmail(email);                                    // uniform 202; the code arrives by email
+await redeemEmail({ token, newPassword });                    // consumes the code, signs in
+await claimAccount({ email, token, newPassword });            // legacy activation link → first password, signs in
 ```
+
+`redeemEmail` and `claimAccount` mint a session exactly like `login` — the
+member lands authenticated with no second call.  All three throw `AmpError`
+code `Unsupported` when the host runs without an email credential store; gate
+the email form on that and fall back to wallet login (§4.1).
 
 **Session persistence — a reload lands authenticated.** `login()` persists the
 session (Bearer + member, IndexedDB in the browser); on mount `<AmpProvider>`
@@ -1249,7 +1272,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
 7. **Never name specific crypto algorithms** in code or docs. Use `seal/open`, `sign/verify`, `hash`, `safe.KeyRef`.
 8. **Never build on bulk namespace enumeration.** `/api/v1/search` is membership-gated, best-effort discovery over the federations you've joined — not a public directory dump, and never anonymous. Resolve exact FQDNs you already know; don't crawl. (§4.6)
-9. **Never call an operator verb (`/api/v1/admin/*`) from browser JS.** The operator Bearer is higher-privilege than a member session; putting it in XSS-exposed script is how an org gets its planet defaced and members mass-minted. These verbs deliberately have no SDK client method — drive them from server-side tooling (a Stripe webhook, an ops script, the `amp` CLI), where the admin Bearer lives (§14.4).
+9. **Never call an operator verb (`/api/v1/admin/*`) from browser JS.** The operator Bearer is higher-privilege than a member session; putting it in XSS-exposed script is how an org gets its planet defaced and members mass-minted. These verbs deliberately have no browser client method — drive them from server-side tooling (a Stripe webhook, an ops script, the `amp` CLI), where the admin Bearer lives (§14.4). The one SDK surface is `AmpAdminClient` on the **Node-only** subpath `@art-media-platform/web/admin` (currently `issueEmailCredential`): it is excluded from the root export, refuses to construct in a browser, and the `operator-go-only` drift manifest pins which verbs may bind there — never import it from browser code.
 
 ---
 
@@ -1288,7 +1311,7 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else (`AOM/SD-withdrawal-consent.md`). |
 | **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
-| **Admin endpoint** | The operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no SDK client method** (§12); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
+| **Admin endpoint** | The operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no browser client method** (§12); email-credential issue binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
 | **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6; `AOM/DD-name-service.md`. |
 | **FQDN** | A fully-qualified domain name (`spaces.example.com`) registered in a federation's NameService and resolvable to a planet. |
@@ -1366,7 +1389,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy, not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **The operator tier** (`POST /api/v1/admin/*`, Bearer + the operator admin allowlist — operator-side gating config, §10) is four verbs: `planet/create`, `planet/brand`, `forums/reserve`, and `credentials/email/issue` (mints an email-scheme member, returns `{ MemberID, Email }` — what a Stripe webhook calls server-side to provision a paying customer). None has an SDK client method, deliberately (§12); the wire shapes live in `webapi/webapi.types.go` under the `operator-go-only` drift manifest. Sealed invites are the *member-session* surface instead: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **The operator tier** (`POST /api/v1/admin/*`, Bearer + the operator admin allowlist — operator-side gating config, §10) is four verbs: `planet/create`, `planet/brand`, `forums/reserve`, and `credentials/email/issue` (mints an email-scheme member, returns `{ MemberID, Email }` — what a Stripe webhook calls server-side to provision a paying customer). None has a browser client method, deliberately (§12); `credentials/email/issue` binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`), and the wire shapes live in `webapi/webapi.types.go` under the `operator-go-only` drift manifest. Sealed invites are the *member-session* surface instead: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability

@@ -20,6 +20,7 @@ export type {
   AmpUploadResult,
   Address,
   BlobRef,
+  ClaimAccountOpts,
   EmailCredential,
   InviteIssueOpts,
   InviteIssueResult,
@@ -28,6 +29,7 @@ export type {
   InviteRevokeOpts,
   InviteListResult,
   LoginCredentials,
+  RedeemEmailOpts,
   SubscriptionEvent,
   TagResolution,
   TxOp,
@@ -44,6 +46,11 @@ export type {
 export type { AmpAdapter } from './adapter.js';
 export { AmpWebClient } from './web-client.js';
 export type { AmpWebClientOpts } from './web-client.js';
+
+// Operator tier: deliberately NOT exported here.  AmpAdminClient (admin
+// credential issue and future operator verbs) is server-side tooling only —
+// import '@art-media-platform/web/admin' from Node, never from browser code
+// (SKILL-amp-web-SDK.md §12).
 
 // Typed errors
 export { AmpError, AmpErrorCode } from './errors.js';

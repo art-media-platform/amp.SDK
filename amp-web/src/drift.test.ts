@@ -19,6 +19,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
+import { AmpAdminClient } from './admin.js';
 import { CryptoKitID } from './crypto/types.js';
 import { AmpWebClient } from './web-client.js';
 import type { AccessLevel, InvitePolicyEntry, WithdrawReason } from './types.js';
@@ -310,21 +311,25 @@ describe('wire fixtures match the Go shapes', () => {
   });
 });
 
-// ── OPERATOR_GO_ONLY — the operator tier has NO client binding ──────
+// ── OPERATOR_GO_ONLY — the operator tier has NO browser binding ─────
 //
-// testdata/operator-go-only.json lists the /api/v1/admin/* verbs ruled
-// Go/CLI-only: the operator Bearer is higher-privilege than a member session
-// and must never normalize into XSS-exposed browser JS.  The Go side pins the
-// same manifest's shapes into its drift guard; this side asserts the INVERSE —
-// no AmpWebClient method for the verb, no admin endpoint string anywhere in
-// client source.  Adding a TS binding therefore fails here until the manifest
-// itself is edited (a reviewed act).
+// testdata/operator-go-only.json lists the /api/v1/admin/* verbs: the
+// operator Bearer is higher-privilege than a member session and must never
+// normalize into XSS-exposed browser JS.  The Go side pins the same
+// manifest's shapes into its drift guard; this side asserts the INVERSE — no
+// AmpWebClient method for any verb, and no admin endpoint string in client
+// source.  A verb ruled NodeAdminModule=true binds ONLY in src/admin.ts
+// (AmpAdminClient — Node-only subpath export, never exported from the
+// browser entry); its endpoint string is confined to that module.  Adding or
+// relaxing a binding therefore fails here until the manifest itself is
+// edited (a reviewed act).
 
 interface OperatorVerb {
   Verb: string;
   Endpoint: string;
   Request: string;
   Response: string;
+  NodeAdminModule?: boolean;
 }
 
 const OPERATOR_GO_ONLY = (loadFixture('operator-go-only.json') as unknown as {
@@ -339,7 +344,7 @@ function clientSourceFiles(): string[] {
     .map(f => join(srcDir, f));
 }
 
-describe('OPERATOR_GO_ONLY manifest — no client binding', () => {
+describe('OPERATOR_GO_ONLY manifest — no browser binding', () => {
   it('manifest lists the operator tier', () => {
     expect(OPERATOR_GO_ONLY.length).toBeGreaterThan(0);
   });
@@ -357,25 +362,50 @@ describe('OPERATOR_GO_ONLY manifest — no client binding', () => {
     for (const verb of OPERATOR_GO_ONLY) {
       expect(
         methods.has(verb.Verb),
-        `AmpWebClient.${verb.Verb}() exists — operator verbs are Go-only; edit operator-go-only.json only via review`,
+        `AmpWebClient.${verb.Verb}() exists — operator verbs never bind in the browser client; edit operator-go-only.json only via review`,
       ).toBe(false);
     }
   });
 
-  it('no client CODE references an operator admin endpoint', () => {
+  it('admin endpoint strings appear only where the manifest rules them', () => {
     const srcDir = dirname(fileURLToPath(import.meta.url));
     for (const file of clientSourceFiles()) {
+      const isAdminModule = relative(srcDir, file) === 'admin.ts';
       // Strip comments — an endpoint may be DOCUMENTED (e.g. the shared
-      // EmailCredential shape lists its three endpoints), never called.
+      // EmailCredential shape lists its four endpoints), never called.
       const code = readFileSync(file, 'utf8')
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/^\s*\/\/.*$/gm, '');
       for (const verb of OPERATOR_GO_ONLY) {
+        if (verb.NodeAdminModule && isAdminModule) continue;   // the one ruled home
         expect(
           code.includes(verb.Endpoint),
-          `${relative(srcDir, file)} references ${verb.Endpoint} — operator verbs are Go-only`,
+          `${relative(srcDir, file)} references ${verb.Endpoint} — operator verbs bind only per the manifest`,
         ).toBe(false);
       }
+    }
+  });
+
+  it('the browser entry (index.ts) does not export the admin module', () => {
+    const srcDir = dirname(fileURLToPath(import.meta.url));
+    const entry = readFileSync(join(srcDir, 'index.ts'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '');
+    expect(
+      /from\s+['"]\.\/admin(\.js)?['"]/.test(entry) || /import\s+['"]\.\/admin(\.js)?['"]/.test(entry),
+      'index.ts exports ./admin — the operator tier must stay out of the browser surface',
+    ).toBe(false);
+  });
+
+  it('every NodeAdminModule verb binds in AmpAdminClient (and only those verbs)', () => {
+    const methods = new Set(Object.getOwnPropertyNames(AmpAdminClient.prototype));
+    for (const verb of OPERATOR_GO_ONLY) {
+      expect(
+        methods.has(verb.Verb),
+        verb.NodeAdminModule
+          ? `AmpAdminClient.${verb.Verb}() missing — the manifest rules it into the admin module`
+          : `AmpAdminClient.${verb.Verb}() exists — the manifest does not rule this verb into the admin module`,
+      ).toBe(verb.NodeAdminModule === true);
     }
   });
 });

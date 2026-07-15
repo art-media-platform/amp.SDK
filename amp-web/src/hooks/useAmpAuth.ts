@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useAmpContext } from '../provider.js';
-import type { AmpAuth, LoginCredentials } from '../types.js';
+import type { AmpAuth, ClaimAccountOpts, LoginCredentials, RedeemEmailOpts } from '../types.js';
 
 export function useAmpAuth(): AmpAuth {
   const { adapter, member, restoring } = useAmpContext();
@@ -26,6 +26,34 @@ export function useAmpAuth(): AmpAuth {
     }
   }, [adapter]);
 
+  const recoverEmail = useCallback(async (email: string) => {
+    setLoading(true);
+    try {
+      await adapter.recoverEmail(email);
+    } finally {
+      setLoading(false);
+    }
+  }, [adapter]);
+
+  // redeem/claim mint a session, so both fire onAuthChange like login does.
+  const redeemEmail = useCallback(async (opts: RedeemEmailOpts) => {
+    setLoading(true);
+    try {
+      return await adapter.redeemEmail(opts);
+    } finally {
+      setLoading(false);
+    }
+  }, [adapter]);
+
+  const claimAccount = useCallback(async (opts: ClaimAccountOpts) => {
+    setLoading(true);
+    try {
+      return await adapter.claimAccount(opts);
+    } finally {
+      setLoading(false);
+    }
+  }, [adapter]);
+
   return {
     member,
     isAuthenticated: member !== null,
@@ -35,5 +63,8 @@ export function useAmpAuth(): AmpAuth {
     restoring,
     login,
     logout,
+    recoverEmail,
+    redeemEmail,
+    claimAccount,
   };
 }

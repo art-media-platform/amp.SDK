@@ -34,10 +34,11 @@ export type LoginCredentials =
 
 /**
  * EmailCredential is the shared request body for the email-credential
- * endpoints — one shape, three endpoints, each consumes a subset:
+ * endpoints — one shape, four endpoints, each consumes a subset:
  *   - POST /api/v1/admin/credentials/email/issue   Email + Password
  *   - POST /api/v1/login/email/recover             Email
  *   - POST /api/v1/login/email/redeem              Token + NewPassword (+ PlanetTag)
+ *   - POST /api/v1/account/claim                   Email + Token + NewPassword (+ PlanetTag)
  */
 export interface EmailCredential {
   Email?: string;
@@ -45,6 +46,22 @@ export interface EmailCredential {
   Token?: string;
   NewPassword?: string;
   PlanetTag?: string;
+}
+
+/** Options for redeeming an emailed recovery code (SDK ergonomic shape). */
+export interface RedeemEmailOpts {
+  token: string;                // the code delivered to the member's inbox
+  newPassword: string;          // replaces the credential on redeem
+}
+
+/**
+ * Options for claiming a legacy account via an email-bound activation token
+ * (AD-app-forums §8.4) — admits a member with no prior credential.
+ */
+export interface ClaimAccountOpts {
+  email: string;                // the address the activation token is bound to
+  token: string;                // the emailed activation token
+  newPassword: string;          // the account's first password
 }
 
 /** The personal-sign challenge a wallet/DID scheme signs before login. */
@@ -69,6 +86,17 @@ export interface AmpAuth {
   restoring: boolean;
   login: (credentials: LoginCredentials) => Promise<AmpMember>;
   logout: () => Promise<void>;
+  /**
+   * Request an email recovery code (always resolves whether or not the address
+   * is known — no existence oracle).  Throws AmpError code 'Unsupported' when
+   * the host has no email credential store — treat that as "hide the email
+   * form, offer wallet login" (never dead-end the user).
+   */
+  recoverEmail: (email: string) => Promise<void>;
+  /** Redeem an emailed recovery code — sets the new password and signs in. */
+  redeemEmail: (opts: RedeemEmailOpts) => Promise<AmpMember>;
+  /** Claim a legacy account via its emailed activation token — sets the first password and signs in. */
+  claimAccount: (opts: ClaimAccountOpts) => Promise<AmpMember>;
 }
 
 // ── Invites ─────────────────────────────────────────────────────────
