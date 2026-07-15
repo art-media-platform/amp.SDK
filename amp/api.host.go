@@ -369,13 +369,13 @@ type TxJournal interface {
 	ReadQuarantined(planetID tag.UID, after tag.UID, cb func(txTimeID tag.UID, raw []byte) bool) error
 }
 
-// TxOutbox queues locally authored TxMsgs and blobs for propagation to vaults.
-// Entries persist across restarts — the outbox is drained when vault connectivity is available.
+// TxOutbox queues locally authored TxMsgs for propagation to vaults.  Entries persist across
+// restarts — the outbox is drained when vault connectivity is available.  Blob bytes never
+// queue: the relayed TxMsg is the announce, and receivers pull what its BlobRef ops name
+// (receiver-driven transfer, SD-planet-storage §13.10).
 type TxOutbox interface {
 	EnqueueTx(planetID tag.UID, txTimeID tag.UID, raw []byte) error
-	EnqueueBlob(ref *BlobRef) error
 	DrainTx(cb func(planetID tag.UID, txTimeID tag.UID, raw []byte) error) error
-	DrainBlobs(cb func(ref *BlobRef) error) error
 	Close() error
 }
 

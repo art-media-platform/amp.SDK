@@ -100,10 +100,7 @@ func BuildBlobChunkTable(src io.Reader, storedLen int64, kitID safe.HashKitID, c
 	chunkSize := int64(1) << chunkSizeLog2
 	remain := storedLen
 	for remain > 0 {
-		span := chunkSize
-		if remain < span {
-			span = remain
-		}
+		span := min(chunkSize, remain)
 		kit.Hasher.Reset()
 		if _, err := io.CopyN(kit.Hasher, src, span); err != nil {
 			return nil, status.Code_DataFailure.Errorf("amp: BuildBlobChunkTable: short read: %v", err)
@@ -132,6 +129,25 @@ func (table *BlobChunkTable) CanonicalBytes() []byte {
 		canon = protowire.AppendBytes(canon, table.ChunkHashes)
 	}
 	return canon
+}
+
+// BlobChunkTableWireSize returns the exact canonical (wire) byte length of the chunk
+// table for a blob of storedLen stored bytes at the given exponent — computable by a
+// receiver from the signed ref alone, which is what bounds a table pull before any
+// byte arrives.
+func BlobChunkTableWireSize(storedLen int64, chunkSizeLog2 uint32) int64 {
+	hashesLen := BlobChunkCount(storedLen, chunkSizeLog2) * BlobTableHashSize
+	size := 0
+	if chunkSizeLog2 != 0 {
+		size += 1 + protowire.SizeVarint(uint64(chunkSizeLog2))
+	}
+	if storedLen != 0 {
+		size += 1 + protowire.SizeVarint(uint64(storedLen))
+	}
+	if hashesLen > 0 {
+		size += 1 + protowire.SizeVarint(hashesLen) + int(hashesLen)
+	}
+	return int64(size)
 }
 
 // RootUID returns the table's commitment under the given HashKit: the leading
