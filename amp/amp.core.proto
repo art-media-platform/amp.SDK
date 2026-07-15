@@ -1388,6 +1388,51 @@ message BlobRef {
     // Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
     fixed64             EpochID_0 = 20;
     fixed64             EpochID_1 = 21;
+
+    // Chunk-table commitment: leading 16 bytes of the HashKitID-hash of the
+    // canonical BlobChunkTable encoding for this blob's STORED bytes.
+    // Zero ⇒ single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no table object;
+    // the whole transfer is one implicit chunk verified by BlobTag.UID.
+    // (SD-planet-storage §13.10)
+    fixed64             TableRoot_0 = 22;
+    fixed64             TableRoot_1 = 23;
+
+    // Power-of-2 exponent of the table chunk size in bytes, encoder-chosen per
+    // blob size / media type.  ≥ 20 (1 MiB, the seal AEAD chunk) so table chunks
+    // always cover whole AEAD frames.  0 = unset (single-chunk blob).
+    uint32              ChunkSizeLog2 = 24;
+}
+
+
+// BlobChunkTable is the transfer/verification manifest for one blob's STORED
+// bytes.  Canonical encoding (this proto, fields in order) is what
+// BlobRef.TableRoot commits to.  Kept as a companion object beside the blob,
+// served through the same pull vocabulary (BlobPullKind_Table); a receiver
+// verifies each arriving chunk against its table hash, and the table itself
+// against the ref's TableRoot before trusting any chunk (SD-planet-storage §13.10).
+message BlobChunkTable {
+    uint32          ChunkSizeLog2 = 1;  // matches the ref
+    uint64          TotalLen      = 2;  // stored byte length (== BlobTag.I)
+    bytes           ChunkHashes   = 3;  // concatenated 32-byte HashKit digests, one per chunk, index-ordered
+}
+
+
+// BlobPullRequest is one receiver-driven pull: one span of chunks (or the
+// table) from one holder.  Chunk indexes address the ref's BlobChunkTable
+// space; index ⇔ offset is a shift by ChunkSizeLog2 (SD-planet-storage §13.10).
+message BlobPullRequest {
+    BlobRef         Ref        = 1;  // wire-stripped (SD-planet-storage §13.2.1)
+    BlobPullKind    Kind       = 2;
+    uint64          ChunkBegin = 3;  // first chunk index (Kind=Chunks)
+    uint64          ChunkCount = 4;  // 0 ⇒ through end-of-blob
+    uint64          RequestID  = 5;  // receiver-chosen; echoed in responses/rejects so every request gets an answer
+}
+
+
+// What one BlobPullRequest asks for.
+enum BlobPullKind {
+    Chunks = 0;  // a span of stored-byte chunks on the table's index space
+    Table  = 1;  // the blob's BlobChunkTable companion object
 }
 
 
