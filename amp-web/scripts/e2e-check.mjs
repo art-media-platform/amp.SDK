@@ -1,11 +1,11 @@
-// End-to-end smoke test for @art-media-platform/web against a live `ampd`
+// End-to-end check for @art-media-platform/web against a live `ampd`
 // app.www portal.
 //
 // Drives the compiled AmpWebClient (../dist) through the full wire surface:
 // wallet login → tx batch → list/read → upsert → subscribe → withdraw →
 // tag resolve → upload → media resolve.
 //
-//   VAULT_URL=<portal> node scripts/smoke.mjs   (default http://127.0.0.1:5193)
+//   VAULT_URL=<portal> node scripts/e2e-check.mjs   (default http://127.0.0.1:5193)
 //
 // Needs a portal with a wallet-login dev backend (an AMP-internal fixture;
 // SKILL §14.7).  The bundle's offline guard is `npm test` — the drift suite
@@ -17,7 +17,7 @@ import { bytesToHex } from '@noble/hashes/utils';
 import { AmpWebClient, base64ToBytes, bytesToBase64 } from '../dist/index.js';
 
 const VAULT = process.env.VAULT_URL || 'http://127.0.0.1:5193';
-const PLANET = process.env.SMOKE_PLANET || 'smoke-planet';
+const PLANET = process.env.E2E_PLANET || 'testportal-planet';
 
 let pass = 0;
 let fail = 0;
@@ -117,7 +117,7 @@ async function main() {
 
   // ── Withdraw (distinct from delete) ──
   // WithdrawOpts is the SDK option bag — camelCase by design, never serialized.
-  await amp.withdraw('projects', 'labels', id, { reason: 'Retracted', rationale: 'smoke' });
+  await amp.withdraw('projects', 'labels', id, { reason: 'Retracted', rationale: 'e2e-check' });
   const afterWd = await amp.query('projects', 'labels', { itemID: id });
   check('withdraw note surfaces on read', afterWd.data[0]?._Withdrawn?.Reason === 'Retracted', JSON.stringify(afterWd.data[0]?._Withdrawn));
 
@@ -128,7 +128,7 @@ async function main() {
   check('resolveTags returns 2', trs.length === 2);
 
   // ── Blob upload + caller-carries-the-Tag resolve ──
-  const file = new File([new Uint8Array([1, 2, 3, 4])], 'smoke.bin', { type: 'application/octet-stream' });
+  const file = new File([new Uint8Array([1, 2, 3, 4])], 'e2e.bin', { type: 'application/octet-stream' });
   const blob = await amp.upload(file, 'projects', { attr: 'media' });
   check('upload returns blob UID', !!blob.UID, JSON.stringify(blob));
   const resolved = await amp.resolveMedia({ UID: blob.UID, ContentType: blob.ContentType, I: blob.I, Units: blob.Units });
@@ -159,6 +159,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('smoke crashed:', err);
+  console.error('e2e-check crashed:', err);
   process.exit(2);
 });
