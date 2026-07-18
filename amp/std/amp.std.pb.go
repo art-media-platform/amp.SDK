@@ -742,6 +742,59 @@ func (TileServerAuth) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{12}
 }
 
+// Reticle style ladder for the space-channel center reticle; 0 denotes unset.
+type ReticleStyleID int32
+
+const (
+	ReticleStyleID_ReticleStyleUnset   ReticleStyleID = 0
+	ReticleStyleID_ReticleLine         ReticleStyleID = 1
+	ReticleStyleID_ReticleAngleBracket ReticleStyleID = 2
+	ReticleStyleID_ReticleSideBrackets ReticleStyleID = 3
+)
+
+// Enum value maps for ReticleStyleID.
+var (
+	ReticleStyleID_name = map[int32]string{
+		0: "ReticleStyleUnset",
+		1: "ReticleLine",
+		2: "ReticleAngleBracket",
+		3: "ReticleSideBrackets",
+	}
+	ReticleStyleID_value = map[string]int32{
+		"ReticleStyleUnset":   0,
+		"ReticleLine":         1,
+		"ReticleAngleBracket": 2,
+		"ReticleSideBrackets": 3,
+	}
+)
+
+func (x ReticleStyleID) Enum() *ReticleStyleID {
+	p := new(ReticleStyleID)
+	*p = x
+	return p
+}
+
+func (x ReticleStyleID) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ReticleStyleID) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[13].Descriptor()
+}
+
+func (ReticleStyleID) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[13]
+}
+
+func (x ReticleStyleID) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ReticleStyleID.Descriptor instead.
+func (ReticleStyleID) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{13}
+}
+
 // BodyEncoding is how an HTTP request body is encoded.
 type BodyEncoding int32
 
@@ -773,11 +826,11 @@ func (x BodyEncoding) String() string {
 }
 
 func (BodyEncoding) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[13].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[14].Descriptor()
 }
 
 func (BodyEncoding) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[13]
+	return &file_amp_std_amp_std_proto_enumTypes[14]
 }
 
 func (x BodyEncoding) Number() protoreflect.EnumNumber {
@@ -786,7 +839,7 @@ func (x BodyEncoding) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BodyEncoding.Descriptor instead.
 func (BodyEncoding) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{13}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
 }
 
 type GeoPath_RenderType int32
@@ -822,11 +875,11 @@ func (x GeoPath_RenderType) String() string {
 }
 
 func (GeoPath_RenderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[14].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[15].Descriptor()
 }
 
 func (GeoPath_RenderType) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[14]
+	return &file_amp_std_amp_std_proto_enumTypes[15]
 }
 
 func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
@@ -3348,6 +3401,127 @@ func (x *TileServer) GetElevationEncoding() string {
 	return ""
 }
 
+// DeviceVars is the device-class client vars group — settings tied to one
+// device's display and performance envelope.  Stored as one item on the
+// member's device node in the home planet (std.Attr.HomeDeviceVars).
+// A zero field is the "unset" sentinel; resolution happens at point of use
+// (std.HomeVars defaults), never in a field initializer.
+type DeviceVars struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UIScale       float32                `protobuf:"fixed32,1,opt,name=UIScale,proto3" json:"UIScale,omitempty"`    // item size scale; 0 → derived from display DPI
+	TargetFPS     int32                  `protobuf:"varint,2,opt,name=TargetFPS,proto3" json:"TargetFPS,omitempty"` // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeviceVars) Reset() {
+	*x = DeviceVars{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeviceVars) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeviceVars) ProtoMessage() {}
+
+func (x *DeviceVars) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeviceVars.ProtoReflect.Descriptor instead.
+func (*DeviceVars) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *DeviceVars) GetUIScale() float32 {
+	if x != nil {
+		return x.UIScale
+	}
+	return 0
+}
+
+func (x *DeviceVars) GetTargetFPS() int32 {
+	if x != nil {
+		return x.TargetFPS
+	}
+	return 0
+}
+
+// MemberVars is the member-class client vars group — presentation preferences
+// that follow the member across devices.  Stored as one item on the home
+// planet head node (std.Attr.HomeMemberVars).  Zero/empty fields are "unset"
+// and resolve at point of use.
+type MemberVars struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	DefaultSkyboxURI  string                 `protobuf:"bytes,1,opt,name=DefaultSkyboxURI,proto3" json:"DefaultSkyboxURI,omitempty"`                  // default space skybox asset URI; empty → channel default
+	ReticleStyle      ReticleStyleID         `protobuf:"varint,2,opt,name=ReticleStyle,proto3,enum=std.ReticleStyleID" json:"ReticleStyle,omitempty"` // center reticle style; 0 → ReticleLine
+	ReticleOverlayURI string                 `protobuf:"bytes,3,opt,name=ReticleOverlayURI,proto3" json:"ReticleOverlayURI,omitempty"`                // center reticle overlay sprite URI; empty → overlay hidden
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *MemberVars) Reset() {
+	*x = MemberVars{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MemberVars) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MemberVars) ProtoMessage() {}
+
+func (x *MemberVars) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MemberVars.ProtoReflect.Descriptor instead.
+func (*MemberVars) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *MemberVars) GetDefaultSkyboxURI() string {
+	if x != nil {
+		return x.DefaultSkyboxURI
+	}
+	return ""
+}
+
+func (x *MemberVars) GetReticleStyle() ReticleStyleID {
+	if x != nil {
+		return x.ReticleStyle
+	}
+	return ReticleStyleID_ReticleStyleUnset
+}
+
+func (x *MemberVars) GetReticleOverlayURI() string {
+	if x != nil {
+		return x.ReticleOverlayURI
+	}
+	return ""
+}
+
 // LoginForm is the recipe for exchanging a username + password for a session token:
 // POST the credentials to an endpoint and read the minted token from the response.
 //
@@ -3366,7 +3540,7 @@ type LoginForm struct {
 
 func (x *LoginForm) Reset() {
 	*x = LoginForm{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[25]
+	mi := &file_amp_std_amp_std_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3378,7 +3552,7 @@ func (x *LoginForm) String() string {
 func (*LoginForm) ProtoMessage() {}
 
 func (x *LoginForm) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[25]
+	mi := &file_amp_std_amp_std_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3391,7 +3565,7 @@ func (x *LoginForm) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginForm.ProtoReflect.Descriptor instead.
 func (*LoginForm) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{25}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *LoginForm) GetEncoding() BodyEncoding {
@@ -3689,7 +3863,16 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"TileSizePx\x12$\n" +
 	"\rMinIntervalMs\x18\x17 \x01(\x05R\rMinIntervalMs\x12 \n" +
 	"\vContentType\x18\x1e \x01(\tR\vContentType\x12,\n" +
-	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"\xba\x01\n" +
+	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"D\n" +
+	"\n" +
+	"DeviceVars\x12\x18\n" +
+	"\aUIScale\x18\x01 \x01(\x02R\aUIScale\x12\x1c\n" +
+	"\tTargetFPS\x18\x02 \x01(\x05R\tTargetFPS\"\x9f\x01\n" +
+	"\n" +
+	"MemberVars\x12*\n" +
+	"\x10DefaultSkyboxURI\x18\x01 \x01(\tR\x10DefaultSkyboxURI\x127\n" +
+	"\fReticleStyle\x18\x02 \x01(\x0e2\x13.std.ReticleStyleIDR\fReticleStyle\x12,\n" +
+	"\x11ReticleOverlayURI\x18\x03 \x01(\tR\x11ReticleOverlayURI\"\xba\x01\n" +
 	"\tLoginForm\x12-\n" +
 	"\bEncoding\x18\x01 \x01(\x0e2\x11.std.BodyEncodingR\bEncoding\x12\x1c\n" +
 	"\tUserField\x18\x02 \x01(\tR\tUserField\x12\x1c\n" +
@@ -3785,7 +3968,12 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x13TileServerAuth_None\x10\x00\x12\x1b\n" +
 	"\x17TileServerAuth_QueryKey\x10\x01\x12\x1c\n" +
 	"\x18TileServerAuth_HeaderKey\x10\x02\x12\x19\n" +
-	"\x15TileServerAuth_Cookie\x10\x03*\"\n" +
+	"\x15TileServerAuth_Cookie\x10\x03*j\n" +
+	"\x0eReticleStyleID\x12\x15\n" +
+	"\x11ReticleStyleUnset\x10\x00\x12\x0f\n" +
+	"\vReticleLine\x10\x01\x12\x17\n" +
+	"\x13ReticleAngleBracket\x10\x02\x12\x17\n" +
+	"\x13ReticleSideBrackets\x10\x03*\"\n" +
 	"\fBodyEncoding\x12\b\n" +
 	"\x04JSON\x10\x00\x12\b\n" +
 	"\x04Form\x10\x01BHZ-github.com/art-media-platform/amp.SDK/amp/std\xaa\x02\x16art.media.platform.stdb\x06proto3"
@@ -3802,8 +3990,8 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 	return file_amp_std_amp_std_proto_rawDescData
 }
 
-var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 15)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 16)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),           // 0: std.TRS_Flags
 	(CameraModeID)(0),        // 1: std.CameraModeID
@@ -3818,89 +4006,93 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(TileProjection)(0),      // 10: std.TileProjection
 	(TileServerScheme)(0),    // 11: std.TileServerScheme
 	(TileServerAuth)(0),      // 12: std.TileServerAuth
-	(BodyEncoding)(0),        // 13: std.BodyEncoding
-	(GeoPath_RenderType)(0),  // 14: std.GeoPath.RenderType
-	(*TRS)(nil),              // 15: std.TRS
-	(*Matrix4X4)(nil),        // 16: std.Matrix4x4
-	(*CameraState)(nil),      // 17: std.CameraState
-	(*CameraOptions)(nil),    // 18: std.CameraOptions
-	(*FileInfo)(nil),         // 19: std.FileInfo
-	(*JsonValue)(nil),        // 20: std.JsonValue
-	(*Report)(nil),           // 21: std.Report
-	(*Labels)(nil),           // 22: std.Labels
-	(*ModuleRef)(nil),        // 23: std.ModuleRef
-	(*Rect)(nil),             // 24: std.Rect
-	(*GeoPath)(nil),          // 25: std.GeoPath
-	(*MediaInfo)(nil),        // 26: std.MediaInfo
-	(*MediaTags)(nil),        // 27: std.MediaTags
-	(*MediaTag)(nil),         // 28: std.MediaTag
-	(*MediaEntry)(nil),       // 29: std.MediaEntry
-	(*MediaRank)(nil),        // 30: std.MediaRank
-	(*Segment)(nil),          // 31: std.Segment
-	(*Arg)(nil),              // 32: std.Arg
-	(*VisPreset)(nil),        // 33: std.VisPreset
-	(*TileBand)(nil),         // 34: std.TileBand
-	(*TileMeshSpec)(nil),     // 35: std.TileMeshSpec
-	(*SkinSpec)(nil),         // 36: std.SkinSpec
-	(*AtmosphereEffect)(nil), // 37: std.AtmosphereEffect
-	(*AtmosphereSpec)(nil),   // 38: std.AtmosphereSpec
-	(*TileServer)(nil),       // 39: std.TileServer
-	(*LoginForm)(nil),        // 40: std.LoginForm
-	(*amp.Tag)(nil),          // 41: amp.Tag
-	(*amp.Tags)(nil),         // 42: amp.Tags
-	(amp.Units)(0),           // 43: amp.Units
-	(*amp.BlobRef)(nil),      // 44: amp.BlobRef
+	(ReticleStyleID)(0),      // 13: std.ReticleStyleID
+	(BodyEncoding)(0),        // 14: std.BodyEncoding
+	(GeoPath_RenderType)(0),  // 15: std.GeoPath.RenderType
+	(*TRS)(nil),              // 16: std.TRS
+	(*Matrix4X4)(nil),        // 17: std.Matrix4x4
+	(*CameraState)(nil),      // 18: std.CameraState
+	(*CameraOptions)(nil),    // 19: std.CameraOptions
+	(*FileInfo)(nil),         // 20: std.FileInfo
+	(*JsonValue)(nil),        // 21: std.JsonValue
+	(*Report)(nil),           // 22: std.Report
+	(*Labels)(nil),           // 23: std.Labels
+	(*ModuleRef)(nil),        // 24: std.ModuleRef
+	(*Rect)(nil),             // 25: std.Rect
+	(*GeoPath)(nil),          // 26: std.GeoPath
+	(*MediaInfo)(nil),        // 27: std.MediaInfo
+	(*MediaTags)(nil),        // 28: std.MediaTags
+	(*MediaTag)(nil),         // 29: std.MediaTag
+	(*MediaEntry)(nil),       // 30: std.MediaEntry
+	(*MediaRank)(nil),        // 31: std.MediaRank
+	(*Segment)(nil),          // 32: std.Segment
+	(*Arg)(nil),              // 33: std.Arg
+	(*VisPreset)(nil),        // 34: std.VisPreset
+	(*TileBand)(nil),         // 35: std.TileBand
+	(*TileMeshSpec)(nil),     // 36: std.TileMeshSpec
+	(*SkinSpec)(nil),         // 37: std.SkinSpec
+	(*AtmosphereEffect)(nil), // 38: std.AtmosphereEffect
+	(*AtmosphereSpec)(nil),   // 39: std.AtmosphereSpec
+	(*TileServer)(nil),       // 40: std.TileServer
+	(*DeviceVars)(nil),       // 41: std.DeviceVars
+	(*MemberVars)(nil),       // 42: std.MemberVars
+	(*LoginForm)(nil),        // 43: std.LoginForm
+	(*amp.Tag)(nil),          // 44: amp.Tag
+	(*amp.Tags)(nil),         // 45: amp.Tags
+	(amp.Units)(0),           // 46: amp.Units
+	(*amp.BlobRef)(nil),      // 47: amp.BlobRef
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
-	15, // 1: std.CameraState.Placement:type_name -> std.TRS
+	16, // 1: std.CameraState.Placement:type_name -> std.TRS
 	1,  // 2: std.CameraState.ModeID:type_name -> std.CameraModeID
 	2,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
-	20, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	41, // 5: std.Report.Title:type_name -> amp.Tag
-	41, // 6: std.Report.Caption:type_name -> amp.Tag
-	41, // 7: std.Report.Errors:type_name -> amp.Tag
-	41, // 8: std.Report.Warnings:type_name -> amp.Tag
-	41, // 9: std.Report.Messages:type_name -> amp.Tag
-	41, // 10: std.Report.Debug:type_name -> amp.Tag
-	41, // 11: std.ModuleRef.Module:type_name -> amp.Tag
-	22, // 12: std.ModuleRef.Labels:type_name -> std.Labels
-	42, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
+	21, // 4: std.JsonValue.Array:type_name -> std.JsonValue
+	44, // 5: std.Report.Title:type_name -> amp.Tag
+	44, // 6: std.Report.Caption:type_name -> amp.Tag
+	44, // 7: std.Report.Errors:type_name -> amp.Tag
+	44, // 8: std.Report.Warnings:type_name -> amp.Tag
+	44, // 9: std.Report.Messages:type_name -> amp.Tag
+	44, // 10: std.Report.Debug:type_name -> amp.Tag
+	44, // 11: std.ModuleRef.Module:type_name -> amp.Tag
+	23, // 12: std.ModuleRef.Labels:type_name -> std.Labels
+	45, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
 	3,  // 14: std.Rect.Format:type_name -> std.PointFormat
-	14, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	15, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	3,  // 16: std.GeoPath.Format:type_name -> std.PointFormat
 	4,  // 17: std.MediaInfo.Flags:type_name -> std.MediaFlags
-	41, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
-	28, // 19: std.MediaTags.Extra:type_name -> std.MediaTag
-	43, // 20: std.MediaTag.Units:type_name -> amp.Units
-	41, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
-	22, // 22: std.MediaEntry.Labels:type_name -> std.Labels
-	26, // 23: std.MediaEntry.Info:type_name -> std.MediaInfo
-	42, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
-	43, // 25: std.Segment.Units:type_name -> amp.Units
-	44, // 26: std.Segment.Blob:type_name -> amp.BlobRef
-	41, // 27: std.VisPreset.Title:type_name -> amp.Tag
-	41, // 28: std.VisPreset.Collection:type_name -> amp.Tag
-	41, // 29: std.VisPreset.Credits:type_name -> amp.Tag
+	44, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
+	29, // 19: std.MediaTags.Extra:type_name -> std.MediaTag
+	46, // 20: std.MediaTag.Units:type_name -> amp.Units
+	44, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
+	23, // 22: std.MediaEntry.Labels:type_name -> std.Labels
+	27, // 23: std.MediaEntry.Info:type_name -> std.MediaInfo
+	45, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
+	46, // 25: std.Segment.Units:type_name -> amp.Units
+	47, // 26: std.Segment.Blob:type_name -> amp.BlobRef
+	44, // 27: std.VisPreset.Title:type_name -> amp.Tag
+	44, // 28: std.VisPreset.Collection:type_name -> amp.Tag
+	44, // 29: std.VisPreset.Credits:type_name -> amp.Tag
 	5,  // 30: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
 	6,  // 31: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
 	7,  // 32: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	32, // 33: std.VisPreset.Args:type_name -> std.Arg
+	33, // 33: std.VisPreset.Args:type_name -> std.Arg
 	8,  // 34: std.TileBand.YEase:type_name -> std.TileEase
-	34, // 35: std.TileMeshSpec.Bands:type_name -> std.TileBand
-	35, // 36: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
-	33, // 37: std.SkinSpec.Layers:type_name -> std.VisPreset
-	37, // 38: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	35, // 35: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	36, // 36: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	34, // 37: std.SkinSpec.Layers:type_name -> std.VisPreset
+	38, // 38: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
 	9,  // 39: std.TileServer.Kind:type_name -> std.TileServerKind
 	10, // 40: std.TileServer.Projection:type_name -> std.TileProjection
 	11, // 41: std.TileServer.Scheme:type_name -> std.TileServerScheme
 	12, // 42: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
-	13, // 43: std.LoginForm.Encoding:type_name -> std.BodyEncoding
-	44, // [44:44] is the sub-list for method output_type
-	44, // [44:44] is the sub-list for method input_type
-	44, // [44:44] is the sub-list for extension type_name
-	44, // [44:44] is the sub-list for extension extendee
-	0,  // [0:44] is the sub-list for field type_name
+	13, // 43: std.MemberVars.ReticleStyle:type_name -> std.ReticleStyleID
+	14, // 44: std.LoginForm.Encoding:type_name -> std.BodyEncoding
+	45, // [45:45] is the sub-list for method output_type
+	45, // [45:45] is the sub-list for method input_type
+	45, // [45:45] is the sub-list for extension type_name
+	45, // [45:45] is the sub-list for extension extendee
+	0,  // [0:45] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -3913,8 +4105,8 @@ func file_amp_std_amp_std_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
-			NumEnums:      15,
-			NumMessages:   26,
+			NumEnums:      16,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

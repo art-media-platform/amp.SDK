@@ -132,10 +132,8 @@ var Attr = struct {
 	HomeAttr                           tag.Name
 	PlanetBinding                      tag.Name
 	PlanetStorageOpts                  tag.Name
-	SystemPropertyAttr                 tag.Name
-	SpaceReticleStyle                  tag.Name
-	SpaceReticleOverlay                tag.Name
-	SpaceSkybox                        tag.Name
+	HomeDeviceVars                     tag.Name
+	HomeMemberVars                     tag.Name
 	BlobAttr                           tag.Name
 	BlobRef                            tag.Name
 	NodeBlobs                          tag.Name
@@ -334,13 +332,10 @@ var Attr = struct {
 
 	PlanetBinding:     tag.Name{ID: tag.UID{0xD1107652908E11D6, 0x1B2B3BC082553787}, Text: "amp.home.planet.binding.Tag"},               // 6j21v5-544f2-7c1qb-tvs21-5bew7
 	PlanetStorageOpts: tag.Name{ID: tag.UID{0x69BFD182C13A9A31, 0xF66973A8296693D5}, Text: "amp.home.planet.storage.PlanetStorageOpts"}, // 39rz8s-5h9um-8szdu-cmp0n-qe4yp
-
-	// ─── System properties ──────────────────────────────────────────
-	SystemPropertyAttr: tag.Name{ID: tag.UID{0x2BA3C11AEAB12331, 0xCAFD58A215C24C83}, Text: "system.property"}, // 1cng0j-pupj4-dswpz-bsn8b-w4m43
-
-	SpaceReticleStyle:   tag.Name{ID: tag.UID{0x898D209EB3284EB4, 0x6854FCADE835E46C}, Text: "system.property.reticle.style"},   // 49jnh9-xdt89-uu6hp-7wprn-3ct3d
-	SpaceReticleOverlay: tag.Name{ID: tag.UID{0x31C05BF7F1CE5245, 0x3A9ECBD90E6673D1}, Text: "system.property.reticle.overlay"}, // 1js1ez-gwffb-92mp7-qcv47-6dwyj
-	SpaceSkybox:         tag.Name{ID: tag.UID{0x101BF55A052215FA, 0x8E0BC10873E916AC}, Text: "system.property.skybox.space"},    // 0h3gup-n1922-rx8w2-y111t-yk5pd
+	// Client vars groups: device-class on the member's device node,
+	// member-class on the home planet head node (one item each).
+	HomeDeviceVars: tag.Name{ID: tag.UID{0x29E7E7423E9B1D1C, 0xEB211EAF5656108E}, Text: "amp.home.device.DeviceVars"}, // 19wzmn-4gnv3-nffq8-8ypxc-5d44f
+	HomeMemberVars: tag.Name{ID: tag.UID{0x120E61F6DBFEBC72, 0xE54F53E16D8E5732}, Text: "amp.home.member.MemberVars"}, // 0k1thz-eqzyr-jtfbm-umw5q-swptk
 
 	// ─── Blob storage ───────────────────────────────────────────────
 	BlobAttr: tag.Name{ID: tag.UID{0x43839888952F19F9, 0xB576A64453AD2634}, Text: "amp.blob"}, // 23hfd8-j59g3-7wvbx-p68j9-uu9jn
@@ -464,6 +459,14 @@ const (
 const (
 	ThemeSlotPrefix   = "asset:theme/"                                               // ThemeMap owns this namespace
 	ThemeDefaultAtlas = "asset:crates.planet.tools/amp.3D.base.assets/theme.default" // factory atlas (in Crates.BaseAssets)
+)
+
+// ─── Client vars resolution — DeviceVars/MemberVars zero fields resolve here at ───
+// point of use (never in C# field initializers).
+const (
+	HomeVarsDefaultTargetFPS = int32(60)
+	HomeVarsMinTargetFPS     = int32(15)
+	HomeVarsMaxTargetFPS     = int32(120)
 )
 
 // ─── Locus spatial binding ──────────────────────────────────────

@@ -562,6 +562,34 @@ message TileServer {
 }
 
 
+// Reticle style ladder for the space-channel center reticle; 0 denotes unset.
+enum ReticleStyleID {
+    ReticleStyleUnset   = 0;
+    ReticleLine         = 1;
+    ReticleAngleBracket = 2;
+    ReticleSideBrackets = 3;
+}
+
+// DeviceVars is the device-class client vars group — settings tied to one
+// device's display and performance envelope.  Stored as one item on the
+// member's device node in the home planet (std.Attr.HomeDeviceVars).
+// A zero field is the "unset" sentinel; resolution happens at point of use
+// (std.HomeVars defaults), never in a field initializer.
+message DeviceVars {
+    float UIScale   = 1; // item size scale; 0 → derived from display DPI
+    int32 TargetFPS = 2; // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
+}
+
+// MemberVars is the member-class client vars group — presentation preferences
+// that follow the member across devices.  Stored as one item on the home
+// planet head node (std.Attr.HomeMemberVars).  Zero/empty fields are "unset"
+// and resolve at point of use.
+message MemberVars {
+    string         DefaultSkyboxURI  = 1; // default space skybox asset URI; empty → channel default
+    ReticleStyleID ReticleStyle      = 2; // center reticle style; 0 → ReticleLine
+    string         ReticleOverlayURI = 3; // center reticle overlay sprite URI; empty → overlay hidden
+}
+
 // BodyEncoding is how an HTTP request body is encoded.
 enum BodyEncoding {
     JSON = 0;  // application/json

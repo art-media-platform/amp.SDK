@@ -209,13 +209,11 @@ tags Attr {
     HomeAttr "amp.home" {
         PlanetBinding     "planet.binding.Tag"
         PlanetStorageOpts "planet.storage.PlanetStorageOpts"
-    }
 
-    // System properties
-    SystemPropertyAttr "system.property" {
-        SpaceReticleStyle   "reticle.style"
-        SpaceReticleOverlay "reticle.overlay"
-        SpaceSkybox         "skybox.space"
+        // Client vars groups: device-class on the member's device node,
+        // member-class on the home planet head node (one item each).
+        HomeDeviceVars "device.DeviceVars"
+        HomeMemberVars "member.MemberVars"
     }
 
     // Blob storage
@@ -341,6 +339,14 @@ const Actor {
 const Theme {
     string SlotPrefix   = "asset:theme/";                                               // ThemeMap owns this namespace
     string DefaultAtlas = "asset:crates.planet.tools/amp.3D.base.assets/theme.default"; // factory atlas (in Crates.BaseAssets)
+}
+
+// Client vars resolution — DeviceVars/MemberVars zero fields resolve here at
+// point of use (never in C# field initializers).
+const HomeVars {
+    int32 DefaultTargetFPS = 60;
+    int32 MinTargetFPS     = 15;
+    int32 MaxTargetFPS     = 120;
 }
 
 // Locus spatial binding
