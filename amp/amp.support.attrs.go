@@ -590,21 +590,26 @@ func (req *Request) FilterLabel() string {
 	return string(label)
 }
 
-// Returns if this range includes the given item's ElementID
-func (req *Request) Admits(elem tag.ElementID) bool {
+// Returns if any span admits the given op address (UID-interval containment).
+func (req *Request) Admits(addr tag.Address) bool {
 	for _, span := range req.Selector.Spans {
 		nodeID := span.NodeID()
-		if !nodeID.IsWildcard() && nodeID != elem.NodeID {
+		if !nodeID.IsWildcard() && nodeID != addr.NodeID {
 			continue
 		}
 		attrID := span.AttrID()
-		if !attrID.IsWildcard() && attrID != elem.AttrID {
+		if !attrID.IsWildcard() && attrID != addr.AttrID {
 			continue
 		}
-		if elem.ItemID[0] < span.ItemID_Min_0 || elem.ItemID[0] > span.ItemID_Max_0 {
+		itemMin, itemMax := span.ItemRange()
+		if addr.ItemID.CompareTo(itemMin) < 0 || addr.ItemID.CompareTo(itemMax) > 0 {
 			continue
 		}
-		if elem.ItemID[1] < span.ItemID_Min_1 || elem.ItemID[1] > span.ItemID_Max_1 {
+		editMin, editMax := span.EditRange()
+		if editMin.IsSet() && addr.EditID.CompareTo(editMin) < 0 {
+			continue
+		}
+		if editMax.IsSet() && addr.EditID.CompareTo(editMax) > 0 {
 			continue
 		}
 
@@ -635,6 +640,20 @@ func (span *ItemSpan) ItemRange() (min, max tag.UID) {
 	max = tag.UID{
 		span.ItemID_Max_0,
 		span.ItemID_Max_1,
+	}
+	return
+}
+
+// EditRange returns the span's edit-axis window; an unset (zero) bound means
+// the window is open on that side.
+func (span *ItemSpan) EditRange() (min, max tag.UID) {
+	min = tag.UID{
+		span.EditID_Min_0,
+		span.EditID_Min_1,
+	}
+	max = tag.UID{
+		span.EditID_Max_0,
+		span.EditID_Max_1,
 	}
 	return
 }

@@ -134,6 +134,18 @@ type TxScope struct {
 
 // Binds an proto.Message prototype to its associated attribute tag.
 type AttrDef struct {
-	tag.Name                // maps the value Prototype to an explicit attr ID
-	Prototype proto.Message // cloned when this attribute is instantiated
+	tag.Name                  // maps the value Prototype to an explicit attr ID
+	Prototype   proto.Message // cloned when this attribute is instantiated
+	Class       AttrClass     // storage class; AttrClass_ClassUnset resolves to Folded
+	RetainEdits int32         // Folded only: cell fold depth K; 0 = unset → 1; the host
+	                          // clamps to its node-local DefaultRetainEditsCap.
+	                          // Meaningless for Tape (must be 0).
+}
+
+// ResolvedClass returns the def's storage class with the unset sentinel resolved.
+func (def *AttrDef) ResolvedClass() AttrClass {
+	if def.Class == AttrClass_ClassUnset {
+		return AttrClass_Folded
+	}
+	return def.Class
 }

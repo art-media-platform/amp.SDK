@@ -434,6 +434,9 @@ type Registry interface {
 	// Note that an *AppModule is READ ONLY since they are static and shared.
 	FindModule(uid tag.UID, name string) *AppModule
 
+	// Returns the registered def for the given attr; ok is false if unregistered.
+	FindAttr(attrID tag.UID) (def AttrDef, ok bool)
+
 	// Instantiates a registered value having a given UID.
 	NewValue(attrID tag.UID) (proto.Message, error)
 }

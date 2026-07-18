@@ -332,7 +332,30 @@ message ItemSpan {
     fixed64  ItemID_Max_1 = 13; // "
 
     int64    ItemsPerAttr = 14; // max items returned per unique attr ID (0 denotes no limit)
-    int64    EditsPerItem = 15; // max edits returned per unique item ID
+    int64    EditsPerItem = 15; // max edits returned per unique item ID, newest first
+
+    // Edit-axis time window, inclusive; an unset bound widens to the tape
+    // start / the open live tail.  EditID == TxID is time-true
+    // (SD-edit-resolution §6.1).  On a Tape attr the journal is the store:
+    // items are tracks, this window selects the replay span, and EditsPerItem
+    // caps samples per track.  On a Folded attr the window filters the cell's
+    // retained edits.
+    fixed64  EditID_Min_0 = 16;
+    fixed64  EditID_Min_1 = 17;
+    fixed64  EditID_Max_0 = 18;
+    fixed64  EditID_Max_1 = 19;
+}
+
+
+// AttrClass is an attr's storage class, fixed at registration (1-of-N; never a
+// bool or bitfield).  Folded: the cabinet folds the attr's present per cell
+// (SD-planet-storage §8.1, §8.6).  Tape: the edit axis is the attr's time
+// axis — the journal IS the tape; the attr is fold-exempt, holds zero cabinet
+// rows, and serve sources from journal replay.
+enum AttrClass {
+    ClassUnset = 0; // unset sentinel; resolves to Folded
+    Folded     = 1; // present-folding cabinet cell (the default)
+    Tape       = 2; // journal-tape time series; fold-exempt
 }
 
 

@@ -29,6 +29,23 @@ func NewRegistry() amp.Registry {
 }
 
 func RegisterAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
+	return registerAttr(attr, prototype, subTags, amp.AttrClass_Folded, 0)
+}
+
+// RegisterFoldedAttr registers a folded attr with an explicit cell fold depth;
+// retainEdits > 1 turns lineage admission on for the attr (SD-edit-resolution §6.3).
+func RegisterFoldedAttr(attr tag.Name, prototype proto.Message, subTags string, retainEdits int32) tag.Name {
+	return registerAttr(attr, prototype, subTags, amp.AttrClass_Folded, retainEdits)
+}
+
+// RegisterTapeAttr registers a fold-exempt journal-tape attr (AttrClass_Tape):
+// the edit axis is the attr's time axis, the cabinet holds zero rows for it,
+// and serve sources from journal replay (SD-planet-storage §8.1).
+func RegisterTapeAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
+	return registerAttr(attr, prototype, subTags, amp.AttrClass_Tape, 0)
+}
+
+func registerAttr(attr tag.Name, prototype proto.Message, subTags string, class amp.AttrClass, retainEdits int32) tag.Name {
 	if subTags != "" {
 		attr = attr.With(subTags)
 	}
@@ -41,8 +58,10 @@ func RegisterAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Na
 	attr = attr.With(typeOf.Name())
 
 	err := gRegistry.RegisterAttr(amp.AttrDef{
-		Name:      attr,
-		Prototype: prototype,
+		Name:        attr,
+		Prototype:   prototype,
+		Class:       class,
+		RetainEdits: retainEdits,
 	})
 	if err != nil {
 		panic(err)
@@ -64,11 +83,29 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	if attrID.IsNil() {
 		return status.Code_BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
+	if def.ResolvedClass() == amp.AttrClass_Tape && def.RetainEdits != 0 {
+		return status.Code_BadRequest.Errorf("RegisterAttr: %q: RetainEdits is meaningless on a Tape attr", def.Name.Canonic())
+	}
 
 	reg.mu.Lock()
 	defer reg.mu.Unlock()
+
+	// An attr's storage policy is write-once: the fold and serve resolve it
+	// process-statically, so re-registration may never change it.
+	if prev, exists := reg.attrDefs[attrID]; exists {
+		if prev.ResolvedClass() != def.ResolvedClass() || prev.RetainEdits != def.RetainEdits {
+			return status.Code_BadRequest.Errorf("RegisterAttr: %q: storage policy already registered differently", def.Name.Canonic())
+		}
+	}
 	reg.attrDefs[attrID] = def
 	return nil
+}
+
+func (reg *registry) FindAttr(attrID tag.UID) (amp.AttrDef, bool) {
+	reg.mu.RLock()
+	def, exists := reg.attrDefs[attrID]
+	reg.mu.RUnlock()
+	return def, exists
 }
 
 // Implements Registry
