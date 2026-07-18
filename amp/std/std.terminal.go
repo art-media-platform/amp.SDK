@@ -12,7 +12,7 @@ import (
 var (
 	// TerminalTape carries a session's TermIO frames (AttrClass_Tape): zero
 	// cabinet rows; serve replays the journal window (SD-planet-storage §8.1).
-	TerminalTape = RegisterTapeAttr(Attr.ItemSeries, &amp.TermIO{}, "main.terminal")
+	TerminalTape = RegisterAttrTape(Attr.ItemSeries, &amp.TermIO{}, "main.terminal")
 
 	// TerminalHead is the folded live-keyframe cell (Folded, K=1) — the
 	// instant re-attach anchor a fresh console loads before tape replay.

@@ -32,16 +32,16 @@ func RegisterAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Na
 	return registerAttr(attr, prototype, subTags, amp.AttrClass_Folded, 0)
 }
 
-// RegisterFoldedAttr registers a folded attr with an explicit cell fold depth;
+// RegisterAttrFolded registers a folded attr with an explicit cell fold depth;
 // retainEdits > 1 turns lineage admission on for the attr (SD-edit-resolution §6.3).
-func RegisterFoldedAttr(attr tag.Name, prototype proto.Message, subTags string, retainEdits int32) tag.Name {
+func RegisterAttrFolded(attr tag.Name, prototype proto.Message, subTags string, retainEdits int32) tag.Name {
 	return registerAttr(attr, prototype, subTags, amp.AttrClass_Folded, retainEdits)
 }
 
-// RegisterTapeAttr registers a fold-exempt journal-tape attr (AttrClass_Tape):
+// RegisterAttrTape registers a fold-exempt journal-tape attr (AttrClass_Tape):
 // the edit axis is the attr's time axis, the cabinet holds zero rows for it,
 // and serve sources from journal replay (SD-planet-storage §8.1).
-func RegisterTapeAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
+func RegisterAttrTape(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
 	return registerAttr(attr, prototype, subTags, amp.AttrClass_Tape, 0)
 }
 
