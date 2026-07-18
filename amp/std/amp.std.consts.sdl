@@ -86,25 +86,25 @@ tags Attr {
             ChannelPropertyCameraControls "camera.controls"
         }
         ChannelType "type" {
-            ChannelTypeSpreadsheet  "spreadsheet"
-            ChannelTypeMessages     "messages"
-            ChannelTypeTimeline     "timeline"
-            ChannelTypeNotes        "notes"
-            ChannelTypeMap          "map"
-            ChannelTypeGlobe        "globe"
-            ChannelTypeManifold     "manifold"
-            ChannelTypeSpace        "space"
-            ChannelTypeLinks        "links"
-            ChannelTypeRegistry     "registry"
-            ChannelTypeSystem       "system"
-            ChannelTypeWeb          "web"
-            ChannelTypeCrateManager "cratemanager"
-            ChannelTypePlaylist     "playlist"
-            ChannelTypePicker       "picker"
-            ChannelTypePlanetPicker "planetpicker"
-            ChannelTypeBrand        "brand"
-            ChannelTypeNameService  "nameservice"
-            ChannelTypeTerminal     "terminal"
+            ChannelTypeSpreadsheet  "Spreadsheet"
+            ChannelTypeMessages     "Messages"
+            ChannelTypeTimeline     "Timeline"
+            ChannelTypeNotes        "Notes"
+            ChannelTypeMap          "Map"
+            ChannelTypeGlobe        "Globe"
+            ChannelTypeManifold     "Manifold"
+            ChannelTypeSpace        "Space"
+            ChannelTypeLinks        "Links"
+            ChannelTypeRegistry     "Registry"
+            ChannelTypeSystem       "System"
+            ChannelTypeWeb          "Web"
+            ChannelTypeCrateManager "CrateManager"
+            ChannelTypePlaylist     "Playlist"
+            ChannelTypePicker       "Picker"
+            ChannelTypePlanetPicker "PlanetPicker"
+            ChannelTypeBrand        "Brand"
+            ChannelTypeNameService  "NameService"
+            ChannelTypeTerminal     "Terminal"
         }
     }
 
@@ -148,39 +148,39 @@ tags Attr {
         // Substrate-agnostic Member Kind (AOM SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
         // resolving to one of these UIDs.  Communities + apps may register
         // additional Kinds in their own consts.sdl.  Zero UID = unspecified.
-        LawMemberKind "memberkind" {
-            LawMemberKind_Person    "person"
-            LawMemberKind_Group     "group"
-            LawMemberKind_Agent     "agent"
-            LawMemberKind_Instance  "instance"
-            LawMemberKind_Successor "successor"
-            LawMemberKind_Memorial  "memorial"
-            LawMemberKind_Process   "process"
+        LawMemberKind "MemberKind" {
+            LawMemberKind_Person    "Person"
+            LawMemberKind_Group     "Group"
+            LawMemberKind_Agent     "Agent"
+            LawMemberKind_Instance  "Instance"
+            LawMemberKind_Successor "Successor"
+            LawMemberKind_Memorial  "Memorial"
+            LawMemberKind_Process   "Process"
         }
 
         // Modal Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a
         // Tag resolving to one of these UIDs.  Communities + apps may register
         // additional modalities.  Zero UID = unspecified.
-        LawAttestationModality "attestationmodality" {
-            LawAttestationModality_Asserted    "asserted"
-            LawAttestationModality_Witnessed   "witnessed"
-            LawAttestationModality_Reported    "reported"
-            LawAttestationModality_Inferred    "inferred"
-            LawAttestationModality_Speculated  "speculated"
-            LawAttestationModality_Dreamed     "dreamed"
-            LawAttestationModality_Liturgical  "liturgical"
-            LawAttestationModality_Conditional "conditional"
-            LawAttestationModality_Contested   "contested"
-            LawAttestationModality_Retracted   "retracted"
+        LawAttestationModality "AttestationModality" {
+            LawAttestationModality_Asserted    "Asserted"
+            LawAttestationModality_Witnessed   "Witnessed"
+            LawAttestationModality_Reported    "Reported"
+            LawAttestationModality_Inferred    "Inferred"
+            LawAttestationModality_Speculated  "Speculated"
+            LawAttestationModality_Dreamed     "Dreamed"
+            LawAttestationModality_Liturgical  "Liturgical"
+            LawAttestationModality_Conditional "Conditional"
+            LawAttestationModality_Contested   "Contested"
+            LawAttestationModality_Retracted   "Retracted"
         }
 
         // Equivalence strengths (AOM SD-address-equivalence.md).  Equivalence.Strength is a Tag
         // resolving to one of these UIDs.  Zero UID = unspecified.
-        LawEquivalenceStrength "equivalencestrength" {
-            LawEquivalenceStrength_Identity    "identity"
-            LawEquivalenceStrength_Translation "translation"
-            LawEquivalenceStrength_Approximate "approximate"
-            LawEquivalenceStrength_Analogous   "analogous"
+        LawEquivalenceStrength "EquivalenceStrength" {
+            LawEquivalenceStrength_Identity    "Identity"
+            LawEquivalenceStrength_Translation "Translation"
+            LawEquivalenceStrength_Approximate "Approximate"
+            LawEquivalenceStrength_Analogous   "Analogous"
         }
 
     }

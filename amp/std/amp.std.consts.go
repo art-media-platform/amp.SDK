@@ -215,25 +215,25 @@ var Attr = struct {
 	ChannelPropertyCameraControls: tag.Name{ID: tag.UID{0x6FCB7C32C026A452, 0xC4D5A0B4BB4DD5D7}, Text: "channel.property.camera.controls"}, // 3gtey3-5h16n-j9d9p-e0qkx-nvpfr
 	ChannelType:                   tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Text: "channel.type"},                     // 71evhn-qj9kw-y382t-pe693-52teh
 
-	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x1C0062A36805F2FB, 0xC37F9A8B51C0A909}, Text: "channel.type.spreadsheet"},  // 0w01jb-6u05y-cxw6z-wuje8-w1b89
-	ChannelTypeMessages:     tag.Name{ID: tag.UID{0x0B6D6A2421321CA6, 0xFBA2073C02B917A6}, Text: "channel.type.messages"},     // 0cepp2-889k3-kmgr8-h77h1-ck5x6
-	ChannelTypeTimeline:     tag.Name{ID: tag.UID{0xCAA590A1B24C80D3, 0xF0D695C6FDB81BC9}, Text: "channel.type.timeline"},     // 6bnq8b-3dkdh-39z1p-npsvy-vh6y9
-	ChannelTypeNotes:        tag.Name{ID: tag.UID{0x7F066E7E15634C8E, 0x2B42527E940C4785}, Text: "channel.type.notes"},        // 3z0tr7-w5c39-k72qh-kkgub-0sjw5
-	ChannelTypeMap:          tag.Name{ID: tag.UID{0x461600979AF3D842, 0x5A0DB0A3BDCC6D2C}, Text: "channel.type.map"},          // 262s09-g6rmv-115n3-ehnfy-wsv9d
-	ChannelTypeGlobe:        tag.Name{ID: tag.UID{0x5AE48F27C6756F95, 0xD710170F8601E1CA}, Text: "channel.type.globe"},        // 2uwk7k-gjmpe-ybxf4-0r1y3-03sfb
-	ChannelTypeManifold:     tag.Name{ID: tag.UID{0x4CBB7B8671F99205, 0xF3E8260DB0811029}, Text: "channel.type.manifold"},     // 2drexs-dwgtk-82z7u-161qs-82419
-	ChannelTypeSpace:        tag.Name{ID: tag.UID{0x7A73CEC90BFC9F74, 0x5A5DE66730642BD4}, Text: "channel.type.space"},        // 3ufg7d-k2zwm-xu5nr-g6dws-68byn
-	ChannelTypeLinks:        tag.Name{ID: tag.UID{0x0F753C0ED5870184, 0x1FC3120334FEC794}, Text: "channel.type.links"},        // 0gfny0-xpd70-621zh-sk0du-gxjwn
-	ChannelTypeRegistry:     tag.Name{ID: tag.UID{0xB9BF3D6330F504B7, 0xE0B97F3A75A18971}, Text: "channel.type.registry"},     // 5trwyq-6d7p0-kvy1f-cz79u-u32cj
-	ChannelTypeSystem:       tag.Name{ID: tag.UID{0xBAAE45A1E50DB5D6, 0xA110D0DF2A2A8A6B}, Text: "channel.type.system"},       // 5upt2u-3t8eq-rcb24-6hvwp-2p2mc
-	ChannelTypeWeb:          tag.Name{ID: tag.UID{0x0E85824C4CAE1CCD, 0x03B61877597F1503}, Text: "channel.type.web"},          // 0fhq14-sm5f3-m6h7e-hsfxd-ry583
-	ChannelTypeCrateManager: tag.Name{ID: tag.UID{0x9E74B4232D25A550, 0x3FAB0CD74C29B100}, Text: "channel.type.cratemanager"}, // 4yfku2-6c95n-p83zb-sdux6-2md80
-	ChannelTypePlaylist:     tag.Name{ID: tag.UID{0x13359329BB89DC00, 0x0A5737DF5CC11363}, Text: "channel.type.playlist"},     // 0m6q9k-mfw9v-h00np-trvxf-d24v3
-	ChannelTypePicker:       tag.Name{ID: tag.UID{0xD2EBF18403D0BFF7, 0x94A830AA64236EE9}, Text: "channel.type.picker"},       // 6kxgss-80yhr-zvt9b-1hp9k-26vr9
-	ChannelTypePlanetPicker: tag.Name{ID: tag.UID{0x235A1464B1A9B829, 0xA3F82B96FE207780}, Text: "channel.type.planetpicker"}, // 13c8b6-9de9r-0nu7y-1ckvz-20xw0
-	ChannelTypeBrand:        tag.Name{ID: tag.UID{0xB65147BCC3C55E4C, 0x9BE811A46788AFF8}, Text: "channel.type.brand"},        // 5qb53v-thy5c-t69ru-0jnjm-sjczs
-	ChannelTypeNameService:  tag.Name{ID: tag.UID{0x7F92C1A4067E91BF, 0x9ED36CF793A42DBF}, Text: "channel.type.nameservice"},  // 3zkc0u-81myk-6ztxn-vdyy9-u8cez
-	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.terminal"},     // 52nz89-dr5zw-7120g-6rzq8-mekvv
+	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x1C0062A36805F2FB, 0xC37F9A8B51C0A909}, Text: "channel.type.Spreadsheet"},  // 0w01jb-6u05y-cxw6z-wuje8-w1b89
+	ChannelTypeMessages:     tag.Name{ID: tag.UID{0x0B6D6A2421321CA6, 0xFBA2073C02B917A6}, Text: "channel.type.Messages"},     // 0cepp2-889k3-kmgr8-h77h1-ck5x6
+	ChannelTypeTimeline:     tag.Name{ID: tag.UID{0xCAA590A1B24C80D3, 0xF0D695C6FDB81BC9}, Text: "channel.type.Timeline"},     // 6bnq8b-3dkdh-39z1p-npsvy-vh6y9
+	ChannelTypeNotes:        tag.Name{ID: tag.UID{0x7F066E7E15634C8E, 0x2B42527E940C4785}, Text: "channel.type.Notes"},        // 3z0tr7-w5c39-k72qh-kkgub-0sjw5
+	ChannelTypeMap:          tag.Name{ID: tag.UID{0x461600979AF3D842, 0x5A0DB0A3BDCC6D2C}, Text: "channel.type.Map"},          // 262s09-g6rmv-115n3-ehnfy-wsv9d
+	ChannelTypeGlobe:        tag.Name{ID: tag.UID{0x5AE48F27C6756F95, 0xD710170F8601E1CA}, Text: "channel.type.Globe"},        // 2uwk7k-gjmpe-ybxf4-0r1y3-03sfb
+	ChannelTypeManifold:     tag.Name{ID: tag.UID{0x4CBB7B8671F99205, 0xF3E8260DB0811029}, Text: "channel.type.Manifold"},     // 2drexs-dwgtk-82z7u-161qs-82419
+	ChannelTypeSpace:        tag.Name{ID: tag.UID{0x7A73CEC90BFC9F74, 0x5A5DE66730642BD4}, Text: "channel.type.Space"},        // 3ufg7d-k2zwm-xu5nr-g6dws-68byn
+	ChannelTypeLinks:        tag.Name{ID: tag.UID{0x0F753C0ED5870184, 0x1FC3120334FEC794}, Text: "channel.type.Links"},        // 0gfny0-xpd70-621zh-sk0du-gxjwn
+	ChannelTypeRegistry:     tag.Name{ID: tag.UID{0xB9BF3D6330F504B7, 0xE0B97F3A75A18971}, Text: "channel.type.Registry"},     // 5trwyq-6d7p0-kvy1f-cz79u-u32cj
+	ChannelTypeSystem:       tag.Name{ID: tag.UID{0xBAAE45A1E50DB5D6, 0xA110D0DF2A2A8A6B}, Text: "channel.type.System"},       // 5upt2u-3t8eq-rcb24-6hvwp-2p2mc
+	ChannelTypeWeb:          tag.Name{ID: tag.UID{0x0E85824C4CAE1CCD, 0x03B61877597F1503}, Text: "channel.type.Web"},          // 0fhq14-sm5f3-m6h7e-hsfxd-ry583
+	ChannelTypeCrateManager: tag.Name{ID: tag.UID{0x9E74B4232D25A550, 0x3FAB0CD74C29B100}, Text: "channel.type.CrateManager"}, // 4yfku2-6c95n-p83zb-sdux6-2md80
+	ChannelTypePlaylist:     tag.Name{ID: tag.UID{0x13359329BB89DC00, 0x0A5737DF5CC11363}, Text: "channel.type.Playlist"},     // 0m6q9k-mfw9v-h00np-trvxf-d24v3
+	ChannelTypePicker:       tag.Name{ID: tag.UID{0xD2EBF18403D0BFF7, 0x94A830AA64236EE9}, Text: "channel.type.Picker"},       // 6kxgss-80yhr-zvt9b-1hp9k-26vr9
+	ChannelTypePlanetPicker: tag.Name{ID: tag.UID{0x235A1464B1A9B829, 0xA3F82B96FE207780}, Text: "channel.type.PlanetPicker"}, // 13c8b6-9de9r-0nu7y-1ckvz-20xw0
+	ChannelTypeBrand:        tag.Name{ID: tag.UID{0xB65147BCC3C55E4C, 0x9BE811A46788AFF8}, Text: "channel.type.Brand"},        // 5qb53v-thy5c-t69ru-0jnjm-sjczs
+	ChannelTypeNameService:  tag.Name{ID: tag.UID{0x7F92C1A4067E91BF, 0x9ED36CF793A42DBF}, Text: "channel.type.NameService"},  // 3zkc0u-81myk-6ztxn-vdyy9-u8cez
+	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.Terminal"},     // 52nz89-dr5zw-7120g-6rzq8-mekvv
 
 	// ─── Brand — substrate-native planet identity (AOM DD-name-service.md §2). ───
 	// Single item per planet at (HeadNodeID, amp.Brand, its own UID); the genesis
@@ -275,38 +275,38 @@ var Attr = struct {
 	// Substrate-agnostic Member Kind (AOM SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
 	// resolving to one of these UIDs.  Communities + apps may register
 	// additional Kinds in their own consts.sdl.  Zero UID = unspecified.
-	LawMemberKind: tag.Name{ID: tag.UID{0x102047CBC77F0A3E, 0x5C2BBD3DA4EA137C}, Text: "amp.law.memberkind"}, // 0h413w-rjvz1-8z5sb-xx7qk-fn4vw
+	LawMemberKind: tag.Name{ID: tag.UID{0x102047CBC77F0A3E, 0x5C2BBD3DA4EA137C}, Text: "amp.law.MemberKind"}, // 0h413w-rjvz1-8z5sb-xx7qk-fn4vw
 
-	LawMemberKind_Person:    tag.Name{ID: tag.UID{0x9066A58EE8084472, 0x7ECCB4DC966DA647}, Text: "amp.law.memberkind.person"},    // 4hduks-xu088-jt7xm-5nvkc-6v9k7
-	LawMemberKind_Group:     tag.Name{ID: tag.UID{0xEF2C5586176DEED8, 0x5B05F595BBE5600D}, Text: "amp.law.memberkind.group"},     // 7g5jbs-d5vex-vd5q1-gpkqx-ybs0e
-	LawMemberKind_Agent:     tag.Name{ID: tag.UID{0x749E0C48FD2107B3, 0x929ECFA81FC32124}, Text: "amp.law.memberkind.agent"},     // 3nms64-jz910-ytt57-qgp0g-w6894
-	LawMemberKind_Instance:  tag.Name{ID: tag.UID{0xB7889D1CF912DC06, 0xFDF984BBDFA0D5BB}, Text: "amp.law.memberkind.instance"},  // 5rj2fj-ty8kv-h3gvy-d4rgg-u1pev
-	LawMemberKind_Successor: tag.Name{ID: tag.UID{0x627C11221E4584F9, 0xCD00ACCD3211B4F9}, Text: "amp.law.memberkind.successor"}, // 32gh8k-47k5h-mwwu0-5dtnt-13e7t
-	LawMemberKind_Memorial:  tag.Name{ID: tag.UID{0xBA335B3927C0252B, 0xB791D002F55B477F}, Text: "amp.law.memberkind.memorial"},  // 5u6eem-k9y04-npvg4-fh0cu-pqjvz
-	LawMemberKind_Process:   tag.Name{ID: tag.UID{0x98ECE8E691BE5BD5, 0x7E0A29F6F4393466}, Text: "amp.law.memberkind.process"},   // 4sxmnf-e4eyc-gbrw2-j9yvu-3ke36
+	LawMemberKind_Person:    tag.Name{ID: tag.UID{0x9066A58EE8084472, 0x7ECCB4DC966DA647}, Text: "amp.law.MemberKind.Person"},    // 4hduks-xu088-jt7xm-5nvkc-6v9k7
+	LawMemberKind_Group:     tag.Name{ID: tag.UID{0xEF2C5586176DEED8, 0x5B05F595BBE5600D}, Text: "amp.law.MemberKind.Group"},     // 7g5jbs-d5vex-vd5q1-gpkqx-ybs0e
+	LawMemberKind_Agent:     tag.Name{ID: tag.UID{0x749E0C48FD2107B3, 0x929ECFA81FC32124}, Text: "amp.law.MemberKind.Agent"},     // 3nms64-jz910-ytt57-qgp0g-w6894
+	LawMemberKind_Instance:  tag.Name{ID: tag.UID{0xB7889D1CF912DC06, 0xFDF984BBDFA0D5BB}, Text: "amp.law.MemberKind.Instance"},  // 5rj2fj-ty8kv-h3gvy-d4rgg-u1pev
+	LawMemberKind_Successor: tag.Name{ID: tag.UID{0x627C11221E4584F9, 0xCD00ACCD3211B4F9}, Text: "amp.law.MemberKind.Successor"}, // 32gh8k-47k5h-mwwu0-5dtnt-13e7t
+	LawMemberKind_Memorial:  tag.Name{ID: tag.UID{0xBA335B3927C0252B, 0xB791D002F55B477F}, Text: "amp.law.MemberKind.Memorial"},  // 5u6eem-k9y04-npvg4-fh0cu-pqjvz
+	LawMemberKind_Process:   tag.Name{ID: tag.UID{0x98ECE8E691BE5BD5, 0x7E0A29F6F4393466}, Text: "amp.law.MemberKind.Process"},   // 4sxmnf-e4eyc-gbrw2-j9yvu-3ke36
 	// Modal Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a
 	// Tag resolving to one of these UIDs.  Communities + apps may register
 	// additional modalities.  Zero UID = unspecified.
-	LawAttestationModality: tag.Name{ID: tag.UID{0x9F5377F513757A9F, 0x74B304390F47261B}, Text: "amp.law.attestationmodality"}, // 4zbevz-b4vpg-bgr9d-s4747-nf9hv
+	LawAttestationModality: tag.Name{ID: tag.UID{0x9F5377F513757A9F, 0x74B304390F47261B}, Text: "amp.law.AttestationModality"}, // 4zbevz-b4vpg-bgr9d-s4747-nf9hv
 
-	LawAttestationModality_Asserted:    tag.Name{ID: tag.UID{0x75C91DBFE351CFA4, 0xBDF0BBC9911BA504}, Text: "amp.law.attestationmodality.asserted"},    // 3pt4fv-zsujt-ykcvw-5vt68-jr984
-	LawAttestationModality_Witnessed:   tag.Name{ID: tag.UID{0xEDF2976BE9E0FC72, 0xA1AA047BE5D91C2F}, Text: "amp.law.attestationmodality.witnessed"},   // 7eybcq-rug0z-jtb3b-h4ggk-xk71g
-	LawAttestationModality_Reported:    tag.Name{ID: tag.UID{0x01ABA5357F784D15, 0x96F49237F6805E56}, Text: "amp.law.attestationmodality.reported"},    // 01pfkm-bzvs9-nbtex-4k6zv-80rkq
-	LawAttestationModality_Inferred:    tag.Name{ID: tag.UID{0x586F8C9352B3899C, 0x8F41E2BF1D0BB521}, Text: "amp.law.attestationmodality.inferred"},    // 2sey69-6npmj-6f8yh-g2rwf-hre91
-	LawAttestationModality_Speculated:  tag.Name{ID: tag.UID{0xB39330159C4E87E1, 0xF842FF134BF859C2}, Text: "amp.law.attestationmodality.speculated"},  // 5mkds1-c72fh-zhzhh-rz2e5-zhqf2
-	LawAttestationModality_Dreamed:     tag.Name{ID: tag.UID{0xAC2C17267CD4DF9B, 0x94DD976E325E51B4}, Text: "amp.law.attestationmodality.dreamed"},     // 5d5hck-dz6nv-yet9r-drest-5wnen
-	LawAttestationModality_Liturgical:  tag.Name{ID: tag.UID{0x801C1A7DF12F7128, 0xFA0D77ADD9E695AB}, Text: "amp.law.attestationmodality.liturgical"},  // 403he7-vw9gf-4ngn3-crprd-ye5ec
-	LawAttestationModality_Conditional: tag.Name{ID: tag.UID{0x84466F1352512715, 0x29E493F726901576}, Text: "amp.law.attestationmodality.conditional"}, // 448trj-6nkj4-wbkmt-4mywm-905cq
-	LawAttestationModality_Contested:   tag.Name{ID: tag.UID{0x0502182AD6D3BDB4, 0xC9F14651631969E3}, Text: "amp.law.attestationmodality.contested"},   // 0508d2-ppqmr-qudmw-b6b5j-jkug3
-	LawAttestationModality_Retracted:   tag.Name{ID: tag.UID{0xCA955565A08728E6, 0x4FCC6CCB72D595CB}, Text: "amp.law.attestationmodality.retracted"},   // 6bkpbq-c8475-3m4zm-3dtet-ec5fc
+	LawAttestationModality_Asserted:    tag.Name{ID: tag.UID{0x75C91DBFE351CFA4, 0xBDF0BBC9911BA504}, Text: "amp.law.AttestationModality.Asserted"},    // 3pt4fv-zsujt-ykcvw-5vt68-jr984
+	LawAttestationModality_Witnessed:   tag.Name{ID: tag.UID{0xEDF2976BE9E0FC72, 0xA1AA047BE5D91C2F}, Text: "amp.law.AttestationModality.Witnessed"},   // 7eybcq-rug0z-jtb3b-h4ggk-xk71g
+	LawAttestationModality_Reported:    tag.Name{ID: tag.UID{0x01ABA5357F784D15, 0x96F49237F6805E56}, Text: "amp.law.AttestationModality.Reported"},    // 01pfkm-bzvs9-nbtex-4k6zv-80rkq
+	LawAttestationModality_Inferred:    tag.Name{ID: tag.UID{0x586F8C9352B3899C, 0x8F41E2BF1D0BB521}, Text: "amp.law.AttestationModality.Inferred"},    // 2sey69-6npmj-6f8yh-g2rwf-hre91
+	LawAttestationModality_Speculated:  tag.Name{ID: tag.UID{0xB39330159C4E87E1, 0xF842FF134BF859C2}, Text: "amp.law.AttestationModality.Speculated"},  // 5mkds1-c72fh-zhzhh-rz2e5-zhqf2
+	LawAttestationModality_Dreamed:     tag.Name{ID: tag.UID{0xAC2C17267CD4DF9B, 0x94DD976E325E51B4}, Text: "amp.law.AttestationModality.Dreamed"},     // 5d5hck-dz6nv-yet9r-drest-5wnen
+	LawAttestationModality_Liturgical:  tag.Name{ID: tag.UID{0x801C1A7DF12F7128, 0xFA0D77ADD9E695AB}, Text: "amp.law.AttestationModality.Liturgical"},  // 403he7-vw9gf-4ngn3-crprd-ye5ec
+	LawAttestationModality_Conditional: tag.Name{ID: tag.UID{0x84466F1352512715, 0x29E493F726901576}, Text: "amp.law.AttestationModality.Conditional"}, // 448trj-6nkj4-wbkmt-4mywm-905cq
+	LawAttestationModality_Contested:   tag.Name{ID: tag.UID{0x0502182AD6D3BDB4, 0xC9F14651631969E3}, Text: "amp.law.AttestationModality.Contested"},   // 0508d2-ppqmr-qudmw-b6b5j-jkug3
+	LawAttestationModality_Retracted:   tag.Name{ID: tag.UID{0xCA955565A08728E6, 0x4FCC6CCB72D595CB}, Text: "amp.law.AttestationModality.Retracted"},   // 6bkpbq-c8475-3m4zm-3dtet-ec5fc
 	// Equivalence strengths (AOM SD-address-equivalence.md).  Equivalence.Strength is a Tag
 	// resolving to one of these UIDs.  Zero UID = unspecified.
-	LawEquivalenceStrength: tag.Name{ID: tag.UID{0x17501E56DC9B1A5D, 0x19F49F4EF6B49F84}, Text: "amp.law.equivalencestrength"}, // 0rb0g5-er4v3-9fjmx-4z9vv-c97w4
+	LawEquivalenceStrength: tag.Name{ID: tag.UID{0x17501E56DC9B1A5D, 0x19F49F4EF6B49F84}, Text: "amp.law.EquivalenceStrength"}, // 0rb0g5-er4v3-9fjmx-4z9vv-c97w4
 
-	LawEquivalenceStrength_Identity:    tag.Name{ID: tag.UID{0x7A180A04688254AF, 0xEDCDADDC2F98FC54}, Text: "amp.law.equivalencestrength.identity"},    // 3u3050-8u42b-kryvm-eevhr-tjz2n
-	LawEquivalenceStrength_Translation: tag.Name{ID: tag.UID{0x8D295A1372FA2C5D, 0x10798077BE8E1B1A}, Text: "amp.law.equivalencestrength.translation"}, // 4e55e1-6wru5-jfj0y-d0fyz-8w6su
-	LawEquivalenceStrength_Approximate: tag.Name{ID: tag.UID{0x90E61D55697A0D3C, 0xA6613FC42F78EF78}, Text: "amp.law.equivalencestrength.approximate"}, // 4hwsfp-bucu1-nybds-9zshr-rjvvs
-	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x112A5CA73BB8C091, 0x8A80533CC1EC7186}, Text: "amp.law.equivalencestrength.analogous"},   // 0j59fb-ffxss-28sp0-2m7m0-yswd6
+	LawEquivalenceStrength_Identity:    tag.Name{ID: tag.UID{0x7A180A04688254AF, 0xEDCDADDC2F98FC54}, Text: "amp.law.EquivalenceStrength.Identity"},    // 3u3050-8u42b-kryvm-eevhr-tjz2n
+	LawEquivalenceStrength_Translation: tag.Name{ID: tag.UID{0x8D295A1372FA2C5D, 0x10798077BE8E1B1A}, Text: "amp.law.EquivalenceStrength.Translation"}, // 4e55e1-6wru5-jfj0y-d0fyz-8w6su
+	LawEquivalenceStrength_Approximate: tag.Name{ID: tag.UID{0x90E61D55697A0D3C, 0xA6613FC42F78EF78}, Text: "amp.law.EquivalenceStrength.Approximate"}, // 4hwsfp-bucu1-nybds-9zshr-rjvvs
+	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x112A5CA73BB8C091, 0x8A80533CC1EC7186}, Text: "amp.law.EquivalenceStrength.Analogous"},   // 0j59fb-ffxss-28sp0-2m7m0-yswd6
 
 	// ─── Planet ledger — durable record of observations and citations. ───
 	// Attestations (strikes, endorsements, witness records, audits, amnesties)
