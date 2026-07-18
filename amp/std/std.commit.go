@@ -71,7 +71,7 @@ func SetupSnapshot(target tag.ElementID) *amp.PinRequest {
 	req := &amp.PinRequest{
 		Mode:     amp.PinMode_Snapshot,
 		Selector: &amp.ItemSelector{},
-		URL:      "amp://~/cabinets",
+		URL:      AmpCabinetsURL,
 	}
 	req.Selector.Select(target)
 	return req
@@ -105,7 +105,7 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
 	tx.Request = &amp.PinRequest{
 		Mode: amp.PinMode_Commit,
-		URL:  "amp://~/cabinets",
+		URL:  AmpCabinetsURL,
 	}
 
 	req := &localCommit{

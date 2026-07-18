@@ -239,6 +239,16 @@ const Session {
     uid ContextID = {0x0, 0x777};
 }
 
+// Amp URL parts (matches UriScheme.AppNative).  CabinetsURL is the
+// app.cabinets direct-commit pin: the universal write door every logged-in
+// member's home planet serves in snapshot and commit modes.
+const Amp {
+    string Scheme       = "amp://";           // amp URL scheme prefix
+    string HomeAlias    = "~";                // the session's home (login) planet
+    string CabinetsPath = "/cabinets";        // app.cabinets module path
+    string CabinetsURL  = "amp://~/cabinets"; // = Scheme + HomeAlias + CabinetsPath
+}
+
 const Asset {
     // Canonic URI scheme prefix for amp asset references (matches UriScheme.Asset).
     string Scheme = "asset:";
