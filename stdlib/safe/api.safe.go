@@ -27,6 +27,14 @@ import (
 // Tests may override this for deterministic output.
 var RandReader io.Reader = rand.Reader
 
+// ErrStoreClosed is the closed-keystore lifecycle sentinel: every EpochKeyStore
+// method returns it once Close has sealed the session.  It is a typed,
+// errors.Is-able identity so consumers can classify "the store is closed" apart
+// from "the key is absent" or an AEAD refusal — a logout racing a decrypt must
+// read as no-custody (retryable), never as forgery (final).  Any keystore a
+// Guard source backs must honor the same contract.
+var ErrStoreClosed = status.Code_NotReady.Error("safe: key store is closed")
+
 // Guard protects and recovers the DEK used to encrypt a KeyTome payload.
 //
 // Implementations:
@@ -153,6 +161,15 @@ type EpochKeyStore interface {
 
 	// SetCurrentEpoch marks an epoch as the current one for a container.
 	SetCurrentEpoch(containerID, epochID tag.UID) error
+
+	// ShredKeys permanently deletes ALL key material held for the given epochs —
+	// every role, every container.  The removal is durable at method return: the
+	// re-sealed tome persists BEFORE ShredKeys returns, so a crash after return
+	// cannot resurrect a shredded key (a shred that can un-shred is not a shred).
+	// In-memory key bytes are zeroed.  Epochs not held are skipped (idempotent).
+	// A container whose current epoch is shredded has no current epoch until
+	// PutKey or SetCurrentEpoch names a new one.
+	ShredKeys(ctx context.Context, epochIDs []tag.UID) error
 
 	// Close encrypts and persists all keys, then zeros sensitive material.
 	Close(ctx context.Context) error

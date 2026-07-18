@@ -102,7 +102,7 @@ func (eks *epochKeyStore) PutKey(containerID tag.UID, key SymKey) error {
 	defer eks.mu.Unlock()
 
 	if eks.closed {
-		return fmt.Errorf("safe: epoch key store is closed")
+		return ErrStoreClosed
 	}
 	if !key.EpochID.IsSet() {
 		return fmt.Errorf("safe: PutKey requires a non-zero EpochID")
@@ -159,7 +159,7 @@ func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID, role KeyRole) (Sy
 	defer eks.mu.RUnlock()
 
 	if eks.closed {
-		return SymKey{}, fmt.Errorf("safe: epoch key store is closed")
+		return SymKey{}, ErrStoreClosed
 	}
 
 	entry, ok := eks.keys[epochID]
@@ -184,7 +184,7 @@ func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID, role KeyRole) (SymK
 	defer eks.mu.RUnlock()
 
 	if eks.closed {
-		return SymKey{}, fmt.Errorf("safe: epoch key store is closed")
+		return SymKey{}, ErrStoreClosed
 	}
 
 	epochID, ok := eks.current[containerID]
@@ -214,7 +214,7 @@ func (eks *epochKeyStore) SetCurrentEpoch(containerID, epochID tag.UID) error {
 	defer eks.mu.Unlock()
 
 	if eks.closed {
-		return fmt.Errorf("safe: epoch key store is closed")
+		return ErrStoreClosed
 	}
 
 	if _, ok := eks.keys[epochID]; !ok {
@@ -226,6 +226,47 @@ func (eks *epochKeyStore) SetCurrentEpoch(containerID, epochID tag.UID) error {
 	return nil
 }
 
+// ShredKeys implements EpochKeyStore: the removal persists before return —
+// the durability half of an operator HistoryCut (cut keys are losable by
+// ruling, so destruction, not recovery, is the obligation here).
+func (eks *epochKeyStore) ShredKeys(ctx context.Context, epochIDs []tag.UID) error {
+	eks.mu.Lock()
+	defer eks.mu.Unlock()
+
+	if eks.closed {
+		return ErrStoreClosed
+	}
+
+	shredded := false
+	for _, epochID := range epochIDs {
+		entry, ok := eks.keys[epochID]
+		if !ok {
+			continue
+		}
+		for _, rk := range entry.RoleKeys {
+			Zero(rk.Key)
+		}
+		delete(eks.keys, epochID)
+		shredded = true
+	}
+	if !shredded && !eks.changed {
+		return nil // nothing held AND memory == disk: the persisted tome already lacks them
+	}
+	// A no-op shred still persists when unsaved changes exist: a prior
+	// ShredKeys whose Save failed left the removal in memory only — the
+	// retry must reach disk, or the shred could un-shred on reopen.
+
+	// A current pointer at a shredded epoch dangles — drop it (fail-closed:
+	// no silent re-election; PutKey or SetCurrentEpoch names a successor).
+	for containerID, epochID := range eks.current {
+		if _, held := eks.keys[epochID]; !held {
+			delete(eks.current, containerID)
+		}
+	}
+
+	return eks.persistLocked(ctx)
+}
+
 func (eks *epochKeyStore) Close(ctx context.Context) error {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
@@ -234,13 +275,21 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 		return nil
 	}
 
-	if !eks.changed {
-		eks.zeroKeys()
-		eks.closed = true
-		return nil
+	if eks.changed {
+		if err := eks.persistLocked(ctx); err != nil {
+			return err
+		}
 	}
 
-	// Build the EpochKeyTome from the in-memory map
+	eks.zeroKeys()
+	eks.closed = true
+	return nil
+}
+
+// persistLocked seals the in-memory map into an EpochKeyTome and saves it via
+// the Guard/TomeStore pair — the one persist site (Close and ShredKeys).
+// Caller holds eks.mu.
+func (eks *epochKeyStore) persistLocked(ctx context.Context) error {
 	tome := &EpochKeyTome{
 		Revision: 1,
 		Keys:     make([]*EpochKeyEntry, 0, len(eks.keys)),
@@ -284,8 +333,7 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 		return fmt.Errorf("safe: failed to save epoch key store: %w", err)
 	}
 
-	eks.zeroKeys()
-	eks.closed = true
+	eks.changed = false
 	return nil
 }
 

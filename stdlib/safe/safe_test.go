@@ -285,7 +285,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	bobRef.PubKey = bob.Bytes
 
 	// Anyone can seal to Bob (sealed-box / anonymous sender).
-	_ = aliceRef
+	_ = &aliceRef
 	testMsg := []byte("hello to bob")
 	sealed, err := safe.SealFor(safe.Crypto.Poly25519.ID, bob.Bytes, testMsg)
 	if err != nil {

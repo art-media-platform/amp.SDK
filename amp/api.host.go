@@ -199,6 +199,11 @@ type Session interface {
 	// repeat reads (e.g. HTTP range requests while scrubbing media) skip the decrypt. Apps use this
 	// to back a data.Asset over a stored blob.
 	OpenBlob(planetID tag.UID, ref *BlobRef) (data.AssetReader, error)
+
+	// PrefetchBlobs names refs as admitted for the planet and pulls any still missing —
+	// the admission surface for a playback-queue or spatial-neighborhood prefetch signal
+	// (SD-planet-storage §13.5, D17).  Best-effort and asynchronous; a no-op without vault sync.
+	PrefetchBlobs(planetID tag.UID, refs []*BlobRef)
 }
 
 // HostSession is the host's privileged session surface, deliberately OFF the
