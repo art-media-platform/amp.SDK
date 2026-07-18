@@ -249,12 +249,15 @@ func (eks *epochKeyStore) ShredKeys(ctx context.Context, epochIDs []tag.UID) err
 		delete(eks.keys, epochID)
 		shredded = true
 	}
-	if !shredded && !eks.changed {
-		return nil // nothing held AND memory == disk: the persisted tome already lacks them
+	if shredded {
+		// Dirty BEFORE the persist attempt: a failed Save must leave the
+		// removal tracked as unsaved, so both a retry and a later Close
+		// reach disk — otherwise the shred could un-shred on reopen.
+		eks.changed = true
 	}
-	// A no-op shred still persists when unsaved changes exist: a prior
-	// ShredKeys whose Save failed left the removal in memory only — the
-	// retry must reach disk, or the shred could un-shred on reopen.
+	if !eks.changed {
+		return nil // nothing shredded AND memory == disk: the persisted tome already lacks them
+	}
 
 	// A current pointer at a shredded epoch dangles — drop it (fail-closed:
 	// no silent re-election; PutKey or SetCurrentEpoch names a successor).

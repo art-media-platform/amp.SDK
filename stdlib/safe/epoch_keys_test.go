@@ -108,6 +108,132 @@ func TestEpochKeys_ShredDurableAtReturn(t *testing.T) {
 	survivor.Zero()
 }
 
+// faultTomeStore delegates to a real TomeStore but fails the next failSaves
+// Save calls — the fault seam for the shred durability contract.
+type faultTomeStore struct {
+	inner     safe.TomeStore
+	failSaves int
+}
+
+func (fs *faultTomeStore) Load(ctx context.Context) (*safe.SealedTome, error) {
+	return fs.inner.Load(ctx)
+}
+
+func (fs *faultTomeStore) Save(ctx context.Context, sealed *safe.SealedTome) error {
+	if fs.failSaves > 0 {
+		fs.failSaves--
+		return errors.New("faultTomeStore: injected Save failure")
+	}
+	return fs.inner.Save(ctx, sealed)
+}
+
+// TestEpochKeys_ShredFailedSaveRetryReachesDisk pins the failed-persist half of
+// the shred contract: a shred whose Save fails ERRORS, and the same-session
+// retry — which finds the keys already gone from memory — must still reach
+// disk before reporting success.  A retry that returns nil off memory state
+// alone leaves the key on disk, and Close (no longer dirty) would seal that
+// in: the resurrected-key hole the shred-marks-dirty flag closes.
+func TestEpochKeys_ShredFailedSaveRetryReachesDisk(t *testing.T) {
+	ctx := context.Background()
+	inner := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	store := &faultTomeStore{inner: inner}
+	guard := safe.NewFileGuard([]byte("pass"), []byte("shred-fault"))
+	defer guard.Close()
+
+	eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("shred-fault"))
+	if err != nil {
+		t.Fatalf("OpenEpochKeyStore: %v", err)
+	}
+	containerID := tag.NewID()
+	cutEpoch := tag.NewID()
+	liveEpoch := tag.NewID()
+	liveContent := randomKeyBytes(t)
+	putEpochKey(t, eks, containerID, cutEpoch, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	putEpochKey(t, eks, containerID, liveEpoch, safe.KeyRole_ContentKey, liveContent)
+	if err := eks.Close(ctx); err != nil {
+		t.Fatalf("Close (seed the tome): %v", err)
+	}
+
+	// Reopen on the same tome; arm ONE Save failure under the shred.
+	eks, err = safe.OpenEpochKeyStore(ctx, store, guard, []byte("shred-fault"))
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	store.failSaves = 1
+	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err == nil {
+		t.Fatal("ShredKeys with a failing Save must error — durable-at-return means the failure surfaces")
+	}
+
+	// The retry finds nothing left in memory but the removal is still unsaved:
+	// it must persist (and succeed) before returning nil.
+	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err != nil {
+		t.Fatalf("ShredKeys retry after failed Save: %v", err)
+	}
+	reopened, err := safe.OpenEpochKeyStore(ctx, inner, guard, []byte("shred-fault"))
+	if err != nil {
+		t.Fatalf("reopen after retry: %v", err)
+	}
+	if _, err := reopened.GetKey(containerID, cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+		t.Fatalf("shredded key survived on disk after the retry reported success: %v", err)
+	}
+	survivor, err := reopened.GetKey(containerID, liveEpoch, safe.KeyRole_ContentKey)
+	if err != nil {
+		t.Fatalf("live key after retry: %v", err)
+	}
+	if !bytes.Equal(survivor.Bytes, liveContent) {
+		t.Fatal("live key bytes did not round-trip the retry persist")
+	}
+	survivor.Zero()
+	if err := reopened.Close(ctx); err != nil {
+		t.Fatalf("Close (reopened): %v", err)
+	}
+	if err := eks.Close(ctx); err != nil {
+		t.Fatalf("Close (shredding session): %v", err)
+	}
+}
+
+// TestEpochKeys_ShredFailedSaveCloseReachesDisk is the Close-path twin: no
+// retry — the session just closes after the failed shred.  The shred marked
+// the store dirty, so Close's persist carries the removal to disk.
+func TestEpochKeys_ShredFailedSaveCloseReachesDisk(t *testing.T) {
+	ctx := context.Background()
+	inner := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	store := &faultTomeStore{inner: inner}
+	guard := safe.NewFileGuard([]byte("pass"), []byte("shred-fault-close"))
+	defer guard.Close()
+
+	eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("shred-fault-close"))
+	if err != nil {
+		t.Fatalf("OpenEpochKeyStore: %v", err)
+	}
+	containerID := tag.NewID()
+	cutEpoch := tag.NewID()
+	putEpochKey(t, eks, containerID, cutEpoch, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	if err := eks.Close(ctx); err != nil {
+		t.Fatalf("Close (seed the tome): %v", err)
+	}
+
+	eks, err = safe.OpenEpochKeyStore(ctx, store, guard, []byte("shred-fault-close"))
+	if err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+	store.failSaves = 1
+	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err == nil {
+		t.Fatal("ShredKeys with a failing Save must error")
+	}
+	if err := eks.Close(ctx); err != nil {
+		t.Fatalf("Close after failed shred: %v", err)
+	}
+	reopened, err := safe.OpenEpochKeyStore(ctx, inner, guard, []byte("shred-fault-close"))
+	if err != nil {
+		t.Fatalf("reopen after Close: %v", err)
+	}
+	defer reopened.Close(ctx)
+	if _, err := reopened.GetKey(containerID, cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+		t.Fatalf("shredded key survived a Close after the failed shred persist: %v", err)
+	}
+}
+
 // TestEpochKeys_ShredCurrentEpochFailsClosed pins the dangling-current posture:
 // shredding a container's current epoch leaves it with NO current epoch (no
 // silent re-election) — GetCurrentKey reads key-absent until PutKey or
