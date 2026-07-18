@@ -10,7 +10,7 @@ import (
 // ItemID is the track lane.  Producer and every reader import these — the
 // registration is the shared-const site.
 var (
-	// TerminalTape carries a session's TermIO frames (AttrClass_Tape): zero
+	// TerminalTape carries a session's TermIO frames (EditClass_Tape): zero
 	// cabinet rows; serve replays the journal window (SD-planet-storage §8.1).
 	TerminalTape = RegisterAttrTape(Attr.ItemSeries, &amp.TermIO{}, "main.terminal")
 

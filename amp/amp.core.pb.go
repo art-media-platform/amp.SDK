@@ -465,57 +465,56 @@ func (PinMode) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{6}
 }
 
-// AttrClass is an attr's storage class, fixed at registration (1-of-N; never a
-// bool or bitfield).  Folded: the cabinet folds the attr's present per cell
-// (SD-planet-storage §8.1, §8.6).  Tape: the edit axis is the attr's time
-// axis — the journal IS the tape; the attr is fold-exempt, holds zero cabinet
-// rows, and serve sources from journal replay.
-type AttrClass int32
+// EditClass is how an attr's edits materialize, fixed at registration
+// (1-of-N; never a bool or bitfield).  Folded: the cabinet folds the attr's
+// present per cell (SD-planet-storage §8.1, §8.6) — the zero value, so an
+// undeclared attr folds exactly as every attr always has.  Tape: the edit
+// axis is the attr's time axis — the journal IS the tape; the attr is
+// fold-exempt, holds zero cabinet rows, and serve sources from journal
+// replay.
+type EditClass int32
 
 const (
-	AttrClass_ClassUnset AttrClass = 0 // unset sentinel; resolves to Folded
-	AttrClass_Folded     AttrClass = 1 // present-folding cabinet cell (the default)
-	AttrClass_Tape       AttrClass = 2 // journal-tape time series; fold-exempt
+	EditClass_Folded EditClass = 0 // present-folding cabinet cell (the universal default)
+	EditClass_Tape   EditClass = 1 // journal-tape time series; fold-exempt
 )
 
-// Enum value maps for AttrClass.
+// Enum value maps for EditClass.
 var (
-	AttrClass_name = map[int32]string{
-		0: "ClassUnset",
-		1: "Folded",
-		2: "Tape",
+	EditClass_name = map[int32]string{
+		0: "Folded",
+		1: "Tape",
 	}
-	AttrClass_value = map[string]int32{
-		"ClassUnset": 0,
-		"Folded":     1,
-		"Tape":       2,
+	EditClass_value = map[string]int32{
+		"Folded": 0,
+		"Tape":   1,
 	}
 )
 
-func (x AttrClass) Enum() *AttrClass {
-	p := new(AttrClass)
+func (x EditClass) Enum() *EditClass {
+	p := new(EditClass)
 	*p = x
 	return p
 }
 
-func (x AttrClass) String() string {
+func (x EditClass) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (AttrClass) Descriptor() protoreflect.EnumDescriptor {
+func (EditClass) Descriptor() protoreflect.EnumDescriptor {
 	return file_amp_amp_core_proto_enumTypes[7].Descriptor()
 }
 
-func (AttrClass) Type() protoreflect.EnumType {
+func (EditClass) Type() protoreflect.EnumType {
 	return &file_amp_amp_core_proto_enumTypes[7]
 }
 
-func (x AttrClass) Number() protoreflect.EnumNumber {
+func (x EditClass) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use AttrClass.Descriptor instead.
-func (AttrClass) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use EditClass.Descriptor instead.
+func (EditClass) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{7}
 }
 
@@ -7783,13 +7782,11 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Commit\x10\x00\x12\f\n" +
 	"\bSnapshot\x10\x01\x12\x10\n" +
-	"\fMaintainSync\x10\x02*1\n" +
-	"\tAttrClass\x12\x0e\n" +
+	"\fMaintainSync\x10\x02*!\n" +
+	"\tEditClass\x12\n" +
 	"\n" +
-	"ClassUnset\x10\x00\x12\n" +
-	"\n" +
-	"\x06Folded\x10\x01\x12\b\n" +
-	"\x04Tape\x10\x02*-\n" +
+	"\x06Folded\x10\x00\x12\b\n" +
+	"\x04Tape\x10\x01*-\n" +
 	"\tSealState\x12\b\n" +
 	"\x04Open\x10\x00\x12\n" +
 	"\n" +
@@ -7889,7 +7886,7 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(ValueHeaderFlags)(0),           // 4: amp.ValueHeaderFlags
 	(PinStatus)(0),                  // 5: amp.PinStatus
 	(PinMode)(0),                    // 6: amp.PinMode
-	(AttrClass)(0),                  // 7: amp.AttrClass
+	(EditClass)(0),                  // 7: amp.EditClass
 	(SealState)(0),                  // 8: amp.SealState
 	(MemberAdmission)(0),            // 9: amp.MemberAdmission
 	(PrivacyMode)(0),                // 10: amp.PrivacyMode
