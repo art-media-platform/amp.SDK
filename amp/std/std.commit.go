@@ -186,16 +186,25 @@ func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.N
 		return err
 	}
 
-	select {
-	case err = <-loader.outErr:
-	case txOut := <-loader.outTx:
-		resp.OnNodeUpdate(amp.NodeUpdate{
-			Tx:       txOut,
-			NodeID:   nodeID,
-			Revision: tag.NowID(),
-		})
-	case <-appCtx.Closing():
-		err = appCtx.Err()
+	// A snapshot may arrive as MANY pushed txs — the serve splits on tx size,
+	// and a Tape-class attr relays one envelope-carry tx per journal tx — so
+	// drain until the terminal status (Synced; the host promotes the last
+	// snapshot tx to Complete).
+	for done := false; !done; {
+		select {
+		case err = <-loader.outErr:
+			done = true
+		case txOut := <-loader.outTx:
+			resp.OnNodeUpdate(amp.NodeUpdate{
+				Tx:       txOut,
+				NodeID:   nodeID,
+				Revision: tag.NowID(),
+			})
+			done = txOut.Status != amp.PinStatus_Syncing
+		case <-appCtx.Closing():
+			err = appCtx.Err()
+			done = true
+		}
 	}
 
 	ctx.Close(err)
