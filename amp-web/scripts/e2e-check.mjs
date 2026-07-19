@@ -131,7 +131,7 @@ async function main() {
   const file = new File([new Uint8Array([1, 2, 3, 4])], 'e2e.bin', { type: 'application/octet-stream' });
   const blob = await amp.upload(file, 'projects', { attr: 'media' });
   check('upload returns blob UID', !!blob.UID, JSON.stringify(blob));
-  const resolved = await amp.resolveMedia({ UID: blob.UID, ContentType: blob.ContentType, I: blob.I, Units: blob.Units });
+  const resolved = await amp.resolveMedia({ UID: blob.UID, ContentTypeRaw: blob.ContentTypeRaw, I: blob.I, Units: blob.Units });
   check('resolveMedia fills URI', !!resolved.URI, JSON.stringify(resolved));
 
   // ── Sealed-box BYOK round-trip (device EncryptKey auto-installed at login) ──

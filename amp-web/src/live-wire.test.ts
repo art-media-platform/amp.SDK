@@ -4,7 +4,7 @@
  * Gated on SMOKE_LIVE=1 with a portal up (cmd/www-smoke on :5193); inert in the
  * normal unit run.  Proves the device EncryptKey auto-installs on a real login
  * and that a sealed BYOK secret survives a real tx → read round-trip opaque,
- * then reopens.  Complements scripts/smoke.mjs (the dist-built harness).
+ * then reopens.  Complements scripts/e2e-check.mjs (the dist-built harness).
  *
  *   (cd amp.planet && SMOKE_ADDR=127.0.0.1:5193 go run ./cmd/www-smoke) &
  *   SMOKE_LIVE=1 npx vitest run src/live-wire.test.ts

@@ -2,7 +2,7 @@
 
 > **What this document is:** Instructions for an AI coding agent (Claude Code, Cursor, Replit Agent, etc.) — and a contract for human web developers — to build web applications that persist data through the art.media.platform (amp) vault infrastructure. Drop this file into any web project. Generated code uses the `@art-media-platform/web` library to talk to `app.www`, the unified HTTP service inside `ampd`.
 
-> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is encrypted, signed, and replicated across independent nodes ("vaults"). Vaults relay traffic without reading content. Every host is a full peer — your app works offline; sync is additive. Your web app is a disposable UI layer; amp is the durable substrate underneath.
+> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is encrypted, signed, and replicated across independent nodes ("vaults"). Vaults relay traffic without reading content. Every host is a full peer — an app on an embedded/local vault works offline (§14.1); **this web client is cloud-only** and needs its operated node reachable (§14.2). Your web app is a disposable UI layer; amp is the durable substrate underneath.
 
 ---
 
@@ -172,6 +172,9 @@ VITE_AMP_PUBLIC_SHARE_PLANET_TAG=my-planet-tag-shares
 ### 4.1 Authentication
 
 ```
+GET  /api/v1/login/challenge?address=<0x…>    (anonymous; ?did=<uri> for the did scheme)
+  Response: { Nonce: string, Message: string, ExpiresAt?: number }   // WalletChallenge
+
 POST /api/v1/login
   Body: LoginCredentials
   Response: { SessionToken: string, ExpiresAt: number, Member: AmpMember }
@@ -187,6 +190,11 @@ GET  /api/v1/me
   Header: Authorization: Bearer <token>
   Response: AmpMember
 ```
+
+The challenge response is the TS `WalletChallenge` shape (`types.ts`); SDK:
+`client.getWalletChallenge(address)` / `client.getDIDChallenge(did)`. It is
+the one login-family shape not yet mirrored in `webapi/webapi.types.go` or the
+golden fixtures — a non-TS client codes to the shape above.
 
 SDK: `client.fetchSession()` wraps `GET /session` (returns `AmpSession`) and
 `client.me()` wraps `GET /me`; both throw `AmpError(401)` when no session is
@@ -207,7 +215,7 @@ type LoginCredentials =
   | { Scheme: 'did';        DID: string; Signature: string; Nonce: string };
 ```
 
-The unified `/api/v1/login` is **shipped**: `wallet`, `email`, `did`, and `memberToken` are fully wired and Bearer-issuing — `memberToken` is the challenge-less SSO scheme (present `signed(memberID‖ts)`, verified against the member's seated `MemberEpoch.SigningKey`), **live on a host-bridged node** and returning `501` only on the in-memory dev backend (§14.7) (AD-app-www §3.3). `yubikey` still parses cleanly and returns HTTP 501 with `Code: "Unsupported"` until it lands — SDK clients can lock the contract today, and it flips on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `Code` (surfaced as `AmpError.code`, e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. (Method errors are the exception: a `405` rides `Code: "BadRequest"`, so branch on `AmpError.status` to tell a wrong method from a malformed body.) The cookie-bound path at `/api/v1/login/wallet/{challenge,verify,session,logout}` serves browser flows that prefer per-step cookie handling; both paths share one session store.
+The unified `/api/v1/login` is **shipped**: `wallet`, `email`, `did`, and `memberToken` are fully wired and Bearer-issuing — `memberToken` is the challenge-less SSO scheme (present `signed(memberID‖ts)`, verified against the member's seated `MemberEpoch.SigningKey`), **live on a host-bridged node** and returning `501` only on the in-memory dev backend (§14.7) (AD-app-www §3.3). `yubikey` still parses cleanly and returns HTTP 501 with `Code: "Unsupported"` until it lands — SDK clients can lock the contract today, and it flips on without any wire-shape change.  Non-2xx responses throw a typed `AmpError` carrying the wire `Code` (surfaced as `AmpError.code`, e.g. `AmpErrorCode.Unsupported`) plus the HTTP `status`, so a client can dispatch on the code and treat a not-yet-wired scheme as a no-op. (Method errors are the exception: a `405` rides `Code: "BadRequest"`, so branch on `AmpError.status` to tell a wrong method from a malformed body.) Two 501 codes, distinct meanings: `Unsupported` = this HOST doesn't offer the feature (yubikey scheme, a node with no email credential store) — hide the affordance; `Unimplemented` = this BACKEND TIER can't perform it (the in-memory dev backend answering an invite/memberToken call that needs the host-bridged backend, §14.7) — the call works against a production node. The cookie-bound path at `/api/v1/login/wallet/{challenge,verify,session,logout}` serves browser flows that prefer per-step cookie handling; both paths share one session store.
 
 **DID scheme (W3C DID 1.0 — login only).** `did` proves control of the key a DID URI names: fetch a challenge with `?did=<uri>`, sign it, and submit `{ Scheme: 'did', DID, Signature, Nonce }`.  Shipped methods: **`did:key`** (Ed25519) and **`did:pkh:eip155`** (Ethereum wallet).  A `did:pkh:eip155:*:0x…` login folds to the *same* MemberID as a `wallet` login over that address (`eth:lc(addr)`) — two URI spellings of one key, one member.  A DID whose method/curve isn't wired yet (e.g. `did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) returns the same 501 `Unsupported`.  This is DID-Auth — Verifiable Credentials (issuer-signed claims) are out of scope.
 
@@ -237,7 +245,7 @@ MemberID for the email scheme = `tag.NameFrom("email:lc(addr)").ID` — mirror o
 ```typescript
 interface AmpMember {
   ID: string;                  // member tag.UID, base32
-  DisplayName: string;
+  DisplayName?: string;        // optional on the wire (Go omitempty)
   Email?: string;
   PlanetID: string;            // planet tag.UID, base32
   Kind?: string;               // tag.UID resolving to a LawMemberKind_*. Default: Person.
@@ -255,7 +263,18 @@ GET  /api/v1/channels/{channel}/attrs/{attr}/items
 GET  /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}
      ?planetTag=<canonic|UID>
      Response: Item
+
+GET  /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/edits
+     ?planetTag=<canonic|UID>
+     Response: EditChainResponse { Original?: Item, Edits: EditEntry[] }
 ```
+
+The `/edits` chain is an item's full audit history — every edit in commit
+order (the original Add first), each entry carrying `EditID` / `CommitTx` /
+`Author` / `CommittedAt` / `Op` (+ `Withdraw` on withdraw entries).  Shapes
+and golden fixtures: `webapi/webapi.types.go` (`EditEntry`,
+`EditChainResponse`) + `webapi/testdata/edits.json`.  No client method yet —
+raw-fetch it per §12.1 until a wrapper lands.
 
 URL query params (`?after=`, `?limit=`, `?planetTag=`) stay lowerCamelCase —
 they are URL params, not JSON body fields.
@@ -306,7 +325,7 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 
 **Tombstone semantics.** `remove` writes a tombstone, not a wipe; bytes survive in the journal bound by retention. `withdraw` is the parallel signed signal — see §7.
 
-**Idempotency & retries.** `upsert` / `remove` / `withdraw` are keyed by a caller-supplied `ItemID`, so replaying one (e.g. after a network timeout that swallowed the `TxResponse`) is safe — same key, last-write-wins. A `create` *without* an explicit `ItemID` mints a fresh item on every call, so a blind retry duplicates; supply a deterministic `ItemID` (§5.8) to make `create` idempotent too.
+**Idempotency & retries.** `upsert` / `remove` / `withdraw` are keyed by a caller-supplied `ItemID`, so replaying one (e.g. after a network timeout that swallowed the `TxResponse`) is safe — same key, last-write-wins. A `create` *without* an explicit `ItemID` mints a fresh item on every call, so a blind retry duplicates; supply a deterministic `ItemID` (§5.8) to make `create` idempotent too. The `create()` sugar takes no `ItemID` — an idempotent create rides `tx([{ Kind: 'create', Channel, Attr, ItemID, Value }])` (or `upsert`, when overwrite semantics fit).
 
 **Verb-RPC — routing a batch to an app handler.** Set `InvokeURL` on `POST /api/v1/tx` to `"amp://~/{app}/{verb}"` (e.g. `amp://~/forums/post`) to route the whole batch to an app's verb handler instead of the default cabinet commit. The host delivers the ops to the named verb as RPC arguments under `PinMode_Invoke` — **not journaled as planet state** — carrying the session member as the tx `FromID`; the app authors any durable writes itself, custodially, recording the invoking member as author. **One batch = one verb**; an empty `InvokeURL` is a normal cabinet commit. This is the write path for a channel a member holds only `Access_ReadOnly` on — the verb, not a direct op, is how the mutation lands. SDK: `client.invoke(verbURL, ops, planetTag?)`, or `invoke` from `useAmpMutation()` (§5.3). (AD-app-forums §3.4.)
 
@@ -315,7 +334,10 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 ```
 POST   /api/v1/upload
        Content-Type: multipart/form-data
-       Fields: file (required), channel, attr, planetTag (optional)
+       Fields: file (required), planetTag (optional)
+               channel, attr, metadata — reserved: sent by the SDK, IGNORED by
+               the server today; association happens via your follow-up item
+               write (below), never via these fields
        Response: amp.Tag (UID + URI + ContentTypeRaw + I/Units=Bytes)
 
 POST   /api/v1/media/resolve
@@ -341,7 +363,9 @@ interface BlobRef {
 
 **Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}` URL.  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
-After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them.
+After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
+
+The `URI` in the upload response is a live stream URL, **host-instance-scoped** (the publisher is in-memory, §above): usable immediately, but re-resolve via `/media/resolve` on later reads or from another host rather than persisting it.
 
 Encrypted blobs are decrypted on demand by `app.www` using the session's epoch key store; the served bytes are plaintext over the (TLS-protected) wire to the client. Plaintext is never persisted on the vault disk.
 
@@ -379,7 +403,11 @@ Frame format (JSON):
 
 Subscriptions are per-`(channel, attr)` and deliver every item event on that attr. To scope subscribe by item, partition the data into per-scope attrs at write time (e.g., `widgets/instance.{memberID}` rather than `widgets/instance` filtered by ownerID).
 
-Subscriptions bind the **session's planet**: the subscribe frame carries no planet field, so neither the client's constructor `planetTag` nor a per-call tag scopes a WebSocket subscription. Reading another planet (§5.7) is REST-only today — refetch to observe its changes.
+Subscriptions bind the **session's planet**: the subscribe frame carries no planet field, so neither the client's constructor `planetTag` nor a per-call tag scopes a WebSocket subscription. Reading another planet (§5.7) is REST-only today — refetch to observe its changes (`useAmpQuery` therefore does not subscribe when its per-call `planetTag` differs from the client default).
+
+Event frames echo the subscribe frame's `Channel`/`Attr` strings **verbatim**, and the SDK keys its subscriber fan-out on that literal string — a canonic name and its base32 UID are two *different* subscriptions that never match each other's frames. Pick one form per `(channel, attr)` and use it consistently.
+
+**Reconnect loses the gap.** The SDK auto-reconnects a dropped WS (3s backoff) and re-subscribes, but frames pushed during the outage are gone — there is no server-side resume cursor. On re-open the client synthesizes a `{ type: 'reconnect' }` `SubscriptionEvent` to every subscriber; `useAmpQuery` responds by refetching, so its cache re-syncs automatically. A direct `client.subscribe()` consumer must refetch on that event itself.
 
 A subscribe the server rejects (no access to the channel/attr, or a malformed key) returns a `{Type:"error", Channel, Attr, Error}` frame on that `(channel, attr)`; the SDK surfaces it as a `{type:'error'}` `SubscriptionEvent` (and `useAmpQuery` sets its `error`) instead of silently never delivering. An error frame is protocol-level, not telemetry.
 
@@ -416,6 +444,11 @@ interface SearchMatch         { PlanetID: string; FQDN: string; AnsweredBy: stri
                                 Score: number; AppName: string; AppDesc: string; Platforms?: string[] }
 interface FederationPeerEntry { FederationID: string; VaultAddrs: VaultEndpoint[]; Label?: string }
 ```
+
+> **Wire shape only — no client binding yet.** These interfaces document the
+> JSON contract; they are not package exports and have no `client.*` methods.
+> Call the endpoints raw against this shape (the §12.1 carve-out) until a
+> wrapper lands; the golden fixtures (`webapi/testdata/vault.json`) pin them.
 
 **`TrustState` is load-bearing — never silently pick.** A record is `Verified` only when the answering federation matches the planet's own `Brand` back-edge (the planet consents to being named there). `Refuted` flags a third party claiming a name the planet never authorized; `Unchecked` means the back-edge wasn't confirmed. When `Ambiguous` is set or `TrustState != 'Verified'`, surface it and let the user choose — do not auto-follow.
 
@@ -455,8 +488,9 @@ POST /api/v1/invite/accept            (Bearer)
   it, so its safety rests on passphrase entropy, not on the token being secret. With
   a strong passphrase the token is inert in transit; with a weak one it is
   brute-forceable — see SECURITY-amp-web-SDK.md.
-- Returns `501` on the in-memory dev backend (§14.7); live on a host-bridged node
-  such as `prod.plan.tools`.
+- Returns `501` `Code: "Unimplemented"` on the in-memory dev backend (§14.7 —
+  the invite family needs the host-bridged backend); live on a host-bridged
+  node such as `prod.plan.tools`.
 - Issuing invites is the operator side of this — `POST /api/v1/invite/issue` (§14.4).
 
 From the SDK:
@@ -596,7 +630,7 @@ const { data, loading, hasMore, loadMore, refetch } =
   });
 ```
 
-The hook subscribes via WebSocket automatically and re-renders on updates — **once a session exists**: the WS connects on login, so an anonymous client's reads are one-shot fetches with no live updates (refetch to observe changes). `data[i]` carries `ItemMeta` fields underscore-prefixed. Options are `itemID` (single-item read), `limit`/`after` (the server-enforced ItemID pagination window), and `planetTag` (per-call planet, overriding the constructor default).
+The hook subscribes via WebSocket automatically and re-renders on updates — **once a session exists**: the WS connects on login, so an anonymous client's reads are one-shot fetches with no live updates (refetch to observe changes). `data[i]` carries `ItemMeta` fields underscore-prefixed. Options are `itemID` (single-item read), `limit`/`after` (the server-enforced ItemID pagination window), and `planetTag` (per-call planet, overriding the constructor default). Two scoping rules the hook enforces: a per-call `planetTag` that differs from the client default makes the rows **fetch-only** (the WS binds the session planet — §4.5 — so live events would be another planet's), and an `itemID` read merges events for that item only. On WS reconnect the hook refetches automatically (§4.5).
 
 #### Address, don't filter
 
@@ -643,6 +677,8 @@ await withdraw('shares', 'link', itemID, {
 
 `invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write custodially (§4.3).
 
+**Embedded-host divert.** When the SPA runs inside the Unity host and the host advertises a native handler for the verb (`window.__amp.bridgeVerbs`), `invoke` diverts the op to the host so the member's OWN key signs the write. The host bridge carries **exactly one op per diverted invoke** — a multi-op `invoke` on a diverted verb throws a typed `AmpError` (`BadRequest`); issue one `invoke()` per op there. In a plain browser (no `window.__amp`) multi-op invokes ride the custodial HTTP path unchanged.
+
 `upsert` accepts any client-supplied `tag.UID` for the item. For singleton items, derive a stable UID from a well-known name — generate it at build time with `forge` or resolve it once via `client.resolveTag('settings:theme-preference')` (§5.8) — or reuse the member's own UID directly. The `scheme:identifier` form matches CAIP-10 / DID conventions.
 
 ### 5.4 `useAmpUpload()`
@@ -650,14 +686,15 @@ await withdraw('shares', 'link', itemID, {
 ```tsx
 const { upload, progress, uploading } = useAmpUpload();
 
-const blobRef = await upload(file, 'projects', {
-  attr: 'media',
-  metadata: { caption, tags: ['vacation'] },
-});
-// store blobRef.UID inside an item:
+const blobRef = await upload(file, 'projects', { attr: 'media' });
+// The follow-up item write is the ONLY durable association (§4.4) — captions,
+// tags, attribution all go in the item value (UploadOpts.metadata is a
+// reserved form field the server drops today):
 await upsert('projects', 'media', blobRef.UID, {
   blobRef,
   filename: file.name,
+  caption,
+  tags: ['vacation'],
 });
 ```
 
@@ -710,8 +747,13 @@ Generate canonic `TagName` / `TagUID` constants from your `.sdl` keys with [`for
 
 ```bash
 go run github.com/art-media-platform/forge/cmd/forge consts your.keys.sdl \
-  --ts_out ./src/amp-consts.ts
+  --ts_out ./src/generated          # a directory; emits ./src/generated/your.keys.consts.ts
 ```
+
+The platform's own well-known vocabulary already ships generated this way —
+`import { std, safe } from '@art-media-platform/web'` gives every
+`amp.std.consts.sdl` tag (`std.Attr.*`, precomputed UIDs + canonic `.text`)
+and the crypto-kit identities, byte-matched to the Go/C# consts.
 
 #### Runtime — `resolveTag` / `resolveTags` (server canonization)
 
@@ -744,7 +786,7 @@ POST /api/v1/tag/resolve   Body: { Exprs: [...] }   → { Results: [{ Expr, Cano
 ### 6.1 Channel and Attribute Naming
 
 - `(channel, attr)` is a logical bucket addressing CRDT items via `tag.UID`. Both names are tag.UIDs derived from string identifiers (forge-keycomb generated).
-- Well-known names live in `amp.std.consts.sdl` under `amp.law/*`, `amp.ledger/*`, `amp.member/*`, `amp.home/*`, `system.property/*`, `amp.blob/*`. App-specific names are added in the app's own `consts.sdl` and regenerated via `make generate`.
+- Well-known names live in `amp.std.consts.sdl` under `amp.law/*`, `amp.ledger/*`, `amp.member/*`, `amp.home/*`, `amp.blob/*`, `channel/*`, `item/*`, `session/*`. App-specific names are added in the app's own `consts.sdl` and regenerated via `make generate`. The TS build of that vocabulary ships in this SDK: `import { std } from '@art-media-platform/web'` (§5.8).
 - App-specific names should use a deploy-prefix (e.g. `maplable.projects` rather than bare `projects`) to avoid collision with future shared names.
 
 **Maplable's channel layout (the worked example throughout this SKILL):**
@@ -1034,6 +1076,11 @@ interface AmpBridge {
 }
 ```
 
+`ListOpts` is `{ limit?, after?, filter? }` — `limit`/`after` are the §4.2
+pagination window; `filter` is a **host-side presentational convenience** (an
+equality hint the host may apply to the rows it fetched), never a server
+predicate — scope by address per §5.2, don't lean on it.
+
 `AmpBridge` and its helper types (`ListOpts`, `TxReceipt`, `FormPayload`, `SubmitResult`) ship in the SDK — `import type { AmpBridge } from '@art-media-platform/web'` for card-author autocomplete, and importing the package augments `window.amp` on the global `Window`. The host (Unity WebView, browser shim, or test harness) injects the implementation. A standalone-browser fallback logs every call to console for debugging:
 
 ```javascript
@@ -1234,8 +1281,9 @@ async function handleFile(file) {
   setPreview(URL.createObjectURL(file));   // instant local preview
   const blobRef = await upload(file, 'projects', { attr: 'media' });
   await upsert('projects', 'media', blobRef.UID, { blobRef, filename: file.name });
-  // blobRef.URI is populated by /media/resolve, not by upload — for the durable
-  // stream URL use useAmpMedia(blobRef.UID) (or client.resolveMedia(blobRef)).
+  // upload's blobRef.URI is host-instance-scoped (§4.4) — fine for an immediate
+  // preview, but for later reads re-resolve via useAmpMedia(blobRef.UID)
+  // (or client.resolveMedia(blobRef)) instead of persisting the URI.
 }
 ```
 
@@ -1264,7 +1312,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 
 ## 12. What NOT to do
 
-1. **Prefer `@art-media-platform/web`** over raw `/api/v1/*` fetches for every endpoint it wraps — login, tx, channels, upload, media, tag-resolve, invites, subscriptions. The client wraps the wire shape with typed errors, durable session rehydration, and sealed-box helpers; raw fetches will accumulate bugs. A handful of operator/consumer endpoints have no client method yet (`/resolve`, `/search`, `/federation/peers` §4.6; `/governance/grant` §14.4) — those you call directly against the wire contract until a wrapper lands.
+1. **Prefer `@art-media-platform/web`** over raw `/api/v1/*` fetches for every endpoint it wraps — login, tx, channels, upload, media, tag-resolve, invites, subscriptions. The client wraps the wire shape with typed errors, durable session rehydration, and sealed-box helpers; raw fetches will accumulate bugs. A handful of operator/consumer endpoints have no client method yet (`/resolve`, `/search`, `/federation/peers` §4.6; `/governance/grant` §14.4; `…/items/{itemID}/edits` §4.2) — those you call directly against the wire contract until a wrapper lands.
 2. **Never store user-supplied secrets unsealed** in channel items. Run `seal()` before `upsert`. Plaintext API keys in `users/api_keys_overrides` is the single most common security mistake.
 3. **Never assume immediate consistency.** Writes propagate over WebSocket; design UI optimistically.
 4. **Never push SecurityEvent telemetry** to a replicated channel. Audit logs and rate-limit notifications are local-only.
@@ -1322,10 +1370,14 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 
 ## Wire-Contract Drift Guard
 
-The JSON wire shapes in this SDK are hand-mirrored between Go
-(`amp/webapi/webapi.types.go`) and TypeScript (`src/types.ts`).  Shared golden
-fixtures pin the contract so drift on either side fails tests instead of
-shipping:
+The JSON wire SHAPES in this SDK are hand-mirrored between Go
+(`amp/webapi/webapi.types.go`) and TypeScript (`src/types.ts`) — the JSON-wire
+idiom needs hand-shaped TS.  The tag/const VOCABULARY is not: `src/generated/`
+compiles from the same `.consts.sdl` sources as the Go and C# consts
+(`make generate`), so vocabulary identity holds by construction and the drift
+suite asserts it byte-for-byte (canary UIDs + exact crypto-kit UIDs).  Shared
+golden fixtures pin the shape contract so drift on either side fails tests
+instead of shipping:
 
 - **Fixtures** — `amp/webapi/testdata/*.json` (shipped in the bundle at
   `webapi/testdata/`, so `npm test` runs the TS guard from either view):
@@ -1408,7 +1460,7 @@ Item order is `_ItemID` (tag.UID) byte order, not wall-clock — fine for SDP ex
 
 ### 14.7 Integration fixtures
 
-For end-to-end tests without a production vault, point the client at a local `ampd` running its in-memory dev backend — it round-trips the exact wire shape (not encrypted, not synced: a contract fixture, not a vault). The bundle also ships `scripts/smoke.mjs`, the login → upsert → query → seal / open smoke check the SDK validates against. Drive your Stripe **test-mode** webhook at a local fixture vault to exercise provision / expire paths without touching real customers.
+For end-to-end tests without a production vault, point the client at a local `ampd` running its in-memory dev backend — it round-trips the exact wire shape (not encrypted, not synced: a contract fixture, not a vault). The bundle also ships `scripts/e2e-check.mjs`, the login → tx → query → subscribe → withdraw → upload → seal/open end-to-end check the SDK validates against (`VAULT_URL=<portal> node scripts/e2e-check.mjs`; it needs a portal with the wallet-login dev backend). Drive your Stripe **test-mode** webhook at a local fixture vault to exercise provision / expire paths without touching real customers.
 
 ### 14.8 Running your own vault & federating (the licensee path)
 

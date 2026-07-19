@@ -90,8 +90,8 @@ What that storage means:
   An XSS payload that can read it holds the member's full session until it
   expires or is revoked — your app's CSP / XSS posture is part of the session
   trust boundary. Ship a strict CSP.
-- **The server bounds the blast radius, not the client.** The token is an
-  opaque 128-bit random Bearer with a host-side expiry (`ExpiresAt`); logout
+- **The server bounds the exposure, not the client.** The token is an
+  opaque 32-byte (256-bit) random Bearer with a host-side expiry (`ExpiresAt`); logout
   drops it server-side, and the SDK clears the persisted copy on `logout()`
   and on any 401. A JS string cannot be zeroized in place — expiry and
   revocation are the real backstops.

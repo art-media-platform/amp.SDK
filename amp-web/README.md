@@ -52,7 +52,7 @@ networking is native `fetch` + `WebSocket`.
 ## Quick Start
 
 ```tsx
-import { AmpProvider, AmpWebClient, useAmpAuth, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
+import { AmpProvider, AmpWebClient, useAmpAuth, useAmpClient, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
 
 // 1. Point the client at the operated amp node + your planet (you don't run the node).
 const client = new AmpWebClient({
@@ -144,7 +144,9 @@ non-trivial canonization. Don't reimplement it — two supported paths:
 
 - **Build-time:** generate canonic `TagName`/`TagUID` constants with
   [`forge`](https://github.com/art-media-platform/forge) from your `.sdl` keys, so
-  your app never registers known keys at runtime.
+  your app never registers known keys at runtime. The platform's own
+  vocabulary ships pre-generated: `import { std, safe } from
+  '@art-media-platform/web'` (UIDs byte-matched to the Go/C# consts).
 - **Runtime:** `client.resolveTag(expr)` / `client.resolveTags(exprs)` resolve
   names server-side (anonymous, long-cacheable) — cache the results.
 
@@ -161,6 +163,11 @@ against an operated node.
 suite, including the wire-contract drift guard against the golden fixtures
 shipped in `webapi/testdata/` (repo: `amp/webapi/testdata/`) — no server
 needed. `webapi/webapi.types.go` is the wire contract those fixtures pin.
+
+> **Bundle view vs repo view.** `webapi/` and `AOM/` exist only in the
+> distributed bundle — `pack.sh` stages them from `amp.SDK/amp/webapi` and the
+> AOM allowlist. In an `amp.SDK` checkout, `amp-web/` has neither; the tests
+> probe both locations, so `npm test` passes from either view.
 
 ## Full API reference
 

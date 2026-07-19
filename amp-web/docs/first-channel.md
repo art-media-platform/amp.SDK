@@ -12,7 +12,7 @@ explains the login mechanics).
 npm create vite@latest my-amp-app -- --template react-ts
 cd my-amp-app
 npm install
-unzip ~/Downloads/amp-web-SDK-v260.zip -d .   # → ./amp-web-SDK, INSIDE the project
+unzip ~/Downloads/amp-web-SDK-vNNN.zip -d .   # → ./amp-web-SDK, INSIDE the project (vNNN = your bundle's version)
 npm install ./amp-web-SDK
 ```
 
