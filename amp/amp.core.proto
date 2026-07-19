@@ -347,14 +347,14 @@ message ItemSpan {
 }
 
 
-// EditType is how an attr's edits materialize, fixed at registration
+// EditClass is how an attr's edits materialize, fixed at registration
 // (1-of-N; never a bool or bitfield).  Folded: the cabinet folds the attr's
 // present per cell (SD-planet-storage §8.1, §8.6) — the zero value, so an
 // undeclared attr folds exactly as every attr always has.  Tape: the edit
 // axis is the attr's time axis — the journal IS the tape; the attr is
 // fold-exempt, holds zero cabinet rows, and serve sources from journal
 // replay.
-enum EditType {
+enum EditClass {
     Folded = 0; // present-folding cabinet cell (the universal default)
     Tape   = 1; // journal-tape time series; fold-exempt
 }
