@@ -359,6 +359,20 @@ const HomeVars {
     int32 MaxTargetFPS     = 120;
 }
 
+// amp.Terminal emulator/grid + shuttle transport defaults (AD-app-terminal
+// §4.4, §5.3).  A zero serialized/config field resolves here at point of use,
+// never in a C# field initializer.  Ms fields multiply at use.
+const Terminal {
+    string ContentType = "application/x-amp-terminal"; // session MediaLink label — routes the channel to the terminal shuttle runtime
+
+    int32 DefaultCols           = 80;      // PTY grid columns
+    int32 DefaultRows           = 24;      // PTY grid rows
+    int32 DefaultScrollbackRows = 1000;    // emulator scrollback rows
+    int64 DefaultKeyframeMs     = 10000;   // keyframe cadence — the DVR replay bound (AD-app-terminal §10-4)
+    int64 DefaultJogMs          = 16000;   // transport jog step
+    int64 DefaultReplayResidentBytes = 8388608; // replay-window residency budget (Buffered cap)
+}
+
 // Locus spatial binding
 const Locus {
     uint32 Bits         = 6;    // cell index bit width
