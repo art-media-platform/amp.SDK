@@ -108,6 +108,7 @@ export class AmpWebClient implements AmpAdapter {
   private wsSubscriptions = new Map<string, Set<(event: SubscriptionEvent) => void>>();
   private authListeners: Set<(member: AmpMember | null) => void> = new Set();
   private wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private wsWasOpen = false;
   private crypto: AmpCrypto = createAmpCrypto();
   private keyStorage: EncryptKeyStorage;
   private sessionStore: SessionStore;
@@ -432,6 +433,11 @@ export class AmpWebClient implements AmpAdapter {
     return this.member;
   }
 
+  /** The constructor default planet tag ('' = the session's bound planet). */
+  get defaultPlanetTag(): string {
+    return this.planetTag;
+  }
+
   onAuthChange(callback: (member: AmpMember | null) => void): () => void {
     this.authListeners.add(callback);
     return () => { this.authListeners.delete(callback); };
@@ -485,7 +491,14 @@ export class AmpWebClient implements AmpAdapter {
     // key signs the write (e.g. a self-signed forums reply); reads + other writes stay custodial.
     if (this.embed?.routes(verbURL)) {
       if (ops.length !== 1) {
-        throw new Error(`embedded divert of ${verbURL} expects exactly one op, got ${ops.length}`);
+        // Typed like every other client failure so a host-embedded consumer's
+        // AmpError dispatch still works (the host bridge carries one op per
+        // diverted invoke — see SKILL §5.3).
+        throw new AmpError(
+          0,
+          AmpErrorCode.BadRequest,
+          `embedded divert of ${verbURL} expects exactly one op, got ${ops.length} — issue one invoke() per op when the host routes this verb`,
+        );
       }
       const op = ops[0];
       return this.embed.invoke(verbURL, op.Value, this.planetTagFor(planetTag) ?? '', op.Channel);
@@ -691,9 +704,19 @@ export class AmpWebClient implements AmpAdapter {
     this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {
+      const isReconnect = this.wsWasOpen;
+      this.wsWasOpen = true;
       for (const key of this.wsSubscriptions.keys()) {
         const [channel, attr] = key.split(':');
         this.wsSend({ Type: 'subscribe', Channel: channel, Attr: attr });
+      }
+      if (isReconnect) {
+        // Frames pushed during the outage are lost (no server-side resume
+        // cursor).  Synthesize a reconnect event so every subscriber refetches
+        // instead of serving a silently-stale cache.
+        for (const subs of this.wsSubscriptions.values()) {
+          subs.forEach(cb => cb({ type: 'reconnect' }));
+        }
       }
     };
 
@@ -723,6 +746,7 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   private disconnectWs(): void {
+    this.wsWasOpen = false;
     if (this.wsReconnectTimer) {
       clearTimeout(this.wsReconnectTimer);
       this.wsReconnectTimer = null;

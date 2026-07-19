@@ -339,4 +339,9 @@ export type SubscriptionEvent =
   // A server-side subscribe rejection (e.g. no access to the channel/attr) or a
   // malformed frame.  Routed to the (channel, attr) subscribers so a failed
   // subscription surfaces instead of silently never delivering.
-  | { type: 'error'; Channel?: string; Attr?: string; Error: string };
+  | { type: 'error'; Channel?: string; Attr?: string; Error: string }
+  // Client-synthesized (never a wire frame): the WebSocket dropped and has
+  // re-opened.  Frames pushed during the outage are lost — there is no
+  // server-side resume cursor — so subscribers must refetch to re-sync
+  // (useAmpQuery does this automatically).
+  | { type: 'reconnect' };

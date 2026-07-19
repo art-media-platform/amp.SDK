@@ -31,6 +31,14 @@ import type {
 } from './types.js';
 
 export interface AmpAdapter {
+  /**
+   * The adapter's default planet tag ('' / absent = the session's bound
+   * planet).  Hooks compare a per-call planetTag against this to detect a
+   * cross-planet read, whose rows must not merge session-planet WS events
+   * (subscriptions always bind the session planet — SKILL §4.5).
+   */
+  readonly defaultPlanetTag?: string;
+
   // ── Auth ──────────────────────────────────────────────────────────
 
   login(credentials: LoginCredentials): Promise<AmpMember>;
