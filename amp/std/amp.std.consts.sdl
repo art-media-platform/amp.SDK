@@ -7,6 +7,9 @@
 
 option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 option csharp_namespace = "art.media.platform.std";
+// TypeScript rides the same forge pass; the path is source-relative so a
+// worktree generates into itself (amp-web imports the module verbatim).
+option ts_out = "../../amp-web/src/generated";
 
 
 tags Attr {

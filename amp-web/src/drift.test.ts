@@ -12,6 +12,10 @@
  * Per fixture entry: required keys (Go fields without omitempty/omitzero)
  * must be present, and every present key must be known (required ∪ optional).
  * Nested wire objects are checked recursively.
+ *
+ * Tag/const VOCABULARY is not hand-mirrored: src/generated/*.ts compiles from
+ * the same .consts.sdl sources as Go/C# (`make generate`), and the canary +
+ * kit-UID cases at the bottom assert the generated identities byte-for-byte.
  */
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -21,6 +25,8 @@ import { describe, expect, it } from 'vitest';
 
 import { AmpAdminClient } from './admin.js';
 import { CryptoKitID } from './crypto/types.js';
+import { Attr, Session, type UID } from './generated/amp.std.consts.js';
+import { Crypto } from './generated/safe.consts.js';
 import { AmpWebClient } from './web-client.js';
 import type { AccessLevel, InvitePolicyEntry, WithdrawReason } from './types.js';
 
@@ -472,13 +478,85 @@ describe('CryptoKitID table matches the golden', () => {
     }
   });
 
-  it('Go kit UIDs are well-formed base32 (authoritative values asserted Go-side)', () => {
+  it('Go kit UIDs equal the forge-generated safe consts (identity, not just form)', () => {
     for (const kit of golden.Kits) {
       if (kit.Name === 'Unspecified') {
         expect(kit.GoUID).toBe('');
         continue;
       }
-      expect(kit.GoUID).toMatch(/^[0-9a-z]{6}(?:-[0-9a-z]{5}){4}$/);
+      const generated = (Crypto as Record<string, { id: UID }>)[kit.Name];
+      expect(generated, `kit ${kit.Name} missing from generated safe consts`).toBeDefined();
+      expect(uidBase32(generated.id)).toBe(kit.GoUID);
     }
   });
 });
+
+// ── Forge-generated consts — canary UIDs ─────────────────────────────
+//
+// src/generated/*.ts compiles from the same .consts.sdl sources as the Go and
+// C# consts, so identity holds by construction; these canaries pin a handful
+// of UIDs AS BYTES so a regen against edited sources (or a broken emitter)
+// fails here instead of shipping.  Values verified against
+// amp/std/amp.std.consts.go.
+
+const STD_CANARIES: Record<string, { id: UID; text: string }> = {
+  App: {
+    id: [0x9FC2012FD63F847An, 0x51AA55A31D90CD25n],
+    text: 'app',
+  },
+  ChannelTypeSpreadsheet: {
+    id: [0x1C0062A36805F2FBn, 0xC37F9A8B51C0A909n],
+    text: 'channel.type.Spreadsheet',
+  },
+  LawMemberKind_Person: {
+    id: [0x9066A58EE8084472n, 0x7ECCB4DC966DA647n],
+    text: 'amp.law.MemberKind.Person',
+  },
+  LawAttestationModality_Asserted: {
+    id: [0x75C91DBFE351CFA4n, 0xBDF0BBC9911BA504n],
+    text: 'amp.law.AttestationModality.Asserted',
+  },
+  LawEquivalenceStrength_Identity: {
+    id: [0x7A180A04688254AFn, 0xEDCDADDC2F98FC54n],
+    text: 'amp.law.EquivalenceStrength.Identity',
+  },
+};
+
+describe('generated std consts carry the Go-side UIDs', () => {
+  it('canary tag entries match byte-for-byte', () => {
+    for (const [name, want] of Object.entries(STD_CANARIES)) {
+      const got = (Attr as Record<string, { id: UID; text: string }>)[name];
+      expect(got, `Attr.${name} missing from generated consts`).toBeDefined();
+      expect(got.id).toEqual(want.id);
+      expect(got.text).toBe(want.text);
+    }
+  });
+
+  it('Session.ContextID matches the SDL literal', () => {
+    expect(Session.ContextID).toEqual([0x0n, 0x777n]);
+  });
+});
+
+// uidBase32 renders a UID in canonic base32 — 26 lowercase geohash digits
+// grouped 6-5-5-5-5 with '-' separators, the stdlib/tag `UID.Base32()` port
+// (test-local: the SDK itself never renders UIDs; the server does).
+const BASE32_ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz';
+
+function uidBase32(uid: UID): string {
+  let hi = uid[0];
+  let lo = uid[1];
+  const out = new Array<string>(30);
+  let isZero = true;
+  for (let i = 29; i >= 0; i--) {
+    if (i > 0 && i % 6 === 0) {
+      out[i] = '-';
+      continue;
+    }
+    const digit = Number(lo & 0x1Fn);
+    if (digit !== 0) isZero = false;
+    out[i] = BASE32_ALPHABET[digit];
+    lo = ((hi & 0x1Fn) << 59n) | (lo >> 5n);
+    hi >>= 5n;
+  }
+  return isZero ? '0' : out.join('');
+}
