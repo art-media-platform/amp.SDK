@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
@@ -20,11 +21,12 @@ func Registry() amp.Registry {
 }
 
 func NewRegistry() amp.Registry {
-	reg := &registry{
+	reg := &registry{}
+	reg.snap.Store(&registrySnap{
 		modsByAlias: make(map[string]*amp.AppModule),
 		modsByID:    make(map[tag.UID]*amp.AppModule),
 		attrDefs:    make(map[tag.UID]amp.AttrDef),
-	}
+	})
 	return reg
 }
 
@@ -70,12 +72,39 @@ func registerAttr(attr tag.Name, prototype proto.Message, subTags string, editFl
 	return attr
 }
 
-// Implements Registry
-type registry struct {
-	mu          sync.RWMutex
+// registrySnap is one immutable copy-on-write registry state: readers take it
+// whole with one atomic load and never see a mutation.
+type registrySnap struct {
 	modsByAlias map[string]*amp.AppModule
 	modsByID    map[tag.UID]*amp.AppModule
 	attrDefs    map[tag.UID]amp.AttrDef
+}
+
+// clone deep-copies the snapshot's maps for a registrar's insert-then-publish.
+func (snap *registrySnap) clone() *registrySnap {
+	next := &registrySnap{
+		modsByAlias: make(map[string]*amp.AppModule, len(snap.modsByAlias)+1),
+		modsByID:    make(map[tag.UID]*amp.AppModule, len(snap.modsByID)+1),
+		attrDefs:    make(map[tag.UID]amp.AttrDef, len(snap.attrDefs)+1),
+	}
+	for alias, mod := range snap.modsByAlias {
+		next.modsByAlias[alias] = mod
+	}
+	for modID, mod := range snap.modsByID {
+		next.modsByID[modID] = mod
+	}
+	for attrID, def := range snap.attrDefs {
+		next.attrDefs[attrID] = def
+	}
+	return next
+}
+
+// Implements Registry.  Registrars (init-time, rare) serialize on writeMu and
+// publish a cloned snapshot; FindAttr / FindModule / NewValue take one atomic
+// load with no lock — no reader/writer contention on the merge hot path.
+type registry struct {
+	snap    atomic.Pointer[registrySnap]
+	writeMu sync.Mutex
 }
 
 func (reg *registry) RegisterAttr(def amp.AttrDef) error {
@@ -87,24 +116,29 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 		return status.Code_BadRequest.Errorf("RegisterAttr: %q: RetainEdits is meaningless on a Tape attr", def.Name.Canonic())
 	}
 
-	reg.mu.Lock()
-	defer reg.mu.Unlock()
+	reg.writeMu.Lock()
+	defer reg.writeMu.Unlock()
 
 	// An attr's storage policy is write-once: the fold and serve resolve it
-	// process-statically, so re-registration may never change it.
-	if prev, exists := reg.attrDefs[attrID]; exists {
+	// process-statically, so re-registration may never change it.  An
+	// IDENTICAL policy no-ops before any clone — the common redundant init
+	// publishes nothing.
+	snap := reg.snap.Load()
+	if prev, exists := snap.attrDefs[attrID]; exists {
 		if prev.EditFlow != def.EditFlow || prev.RetainEdits != def.RetainEdits {
 			return status.Code_BadRequest.Errorf("RegisterAttr: %q: storage policy already registered differently", def.Name.Canonic())
 		}
+		return nil
 	}
-	reg.attrDefs[attrID] = def
+	next := snap.clone()
+	next.attrDefs[attrID] = def
+	reg.snap.Store(next)
 	return nil
 }
 
 func (reg *registry) FindAttr(attrID tag.UID) (amp.AttrDef, bool) {
-	reg.mu.RLock()
-	def, exists := reg.attrDefs[attrID]
-	reg.mu.RUnlock()
+	snap := reg.snap.Load()
+	def, exists := snap.attrDefs[attrID]
 	return def, exists
 }
 
@@ -112,41 +146,39 @@ func (reg *registry) FindAttr(attrID tag.UID) (amp.AttrDef, bool) {
 func (reg *registry) RegisterModule(mod *amp.AppModule) error {
 	modID := mod.Info.Name.ID
 
-	reg.mu.Lock()
-	defer reg.mu.Unlock()
+	reg.writeMu.Lock()
+	defer reg.writeMu.Unlock()
 
-	reg.modsByID[modID] = mod
+	next := reg.snap.Load().clone()
+	next.modsByID[modID] = mod
 
 	for _, alias := range mod.Info.Aliases {
 		if alias != "" {
-			reg.modsByAlias[alias] = mod
+			next.modsByAlias[alias] = mod
 		}
 	}
 	// Module aliases resolve case-insensitively, so key them by the folded
 	// canonic form and its leaf component.
 	canonic := mod.Info.Name.Canonic()
-	reg.modsByAlias[canonic] = mod
+	next.modsByAlias[canonic] = mod
 	if dot := strings.LastIndexByte(canonic, tag.CanonicSeparatorChar); dot >= 0 {
-		reg.modsByAlias[canonic[dot+1:]] = mod
+		next.modsByAlias[canonic[dot+1:]] = mod
 	}
 
+	reg.snap.Store(next)
 	return nil
 }
 
 func (reg *registry) FindModule(moduleID tag.UID, moduleAlias string) *amp.AppModule {
+	snap := reg.snap.Load()
+
 	var mod *amp.AppModule
-
-	reg.mu.RLock()
-	{
-		if moduleID.IsSet() {
-			mod = reg.modsByID[moduleID]
-		}
-		if mod == nil && moduleAlias != "" {
-			mod = reg.modsByAlias[moduleAlias]
-		}
+	if moduleID.IsSet() {
+		mod = snap.modsByID[moduleID]
 	}
-	reg.mu.RUnlock()
-
+	if mod == nil && moduleAlias != "" {
+		mod = snap.modsByAlias[moduleAlias]
+	}
 	return mod
 }
 
@@ -155,7 +187,7 @@ func (reg *registry) NewValue(attrID tag.UID) (proto.Message, error) {
 
 	// Often, an attrID will be a unnamed scalar attr (which means we can get the elemDef directly.
 	// This is also essential during bootstrapping when the client sends a RegisterDefs is not registered yet.
-	def, exists := reg.attrDefs[attrID]
+	def, exists := reg.snap.Load().attrDefs[attrID]
 	if !exists {
 		return nil, status.Code_ItemNotFound.Errorf("attr %q not found", attrID.String())
 	}
