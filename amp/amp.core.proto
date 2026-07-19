@@ -355,8 +355,8 @@ message ItemSpan {
 // fold-exempt, holds zero cabinet rows, and serve sources from journal
 // replay.
 enum EditFlow {
-    Fold   = 0; // edits flow into the cabinet fold — the present (the universal default)
-    Tape   = 1; // edits flow onto the journal tape — fold-exempt time series
+    Fold = 0; // edits also fold into the cabinet's present (the universal default)
+    Tape = 1; // edits stay on the journal tape — the journal IS the store; no fold, zero cabinet rows
 }
 
 

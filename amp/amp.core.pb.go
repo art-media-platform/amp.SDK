@@ -475,8 +475,8 @@ func (PinMode) EnumDescriptor() ([]byte, []int) {
 type EditFlow int32
 
 const (
-	EditFlow_Fold EditFlow = 0 // edits flow into the cabinet fold — the present (the universal default)
-	EditFlow_Tape EditFlow = 1 // edits flow onto the journal tape — fold-exempt time series
+	EditFlow_Fold EditFlow = 0 // edits also fold into the cabinet's present (the universal default)
+	EditFlow_Tape EditFlow = 1 // edits stay on the journal tape — the journal IS the store; no fold, zero cabinet rows
 )
 
 // Enum value maps for EditFlow.
