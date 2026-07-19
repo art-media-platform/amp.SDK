@@ -1,12 +1,11 @@
 syntax = "proto3";
 
 // TermIO is the wire frame for amp.Terminal — a teletype that rides an amp
-// channel.  One frame is one CRDT append at (sessionNode, terminal series attr,
-// ItemID).  The ItemID is a UID stamped when the batch flushes (capture time,
-// not commit time): a UID's leading six bytes are UTC seconds, so the series is
-// time-ordered by capture with no timestamp field, and a delayed or offline
-// commit preserves the original order.  The persisted series is a read-only
-// "console"; its live tail driven interactively is a "terminal".
+// channel.  One frame is one edit on the session tape at (sessionNode,
+// std.TerminalTape, track lane): the attr is fold-exempt (EditFlow_Tape), the
+// EditID stamped at commit is the time axis, and the constant ItemID
+// discriminates the track (out / in / keyframe).  The persisted tape is a
+// read-only "console"; its live tail driven interactively is a "terminal".
 // See AOM/AD-app-terminal.md.
 package amp;
 
