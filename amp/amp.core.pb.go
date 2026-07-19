@@ -465,56 +465,56 @@ func (PinMode) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{6}
 }
 
-// EditClass is how an attr's edits materialize, fixed at registration
+// EditFlow is where an attr's edits materialize, fixed at registration
 // (1-of-N; never a bool or bitfield).  Folded: the cabinet folds the attr's
 // present per cell (SD-planet-storage §8.1, §8.6) — the zero value, so an
 // undeclared attr folds exactly as every attr always has.  Tape: the edit
 // axis is the attr's time axis — the journal IS the tape; the attr is
 // fold-exempt, holds zero cabinet rows, and serve sources from journal
 // replay.
-type EditClass int32
+type EditFlow int32
 
 const (
-	EditClass_Folded EditClass = 0 // present-folding cabinet cell (the universal default)
-	EditClass_Tape   EditClass = 1 // journal-tape time series; fold-exempt
+	EditFlow_Fold EditFlow = 0 // edits flow into the cabinet fold — the present (the universal default)
+	EditFlow_Tape EditFlow = 1 // edits flow onto the journal tape — fold-exempt time series
 )
 
-// Enum value maps for EditClass.
+// Enum value maps for EditFlow.
 var (
-	EditClass_name = map[int32]string{
-		0: "Folded",
+	EditFlow_name = map[int32]string{
+		0: "Fold",
 		1: "Tape",
 	}
-	EditClass_value = map[string]int32{
-		"Folded": 0,
-		"Tape":   1,
+	EditFlow_value = map[string]int32{
+		"Fold": 0,
+		"Tape": 1,
 	}
 )
 
-func (x EditClass) Enum() *EditClass {
-	p := new(EditClass)
+func (x EditFlow) Enum() *EditFlow {
+	p := new(EditFlow)
 	*p = x
 	return p
 }
 
-func (x EditClass) String() string {
+func (x EditFlow) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (EditClass) Descriptor() protoreflect.EnumDescriptor {
+func (EditFlow) Descriptor() protoreflect.EnumDescriptor {
 	return file_amp_amp_core_proto_enumTypes[7].Descriptor()
 }
 
-func (EditClass) Type() protoreflect.EnumType {
+func (EditFlow) Type() protoreflect.EnumType {
 	return &file_amp_amp_core_proto_enumTypes[7]
 }
 
-func (x EditClass) Number() protoreflect.EnumNumber {
+func (x EditFlow) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use EditClass.Descriptor instead.
-func (EditClass) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use EditFlow.Descriptor instead.
+func (EditFlow) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{7}
 }
 
@@ -7782,10 +7782,9 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Commit\x10\x00\x12\f\n" +
 	"\bSnapshot\x10\x01\x12\x10\n" +
-	"\fMaintainSync\x10\x02*!\n" +
-	"\tEditClass\x12\n" +
-	"\n" +
-	"\x06Folded\x10\x00\x12\b\n" +
+	"\fMaintainSync\x10\x02*\x1e\n" +
+	"\bEditFlow\x12\b\n" +
+	"\x04Fold\x10\x00\x12\b\n" +
 	"\x04Tape\x10\x01*-\n" +
 	"\tSealState\x12\b\n" +
 	"\x04Open\x10\x00\x12\n" +
@@ -7886,7 +7885,7 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(ValueHeaderFlags)(0),           // 4: amp.ValueHeaderFlags
 	(PinStatus)(0),                  // 5: amp.PinStatus
 	(PinMode)(0),                    // 6: amp.PinMode
-	(EditClass)(0),                  // 7: amp.EditClass
+	(EditFlow)(0),                   // 7: amp.EditFlow
 	(SealState)(0),                  // 8: amp.SealState
 	(MemberAdmission)(0),            // 9: amp.MemberAdmission
 	(PrivacyMode)(0),                // 10: amp.PrivacyMode
