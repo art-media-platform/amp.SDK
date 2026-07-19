@@ -465,56 +465,56 @@ func (PinMode) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{6}
 }
 
-// EditClass is how an attr's edits materialize, fixed at registration
+// EditType is how an attr's edits materialize, fixed at registration
 // (1-of-N; never a bool or bitfield).  Folded: the cabinet folds the attr's
 // present per cell (SD-planet-storage §8.1, §8.6) — the zero value, so an
 // undeclared attr folds exactly as every attr always has.  Tape: the edit
 // axis is the attr's time axis — the journal IS the tape; the attr is
 // fold-exempt, holds zero cabinet rows, and serve sources from journal
 // replay.
-type EditClass int32
+type EditType int32
 
 const (
-	EditClass_Folded EditClass = 0 // present-folding cabinet cell (the universal default)
-	EditClass_Tape   EditClass = 1 // journal-tape time series; fold-exempt
+	EditType_Folded EditType = 0 // present-folding cabinet cell (the universal default)
+	EditType_Tape   EditType = 1 // journal-tape time series; fold-exempt
 )
 
-// Enum value maps for EditClass.
+// Enum value maps for EditType.
 var (
-	EditClass_name = map[int32]string{
+	EditType_name = map[int32]string{
 		0: "Folded",
 		1: "Tape",
 	}
-	EditClass_value = map[string]int32{
+	EditType_value = map[string]int32{
 		"Folded": 0,
 		"Tape":   1,
 	}
 )
 
-func (x EditClass) Enum() *EditClass {
-	p := new(EditClass)
+func (x EditType) Enum() *EditType {
+	p := new(EditType)
 	*p = x
 	return p
 }
 
-func (x EditClass) String() string {
+func (x EditType) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (EditClass) Descriptor() protoreflect.EnumDescriptor {
+func (EditType) Descriptor() protoreflect.EnumDescriptor {
 	return file_amp_amp_core_proto_enumTypes[7].Descriptor()
 }
 
-func (EditClass) Type() protoreflect.EnumType {
+func (EditType) Type() protoreflect.EnumType {
 	return &file_amp_amp_core_proto_enumTypes[7]
 }
 
-func (x EditClass) Number() protoreflect.EnumNumber {
+func (x EditType) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use EditClass.Descriptor instead.
-func (EditClass) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use EditType.Descriptor instead.
+func (EditType) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{7}
 }
 
@@ -7782,8 +7782,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Commit\x10\x00\x12\f\n" +
 	"\bSnapshot\x10\x01\x12\x10\n" +
-	"\fMaintainSync\x10\x02*!\n" +
-	"\tEditClass\x12\n" +
+	"\fMaintainSync\x10\x02* \n" +
+	"\bEditType\x12\n" +
 	"\n" +
 	"\x06Folded\x10\x00\x12\b\n" +
 	"\x04Tape\x10\x01*-\n" +
@@ -7886,7 +7886,7 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(ValueHeaderFlags)(0),           // 4: amp.ValueHeaderFlags
 	(PinStatus)(0),                  // 5: amp.PinStatus
 	(PinMode)(0),                    // 6: amp.PinMode
-	(EditClass)(0),                  // 7: amp.EditClass
+	(EditType)(0),                   // 7: amp.EditType
 	(SealState)(0),                  // 8: amp.SealState
 	(MemberAdmission)(0),            // 9: amp.MemberAdmission
 	(PrivacyMode)(0),                // 10: amp.PrivacyMode

@@ -29,23 +29,23 @@ func NewRegistry() amp.Registry {
 }
 
 func RegisterAttr(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
-	return registerAttr(attr, prototype, subTags, amp.EditClass_Folded, 0)
+	return registerAttr(attr, prototype, subTags, amp.EditType_Folded, 0)
 }
 
 // RegisterAttrFolded registers a folded attr with an explicit cell fold depth;
 // retainEdits > 1 turns lineage admission on for the attr (SD-edit-resolution §6.3).
 func RegisterAttrFolded(attr tag.Name, prototype proto.Message, subTags string, retainEdits int32) tag.Name {
-	return registerAttr(attr, prototype, subTags, amp.EditClass_Folded, retainEdits)
+	return registerAttr(attr, prototype, subTags, amp.EditType_Folded, retainEdits)
 }
 
-// RegisterAttrTape registers a fold-exempt journal-tape attr (EditClass_Tape):
+// RegisterAttrTape registers a fold-exempt journal-tape attr (EditType_Tape):
 // the edit axis is the attr's time axis, the cabinet holds zero rows for it,
 // and serve sources from journal replay (SD-planet-storage §8.1).
 func RegisterAttrTape(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
-	return registerAttr(attr, prototype, subTags, amp.EditClass_Tape, 0)
+	return registerAttr(attr, prototype, subTags, amp.EditType_Tape, 0)
 }
 
-func registerAttr(attr tag.Name, prototype proto.Message, subTags string, editClass amp.EditClass, retainEdits int32) tag.Name {
+func registerAttr(attr tag.Name, prototype proto.Message, subTags string, editType amp.EditType, retainEdits int32) tag.Name {
 	if subTags != "" {
 		attr = attr.With(subTags)
 	}
@@ -60,7 +60,7 @@ func registerAttr(attr tag.Name, prototype proto.Message, subTags string, editCl
 	err := gRegistry.RegisterAttr(amp.AttrDef{
 		Name:        attr,
 		Prototype:   prototype,
-		EditClass:   editClass,
+		EditType:    editType,
 		RetainEdits: retainEdits,
 	})
 	if err != nil {
@@ -83,7 +83,7 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	if attrID.IsNil() {
 		return status.Code_BadTag.Errorf("RegisterAttr: missing Attr.ID")
 	}
-	if def.EditClass == amp.EditClass_Tape && def.RetainEdits != 0 {
+	if def.EditType == amp.EditType_Tape && def.RetainEdits != 0 {
 		return status.Code_BadRequest.Errorf("RegisterAttr: %q: RetainEdits is meaningless on a Tape attr", def.Name.Canonic())
 	}
 
@@ -93,7 +93,7 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	// An attr's storage policy is write-once: the fold and serve resolve it
 	// process-statically, so re-registration may never change it.
 	if prev, exists := reg.attrDefs[attrID]; exists {
-		if prev.EditClass != def.EditClass || prev.RetainEdits != def.RetainEdits {
+		if prev.EditType != def.EditType || prev.RetainEdits != def.RetainEdits {
 			return status.Code_BadRequest.Errorf("RegisterAttr: %q: storage policy already registered differently", def.Name.Canonic())
 		}
 	}
