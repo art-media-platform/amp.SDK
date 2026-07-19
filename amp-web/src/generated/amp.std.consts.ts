@@ -235,6 +235,16 @@ export const Session = {
     ContextID: [0x0n, 0x777n],
 } as const;
 
+// ─── Amp URL parts (matches UriScheme.AppNative).  CabinetsURL is the ───
+// app.cabinets direct-commit pin: the universal write door every logged-in
+// member's home planet serves in snapshot and commit modes.
+export const Amp = {
+    Scheme:       "amp://",  // amp URL scheme prefix
+    HomeAlias:    "~",  // the session's home (login) planet
+    CabinetsPath: "/cabinets",  // app.cabinets module path
+    CabinetsURL:  "amp://~/cabinets",  // = Scheme + HomeAlias + CabinetsPath
+} as const;
+
 export const Asset = {
     // Canonic URI scheme prefix for amp asset references (matches UriScheme.Asset).
     Scheme: "asset:",
@@ -335,6 +345,19 @@ export const HomeVars = {
     DefaultTargetFPS: 60,
     MinTargetFPS:     15,
     MaxTargetFPS:     120,
+} as const;
+
+// ─── amp.Terminal emulator/grid + shuttle transport defaults (AD-app-terminal ───
+// §4.4, §5.3).  A zero serialized/config field resolves here at point of use,
+// never in a C# field initializer.  Ms fields multiply at use.
+export const Terminal = {
+    ContentType:                "application/x-amp-terminal",  // session MediaLink label — routes the channel to the terminal shuttle runtime
+    DefaultCols:                80,  // PTY grid columns
+    DefaultRows:                24,  // PTY grid rows
+    DefaultScrollbackRows:      1000,  // emulator scrollback rows
+    DefaultKeyframeMs:          10000n,  // keyframe cadence — the DVR replay bound (AD-app-terminal §10-4)
+    DefaultJogMs:               16000n,  // transport jog step
+    DefaultReplayResidentBytes: 8388608n,  // replay-window residency budget (Buffered cap)
 } as const;
 
 // ─── Locus spatial binding ──────────────────────────────────────
