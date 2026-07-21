@@ -399,16 +399,20 @@ func UID_FromName(tagsExpr string) UID {
 
 // NowID returns a time-based UID with entropy mixed into the low bits,
 // making the result statistically universally unique while preserving
-// wall-clock ordering in the high bits.
+// wall-clock ordering in the high bits.  The entropy fold advances gEntropy
+// through a lock-free CAS loop, so concurrent same-tick callers always mint
+// distinct UIDs — a losing racer recomputes from the winner's fold.
 func NowID() UID {
 	uid := UID_FromTime(time.Now())
 
-	prev := gEntropy.Load()
-	entropy := rot1*uid[1] ^ prev
-	uid[1] ^= entropy & EntropyMask
-	gEntropy.Store(rot2 * entropy)
-
-	return uid
+	for {
+		prev := gEntropy.Load()
+		entropy := rot1*uid[1] ^ prev
+		if gEntropy.CompareAndSwap(prev, rot2*entropy) {
+			uid[1] ^= entropy & EntropyMask
+			return uid
+		}
+	}
 }
 
 var gEntropy atomic.Uint64
