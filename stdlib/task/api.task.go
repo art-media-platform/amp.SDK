@@ -63,7 +63,7 @@ func NewChild(parent Context, label string) (Context, error) {
 // the framework reads Label (logging) and IdleClose (idle-close), the rest is for the caller.
 type Info struct {
 	TaskID     tag.UID // universally unique instance ID -- assigned automatically when unset
-	Label      string  // logging and debugging label
+	Label      string  // logging and debugging label -- empty inherits the parent's label at StartChild
 	Attachment any     // optional user-defined value
 	DebugMode  bool    // when set, a context logs more verbosely and can perform (or log) expensive diagnostics
 
