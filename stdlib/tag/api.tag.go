@@ -56,7 +56,7 @@ const (
 	UID_Size                = 16                   // UID octet size
 	UID_Bits                = 8 * UID_Size         // UID bit size
 	UID_Base32Length        = (UID_Bits + 4) / 5   // max base32 digit count of a UID
-	UID_Base32GroupedLength = UID_Base32Length + 4 // Base32() render length incl. the 6-5-5-5-5 '-' separators
+	UID_Base32GroupedLength = UID_Base32Length + 3 // Base32() render length incl. the 2-11-11-2 '-' separators
 	UID_0_Max        = 0xFFFFFFFFFFFFFFFF // max allowed value of UID[0] (inclusive)
 	UID_1_Max        = 0xFFFFFFFFFFFFFFF0 // max allowed value of UID[1] (inclusive)
 	UID_1_Wildcard   = 0xFFFFFFFFFFFFFFFA // match any UID

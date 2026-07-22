@@ -33,7 +33,7 @@ beforeEach(() => {
       );
     }
     return new Response(
-      JSON.stringify({ MemberID: '06efvw-28sb2-00124-8j248-j248j', Email: 'bob@example.com' }),
+      JSON.stringify({ MemberID: '06-efvw28sb200-1248j248j24-8j', Email: 'bob@example.com' }),
       { status: 201, headers: { 'content-type': 'application/json' } },
     );
   }) as typeof fetch;
@@ -52,7 +52,7 @@ describe('issueEmailCredential', () => {
     expect(calls[0].url).toBe(`${VAULT}/api/v1/admin/credentials/email/issue`);
     expect(calls[0].auth).toBe('Bearer op-bearer');
     expect(calls[0].body).toEqual({ Email: 'bob@example.com', Password: 'initial-secret-9' });
-    expect(out.MemberID).toBe('06efvw-28sb2-00124-8j248-j248j');
+    expect(out.MemberID).toBe('06-efvw28sb200-1248j248j24-8j');
     expect(out.Email).toBe('bob@example.com');
   });
 

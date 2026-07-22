@@ -1,116 +1,116 @@
                                  . ✙ בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ  ✙ .
-3zyz3j-r4rg6-t26ze-px29x-zc2vf   ✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
+ 3z-yz3jr4rg6t2-6zepx29xzc2-vf   ✙.בְּרֵאשִׁ֖ית.בָּרָ֣א.אֱלֹהִ֑ים.אֵ֥ת.הַשָּׁמַ֖יִם.וְאֵ֥ת.הָאָֽרֶץ.✙
 
                                  Hello World!
-5zrhzg-yzm22-dje3p-48sjj-0m3wn   hello.world
+ 5z-rhzgyzm22dj-e3p48sjj0m3-wn   hello.world
                                  Hello, World!
-5zrhzg-yzm22-dje3p-48sjj-0m3wn   hello.world
+ 5z-rhzgyzm22dj-e3p48sjj0m3-wn   hello.world
                                  hello  world
-5zrhzg-yzm22-dje3p-48sjj-0m3wn   hello.world
+ 5z-rhzgyzm22dj-e3p48sjj0m3-wn   hello.world
 
                                  Hello and welcome to tags!
-7h1gdt-cxbv0-yy8x1-nsgps-upsqv   hello.and.welcome.to.tags
+ 7h-1gdtcxbv0yy-8x1nsgpsups-qv   hello.and.welcome.to.tags
                                  hello, and welcome to tags!
-7h1gdt-cxbv0-yy8x1-nsgps-upsqv   hello.and.welcome.to.tags
+ 7h-1gdtcxbv0yy-8x1nsgpsups-qv   hello.and.welcome.to.tags
                                  hello, and Welcome to tags!!
-7h1gdt-cxbv0-yy8x1-nsgps-upsqv   hello.and.welcome.to.tags
+ 7h-1gdtcxbv0yy-8x1nsgpsups-qv   hello.and.welcome.to.tags
                                  hello, and..welcome to... tags.
-7h1gdt-cxbv0-yy8x1-nsgps-upsqv   hello.and.welcome.to.tags
+ 7h-1gdtcxbv0yy-8x1nsgpsups-qv   hello.and.welcome.to.tags
 
                                  UTF-8 whitespace, commas, periods, and other common punctuation separate tag literals.  The canonic form of a tag string is its literals separated by a period ('.').
-5qzde8-0zxum-g8prg-ukbjj-3ty76   utf.8.whitespace.commas.periods.and.other.common.punctuation.separate.tag.literals.the.canonic.form.of.a.tag.string.is.its.literals.separated.by.a.period.'.'
+ 5q-zde80zxumg8-prgukbjj3ty-76   utf.8.whitespace.commas.periods.and.other.common.punctuation.separate.tag.literals.the.canonic.form.of.a.tag.string.is.its.literals.separated.by.a.period.'.'
 
                                  10 words randomly chosen from the English dictionary, taken in order, exceeds 10^52 possible sequences.  That's 15,000 times the number of possible Bitcoin public addresses (2^160).
-2p4v7z-6mv6h-r94kf-ux3hv-t0gup   10.words.randomly.chosen.from.the.english.dictionary.taken.in.order.exceeds.10^52.possible.sequences.that's.15.000.times.the.number.of.possible.bitcoin.public.addresses.2^160
+ 2p-4v7z6mv6hr9-4kfux3hvt0g-up   10.words.randomly.chosen.from.the.english.dictionary.taken.in.order.exceeds.10^52.possible.sequences.that's.15.000.times.the.number.of.possible.bitcoin.public.addresses.2^160
 
                                  We can cite 5qzde80zxumg8prgukbjj3ty76 and 2P4V7Z6MV6HR94KFUX3HVT0GUP as literals, demonstrating a convenient way to cryptographically chain and validate tags, allowing us to validate ancestry.
-211bzf-c5kz9-p0ct9-cy0bb-qe3by   we.can.cite.5qzde80zxumg8prgukbjj3ty76.and.2p4v7z6mv6hr94kfux3hvt0gup.as.literals.demonstrating.a.convenient.way.to.cryptographically.chain.and.validate.tags.allowing.us.to.validate.ancestry
+ 21-1bzfc5kz9p0-ct9cy0bbqe3-by   we.can.cite.5qzde80zxumg8prgukbjj3ty76.and.2p4v7z6mv6hr94kfux3hvt0gup.as.literals.demonstrating.a.convenient.way.to.cryptographically.chain.and.validate.tags.allowing.us.to.validate.ancestry
 
                                  Expressing 211bzfc5kz9p0ct9cy0bbqe3by with S2 geo-tiles 8D489E34600637F and 872AA845ADF325 demonstrates how locations can also be bound and chained together in this system.  This offers easy "DIY" layering of security and permissions.
-68cgd9-zgdzw-k06uc-08mnu-g0stf   expressing.211bzfc5kz9p0ct9cy0bbqe3by.with.s2.geo.tiles.8d489e34600637f.and.872aa845adf325.demonstrates.how.locations.can.also.be.bound.and.chained.together.in.this.system.this.offers.easy.diy.layering.of.security.and.permissions
+ 68-cgd9zgdzwk0-6uc08mnug0s-tf   expressing.211bzfc5kz9p0ct9cy0bbqe3by.with.s2.geo.tiles.8d489e34600637f.and.872aa845adf325.demonstrates.how.locations.can.also.be.bound.and.chained.together.in.this.system.this.offers.easy.diy.layering.of.security.and.permissions
 
                                  Since we want canonic string forms to be invariant under omitted or additional punctuation, <>, (), {}, "" [] are dropped:
-62x7qm-p2dw0-gr5kc-dmqnk-s52nc   since.we.want.canonic.string.forms.to.be.invariant.under.omitted.or.additional.punctuation.are.dropped:
+ 62-x7qmp2dw0gr-5kcdmqnks52-nc   since.we.want.canonic.string.forms.to.be.invariant.under.omitted.or.additional.punctuation.are.dropped:
 
                                  This means we match proper nouns and titles easily, such as A Game Of Thrones
-7xvd5t-hfn81-4rb7x-0ukve-8jujc   this.means.we.match.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
+ 7x-vd5thfn814r-b7x0ukve8ju-jc   this.means.we.match.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
                                  This means we match proper nouns and titles easily, such as "A Game of Thrones".
-7xvd5t-hfn81-4rb7x-0ukve-8jujc   this.means.we.match.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
+ 7x-vd5thfn814r-b7x0ukve8ju-jc   this.means.we.match.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
                                  This means we match proper nouns and titles easily, such as a game of thrones.
-7xvd5t-hfn81-4rb7x-0ukve-8jujc   this.means.we.match.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
+ 7x-vd5thfn814r-b7x0ukve8ju-jc   this.means.we.match.proper.nouns.and.titles.easily.such.as.a.game.of.thrones
 
                                  Get the AMP SDK today??
-2fr3u8-yrt2z-zxy1p-uhjvj-jbf81   get.the.amp.sdk.today
+ 2f-r3u8yrt2zzx-y1puhjvjjbf-81   get.the.amp.sdk.today
                                  Get the AMP SDK today
-2fr3u8-yrt2z-zxy1p-uhjvj-jbf81   get.the.amp.sdk.today
+ 2f-r3u8yrt2zzx-y1puhjvjjbf-81   get.the.amp.sdk.today
                                  Get the Amp SDK today!
-2fr3u8-yrt2z-zxy1p-uhjvj-jbf81   get.the.amp.sdk.today
+ 2f-r3u8yrt2zzx-y1puhjvjjbf-81   get.the.amp.sdk.today
 
                                  Tag names have two halves.  Left of the first /, :, or \ is the "name" part — cleaned up into canonic dotted form (ASCII case-folded to lowercase, like URL schemes per RFC 3986 §3.1).  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
-2gpdqu-zps9g-2pxkd-qky0f-zzhnn   tag.names.have.two.halves.left.of.the.first/, :, or \ is the "name" part — cleaned up into canonic dotted form (ASCII case-folded to lowercase, like URL schemes per RFC 3986 §3.1).  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
+ 2g-pdquzps9g2p-xkdqky0fzzh-nn   tag.names.have.two.halves.left.of.the.first/, :, or \ is the "name" part — cleaned up into canonic dotted form (ASCII case-folded to lowercase, like URL schemes per RFC 3986 §3.1).  Right of that first /, :, or \ is the "URL" part — kept exactly as-is (RFC 3986 leaves path/query case-sensitivity to the scheme owner).
 
                                  https://example.com/path
-6z5w45-9bq59-20kpe-k3802-9800h   https://example.com/path
+ 6z-5w459bq5920-kpek3802980-0h   https://example.com/path
                                  HTTPS://example.com/path
-6z5w45-9bq59-20kpe-k3802-9800h   https://example.com/path
+ 6z-5w459bq5920-kpek3802980-0h   https://example.com/path
 
                                  spaces.plan.tools
-4zhgdv-4665w-gcrqm-ezbc6-5cekr   spaces.plan.tools
+ 4z-hgdv4665wgc-rqmezbc65ce-kr   spaces.plan.tools
                                  SPACES.PLAN.TOOLS
-4zhgdv-4665w-gcrqm-ezbc6-5cekr   spaces.plan.tools
+ 4z-hgdv4665wgc-rqmezbc65ce-kr   spaces.plan.tools
                                  spaces.Plan.Tools
-4zhgdv-4665w-gcrqm-ezbc6-5cekr   spaces.plan.tools
+ 4z-hgdv4665wgc-rqmezbc65ce-kr   spaces.plan.tools
                                  Spaces.plan.Tools
-4zhgdv-4665w-gcrqm-ezbc6-5cekr   spaces.plan.tools
+ 4z-hgdv4665wgc-rqmezbc65ce-kr   spaces.plan.tools
 
                                  Another link amp://planet.com/deep/path/with-Dashes.and.dots
-3t330h-9yw7b-2x1tj-40r6g-v70yp   another.link.amp://planet.com/deep/path/with-Dashes.and.dots
+ 3t-330h9yw7b2x-1tj40r6gv70-yp   another.link.amp://planet.com/deep/path/with-Dashes.and.dots
                                  another link Amp://planet.com/deep/path/with-Dashes.and.dots
-3t330h-9yw7b-2x1tj-40r6g-v70yp   another.link.amp://planet.com/deep/path/with-Dashes.and.dots
+ 3t-330h9yw7b2x-1tj40r6gv70-yp   another.link.amp://planet.com/deep/path/with-Dashes.and.dots
                                  another link AMP://planet.com/deep/path/with-Dashes.and.dots
-3t330h-9yw7b-2x1tj-40r6g-v70yp   another.link.amp://planet.com/deep/path/with-Dashes.and.dots
+ 3t-330h9yw7b2x-1tj40r6gv70-yp   another.link.amp://planet.com/deep/path/with-Dashes.and.dots
 
                                  File:///var/log/app.log
-7497ku-7gu6n-9hz8f-xrd6x-v1pj5   file:///var/log/app.log
+ 74-97ku7gu6n9h-z8fxrd6xv1p-j5   file:///var/log/app.log
                                  FTP://user@host:21/dir
-5jj3m7-f9z6p-mhwns-f1bnr-1fg7m   ftp://user@host:21/dir
+ 5j-j3m7f9z6pmh-wnsf1bnr1fg-7m   ftp://user@host:21/dir
                                  Any-scheme://MixedCase/PreservedExactly
-2fpeur-w397z-vpkx0-pyx4q-qmktu   any-scheme://MixedCase/PreservedExactly
+ 2f-peurw397zvp-kx0pyx4qqmk-tu   any-scheme://MixedCase/PreservedExactly
 
                                  your-custom-scheme://preserved-url.com:23382/path?Query=string#fragment
-0ph34q-4pw3u-hrhw8-0z13z-f9fy1   your-custom-scheme://preserved-url.com:23382/path?Query=string#fragment
+ 0p-h34q4pw3uhr-hw80z13zf9f-y1   your-custom-scheme://preserved-url.com:23382/path?Query=string#fragment
                                  Your-Custom-Scheme://preserved-url.com:23382/path?Query=string#fragment
-0ph34q-4pw3u-hrhw8-0z13z-f9fy1   your-custom-scheme://preserved-url.com:23382/path?Query=string#fragment
+ 0p-h34q4pw3uhr-hw80z13zf9f-y1   your-custom-scheme://preserved-url.com:23382/path?Query=string#fragment
 
                                  git+ssh://user@Host/repo.git
-4qjfcs-c5st4-re8bc-1hs4u-7wyxu   git+ssh://user@Host/repo.git
+ 4q-jfcsc5st4re-8bc1hs4u7wy-xu   git+ssh://user@Host/repo.git
                                  GIT+SSH://user@Host/repo.git
-4qjfcs-c5st4-re8bc-1hs4u-7wyxu   git+ssh://user@Host/repo.git
+ 4q-jfcsc5st4re-8bc1hs4u7wy-xu   git+ssh://user@Host/repo.git
 
 
                                  Text left of a URL gets canonized; the URL stays exact.
-49xms2-8p04s-qtxj4-8x8zm-xbx6r   text.left.of.a.url.gets.canonized;.the.url.stays.exact
+ 49-xms28p04sqt-xj48x8zmxbx-6r   text.left.of.a.url.gets.canonized;.the.url.stays.exact
                                  prefix is parsed normally  HTTPS://x-y.com
-2cmm7c-g2jb5-yw7w9-1p484-33geb   prefix.is.parsed.normally.https://x-y.com
+ 2c-mm7cg2jb5yw-7w91p48433g-eb   prefix.is.parsed.normally.https://x-y.com
                                  Prefix is Parsed normally.  https://x-y.com
-2cmm7c-g2jb5-yw7w9-1p484-33geb   prefix.is.parsed.normally.https://x-y.com
+ 2c-mm7cg2jb5yw-7w91p48433g-eb   prefix.is.parsed.normally.https://x-y.com
 
                                  Identity-from-canonic-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
-6c2msd-3vg37-689yr-8gutd-u5gvv   identity-from-canonic-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
+ 6c-2msd3vg3768-9yr8gutdu5g-vv   identity-from-canonic-text: parse, don't atomically hash.  Wallet members, contract addresses, and similar derive their UID by parsing a scheme:identifier expression — the URL form puts the scheme through the canonic word fold and hashes the identifier atomically (per the URL-part rule above).  Matches CAIP-10 / DID conventions.  Pre-lowercase the identifier so EIP-55 mixed-case addresses fold into the same UID:
                                  eth:0xabcdef1234567890abcdef1234567890abcdef12
-18gu1x-ebfp8-b7etr-7nu4r-ccbj4   eth:0xabcdef1234567890abcdef1234567890abcdef12
+ 18-gu1xebfp8b7-etr7nu4rccb-j4   eth:0xabcdef1234567890abcdef1234567890abcdef12
                                  Eth:0xabcdef1234567890abcdef1234567890abcdef12
-18gu1x-ebfp8-b7etr-7nu4r-ccbj4   eth:0xabcdef1234567890abcdef1234567890abcdef12
+ 18-gu1xebfp8b7-etr7nu4rccb-j4   eth:0xabcdef1234567890abcdef1234567890abcdef12
                                  ETH:0xabcdef1234567890abcdef1234567890abcdef12
-18gu1x-ebfp8-b7etr-7nu4r-ccbj4   eth:0xabcdef1234567890abcdef1234567890abcdef12
+ 18-gu1xebfp8b7-etr7nu4rccb-j4   eth:0xabcdef1234567890abcdef1234567890abcdef12
 
                                  Mixed-case input becomes a different UID unless lowercased — the URL part is exact-as-is by design.  Lowercase the identifier before parsing:
-7mukjh-8u9zr-7swch-dg72t-xxtve   mixed.case.input.becomes.a.different.uid.unless.lowercased.—.the.url.part.is.exact.as.is.by.design.lowercase.the.identifier.before.parsing:
+ 7m-ukjh8u9zr7s-wchdg72txxt-ve   mixed.case.input.becomes.a.different.uid.unless.lowercased.—.the.url.part.is.exact.as.is.by.design.lowercase.the.identifier.before.parsing:
                                  eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
-52pvdw-u39p1-r6km2-7n5c4-8nk76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+ 52-pvdwu39p1r6-km27n5c48nk-76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
                                  Eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
-52pvdw-u39p1-r6km2-7n5c4-8nk76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+ 52-pvdwu39p1r6-km27n5c48nk-76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
                                  ETH:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
-52pvdw-u39p1-r6km2-7n5c4-8nk76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
+ 52-pvdwu39p1r6-km27n5c48nk-76   eth:0xAbCdEf1234567890aBcDeF1234567890AbCdEf12
 
 

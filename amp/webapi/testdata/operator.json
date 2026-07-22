@@ -9,7 +9,7 @@
         "OrgName": "SoundSpectrum",
         "AppDomain": "spaces.soundspectrum.com",
         "NamedBy": {
-          "UID": "06efvw-28sb4-00248-j248j-248j2"
+          "UID": "06-efvw28sb400-248j248j248-j2"
         }
       },
       "OrgHomeURL": "https://soundspectrum.com"
@@ -17,17 +17,17 @@
   },
   "PlanetCreateRequest.uidOnly": {
     "Tag": {
-      "UID": "06efvw-28sb6-0036d-tm6dt-m6dtm"
+      "UID": "06-efvw28sb600-36dtm6dtm6d-tm"
     }
   },
   "PlanetCreateResponse": {
-    "PlanetID": "06efvw-28sb4-00248-j248j-248j2",
+    "PlanetID": "06-efvw28sb400-248j248j248-j2",
     "Tag": "spaces.soundspectrum.com",
     "Public": true
   },
   "BrandSetRequest": {
     "Planet": {
-      "UID": "06efvw-28sb4-00248-j248j-248j2"
+      "UID": "06-efvw28sb400-248j248j248-j2"
     },
     "Brand": {
       "Identity": {
@@ -36,7 +36,7 @@
         "AppDomain": "spaces.soundspectrum.com",
         "URLSchemes": ["spaces"],
         "NamedBy": {
-          "UID": "06efvw-28sb4-00248-j248j-248j2"
+          "UID": "06-efvw28sb400-248j248j248-j2"
         }
       },
       "OrgHomeURL": "https://soundspectrum.com",
@@ -44,15 +44,15 @@
     }
   },
   "BrandSetResponse": {
-    "PlanetID": "06efvw-28sb4-00248-j248j-248j2"
+    "PlanetID": "06-efvw28sb400-248j248j248-j2"
   },
   "ForumsReserveRequest.address": {
     "Address": "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
   },
   "ForumsReserveRequest.memberID": {
-    "MemberID": "06efvw-28sb2-00124-8j248-j248j"
+    "MemberID": "06-efvw28sb200-1248j248j24-8j"
   },
   "ForumsReserveResponse": {
-    "MemberID": "06efvw-28sb2-00124-8j248-j248j"
+    "MemberID": "06-efvw28sb200-1248j248j24-8j"
   }
 }

@@ -69,8 +69,8 @@ func (name *Name) GoString() string {
 }
 
 // AsLabel returns a compact label for logging / debugging — the human Text when
-// present (elided to 32 runes), else the compact "first1…last4" base32 form of
-// the UID.
+// present (elided to 32 runes), else the fourway "NN…NN" base32 form of the
+// UID.
 func (name Name) AsLabel() string {
 	if name.Text == "" {
 		return name.ID.AsLabel()
@@ -594,11 +594,13 @@ func (id UID) HashLiteral(tagLiteral []byte) UID {
 }
 
 // Returns this tag.UID in canonic Base32 text form: 26 lowercase geohash
-// digits grouped 6-5-5-5-5 with '-' separators (SD-canonization-spec §1.7).
-// Decoding strips '-' and whitespace and accepts either case, so grouping
-// carries no identity weight.  The dash after digit 16 marks the NowID
-// time/entropy boundary (EntropyBits = 50 = the last 10 digits), so
-// same-session IDs read as an identical head and a differing tail.
+// digits grouped 2-11-11-2 with '-' separators — dashes after digits 2, 13,
+// and 24 (SD-canonization-spec §1.7).  The outer pairs are the fourway
+// anchors (AsLabel).  Decoding strips '-' and whitespace and accepts either
+// case, so grouping carries no identity weight.  Digits 17–26 are pure
+// entropy (EntropyBits = 50); digits 1–16 are a NowID's time-ordered head,
+// so the leading-digit run two IDs share tracks how close in time they
+// were minted (same-ms mints share ~11).
 func (id UID) Base32() string {
 	x0 := id[0] // MSB
 	x1 := id[1] // LSB
@@ -606,7 +608,7 @@ func (id UID) Base32() string {
 
 	isZero := true
 	for i := len(out) - 1; i >= 0; i-- {
-		if i > 0 && i%6 == 0 {
+		if i%12 == 2 { // '-' at render slots 2, 14, 26: groups 2-11-11-2
 			out[i] = '-'
 			continue
 		}
@@ -627,13 +629,17 @@ func (id UID) Base32() string {
 	return string(out)
 }
 
-// AsLabel returns a compact "first1…last4" base32 label for debugging / logging.
+// AsLabel returns the fourway form "NN…NN": the first two and last two Base32
+// digits joined by the single ellipsis glyph '…' (U+2026, never "..") — the
+// standing compact render for logs (SD-canonization-spec §1.7).  The pairs are
+// exactly the outer groups of the 2-11-11-2 render; a clock-era head pair
+// signals a timestamp ID, and the tail pair is entropy.
 func (id UID) AsLabel() string {
 	full := id.Base32()
-	if len(full) <= 8 {
+	if len(full) <= 5 {
 		return full
 	}
-	return full[:1] + "…" + full[len(full)-4:]
+	return full[:2] + "…" + full[len(full)-2:]
 }
 
 // Converts this tag.UID to a 63-bit composite integer (i.e. always positive).

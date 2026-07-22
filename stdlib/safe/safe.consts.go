@@ -11,7 +11,7 @@ var Crypto = struct {
 	P256      tag.Name
 	Secp256k1 tag.Name
 }{
-	Poly25519: tag.Name{ID: tag.UID{0x629134B84734DA6F, 0xCC870AD1BB12E1E6}, Text: "amp.crypto.poly25519"}, // 32k4uc-hjtnv-9rwt1-sbu6x-j5sg6
-	P256:      tag.Name{ID: tag.UID{0x188DC92BB63ACCBD, 0xE22053F8FFA3A09F}, Text: "amp.crypto.p256"},      // 0sjr4k-rejut-kyy48-2mz3z-u784z
-	Secp256k1: tag.Name{ID: tag.UID{0x1906FAF4F88AB854, 0x6328B92D89014254}, Text: "amp.crypto.secp256k1"}, // 0t0vxg-9y4br-1b66b-5t5q4-h2hkn
+	Poly25519: tag.Name{ID: tag.UID{0x629134B84734DA6F, 0xCC870AD1BB12E1E6}, Text: "amp.crypto.poly25519"}, // 32-k4uchjtnv9r-wt1sbu6xj5s-g6
+	P256:      tag.Name{ID: tag.UID{0x188DC92BB63ACCBD, 0xE22053F8FFA3A09F}, Text: "amp.crypto.p256"},      // 0s-jr4krejutky-y482mz3zu78-4z
+	Secp256k1: tag.Name{ID: tag.UID{0x1906FAF4F88AB854, 0x6328B92D89014254}, Text: "amp.crypto.secp256k1"}, // 0t-0vxg9y4br1b-66b5t5q4h2h-kn
 }

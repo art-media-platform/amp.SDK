@@ -13,8 +13,8 @@ import "github.com/art-media-platform/amp.SDK/stdlib/tag"
 name, _ := tag.Parse("Hello World!")
 fmt.Println(name.Text)          // Hello.World   (case-preserved, for display)
 fmt.Println(name.Canonic())     // hello.world   (folded form behind ID)
-fmt.Println(name.ID.Base32())   // 5zrhzgyzm22dje3p48sjj0m3wn
-fmt.Println(name.ID.AsLabel())  // 5..m3wn  (compact debug label)
+fmt.Println(name.ID.Base32())   // 5z-rhzgyzm22dj-e3p48sjj0m3-wn
+fmt.Println(name.ID.AsLabel())  // 5z…wn  (fourway debug label)
 
 // Mint a unique time-based UID with entropy.
 id := tag.NowID()
@@ -52,7 +52,7 @@ type Name struct {
 
 `Text` is **optional and may be dropped**. The UID is the sole identity, so a processor can match, route, and serve tags with `Text` stripped — fielding queries over opaque UIDs without learning what they name. Dropping `Text` before a request reaches an untrusted relay (e.g. `tag.DarkProjectsDivision.ClassifiedProjectTitle.Q3.2026` collapses to bare UIDs) is an information-leakage control; on the wire `Tag.Text` is an optional field, so omitting it is a no-op.
 
-The hash is deterministic, cross-language, and small enough to compare with `==`, use as a map key, or fit in a database column. It has a short human-readable form via `id.Base32()`: 26 digits grouped `6-5-5-5-5` with `-` separators (e.g. `7rfxvr-fxvrf-xvj4e-2qg2e-ctrrh`), drawn from a 32-character **lowercase** alphabet that omits easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). Lowercase matches the canonic fold, so a UID embedded in a tag expression reads the same before and after folding, and decoding is case-insensitive (an upper-cased copy still parses to the same UID). The grouping carries no identity weight either — decoding strips `-` and whitespace, so the solid 26-digit form parses to the same UID. This human-friendly form is safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. For compact log lines and debug output, `id.AsLabel()` returns a `first1..last4` short form (e.g. `6..800h`) — distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
+The hash is deterministic, cross-language, and small enough to compare with `==`, use as a map key, or fit in a database column. It has a short human-readable form via `id.Base32()`: 26 digits grouped `2-11-11-2` with `-` separators (e.g. `7r-fxvrfxvrfxv-j4e2qg2ectr-rh`), drawn from a 32-character **lowercase** alphabet that omits easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). Lowercase matches the canonic fold, so a UID embedded in a tag expression reads the same before and after folding, and decoding is case-insensitive (an upper-cased copy still parses to the same UID). The grouping carries no identity weight either — decoding strips `-` and whitespace, so the solid 26-digit form parses to the same UID. This human-friendly form is safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. For compact log lines and debug output, `id.AsLabel()` returns the **fourway** form `NN…NN` — the first two and last two digits, exactly the outer groups of the grouped render, joined by the single ellipsis glyph `…` (e.g. `7r…rh`; `NN..NN` is typing shorthand only, never emitted) — distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
 
 The canonic word fold is intentionally lossy in ways that improve usability without compressing the namespace into anything close to dangerous.
 

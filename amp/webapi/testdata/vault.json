@@ -8,8 +8,8 @@
   },
   "ResolveResponse": {
     "FQDN": "plan.tools",
-    "PlanetID": "06efvw-28sb4-00248-j248j-248j2",
-    "AnsweredBy": "06efvw-28sbh-008j2-48j24-8j248",
+    "PlanetID": "06-efvw28sb400-248j248j248-j2",
+    "AnsweredBy": "06-efvw28sbh00-8j248j248j2-48",
     "VaultAddrs": [
       {
         "Transport": "tcp",
@@ -28,9 +28,9 @@
   "SearchResponse": {
     "Matches": [
       {
-        "PlanetID": "06efvw-28sb4-00248-j248j-248j2",
+        "PlanetID": "06-efvw28sb400-248j248j248-j2",
         "FQDN": "plan.tools",
-        "AnsweredBy": "06efvw-28sbh-008j2-48j24-8j248",
+        "AnsweredBy": "06-efvw28sbh00-8j248j248j2-48",
         "Score": 0.875,
         "AppName": "PLAN 3D",
         "AppDesc": "crisis-resilient offline-first coordination",
@@ -41,7 +41,7 @@
   "FederationPeersResponse": {
     "Peers": [
       {
-        "FederationID": "06efvw-28sb4-00248-j248j-248j2",
+        "FederationID": "06-efvw28sb400-248j248j248-j2",
         "VaultAddrs": [
           {
             "Transport": "tcp",

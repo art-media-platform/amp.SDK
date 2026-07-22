@@ -777,7 +777,7 @@ GET  /api/v1/tag/resolve?expr=amp.member.profile   → { Expr, Canonic, ID }
 POST /api/v1/tag/resolve   Body: { Exprs: [...] }   → { Results: [{ Expr, Canonic, ID }, ...] }
 ```
 
-**Already holding a UID?** A base32 `tag.UID` — 26 digits, rendered grouped `6-5-5-5-5` with `-` separators (e.g. `member.ID`, or an `itemID` from a read) — is already in wire form — pass it straight through. Decoding strips `-` and whitespace, so the grouped and solid forms resolve to the same UID. `resolveTag` round-trips a UID back to the same UID rather than re-hashing it, so mixing names and UIDs in one `resolveTags` batch is safe.
+**Already holding a UID?** A base32 `tag.UID` — 26 digits, rendered grouped `2-11-11-2` with `-` separators (e.g. `member.ID`, or an `itemID` from a read) — is already in wire form — pass it straight through. Decoding strips `-` and whitespace, so the grouped and solid forms resolve to the same UID. `resolveTag` round-trips a UID back to the same UID rather than re-hashing it, so mixing names and UIDs in one `resolveTags` batch is safe.
 
 ---
 

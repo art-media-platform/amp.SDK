@@ -1,16 +1,16 @@
 {
   "EditEntry.upsert": {
-    "EditID": "06efvw-28sb8-0048j-248j2-48j24",
-    "CommitTx": "06efvw-28sbd-006dt-m6dtm-6dtm6",
-    "Author": "06efvw-28sb2-00124-8j248-j248j",
+    "EditID": "06-efvw28sb800-48j248j248j-24",
+    "CommitTx": "06-efvw28sbd00-6dtm6dtm6dt-m6",
+    "Author": "06-efvw28sb200-1248j248j24-8j",
     "CommittedAt": "2026-07-02T12:34:56Z",
     "Op": "upsert",
     "Body": {"Title": "First post", "Body": "hello world"}
   },
   "EditEntry.withdraw": {
-    "EditID": "06efvw-28sb8-0048j-248j2-48j24",
-    "CommitTx": "06efvw-28sbd-006dt-m6dtm-6dtm6",
-    "Author": "06efvw-28sb2-00124-8j248-j248j",
+    "EditID": "06-efvw28sb800-48j248j248j-24",
+    "CommitTx": "06-efvw28sbd00-6dtm6dtm6dt-m6",
+    "Author": "06-efvw28sb200-1248j248j24-8j",
     "CommittedAt": "2026-07-02T13:00:00Z",
     "Op": "withdraw",
     "Withdraw": {
@@ -20,25 +20,25 @@
   },
   "EditChainResponse": {
     "Original": {
-      "_ItemID": "06efvw-28sb6-0036d-tm6dt-m6dtm",
-      "_EditID": "06efvw-28sb8-0048j-248j2-48j24",
-      "_FromID": "06efvw-28sbb-005bp-bpbpb-pbpbp",
+      "_ItemID": "06-efvw28sb600-36dtm6dtm6d-tm",
+      "_EditID": "06-efvw28sb800-48j248j248j-24",
+      "_FromID": "06-efvw28sbb00-5bpbpbpbpbp-bp",
       "_UpdatedAt": "2026-07-02T12:34:56Z",
       "Value": {"Body": "hello world"}
     },
     "Edits": [
       {
-        "EditID": "06efvw-28sb8-0048j-248j2-48j24",
-        "CommitTx": "06efvw-28sbd-006dt-m6dtm-6dtm6",
-        "Author": "06efvw-28sb2-00124-8j248-j248j",
+        "EditID": "06-efvw28sb800-48j248j248j-24",
+        "CommitTx": "06-efvw28sbd00-6dtm6dtm6dt-m6",
+        "Author": "06-efvw28sb200-1248j248j24-8j",
         "CommittedAt": "2026-07-02T12:34:56Z",
         "Op": "upsert",
         "Body": {"Body": "hello world"}
       },
       {
-        "EditID": "06efvw-28sbf-007fx-vrfxv-rfxvr",
-        "CommitTx": "06efvw-28sbd-006dt-m6dtm-6dtm6",
-        "Author": "06efvw-28sb2-00124-8j248-j248j",
+        "EditID": "06-efvw28sbf00-7fxvrfxvrfx-vr",
+        "CommitTx": "06-efvw28sbd00-6dtm6dtm6dt-m6",
+        "Author": "06-efvw28sb200-1248j248j24-8j",
         "CommittedAt": "2026-07-02T13:00:00Z",
         "Op": "withdraw",
         "Withdraw": {
