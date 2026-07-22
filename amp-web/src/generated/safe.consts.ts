@@ -10,7 +10,7 @@ export interface TagName {
 }
 
 export const Crypto = {
-    Poly25519: { id: [0x629134B84734DA6Fn, 0xCC870AD1BB12E1E6n], text: "amp.crypto.poly25519" },  // 32-k4uchjtnv9r-wt1sbu6xj5s-g6
-    P256     : { id: [0x188DC92BB63ACCBDn, 0xE22053F8FFA3A09Fn], text: "amp.crypto.p256" },  // 0s-jr4krejutky-y482mz3zu78-4z
-    Secp256k1: { id: [0x1906FAF4F88AB854n, 0x6328B92D89014254n], text: "amp.crypto.secp256k1" },  // 0t-0vxg9y4br1b-66b5t5q4h2h-kn
+    Poly25519: { id: [0x629134B84734DA6Fn, 0xCC870AD1BB12E1E6n], text: "amp.crypto.poly25519" },  // 32k-4uchjtnv9r-wt1sbu6xj5-sg6
+    P256     : { id: [0x188DC92BB63ACCBDn, 0xE22053F8FFA3A09Fn], text: "amp.crypto.p256" },  // 0sj-r4krejutky-y482mz3zu7-84z
+    Secp256k1: { id: [0x1906FAF4F88AB854n, 0x6328B92D89014254n], text: "amp.crypto.secp256k1" },  // 0t0-vxg9y4br1b-66b5t5q4h2-hkn
 } satisfies Record<string, TagName>;

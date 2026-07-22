@@ -34,23 +34,23 @@
     "SessionToken": "5oQyDsW3vG7kThJ9mXaZcE1rB8uNfLpV",
     "ExpiresAt": 1783000000,
     "Member": {
-      "ID": "06-efvw28sb200-1248j248j24-8j",
+      "ID": "06e-fvw28sb200-1248j248j2-48j",
       "DisplayName": "Alice",
       "Email": "alice@example.com",
-      "PlanetID": "06-efvw28sb400-248j248j248-j2",
+      "PlanetID": "06e-fvw28sb400-248j248j24-8j2",
       "Kind": "Person",
       "Address": "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
     }
   },
   "AmpMember.minimal": {
-    "ID": "06-efvw28sb200-1248j248j24-8j",
-    "PlanetID": "06-efvw28sb400-248j248j248-j2"
+    "ID": "06e-fvw28sb200-1248j248j2-48j",
+    "PlanetID": "06e-fvw28sb400-248j248j24-8j2"
   },
   "SessionResponse": {
     "Member": {
-      "ID": "06-efvw28sb200-1248j248j24-8j",
+      "ID": "06e-fvw28sb200-1248j248j2-48j",
       "DisplayName": "Alice",
-      "PlanetID": "06-efvw28sb400-248j248j248-j2"
+      "PlanetID": "06e-fvw28sb400-248j248j24-8j2"
     },
     "ExpiresAt": 1783000000
   },
@@ -72,7 +72,7 @@
     "NewPassword": "first-secret-7"
   },
   "EmailIssueResponse": {
-    "MemberID": "06-efvw28sb200-1248j248j24-8j",
+    "MemberID": "06e-fvw28sb200-1248j248j2-48j",
     "Email": "bob@example.com"
   },
   "ErrorResponse": {

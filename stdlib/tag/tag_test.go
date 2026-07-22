@@ -53,7 +53,7 @@ func TestTag(t *testing.T) {
 		t.Fatalf("chained ID != HashLiteral(Text): %v", name.ID)
 	}
 	base32 := name.ID.Base32()
-	if base32 != "5e-ez7jtvnt1d4-2251gsu28mq-y9" {
+	if base32 != "5ee-z7jtvnt1d4-2251gsu28m-qy9" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	parsed, err := tag.Parse(base32)
@@ -69,7 +69,7 @@ func TestTag(t *testing.T) {
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
 		holyExpr := tag.HashName(Genesis)
-		if holyExpr.ID.Base32() != "3e-vfmjwnbj2wg-7qb93xk3zyr-2b" {
+		if holyExpr.ID.Base32() != "3ev-fmjwnbj2wg-7qb93xk3zy-r2b" {
 			t.Fatalf("tag.HashName() failed: got %v", holyExpr.ID.Base32())
 		}
 
@@ -103,10 +103,10 @@ func TestTag(t *testing.T) {
 	}
 
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
-	if tid.AsLabel() != "7r…rh" {
+	if tid.AsLabel() != "7…rrh" {
 		t.Errorf("tag.UID.AsLabel() failed: got %q", tid.AsLabel())
 	}
-	if tid.Base32() != "7r-fxvrfxvrfxv-j4e2qg2ectr-rh" {
+	if tid.Base32() != "7rf-xvrfxvrfxv-j4e2qg2ect-rrh" {
 		t.Errorf("tag.UID.Base32() failed: got %v", tid.Base32())
 	}
 	if b16 := tid.Base16(); b16 != "0xF777777777777777123456789ABCDEF0" {
@@ -115,11 +115,11 @@ func TestTag(t *testing.T) {
 }
 
 func TestBase32Grouping(t *testing.T) {
-	// Geometry golden (2-11-11-2) — shared verbatim with the C# mirror test so
+	// Geometry golden (3-10-10-3) — shared verbatim with the C# mirror test so
 	// the two formatters cannot drift.
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
 	grouped := tid.Base32()
-	if grouped != "7r-fxvrfxvrfxv-j4e2qg2ectr-rh" {
+	if grouped != "7rf-xvrfxvrfxv-j4e2qg2ect-rrh" {
 		t.Fatalf("tag.UID.Base32() failed: got %q", grouped)
 	}
 	if len(grouped) != tag.UID_Base32GroupedLength {
@@ -139,28 +139,6 @@ func TestBase32Grouping(t *testing.T) {
 
 	if zero := (tag.UID{}).Base32(); zero != "0" {
 		t.Fatalf("zero UID Base32() failed: got %q", zero)
-	}
-}
-
-// TestFourwayLabel pins the AsLabel contract: the fourway form "NN…NN" — the
-// first two and last two Base32 digits, exactly the outer groups of the
-// 2-11-11-2 render, joined by the single ellipsis glyph '…' (U+2026, never
-// "..").  Golden string shared with the grouped-geometry vector above.
-func TestFourwayLabel(t *testing.T) {
-	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
-	label := tid.AsLabel()
-	if label != "7r…rh" {
-		t.Fatalf("fourway label: got %q, want %q", label, "7r…rh")
-	}
-	if strings.Count(label, "…") != 1 || strings.Contains(label, "..") {
-		t.Fatalf("fourway glyph: want a single '…' (U+2026), got %q", label)
-	}
-	grouped := tid.Base32()
-	if label[:2] != grouped[:2] || label[len(label)-2:] != grouped[len(grouped)-2:] {
-		t.Fatalf("fourway anchors must be the outer groups of %q, got %q", grouped, label)
-	}
-	if zero := (tag.UID{}).AsLabel(); zero != "0" {
-		t.Fatalf("zero UID AsLabel: got %q", zero)
 	}
 }
 

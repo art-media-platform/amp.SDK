@@ -1,11 +1,11 @@
 {
   "GovernanceGrantRequest.full": {
-    "Planet": "06-efvw28sb400-248j248j248-j2",
+    "Planet": "06e-fvw28sb400-248j248j24-8j2",
     "Channel": "amp.app.forum.general",
-    "Parent": "06-efvw28sbg00-6dtm6dtm6dt-m6",
+    "Parent": "06e-fvw28sbg00-6dtm6dtm6d-tm6",
     "MemberGrants": [
-      { "Member": "06-efvw28sb200-1248j248j24-8j", "Access": "Moderator" },
-      { "Member": "06-efvw28sbk00-9m6dtm6dtm6-dt", "Access": "NotAllowed" }
+      { "Member": "06e-fvw28sb200-1248j248j2-48j", "Access": "Moderator" },
+      { "Member": "06e-fvw28sbk00-9m6dtm6dtm-6dt", "Access": "NotAllowed" }
     ],
     "DefaultGrants": [
       { "Access": "ReadOnly" }
@@ -15,14 +15,14 @@
     ]
   },
   "GovernanceGrantRequest.minimal": {
-    "Planet": "06-efvw28sb400-248j248j248-j2",
-    "Channel": "06-efvw28sbg00-6dtm6dtm6dt-m6",
+    "Planet": "06e-fvw28sb400-248j248j24-8j2",
+    "Channel": "06e-fvw28sbg00-6dtm6dtm6d-tm6",
     "DefaultGrants": [
       { "Access": "ReadWrite" }
     ]
   },
   "GovernanceGrantResponse": {
-    "PlanetID": "06-efvw28sb400-248j248j248-j2",
-    "Channel": "06-efvw28sbg00-6dtm6dtm6dt-m6"
+    "PlanetID": "06e-fvw28sb400-248j248j24-8j2",
+    "Channel": "06e-fvw28sbg00-6dtm6dtm6d-tm6"
   }
 }
