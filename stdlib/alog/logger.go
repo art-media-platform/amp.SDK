@@ -1,9 +1,24 @@
 // Package alog is amp's built-in logging primitive — a lean, dependency-free
-// tag-scoped logger.  Each log line is a single-char severity tag, a timestamp,
-// a bracketed source token, then the message, all space-separated and vertically
+// tag-scoped logger.  Each log line is a two-char rank code, a timestamp, a
+// bracketed source token, then the message, all space-separated and vertically
 // aligned:
 //
-//	I 2026-05-24 15:04:05.123 [0..1234 app.www    ·   ] some message
+//	I0 2026-05-24 15:04:05.123 [0…123 app.www    ·   ] some message
+//
+// The rank code is severity then verbosity level: E0 error, W0 warn, I0/I1/I2… for
+// Info(n).  Lower is higher rank, and the digit reads uniformly as suppressibility —
+// 0 always prints, ≥1 prints only once -v reaches it.  E and W carry 0 because they
+// are unconditional.  A message carrying embedded newlines continues on '··' lines,
+// so a record with a stack trace or a dump stays one record and "^[EWI][0-9] "
+// remains a true line anchor.
+//
+// The timestamp is the transport's job wherever a transport does it.  Under systemd
+// the journal stamps and stores every entry, so a line bound only for journald drops
+// the date and carries 15:04:05.000 — which still earns its columns, because the
+// stderr journal path records emit time nowhere else (it passes no source timeval, so
+// __REALTIME_TIMESTAMP is receipt time).  Every other destination — a -log_file tee,
+// an embedded host's stderr, go test — has no envelope at all and keeps the full
+// date.  See AOM O2 §2.8.
 //
 // The source token leads with the logger's owner id (a task.Context's id, say) when
 // it has one, then the label; a logger with no label shows the log call-site file:line
@@ -40,19 +55,19 @@ import (
 	"unicode/utf8"
 )
 
-// Logger abstracts basic logging functions.  Levels follow Go's slog convention:
-// Debug / Info / Warn / Error.  Info and Infof take a verbosity level; 0 always
-// logs, higher levels log only when -v ≥ that level.
+// Logger abstracts basic logging functions: Info / Warn / Error.  Info and Infof
+// take a verbosity level; 0 always logs, higher levels log only when -v ≥ that
+// level.
 //
 // No Success (UX affordance, not a severity), no Fatal (hiding os.Exit inside a
-// log call is a footgun; exit at the call site), no structured-field variants
-// (no callers needed them; fmt.Sprintf is fine).
+// log call is a footgun; exit at the call site), no Debug (Info's level digit
+// already spans diagnostic depth, and a second axis for the same thing invites
+// the two disagreeing), no structured-field variants (no callers needed them;
+// fmt.Sprintf is fine).
 type Logger interface {
 	SetLogLabel(label string)
 	GetLogLabel() string
 	GetLogPrefix() string
-	Debug(args ...any)
-	Debugf(format string, args ...any)
 	LogV(logLevel int32) bool
 	Info(logLevel int32, args ...any)
 	Infof(logLevel int32, format string, args ...any)
@@ -92,15 +107,40 @@ func SetColor(on bool) { gUseColor.Store(on) }
 // ────────────────────────── globals ──────────────────────────
 
 var (
-	gVLevel      atomic.Int32
-	gUseColor    atomic.Bool
-	gLogFilePath string
-	gLogFile     *os.File
-	gFileOnce    sync.Once
-	gOutMu       sync.Mutex
-	gWidths      columnWidths
-	gDefault     = logger{}
+	gVLevel       atomic.Int32
+	gUseColor     atomic.Bool
+	gLogFilePath  string
+	gLogFile      *os.File
+	gFileOnce     sync.Once
+	gOutMu        sync.Mutex
+	gWidths       columnWidths
+	gDefault      = logger{}
+	gDestOnce     sync.Once
+	gStampFormat  = stampFull
+	gSyslogPrefix bool
 )
+
+const (
+	// stampFull dates every line, for a destination that keeps no envelope of its own.
+	stampFull = "2006-01-02 15:04:05.000"
+
+	// stampShort drops the date for a journald-only stderr, which stores and renders
+	// its own.  Time-of-day stays: the stderr journal path passes no source timeval,
+	// so nothing but this field records when the line was actually emitted.
+	stampShort = "15:04:05.000"
+)
+
+// resolveDestination fixes the line format from the destination set — once, on the
+// first emit, which is after flag parsing so -log_file is known.  The short stamp and
+// the <N> prefix are systemd's to consume, so both are taken only when stderr IS the
+// journal and no file tee competes for the same bytes; a tee would otherwise be handed
+// dateless lines and a stray prefix.  Callers must hold gOutMu.
+func resolveDestination() {
+	if gLogFilePath == "" && stderrIsJournalStream() {
+		gStampFormat = stampShort
+		gSyslogPrefix = true
+	}
+}
 
 // columnWidths tracks the sticky pad width of the source column interior (the id, label,
 // and/or file:line inside the brackets).  The width grows to fit and holds a floor; once
@@ -161,26 +201,78 @@ func isTTY(f *os.File) bool {
 type severity int
 
 const (
-	sevDebug severity = iota
-	sevInfo
+	sevInfo severity = iota
 	sevWarn
 	sevError
 )
 
 type sevInfoEntry struct {
-	tag  byte   // single-char code printed in the line header
+	tag  byte   // severity char leading the two-char rank code
 	ansi string // ANSI SGR prefix (empty = no color)
 }
 
 // ANSI codes: reset = \x1b[0m.  Colors stay simple and human-readable.
 var sevTable = [...]sevInfoEntry{
-	sevDebug: {tag: 'D', ansi: "\x1b[90m"}, // bright black / grey
-	sevInfo:  {tag: 'I', ansi: ""},         // default
+	sevInfo:  {tag: 'I', ansi: ""},         // level decides — see lineColor
 	sevWarn:  {tag: 'W', ansi: "\x1b[33m"}, // yellow
 	sevError: {tag: 'E', ansi: "\x1b[31m"}, // red
 }
 
-const ansiReset = "\x1b[0m"
+const (
+	ansiReset = "\x1b[0m"
+
+	// ansiDim is worn by gated Info lines.  Level 0 stays undimmed: those are the
+	// beacons, and dimming by severity would dim them along with the flood they are
+	// meant to stand out from.
+	ansiDim = "\x1b[90m" // bright black / grey
+)
+
+// lineColor picks a line's color from its rank rather than its severity alone, so the
+// verbosity a caller chose is visible instead of merely obeyed.
+func lineColor(sev severity, level int32) string {
+	if sev == sevInfo && level >= 1 {
+		return ansiDim
+	}
+	return sevTable[sev].ansi
+}
+
+// levelDigit renders a verbosity level into the rank code's second column.  The API
+// takes an int32 while the column holds one digit, so anything past 9 saturates rather
+// than widening the field and breaking every alignment below it.
+func levelDigit(level int32) byte {
+	switch {
+	case level <= 0:
+		return '0'
+	case level >= 9:
+		return '9'
+	}
+	return byte('0' + level)
+}
+
+// continuationMark stands in the rank column for the 2nd and later lines of a message
+// carrying embedded newlines: the record stays one record, and a continuation can never
+// match the "^[EWI][0-9] " anchor that greps and transcript maskers key on.
+const continuationMark = "··"
+
+// syslogPrefix maps a line's rank onto an sd-daemon(3) level prefix.  journald parses it
+// into PRIORITY= and strips it before storage (SyslogLevelPrefix= defaults true), so it
+// costs three bytes on the wire and nothing in the journal — and it is what lets
+// `journalctl -p` cut a running node's output by rank without a restart.
+func syslogPrefix(sev severity, level int32) string {
+	switch sev {
+	case sevError:
+		return "<3>" // SD_ERR
+	case sevWarn:
+		return "<4>" // SD_WARNING
+	}
+	switch {
+	case level <= 0:
+		return "<5>" // SD_NOTICE — the unsuppressible identity facts of O2 §2.8
+	case level == 1:
+		return "<6>" // SD_INFO — the working spine
+	}
+	return "<7>" // SD_DEBUG — detail, present only because -v asked for it
+}
 
 // ────────────────────────── logger ──────────────────────────
 
@@ -204,10 +296,11 @@ func (l *logger) GetLogPrefix() string { return l.prefix }
 
 // ────────────────────────── emit ──────────────────────────
 
-// emit writes one log line.  depth selects which stack frame the file:line names:
-// the public entry methods (Debug/Info/...) pass 1 to name their caller; a
-// wrapper that forwards through another method passes 2.
-func (l *logger) emit(sev severity, depth int, msg string) {
+// emit writes one record — one line, or several when msg carries embedded newlines.
+// level is the caller's verbosity; Warn and Error pass 0, being unconditional.  depth
+// selects which stack frame the file:line names: the public entry methods pass 1 to
+// name their caller; a wrapper forwarding through another method passes 2.
+func (l *logger) emit(sev severity, level int32, depth int, msg string) {
 	// Build the bracket interior before taking the lock; its width drives alignment
 	// under gOutMu.  The interior is right-padded to that width before ']' so every
 	// line's closing bracket lands at the same column, then a single space separates
@@ -233,32 +326,50 @@ func (l *logger) emit(sev severity, depth int, msg string) {
 
 	entry := sevTable[sev]
 	useColor := gUseColor.Load()
-	now := time.Now()
+	ansi := lineColor(sev, level)
 
 	var sb strings.Builder
 	sb.Grow(96 + len(msg) + len(source))
 
 	gOutMu.Lock()
 
+	gDestOnce.Do(resolveDestination)
+
+	// The clock is read under the lock.  Sampled outside it, two goroutines could stamp
+	// in one order and write in the other, producing a file whose timestamps contradict
+	// its own line order.
+	stamp := time.Now().Format(gStampFormat)
+
 	sourceWidth := gWidths.observe(sourceCols)
 
-	if useColor && entry.ansi != "" {
-		sb.WriteString(entry.ansi)
-	}
-	sb.WriteByte(entry.tag)
-	sb.WriteByte(' ')
-	sb.WriteString(now.Format("2006-01-02 15:04:05.000"))
-	sb.WriteByte(' ')
-	sb.WriteByte('[')
-	sb.WriteString(source)
-	writeGutter(&sb, sourceCols, sourceWidth)
-	sb.WriteByte(']')
-	if useColor && entry.ansi != "" {
-		sb.WriteString(ansiReset)
-	}
-	sb.WriteByte(' ')
-	sb.WriteString(msg)
-	if !strings.HasSuffix(msg, "\n") {
+	for i, line := range strings.Split(strings.TrimSuffix(msg, "\n"), "\n") {
+		if gSyslogPrefix {
+			sb.WriteString(syslogPrefix(sev, level))
+		}
+		if useColor && ansi != "" {
+			sb.WriteString(ansi)
+		}
+		if i == 0 {
+			sb.WriteByte(entry.tag)
+			sb.WriteByte(levelDigit(level))
+			sb.WriteByte(' ')
+			sb.WriteString(stamp)
+			sb.WriteByte(' ')
+			sb.WriteByte('[')
+			sb.WriteString(source)
+			writeGutter(&sb, sourceCols, sourceWidth)
+			sb.WriteByte(']')
+		} else {
+			// A continuation carries neither stamp nor source: repeating them would
+			// squeeze a dump into the narrowest column on the line, which is the
+			// opposite of why the dump was logged.
+			sb.WriteString(continuationMark)
+		}
+		if useColor && ansi != "" {
+			sb.WriteString(ansiReset)
+		}
+		sb.WriteByte(' ')
+		sb.WriteString(line)
 		sb.WriteByte('\n')
 	}
 
@@ -399,22 +510,20 @@ func (verbosityFlag) IsBoolFlag() bool { return false }
 
 func (l *logger) LogV(level int32) bool { return level == 0 || level <= gVLevel.Load() }
 
-func (l *logger) Debug(args ...any)         { l.emit(sevDebug, 1, fmt.Sprint(args...)) }
-func (l *logger) Debugf(f string, a ...any) { l.emit(sevDebug, 1, fmt.Sprintf(f, a...)) }
-func (l *logger) Warn(args ...any)          { l.emit(sevWarn, 1, fmt.Sprint(args...)) }
-func (l *logger) Warnf(f string, a ...any)  { l.emit(sevWarn, 1, fmt.Sprintf(f, a...)) }
-func (l *logger) Error(args ...any)         { l.emit(sevError, 1, fmt.Sprint(args...)) }
-func (l *logger) Errorf(f string, a ...any) { l.emit(sevError, 1, fmt.Sprintf(f, a...)) }
+func (l *logger) Warn(args ...any)          { l.emit(sevWarn, 0, 1, fmt.Sprint(args...)) }
+func (l *logger) Warnf(f string, a ...any)  { l.emit(sevWarn, 0, 1, fmt.Sprintf(f, a...)) }
+func (l *logger) Error(args ...any)         { l.emit(sevError, 0, 1, fmt.Sprint(args...)) }
+func (l *logger) Errorf(f string, a ...any) { l.emit(sevError, 0, 1, fmt.Sprintf(f, a...)) }
 
 func (l *logger) Info(level int32, args ...any) {
 	if l.LogV(level) {
-		l.emit(sevInfo, 1, fmt.Sprint(args...))
+		l.emit(sevInfo, level, 1, fmt.Sprint(args...))
 	}
 }
 
 func (l *logger) Infof(level int32, f string, a ...any) {
 	if l.LogV(level) {
-		l.emit(sevInfo, 1, fmt.Sprintf(f, a...))
+		l.emit(sevInfo, level, 1, fmt.Sprintf(f, a...))
 	}
 }
 
@@ -443,7 +552,7 @@ func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 			count++
 			curTime := time.Now().Unix()
 			fmt.Println() // clear any un-terminated ^c
-			gDefault.emit(sevWarn, 1, "received "+sig.String())
+			gDefault.emit(sevWarn, 0, 1, "received "+sig.String())
 
 			if onFirst != nil {
 				firstTime = curTime
@@ -451,7 +560,7 @@ func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 				onFirst = nil
 			} else if onRepeated != nil {
 				if curTime > firstTime+3 && count >= 3 {
-					gDefault.emit(sevWarn, 1, "received repeated interrupts — forcing exit")
+					gDefault.emit(sevWarn, 0, 1, "received repeated interrupts — forcing exit")
 					close(onRepeated)
 					onRepeated = nil
 				}
@@ -459,6 +568,6 @@ func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 		}
 	}()
 
-	gDefault.emit(sevInfo, 1, fmt.Sprintf("to stop: \x1b[1m^C\x1b[0m or \x1b[1mkill -s SIGINT %d\x1b[0m", os.Getpid()))
+	gDefault.emit(sevInfo, 0, 1, fmt.Sprintf("to stop: \x1b[1m^C\x1b[0m or \x1b[1mkill -s SIGINT %d\x1b[0m", os.Getpid()))
 	return onFirst, onRepeated
 }
