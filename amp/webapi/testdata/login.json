@@ -25,6 +25,11 @@
     "Signature": "0x9e8d7c6b5a493827160f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69",
     "Nonce": "srv-nonce-did-41b2"
   },
+  "ChallengeResponse": {
+    "Nonce": "7f3a9c51b2e8d4061a5c3f7e9b0d2a48",
+    "Message": "amp.planet.demo wants you to sign in with your Ethereum account:\n0x8ba1f109551bD432803012645Ac136ddd64DBA72\n\nSign in to amp.\n\nURI: https://amp.planet.demo\nVersion: 1\nChain ID: 1\nNonce: 7f3a9c51b2e8d4061a5c3f7e9b0d2a48\nIssued At: 2026-07-01T00:00:00Z\nExpiration Time: 2026-07-01T00:05:00Z",
+    "ExpiresAt": 1783000000
+  },
   "LoginResponse": {
     "SessionToken": "5oQyDsW3vG7kThJ9mXaZcE1rB8uNfLpV",
     "ExpiresAt": 1783000000,

@@ -1,0 +1,28 @@
+{
+  "GovernanceGrantRequest.full": {
+    "Planet": "06-efvw28sb400-248j248j248-j2",
+    "Channel": "amp.app.forum.general",
+    "Parent": "06-efvw28sbg00-6dtm6dtm6dt-m6",
+    "MemberGrants": [
+      { "Member": "06-efvw28sb200-1248j248j24-8j", "Access": "Moderator" },
+      { "Member": "06-efvw28sbk00-9m6dtm6dtm6-dt", "Access": "NotAllowed" }
+    ],
+    "DefaultGrants": [
+      { "Access": "ReadOnly" }
+    ],
+    "CitedAttestations": [
+      "0tpvgh9318s00dtm6dtm6dtm6d36rey14d5400248j248j248j20duxrs4jhnn00bpbpbpbpbpbpb"
+    ]
+  },
+  "GovernanceGrantRequest.minimal": {
+    "Planet": "06-efvw28sb400-248j248j248-j2",
+    "Channel": "06-efvw28sbg00-6dtm6dtm6dt-m6",
+    "DefaultGrants": [
+      { "Access": "ReadWrite" }
+    ]
+  },
+  "GovernanceGrantResponse": {
+    "PlanetID": "06-efvw28sb400-248j248j248-j2",
+    "Channel": "06-efvw28sbg00-6dtm6dtm6dt-m6"
+  }
+}

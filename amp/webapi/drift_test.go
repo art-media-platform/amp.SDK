@@ -38,6 +38,7 @@ var nonShapeFiles = map[string]bool{
 // shapeCtors maps a fixture entry's shape prefix to its Go wire struct.
 var shapeCtors = map[string]func() any{
 	"LoginRequest":            func() any { return &webapi.LoginRequest{} },
+	"ChallengeResponse":       func() any { return &webapi.ChallengeResponse{} },
 	"LoginResponse":           func() any { return &webapi.LoginResponse{} },
 	"AmpMember":               func() any { return &webapi.AmpMember{} },
 	"SessionResponse":         func() any { return &webapi.SessionResponse{} },
@@ -60,6 +61,8 @@ var shapeCtors = map[string]func() any{
 	"InviteAcceptResponse":    func() any { return &webapi.InviteAcceptResponse{} },
 	"InviteRevokeRequest":     func() any { return &webapi.InviteRevokeRequest{} },
 	"InviteListResponse":      func() any { return &webapi.InviteListResponse{} },
+	"GovernanceGrantRequest":  func() any { return &webapi.GovernanceGrantRequest{} },
+	"GovernanceGrantResponse": func() any { return &webapi.GovernanceGrantResponse{} },
 	"VaultEndpoint":           func() any { return &webapi.VaultEndpoint{} },
 	"ResolveRequest":          func() any { return &webapi.ResolveRequest{} },
 	"ResolveResponse":         func() any { return &webapi.ResolveResponse{} },
@@ -221,17 +224,12 @@ func TestAccessGolden(t *testing.T) {
 	}{}
 	loadJSON(t, filepath.Join("testdata", "access.json"), &golden)
 
-	// AccessLevels is the grantable subset the TS AccessLevel union accepts —
-	// every name must be a real amp.Access enum name (subset, not set-equal:
-	// NotAllowed/Invite/Private are legal Go-side but not grantable via invite).
-	for _, name := range golden.AccessLevels {
-		if _, ok := amp.Access_value[name]; !ok {
-			t.Errorf("access golden %q is not an amp.Access enum name", name)
-		}
-	}
-
-	// The remaining goldens mirror their full wire vocabulary — set-equal, so
-	// adding an enum value Go-side forces the golden (and the TS union) to move.
+	// Every golden mirrors its full wire vocabulary — set-equal, so adding an
+	// enum value Go-side forces the golden (and the TS union) to move.
+	// AccessLevels is the full amp.Access set: the grant endpoints (invite
+	// issue, governance grant) parse any Access enum name, and NotAllowed is
+	// meaningful as an explicit-deny governance grant.
+	assertNameSetEqual(t, "Access", golden.AccessLevels, amp.Access_name)
 	assertNameSetEqual(t, "WithdrawReason", golden.WithdrawReasons, amp.WithdrawReason_name, "UnspecifiedReason")
 	assertNameSetEqual(t, "InviteStatus", golden.InviteStatuses, amp.InviteStatus_name)
 	assertNameSetEqual(t, "TrustState", golden.TrustStates, amp.TrustState_name)

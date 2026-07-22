@@ -68,6 +68,11 @@ const SHAPES: Record<string, ShapeSpec> = {
     optional: ['Address', 'Signature', 'Nonce', 'Email', 'Password',
       'MemberToken', 'ChallengeResponse', 'DID', 'PlanetTag'],
   },
+  // types.ts WalletChallenge mirrors this shape (ExpiresAt? optional both ways).
+  ChallengeResponse: {
+    required: ['Nonce', 'Message'],
+    optional: ['ExpiresAt'],
+  },
   LoginResponse: {
     required: ['SessionToken', 'ExpiresAt', 'Member'],
     nested: { Member: 'AmpMember' },
@@ -162,6 +167,22 @@ const SHAPES: Record<string, ShapeSpec> = {
   },
   InviteRedemptionEntry: { required: ['Member', 'RedeemedAt', 'Rank', 'InRank'] },
 
+  // NOTE: no TS interface models the governance-grant family yet (the SDK has
+  // no governance API — raw-fetch per the §12.1 carve-out); these assert the
+  // Go shape so the fixture stays honest for the client that adds it.
+  // GrantEntry.Access takes any AccessLevel name; CitedAttestations elements
+  // are packed base32 Address strings (opaque — not nested wire objects).
+  GrantEntry: {
+    required: ['Access'],
+    optional: ['Member'],
+  },
+  GovernanceGrantRequest: {
+    required: ['Planet', 'Channel'],
+    optional: ['Parent', 'MemberGrants', 'DefaultGrants', 'CitedAttestations'],
+    nested: { MemberGrants: 'GrantEntry', DefaultGrants: 'GrantEntry' },
+  },
+  GovernanceGrantResponse: { required: ['PlanetID', 'Channel'] },
+
   // Address is BASE64 — opaque transport bytes (Go []byte), NOT a base32 UID.
   // No TS interface models the resolve/federation family yet.
   VaultEndpoint: { required: ['Transport', 'Address'] },
@@ -255,6 +276,7 @@ const FIXTURE_FILES = [
   'subscribe.json',
   'edits.json',
   'invite.json',
+  'governance.json',
   'vault.json',
   'media.json',
   'operator.json',
@@ -421,6 +443,7 @@ describe('OPERATOR_GO_ONLY manifest — no browser binding', () => {
 // `satisfies` ties each hand-list to the TS union at typecheck time; the
 // runtime toEqual ties it to the shared fixture the Go side verifies.
 const ACCESS_LEVELS = [
+  'NotAllowed', 'Invite', 'Private',
   'ReadOnly', 'ReadWrite', 'Moderator', 'Admin',
 ] as const satisfies readonly AccessLevel[];
 

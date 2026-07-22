@@ -64,6 +64,18 @@ type LoginRequest struct {
 	PlanetTag string `json:"PlanetTag,omitempty"`
 }
 
+// ChallengeResponse is the body of GET /api/v1/login/challenge?address=0x…
+// (or ?did=…) — the server-issued personal-sign challenge the wallet and DID
+// login schemes sign.  Message is the EIP-4361 payload (or the generic
+// domain-bound message for a non-EVM DID); the follow-up LoginRequest echoes
+// Nonce, and the challenge itself is server-stored keyed by Nonce, never
+// resent.  The TS mirror is types.ts WalletChallenge.
+type ChallengeResponse struct {
+	Nonce     string `json:"Nonce"`
+	Message   string `json:"Message"`
+	ExpiresAt int64  `json:"ExpiresAt,omitempty"` // unix seconds — challenge nonce expiry
+}
+
 // LoginResponse is the body of a successful POST /api/v1/login.
 //
 // SessionToken stays as string — it's a 32-byte random Bearer, not a UID.
@@ -470,6 +482,41 @@ type InviteRedemptionEntry struct {
 	RedeemedAt int64   `json:"RedeemedAt"` // unix seconds
 	Rank       int     `json:"Rank"`
 	InRank     bool    `json:"InRank"`
+}
+
+// ── Governance (§ app.home ChannelEpoch) ────────────────────────────────
+//
+// A ChannelEpoch is the authoritative governance record for its channel and is
+// latest-wins-REPLACE (an op naming one member replaces the whole ACL), so the
+// endpoint takes the COMPLETE desired policy.  Incremental single-member grants
+// are a read-modify-set the full-participant (native) client does against its
+// synced governance state; this façade does not synthesize them.
+
+// GrantEntry is one access grant.  Member is a base32 member UID; leave it
+// empty for a DefaultGrants entry (the grant that applies to members not
+// named).  Access is an amp.Access enum name — the full vocabulary
+// (testdata/access.json AccessLevels is the golden).
+type GrantEntry struct {
+	Member string `json:"Member,omitempty"`
+	Access string `json:"Access"`
+}
+
+// GovernanceGrantRequest is the body of POST /api/v1/governance/grant — the
+// complete access policy for one channel of a planet (Bearer; the caller
+// administers the planet).
+type GovernanceGrantRequest struct {
+	Planet            string         `json:"Planet"`                  // base32 UID of the planet whose channel is governed
+	Channel           string         `json:"Channel"`                 // canonic name or base32 UID of the channel node
+	Parent            string         `json:"Parent,omitempty"`        // optional parent legislating channel (canonic-or-UID)
+	MemberGrants      []GrantEntry   `json:"MemberGrants,omitempty"`  // per-member permissions
+	DefaultGrants     []GrantEntry   `json:"DefaultGrants,omitempty"` // permissions for members not named in MemberGrants
+	CitedAttestations []*amp.Address `json:"CitedAttestations,omitempty"`
+}
+
+// GovernanceGrantResponse is the committed policy's addressing.
+type GovernanceGrantResponse struct {
+	PlanetID tag.UID `json:"PlanetID"`
+	Channel  tag.UID `json:"Channel"`
 }
 
 // ErrorResponse is the body of every non-2xx /api/v1/* response.

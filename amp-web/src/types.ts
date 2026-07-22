@@ -64,7 +64,11 @@ export interface ClaimAccountOpts {
   newPassword: string;          // the account's first password
 }
 
-/** The personal-sign challenge a wallet/DID scheme signs before login. */
+/**
+ * The personal-sign challenge a wallet/DID scheme signs before login — body of
+ * GET /api/v1/login/challenge (webapi.ChallengeResponse; drift-guarded via the
+ * login.json fixture).
+ */
 export interface WalletChallenge {
   Nonce: string;
   Message: string;
@@ -145,8 +149,13 @@ export interface InviteRevokeOpts {
   rotate?: boolean;             // also rotate the planet epoch (node-custodial founder only)
 }
 
-/** Access levels a redeemer may be granted (enum names, per the wire contract). */
+/**
+ * Access levels (amp.Access enum names, per the wire contract) — the full
+ * vocabulary the grant endpoints accept (invite issue, governance grant).
+ * 'NotAllowed' as a governance grant is an explicit deny.
+ */
 export type AccessLevel =
+  | 'NotAllowed' | 'Invite' | 'Private'
   | 'ReadOnly' | 'ReadWrite' | 'Moderator' | 'Admin';
 
 /** One invite policy with its rank-adjudicated redemption ledger. */
