@@ -1255,6 +1255,7 @@ type Tag struct {
 	ContentTypeRaw string `protobuf:"bytes,24,opt,name=ContentTypeRaw,proto3" json:"ContentTypeRaw,omitempty"` // IANA media type; access via Tag.ContentType() e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
 	URI            string `protobuf:"bytes,26,opt,name=URI,proto3" json:"URI,omitempty"`                       // IANA RFC 1738 URL or unix pathname
 	Text           string `protobuf:"bytes,28,opt,name=Text,proto3" json:"Text,omitempty"`                     // UTF8 plain-text, XML, RTF
+	Data           []byte `protobuf:"bytes,29,opt,name=Data,proto3" json:"Data,omitempty"`                     // arbitrary binary payload
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -1350,6 +1351,13 @@ func (x *Tag) GetText() string {
 		return x.Text
 	}
 	return ""
+}
+
+func (x *Tag) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
 }
 
 // Tags is a multi-purpose, serializable, and customizable tree of tags.
@@ -7173,7 +7181,7 @@ var File_amp_amp_core_proto protoreflect.FileDescriptor
 
 const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
-	"\x12amp/amp.core.proto\x12\x03amp\x1a\x16stdlib/safe/safe.proto\"\xc9\x01\n" +
+	"\x12amp/amp.core.proto\x12\x03amp\x1a\x16stdlib/safe/safe.proto\"\xdd\x01\n" +
 	"\x03Tag\x12\x13\n" +
 	"\x05UID_0\x18\x03 \x01(\x06R\x04UID0\x12\x13\n" +
 	"\x05UID_1\x18\x04 \x01(\x06R\x04UID1\x12\f\n" +
@@ -7184,7 +7192,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	".amp.UnitsR\x05Units\x12&\n" +
 	"\x0eContentTypeRaw\x18\x18 \x01(\tR\x0eContentTypeRaw\x12\x10\n" +
 	"\x03URI\x18\x1a \x01(\tR\x03URI\x12\x12\n" +
-	"\x04Text\x18\x1c \x01(\tR\x04Text\"o\n" +
+	"\x04Text\x18\x1c \x01(\tR\x04Text\x12\x12\n" +
+	"\x04Data\x18\x1d \x01(\fR\x04Data\"o\n" +
 	"\x04Tags\x12\x1c\n" +
 	"\x04Head\x18\x01 \x01(\v2\b.amp.TagR\x04Head\x12\"\n" +
 	"\aSubTags\x18\x04 \x03(\v2\b.amp.TagR\aSubTags\x12%\n" +

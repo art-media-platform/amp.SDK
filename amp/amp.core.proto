@@ -61,6 +61,7 @@ message Tag {
     string  ContentTypeRaw = 24; // IANA media type; access via Tag.ContentType() e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
     string  URI            = 26; // IANA RFC 1738 URL or unix pathname
     string  Text           = 28; // UTF8 plain-text, XML, RTF
+    bytes   Data           = 29; // arbitrary binary payload
 }
 
 
