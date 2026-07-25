@@ -84,7 +84,10 @@ rm -rf "$STAGE/examples/forums/node_modules" \
 #     cp -R, so operator/audit docs can't leak).  A partner bundle is deterministic:
 #     a listed doc that is missing FAILS the build — never warn-and-skip.  A
 #     public/CI build without amp.planet opts out explicitly with AMP_WEB_NO_AOM=1.
-AOM_SRC="$SDK/../amp.planet/AOM"
+#     AMP_WEB_AOM_SRC points the read at a sibling worktree's AOM.
+#     AOM_DOCS ship whole; AOM_PUBLIC_SUBSET are operator chapters that ship only
+#     their `[PUBLIC]`-marked sections (pack-aom-public.mjs; O4 §4 front matter).
+AOM_SRC="${AMP_WEB_AOM_SRC:-$SDK/../amp.planet/AOM}"
 AOM_DOCS=(
   DD-architecture-overview.md
   DD-name-service.md
@@ -96,6 +99,9 @@ AOM_DOCS=(
   SD-invite-governance.md
   AD-app-www.md
   AD-app-forums.md
+)
+AOM_PUBLIC_SUBSET=(
+  O4-standard-procedures.md
 )
 if [ -n "${AMP_WEB_NO_AOM:-}" ]; then
   echo "!!! AMP_WEB_NO_AOM set — bundling without AOM design refs"
@@ -111,6 +117,13 @@ else
       exit 1
     fi
     cp "$AOM_SRC/$doc" "$STAGE/AOM/$doc"
+  done
+  for doc in "${AOM_PUBLIC_SUBSET[@]}"; do
+    if [ ! -f "$AOM_SRC/$doc" ]; then
+      echo "ERROR: allowlisted AOM chapter missing: $AOM_SRC/$doc" >&2
+      exit 1
+    fi
+    node "$HERE/pack-aom-public.mjs" "$AOM_SRC/$doc" "$STAGE/AOM/$doc"
   done
 fi
 

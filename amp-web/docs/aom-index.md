@@ -27,9 +27,17 @@ required reading.
 | `AOM/SD-invite-governance.md` | "What are invite policies, ceilings, revocation, and the redemption ledger?" (behind `issueInvite` / `acceptInvite` — SKILL §4.7.) |
 | `AOM/SD-canonization-spec.md` | "Why can't I canonize names client-side?" — the byte-level rules behind `resolveTag` / forge (SKILL §5.8). |
 | `AOM/AD-app-forums.md` | "How does a real app structure channels, verbs, and a custodian?" — the design behind `examples/forums/`. |
+| `AOM/O4-standard-procedures.md` | "What are the actual steps?" — redeem an invite, publish a name, run your own follower node, and the end-to-end mint-and-connect walk. |
 
 ## What Is Deliberately Not Shipped
 
-Operator runbooks, security-cluster internals, and audit files. If a
-shipped doc cites one and the answer matters to your integration, ask
+Operator runbooks, security-cluster internals, and audit files.
+`AOM/O4-standard-procedures.md` ships as its partner-facing subset: the
+sections that run a node — deploy, wipe, provider setup, release — stay
+held, and a coordinate naming one reads `(operator)`. If a shipped doc
+cites something withheld and the answer matters to your integration, ask
 your amp contact rather than guessing.
+
+Every procedure names roles (`<host>`, `<FED-UID>`, `<planet-UID>`,
+`<passphrase>`, …), never live values — bind them from your own
+deployment before running anything.

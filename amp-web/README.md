@@ -215,6 +215,10 @@ Rules the pack enforces on partner-visible text:
   rescue an instruction; reword at source.
 - Cite an internal doc as background, never instruction:
   `` Background (internal): `XYZ.md`. ``
+- An AOM operator chapter ships as its `[PUBLIC]`-marked sections only
+  (`pack-aom-public.mjs`): every `## N.M` heading in the source chapter carries
+  a `[PUBLIC]` or `[OPERATOR]` marker or the pack fails, and a coordinate naming
+  a withheld section is rewritten to the greppable token `§N.M (operator)`.
 
 ## Versioning & Stability
 
