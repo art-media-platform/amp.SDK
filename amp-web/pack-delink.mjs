@@ -52,7 +52,10 @@ function mdFiles(dir) {
 }
 
 // Char ranges covered by fenced code blocks (`fences`) plus inline code
-// spans (`masks`); links inside `masks` are not candidates.
+// spans (`masks`); links inside `masks` are not candidates.  An inline span
+// is matched WITHIN ONE LINE: a span allowed to run across lines pairs a
+// stray backtick with a distant one and silently masks whole paragraphs —
+// links inside would then never be checked, and a skip is not a pass.
 function maskedRanges(text) {
   const fences = [];
   const lines = text.split('\n');
@@ -76,10 +79,13 @@ function maskedRanges(text) {
 
   const masks = fences.slice();
   const inMask = (idx) => masks.some(([a, b]) => idx >= a && idx < b);
-  for (const span of text.matchAll(/(`{1,2})[^`]+\1/g)) {
-    if (!inMask(span.index)) {
-      masks.push([span.index, span.index + span[0].length]);
+  pos = 0;
+  for (const line of lines) {
+    for (const span of line.matchAll(/(`{1,2})[^`]+\1/g)) {
+      const idx = pos + span.index;
+      if (!inMask(idx)) masks.push([idx, idx + span[0].length]);
     }
+    pos += line.length + 1;
   }
   return { fences, masks };
 }
