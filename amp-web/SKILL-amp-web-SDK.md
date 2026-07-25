@@ -500,8 +500,9 @@ const { PlanetID, MemberID } = await client.acceptInvite({
   inviteText: 'https://{fqdn}/invite#…',   // the universal URL, or its amp-base32 body
   passphrase: '…',                          // out-of-band
 });
-// You are now a member of that federation's planet; from here you can register
-// your own names with `amp name register` (§4.6).
+// You are now a member of that federation's planet.  What you can do with your
+// own planets from here — brand them yourself, and who registers their names —
+// is §4.8.
 ```
 
 **Issuing, revoking, and listing invites** (operator side; Bearer, host-bridged):
@@ -547,6 +548,72 @@ curl -sX POST https://prod.plan.tools/api/v1/invite/accept \
   -H 'Content-Type: application/json' \
   -d '{"InviteText":"https://prod.plan.tools/invite#…","Passphrase":"…"}'
 ```
+
+---
+
+### 4.8 Your own planets — mint, brand, register
+
+Joining a federation (§4.7) is not the same as owning a planet in it. One rule
+fixes the boundary: **the web bridge refuses governance-law attrs**
+(`LawPlanetEpoch`, `LawMemberEpoch`, `LawChannelEpoch`, `LawPlanetOrigin`,
+`LawEquivalence`) — a browser cannot address governance at all. Planet genesis
+posts exactly that attr, so **no browser call mints a planet**, and none is
+planned.
+
+| Act | Web client (Bearer session) | Native `amp` CLI |
+|---|---|---|
+| Home planet | ✅ auto-minted on your first login (§0) — one per member, private | ✅ same |
+| Another planet | ❌ no member wire verb — your operator mints one for you (`POST /api/v1/admin/planet/create`, admin-gated, public only) | ✅ `amp planet genesis "<label>"` (private by default, `--public` for anonymous-readable) |
+| Brand it, `NamedBy` included | ✅ member-authorized `invoke` — below | ✅ `amp brand set <planet-UID> --namedby <FED-UID>` |
+| Register an FQDN into a federation | ❌ no wire verb — your federation's operator registers it, or take the CLI path | ✅ `amp name register` (`AOM/O4-standard-procedures.md` §4.10) |
+| Resolve a name + judge trust | ✅ `POST /api/v1/resolve` (§4.6) | ✅ |
+
+**Branding your planet is a member act — and it is the back-edge.**
+`Brand.Identity.NamedBy` is what turns a resolve from `Unchecked` into
+`Verified` (§4.6), and the verb that authors it is member-authorized:
+`amp://~/home/planet/brand/<planet-UID>`, routed as a verb-RPC (§4.3). The gate
+is the planet's own authority — its founder, or an `Access_Admin` on its root —
+**not** the operator admin allowlist, so a web-only partner brands its own
+planet with no operator involvement. Address the op at the planet's single
+canonical Brand cell: `Attr` = `amp.Brand`, `ItemID` = that attr's own UID
+(resolve it once, §5.8); a batch addressed anywhere else is rejected.
+
+```ts
+const [brand] = await client.resolveTags(['amp.Brand']);   // ID = the canonical Brand cell
+await client.invoke(`amp://~/home/planet/brand/${planetUID}`, [{
+  Kind:    'upsert',
+  Channel: planetUID,        // the verb re-addresses to the canonical cell
+  Attr:    'amp.Brand',
+  ItemID:  brand.ID,
+  Value: {
+    Identity: {
+      AppName:   'Your App',
+      AppDomain: 'app.example.com',
+      NamedBy:   { UID: '<FED-UID>' },   // the federation you joined (§4.7)
+    },
+    AppHomeURL: 'https://app.example.com',
+  },
+}]);
+```
+
+The Brand you post is the planet's **complete replacement** identity card, not a
+patch — send every field you want kept (§10.1). A UID-bearing field rides an
+`amp.Tag`, whose JSON form is `{ "UID": "<base32>" }`. A planet with no Brand
+resolves `Unchecked`; one whose Brand names a federation that doesn't carry its
+record resolves `Refuted` — so brand and register together.
+
+**Private vs public.** There is no per-item visibility flag (§6.4). Privacy is a
+genesis-time fact of the planet (`PlanetEpoch.IsPublic`), not a runtime toggle,
+so it can never be flipped later from any surface. A web client's planets are:
+its own private home planet, plus whatever planets its operator minted and
+admitted it to. An additional planet of *either* privacy — including a private
+org planet — is a genesis act, and genesis is the CLI path below.
+
+**Taking the CLI path** costs a Go toolchain, a box to run `ampd` on, and
+epoch-key custody; it buys self-serve genesis and name registration (§14.8). The
+procedures ship in this bundle: `AOM/O4-standard-procedures.md` §4.18 is the
+end-to-end mint-and-connect walk, §4.17 stands up your own follower node, §4.10
+publishes a name, §4.6 redeems an invite from the CLI side.
 
 ---
 
@@ -882,7 +949,7 @@ Where the third-party API supports it (OpenRouter scoped tokens, Stripe Connect 
 
 ### 6.4 Public reads & sharing
 
-amp does NOT have a per-item visibility flag. Public-readable content lives on a separate planet operating in public mode (`PlanetEpoch.IsPublic = true` at genesis — see `SECURITY-amp-web-SDK.md`).
+amp does NOT have a per-item visibility flag. Public-readable content lives on a separate planet operating in public mode (`PlanetEpoch.IsPublic = true` at genesis — see `SECURITY-amp-web-SDK.md`). Genesis-time means exactly that: no surface flips a planet's privacy afterwards, and a web client cannot genesis one (§4.8).
 
 #### Operator setup (one time per deploy)
 
@@ -1475,7 +1542,9 @@ When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology)
 
 **Identity & trust.** A partner's planets set `Brand.NamedBy` to the naming federation — the back-edge (§4.6) that lets a resolver return `TrustState: 'Verified'`. Resolved records carry the partner's own `VaultAddrs`, so a consumer reaches the partner's vault **directly** — cross-host, never proxied through the parent.
 
-The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own. Operator runbook with the exact genesis / invite / register / peer steps: `deploy/README`.
+The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own.
+
+**The step-by-step procedures ship in this bundle** — `AOM/O4-standard-procedures.md`: §4.18 the end-to-end mint-and-connect walk, §4.17 your own follower node, §4.10 name publication + the resolve verdicts, §4.6 invite redemption, §4.4/§4.5 the invite artifact and its out-of-band passphrase. They name roles (`<host>`, `<FED-UID>`, `<planet-UID>`, …), never live values; bind them to your own deployment. Sections that run AMP's own nodes are held back and read `(operator)`. Which of these a web client can do without the CLI is §4.8.
 
 ---
 
