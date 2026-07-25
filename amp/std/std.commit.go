@@ -22,10 +22,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) erro
 		AttrID: attrID,
 	})
 
-	req := &localLoad{
-		outTx:  make(chan *amp.TxMsg),
-		outErr: make(chan error),
-	}
+	req := newLocalLoad()
 
 	ctx := closer.WrapContext(appCtx)
 	err := appCtx.Session().SubmitTx(amp.TxCommit{
@@ -80,6 +77,15 @@ func SetupSnapshot(target tag.ElementID) *amp.PinRequest {
 type localLoad struct {
 	outTx  chan *amp.TxMsg
 	outErr chan error
+}
+
+// newLocalLoad builds the load pipeline's out-channels — the single site that
+// sets their shape for every loader (BlockingLoad, LoadItems).
+func newLocalLoad() *localLoad {
+	return &localLoad{
+		outTx:  make(chan *amp.TxMsg),
+		outErr: make(chan error),
+	}
 }
 
 func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
@@ -170,10 +176,7 @@ func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.N
 		ItemID: tag.WildcardID(),
 	})
 
-	loader := &localLoad{
-		outTx:  make(chan *amp.TxMsg),
-		outErr: make(chan error),
-	}
+	loader := newLocalLoad()
 
 	ctx := closer.WrapContext(appCtx)
 	err := appCtx.Session().SubmitTx(amp.TxCommit{
