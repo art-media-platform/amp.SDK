@@ -529,45 +529,46 @@ func (l *logger) Infof(level int32, f string, a ...any) {
 
 // ────────────────────────── interrupt handling ──────────────────────────
 
-// AwaitInterrupt returns two channels: the first closes on SIGINT/SIGTERM; the
-// second closes when a 3rd (or later) signal arrives more than 3 seconds after the
-// first, so long-running programs can distinguish graceful shutdown from a user
-// demanding exit now.
+// AwaitInterrupt installs the process shutdown ladder and returns its two stages:
+//
+//	signal #1 — first closes: begin a graceful stop.
+//	signal #2 — repeated closes: an operator escalation, graceful → forced.
+//	signal #3 — the OS default disposition is restored, so the next signal
+//	            terminates the process and a wedged shutdown is always killable.
+//
+// A repeated signal is never a no-op, at any interval.  A caller wanting only
+// graceful stop ignores repeated; a caller needing a hard exit bound arms its own
+// watchdog off these stages rather than re-implementing the ladder.
 func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 	onFirst := make(chan struct{})
 	onRepeated := make(chan struct{})
 
 	go func() {
-		sigInbox := make(chan os.Signal, 1)
+		// Buffered: a rapid repeat must not be dropped while this goroutine emits
+		// the previous rung.
+		sigInbox := make(chan os.Signal, 4)
 		// SIGHUP is deliberately excluded: catching it would override the SIG_IGN that
 		// nohup installs, letting a closing controlling terminal or SSH session terminate
 		// a backgrounded daemon.  SIGINT/SIGTERM are the shutdown signals; for a daemon a
 		// hangup means "reload", not "die".
 		signal.Notify(sigInbox, syscall.SIGINT, syscall.SIGTERM)
 
-		count := 0
-		firstTime := int64(0)
+		reportSignal(<-sigInbox, "stopping")
+		close(onFirst)
 
-		for sig := range sigInbox {
-			count++
-			curTime := time.Now().Unix()
-			fmt.Println() // clear any un-terminated ^c
-			gDefault.emit(sevWarn, 0, 1, "received "+sig.String())
+		reportSignal(<-sigInbox, "again — abandoning the graceful stop")
+		close(onRepeated)
 
-			if onFirst != nil {
-				firstTime = curTime
-				close(onFirst)
-				onFirst = nil
-			} else if onRepeated != nil {
-				if curTime > firstTime+3 && count >= 3 {
-					gDefault.emit(sevWarn, 0, 1, "received repeated interrupts — forcing exit")
-					close(onRepeated)
-					onRepeated = nil
-				}
-			}
-		}
+		reportSignal(<-sigInbox, "a third time — restoring default handling; the next signal terminates")
+		signal.Reset(syscall.SIGINT, syscall.SIGTERM)
 	}()
 
-	gDefault.emit(sevInfo, 0, 1, fmt.Sprintf("to stop: \x1b[1m^C\x1b[0m or \x1b[1mkill -s SIGINT %d\x1b[0m", os.Getpid()))
+	gDefault.emit(sevInfo, 0, 1, fmt.Sprintf("to stop: \x1b[1m^C\x1b[0m or \x1b[1mkill -s SIGINT %d\x1b[0m (repeat to escalate)", os.Getpid()))
 	return onFirst, onRepeated
+}
+
+// reportSignal narrates one rung of the shutdown ladder.
+func reportSignal(sig os.Signal, note string) {
+	fmt.Println() // clear any un-terminated ^C
+	gDefault.emit(sevWarn, 0, 2, "received "+sig.String()+" — "+note)
 }

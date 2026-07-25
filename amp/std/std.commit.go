@@ -80,11 +80,13 @@ type localLoad struct {
 }
 
 // newLocalLoad builds the load pipeline's out-channels — the single site that
-// sets their shape for every loader (BlockingLoad, LoadItems).
+// sets their shape for every loader (BlockingLoad, LoadItems).  outErr is
+// buffered: a receiver leaves its select via appCtx.Closing(), so an error
+// racing that departure must never block its sender (the localCommit shape).
 func newLocalLoad() *localLoad {
 	return &localLoad{
 		outTx:  make(chan *amp.TxMsg),
-		outErr: make(chan error),
+		outErr: make(chan error, 1),
 	}
 }
 
@@ -96,10 +98,13 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 	var err error
 
 	select {
-	case req.outTx <- tx:
+	case req.outTx <- tx: // guarded by ctx.Done(): a departed receiver cancels the context
 	case <-ctx.Done():
 		err = ctx.Err()
-		req.outErr <- err
+		select {
+		case req.outErr <- err:
+		default: // receiver already left; drop rather than block the pipeline
+		}
 	}
 	return err
 }
