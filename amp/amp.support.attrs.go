@@ -1,6 +1,7 @@
 package amp
 
 import (
+	"bytes"
 	"fmt"
 	"net/url"
 	"sort"
@@ -360,6 +361,7 @@ func (v *Tag) Clone() *Tag {
 		ContentTypeRaw: v.ContentTypeRaw,
 		URI:            v.URI,
 		Text:           v.Text,
+		Data:           bytes.Clone(v.Data), // deep: an attachment must not alias the source buffer
 	}
 }
 

@@ -1,9 +1,12 @@
 package amp
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"testing"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -140,5 +143,69 @@ func TestTagTextWireSize(t *testing.T) {
 	}
 	if delta := len(stored) - len(interned); delta != 13 {
 		t.Fatalf("text/plain string cost = %d B (2 B tag + 1 B len + 10 B ascii), want 13", delta)
+	}
+}
+
+// TestTagAttachmentSyntax pins the attachment rule (SD-content-substrate.md §3.6): Data
+// requires ContentTypeRaw, URI + Data together is legal (the post-fetch cache), and the rule
+// reaches every leaf of a tree, Head / SubTag / Child alike.
+func TestTagAttachmentSyntax(t *testing.T) {
+	payload := []byte{0x89, 'P', 'N', 'G'}
+
+	if err := (&Tag{Data: payload}).Validate(); !errors.Is(err, ErrTagNoContentType) {
+		t.Fatalf("untyped attachment admitted (err=%v)", err)
+	}
+	if err := (&Tag{ContentTypeRaw: "image/png", Data: payload}).Validate(); err != nil {
+		t.Fatalf("typed attachment refused: %v", err)
+	}
+	// The post-fetch cache: bytes inline PLUS the canonical location, no precedence rule.
+	cached := &Tag{ContentTypeRaw: "image/png", URI: "amp://p/blob/n", Data: payload}
+	if err := cached.Validate(); err != nil {
+		t.Fatalf("post-fetch cache refused: %v", err)
+	}
+	// A Tag with no Data is unconstrained; nil is not a refusal.
+	if err := (&Tag{URI: "amp://p/blob/n"}).Validate(); err != nil {
+		t.Fatalf("pure reference refused: %v", err)
+	}
+	var nilLeaf *Tag
+	if err := nilLeaf.Validate(); err != nil {
+		t.Fatalf("nil leaf refused: %v", err)
+	}
+
+	// Placement is Head OR SubTag OR Child — every leaf is checked.
+	for name, tree := range map[string]*Tags{
+		"head":   NewTags(&Tag{Data: payload}),
+		"subtag": NewTags(TagText("text/html", "<p>hi</p>"), &Tag{Data: payload}),
+		"child":  NewTags(TagText("text/html", "<p>hi</p>")).AddChild(NewTags(&Tag{Data: payload})),
+	} {
+		if err := tree.Validate(); !errors.Is(err, ErrTagNoContentType) {
+			t.Fatalf("%s: untyped attachment admitted (err=%v)", name, err)
+		}
+	}
+
+	// The enforcement door: MarshalOp is where an op value is last a typed proto.
+	tx := &TxMsg{}
+	if err := tx.Upsert(tag.UID{1}, tag.UID{2}, tag.UID{3}, &Tag{Data: payload}); !errors.Is(err, ErrTagNoContentType) {
+		t.Fatalf("untyped attachment marshaled into a tx (err=%v)", err)
+	}
+	if len(tx.Ops) != 0 {
+		t.Fatalf("refused op appended to the tx: %d ops", len(tx.Ops))
+	}
+	if err := tx.Upsert(tag.UID{1}, tag.UID{2}, tag.UID{3}, cached); err != nil {
+		t.Fatalf("post-fetch cache refused at MarshalOp: %v", err)
+	}
+}
+
+// TestTagCloneCarriesData pins Clone as a full copy: an attachment survives the clone the
+// blob-meta path takes, and the copy does not alias the source buffer.
+func TestTagCloneCarriesData(t *testing.T) {
+	src := &Tag{ContentTypeRaw: "image/png", Data: []byte{1, 2, 3}}
+	dst := src.Clone()
+	if !bytes.Equal(dst.Data, src.Data) {
+		t.Fatalf("Clone dropped Data: %v", dst.Data)
+	}
+	src.Data[0] = 9
+	if dst.Data[0] == 9 {
+		t.Fatal("Clone aliased the source buffer")
 	}
 }

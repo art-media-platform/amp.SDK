@@ -250,6 +250,9 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 
 	// VALUE CONTENT
 	if val != nil {
+		if err := checkTagSyntax(val); err != nil {
+			return err
+		}
 		var err error
 		ds, err = data.MarshalTo(ds, val)
 		if err != nil {
@@ -264,6 +267,21 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 	tx.Ops = append(tx.Ops, *op)
 	tx.Normalized = false
 
+	return nil
+}
+
+// checkTagSyntax admits a Tag/Tags op value at the authoring door — the last point at which
+// an op value is still a typed proto.  Past MarshalOp a tx carries opaque bytes and there is
+// no attr→type resolution, so the downstream MaxTxMsgSize gate can weigh a tx but cannot see
+// a Tag inside it; siting the rule here keeps the refusal on the producer's own stack, ahead
+// of seal and journal.  A non-Tag value costs one type switch.  Tag.Validate owns the rule.
+func checkTagSyntax(val proto.Message) error {
+	switch leaf := val.(type) {
+	case *Tag:
+		return leaf.Validate()
+	case *Tags:
+		return leaf.Validate()
+	}
 	return nil
 }
 

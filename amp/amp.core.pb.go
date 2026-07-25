@@ -1239,7 +1239,20 @@ func (ArchiveMode) EnumDescriptor() ([]byte, []int) {
 
 // Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
 //
-// All fields are optional and their meaning is contextual.
+// All fields are optional and their meaning is contextual; a Tag plays one or more roles —
+// identity (UID), reference (URI / ContentTypeRaw), label (Text), measure (I/J/K + Units),
+// attachment (Data).
+//
+// URI + Data together is the POST-FETCH CACHE: URI names where the object lives, Data is a
+// copy of it materialized inline, so holding Data IS the cache hit and there is no precedence
+// to resolve.  A content-addressed handle cannot go stale — a BlobID is the leading 16 bytes
+// of the content hash, so the bytes it names never change.  A location-addressed URI has no
+// such guarantee: the copy is as of write time and the producer owns its refresh.
+//
+// Data requires ContentTypeRaw (bytes with no media type are unrenderable) and is legal on
+// Tags.Head or any Tags.SubTag.  The substrate sets NO per-Tag size ceiling, so an attachment
+// reaches every subscriber and stays in the journal ungated by BlobPullPolicy, and the
+// producer owns its own limit.  (SD-content-substrate.md §3.1, §3.6)
 type Tag struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// / open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
@@ -1253,9 +1266,9 @@ type Tag struct {
 	// / open-use non-inline fields
 	// /
 	ContentTypeRaw string `protobuf:"bytes,24,opt,name=ContentTypeRaw,proto3" json:"ContentTypeRaw,omitempty"` // IANA media type; access via Tag.ContentType() e.g. "text/html", "image/png", "image/*", "amp.vis/content.*"
-	URI            string `protobuf:"bytes,26,opt,name=URI,proto3" json:"URI,omitempty"`                       // IANA RFC 1738 URL or unix pathname
+	URI            string `protobuf:"bytes,26,opt,name=URI,proto3" json:"URI,omitempty"`                       // IANA RFC 1738 URL or unix pathname; with Data set, the canonical/origin location of those bytes
 	Text           string `protobuf:"bytes,28,opt,name=Text,proto3" json:"Text,omitempty"`                     // UTF8 plain-text, XML, RTF
-	Data           []byte `protobuf:"bytes,29,opt,name=Data,proto3" json:"Data,omitempty"`                     // arbitrary binary payload
+	Data           []byte `protobuf:"bytes,29,opt,name=Data,proto3" json:"Data,omitempty"`                     // inline binary payload as given; requires ContentTypeRaw
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }

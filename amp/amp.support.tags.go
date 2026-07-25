@@ -1,6 +1,10 @@
 package amp
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
+)
 
 // Tag / Tags ergonomics — the builder + accessor layer for the content model where a
 // value's DOCUMENT is an amp.Tags tree of amp.Tag leaves, each leaf self-declaring its
@@ -37,6 +41,38 @@ func (leaf *Tag) ContentType() string {
 		return DefaultContentType
 	}
 	return strings.ToLower(leaf.ContentTypeRaw)
+}
+
+// ErrTagNoContentType: a leaf carries Data with no ContentTypeRaw.  An attachment with no
+// media type is unrenderable — nothing downstream can decide how to read the bytes — so it is
+// refused where the value is authored rather than stored and served as unusable payload.
+var ErrTagNoContentType = status.Code_BadRequest.Error("amp.Tag: Data requires ContentTypeRaw")
+
+// Validate reports whether a leaf's field combination is legal — the ONE statement of Tag
+// syntax (SD-content-substrate.md §3.6).  Data (an inline attachment) requires
+// ContentTypeRaw.  URI and Data together are legal and expected — the post-fetch cache, where
+// URI is the object's location and Data a copy materialized inline — and carry no precedence
+// rule.  Nil-safe.
+func (leaf *Tag) Validate() error {
+	if leaf == nil || len(leaf.Data) == 0 {
+		return nil
+	}
+	if leaf.ContentTypeRaw == "" {
+		return ErrTagNoContentType
+	}
+	return nil
+}
+
+// Validate checks every leaf of the tree — Head, SubTags, and Children alike, since an
+// attachment is legal at any depth (§3.6) — and returns the first refusal.  Nil-safe.
+func (t *Tags) Validate() error {
+	var refused error
+	t.Walk(func(leaf *Tag) {
+		if refused == nil {
+			refused = leaf.Validate()
+		}
+	})
+	return refused
 }
 
 // NewTags builds a Tags branch: head identifies the branch, subTags amplify it (sibling
