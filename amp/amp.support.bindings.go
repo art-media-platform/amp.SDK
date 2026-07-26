@@ -34,6 +34,22 @@ type AttrItem[V proto.Message] struct {
 	Tx      *TxMsg // carrying tx; borrowed for the callback only (read Tx.TxID(), never retain)
 }
 
+// ItemMerger folds an arriving op's decoded value into an item's cached value —
+// the per-attr override of AttrBinding's whole-value LWW, for attrs whose
+// record custody is per-field (MemberEpoch: NewMemberEpochMerger).
+//
+// MergeItem sees every admitted non-delete arrival, stale EditIDs included;
+// idempotence under re-presentation is the merger's contract (strict per-field
+// clocks).  prev is the current cached value (hasPrev false on first sight);
+// the returned merged value replaces the cache when changed.  arrival.Value is
+// owned by the arrival (freshly unmarshaled) but is also handed to OnItem
+// consumers — a merger that retains sub-messages must clone them.  DropItem
+// clears any per-item merge state when the item is deleted.
+type ItemMerger[V proto.Message] interface {
+	MergeItem(arrival AttrItem[V], prev V, hasPrev bool) (merged V, changed bool)
+	DropItem(itemID tag.UID)
+}
+
 // AttrBinding wires a specific attr (and optional item filter) to typed callbacks and caches item state.
 // V is the concrete proto.Message type expected for this attr (must be a pointer type like *amp.Tag).
 //
@@ -56,11 +72,21 @@ type AttrBinding[V proto.Message] struct {
 	// address and the carrying tx (e.g. for tx.TxID() recency / skew / cap policy).
 	OnAdmit func(addr tag.Address, tx *TxMsg) bool
 
-	// OnItem fires for each matching op that passes the admit check and CRDT ordering (if non-nil)
+	// OnItem fires for each matching op that passes the admit check and CRDT ordering (if non-nil).
+	// With a Merger set it fires for EVERY admitted non-delete arrival (stale EditIDs included)
+	// and receives the ARRIVING record verbatim — never the merged cache value — so consumers
+	// that act on what a record carries (e.g. WrappedKeys extraction) see each delivery.
 	OnItem func(item AttrItem[V])
 
 	// OnSync fires once after all ops in a NodeUpdate have been processed  (if non-nil)
 	OnSync func()
+
+	// Merger, if set, replaces the cache's whole-value LWW rule with a per-field
+	// CRDT fold (see ItemMerger): every non-delete arrival is offered to the
+	// merger — a stale-ordered record can still own a field — and the cache
+	// (GetItem / EnumItems / FirstItem) serves the MERGED value.  Deletes keep
+	// LWW ordering.  OnItem behavior: see above.
+	Merger ItemMerger[V]
 
 	revision tag.UID                  // most recently witnessed NodeUpdate
 	nodeID   tag.UID                  // bound node ID
@@ -247,12 +273,17 @@ func (b *AttrBinding[V]) OnNodeUpdate(update NodeUpdate) {
 			continue
 		}
 
-		// CRDT: reject edits older than what we already have.
+		// CRDT ordering: whole-value LWW by EditID.  A Merger-equipped binding
+		// folds every non-delete arrival instead (a stale-ordered record can
+		// still own a field — per-field custody); deletes keep LWW.
 		prevEdit, hasEdit := b.edits[op.Addr.ItemID]
-		if hasEdit && prevEdit.CompareTo(op.Addr.EditID) >= 0 {
+		isDelete := (op.Flags & TxOpFlags_Delete) != 0
+		if (b.Merger == nil || isDelete) && hasEdit && prevEdit.CompareTo(op.Addr.EditID) >= 0 {
 			continue
 		}
-		b.edits[op.Addr.ItemID] = op.Addr.EditID
+		if !hasEdit || prevEdit.CompareTo(op.Addr.EditID) < 0 {
+			b.edits[op.Addr.ItemID] = op.Addr.EditID
+		}
 
 		item := AttrItem[V]{
 			Addr:  op.Addr,
@@ -260,9 +291,12 @@ func (b *AttrBinding[V]) OnNodeUpdate(update NodeUpdate) {
 			Value: b.msgType.New().Interface().(V),
 		}
 
-		if (op.Flags & TxOpFlags_Delete) != 0 {
+		if isDelete {
 			item.Deleted = true
 			delete(b.items, op.Addr.ItemID)
+			if b.Merger != nil {
+				b.Merger.DropItem(op.Addr.ItemID)
+			}
 			if !hasEdit {
 				continue // ignore deletes of items we've never seen
 			}
@@ -270,7 +304,14 @@ func (b *AttrBinding[V]) OnNodeUpdate(update NodeUpdate) {
 			if err := tx.UnmarshalOpValue(idx, item.Value); err != nil {
 				continue
 			}
-			b.items[op.Addr.ItemID] = item.Value
+			if b.Merger != nil {
+				prev, hasPrev := b.items[op.Addr.ItemID]
+				if merged, changed := b.Merger.MergeItem(item, prev, hasPrev); changed {
+					b.items[op.Addr.ItemID] = merged
+				}
+			} else {
+				b.items[op.Addr.ItemID] = item.Value
+			}
 		}
 
 		if b.OnItem != nil {
