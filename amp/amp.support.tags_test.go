@@ -209,3 +209,42 @@ func TestTagCloneCarriesData(t *testing.T) {
 		t.Fatal("Clone aliased the source buffer")
 	}
 }
+
+// TestTagFromData pins the attachment constructor: the type is lower-cased and NEVER
+// stripped — an empty ContentTypeRaw on a Data leaf is what Validate refuses — so even
+// text/plain (which TagText strips to "") stays explicit.
+func TestTagFromData(t *testing.T) {
+	leaf := TagFromData("Image/PNG", []byte{1, 2, 3})
+	if leaf.ContentTypeRaw != "image/png" {
+		t.Fatalf("ContentTypeRaw = %q", leaf.ContentTypeRaw)
+	}
+	if err := leaf.Validate(); err != nil {
+		t.Fatalf("valid attachment refused: %v", err)
+	}
+	plain := TagFromData("text/plain", []byte("x"))
+	if plain.ContentTypeRaw != "text/plain" {
+		t.Fatalf("TagFromData stripped text/plain to %q — a Data leaf must keep its type", plain.ContentTypeRaw)
+	}
+	if err := plain.Validate(); err != nil {
+		t.Fatalf("text/plain attachment refused: %v", err)
+	}
+}
+
+// TestTagIsNil pins the predicate: identity + reference coverage only (UID, URI), and a
+// nil receiver reports true — a nil *Tag names nothing, so a guard like
+// `if login.Member.IsNil() { refuse }` refuses a Login carrying no Member instead of
+// passing the nil into a deref.
+func TestTagIsNil(t *testing.T) {
+	if !(*Tag)(nil).IsNil() {
+		t.Fatal("nil *Tag reports IsNil() == false — a nil-guarded caller derefs it")
+	}
+	if !(&Tag{}).IsNil() {
+		t.Fatal("empty Tag must report IsNil() == true")
+	}
+	if (&Tag{UID_0: 1}).IsNil() || (&Tag{URI: "amp://x"}).IsNil() {
+		t.Fatal("a Tag with identity or reference must report IsNil() == false")
+	}
+	if !(&Tag{Text: "label", Data: []byte{1}, I: 5}).IsNil() {
+		t.Fatal("coverage is identity + reference only — Text/Data/I must not affect IsNil")
+	}
+}

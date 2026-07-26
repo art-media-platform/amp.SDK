@@ -376,8 +376,11 @@ func (v *Tag) SetID(uid tag.UID) {
 	v.UID_1 = uid[1]
 }
 
+// IsNil reports whether the Tag carries no identity and no reference — UID and URI both
+// unset.  Label, measure, and attachment fields (Text, I/J/K, Data) are not consulted.
+// Nil-safe: a nil *Tag reports true.
 func (v *Tag) IsNil() bool {
-	return v != nil && v.URI == "" && v.UID_0 == 0 && v.UID_1 == 0
+	return v == nil || (v.URI == "" && v.UID_0 == 0 && v.UID_1 == 0)
 }
 
 func (v *Tag) UID() tag.UID {

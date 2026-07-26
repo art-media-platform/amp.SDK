@@ -44,7 +44,7 @@ const (
 // author one post-genesis via POST /api/v1/admin/planet/brand.
 type PlanetCreateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Tag           *amp.Tag               `protobuf:"bytes,1,opt,name=Tag,proto3" json:"Tag,omitempty"`
+	Tag           *amp.Tag               `protobuf:"bytes,1,opt,name=Tag,proto3" json:"Tag,omitempty"` // identity + label — the planet to create (Text = tag.Name expression, or raw UID_0/1)
 	Brand         *amp.Brand             `protobuf:"bytes,2,opt,name=Brand,proto3" json:"Brand,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -100,7 +100,7 @@ func (x *PlanetCreateRequest) GetBrand() *amp.Brand {
 // single Brand address), not a delta.
 type BrandSetRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Planet        *amp.Tag               `protobuf:"bytes,1,opt,name=Planet,proto3" json:"Planet,omitempty"`
+	Planet        *amp.Tag               `protobuf:"bytes,1,opt,name=Planet,proto3" json:"Planet,omitempty"` // identity — the target planet (UID)
 	Brand         *amp.Brand             `protobuf:"bytes,2,opt,name=Brand,proto3" json:"Brand,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

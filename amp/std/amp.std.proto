@@ -143,13 +143,13 @@ message JsonValue {
 
 // Generic report summary
 message Report {
-    amp.Tag Title   = 1;
-    amp.Tag Caption = 2;
+    amp.Tag Title   = 1; // label — the report headline (TagText leaf)
+    amp.Tag Caption = 2; // label — one-line subtitle
 
-    repeated amp.Tag Errors   = 3;
-    repeated amp.Tag Warnings = 4;
-    repeated amp.Tag Messages = 5;
-    repeated amp.Tag Debug    = 15;
+    repeated amp.Tag Errors   = 3; // label — one error line per leaf
+    repeated amp.Tag Warnings = 4; // label — one warning line per leaf
+    repeated amp.Tag Messages = 5; // label — one status/progress line per leaf
+    repeated amp.Tag Debug    = 15; // label — one diagnostic line per leaf
 }
 
 // Labels is the bundled label struct for "described items" — media tracks,
@@ -229,7 +229,7 @@ enum PointFormat {
 // MediaInfo wraps a media track, feature, featurette, collection, album, or playlist.
 message MediaInfo {
     MediaFlags Flags      = 1; // describes this item
-    amp.Tag    Tag        = 3; // free use
+    amp.Tag    Tag        = 3; // unused — no producer; field number held until a role is ruled at first use
     double     StartAt    = 5; // starts playback at the given seconds offset
     double     Seconds    = 6; // playback duration in seconds
 
@@ -360,9 +360,9 @@ enum AudioFlags {
 }
 
 message VisPreset {
-    amp.Tag         Title       = 1;
-    amp.Tag         Collection  = 2;
-    amp.Tag         Credits     = 3;
+    amp.Tag         Title       = 1; // label — preset display name
+    amp.Tag         Collection  = 2; // label — the pack/collection the preset ships in
+    amp.Tag         Credits     = 3; // label — author / attribution line
 
     ColormapFlags   ColormapFlags = 6;
     SensorFlags     SensorFlags   = 7;

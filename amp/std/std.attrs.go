@@ -31,7 +31,8 @@ var (
 func TagsForContentType(contentType string) *amp.Tags {
 	return &amp.Tags{
 		Head: &amp.Tag{
-			URI: ContentGlyphURI + contentType,
+			URI:            ContentGlyphURI + contentType,
+			ContentTypeRaw: contentType, // the leaf declares its own type — readers use Tag.ContentType(), never the URI suffix
 		},
 	}
 }

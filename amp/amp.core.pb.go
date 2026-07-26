@@ -2158,9 +2158,9 @@ func (x *ItemSpan) GetEditID_Max_1() uint64 {
 // Login -- STEP 1: client -> host
 type Login struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
-	Member *Tag                   `protobuf:"bytes,1,opt,name=Member,proto3" json:"Member,omitempty"`
-	Planet *Tag                   `protobuf:"bytes,2,opt,name=Planet,proto3" json:"Planet,omitempty"`
-	Device *Tag                   `protobuf:"bytes,5,opt,name=Device,proto3" json:"Device,omitempty"`
+	Member *Tag                   `protobuf:"bytes,1,opt,name=Member,proto3" json:"Member,omitempty"` // identity — the member logging in (UID; Text optionally a label, e.g. a wallet address)
+	Planet *Tag                   `protobuf:"bytes,2,opt,name=Planet,proto3" json:"Planet,omitempty"` // identity — the target home planet (UID; Text optionally its display label)
+	Device *Tag                   `protobuf:"bytes,5,opt,name=Device,proto3" json:"Device,omitempty"` // identity — the client device (UID)
 	// HostAddress is the network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
 	// amp.Host uses this as the host name when serving URLs for the client to consume.
 	HostAddress string `protobuf:"bytes,8,opt,name=HostAddress,proto3" json:"HostAddress,omitempty"`

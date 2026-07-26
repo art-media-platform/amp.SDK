@@ -377,9 +377,9 @@ enum EditFlow {
 // Login -- STEP 1: client -> host
 message Login {
 
-    Tag                Member = 1;
-    Tag                Planet = 2;
-    Tag                Device = 5;
+    Tag                Member = 1; // identity — the member logging in (UID; Text optionally a label, e.g. a wallet address)
+    Tag                Planet = 2; // identity — the target home planet (UID; Text optionally its display label)
+    Tag                Device = 5; // identity — the client device (UID)
 
     // HostAddress is the network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
     // amp.Host uses this as the host name when serving URLs for the client to consume.

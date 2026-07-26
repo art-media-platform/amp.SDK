@@ -112,7 +112,7 @@ func SelectBestSource(sources *amp.Tags, want SourceCriteria) *amp.Tag {
 	}
 	best := (*amp.Tag)(nil)
 	for _, src := range sources.SubTags {
-		if src == nil || src.IsNil() {
+		if src.IsNil() {
 			continue
 		}
 		if want.Offline && !SourceIsBlob(src) {

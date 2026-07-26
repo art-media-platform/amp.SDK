@@ -28,6 +28,17 @@ func TagText(contentType, text string) *Tag {
 	}
 }
 
+// TagFromData returns a leaf Tag carrying an inline binary payload of the given IANA media
+// type — the attachment leaf (a verifier record, cover art, a glyph).  The type is canonized
+// to lower case and is REQUIRED (Tag.Validate); unlike TagText it is never stripped, because
+// an empty ContentTypeRaw on a Data leaf is a refusal, not a default (SD-content-substrate §3.6).
+func TagFromData(contentType string, data []byte) *Tag {
+	return &Tag{
+		ContentTypeRaw: strings.ToLower(contentType),
+		Data:           data,
+	}
+}
+
 // ContentType resolves ContentTypeRaw into a portable, canonical IANA media type: lower-cased
 // (media types are case-insensitive) with the empty default resolved to DefaultContentType
 // (text/plain).  It is the stable accessor — callers read the type through it, never off the

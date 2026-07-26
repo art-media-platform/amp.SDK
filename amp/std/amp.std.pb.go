@@ -1579,12 +1579,12 @@ func (x *JsonValue) GetArray() []*JsonValue {
 // Generic report summary
 type Report struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`
-	Caption       *amp.Tag               `protobuf:"bytes,2,opt,name=Caption,proto3" json:"Caption,omitempty"`
-	Errors        []*amp.Tag             `protobuf:"bytes,3,rep,name=Errors,proto3" json:"Errors,omitempty"`
-	Warnings      []*amp.Tag             `protobuf:"bytes,4,rep,name=Warnings,proto3" json:"Warnings,omitempty"`
-	Messages      []*amp.Tag             `protobuf:"bytes,5,rep,name=Messages,proto3" json:"Messages,omitempty"`
-	Debug         []*amp.Tag             `protobuf:"bytes,15,rep,name=Debug,proto3" json:"Debug,omitempty"`
+	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`       // label — the report headline (TagText leaf)
+	Caption       *amp.Tag               `protobuf:"bytes,2,opt,name=Caption,proto3" json:"Caption,omitempty"`   // label — one-line subtitle
+	Errors        []*amp.Tag             `protobuf:"bytes,3,rep,name=Errors,proto3" json:"Errors,omitempty"`     // label — one error line per leaf
+	Warnings      []*amp.Tag             `protobuf:"bytes,4,rep,name=Warnings,proto3" json:"Warnings,omitempty"` // label — one warning line per leaf
+	Messages      []*amp.Tag             `protobuf:"bytes,5,rep,name=Messages,proto3" json:"Messages,omitempty"` // label — one status/progress line per leaf
+	Debug         []*amp.Tag             `protobuf:"bytes,15,rep,name=Debug,proto3" json:"Debug,omitempty"`      // label — one diagnostic line per leaf
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1994,7 +1994,7 @@ func (x *GeoPath) GetPoints() []uint64 {
 type MediaInfo struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	Flags      MediaFlags             `protobuf:"varint,1,opt,name=Flags,proto3,enum=std.MediaFlags" json:"Flags,omitempty"` // describes this item
-	Tag        *amp.Tag               `protobuf:"bytes,3,opt,name=Tag,proto3" json:"Tag,omitempty"`                          // free use
+	Tag        *amp.Tag               `protobuf:"bytes,3,opt,name=Tag,proto3" json:"Tag,omitempty"`                          // unused — no producer; field number held until a role is ruled at first use
 	StartAt    float64                `protobuf:"fixed64,5,opt,name=StartAt,proto3" json:"StartAt,omitempty"`                // starts playback at the given seconds offset
 	Seconds    float64                `protobuf:"fixed64,6,opt,name=Seconds,proto3" json:"Seconds,omitempty"`                // playback duration in seconds
 	Popularity float32                `protobuf:"fixed32,16,opt,name=Popularity,proto3" json:"Popularity,omitempty"`         // 0.0 to 1.0
@@ -2614,9 +2614,9 @@ func (x *Arg) GetValue() string {
 
 type VisPreset struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`
-	Collection    *amp.Tag               `protobuf:"bytes,2,opt,name=Collection,proto3" json:"Collection,omitempty"`
-	Credits       *amp.Tag               `protobuf:"bytes,3,opt,name=Credits,proto3" json:"Credits,omitempty"`
+	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`           // label — preset display name
+	Collection    *amp.Tag               `protobuf:"bytes,2,opt,name=Collection,proto3" json:"Collection,omitempty"` // label — the pack/collection the preset ships in
+	Credits       *amp.Tag               `protobuf:"bytes,3,opt,name=Credits,proto3" json:"Credits,omitempty"`       // label — author / attribution line
 	ColormapFlags ColormapFlags          `protobuf:"varint,6,opt,name=ColormapFlags,proto3,enum=std.ColormapFlags" json:"ColormapFlags,omitempty"`
 	SensorFlags   SensorFlags            `protobuf:"varint,7,opt,name=SensorFlags,proto3,enum=std.SensorFlags" json:"SensorFlags,omitempty"`
 	AudioFlags    AudioFlags             `protobuf:"varint,8,opt,name=AudioFlags,proto3,enum=std.AudioFlags" json:"AudioFlags,omitempty"`

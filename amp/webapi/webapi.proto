@@ -28,7 +28,7 @@ import "amp/amp.core.proto";
 // omitted, no Brand is authored (the planet resolves Unchecked until one is);
 // author one post-genesis via POST /api/v1/admin/planet/brand.
 message PlanetCreateRequest {
-    amp.Tag             Tag   = 1;
+    amp.Tag             Tag   = 1; // identity + label — the planet to create (Text = tag.Name expression, or raw UID_0/1)
     amp.Brand           Brand = 2;
 }
 
@@ -38,7 +38,7 @@ message PlanetCreateRequest {
 // Brand is the COMPLETE desired Brand (latest-wins replace at the planet's
 // single Brand address), not a delta.
 message BrandSetRequest {
-    amp.Tag             Planet = 1;
+    amp.Tag             Planet = 1; // identity — the target planet (UID)
     amp.Brand           Brand  = 2;
 }
 
