@@ -94,10 +94,14 @@ func NewLoggerWithID(id, label string) Logger {
 	return l
 }
 
-// InitFlags registers -v and -log_file on the given FlagSet.
+// InitFlags registers -v and -log_file on the given FlagSet.  Registration is
+// side-effect-free (Var values backing onto synchronized globals), so any number
+// of FlagSets — one per Environment in an embedding process that builds several —
+// may register while live loggers emit, and a later registration never resets a
+// value an earlier FlagSet configured.
 func InitFlags(fs *flag.FlagSet) {
 	fs.Var(verbosityFlag{}, "v", "log verbosity level (higher = more verbose)")
-	fs.StringVar(&gLogFilePath, "log_file", "", "append log output to this file in addition to stderr")
+	fs.Var(logFileFlag{}, "log_file", "append log output to this file in addition to stderr")
 }
 
 // SetColor enables or disables ANSI color in console output.  Defaults to true
@@ -109,7 +113,7 @@ func SetColor(on bool) { gUseColor.Store(on) }
 var (
 	gVLevel       atomic.Int32
 	gUseColor     atomic.Bool
-	gLogFilePath  string
+	gLogFilePath  string // -log_file path; guarded by gOutMu (written via logFileFlag)
 	gLogFile      *os.File
 	gFileOnce     sync.Once
 	gOutMu        sync.Mutex
@@ -505,6 +509,25 @@ func (verbosityFlag) Set(s string) error {
 	return nil
 }
 func (verbosityFlag) IsBoolFlag() bool { return false }
+
+// logFileFlag backs -log_file onto gLogFilePath under gOutMu — the lock emit
+// already holds for the reads (resolveDestination, openFileLogger), so a flag
+// parse or Set concurrent with a live logger is ordered, and registering the
+// flag itself writes nothing.
+type logFileFlag struct{}
+
+func (logFileFlag) String() string {
+	gOutMu.Lock()
+	defer gOutMu.Unlock()
+	return gLogFilePath
+}
+
+func (logFileFlag) Set(path string) error {
+	gOutMu.Lock()
+	gLogFilePath = path
+	gOutMu.Unlock()
+	return nil
+}
 
 // ────────────────────────── interface impl ──────────────────────────
 
