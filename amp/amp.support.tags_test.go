@@ -230,21 +230,24 @@ func TestTagFromData(t *testing.T) {
 	}
 }
 
-// TestTagIsNil pins the predicate: identity + reference coverage only (UID, URI), and a
-// nil receiver reports true — a nil *Tag names nothing, so a guard like
-// `if login.Member.IsNil() { refuse }` refuses a Login carrying no Member instead of
-// passing the nil into a deref.
-func TestTagIsNil(t *testing.T) {
-	if !(*Tag)(nil).IsNil() {
-		t.Fatal("nil *Tag reports IsNil() == false — a nil-guarded caller derefs it")
+// TestTagNoUIDNoURI pins the split predicates: NoUID = identity only, NoURI =
+// reference only, each nil-safe true — a nil *Tag names nothing, so a guard like
+// `if login.Member.NoUID() { refuse }` refuses a Login carrying no Member instead
+// of passing the nil into a deref.
+func TestTagNoUIDNoURI(t *testing.T) {
+	if !(*Tag)(nil).NoUID() || !(*Tag)(nil).NoURI() {
+		t.Fatal("nil *Tag must report NoUID() and NoURI() true — a nil-guarded caller derefs it")
 	}
-	if !(&Tag{}).IsNil() {
-		t.Fatal("empty Tag must report IsNil() == true")
+	if !(&Tag{}).NoUID() || !(&Tag{}).NoURI() {
+		t.Fatal("empty Tag must report NoUID() and NoURI() true")
 	}
-	if (&Tag{UID_0: 1}).IsNil() || (&Tag{URI: "amp://x"}).IsNil() {
-		t.Fatal("a Tag with identity or reference must report IsNil() == false")
+	if (&Tag{UID_0: 1}).NoUID() || (&Tag{URI: "amp://x"}).NoURI() {
+		t.Fatal("a Tag with identity must report NoUID() false; with reference, NoURI() false")
 	}
-	if !(&Tag{Text: "label", Data: []byte{1}, I: 5}).IsNil() {
-		t.Fatal("coverage is identity + reference only — Text/Data/I must not affect IsNil")
+	if !(&Tag{URI: "amp://x"}).NoUID() || !(&Tag{UID_0: 1}).NoURI() {
+		t.Fatal("the predicates are independent — URI does not affect NoUID, nor UID NoURI")
+	}
+	if !(&Tag{Text: "label", Data: []byte{1}, I: 5}).NoUID() {
+		t.Fatal("coverage is identity + reference only — Text/Data/I must not affect either")
 	}
 }
