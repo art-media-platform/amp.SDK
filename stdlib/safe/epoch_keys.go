@@ -15,9 +15,12 @@ import (
 // Each epoch gets one EpochKeyEntry carrying up to 4 role-tagged materials (see KeyRole).
 // Map is keyed by EpochID; role lookup is a short linear scan within the entry.
 //
-// All epoch keys are loaded on Open and persisted on Close via the same Guard/TomeStore mechanism
-// used by the identity Enclave.  For extreme scale (millions of historical keys), a future
-// implementation can add LRU eviction and lazy disk loading — the interface is unchanged.
+// All epoch keys are loaded on Open via the same Guard/TomeStore mechanism used by the
+// identity Enclave.  Mutations are durable at return: PutKey and ShredKeys persist the
+// re-sealed tome before reporting success, so an unclean kill never loses an installed
+// key (a founded planet's only ContentKey copy must not ride on a clean Close).  For
+// extreme scale (millions of historical keys), a future implementation can add LRU
+// eviction and lazy disk loading — the interface is unchanged.
 type epochKeyStore struct {
 	mu      sync.RWMutex
 	store   TomeStore
@@ -97,7 +100,7 @@ func OpenEpochKeyStore(
 	return eks, nil
 }
 
-func (eks *epochKeyStore) PutKey(containerID tag.UID, key SymKey) error {
+func (eks *epochKeyStore) PutKey(ctx context.Context, containerID tag.UID, key SymKey) error {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
 
@@ -150,8 +153,11 @@ func (eks *epochKeyStore) PutKey(containerID tag.UID, key SymKey) error {
 		}
 	}
 
+	// Dirty BEFORE the persist attempt (the ShredKeys discipline): a failed
+	// Save returns the error with the install tracked as unsaved, so both a
+	// caller retry and a later Close carry it to disk.
 	eks.changed = true
-	return nil
+	return eks.persistLocked(ctx)
 }
 
 func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID, role KeyRole) (SymKey, error) {
@@ -290,7 +296,7 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 }
 
 // persistLocked seals the in-memory map into an EpochKeyTome and saves it via
-// the Guard/TomeStore pair — the one persist site (Close and ShredKeys).
+// the Guard/TomeStore pair — the one persist site (PutKey, ShredKeys, Close).
 // Caller holds eks.mu.
 func (eks *epochKeyStore) persistLocked(ctx context.Context) error {
 	tome := &EpochKeyTome{

@@ -24,7 +24,7 @@ func randomKeyBytes(t *testing.T) []byte {
 
 func putEpochKey(t *testing.T, eks safe.EpochKeyStore, containerID, epochID tag.UID, role safe.KeyRole, keyBytes []byte) {
 	t.Helper()
-	err := eks.PutKey(containerID, safe.SymKey{
+	err := eks.PutKey(context.Background(), containerID, safe.SymKey{
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 		EpochID:     epochID,
 		Role:        role,
@@ -106,6 +106,68 @@ func TestEpochKeys_ShredDurableAtReturn(t *testing.T) {
 		t.Fatal("live epoch key bytes did not round-trip the shred-persisted tome")
 	}
 	survivor.Zero()
+}
+
+// TestEpochKeys_PutDurableAtReturn pins the install durability contract: an
+// installed epoch key persists BEFORE PutKey returns, so a crash after return
+// (modeled by reopening the tome WITHOUT Close) cannot lose it.  A key that
+// exists only until clean Close is a key an unclean kill deletes — the
+// founder-loses-its-confidential-planet defect (O4 §4.12 caution).
+func TestEpochKeys_PutDurableAtReturn(t *testing.T) {
+	ctx := context.Background()
+	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("put-durable"))
+	defer guard.Close()
+
+	eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("put-durable"))
+	if err != nil {
+		t.Fatalf("OpenEpochKeyStore: %v", err)
+	}
+
+	containerID := tag.NewID()
+	epochID := tag.NowID()
+	contentKey := randomKeyBytes(t)
+	writeSeed := randomKeyBytes(t)
+	putEpochKey(t, eks, containerID, epochID, safe.KeyRole_ContentKey, contentKey)
+	putEpochKey(t, eks, containerID, epochID, safe.KeyRole_WriteSeed, writeSeed)
+
+	// Crash model: NO Close — reopen straight from the persisted tome.  Every
+	// installed role must round-trip byte-identical, and the container's
+	// current-epoch election must re-derive to the installed epoch.
+	reopened, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("put-durable"))
+	if err != nil {
+		t.Fatalf("reopen without Close: %v", err)
+	}
+	defer reopened.Close(ctx)
+
+	for _, probe := range []struct {
+		role safe.KeyRole
+		want []byte
+	}{
+		{safe.KeyRole_ContentKey, contentKey},
+		{safe.KeyRole_WriteSeed, writeSeed},
+	} {
+		got, err := reopened.GetKey(containerID, epochID, probe.role)
+		if err != nil {
+			t.Fatalf("role=%v lost across a no-Close reopen — PutKey is not durable at return: %v", probe.role, err)
+		}
+		if !bytes.Equal(got.Bytes, probe.want) {
+			t.Fatalf("role=%v bytes did not round-trip the install persist", probe.role)
+		}
+		got.Zero()
+	}
+	current, err := reopened.GetCurrentKey(containerID, safe.KeyRole_ContentKey)
+	if err != nil {
+		t.Fatalf("current epoch not re-derived after no-Close reopen: %v", err)
+	}
+	if current.EpochID != epochID {
+		t.Fatalf("current epoch %s, want installed %s", current.EpochID.Base32(), epochID.Base32())
+	}
+	current.Zero()
+
+	if err := eks.Close(ctx); err != nil {
+		t.Fatalf("Close (installing session): %v", err)
+	}
 }
 
 // faultTomeStore delegates to a real TomeStore but fails the next failSaves
@@ -310,7 +372,7 @@ func TestEpochKeys_ClosedStoreSentinel(t *testing.T) {
 	if _, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("GetCurrentKey on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
-	if err := eks.PutKey(containerID, safe.SymKey{EpochID: epochID, Bytes: randomKeyBytes(t)}); !errors.Is(err, safe.ErrStoreClosed) {
+	if err := eks.PutKey(ctx, containerID, safe.SymKey{EpochID: epochID, Bytes: randomKeyBytes(t)}); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("PutKey on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
 	if err := eks.SetCurrentEpoch(containerID, epochID); !errors.Is(err, safe.ErrStoreClosed) {

@@ -149,7 +149,10 @@ type EpochKeyStore interface {
 
 	// PutKey stores a symmetric epoch key for the given container (planet or channel).
 	// key.EpochID, key.Role, and key.Bytes must be set; key.CryptoKitID selects the crypto suite.
-	PutKey(containerID tag.UID, key SymKey) error
+	// The install is durable at method return: the re-sealed tome persists BEFORE
+	// PutKey reports success, so an unclean kill after return cannot lose the key —
+	// a founded confidential planet's ContentKey must never ride on a clean Close.
+	PutKey(ctx context.Context, containerID tag.UID, key SymKey) error
 
 	// GetKey retrieves a symmetric epoch key by its container + epoch UIDs + role.
 	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
