@@ -4,7 +4,7 @@
 
 **art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Every participant holds their own keys.  Every device can be a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
 
-This repository is the **SDK**: a dependency-light Go library defining the wire format, CRDT addressing model, key/identity primitives, and `AppModule` interface.  Pair it with amp.planet to produce:
+This repository is the **SDK**: a dependency-light Go library defining the wire format, [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) addressing model, key/identity primitives, and `AppModule` interface.  Pair it with amp.planet to produce:
 
 - `ampd` — standalone server / vault (macOS, Windows, Linux, Raspberry Pi, Android, Graphene)
 - `libampd` — embeddable C library for Unity and Unreal clients
