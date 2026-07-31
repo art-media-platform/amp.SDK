@@ -1030,19 +1030,19 @@ func (InviteStatus) EnumDescriptor() ([]byte, []int) {
 type BlobPullKind int32
 
 const (
-	BlobPullKind_Chunks BlobPullKind = 0 // a span of stored-byte chunks on the table's index space
-	BlobPullKind_Table  BlobPullKind = 1 // the blob's BlobChunkTable companion object
+	BlobPullKind_Chunks BlobPullKind = 0 // a span of stored-byte chunks on the meta's index space
+	BlobPullKind_Meta   BlobPullKind = 1 // the blob's BlobMeta companion object
 )
 
 // Enum value maps for BlobPullKind.
 var (
 	BlobPullKind_name = map[int32]string{
 		0: "Chunks",
-		1: "Table",
+		1: "Meta",
 	}
 	BlobPullKind_value = map[string]int32{
 		"Chunks": 0,
-		"Table":  1,
+		"Meta":   1,
 	}
 )
 
@@ -4891,15 +4891,15 @@ type BlobRef struct {
 	// Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
 	EpochID_0 uint64 `protobuf:"fixed64,20,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`
 	EpochID_1 uint64 `protobuf:"fixed64,21,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`
-	// Chunk-table commitment: leading 16 bytes of the HashKitID-hash of the
-	// canonical BlobChunkTable encoding for this blob's STORED bytes.
-	// Zero ⇒ single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no table object;
+	// BlobMeta commitment: leading 16 bytes of the HashKitID-hash of the
+	// canonical BlobMeta encoding for this blob's STORED bytes.
+	// Zero ⇒ single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no meta object;
 	// the whole transfer is one implicit chunk verified by BlobTag.UID.
 	// (SD-planet-storage §13.10)
-	TableRoot_0 uint64 `protobuf:"fixed64,22,opt,name=TableRoot_0,json=TableRoot0,proto3" json:"TableRoot_0,omitempty"`
-	TableRoot_1 uint64 `protobuf:"fixed64,23,opt,name=TableRoot_1,json=TableRoot1,proto3" json:"TableRoot_1,omitempty"`
-	// Power-of-2 exponent of the table chunk size in bytes, encoder-chosen per
-	// blob size / media type.  ≥ 20 (1 MiB, the seal AEAD chunk) so table chunks
+	MetaRoot_0 uint64 `protobuf:"fixed64,22,opt,name=MetaRoot_0,json=MetaRoot0,proto3" json:"MetaRoot_0,omitempty"`
+	MetaRoot_1 uint64 `protobuf:"fixed64,23,opt,name=MetaRoot_1,json=MetaRoot1,proto3" json:"MetaRoot_1,omitempty"`
+	// Power-of-2 exponent of the meta chunk size in bytes, encoder-chosen per
+	// blob size / media type.  ≥ 20 (1 MiB, the seal AEAD chunk) so meta chunks
 	// always cover whole AEAD frames.  0 = unset (single-chunk blob).
 	ChunkSizeLog2 uint32 `protobuf:"varint,24,opt,name=ChunkSizeLog2,proto3" json:"ChunkSizeLog2,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -5013,16 +5013,16 @@ func (x *BlobRef) GetEpochID_1() uint64 {
 	return 0
 }
 
-func (x *BlobRef) GetTableRoot_0() uint64 {
+func (x *BlobRef) GetMetaRoot_0() uint64 {
 	if x != nil {
-		return x.TableRoot_0
+		return x.MetaRoot_0
 	}
 	return 0
 }
 
-func (x *BlobRef) GetTableRoot_1() uint64 {
+func (x *BlobRef) GetMetaRoot_1() uint64 {
 	if x != nil {
-		return x.TableRoot_1
+		return x.MetaRoot_1
 	}
 	return 0
 }
@@ -5034,13 +5034,13 @@ func (x *BlobRef) GetChunkSizeLog2() uint32 {
 	return 0
 }
 
-// BlobChunkTable is the transfer/verification manifest for one blob's STORED
+// BlobMeta is the transfer/verification manifest for one blob's STORED
 // bytes.  Canonical encoding (this proto, fields in order) is what
-// BlobRef.TableRoot commits to.  Kept as a companion object beside the blob,
-// served through the same pull vocabulary (BlobPullKind_Table); a receiver
-// verifies each arriving chunk against its table hash, and the table itself
-// against the ref's TableRoot before trusting any chunk (SD-planet-storage §13.10).
-type BlobChunkTable struct {
+// BlobRef.MetaRoot commits to.  Kept as a companion object beside the blob,
+// served through the same pull vocabulary (BlobPullKind_Meta); a receiver
+// verifies each arriving chunk against its meta entry, and the meta itself
+// against the ref's MetaRoot before trusting any chunk (SD-planet-storage §13.10).
+type BlobMeta struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChunkSizeLog2 uint32                 `protobuf:"varint,1,opt,name=ChunkSizeLog2,proto3" json:"ChunkSizeLog2,omitempty"` // matches the ref
 	TotalLen      uint64                 `protobuf:"varint,2,opt,name=TotalLen,proto3" json:"TotalLen,omitempty"`           // stored byte length (== BlobTag.I)
@@ -5049,20 +5049,20 @@ type BlobChunkTable struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *BlobChunkTable) Reset() {
-	*x = BlobChunkTable{}
+func (x *BlobMeta) Reset() {
+	*x = BlobMeta{}
 	mi := &file_amp_amp_core_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *BlobChunkTable) String() string {
+func (x *BlobMeta) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*BlobChunkTable) ProtoMessage() {}
+func (*BlobMeta) ProtoMessage() {}
 
-func (x *BlobChunkTable) ProtoReflect() protoreflect.Message {
+func (x *BlobMeta) ProtoReflect() protoreflect.Message {
 	mi := &file_amp_amp_core_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -5074,26 +5074,26 @@ func (x *BlobChunkTable) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use BlobChunkTable.ProtoReflect.Descriptor instead.
-func (*BlobChunkTable) Descriptor() ([]byte, []int) {
+// Deprecated: Use BlobMeta.ProtoReflect.Descriptor instead.
+func (*BlobMeta) Descriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *BlobChunkTable) GetChunkSizeLog2() uint32 {
+func (x *BlobMeta) GetChunkSizeLog2() uint32 {
 	if x != nil {
 		return x.ChunkSizeLog2
 	}
 	return 0
 }
 
-func (x *BlobChunkTable) GetTotalLen() uint64 {
+func (x *BlobMeta) GetTotalLen() uint64 {
 	if x != nil {
 		return x.TotalLen
 	}
 	return 0
 }
 
-func (x *BlobChunkTable) GetChunkHashes() []byte {
+func (x *BlobMeta) GetChunkHashes() []byte {
 	if x != nil {
 		return x.ChunkHashes
 	}
@@ -5101,7 +5101,7 @@ func (x *BlobChunkTable) GetChunkHashes() []byte {
 }
 
 // BlobPullRequest is one receiver-driven pull: one span of chunks (or the
-// table) from one holder.  Chunk indexes address the ref's BlobChunkTable
+// meta) from one holder.  Chunk indexes address the ref's BlobMeta chunk
 // space; index ⇔ offset is a shift by ChunkSizeLog2 (SD-planet-storage §13.10).
 type BlobPullRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -7523,7 +7523,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\fRedeemedAt_1\x18\x04 \x01(\x06R\vRedeemedAt1\x121\n" +
 	"\rGrantedAccess\x18\x05 \x01(\x0e2\v.amp.AccessR\rGrantedAccess\x128\n" +
 	"\x10MemberSigningKey\x18\v \x01(\v2\f.safe.KeyRefR\x10MemberSigningKey\x12 \n" +
-	"\vRedeemProof\x18\x06 \x01(\fR\vRedeemProof\"\xbe\x03\n" +
+	"\vRedeemProof\x18\x06 \x01(\fR\vRedeemProof\"\xba\x03\n" +
 	"\aBlobRef\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -7538,13 +7538,13 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\bAssetTag\x18\x10 \x01(\v2\b.amp.TagR\bAssetTag\x12\"\n" +
 	"\aBlobTag\x18\x11 \x01(\v2\b.amp.TagR\aBlobTag\x12\x1b\n" +
 	"\tEpochID_0\x18\x14 \x01(\x06R\bEpochID0\x12\x1b\n" +
-	"\tEpochID_1\x18\x15 \x01(\x06R\bEpochID1\x12\x1f\n" +
-	"\vTableRoot_0\x18\x16 \x01(\x06R\n" +
-	"TableRoot0\x12\x1f\n" +
-	"\vTableRoot_1\x18\x17 \x01(\x06R\n" +
-	"TableRoot1\x12$\n" +
-	"\rChunkSizeLog2\x18\x18 \x01(\rR\rChunkSizeLog2\"t\n" +
-	"\x0eBlobChunkTable\x12$\n" +
+	"\tEpochID_1\x18\x15 \x01(\x06R\bEpochID1\x12\x1d\n" +
+	"\n" +
+	"MetaRoot_0\x18\x16 \x01(\x06R\tMetaRoot0\x12\x1d\n" +
+	"\n" +
+	"MetaRoot_1\x18\x17 \x01(\x06R\tMetaRoot1\x12$\n" +
+	"\rChunkSizeLog2\x18\x18 \x01(\rR\rChunkSizeLog2\"n\n" +
+	"\bBlobMeta\x12$\n" +
 	"\rChunkSizeLog2\x18\x01 \x01(\rR\rChunkSizeLog2\x12\x1a\n" +
 	"\bTotalLen\x18\x02 \x01(\x04R\bTotalLen\x12 \n" +
 	"\vChunkHashes\x18\x03 \x01(\fR\vChunkHashes\"\xb6\x01\n" +
@@ -7862,11 +7862,11 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tRetracted\x10\b*3\n" +
 	"\fInviteStatus\x12\x10\n" +
 	"\fInviteActive\x10\x00\x12\x11\n" +
-	"\rInviteRevoked\x10\x01*%\n" +
+	"\rInviteRevoked\x10\x01*$\n" +
 	"\fBlobPullKind\x12\n" +
 	"\n" +
-	"\x06Chunks\x10\x00\x12\t\n" +
-	"\x05Table\x10\x01*T\n" +
+	"\x06Chunks\x10\x00\x12\b\n" +
+	"\x04Meta\x10\x01*T\n" +
 	"\n" +
 	"PlatformID\x12\r\n" +
 	"\tUniversal\x10\x00\x12\t\n" +
@@ -7956,7 +7956,7 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(*PlanetInvitePolicy)(nil),      // 53: amp.PlanetInvitePolicy
 	(*PlanetInviteRedemption)(nil),  // 54: amp.PlanetInviteRedemption
 	(*BlobRef)(nil),                 // 55: amp.BlobRef
-	(*BlobChunkTable)(nil),          // 56: amp.BlobChunkTable
+	(*BlobMeta)(nil),                // 56: amp.BlobMeta
 	(*BlobPullRequest)(nil),         // 57: amp.BlobPullRequest
 	(*PlanetStorageOpts)(nil),       // 58: amp.PlanetStorageOpts
 	(*BlobEntry)(nil),               // 59: amp.BlobEntry
