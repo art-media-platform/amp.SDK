@@ -44,6 +44,11 @@ const (
 	// smallest chunk size in bounds that keeps the meta at or under this many
 	// entries (~1–2k chunks per blob).
 	BlobMetaTargetChunks = 2048
+
+	// BlobLenMax bounds a blob's declared stored length (1 PiB): a generous,
+	// finite guard so a garbled or hostile length can never drive an
+	// unbounded transfer or overflow span arithmetic (§13.10).
+	BlobLenMax = int64(1) << 50
 )
 
 // MetaRootUID is the ref's BlobMeta commitment; zero ⇒ single-chunk blob
@@ -78,6 +83,74 @@ func BlobChunkCount(storedLen int64, chunkSizeLog2 uint32) uint64 {
 		return 0
 	}
 	return uint64(storedLen+(1<<chunkSizeLog2)-1) >> chunkSizeLog2
+}
+
+// ── Meta-chunk address arithmetic ───────────────────────────────────────
+//
+// The single authoritative site for the meta's index ⇔ STORED-byte-offset
+// mapping — a shift by the ref's ChunkSizeLog2 (SD-planet-storage §13.10).
+// Serve-span resolution, the wire frame address, and staging absorb all
+// address this space.  Meta chunks are NOT aligned to seal AEAD frames
+// (frame pitch carries per-frame overhead); no caller may assume otherwise.
+
+// BlobChunkOffset is the stored-byte offset of a meta chunk index (§13.10).
+func BlobChunkOffset(chunkIndex uint64, chunkSizeLog2 uint32) int64 {
+	return int64(chunkIndex) << chunkSizeLog2
+}
+
+// BlobChunkIndex is the meta chunk index containing a stored-byte position
+// (§13.10).
+func BlobChunkIndex(position int64, chunkSizeLog2 uint32) uint64 {
+	return uint64(position) >> chunkSizeLog2
+}
+
+// BlobChunkRemaining is the byte count from a stored-byte position to the
+// end of its meta chunk — a full chunk when the position sits on a boundary
+// (§13.10).
+func BlobChunkRemaining(position int64, chunkSizeLog2 uint32) int64 {
+	chunkSize := int64(1) << chunkSizeLog2
+	return chunkSize - position&(chunkSize-1)
+}
+
+// BlobChunkAligned reports whether a stored-byte position sits on a meta
+// chunk boundary (§13.10).
+func BlobChunkAligned(position int64, chunkSizeLog2 uint32) bool {
+	return position&((int64(1)<<chunkSizeLog2)-1) == 0
+}
+
+// BlobWireAddress is the wire frame's (chunkIndex, offsetInChunk) address of
+// a stored-byte position (§13.10; frame layout in SD-security-sync §13.8).
+// ChunkSizeLog2 0 = a blob with no meta: one implicit chunk, the position is
+// the in-chunk offset.
+func BlobWireAddress(position int64, chunkSizeLog2 uint32) (chunkIndex, offsetInChunk uint64) {
+	if chunkSizeLog2 == 0 {
+		return 0, uint64(position)
+	}
+	return uint64(position) >> chunkSizeLog2, uint64(position) & ((1 << chunkSizeLog2) - 1)
+}
+
+// BlobPullSpan resolves a {ChunkBegin, ChunkCount} pull against a blob of
+// blobLen stored bytes: the span's start offset and byte length on the
+// meta's index space (§13.10; ChunkCount 0 = through end-of-blob).
+// ok=false ⇒ a malformed exponent or a span outside the blob (chunk indexes
+// are bounded by BlobLenMax so the shift can never overflow).
+func BlobPullSpan(blobLen int64, chunkSizeLog2 uint32, chunkBegin, chunkCount uint64) (startOffset, spanLen int64, ok bool) {
+	if chunkSizeLog2 >= 63 ||
+		(chunkSizeLog2 > 0 && chunkBegin > uint64(BlobLenMax)>>chunkSizeLog2) ||
+		(chunkSizeLog2 == 0 && chunkBegin != 0) {
+		return 0, 0, false
+	}
+	startOffset = BlobChunkOffset(chunkBegin, chunkSizeLog2)
+	if startOffset >= blobLen && blobLen > 0 {
+		return 0, 0, false
+	}
+	spanLen = blobLen - startOffset
+	if chunkCount > 0 {
+		if requested := int64(chunkCount) << chunkSizeLog2; requested < spanLen {
+			spanLen = requested
+		}
+	}
+	return startOffset, spanLen, true
 }
 
 // BuildBlobMeta reads exactly storedLen bytes of STORED content from src
