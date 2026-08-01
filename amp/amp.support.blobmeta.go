@@ -26,8 +26,15 @@ const (
 	// ref's HashKit digest over one stored-byte chunk.
 	BlobMetaHashSize = 32
 
-	// BlobChunkSizeLog2Min floors the encoder-chosen meta chunk size at 1 MiB —
-	// the seal AEAD chunk — so a meta chunk always covers whole AEAD frames.
+	// BlobChunkSizeLog2Min floors the encoder-chosen meta chunk size at 1 MiB.
+	// What the floor buys (the authoritative rationale — other sites reference
+	// it, never restate): it bounds the meta's weight at 32 B per MiB of
+	// stored bytes (~0.003%), makes every blob at or under 1 MiB single-chunk
+	// (no meta object at all — the cheap small-asset case), and keeps the
+	// chunk — the transfer's verify/retry quantum — no finer than the 1 MiB
+	// default wire frame (SD-planet-storage §13.10).  Meta chunk boundaries
+	// are stored-byte shifts and do NOT align to seal AEAD frames (frame
+	// pitch carries per-frame overhead); all verification is frame-blind.
 	BlobChunkSizeLog2Min = 20
 
 	// BlobChunkSizeLog2Max caps the meta chunk size at 1 GiB (TB-class assets).

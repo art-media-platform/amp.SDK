@@ -4899,8 +4899,9 @@ type BlobRef struct {
 	MetaRoot_0 uint64 `protobuf:"fixed64,22,opt,name=MetaRoot_0,json=MetaRoot0,proto3" json:"MetaRoot_0,omitempty"`
 	MetaRoot_1 uint64 `protobuf:"fixed64,23,opt,name=MetaRoot_1,json=MetaRoot1,proto3" json:"MetaRoot_1,omitempty"`
 	// Power-of-2 exponent of the meta chunk size in bytes, encoder-chosen per
-	// blob size / media type.  ≥ 20 (1 MiB, the seal AEAD chunk) so meta chunks
-	// always cover whole AEAD frames.  0 = unset (single-chunk blob).
+	// blob size / media type.  Floored at 2^20 — rationale at the SDK's
+	// BlobChunkSizeLog2Min (amp.support.blobmeta.go); meta chunks do NOT
+	// align to seal AEAD frames.  0 = unset (single-chunk blob).
 	ChunkSizeLog2 uint32 `protobuf:"varint,24,opt,name=ChunkSizeLog2,proto3" json:"ChunkSizeLog2,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

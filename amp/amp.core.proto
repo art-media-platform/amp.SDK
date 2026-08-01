@@ -1436,8 +1436,9 @@ message BlobRef {
     fixed64             MetaRoot_1 = 23;
 
     // Power-of-2 exponent of the meta chunk size in bytes, encoder-chosen per
-    // blob size / media type.  ≥ 20 (1 MiB, the seal AEAD chunk) so meta chunks
-    // always cover whole AEAD frames.  0 = unset (single-chunk blob).
+    // blob size / media type.  Floored at 2^20 — rationale at the SDK's
+    // BlobChunkSizeLog2Min (amp.support.blobmeta.go); meta chunks do NOT
+    // align to seal AEAD frames.  0 = unset (single-chunk blob).
     uint32              ChunkSizeLog2 = 24;
 }
 
