@@ -3,7 +3,6 @@ package amp
 import (
 	"bytes"
 	"encoding/binary"
-	"io"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
@@ -13,47 +12,81 @@ import (
 
 // ── BlobMeta: the transfer/verification manifest ────────────────────────
 //
-// Every multi-chunk blob carries a BlobMeta manifest over its STORED bytes
-// (ciphertext for a sealed blob), computed at seal/store time and kept as a
-// companion object beside the blob.  The ref commits to it via MetaRoot —
-// the leading 16 bytes of the ref's HashKit digest over the meta's canonical
-// encoding — and the ref rides a member-signed TxMsg, so a receiver verifies
-// the meta against a signed commitment before trusting any chunk, then each
-// arriving chunk against its meta hash (SD-planet-storage §13.10).
+// Every blob spanning more than one grain carries a BlobMeta manifest over
+// its STORED bytes (ciphertext for a sealed blob), minted in the store's
+// single write pass and kept as a companion object beside the blob.  The
+// ref commits to it via MetaRoot — the leading 16 bytes of the ref's
+// HashKit digest over the meta's canonical encoding — and the ref rides a
+// member-signed TxMsg, so a receiver verifies the meta against a signed
+// commitment before trusting any chunk (SD-planet-storage §13.10).
+//
+// The chunk hash is two-level (composable):
+//
+//	fine digest = H(one grain of stored bytes)          level 0, untagged
+//	meta entry  = H(composeTag ‖ the chunk's fine-digest run)   level 1
+//
+// The rule is uniform at every exponent — a chunk of one grain is still
+// the tagged hash of its one-digest run.  The tag makes the two levels'
+// input spaces disjoint, so a digest run can never collide with raw
+// stored bytes.  Grain digests are derived on demand by any full holder
+// (never stored): a low-bandwidth receiver pulls a chunk's run, verifies
+// it against the meta entry, then verifies each arriving grain — the
+// grain, not the chunk, is the narrow-link retry/resume quantum.  Entry
+// width follows the HashKit (BlobMetaHashSize today; a wider kit is a
+// registration, not a format change).
 
 const (
 	// BlobMetaHashSize is one BlobMeta entry: the leading bytes of the
-	// ref's HashKit digest over one stored-byte chunk.
+	// tagged HashKit digest over the chunk's grain-digest run.
 	BlobMetaHashSize = 32
+
+	// BlobGrainSizeLog2 fixes the fine-grain quantum at 4 KiB: the level-0
+	// hashing unit, the narrow-link (RF-class) verify/retry/resume quantum,
+	// and the meta floor — a blob at or under one grain carries no meta.
+	// 4 KiB keeps a grain retry at seconds even on baud-class links, gives
+	// message-scale (4 KB+) payloads grain resume, and is page/FS-block
+	// aligned.  Grain digests are transient — derived, sent, verified,
+	// discarded — so grain size never costs stored or meta bytes (§13.10).
+	BlobGrainSizeLog2 = 12
 
 	// BlobChunkSizeLog2Min floors the encoder-chosen meta chunk size at 1 MiB.
 	// What the floor buys (the authoritative rationale — other sites reference
 	// it, never restate): it bounds the meta's weight at 32 B per MiB of
-	// stored bytes (~0.003%), makes every blob at or under 1 MiB single-chunk
-	// (no meta object at all — the cheap small-asset case), and keeps the
-	// chunk — the transfer's verify/retry quantum — no finer than the 1 MiB
-	// default wire frame (SD-planet-storage §13.10).  Meta chunk boundaries
-	// are stored-byte shifts and do NOT align to seal AEAD frames (frame
-	// pitch carries per-frame overhead); all verification is frame-blind.
+	// stored bytes (~0.003%) and keeps the chunk — the broadband transfer's
+	// verify quantum — no finer than the 1 MiB default wire frame
+	// (SD-planet-storage §13.10).  Meta chunk boundaries are stored-byte
+	// shifts and do NOT align to seal AEAD frames (frame pitch carries
+	// per-frame overhead); all verification is frame-blind.
 	BlobChunkSizeLog2Min = 20
 
 	// BlobChunkSizeLog2Max caps the meta chunk size at 1 GiB (TB-class assets).
 	BlobChunkSizeLog2Max = 30
 
 	// BlobMetaTargetChunks is the encoder's default sizing target: the
-	// smallest chunk size in bounds that keeps the meta at or under this many
-	// entries (~1–2k chunks per blob).
-	BlobMetaTargetChunks = 2048
+	// smallest chunk size in bounds that keeps the meta at or under this
+	// many entries — ≤1 MiB of meta (one default wire frame), which holds
+	// the 1 MiB chunk through 32 GiB blobs.
+	BlobMetaTargetChunks = 32768
 
 	// BlobLenMax bounds a blob's declared stored length (1 PiB): a generous,
 	// finite guard so a garbled or hostile length can never drive an
 	// unbounded transfer or overflow span arithmetic (§13.10).
 	BlobLenMax = int64(1) << 50
+
+	// blobMetaComposeTag prefixes every level-1 (digest-run) hash — the
+	// domain separator that keeps run input disjoint from raw stored bytes.
+	blobMetaComposeTag byte = 0x01
+
+	// blobMetaSpillLen is the stored length past which BlobMetaBuilder
+	// stops buffering grain digests (0.78% of stream) and switches to
+	// incremental per-exponent lanes — bounding builder memory at ~16 MB
+	// while staying single-pass at any size.
+	blobMetaSpillLen = int64(2) << 30
 )
 
-// MetaRootUID is the ref's BlobMeta commitment; zero ⇒ single-chunk blob
-// (no meta object — the whole transfer is one implicit chunk verified by
-// BlobTag.UID).
+// MetaRootUID is the ref's BlobMeta commitment; zero ⇒ a blob at or under
+// one grain (no meta object — the whole transfer is one implicit chunk
+// verified by BlobTag.UID).
 func (ref *BlobRef) MetaRootUID() tag.UID {
 	return tag.UID{ref.MetaRoot_0, ref.MetaRoot_1}
 }
@@ -153,41 +186,335 @@ func BlobPullSpan(blobLen int64, chunkSizeLog2 uint32, chunkBegin, chunkCount ui
 	return startOffset, spanLen, true
 }
 
-// BuildBlobMeta reads exactly storedLen bytes of STORED content from src
-// and returns its BlobMeta.  The caller chooses chunkSizeLog2 (see
-// ChooseBlobChunkSizeLog2) and only calls this for multi-chunk blobs — a
-// single-chunk blob carries no meta.
-func BuildBlobMeta(src io.Reader, storedLen int64, kitID safe.HashKitID, chunkSizeLog2 uint32) (*BlobMeta, error) {
-	if chunkSizeLog2 < BlobChunkSizeLog2Min || chunkSizeLog2 > BlobChunkSizeLog2Max {
-		return nil, status.Code_BadRequest.Errorf("amp: BuildBlobMeta: ChunkSizeLog2 %d out of bounds [%d,%d]", chunkSizeLog2, BlobChunkSizeLog2Min, BlobChunkSizeLog2Max)
-	}
-	numChunks := BlobChunkCount(storedLen, chunkSizeLog2)
-	if numChunks < 2 {
-		return nil, status.Code_BadRequest.Errorf("amp: BuildBlobMeta: %d bytes is single-chunk at 2^%d — no meta", storedLen, chunkSizeLog2)
-	}
+// ── Two-level chunk hashing (§13.10) ────────────────────────────────────
+
+// newBlobHashKit resolves a HashKit for meta hashing, enforcing the entry
+// width floor.
+func newBlobHashKit(kitID safe.HashKitID) (safe.HashKit, error) {
 	kit, err := safe.NewHashKit(kitID)
+	if err != nil {
+		return kit, err
+	}
+	if kit.HashSz < BlobMetaHashSize {
+		return kit, status.Code_BadRequest.Errorf("amp: HashKit %v digest %d < meta entry size %d", kitID, kit.HashSz, BlobMetaHashSize)
+	}
+	return kit, nil
+}
+
+// BlobChunkHasher computes meta entries from a chunk's stored bytes — the
+// one site holding the grain-then-compose mechanics every verifier shares.
+// The caller streams one chunk's bytes through Write (any segmentation) and
+// takes its entry with SumChunk; grain boundaries are handled internally.
+type BlobChunkHasher struct {
+	fine    safe.HashKit // level 0: raw grain bytes
+	compose safe.HashKit // level 1: tagged fine-digest runs
+	inGrain int64        // bytes fed into the current (partial) grain
+	tagged  bool         // compose tag written for the current chunk
+}
+
+// NewBlobChunkHasher returns a chunk hasher under the given kit (zero =
+// the registry default).
+func NewBlobChunkHasher(kitID safe.HashKitID) (*BlobChunkHasher, error) {
+	fine, err := newBlobHashKit(kitID)
 	if err != nil {
 		return nil, err
 	}
-	if kit.HashSz < BlobMetaHashSize {
-		return nil, status.Code_BadRequest.Errorf("amp: BuildBlobMeta: HashKit %v digest %d < meta entry size %d", kitID, kit.HashSz, BlobMetaHashSize)
+	compose, err := newBlobHashKit(kitID)
+	if err != nil {
+		return nil, err
 	}
-	meta := &BlobMeta{
-		ChunkSizeLog2: chunkSizeLog2,
-		TotalLen:      uint64(storedLen),
-		ChunkHashes:   make([]byte, 0, numChunks*BlobMetaHashSize),
+	hasher := &BlobChunkHasher{
+		fine:    fine,
+		compose: compose,
 	}
-	chunkSize := int64(1) << chunkSizeLog2
-	remain := storedLen
-	for remain > 0 {
-		span := min(chunkSize, remain)
-		kit.Hasher.Reset()
-		if _, err := io.CopyN(kit.Hasher, src, span); err != nil {
-			return nil, status.Code_DataFailure.Errorf("amp: BuildBlobMeta: short read: %v", err)
+	return hasher, nil
+}
+
+// Write streams stored bytes of the current chunk (io.Writer; never errors).
+func (bch *BlobChunkHasher) Write(chunk []byte) (int, error) {
+	written := len(chunk)
+	grainSize := int64(1) << BlobGrainSizeLog2
+	for len(chunk) > 0 {
+		span := min(grainSize-bch.inGrain, int64(len(chunk)))
+		bch.fine.Hasher.Write(chunk[:span])
+		bch.inGrain += span
+		chunk = chunk[span:]
+		if bch.inGrain == grainSize {
+			bch.finishGrain()
 		}
-		meta.ChunkHashes = append(meta.ChunkHashes, kit.Hasher.Sum(nil)[:BlobMetaHashSize]...)
-		remain -= span
 	}
+	return written, nil
+}
+
+// finishGrain closes the current grain and feeds its digest to the run.
+func (bch *BlobChunkHasher) finishGrain() {
+	digest := bch.fine.Hasher.Sum(nil)
+	bch.fine.Hasher.Reset()
+	bch.inGrain = 0
+	if !bch.tagged {
+		bch.compose.Hasher.Reset()
+		bch.compose.Hasher.Write([]byte{blobMetaComposeTag})
+		bch.tagged = true
+	}
+	bch.compose.Hasher.Write(digest[:BlobMetaHashSize])
+}
+
+// SumChunk closes the current chunk — flushing a partial final grain — and
+// returns its meta entry, resetting for the next chunk.
+func (bch *BlobChunkHasher) SumChunk() []byte {
+	if bch.inGrain > 0 || !bch.tagged {
+		bch.finishGrain()
+	}
+	entry := bch.compose.Hasher.Sum(nil)[:BlobMetaHashSize]
+	bch.tagged = false
+	return entry
+}
+
+// Reset discards any partial chunk state.
+func (bch *BlobChunkHasher) Reset() {
+	bch.fine.Hasher.Reset()
+	bch.inGrain = 0
+	bch.tagged = false
+}
+
+// BlobGrainRun derives a chunk's fine-digest run from its stored bytes —
+// what a full holder sends ahead of grains to a narrow-link receiver.  The
+// run is transient: derived, sent, verified, discarded (§13.10).
+func BlobGrainRun(kitID safe.HashKitID, chunk []byte) ([]byte, error) {
+	fine, err := newBlobHashKit(kitID)
+	if err != nil {
+		return nil, err
+	}
+	grainSize := int64(1) << BlobGrainSizeLog2
+	grainCount := (int64(len(chunk)) + grainSize - 1) >> BlobGrainSizeLog2
+	run := make([]byte, 0, grainCount*BlobMetaHashSize)
+	for len(chunk) > 0 {
+		span := min(grainSize, int64(len(chunk)))
+		fine.Hasher.Reset()
+		fine.Hasher.Write(chunk[:span])
+		run = append(run, fine.Hasher.Sum(nil)[:BlobMetaHashSize]...)
+		chunk = chunk[span:]
+	}
+	return run, nil
+}
+
+// VerifyGrainRun checks a received fine-digest run against its chunk's meta
+// entry — the narrow-link receiver's gate before trusting any grain.  A
+// verified run then verifies each arriving grain by fine digest alone.
+func VerifyGrainRun(kitID safe.HashKitID, entry []byte, run []byte) error {
+	if len(run) == 0 || len(run)%BlobMetaHashSize != 0 {
+		return status.Code_AuthFailed.Errorf("amp: VerifyGrainRun: run length %d is not a digest multiple", len(run))
+	}
+	compose, err := newBlobHashKit(kitID)
+	if err != nil {
+		return err
+	}
+	compose.Hasher.Write([]byte{blobMetaComposeTag})
+	compose.Hasher.Write(run)
+	if !bytes.Equal(compose.Hasher.Sum(nil)[:BlobMetaHashSize], entry) {
+		return status.Code_AuthFailed.Error("amp: VerifyGrainRun: run does not match the meta entry")
+	}
+	return nil
+}
+
+// ── Streaming meta mint ─────────────────────────────────────────────────
+
+// blobMetaLane accumulates one candidate exponent's entries once the
+// builder spills out of digest buffering (storedLen > blobMetaSpillLen).
+type blobMetaLane struct {
+	compose safe.HashKit // level-1 hasher for the run in progress
+	entries []byte       // emitted meta entries
+	grains  uint64       // fine digests fed into the run in progress
+	tagged  bool         // compose tag written for the run in progress
+	dead    bool         // exponent ruled out by the grown storedLen
+}
+
+// BlobMetaBuilder mints a BlobMeta in the store's single write pass — the
+// one authoritative mint site for every publish path.  Stream the STORED
+// bytes through Write (any segmentation), then Finish; a nil meta means the
+// blob is at or under one grain and carries none.  One-shot; not reusable.
+//
+// Internals: grain digests are buffered (32 B per grain, ≤16 MB) and the
+// winning exponent's entries composed at Finish; past blobMetaSpillLen the
+// buffer replays into per-exponent lanes — dead exponents pruned as the
+// length grows — so memory stays bounded and the pass count stays one at
+// any size.
+type BlobMetaBuilder struct {
+	kitID   safe.HashKitID
+	fine    safe.HashKit   // level 0: raw grain bytes
+	inGrain int64          // bytes fed into the current (partial) grain
+	total   int64          // stored bytes seen
+	runBuf  []byte         // buffered grain digests (until spill)
+	lanes   []blobMetaLane // per-exponent lanes (nil until spill)
+}
+
+// NewBlobMetaBuilder returns a builder under the given kit (zero = the
+// registry default).
+func NewBlobMetaBuilder(kitID safe.HashKitID) (*BlobMetaBuilder, error) {
+	fine, err := newBlobHashKit(kitID)
+	if err != nil {
+		return nil, err
+	}
+	builder := &BlobMetaBuilder{
+		kitID: kitID,
+		fine:  fine,
+	}
+	return builder, nil
+}
+
+// Write streams stored bytes (io.Writer).
+func (bld *BlobMetaBuilder) Write(stored []byte) (int, error) {
+	if bld.total+int64(len(stored)) > BlobLenMax {
+		return 0, status.Code_BadRequest.Errorf("amp: BlobMetaBuilder: stored length exceeds BlobLenMax (%d)", BlobLenMax)
+	}
+	written := len(stored)
+	grainSize := int64(1) << BlobGrainSizeLog2
+	for len(stored) > 0 {
+		span := min(grainSize-bld.inGrain, int64(len(stored)))
+		bld.fine.Hasher.Write(stored[:span])
+		bld.inGrain += span
+		bld.total += span
+		stored = stored[span:]
+		if bld.inGrain == grainSize {
+			bld.absorbGrain()
+		}
+	}
+	return written, nil
+}
+
+// absorbGrain closes the current grain and routes its digest.
+func (bld *BlobMetaBuilder) absorbGrain() {
+	digest := bld.fine.Hasher.Sum(nil)
+	bld.fine.Hasher.Reset()
+	bld.inGrain = 0
+
+	if bld.lanes == nil {
+		bld.runBuf = append(bld.runBuf, digest[:BlobMetaHashSize]...)
+		if bld.total > blobMetaSpillLen {
+			bld.spill()
+		}
+		return
+	}
+	bld.feedLanes(digest[:BlobMetaHashSize])
+	bld.pruneLanes()
+}
+
+// spill replays the buffered digests into per-exponent lanes and frees the
+// buffer — the giant-blob posture.
+func (bld *BlobMetaBuilder) spill() {
+	laneCount := BlobChunkSizeLog2Max - BlobChunkSizeLog2Min + 1
+	bld.lanes = make([]blobMetaLane, laneCount)
+	for ii := range bld.lanes {
+		kit, err := newBlobHashKit(bld.kitID)
+		if err != nil {
+			// The kit already resolved at construction; a registry mutation
+			// mid-stream is not a supported state.
+			panic(err)
+		}
+		bld.lanes[ii].compose = kit
+	}
+	buffered := bld.runBuf
+	bld.runBuf = nil
+	for begin := 0; begin < len(buffered); begin += BlobMetaHashSize {
+		bld.feedLanes(buffered[begin : begin+BlobMetaHashSize])
+	}
+	bld.pruneLanes()
+}
+
+// feedLanes routes one grain digest into every live lane.
+func (bld *BlobMetaBuilder) feedLanes(digest []byte) {
+	for ii := range bld.lanes {
+		lane := &bld.lanes[ii]
+		if lane.dead {
+			continue
+		}
+		if !lane.tagged {
+			lane.compose.Hasher.Reset()
+			lane.compose.Hasher.Write([]byte{blobMetaComposeTag})
+			lane.tagged = true
+		}
+		lane.compose.Hasher.Write(digest)
+		lane.grains++
+		exp := uint32(BlobChunkSizeLog2Min + ii)
+		if lane.grains == blobGrainsPerChunk(exp) {
+			lane.entries = append(lane.entries, lane.compose.Hasher.Sum(nil)[:BlobMetaHashSize]...)
+			lane.tagged = false
+			lane.grains = 0
+		}
+	}
+}
+
+// pruneLanes kills exponents the grown length has ruled out; the max
+// exponent never dies.
+func (bld *BlobMetaBuilder) pruneLanes() {
+	for ii := range bld.lanes[:len(bld.lanes)-1] {
+		lane := &bld.lanes[ii]
+		if lane.dead {
+			continue
+		}
+		if blobLaneDead(bld.total, uint32(BlobChunkSizeLog2Min+ii)) {
+			lane.dead = true
+			lane.entries = nil
+		}
+	}
+}
+
+// blobLaneDead reports whether an exponent can no longer be the chosen one
+// for a stream already storedLen bytes long — its entry count exceeds the
+// target, and ChooseBlobChunkSizeLog2 picks the smallest exponent that
+// fits, so the lane can never win.
+func blobLaneDead(storedLen int64, chunkSizeLog2 uint32) bool {
+	return storedLen > int64(BlobMetaTargetChunks)<<chunkSizeLog2
+}
+
+// blobGrainsPerChunk is the fine-digest run length of a full chunk.
+func blobGrainsPerChunk(chunkSizeLog2 uint32) uint64 {
+	return uint64(1) << (chunkSizeLog2 - BlobGrainSizeLog2)
+}
+
+// Finish closes the stream and mints the meta — nil when the blob is at or
+// under one grain (no meta object; the whole transfer is verified by
+// BlobTag.UID alone).
+func (bld *BlobMetaBuilder) Finish() (*BlobMeta, error) {
+	if bld.inGrain > 0 {
+		bld.absorbGrain()
+	}
+	if bld.total <= int64(1)<<BlobGrainSizeLog2 {
+		return nil, nil
+	}
+	exp := ChooseBlobChunkSizeLog2(bld.total)
+	meta := &BlobMeta{
+		ChunkSizeLog2: exp,
+		TotalLen:      uint64(bld.total),
+	}
+
+	if bld.lanes == nil {
+		// Compose the winning exponent's entries from the buffered digests.
+		compose, err := newBlobHashKit(bld.kitID)
+		if err != nil {
+			return nil, err
+		}
+		runLen := int(blobGrainsPerChunk(exp)) * BlobMetaHashSize
+		for begin := 0; begin < len(bld.runBuf); begin += runLen {
+			end := min(begin+runLen, len(bld.runBuf))
+			compose.Hasher.Reset()
+			compose.Hasher.Write([]byte{blobMetaComposeTag})
+			compose.Hasher.Write(bld.runBuf[begin:end])
+			meta.ChunkHashes = append(meta.ChunkHashes, compose.Hasher.Sum(nil)[:BlobMetaHashSize]...)
+		}
+		return meta, nil
+	}
+
+	lane := &bld.lanes[exp-BlobChunkSizeLog2Min]
+	if lane.dead {
+		return nil, status.Code_DataFailure.Errorf("amp: BlobMetaBuilder: chosen exponent %d was pruned — builder invariant broken", exp)
+	}
+	if lane.grains > 0 {
+		lane.entries = append(lane.entries, lane.compose.Hasher.Sum(nil)[:BlobMetaHashSize]...)
+		lane.tagged = false
+		lane.grains = 0
+	}
+	meta.ChunkHashes = lane.entries
 	return meta, nil
 }
 
@@ -254,6 +581,16 @@ func (meta *BlobMeta) ChunkHash(chunkIndex uint64) []byte {
 	return meta.ChunkHashes[begin : begin+BlobMetaHashSize]
 }
 
+// ChunkUID is one chunk's hashname — the leading 16 bytes of its meta entry
+// as a tag.UID, the swarm-addressable identity of that chunk (§13.10).
+func (meta *BlobMeta) ChunkUID(chunkIndex uint64) tag.UID {
+	entry := meta.ChunkHash(chunkIndex)
+	return tag.UID{
+		binary.BigEndian.Uint64(entry[0:8]),
+		binary.BigEndian.Uint64(entry[8:16]),
+	}
+}
+
 // ChunkSpan returns the stored-byte offset and length of one chunk —
 // index ⇔ offset is a shift by ChunkSizeLog2; the final chunk is the remainder.
 func (meta *BlobMeta) ChunkSpan(chunkIndex uint64) (offset int64, length int64) {
@@ -297,10 +634,10 @@ func (ref *BlobRef) VerifyBlobMeta(meta *BlobMeta) error {
 	if ref.BlobTag != nil && meta.TotalLen != uint64(ref.BlobTag.I) {
 		return status.Code_AuthFailed.Errorf("amp: VerifyBlobMeta: TotalLen %d != stored length %d", meta.TotalLen, ref.BlobTag.I)
 	}
-	numChunks := BlobChunkCount(int64(meta.TotalLen), meta.ChunkSizeLog2)
-	if numChunks < 2 {
-		return status.Code_AuthFailed.Error("amp: VerifyBlobMeta: single-chunk blob carries no meta")
+	if meta.TotalLen <= uint64(1)<<BlobGrainSizeLog2 {
+		return status.Code_AuthFailed.Error("amp: VerifyBlobMeta: a blob at or under one grain carries no meta")
 	}
+	numChunks := BlobChunkCount(int64(meta.TotalLen), meta.ChunkSizeLog2)
 	if len(meta.ChunkHashes) != int(numChunks)*BlobMetaHashSize {
 		return status.Code_AuthFailed.Errorf("amp: VerifyBlobMeta: %d hash bytes != %d chunks × %d", len(meta.ChunkHashes), numChunks, BlobMetaHashSize)
 	}
@@ -325,11 +662,12 @@ func (meta *BlobMeta) VerifyChunk(chunkIndex uint64, chunk []byte, kitID safe.Ha
 	if int64(len(chunk)) != wantLen {
 		return status.Code_AuthFailed.Errorf("amp: VerifyChunk: chunk %d is %d bytes, meta says %d", chunkIndex, len(chunk), wantLen)
 	}
-	digest, err := hashBytes(kitID, chunk)
+	hasher, err := NewBlobChunkHasher(kitID)
 	if err != nil {
 		return err
 	}
-	if !bytes.Equal(digest[:BlobMetaHashSize], meta.ChunkHash(chunkIndex)) {
+	hasher.Write(chunk)
+	if !bytes.Equal(hasher.SumChunk(), meta.ChunkHash(chunkIndex)) {
 		return status.Code_AuthFailed.Errorf("amp: VerifyChunk: chunk %d hash does not match its meta entry", chunkIndex)
 	}
 	return nil
