@@ -16,7 +16,6 @@
 package p256
 
 import (
-	"bytes"
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/elliptic"
@@ -122,7 +121,7 @@ func open(msg, prvKey []byte) ([]byte, error) {
 }
 
 // ecdhDeriveKey computes the ECDH shared secret and derives a symmetric key
-// via HKDF with a canonical-ordered info string, matching the Poly25519 shape.
+// via safe.DeriveSharedKey.
 func ecdhDeriveKey(prvKey, peerPubKey []byte) ([]byte, error) {
 	curve := ecdh.P256()
 
@@ -141,17 +140,7 @@ func ecdhDeriveKey(prvKey, peerPubKey []byte) ([]byte, error) {
 	}
 	defer safe.Zero(shared)
 
-	myPub := prv.PublicKey().Bytes()
-	var lo, hi []byte
-	if bytes.Compare(myPub, peerPubKey) <= 0 {
-		lo, hi = myPub, peerPubKey
-	} else {
-		lo, hi = peerPubKey, myPub
-	}
-	info := append([]byte("safe.ECDH-P256."), lo...)
-	info = append(info, hi...)
-
-	return safe.DeriveKey(shared, nil, info)
+	return safe.DeriveSharedKey("ECDH-P256", prv.PublicKey().Bytes(), peerPubKey, shared)
 }
 
 func sign(msg []byte, signerPrvKey []byte) ([]byte, error) {

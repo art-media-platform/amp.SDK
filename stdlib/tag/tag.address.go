@@ -5,24 +5,24 @@ import (
 	"fmt"
 )
 
-func (addr *Address) ElementLSM() (lsm ElementLSM) {
+// putElementLSM packs NodeID, AttrID, and ItemID big-endian into lsm[0:48].
+func (addr *Address) putElementLSM(lsm []byte) {
 	binary.BigEndian.PutUint64(lsm[0:8], addr.NodeID[0])   // NodeID
 	binary.BigEndian.PutUint64(lsm[8:16], addr.NodeID[1])  //
 	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
 	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[1]) //
 	binary.BigEndian.PutUint64(lsm[32:40], addr.ItemID[0]) // ItemID
 	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[1]) //
+}
+
+func (addr *Address) ElementLSM() (lsm ElementLSM) {
+	addr.putElementLSM(lsm[:])
 	return
 }
 
 // Converts this Address to an AddressLSM.
 func (addr *Address) AsLSM(lsm []byte) {
-	binary.BigEndian.PutUint64(lsm[0:8], addr.NodeID[0])   // NodeID
-	binary.BigEndian.PutUint64(lsm[8:16], addr.NodeID[1])  //
-	binary.BigEndian.PutUint64(lsm[16:24], addr.AttrID[0]) // AttrID
-	binary.BigEndian.PutUint64(lsm[24:32], addr.AttrID[1]) //
-	binary.BigEndian.PutUint64(lsm[32:40], addr.ItemID[0]) // ItemID
-	binary.BigEndian.PutUint64(lsm[40:48], addr.ItemID[1]) //
+	addr.putElementLSM(lsm)
 	binary.BigEndian.PutUint64(lsm[48:56], addr.EditID[0]) // EditID
 	binary.BigEndian.PutUint64(lsm[56:64], addr.EditID[1]) //
 }

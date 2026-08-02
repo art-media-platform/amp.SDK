@@ -47,6 +47,13 @@ func (tx *TxEnvelope) SetTxID(ID tag.UID) {
 	tx.TxID_1 = ID[1]
 }
 
+// MemberProofInput returns the bytes the MemberProof HMAC commits to: the
+// TxID as 16 big-endian bytes.  The proof producer and every verify site must
+// consume this one encoding.
+func (tx *TxEnvelope) MemberProofInput() []byte {
+	return tx.TxID().AppendTo(nil)
+}
+
 // PlanetID returns the planet this tx applies to.
 func (tx *TxEnvelope) PlanetID() tag.UID {
 	return tag.UID{tx.Planet_0, tx.Planet_1}
@@ -691,10 +698,7 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 		wirePayload = encrypted
 
 		// Compute MemberProof for relay verification (HMAC of proof_key over TxID)
-		txIDBytes := make([]byte, 16)
-		binary.BigEndian.PutUint64(txIDBytes[0:8], tx.TxEnvelope.TxID_0)
-		binary.BigEndian.PutUint64(txIDBytes[8:16], tx.TxEnvelope.TxID_1)
-		proof, err := crypto.ComputeMemberProof(txIDBytes, &tx.TxEnvelope)
+		proof, err := crypto.ComputeMemberProof(tx.TxEnvelope.MemberProofInput(), &tx.TxEnvelope)
 		if err != nil {
 			return err
 		}

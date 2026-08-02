@@ -13,7 +13,6 @@
 package poly25519
 
 import (
-	"bytes"
 	"crypto/ecdh"
 	"crypto/ed25519"
 	"io"
@@ -135,20 +134,7 @@ func x25519DeriveKey(prvKey []byte, peerPubKey []byte) ([]byte, error) {
 	}
 	defer safe.Zero(shared)
 
-	// Derive a symmetric key from the shared secret.
-	// Using the concatenation of both public keys as HKDF info for domain separation.
-	// Canonical order ensures both sides derive the same key.
-	myPub := prv.PublicKey().Bytes()
-	var lo, hi []byte
-	if bytes.Compare(myPub, peerPubKey) <= 0 {
-		lo, hi = myPub, peerPubKey
-	} else {
-		lo, hi = peerPubKey, myPub
-	}
-	info := append([]byte("safe.X25519."), lo...)
-	info = append(info, hi...)
-
-	return safe.DeriveKey(shared, nil, info)
+	return safe.DeriveSharedKey("X25519", prv.PublicKey().Bytes(), peerPubKey, shared)
 }
 
 func sign(digest []byte, signerPrvKey []byte) ([]byte, error) {

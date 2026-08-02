@@ -1,6 +1,7 @@
 package safe
 
 import (
+	"bytes"
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -62,6 +63,27 @@ func DeriveKey(rootKey, salt, info []byte) ([]byte, error) {
 // Purpose strings provide domain separation (e.g. "member-proof", "content").
 func DeriveSubKey(masterKey []byte, purpose string) ([]byte, error) {
 	return DeriveKey(masterKey, nil, []byte(purpose))
+}
+
+// DeriveSharedKey derives the symmetric key for an ECDH exchange from the
+// curve's shared secret.  Both public keys are bound into the HKDF info —
+// "safe.<curveLabel>." followed by the two keys in canonical (lexicographic)
+// order — so either side derives the same key.  Each curve kit performs its
+// own curve math and passes its own public-key serialization; that
+// serialization is part of the curve's derivation contract and must never
+// change for a deployed curve.
+func DeriveSharedKey(curveLabel string, pubKeyA, pubKeyB, shared []byte) ([]byte, error) {
+	lo, hi := pubKeyA, pubKeyB
+	if bytes.Compare(lo, hi) > 0 {
+		lo, hi = hi, lo
+	}
+	info := make([]byte, 0, len("safe.")+len(curveLabel)+1+len(lo)+len(hi))
+	info = append(info, "safe."...)
+	info = append(info, curveLabel...)
+	info = append(info, '.')
+	info = append(info, lo...)
+	info = append(info, hi...)
+	return DeriveKey(shared, nil, info)
 }
 
 // StretchParams names the tunable work factors for StretchKey.  They travel with
