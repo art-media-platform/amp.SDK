@@ -5045,7 +5045,7 @@ type BlobMeta struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChunkSizeLog2 uint32                 `protobuf:"varint,1,opt,name=ChunkSizeLog2,proto3" json:"ChunkSizeLog2,omitempty"` // matches the ref
 	TotalLen      uint64                 `protobuf:"varint,2,opt,name=TotalLen,proto3" json:"TotalLen,omitempty"`           // stored byte length (== BlobTag.I)
-	ChunkHashes   []byte                 `protobuf:"bytes,3,opt,name=ChunkHashes,proto3" json:"ChunkHashes,omitempty"`      // concatenated 32-byte HashKit digests, one per chunk, index-ordered
+	ChunkHashes   []byte                 `protobuf:"bytes,3,opt,name=ChunkHashes,proto3" json:"ChunkHashes,omitempty"`      // concatenated 32-byte entries, one per chunk, index-ordered: tagged HashKit digest over the chunk's 4 KiB grain-digest run (amp.support.blobmeta.go; SD-planet-storage §13.10)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
