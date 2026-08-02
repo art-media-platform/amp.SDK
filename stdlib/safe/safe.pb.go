@@ -1114,6 +1114,106 @@ func (x *EncryptedSymKey) GetCiphertext() []byte {
 	return nil
 }
 
+// SealedValue is a value sealed at rest under an epoch key — the payload of a
+// sealed attr (content type amp.SealedContentType): the record syncs as
+// ordinary CRDT state and only keyholders open it.  The triple
+// (ContainerID, EpochID, Role) names the wrapping key in EpochKeyStore
+// coordinates; the element address the record lives at binds the AEAD as AAD
+// (recomputed by the opener, never stored), so a sealed box cannot be
+// transplanted onto a different element undetected.  Seal/open live in
+// amp.SealValueBox / amp.OpenValueBox — the one authoritative pair.
+type SealedValue struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ContainerID_0 uint64                 `protobuf:"fixed64,1,opt,name=ContainerID_0,json=ContainerID0,proto3" json:"ContainerID_0,omitempty"` // Planet or channel UID the epoch belongs to, bytes 0..7
+	ContainerID_1 uint64                 `protobuf:"fixed64,2,opt,name=ContainerID_1,json=ContainerID1,proto3" json:"ContainerID_1,omitempty"` // Planet or channel UID, bytes 8..15
+	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`             // Sealing epoch UID, bytes 0..7 (time-based)
+	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Sealing epoch UID, bytes 8..15
+	Role          KeyRole                `protobuf:"varint,5,opt,name=Role,proto3,enum=safe.KeyRole" json:"Role,omitempty"`                    // which role material seals this value (ContentKey)
+	ContentType   string                 `protobuf:"bytes,6,opt,name=ContentType,proto3" json:"ContentType,omitempty"`                         // content type of the enclosed plaintext
+	Ciphertext    []byte                 `protobuf:"bytes,8,opt,name=Ciphertext,proto3" json:"Ciphertext,omitempty"`                           // nonce(24) ‖ AEAD cipherblob (EncryptedSymKey layout)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SealedValue) Reset() {
+	*x = SealedValue{}
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SealedValue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SealedValue) ProtoMessage() {}
+
+func (x *SealedValue) ProtoReflect() protoreflect.Message {
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SealedValue.ProtoReflect.Descriptor instead.
+func (*SealedValue) Descriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *SealedValue) GetContainerID_0() uint64 {
+	if x != nil {
+		return x.ContainerID_0
+	}
+	return 0
+}
+
+func (x *SealedValue) GetContainerID_1() uint64 {
+	if x != nil {
+		return x.ContainerID_1
+	}
+	return 0
+}
+
+func (x *SealedValue) GetEpochID_0() uint64 {
+	if x != nil {
+		return x.EpochID_0
+	}
+	return 0
+}
+
+func (x *SealedValue) GetEpochID_1() uint64 {
+	if x != nil {
+		return x.EpochID_1
+	}
+	return 0
+}
+
+func (x *SealedValue) GetRole() KeyRole {
+	if x != nil {
+		return x.Role
+	}
+	return KeyRole_ContentKey
+}
+
+func (x *SealedValue) GetContentType() string {
+	if x != nil {
+		return x.ContentType
+	}
+	return ""
+}
+
+func (x *SealedValue) GetCiphertext() []byte {
+	if x != nil {
+		return x.Ciphertext
+	}
+	return nil
+}
+
 var File_stdlib_safe_safe_proto protoreflect.FileDescriptor
 
 const file_stdlib_safe_safe_proto_rawDesc = "" +
@@ -1203,6 +1303,16 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12\x1e\n" +
 	"\n" +
 	"Ciphertext\x18\b \x01(\fR\n" +
+	"Ciphertext\"\xf6\x01\n" +
+	"\vSealedValue\x12#\n" +
+	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
+	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
+	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
+	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12!\n" +
+	"\x04Role\x18\x05 \x01(\x0e2\r.safe.KeyRoleR\x04Role\x12 \n" +
+	"\vContentType\x18\x06 \x01(\tR\vContentType\x12\x1e\n" +
+	"\n" +
+	"Ciphertext\x18\b \x01(\fR\n" +
 	"Ciphertext*'\n" +
 	"\x05Const\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x15\n" +
@@ -1239,7 +1349,7 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 }
 
 var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),              // 0: safe.Const
 	(KeyType)(0),            // 1: safe.KeyType
@@ -1255,6 +1365,7 @@ var file_stdlib_safe_safe_proto_goTypes = []any{
 	(*EpochKeyEntry)(nil),   // 11: safe.EpochKeyEntry
 	(*EpochKeyTome)(nil),    // 12: safe.EpochKeyTome
 	(*EncryptedSymKey)(nil), // 13: safe.EncryptedSymKey
+	(*SealedValue)(nil),     // 14: safe.SealedValue
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	5,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
@@ -1264,11 +1375,12 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	3,  // 4: safe.RoleKey.Role:type_name -> safe.KeyRole
 	10, // 5: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
 	11, // 6: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	7,  // [7:7] is the sub-list for method output_type
-	7,  // [7:7] is the sub-list for method input_type
-	7,  // [7:7] is the sub-list for extension type_name
-	7,  // [7:7] is the sub-list for extension extendee
-	0,  // [0:7] is the sub-list for field type_name
+	3,  // 7: safe.SealedValue.Role:type_name -> safe.KeyRole
+	8,  // [8:8] is the sub-list for method output_type
+	8,  // [8:8] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1282,7 +1394,7 @@ func file_stdlib_safe_safe_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   10,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

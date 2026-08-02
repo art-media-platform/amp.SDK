@@ -210,3 +210,22 @@ message EncryptedSymKey {
     fixed64     EpochID_1    = 4;    // Epoch UID this key belongs to, bytes 8..15
     bytes       Ciphertext   = 8;    // Output of safe.SealFor(CryptoKitID, recipient_pub, symmetric_key)
 }
+
+
+// SealedValue is a value sealed at rest under an epoch key — the payload of a
+// sealed attr (content type amp.SealedContentType): the record syncs as
+// ordinary CRDT state and only keyholders open it.  The triple
+// (ContainerID, EpochID, Role) names the wrapping key in EpochKeyStore
+// coordinates; the element address the record lives at binds the AEAD as AAD
+// (recomputed by the opener, never stored), so a sealed box cannot be
+// transplanted onto a different element undetected.  Seal/open live in
+// amp.SealValueBox / amp.OpenValueBox — the one authoritative pair.
+message SealedValue {
+    fixed64     ContainerID_0   = 1;    // Planet or channel UID the epoch belongs to, bytes 0..7
+    fixed64     ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
+    fixed64     EpochID_0       = 3;    // Sealing epoch UID, bytes 0..7 (time-based)
+    fixed64     EpochID_1       = 4;    // Sealing epoch UID, bytes 8..15
+    KeyRole     Role            = 5;    // which role material seals this value (ContentKey)
+    string      ContentType     = 6;    // content type of the enclosed plaintext
+    bytes       Ciphertext      = 8;    // nonce(24) ‖ AEAD cipherblob (EncryptedSymKey layout)
+}
