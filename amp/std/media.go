@@ -252,7 +252,7 @@ func (a *mediaStreamAsset) NewAssetReader() (data.AssetReader, error) {
 // them out on a contiguous byte timeline.  Caller holds a.mu.
 func (a *mediaStreamAsset) loadLocked() error {
 	coll := &segCollector{revision: tag.NowID(), attr: a.src.Attr}
-	if err := LoadItems(a.appCtx, a.src.Node, a.src.Attr, coll); err != nil {
+	if err := LoadItems(a.appCtx, a.src.Node, a.src.Attr, coll, amp.TxScope{Planet: a.src.Planet}); err != nil {
 		return err
 	}
 	sort.Slice(coll.raw, func(i, j int) bool {
