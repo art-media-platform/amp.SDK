@@ -566,16 +566,20 @@ func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 	onFirst := make(chan struct{})
 	onRepeated := make(chan struct{})
 
-	go func() {
-		// Buffered: a rapid repeat must not be dropped while this goroutine emits
-		// the previous rung.
-		sigInbox := make(chan os.Signal, 4)
-		// SIGHUP is deliberately excluded: catching it would override the SIG_IGN that
-		// nohup installs, letting a closing controlling terminal or SSH session terminate
-		// a backgrounded daemon.  SIGINT/SIGTERM are the shutdown signals; for a daemon a
-		// hangup means "reload", not "die".
-		signal.Notify(sigInbox, syscall.SIGINT, syscall.SIGTERM)
+	// Buffered: a rapid repeat must not be dropped while the rung goroutine emits
+	// the previous rung.
+	sigInbox := make(chan os.Signal, 4)
+	// SIGHUP is deliberately excluded: catching it would override the SIG_IGN that
+	// nohup installs, letting a closing controlling terminal or SSH session terminate
+	// a backgrounded daemon.  SIGINT/SIGTERM are the shutdown signals; for a daemon a
+	// hangup means "reload", not "die".
+	//
+	// Notify is installed HERE, synchronously — the ladder is armed the moment this
+	// function returns.  Armed inside the goroutine, a signal landing between return
+	// and the goroutine's first run takes the OS default and kills the process.
+	signal.Notify(sigInbox, syscall.SIGINT, syscall.SIGTERM)
 
+	go func() {
 		reportSignal(<-sigInbox, "stopping")
 		close(onFirst)
 

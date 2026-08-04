@@ -9,14 +9,36 @@ package alog
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
 )
+
+// syncBuffer captures child stderr for failure forensics: with no Stderr set,
+// exec sends the child's stderr to the null device, and an early child death
+// (the alog beacon with no rung line after it) leaves no evidence at all.
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+func (b *syncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
 
 const (
 	signalChildEnv = "ALOG_SIGNAL_LADDER_CHILD"
@@ -45,14 +67,16 @@ func awaitInterruptChild() {
 }
 
 // awaitMark waits for one MARK line, failing the test if it does not arrive.
-func awaitMark(t *testing.T, lines <-chan string, want string) {
+func awaitMark(t *testing.T, child *exec.Cmd, childStderr *syncBuffer, lines <-chan string, want string) {
 	t.Helper()
 	deadline := time.After(markerBound)
 	for {
 		select {
 		case line, ok := <-lines:
 			if !ok {
-				t.Fatalf("child stdout closed awaiting MARK:%s", want)
+				waitErr := child.Wait()
+				t.Fatalf("child stdout closed awaiting MARK:%s\nchild.Wait: %v\nchild stderr:\n%s",
+					want, waitErr, childStderr.String())
 			}
 			if strings.TrimSpace(line) == "MARK:"+want {
 				return
@@ -71,6 +95,8 @@ func TestAwaitInterruptEscalationLadder(t *testing.T) {
 
 	child := exec.Command(os.Args[0], "-test.run=^TestAwaitInterruptEscalationLadder$")
 	child.Env = append(os.Environ(), signalChildEnv+"=1")
+	childStderr := &syncBuffer{}
+	child.Stderr = childStderr
 	stdout, err := child.StdoutPipe()
 	if err != nil {
 		t.Fatalf("stdout pipe: %v", err)
@@ -96,13 +122,13 @@ func TestAwaitInterruptEscalationLadder(t *testing.T) {
 		}
 	}
 
-	awaitMark(t, lines, "armed")
+	awaitMark(t, child, childStderr, lines, "armed")
 
 	signalChild(1)
-	awaitMark(t, lines, "first")
+	awaitMark(t, child, childStderr, lines, "first")
 
 	signalChild(2) // graceful → forced; a second signal is never a no-op
-	awaitMark(t, lines, "repeated")
+	awaitMark(t, child, childStderr, lines, "repeated")
 
 	signalChild(3) // restores the OS default disposition
 
