@@ -54,19 +54,30 @@ func TestPhrase_StringParseRoundtrip(t *testing.T) {
 	}
 }
 
-func TestPhrase_ChecksumRejectsWordSwap(t *testing.T) {
-	entropy := make([]byte, 16)
-	rand.Read(entropy)
-	phrase := safe.EncodePhrase(entropy)
+// phraseSwapEntropy is the golden fixture for the word-swap rejection tests.
+// The checksum is one byte (PhraseChecksumSize), so a word swap on RANDOM
+// entropy still passes it with probability 2⁻⁸ — swapping word[0] of this
+// fixed entropy ("able" → "acid") is a verified checksum mismatch, so
+// rejection is deterministic.
+var phraseSwapEntropy = []byte{
+	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+}
 
-	// Swap word[0] for a different valid word.
-	original := phrase[0]
-	swap := safe.PhraseWordAt(0)
-	if original == swap {
-		swap = safe.PhraseWordAt(1)
+// phraseWithSwappedWord returns phraseSwapEntropy's phrase with word[0]
+// swapped for a different valid word.
+func phraseWithSwappedWord(t *testing.T) safe.Phrase {
+	t.Helper()
+	phrase := safe.EncodePhrase(phraseSwapEntropy)
+	swap := safe.PhraseWordAt(1)
+	if phrase[0] == swap {
+		t.Fatalf("fixture invalid: word[0] %q equals its swap", phrase[0])
 	}
-	bad := append(safe.Phrase{swap}, phrase[1:]...)
+	return append(safe.Phrase{swap}, phrase[1:]...)
+}
 
+func TestPhrase_ChecksumRejectsWordSwap(t *testing.T) {
+	bad := phraseWithSwappedWord(t)
 	if _, err := safe.DecodePhrase(bad); err == nil {
 		t.Fatal("expected checksum rejection on word swap")
 	}
@@ -151,15 +162,7 @@ func TestPhrase_KeyPairDeterministic(t *testing.T) {
 }
 
 func TestPhrase_KeyPairRejectsBadChecksum(t *testing.T) {
-	entropy := make([]byte, 16)
-	rand.Read(entropy)
-	phrase := safe.EncodePhrase(entropy)
-	// Swap word[0] — invalidates checksum
-	alt := safe.PhraseWordAt(0)
-	if phrase[0] == alt {
-		alt = safe.PhraseWordAt(1)
-	}
-	bad := append(safe.Phrase{alt}, phrase[1:]...)
+	bad := phraseWithSwappedWord(t)
 
 	spec := safe.KeySpec{
 		CryptoKitID: safe.Crypto.Poly25519.ID,
