@@ -7,6 +7,10 @@
 
 option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 option csharp_namespace = "art.media.platform.std";
+// UID-vocabulary subtrees (ZO §4.8): these leaves mint UIDs used as VALUES
+// (a Tag field resolves to one), never as AttrIDs — exempt from the
+// generated attr registration.
+option attr_vocab = "channel.type";
 // TypeScript rides the same forge pass; the path is source-relative so a
 // worktree generates into itself (amp-web imports the module verbatim).
 option ts_out = "../../amp-web/src/generated";

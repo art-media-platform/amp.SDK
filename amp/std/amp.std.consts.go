@@ -4,7 +4,11 @@
 
 package std
 
-import "github.com/art-media-platform/amp.SDK/stdlib/tag"
+import (
+	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+)
 
 var Attr = struct {
 	App                                tag.Name
@@ -505,3 +509,70 @@ const (
 	LocusTier2        = uint32(19)   // + ring 2
 	LocusTier3        = uint32(37)   // + ring 3
 )
+
+// Every attr above whose trailing name word is a message type registers
+// here at init (ZO §4.8).  The tape rule is provisional: an attr carrying
+// the reserved `item.series.` literal registers as EditFlow_Tape.
+func init() {
+	RegisterAttrDeclared(Attr.Login, &amp.Login{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LoginChallenge, &amp.LoginChallenge{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LoginResponse, &amp.LoginResponse{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LoginCheckpoint, &amp.LoginCheckpoint{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.TxSealChallenge, &amp.LoginChallenge{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.TxSealResponse, &amp.CoSignature{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MemberToken, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.SessionStatus, &status.Status{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LaunchWeb, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LaunchOAuth, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.AppState, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemLabels, &Labels{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemLabel, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemCaption, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemCollection, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemSynopsis, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemFileInfo, &FileInfo{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemBehaviors, &amp.Tags{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemGlyphs, &amp.Tags{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemLinks, &amp.Tags{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemCameraState, &CameraState{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemCameraOptions, &CameraOptions{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ItemAtmosphere, &AtmosphereSpec{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.SeriesTRS, &TRS{}, amp.EditFlow_Tape)
+	RegisterAttrDeclared(Attr.SeriesLabels, &Labels{}, amp.EditFlow_Tape)
+	RegisterAttrDeclared(Attr.SeriesAssetTag, &amp.Tag{}, amp.EditFlow_Tape)
+	RegisterAttrDeclared(Attr.SeriesHeadLink, &amp.Tag{}, amp.EditFlow_Tape)
+	RegisterAttrDeclared(Attr.SeriesLinkTree, &amp.Tags{}, amp.EditFlow_Tape)
+	RegisterAttrDeclared(Attr.MediaLink, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MediaRelease, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MediaInfo, &MediaInfo{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MediaSources, &amp.Tags{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MediaTags, &MediaTags{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MediaEntry, &MediaEntry{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MediaRank, &MediaRank{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.MediaPlacement, &TRS{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ChannelCatalog, &amp.ChannelEpoch{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ChannelEpochs, &amp.ChannelEpoch{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ChannelPropertySeries, &JsonValue{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.Brand, &amp.Brand{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.NameServiceRecord, &amp.NameServiceRecord{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.PlanetInvitePolicy, &amp.PlanetInvitePolicy{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.PlanetInviteRedemption, &amp.PlanetInviteRedemption{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.FederationDirectory, &amp.FederationDirectory{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LawPlanetEpoch, &amp.PlanetEpoch{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LawMemberEpoch, &amp.MemberEpoch{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LawChannelEpoch, &amp.ChannelEpoch{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LawEpochLink, &amp.EpochLink{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LawPlanetOrigin, &amp.PlanetOrigin{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LawEquivalence, &amp.Equivalence{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LawWithdraw, &amp.Withdraw{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.LedgerAttestation, &amp.Attestation{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.PlanetInvite, &amp.PlanetInvite{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.PlanetInviteOp, &amp.PlanetInviteOp{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.PlanetBinding, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.PlanetStorageOpts, &amp.PlanetStorageOpts{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.HomeDeviceVars, &DeviceVars{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.HomeMemberVars, &MemberVars{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.BlobRef, &amp.BlobRef{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.NodeBlobs, &amp.BlobRef{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.TileServer, &TileServer{}, amp.EditFlow_Fold)
+}

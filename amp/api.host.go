@@ -437,6 +437,11 @@ type Registry interface {
 	// Returns the registered def for the given attr; ok is false if unregistered.
 	FindAttr(attrID tag.UID) (def AttrDef, ok bool)
 
+	// Enumerates registered attrs in canonic name order until fn returns false.
+	// Snapshot-consistent and process-local — a reflection UI's "what attrs
+	// exist?" door, paired with FindAttr's "is this UID known?".
+	EnumAttrs(fn func(def AttrDef) bool)
+
 	// Instantiates a registered value having a given UID.
 	NewValue(attrID tag.UID) (proto.Message, error)
 }

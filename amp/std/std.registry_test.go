@@ -1,6 +1,8 @@
 package std
 
 import (
+	"reflect"
+	"strings"
 	"sync"
 	"testing"
 
@@ -91,6 +93,63 @@ func TestRegistryConcurrentReadWrite(t *testing.T) {
 	for _, name := range names {
 		if _, ok := reg.FindAttr(name.ID); !ok {
 			t.Fatalf("attr %q missing after concurrent registration", name.Canonic())
+		}
+	}
+}
+
+// The generated-registration round trip (B-attr-autoreg): every attr the
+// forge registration emitted is live in the process registry, count-exact
+// and §4.8-conformant, with golden UIDs asserted as BYTES.
+func TestGeneratedAttrRegistration(t *testing.T) {
+	// amp.std.consts.sdl declares 61 registrable attrs (trailing message-type
+	// word, ZO §4.8); std.terminal.go registers 2 more at use-site.  A count
+	// drift means a registration was added or lost — both are conscious edits.
+	const generatedAttrs = 61
+	const useSiteAttrs = 2
+
+	count := 0
+	Registry().EnumAttrs(func(def amp.AttrDef) bool {
+		count++
+		// §4.8 sweep: the trailing name word IS the reflected prototype name.
+		typeName := reflect.TypeOf(def.Prototype).Elem().Name()
+		text := def.Name.Text
+		if lastDot := strings.LastIndexByte(text, '.'); lastDot >= 0 {
+			text = text[lastDot+1:]
+		}
+		if text != typeName {
+			t.Errorf("attr %q: trailing word %q != prototype type %q", def.Name.Text, text, typeName)
+		}
+		return true
+	})
+	if count != generatedAttrs+useSiteAttrs {
+		t.Fatalf("registry holds %d attrs, want %d generated + %d use-site", count, generatedAttrs, useSiteAttrs)
+	}
+
+	// Golden fixtures — identity is BYTES (fold parity between forge codegen
+	// and the runtime tag fold).
+	golden := []struct {
+		attr tag.Name
+		uid  tag.UID
+		flow amp.EditFlow
+	}{
+		{Attr.AppState, tag.UID{0x6CEB3696AB78B359, 0x08CF79D767A904E8}, amp.EditFlow_Fold},
+		{Attr.SeriesTRS, tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, amp.EditFlow_Tape},
+		{Attr.SessionStatus, tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, amp.EditFlow_Fold},
+	}
+	for _, g := range golden {
+		if g.attr.ID != g.uid {
+			t.Errorf("attr %q: UID %v != golden %v", g.attr.Text, g.attr.ID, g.uid)
+		}
+		def, ok := Registry().FindAttr(g.uid)
+		if !ok {
+			t.Errorf("attr %q: not registered", g.attr.Text)
+			continue
+		}
+		if def.EditFlow != g.flow {
+			t.Errorf("attr %q: EditFlow %v != %v", g.attr.Text, def.EditFlow, g.flow)
+		}
+		if _, err := Registry().NewValue(g.uid); err != nil {
+			t.Errorf("attr %q: NewValue: %v", g.attr.Text, err)
 		}
 	}
 }

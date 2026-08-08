@@ -2,6 +2,7 @@ package std
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -45,6 +46,36 @@ func RegisterAttrFolded(attr tag.Name, prototype proto.Message, subTags string, 
 // and serve sources from journal replay (SD-planet-storage §8.1).
 func RegisterAttrTape(attr tag.Name, prototype proto.Message, subTags string) tag.Name {
 	return registerAttr(attr, prototype, subTags, amp.EditFlow_Tape, 0)
+}
+
+// RegisterAttrDeclared registers an SDL-declared attr whose name ALREADY
+// carries its trailing message-type word — the forge-generated registration's
+// entry point (ZO §4.8).  The tail is verified byte-equal against the
+// prototype's reflected type name; a mismatch panics at init, making the
+// declared name / stored type contract a compiled invariant.
+func RegisterAttrDeclared(attr tag.Name, prototype proto.Message, editFlow amp.EditFlow) {
+	typeOf := reflect.TypeOf(prototype)
+	if typeOf.Kind() == reflect.Pointer {
+		typeOf = typeOf.Elem()
+	}
+	tail := attr.Text
+	if lastDot := strings.LastIndexByte(tail, '.'); lastDot >= 0 {
+		tail = tail[lastDot+1:]
+	}
+	if tail != typeOf.Name() {
+		panic(status.Code_BadTag.Errorf(
+			"RegisterAttrDeclared: %q: trailing word %q != prototype type %q (ZO §4.8)",
+			attr.Text, tail, typeOf.Name()))
+	}
+
+	err := gRegistry.RegisterAttr(amp.AttrDef{
+		Name:      attr,
+		Prototype: prototype,
+		EditFlow:  editFlow,
+	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func registerAttr(attr tag.Name, prototype proto.Message, subTags string, editFlow amp.EditFlow, retainEdits int32) tag.Name {
@@ -140,6 +171,24 @@ func (reg *registry) FindAttr(attrID tag.UID) (amp.AttrDef, bool) {
 	snap := reg.snap.Load()
 	def, exists := snap.attrDefs[attrID]
 	return def, exists
+}
+
+// Implements Registry.  Enumeration is snapshot-consistent (one atomic load)
+// and sorted by canonic name so a reflection UI renders a stable order.
+func (reg *registry) EnumAttrs(fn func(def amp.AttrDef) bool) {
+	snap := reg.snap.Load()
+	defs := make([]amp.AttrDef, 0, len(snap.attrDefs))
+	for _, def := range snap.attrDefs {
+		defs = append(defs, def)
+	}
+	sort.Slice(defs, func(i, j int) bool {
+		return defs[i].Name.Text < defs[j].Name.Text
+	})
+	for _, def := range defs {
+		if !fn(def) {
+			return
+		}
+	}
 }
 
 // Implements Registry
