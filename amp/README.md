@@ -85,10 +85,10 @@ func (it *notesRoot) MarshalAttrs(w std.ItemWriter) {
 
 ### 2. Interactive — Bidirectional, Reactive State
 
-For editors, viewers, anything that takes writes.  Register typed bindings with [`amp.AttrBinding[V]`](amp.support.bindings.go); incoming `TxMsg` ops dispatch to typed callbacks, and the binding caches current item state for you.
+For editors, viewers, anything that takes writes.  Register typed bindings with [`amp.FoldBinding[V]`](amp.support.bindings.go); incoming `TxMsg` ops dispatch to typed callbacks, and the binding caches current item state for you.
 
 ```go
-notes := amp.NewAttrBinding[*NoteValue](NotesAttr) // one attr → typed items
+notes := amp.NewFoldBinding[*NoteValue](NotesAttr) // one attr → typed items
 
 // Per-item callback: fires for each create/update/delete in an incoming TxMsg.
 notes.OnItem = func(item amp.AttrItem[*NoteValue]) {
@@ -106,7 +106,7 @@ notes.Bind(nodeID)
 notes.UpsertItem(tx, itemID, &NoteValue{ /* ... */ })
 ```
 
-> The interfaces above are real (`api.apps.go`, `amp/std/api.std.go`, `amp.support.bindings.go`); the bodies are illustrative.  For a complete, runnable channel that stays strictly within the public `amp` / `amp/std` API, read [`app.hello`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.hello/app.hello.go) — the minimal send-only example, registered in [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet/blob/main/amp/host/std-apps.go).  For interactive bindings, [`app.home`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.home/home.go) binds the home planet's typed item state via `AttrBinding`.
+> The interfaces above are real (`api.apps.go`, `amp/std/api.std.go`, `amp.support.bindings.go`); the bodies are illustrative.  For a complete, runnable channel that stays strictly within the public `amp` / `amp/std` API, read [`app.hello`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.hello/app.hello.go) — the minimal send-only example, registered in [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet/blob/main/amp/host/std-apps.go).  For interactive bindings, [`app.home`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.home/home.go) binds the home planet's typed item state via `FoldBinding`.
 
 ---
 
@@ -219,7 +219,7 @@ And Unity already models it this way, 1:1.  A `LiveCrate` is literally an `IResp
 |------|--------------|
 | [`api.apps.go`](api.apps.go) | `AppModule`, `AppInstance`, `Pin`, `Pinner`, `TxMsg`, `TxOp`, `AttrDef` — the channel contract |
 | [`api.host.go`](api.host.go) | `Host`, `Session`, `Transport`, `Registry`, `Request`, asset + journal interfaces |
-| [`amp.support.bindings.go`](amp.support.bindings.go) | `AttrBinding[V]`, `NodeResponder` — typed reactive state |
+| [`amp.support.bindings.go`](amp.support.bindings.go) | `FoldBinding[V]`, `NodeResponder` — typed reactive state |
 | [`amp.support.attrs.go`](amp.support.attrs.go) | Attr helpers and well-known attr definitions |
 | [`amp.support.tx.go`](amp.support.tx.go) | `TxMsg` construction, marshaling, `Upsert` |
 | [`amp.support.epoch.go`](amp.support.epoch.go) | Planet/channel epoch key plumbing |

@@ -7,10 +7,6 @@
 
 option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 option csharp_namespace = "art.media.platform.std";
-// UID-vocabulary subtrees (ZO §4.8): these leaves mint UIDs used as VALUES
-// (a Tag field resolves to one), never as AttrIDs — exempt from the
-// generated attr registration.
-option attr_vocab = "channel.type";
 // TypeScript rides the same forge pass; the path is source-relative so a
 // worktree generates into itself (amp-web imports the module verbatim).
 option ts_out = "../../amp-web/src/generated";
@@ -56,6 +52,12 @@ tags Attr {
         ItemCameraOptions "CameraOptions"
         ItemAtmosphere    "AtmosphereSpec" // 4-category atmosphere composition (sky/sun/night/fog)
         TileAttr          "tile"
+        // series is the ITEM axis, not the EDIT axis: these fold — a
+        // consumer wants the best/latest value per item (the Space sheet
+        // binds all five as folds; 280 D-series-editflow).  A tape lane
+        // over TRS history is a NEW attr when wanted, never a re-class.
+        // The unit-tail leaves (S2R/S2T) carry no stored message and
+        // never register.
         ItemSeries "series" {
             SeriesTRS      "TRS"
             SeriesLabels   "Labels"
@@ -92,7 +94,10 @@ tags Attr {
             ChannelPropertyGrid           "grid"
             ChannelPropertyCameraControls "camera.controls"
         }
-        ChannelType "type" {
+        // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
+        // as VALUES (a Tag field resolves to one), never as AttrIDs —
+        // exempt from the generated attr registration.
+        ChannelType "type" : vocab {
             ChannelTypeSpreadsheet  "Spreadsheet"
             ChannelTypeMessages     "Messages"
             ChannelTypeTimeline     "Timeline"

@@ -2,7 +2,7 @@
 //
 // Most amp apps embed App and use Pin to manage bidirectional state flow.
 // Send-only apps (e.g. serving a file listing) use the Item/PinAndServe pattern.
-// Interactive apps (e.g. planet viewers, editors) use Pin.Bind/MergeIncoming with AttrBinding.
+// Interactive apps (e.g. planet viewers, editors) use Pin.Bind/MergeIncoming with FoldBinding.
 package std
 
 import (
@@ -45,7 +45,7 @@ type ItemNode[AppT amp.AppInstance] struct {
 //   - PinAndServe populates items via PinInto, serializes via MarshalAttrs, pushes to client.
 //
 // For interactive apps (binding pattern):
-//   - Bind registers NodeResponders (typically AttrBinding instances).
+//   - Bind registers NodeResponders (typically FoldBinding instances).
 //   - MergeIncoming dispatches incoming TxMsg ops to bound responders.
 //   - Responders fire typed callbacks per item, enabling reactive state management.
 type Pin[AppT amp.AppInstance] struct {
@@ -62,7 +62,7 @@ type Pin[AppT amp.AppInstance] struct {
 
 // Bind registers a NodeResponder on this pin.
 // When MergeIncoming is called, matching ops are dispatched to this responder.
-// Typically used with amp.AttrBinding[V] instances.
+// Typically used with amp.FoldBinding[V] instances.
 func (pin *Pin[AppT]) Bind(resp amp.NodeResponder) {
 	pin.responders = append(pin.responders, resp)
 }

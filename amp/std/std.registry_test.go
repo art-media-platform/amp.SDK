@@ -125,6 +125,33 @@ func TestGeneratedAttrRegistration(t *testing.T) {
 		t.Fatalf("registry holds %d attrs, want %d generated + %d use-site", count, generatedAttrs, useSiteAttrs)
 	}
 
+	// The declared-flag → EditFlow mapping (ZO §4.8 declared flags):
+	// series attrs are the ITEM axis and fold — their consumers bind
+	// best/latest per item (astar 08-08: "we just want the best /
+	// latest"; 280 D-series-editflow: a tape lane is a NEW attr, never
+	// a re-class).
+	flagged := []struct {
+		attr tag.Name
+		flow amp.EditFlow
+	}{
+		{Attr.SeriesTRS, amp.EditFlow_Fold},
+		{Attr.SeriesLabels, amp.EditFlow_Fold},
+		{Attr.SeriesAssetTag, amp.EditFlow_Fold},
+		{Attr.SeriesHeadLink, amp.EditFlow_Fold},
+		{Attr.SeriesLinkTree, amp.EditFlow_Fold},
+		{Attr.ChannelPropertySeries, amp.EditFlow_Fold},
+	}
+	for _, f := range flagged {
+		def, ok := Registry().FindAttr(f.attr.ID)
+		if !ok {
+			t.Errorf("attr %q: not registered", f.attr.Text)
+			continue
+		}
+		if def.EditFlow != f.flow {
+			t.Errorf("attr %q: EditFlow %v != declared %v", f.attr.Text, def.EditFlow, f.flow)
+		}
+	}
+
 	// Golden fixtures — identity is BYTES (fold parity between forge codegen
 	// and the runtime tag fold).
 	golden := []struct {
@@ -133,7 +160,7 @@ func TestGeneratedAttrRegistration(t *testing.T) {
 		flow amp.EditFlow
 	}{
 		{Attr.AppState, tag.UID{0x6CEB3696AB78B359, 0x08CF79D767A904E8}, amp.EditFlow_Fold},
-		{Attr.SeriesTRS, tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, amp.EditFlow_Tape},
+		{Attr.SeriesTRS, tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, amp.EditFlow_Fold},
 		{Attr.SessionStatus, tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, amp.EditFlow_Fold},
 	}
 	for _, g := range golden {

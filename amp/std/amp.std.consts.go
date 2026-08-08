@@ -183,7 +183,13 @@ var Attr = struct {
 	ItemCameraOptions: tag.Name{ID: tag.UID{0xEF9DCA7B29C45C47, 0xBB03A56AA33F6432}, Text: "item.CameraOptions"},       // 7gm-r57qbf4cj3-vq0x5ebjmy-t1k
 	ItemAtmosphere:    tag.Name{ID: tag.UID{0x8718C93E8B1E2B4C, 0xB09A9629ED2B9B9B}, Text: "item.AtmosphereSpec"},      // 473-34mx2sy5e6-c16nq57qkr-6wv
 	TileAttr:          tag.Name{ID: tag.UID{0xBF3216B40F0EE8E3, 0x9E0C1A4B0E2789C8}, Text: "item.tile"},                // 5z6-8cc83sfx3j-tw30u9d72g-2f8
-	ItemSeries:        tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Text: "item.series"},              // 34g-dqg3rws34e-gz178n0bwg-h5v
+	// series is the ITEM axis, not the EDIT axis: these fold — a
+	// consumer wants the best/latest value per item (the Space sheet
+	// binds all five as folds; 280 D-series-editflow).  A tape lane
+	// over TRS history is a NEW attr when wanted, never a re-class.
+	// The unit-tail leaves (S2R/S2T) carry no stored message and
+	// never register.
+	ItemSeries: tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Text: "item.series"}, // 34g-dqg3rws34e-gz178n0bwg-h5v
 
 	SeriesTRS:      tag.Name{ID: tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, Text: "item.series.TRS"},            // 3cx-m3sbf4f7qg-2c5dg5mqe0-0hu
 	SeriesLabels:   tag.Name{ID: tag.UID{0x64DF54E7607F2F0E, 0xE02A46D568115245}, Text: "item.series.Labels"},         // 34v-xbffs3z5w7-f0bk6upn12-nk5
@@ -217,7 +223,10 @@ var Attr = struct {
 	ChannelPropertySkybox:         tag.Name{ID: tag.UID{0x3DE032C924E7EC82, 0x5FFF404B037126D4}, Text: "channel.property.skybox"},          // 1xw-0tdk977xk1-5zzu09d1r2-9qn
 	ChannelPropertyGrid:           tag.Name{ID: tag.UID{0x94EFC317CF34165F, 0xCAB7BCDADD7C784D}, Text: "channel.property.grid"},            // 4nx-z1jgmtn2tg-wpexwvcfrs-y2e
 	ChannelPropertyCameraControls: tag.Name{ID: tag.UID{0x6FCB7C32C026A452, 0xC4D5A0B4BB4DD5D7}, Text: "channel.property.camera.controls"}, // 3gt-ey35h16nj9-d9pe0qkxnv-pfr
-	ChannelType:                   tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Text: "channel.type"},                     // 71e-vhnqj9kwy3-82tpe69352-teh
+	// `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
+	// as VALUES (a Tag field resolves to one), never as AttrIDs —
+	// exempt from the generated attr registration.
+	ChannelType: tag.Name{ID: tag.UID{0xE16EE14B4532E786, 0x8166AD32465165B0}, Text: "channel.type"}, // 71e-vhnqj9kwy3-82tpe69352-teh
 
 	ChannelTypeSpreadsheet:  tag.Name{ID: tag.UID{0x1C0062A36805F2FB, 0xC37F9A8B51C0A909}, Text: "channel.type.Spreadsheet"},  // 0w0-1jb6u05ycx-w6zwuje8w1-b89
 	ChannelTypeMessages:     tag.Name{ID: tag.UID{0x0B6D6A2421321CA6, 0xFBA2073C02B917A6}, Text: "channel.type.Messages"},     // 0ce-pp2889k3km-gr8h77h1ck-5x6
@@ -511,8 +520,8 @@ const (
 )
 
 // Every attr above whose trailing name word is a message type registers
-// here at init (ZO §4.8).  The tape rule is provisional: an attr carrying
-// the reserved `item.series.` literal registers as EditFlow_Tape.
+// here at init (ZO §4.8); a `: tape` flag in the SDL declares EditFlow_Tape,
+// unmarked attrs fold.
 func init() {
 	RegisterAttrDeclared(Attr.Login, &amp.Login{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.LoginChallenge, &amp.LoginChallenge{}, amp.EditFlow_Fold)
@@ -537,11 +546,11 @@ func init() {
 	RegisterAttrDeclared(Attr.ItemCameraState, &CameraState{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.ItemCameraOptions, &CameraOptions{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.ItemAtmosphere, &AtmosphereSpec{}, amp.EditFlow_Fold)
-	RegisterAttrDeclared(Attr.SeriesTRS, &TRS{}, amp.EditFlow_Tape)
-	RegisterAttrDeclared(Attr.SeriesLabels, &Labels{}, amp.EditFlow_Tape)
-	RegisterAttrDeclared(Attr.SeriesAssetTag, &amp.Tag{}, amp.EditFlow_Tape)
-	RegisterAttrDeclared(Attr.SeriesHeadLink, &amp.Tag{}, amp.EditFlow_Tape)
-	RegisterAttrDeclared(Attr.SeriesLinkTree, &amp.Tags{}, amp.EditFlow_Tape)
+	RegisterAttrDeclared(Attr.SeriesTRS, &TRS{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.SeriesLabels, &Labels{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.SeriesAssetTag, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.SeriesHeadLink, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.SeriesLinkTree, &amp.Tags{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.MediaLink, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.MediaRelease, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.MediaInfo, &MediaInfo{}, amp.EditFlow_Fold)

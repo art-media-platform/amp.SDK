@@ -10,8 +10,8 @@ import (
 )
 
 // bindTag returns a wildcard *amp.Tag binding bound to node.
-func bindTag(node tag.UID) *amp.AttrBinding[*amp.Tag] {
-	binding := amp.NewAttrBinding[*amp.Tag](std.Attr.PlanetBinding)
+func bindTag(node tag.UID) *amp.FoldBinding[*amp.Tag] {
+	binding := amp.NewFoldBinding[*amp.Tag](std.Attr.PlanetBinding)
 	binding.Bind(node)
 	return binding
 }
@@ -19,7 +19,7 @@ func bindTag(node tag.UID) *amp.AttrBinding[*amp.Tag] {
 // feedUpsert drives one Upsert(node, PlanetBinding, item)=text op through the
 // binding under the witnessed txID.  SetTxID precedes Upsert so the op's EditID
 // derives from txID (DeriveID(nil) == txID), giving txID-ordered EditIDs.
-func feedUpsert(binding *amp.AttrBinding[*amp.Tag], node, item, txID tag.UID, text string) {
+func feedUpsert(binding *amp.FoldBinding[*amp.Tag], node, item, txID tag.UID, text string) {
 	tx := amp.TxNew()
 	tx.SetTxID(txID)
 	_ = tx.Upsert(node, std.Attr.PlanetBinding.ID, item, &amp.Tag{Text: text})
@@ -33,10 +33,10 @@ func tagText(value *amp.Tag) string {
 	return value.Text
 }
 
-// TestAttrBinding_OnAdmitVetoBeforeEditBump pins that OnAdmit runs BEFORE the CRDT
+// TestFoldBinding_OnAdmitVetoBeforeEditBump pins that OnAdmit runs BEFORE the CRDT
 // edit-ordering bump: a vetoed op leaves the item's high-water EditID untouched, so a
 // subsequent admitted op with a LOWER EditID still applies (no cell poisoning).
-func TestAttrBinding_OnAdmitVetoBeforeEditBump(t *testing.T) {
+func TestFoldBinding_OnAdmitVetoBeforeEditBump(t *testing.T) {
 	node := tag.NowID()
 	item := tag.NowID()
 	lowTxID := tag.UID_FromTime(time.Now())
@@ -59,10 +59,10 @@ func TestAttrBinding_OnAdmitVetoBeforeEditBump(t *testing.T) {
 	}
 }
 
-// TestAttrBinding_ItemTxExposesWitnessedTxID pins that OnItem can read the carrying
+// TestFoldBinding_ItemTxExposesWitnessedTxID pins that OnItem can read the carrying
 // tx's TxID via AttrItem.Tx — the seam app.nameservice uses to rebind a record's
 // RegisteredAt to the controller-witnessed TxID.
-func TestAttrBinding_ItemTxExposesWitnessedTxID(t *testing.T) {
+func TestFoldBinding_ItemTxExposesWitnessedTxID(t *testing.T) {
 	node := tag.NowID()
 	item := tag.NowID()
 	txID := tag.NowID()
@@ -81,11 +81,11 @@ func TestAttrBinding_ItemTxExposesWitnessedTxID(t *testing.T) {
 	}
 }
 
-// TestAttrBinding_BoundEditIDEqualsTxID pins the shared Go/C# invariant: a bound-path
+// TestFoldBinding_BoundEditIDEqualsTxID pins the shared Go/C# invariant: a bound-path
 // edit mints its EditID from the TxID with no parent seed, so EditID == TxID.  The C#
-// AttrBinding.UpdateItem must satisfy the identical invariant (else the two clients
+// FoldBinding.UpdateItem must satisfy the identical invariant (else the two clients
 // derive different EditIDs on one wire and LWW winners diverge).
-func TestAttrBinding_BoundEditIDEqualsTxID(t *testing.T) {
+func TestFoldBinding_BoundEditIDEqualsTxID(t *testing.T) {
 	node := tag.NowID()
 	item := tag.NowID()
 	txID := tag.NowID()
@@ -115,10 +115,10 @@ func TestAttrBinding_BoundEditIDEqualsTxID(t *testing.T) {
 	}
 }
 
-// TestAttrBinding_DeleteFiresOnItemDeleted pins the delete branch the resolver's
+// TestFoldBinding_DeleteFiresOnItemDeleted pins the delete branch the resolver's
 // reverse-index maintenance relies on: a delete op is consulted by OnAdmit, fires
 // OnItem with Deleted=true, and removes the live value.
-func TestAttrBinding_DeleteFiresOnItemDeleted(t *testing.T) {
+func TestFoldBinding_DeleteFiresOnItemDeleted(t *testing.T) {
 	node := tag.NowID()
 	item := tag.NowID()
 

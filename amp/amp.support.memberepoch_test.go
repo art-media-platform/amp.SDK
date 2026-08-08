@@ -55,14 +55,14 @@ func memberEpochUpdate(t *testing.T, rec memberEpochRecord) NodeUpdate {
 	return NodeUpdate{NodeID: HeadNodeID, Revision: tx.TxID(), Tx: tx}
 }
 
-func newMemberEpochBinding() *AttrBinding[*MemberEpoch] {
-	binding := NewAttrBinding[*MemberEpoch](testMemberEpochAttr)
+func newMemberEpochBinding() *FoldBinding[*MemberEpoch] {
+	binding := NewFoldBinding[*MemberEpoch](testMemberEpochAttr)
 	binding.Bind(HeadNodeID)
 	binding.Merger = NewMemberEpochMerger()
 	return binding
 }
 
-func mergedKeys(t *testing.T, binding *AttrBinding[*MemberEpoch], member tag.UID) (signPub, encryptPub string, status MemberStatus) {
+func mergedKeys(t *testing.T, binding *FoldBinding[*MemberEpoch], member tag.UID) (signPub, encryptPub string, status MemberStatus) {
 	t.Helper()
 	epoch, ok := binding.GetItem(member)
 	if !ok {
@@ -137,7 +137,7 @@ func TestMemberEpochMerge_IssuerCannotRegressSelfRotated(t *testing.T) {
 	// Control: the same in-order sequence on a plain-LWW binding answers the
 	// restatement — the defect shape this merger exists to replace.  If this
 	// ever fails, whole-value LWW changed underneath; re-evaluate the merger.
-	plain := NewAttrBinding[*MemberEpoch](testMemberEpochAttr)
+	plain := NewFoldBinding[*MemberEpoch](testMemberEpochAttr)
 	plain.Bind(HeadNodeID)
 	for _, rec := range []memberEpochRecord{seed, selfRotate, restate} {
 		plain.OnNodeUpdate(memberEpochUpdate(t, rec))

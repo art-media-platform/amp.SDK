@@ -49,6 +49,12 @@ export const Attr = {
     ItemCameraOptions                 : { id: [0xEF9DCA7B29C45C47n, 0xBB03A56AA33F6432n], text: "item.CameraOptions" },          // 7gm-r57qbf4cj3-vq0x5ebjmy-t1k
     ItemAtmosphere                    : { id: [0x8718C93E8B1E2B4Cn, 0xB09A9629ED2B9B9Bn], text: "item.AtmosphereSpec" },         // 473-34mx2sy5e6-c16nq57qkr-6wv
     TileAttr                          : { id: [0xBF3216B40F0EE8E3n, 0x9E0C1A4B0E2789C8n], text: "item.tile" },                   // 5z6-8cc83sfx3j-tw30u9d72g-2f8
+    // series is the ITEM axis, not the EDIT axis: these fold — a
+    // consumer wants the best/latest value per item (the Space sheet
+    // binds all five as folds; 280 D-series-editflow).  A tape lane
+    // over TRS history is a NEW attr when wanted, never a re-class.
+    // The unit-tail leaves (S2R/S2T) carry no stored message and
+    // never register.
     ItemSeries                        : { id: [0x647B2CF1DF98191An, 0xFF84E8A015C7C0BBn], text: "item.series" },                 // 34g-dqg3rws34e-gz178n0bwg-h5v
 
     SeriesTRS                         : { id: [0x6BECC785388E3D9En, 0x25958F2CECD0021An], text: "item.series.TRS" },             // 3cx-m3sbf4f7qg-2c5dg5mqe0-0hu
@@ -83,6 +89,9 @@ export const Attr = {
     ChannelPropertySkybox             : { id: [0x3DE032C924E7EC82n, 0x5FFF404B037126D4n], text: "channel.property.skybox" },            // 1xw-0tdk977xk1-5zzu09d1r2-9qn
     ChannelPropertyGrid               : { id: [0x94EFC317CF34165Fn, 0xCAB7BCDADD7C784Dn], text: "channel.property.grid" },              // 4nx-z1jgmtn2tg-wpexwvcfrs-y2e
     ChannelPropertyCameraControls     : { id: [0x6FCB7C32C026A452n, 0xC4D5A0B4BB4DD5D7n], text: "channel.property.camera.controls" },   // 3gt-ey35h16nj9-d9pe0qkxnv-pfr
+    // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
+    // as VALUES (a Tag field resolves to one), never as AttrIDs —
+    // exempt from the generated attr registration.
     ChannelType                       : { id: [0xE16EE14B4532E786n, 0x8166AD32465165B0n], text: "channel.type" },                       // 71e-vhnqj9kwy3-82tpe69352-teh
 
     ChannelTypeSpreadsheet            : { id: [0x1C0062A36805F2FBn, 0xC37F9A8B51C0A909n], text: "channel.type.Spreadsheet" },           // 0w0-1jb6u05ycx-w6zwuje8w1-b89

@@ -35,7 +35,7 @@ type AttrItem[V proto.Message] struct {
 }
 
 // ItemMerger folds an arriving op's decoded value into an item's cached value —
-// the per-attr override of AttrBinding's whole-value LWW, for attrs whose
+// the per-attr override of FoldBinding's whole-value LWW, for attrs whose
 // record custody is per-field (MemberEpoch: NewMemberEpochMerger).
 //
 // MergeItem sees every admitted non-delete arrival, stale EditIDs included;
@@ -50,7 +50,7 @@ type ItemMerger[V proto.Message] interface {
 	DropItem(itemID tag.UID)
 }
 
-// AttrBinding wires a specific attr (and optional item filter) to typed callbacks and caches item state.
+// FoldBinding wires a specific attr (and optional item filter) to typed callbacks and caches item state.
 // V is the concrete proto.Message type expected for this attr (must be a pointer type like *amp.Tag).
 //
 // Reading:
@@ -61,7 +61,7 @@ type ItemMerger[V proto.Message] interface {
 // Writing:
 //
 //	Bind + UpsertItem / DeleteItem let you author ops through this binding's node/attr context.
-type AttrBinding[V proto.Message] struct {
+type FoldBinding[V proto.Message] struct {
 	Attr tag.Name // attr to match
 	Item tag.Name // item to match (wildcard matches all)
 
@@ -95,10 +95,10 @@ type AttrBinding[V proto.Message] struct {
 	items    map[tag.UID]V            // ItemID -> cached value (live items only; deleted items removed)
 }
 
-// NewAttrBinding creates a binding that matches ALL item IDs for the given attr.
-func NewAttrBinding[V proto.Message](attrID tag.Name) *AttrBinding[V] {
+// NewFoldBinding creates a binding that matches ALL item IDs for the given attr.
+func NewFoldBinding[V proto.Message](attrID tag.Name) *FoldBinding[V] {
 	var zero V
-	return &AttrBinding[V]{
+	return &FoldBinding[V]{
 		Attr:    attrID,
 		Item:    tag.Wildcard(),
 		msgType: zero.ProtoReflect().Type(),
@@ -107,14 +107,14 @@ func NewAttrBinding[V proto.Message](attrID tag.Name) *AttrBinding[V] {
 	}
 }
 
-// NewAttrItemBinding creates a binding for a specific attr and item ID.
-func NewAttrItemBinding[V proto.Message](attrID, itemID tag.Name) *AttrBinding[V] {
+// NewFoldItemBinding creates a binding for a specific attr and item ID.
+func NewFoldItemBinding[V proto.Message](attrID, itemID tag.Name) *FoldBinding[V] {
 	capHint := 1
 	if itemID.IsWildcard() {
 		capHint = 64
 	}
 	var zero V
-	return &AttrBinding[V]{
+	return &FoldBinding[V]{
 		Attr:    attrID,
 		Item:    itemID,
 		msgType: zero.ProtoReflect().Type(),
@@ -128,35 +128,35 @@ func NewAttrItemBinding[V proto.Message](attrID, itemID tag.Name) *AttrBinding[V
 // ════════════════════════════════════════════════════════
 
 // Revision implements NodeResponder.
-func (b *AttrBinding[V]) Revision() tag.UID { return b.revision }
+func (b *FoldBinding[V]) Revision() tag.UID { return b.revision }
 
 // NodeID returns the bound node ID (set by Bind or auto-detected from first update).
-func (b *AttrBinding[V]) NodeID() tag.UID { return b.nodeID }
+func (b *FoldBinding[V]) NodeID() tag.UID { return b.nodeID }
 
 // ════════════════════════════════════════════════════════
 // Read: accumulated item state
 // ════════════════════════════════════════════════════════
 
 // ItemCount returns the number of live (non-deleted) items.
-func (b *AttrBinding[V]) ItemCount() int {
+func (b *FoldBinding[V]) ItemCount() int {
 	return len(b.items)
 }
 
 // HasItem returns true if the binding has a live value for the given item.
-func (b *AttrBinding[V]) HasItem(itemID tag.UID) bool {
+func (b *FoldBinding[V]) HasItem(itemID tag.UID) bool {
 	_, ok := b.items[itemID]
 	return ok
 }
 
 // GetItem returns the most recent value for an item, or (zero, false) if absent or deleted.
-func (b *AttrBinding[V]) GetItem(itemID tag.UID) (V, bool) {
+func (b *FoldBinding[V]) GetItem(itemID tag.UID) (V, bool) {
 	val, ok := b.items[itemID]
 	return val, ok
 }
 
 // FirstItem returns any single live item — useful for single-value (non-wildcard) bindings.
 // Mirrors C# ItemNode.LoadAttrItem<V>.
-func (b *AttrBinding[V]) FirstItem() (tag.UID, V, bool) {
+func (b *FoldBinding[V]) FirstItem() (tag.UID, V, bool) {
 	for id, val := range b.items {
 		return id, val, true
 	}
@@ -166,7 +166,7 @@ func (b *AttrBinding[V]) FirstItem() (tag.UID, V, bool) {
 
 // EnumItems iterates all live items.  Return false from fn to stop early.
 // Iteration order is not guaranteed.
-func (b *AttrBinding[V]) EnumItems(fn func(itemID tag.UID, value V) bool) {
+func (b *FoldBinding[V]) EnumItems(fn func(itemID tag.UID, value V) bool) {
 	for id, val := range b.items {
 		if !fn(id, val) {
 			return
@@ -175,7 +175,7 @@ func (b *AttrBinding[V]) EnumItems(fn func(itemID tag.UID, value V) bool) {
 }
 
 // EnumItemIDs iterates the IDs of all live items.
-func (b *AttrBinding[V]) EnumItemIDs(fn func(itemID tag.UID) bool) {
+func (b *FoldBinding[V]) EnumItemIDs(fn func(itemID tag.UID) bool) {
 	for id := range b.items {
 		if !fn(id) {
 			return
@@ -185,7 +185,7 @@ func (b *AttrBinding[V]) EnumItemIDs(fn func(itemID tag.UID) bool) {
 
 // ItemAddress returns the full address (including EditID) for a tracked item.
 // Returns false if the item has never been seen.
-func (b *AttrBinding[V]) ItemAddress(itemID tag.UID) (addr tag.Address, ok bool) {
+func (b *FoldBinding[V]) ItemAddress(itemID tag.UID) (addr tag.Address, ok bool) {
 	editID, ok := b.edits[itemID]
 	if ok {
 		addr.NodeID = b.nodeID
@@ -198,7 +198,7 @@ func (b *AttrBinding[V]) ItemAddress(itemID tag.UID) (addr tag.Address, ok bool)
 
 // Clear resets all accumulated state (edits, cached values, revision).
 // The binding remains usable — subsequent updates repopulate it.
-func (b *AttrBinding[V]) Clear() {
+func (b *FoldBinding[V]) Clear() {
 	clear(b.edits)
 	clear(b.items)
 	b.revision = tag.UID{}
@@ -210,23 +210,23 @@ func (b *AttrBinding[V]) Clear() {
 
 // Bind explicitly sets the node ID for this binding.
 // Required before Upsert if the binding hasn't yet received an incoming update.
-func (b *AttrBinding[V]) Bind(nodeID tag.UID) {
+func (b *FoldBinding[V]) Bind(nodeID tag.UID) {
 	if b.nodeID.IsSet() && b.nodeID != nodeID {
-		panic("AttrBinding: Bind called with different nodeID")
+		panic("FoldBinding: Bind called with different nodeID")
 	}
 	b.nodeID = nodeID
 }
 
 // UpsertItem writes an upsert op into tx using this binding's node and attr.
-func (b *AttrBinding[V]) UpsertItem(tx *TxMsg, itemID tag.UID, value V) error {
+func (b *FoldBinding[V]) UpsertItem(tx *TxMsg, itemID tag.UID, value V) error {
 	if b.nodeID.IsNil() {
-		panic("AttrBinding: UpsertItem called before Bind or first update")
+		panic("FoldBinding: UpsertItem called before Bind or first update")
 	}
 	return tx.Upsert(b.nodeID, b.Attr.ID, itemID, value)
 }
 
 // DeleteItem appends a delete op for a known item.  Returns false if the item is unknown.
-func (b *AttrBinding[V]) DeleteItem(tx *TxMsg, itemID tag.UID) bool {
+func (b *FoldBinding[V]) DeleteItem(tx *TxMsg, itemID tag.UID) bool {
 	addr, ok := b.ItemAddress(itemID)
 	if !ok {
 		return false
@@ -241,7 +241,7 @@ func (b *AttrBinding[V]) DeleteItem(tx *TxMsg, itemID tag.UID) bool {
 
 // OnNodeUpdate filters incoming ops for this attr/item, updates the cached item state,
 // and fires OnItem for each matching op.
-func (b *AttrBinding[V]) OnNodeUpdate(update NodeUpdate) {
+func (b *FoldBinding[V]) OnNodeUpdate(update NodeUpdate) {
 	b.revision = update.Revision
 
 	// Auto-bind to the first node we see; skip updates for other nodes.
