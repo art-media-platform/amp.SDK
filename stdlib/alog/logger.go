@@ -108,6 +108,22 @@ func InitFlags(fs *flag.FlagSet) {
 // when stderr is a terminal, false otherwise.  File output never carries color.
 func SetColor(on bool) { gUseColor.Store(on) }
 
+// MirrorFunc receives every emitted record — the fully formatted, ANSI-free
+// line(s) — after the stderr write.  level is the record's verbosity rank;
+// sevTag is the severity char leading the line ('I', 'W', 'E').  Called under
+// the emit lock: a mirror must return quickly and must never log through alog
+// itself.
+type MirrorFunc func(level int32, sevTag byte, line string)
+
+// SetMirror installs (nil removes) the process-wide emit mirror — the seam an
+// embedding host (ampd-lib) uses to surface alog output where the embedder is
+// looking (e.g. the Unity console), which stderr never reaches.
+func SetMirror(mirror MirrorFunc) {
+	gOutMu.Lock()
+	gMirror = mirror
+	gOutMu.Unlock()
+}
+
 // ────────────────────────── globals ──────────────────────────
 
 var (
@@ -122,6 +138,7 @@ var (
 	gDestOnce     sync.Once
 	gStampFormat  = stampFull
 	gSyslogPrefix bool
+	gMirror       MirrorFunc // guarded by gOutMu, like the writes it mirrors
 )
 
 const (
@@ -387,6 +404,13 @@ func (l *logger) emit(sev severity, level int32, depth int, msg string) {
 		} else {
 			f.Write(lineBytes)
 		}
+	}
+	if gMirror != nil {
+		mirrored := lineBytes
+		if useColor {
+			mirrored = stripANSI(lineBytes)
+		}
+		gMirror(level, entry.tag, string(mirrored))
 	}
 	gOutMu.Unlock()
 }
