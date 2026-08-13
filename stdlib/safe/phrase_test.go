@@ -55,10 +55,9 @@ func TestPhrase_StringParseRoundtrip(t *testing.T) {
 }
 
 // phraseSwapEntropy is the golden fixture for the word-swap rejection tests.
-// The checksum is one byte (PhraseChecksumSize), so a word swap on RANDOM
-// entropy still passes it with probability 2⁻⁸ — swapping word[0] of this
-// fixed entropy ("able" → "acid") is a verified checksum mismatch, so
-// rejection is deterministic.
+// A word swap on RANDOM entropy passes the checksum with probability
+// 2^(-8·PhraseChecksumSize) — swapping word[0] of this fixed entropy is a
+// verified checksum mismatch, so rejection is deterministic.
 var phraseSwapEntropy = []byte{
 	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
 	0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -80,6 +79,29 @@ func TestPhrase_ChecksumRejectsWordSwap(t *testing.T) {
 	bad := phraseWithSwappedWord(t)
 	if _, err := safe.DecodePhrase(bad); err == nil {
 		t.Fatal("expected checksum rejection on word swap")
+	}
+}
+
+// TestPhrase_SwapRejectionRate asserts the widened checksum's rejection rate
+// (280 D-phrase-checksum-width): 2000 random single-word swaps must ALL be
+// rejected.  At the 4-byte width a false accept is 2⁻³² (expected failures
+// here ≈ 5·10⁻⁷); at the old 1-byte width ~8 of 2000 swaps passed
+// (P(≥1) ≈ 99.96%), so this test fails against any regression to it.
+func TestPhrase_SwapRejectionRate(t *testing.T) {
+	entropy := make([]byte, 16)
+	for trial := 0; trial < 2000; trial++ {
+		if _, err := rand.Read(entropy); err != nil {
+			t.Fatal(err)
+		}
+		phrase := safe.EncodePhrase(entropy)
+		pos := trial % len(phrase)
+		idx := safe.PhraseWordIndex(phrase[pos])
+		swapped := append(safe.Phrase(nil), phrase...)
+		swapped[pos] = safe.PhraseWordAt((idx + 1) % safe.PhraseWordCount)
+		if _, err := safe.DecodePhrase(swapped); err == nil {
+			t.Fatalf("trial %d: single-word swap at %d passed the %d-byte checksum",
+				trial, pos, safe.PhraseChecksumSize)
+		}
 	}
 }
 

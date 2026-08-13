@@ -11,8 +11,20 @@ import (
 )
 
 // PhraseChecksumSize is the number of checksum bytes appended before encoding.
-// Each word carries 8 bits (PhraseWordCount=256), so a 1-byte checksum adds one word.
-const PhraseChecksumSize = 1
+// Each word carries 8 bits (PhraseWordCount=256), so the checksum adds
+// PhraseChecksumSize words.
+//
+// Width math (280 D-phrase-checksum-width, ruled "widen now"): at 1 byte a
+// single mistyped/swapped word passed the checksum at 2⁻⁸ (measured 1/247.8
+// over 200k trials) and silently derived a WRONG keypair — for founder-phrase
+// custody that is a lost identity, not a login retry.  4 bytes puts a false
+// accept at 2⁻³² (~1 in 4.3 billion) for +3 spoken words.  BIP-39 tolerates
+// 4–8 checksum BITS because wallet UX re-verifies the derived account; AMP
+// has no phrase surface yet, so the checksum is the only guard.  Doctrine for
+// whoever ships the first phrase surface: it MUST echo the derived identity
+// (fingerprint confirm) back to the operator before use — the checksum bounds
+// typos, the echo catches everything else.
+const PhraseChecksumSize = 4
 
 // Phrase is an ordered list of canonical wordlist words that encodes a byte
 // sequence plus a trailing checksum. Each word carries 8 bits of data.
