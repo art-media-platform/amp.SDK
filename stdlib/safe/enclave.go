@@ -110,7 +110,12 @@ func OpenEnclave(
 }
 
 // ImportKey inserts a keypair into the given keyring.
-func (enc *enclave) ImportKey(keyringID tag.UID, kp KeyPair) error {
+// The install is durable at return: the re-sealed tome persists BEFORE ImportKey
+// reports success (280/D-enclave-identity-flush — the epoch-key PutKey
+// discipline, one layer down).  Success ⟹ the key is on disk; a persist failure
+// returns the error and is a durability failure the caller must not read as
+// success.  An exact-duplicate no-op does not re-persist.
+func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
 
@@ -137,11 +142,23 @@ func (enc *enclave) ImportKey(keyringID tag.UID, kp KeyPair) error {
 		PubKey:        append([]byte(nil), kp.Pub.Bytes...),
 		PrvKey:        append([]byte(nil), kp.Prv...),
 	}
-	return enc.mergeRecord(rec)
+	priorRevision := enc.revision
+	if err := enc.mergeRecord(rec); err != nil {
+		return err
+	}
+	if enc.revision == priorRevision {
+		return nil // exact duplicate — nothing new to persist
+	}
+	return enc.persistLocked(ctx)
 }
 
 // GenerateKey creates a new keypair under the given keyring.
-func (enc *enclave) GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error) {
+// The install is durable at return (see ImportKey): success ⟹ the key is on
+// disk.  A persist failure returns the error and the caller must treat it as a
+// durability failure — the guard must be open at install, which every real
+// flow satisfies (the session enclave's guard closes only at teardown, after
+// all installs; 280/D-enclave-identity-flush).
+func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec KeySpec) (PubKey, error) {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
 
@@ -194,6 +211,9 @@ func (enc *enclave) GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
 				kp.Zero()
 				continue
 			}
+			return PubKey{}, err
+		}
+		if err := enc.persistLocked(ctx); err != nil {
 			return PubKey{}, err
 		}
 		return pubKeyFromRecord(rec), nil
@@ -379,6 +399,18 @@ func (enc *enclave) Close(ctx context.Context) error {
 		return nil
 	}
 
+	if err := enc.persistLocked(ctx); err != nil {
+		return err
+	}
+
+	enc.zeroState()
+	return nil
+}
+
+// persistLocked seals the in-memory key index into a KeyTome and saves it via
+// the Guard/TomeStore pair — the ONE persist site (ImportKey, GenerateKey,
+// Close).  Caller holds enc.mu.
+func (enc *enclave) persistLocked(ctx context.Context) error {
 	tome := &KeyTome{
 		Revision: enc.revision,
 		Keys:     enc.flattenRecords(),
@@ -418,8 +450,6 @@ func (enc *enclave) Close(ctx context.Context) error {
 	if err := enc.store.Save(ctx, sealed); err != nil {
 		return fmt.Errorf("safe: failed to save SealedTome: %w", err)
 	}
-
-	enc.zeroState()
 	return nil
 }
 

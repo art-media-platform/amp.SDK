@@ -99,7 +99,7 @@ func TestExportSymmetricKey(t *testing.T) {
 	defer enc.Close(ctx)
 
 	keyringID := tag.NewID()
-	_, err = enc.GenerateKey(keyringID, safe.KeySpec{
+	_, err = enc.GenerateKey(ctx, keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -168,7 +168,7 @@ func TestRoundTrip(t *testing.T) {
 	keyRef := safe.KeyRef{}
 	keyRef.SetKeyringID(keyringID)
 
-	pub, err := enc.GenerateKey(keyringID, safe.KeySpec{
+	pub, err := enc.GenerateKey(ctx, keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -262,7 +262,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	aliceRef := safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
 	aliceRef.SetKeyringID(aliceKeyringID)
 
-	alice, err := enc.GenerateKey(aliceKeyringID, safe.KeySpec{
+	alice, err := enc.GenerateKey(ctx, aliceKeyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_AsymmetricKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -275,7 +275,7 @@ func TestAsymmetricRoundTrip(t *testing.T) {
 	bobRef := safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
 	bobRef.SetKeyringID(bobKeyringID)
 
-	bob, err := enc.GenerateKey(bobKeyringID, safe.KeySpec{
+	bob, err := enc.GenerateKey(ctx, bobKeyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_AsymmetricKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -332,7 +332,7 @@ func TestImportKey(t *testing.T) {
 		Prv: privBytes,
 	}
 
-	if err := enc.ImportKey(keyringID, kp); err != nil {
+	if err := enc.ImportKey(ctx, keyringID, kp); err != nil {
 		t.Fatalf("ImportKey: %v", err)
 	}
 
@@ -478,7 +478,7 @@ func TestLargePayload(t *testing.T) {
 	const ringCount = 100
 	for i := 0; i < ringCount; i++ {
 		keyringID := tag.UID{uint64(i + 1), uint64(i + 1000)}
-		_, err := enc.GenerateKey(keyringID, safe.KeySpec{
+		_, err := enc.GenerateKey(ctx, keyringID, safe.KeySpec{
 			KeyType:     safe.KeyType_SigningKey,
 			CryptoKitID: safe.Crypto.Poly25519.ID,
 		})
@@ -530,7 +530,7 @@ func TestFetchNewestKey(t *testing.T) {
 
 	keyringID := tag.NewID()
 
-	first, err := enc.GenerateKey(keyringID, safe.KeySpec{
+	first, err := enc.GenerateKey(ctx, keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -538,7 +538,7 @@ func TestFetchNewestKey(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	second, err := enc.GenerateKey(keyringID, safe.KeySpec{
+	second, err := enc.GenerateKey(ctx, keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -579,7 +579,7 @@ func TestEncryptDecryptVariousSizes(t *testing.T) {
 	keyRef := safe.KeyRef{}
 	keyRef.SetKeyringID(keyringID)
 
-	pub, err := enc.GenerateKey(keyringID, safe.KeySpec{
+	pub, err := enc.GenerateKey(ctx, keyringID, safe.KeySpec{
 		KeyType:     safe.KeyType_SymmetricKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -634,7 +634,7 @@ func TestDualKeyTypeStreams(t *testing.T) {
 
 	aliceID := tag.NewID()
 
-	aliceSign, err := enc.GenerateKey(aliceID, safe.KeySpec{
+	aliceSign, err := enc.GenerateKey(ctx, aliceID, safe.KeySpec{
 		KeyType:     safe.KeyType_SigningKey,
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 	})
@@ -645,7 +645,7 @@ func TestDualKeyTypeStreams(t *testing.T) {
 		t.Fatalf("Poly25519 signing pubkey expected 32 bytes, got %d", len(aliceSign.Bytes))
 	}
 
-	aliceEnc, err := enc.GenerateKey(aliceID, safe.KeySpec{
+	aliceEnc, err := enc.GenerateKey(ctx, aliceID, safe.KeySpec{
 		KeyType:     safe.KeyType_AsymmetricKey,
 		CryptoKitID: safe.Crypto.P256.ID,
 	})
@@ -711,5 +711,85 @@ func TestDualKeyTypeStreams(t *testing.T) {
 	rejected.SetKeyringID(aliceID)
 	if _, err := enc.FetchPubKey(rejected); err == nil {
 		t.Fatal("FetchPubKey with mismatched Type should have failed")
+	}
+}
+
+// TestEnclave_InstallDurableAtReturn pins the identity-key durability contract
+// (280/D-enclave-identity-flush — the epoch-key PutKey discipline one layer
+// down): an imported or generated key persists BEFORE the mutating call
+// returns, so a first-session unclean kill (modeled by reopening the tome
+// WITHOUT Close) cannot lose the member's signing/encrypt identity.
+func TestEnclave_InstallDurableAtReturn(t *testing.T) {
+	ctx := context.Background()
+	dir := t.TempDir()
+	store := safe.NewLocalTomeStore(filepath.Join(dir, "durable.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("durable"))
+	defer guard.Close()
+
+	enc, err := safe.OpenEnclave(ctx, store, guard, []byte("durable-test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	memberID := tag.NewID()
+	signPub, err := enc.GenerateKey(ctx, memberID, safe.KeySpec{
+		CryptoKitID: safe.Crypto.Poly25519.ID,
+		KeyType:     safe.KeyType_SigningKey,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	encryptPub, err := enc.GenerateKey(ctx, memberID, safe.KeySpec{
+		CryptoKitID: safe.Crypto.Poly25519.ID,
+		KeyType:     safe.KeyType_AsymmetricKey,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	importedPub := make([]byte, 32)
+	rand.Read(importedPub)
+	peerID := tag.NewID()
+	if err := enc.ImportKey(ctx, peerID, safe.KeyPair{
+		Pub: safe.PubKey{
+			CryptoKitID: safe.Crypto.Poly25519.ID,
+			KeyType:     safe.KeyType_SigningKey,
+			Bytes:       importedPub,
+		},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// Crash model: NO Close — reopen straight from the persisted tome.
+	reopened, err := safe.OpenEnclave(ctx, store, guard, []byte("durable-test"))
+	if err != nil {
+		t.Fatalf("reopen without Close: %v", err)
+	}
+	defer reopened.Close(ctx)
+
+	signRef := &safe.KeyRef{Type: safe.KeyType_SigningKey}
+	signRef.SetKeyringID(memberID)
+	got, err := reopened.FetchPubKey(signRef)
+	if err != nil {
+		t.Fatalf("signing identity lost across a no-Close reopen — install is not durable at return: %v", err)
+	}
+	if !bytes.Equal(got.Bytes, signPub.Bytes) {
+		t.Fatal("signing pubkey did not round-trip the install persist")
+	}
+	if !reopened.CanSign(signRef) {
+		t.Fatal("signing private half lost across a no-Close reopen")
+	}
+	encRef := &safe.KeyRef{Type: safe.KeyType_AsymmetricKey}
+	encRef.SetKeyringID(memberID)
+	if got, err = reopened.FetchPubKey(encRef); err != nil || !bytes.Equal(got.Bytes, encryptPub.Bytes) {
+		t.Fatalf("encrypt key lost or mutated across a no-Close reopen: %v", err)
+	}
+	peerRef := &safe.KeyRef{Type: safe.KeyType_SigningKey}
+	peerRef.SetKeyringID(peerID)
+	if got, err = reopened.FetchPubKey(peerRef); err != nil || !bytes.Equal(got.Bytes, importedPub) {
+		t.Fatalf("imported pub-only key lost across a no-Close reopen: %v", err)
+	}
+
+	if err := enc.Close(ctx); err != nil {
+		t.Fatalf("Close (installing session): %v", err)
 	}
 }

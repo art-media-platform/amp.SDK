@@ -31,7 +31,7 @@ func TestEnclave_CanSign(t *testing.T) {
 
 	// (1) A generated SigningKey — private half held → CanSign true.
 	full := tag.NewID()
-	if _, err := enc.GenerateKey(full, safe.KeySpec{
+	if _, err := enc.GenerateKey(ctx, full, safe.KeySpec{
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 		KeyType:     safe.KeyType_SigningKey,
 	}); err != nil {
@@ -52,7 +52,7 @@ func TestEnclave_CanSign(t *testing.T) {
 		t.Fatalf("generate keypair: %v", err)
 	}
 	pubOnly := tag.NewID()
-	if err := enc.ImportKey(pubOnly, safe.KeyPair{Pub: kp.Pub}); err != nil { // Prv omitted ⇒ public-only
+	if err := enc.ImportKey(ctx, pubOnly, safe.KeyPair{Pub: kp.Pub}); err != nil { // Prv omitted ⇒ public-only
 		t.Fatalf("ImportKey(public-only): %v", err)
 	}
 	pubRef := &safe.KeyRef{KeyringID_0: pubOnly[0], KeyringID_1: pubOnly[1], Type: safe.KeyType_SigningKey}

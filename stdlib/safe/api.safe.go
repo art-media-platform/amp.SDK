@@ -83,11 +83,17 @@ type Enclave interface {
 	// If kp.Pub.TimeID is zero, it is set to tag.NowID().
 	// An exact-match duplicate is a no-op; a pub-key collision that is NOT an
 	// exact dupe is rejected as an error.
-	ImportKey(keyringID tag.UID, kp KeyPair) error
+	// The install is durable at method return: the re-sealed tome persists
+	// BEFORE ImportKey reports success, so an unclean kill after return cannot
+	// lose the key — a member's identity must never ride on a clean Close.
+	// The guard must be open at install (it closes only at teardown, after all
+	// installs); a persist failure returns the error and is NOT a durable install.
+	ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error
 
 	// GenerateKey creates a new keypair in the given keyring and registers it.
 	// Returns the new PubKey (with TimeID populated).
-	GenerateKey(keyringID tag.UID, spec KeySpec) (PubKey, error)
+	// Durable at return, like ImportKey.
+	GenerateKey(ctx context.Context, keyringID tag.UID, spec KeySpec) (PubKey, error)
 
 	// FetchPubKey returns the PubKey for ref.
 	// If len(ref.PubKey) == 0, the newest key in the keyring is returned.
