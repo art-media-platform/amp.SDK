@@ -428,27 +428,18 @@ GET  /api/v1/federation/peers?federation=<base32-UID>   (Bearer)
                                              → { Peers: FederationPeerEntry[] }
 ```
 
+All four shapes are package exports (`ResolveResponse`, `VaultEndpoint`, `SearchMatch`, `FederationPeerEntry`, plus the `TrustState` union), bound as typed client methods — never raw-fetch these:
+
 ```typescript
-interface ResolveResponse {
-  FQDN:          string;
-  PlanetID:      string;     // base32 tag.UID — the planet the FQDN names
-  AnsweredBy:    string;     // base32 tag.UID — federation that answered
-  VaultAddrs:    VaultEndpoint[];   // dialable bootstrap addrs — returned in full by resolve
-  TrustState:    'Unchecked' | 'Verified' | 'Refuted';
-  PinPrecedence: boolean;
-  Ambiguous:     boolean;    // >1 federation claims this FQDN
-  Hops:          number;     // forwarding hops to the answer
-}
-interface VaultEndpoint       { Transport: string; Address: string /* base64 */ }
-interface SearchMatch         { PlanetID: string; FQDN: string; AnsweredBy: string;
-                                Score: number; AppName: string; AppDesc: string; Platforms?: string[] }
-interface FederationPeerEntry { FederationID: string; VaultAddrs: VaultEndpoint[]; Label?: string }
+const res: ResolveResponse = await client.resolve('spaces.example.com');
+// AmpError 404 'NotFound' = no federation names that FQDN.
+// res.VaultAddrs[].Address is BASE64 transport bytes (Go []byte), not a base32 UID.
+
+const matches: SearchMatch[] = await client.search('plan', 10);        // Bearer; Limit optional
+const peers: FederationPeerEntry[] = await client.federationPeers(fedUID); // Bearer; base32 federation UID REQUIRED (400 without)
 ```
 
-> **Wire shape only — no client binding yet.** These interfaces document the
-> JSON contract; they are not package exports and have no `client.*` methods.
-> Call the endpoints raw against this shape (the §12.1 carve-out) until a
-> wrapper lands; the golden fixtures (`webapi/testdata/vault.json`) pin them.
+React: `useAmpResolve(fqdn)` wraps the anonymous resolve for deep-link landings — `{ resolution, loading, error }`, where `resolution === null` with no error means no federation names that FQDN (a 404 is an answer, not a failure). The golden fixtures (`webapi/testdata/vault.json`) pin all four shapes on both the Go and TS sides.
 
 **`TrustState` is load-bearing — never silently pick.** A record is `Verified` only when the answering federation matches the planet's own `Brand` back-edge (the planet consents to being named there). `Refuted` flags a third party claiming a name the planet never authorized; `Unchecked` means the back-edge wasn't confirmed. When `Ambiguous` is set or `TrustState != 'Verified'`, surface it and let the user choose — do not auto-follow.
 
@@ -1295,9 +1286,11 @@ A single `ampd` can host many planets/orgs at once; that multi-tenancy is a host
 
 The durable model: per-deploy configuration is **signed, chronicle-tracked facts on the substrate**, rotated by a signed write — never a static file hand-edited-and-restarted. There is no consumer-facing config file to build against. Three records, by purpose:
 
-**1. A planet's identity — its `Brand` record.** Each public / org planet carries one `Brand` item at a fixed CRDT address (the `amp.brand` attr), admin-signed and edit-chained — so a rebrand (rename, domain change, scheme update, federation roam) is a single signed edit, no restart and no re-genesis. Fields: `AppName`, `AppDomain`, `OrgName`, `OrgHomeURL` / `AppHomeURL`, `URLSchemes`, `Targets[]` (per-platform installs, each an `AppTarget` — incl. `AppleTeamID`), `Links[]`, `CrateSnapshotURL`, `BundledCrates`, `TemplateSet`, and `NamedBy` (the federation that names this planet — the §4.6 back-edge). The personal home planet is "naked" (no `Brand`); its display name is `PlanetEpoch.Label` ("Home").
+**1. A planet's identity — its `Brand` record.** Each public / org planet carries one `Brand` item at a fixed CRDT address (the `amp.Brand` attr on the planet's head node), admin-signed and edit-chained — so a rebrand (rename, domain change, scheme update, federation roam) is a single signed edit, no restart and no re-genesis. Fields: `AppName`, `AppDomain`, `OrgName`, `OrgHomeURL` / `AppHomeURL`, `URLSchemes`, `Targets[]` (per-platform installs, each an `AppTarget` — incl. `AppleTeamID`), `Links[]`, `CrateSnapshotURL`, `BundledCrates`, `TemplateSet`, and `NamedBy` (the federation that names this planet — the §4.6 back-edge). The personal home planet is "naked" (no `Brand`); its display name is `PlanetEpoch.Label` ("Home").
 
 > **Display-only — the durable security rule.** A planet's substrate `Brand` is read for **display only**: planet header, picker tile, publisher attribution. Because it is admin-mutable, it is **never** read for app *behavior*. Every behavioral field — your deep-link schemes, link host, install targets, crate feed — is read from your **build's own factory brand** (bundled in the app / SKU), never from a planet's `Brand`. So a planet rebrand changes what it *displays as*, never what your app *does*. (One resolver returns `planetBrand ?? factoryBrand` for display; behavioral code reads the factory directly.)
+
+**Reading it from the SDK.** `client.getBrand(planetTag?)` reads the planet's `Brand` off its head-node anchor over the standard items rail and returns `PlanetBrand { brand, namedBy, trustState, resolution? }` — or `null` for a planet with no Brand authored (a naked home planet; render `PlanetEpoch.Label` instead). `namedBy` is the base32 federation UID from `Brand.Identity.NamedBy` (the §4.6 back-edge; `''` when unset). `trustState` is the host resolver's verdict on the Brand's **claimed** `Identity.AppDomain` (obtained via the anonymous `resolve()`; `'Unchecked'` when no domain is claimed or no federation names it), with the full `ResolveResponse` riding as `resolution`. The verdict binds `(FQDN → resolution.PlanetID)`, not the planet you queried — when `resolution.PlanetID` differs from your planet's UID, the domain claim points elsewhere: surface it, never render a Verified badge. React: `useAmpBrand(planetTag?)` → `{ brand, loading, error }`. The wire types (`Brand`, `BrandIdentity`, `AppTarget`, `AppLink`, `CrateRef`, `AmpTag`) are package exports; consumption stays read-only — authoring a Brand is an operator act with no browser binding (§12).
 
 **2. Host gating config — CORS origins + admin allowlist.** The web origins authorized to call the host (the CORS allow-list) and the operator-admin allowlist (who may hit `/api/v1/admin/*`) are **operator HTTP-gating config, not planet governance**. Stable field semantics: a list of allowed origins (`https://maplable.com`, `*.maplable.com` — never pair `"*"` with credentials; see `SECURITY-amp-web-SDK.md`) and a list of admin member-IDs (`eth:0x…`, `email:…`; empty fails closed → every admin call `403`). Stored operator-side, per whitelabel domain — never in your bundle or code path.
 

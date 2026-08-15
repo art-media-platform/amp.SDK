@@ -32,7 +32,9 @@ import type {
   AmpQueryOpts,
   AmpSession,
   BlobRef,
+  Brand,
   ClaimAccountOpts,
+  FederationPeerEntry,
   InviteIssueOpts,
   InviteIssueResult,
   InviteAcceptOpts,
@@ -40,9 +42,13 @@ import type {
   InviteRevokeOpts,
   InviteListResult,
   LoginCredentials,
+  PlanetBrand,
   RedeemEmailOpts,
+  ResolveResponse,
+  SearchMatch,
   SubscriptionEvent,
   TagResolution,
+  TrustState,
   TxOp,
   TxResult,
   UploadOpts,
@@ -51,6 +57,15 @@ import type {
   WithdrawOpts,
   WithdrawReason,
 } from './types.js';
+
+// The planet-level Brand anchor (SKILL §10): one item per planet at
+// (amp.HeadNodeID, std.Attr.Brand, std.Attr.Brand.UID).  The channel is the
+// head node's base32 UID (canonic constant, not a hashed name); the item ID is
+// the amp.Brand attr's own UID — both pinned as goldens in
+// web-client.brand.test.ts against the generated consts.
+const HEAD_NODE_CHANNEL = '000-0000000000-0000000000-01r';
+const BRAND_ATTR = 'amp.Brand';
+const BRAND_ITEM_ID = '5r1-24qj5wjft5-vbp7wg1pf4-8ef';
 
 export interface AmpWebClientOpts {
   vaultUrl: string;       // operated node URL — e.g. https://prod.plan.tools
@@ -557,6 +572,91 @@ export class AmpWebClient implements AmpAdapter {
       body: JSON.stringify({ Exprs: exprs }),
     });
     return out.Results ?? [];
+  }
+
+  // ── NameService / federation directory (SKILL §4.6) ───────────────
+
+  /**
+   * Resolve a registered FQDN to the planet that serves it — POST
+   * /api/v1/resolve.  Anonymous (works signed-out): a fresh install or a
+   * deep-link source can dial + pin a named planet before it has any session.
+   * No record is AmpError 404 'NotFound'.  TrustState is load-bearing — never
+   * silently follow a non-Verified or Ambiguous answer.
+   */
+  async resolve(fqdn: string): Promise<ResolveResponse> {
+    return this.apiFetch<ResolveResponse>('/resolve', {
+      method: 'POST',
+      body: JSON.stringify({ FQDN: fqdn }),
+    });
+  }
+
+  /**
+   * Ranked best-effort search over the federations the session has joined —
+   * POST /api/v1/search.  Bearer: enumeration is membership-gated (the
+   * scraping surface), unlike the anonymous single-FQDN resolve().
+   */
+  async search(query: string, limit?: number): Promise<SearchMatch[]> {
+    const body: { Query: string; Limit?: number } = { Query: query };
+    if (limit && limit > 0) body.Limit = limit;
+    const out = await this.apiFetch<{ Matches: SearchMatch[] }>('/search', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return out.Matches ?? [];
+  }
+
+  /**
+   * The peer / parent pointers a federation enumerates for cross-federation
+   * forwarding — GET /api/v1/federation/peers?federation=<base32-UID>.
+   * Bearer; the federation UID is required (400 without it).
+   */
+  async federationPeers(federationID: string): Promise<FederationPeerEntry[]> {
+    const out = await this.apiFetch<{ Peers: FederationPeerEntry[] }>(
+      `/federation/peers?federation=${encodeURIComponent(federationID)}`,
+    );
+    return out.Peers ?? [];
+  }
+
+  // ── Brand (read-only substrate identity — SKILL §10) ──────────────
+
+  /**
+   * Read a planet's substrate Brand off its head-node anchor via the standard
+   * items rail, surfacing NamedBy + the resolver's TrustState verdict on the
+   * Brand's claimed AppDomain (resolved via resolve(); 'Unchecked' when no
+   * domain is claimed or no federation names it).  Resolves null when the
+   * planet carries no Brand (a naked home planet).  Display-only by rule:
+   * the Brand is admin-mutable and never a source of app behavior.
+   */
+  async getBrand(planetTag?: string): Promise<PlanetBrand | null> {
+    let item: WireItem;
+    try {
+      item = await this.apiFetch<WireItem>(
+        this.itemsPath(HEAD_NODE_CHANNEL, BRAND_ATTR, BRAND_ITEM_ID) + this.planetQuery(planetTag),
+      );
+    } catch (err) {
+      if (err instanceof AmpError && err.status === 404) {
+        return null;   // no Brand authored on this planet
+      }
+      throw err;
+    }
+
+    const brand = (item?.Value ?? {}) as Brand;
+    const namedBy = brand.Identity?.NamedBy?.UID ?? '';
+    let trustState: TrustState = 'Unchecked';
+    let resolution: ResolveResponse | undefined;
+    const domain = brand.Identity?.AppDomain ?? '';
+    if (domain) {
+      try {
+        resolution = await this.resolve(domain);
+        trustState = resolution.TrustState;
+      } catch (err) {
+        if (!(err instanceof AmpError && err.status === 404)) {
+          throw err;
+        }
+        // No federation names the claimed domain — the cold 'Unchecked' verdict stands.
+      }
+    }
+    return { brand, namedBy, trustState, resolution };
   }
 
   // ── Media ─────────────────────────────────────────────────────────

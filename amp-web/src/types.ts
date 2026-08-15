@@ -189,6 +189,151 @@ export interface TagResolution {
   ID: string;            // base32 tag.UID
 }
 
+// ── NameService / federation directory (wire shapes) ────────────────
+//
+// POST /api/v1/resolve (anonymous), POST /api/v1/search (Bearer),
+// GET /api/v1/federation/peers (Bearer) — mirroring amp.SDK/amp/webapi
+// (drift-guarded via the vault.json fixture).  See SKILL §4.6.
+
+/**
+ * The three-state back-edge verdict on a NameService record (amp.TrustState
+ * enum names; DD-name-service §3.3).  Load-bearing: never silently follow a
+ * non-Verified or Ambiguous answer — surface it and let the user choose.
+ */
+export type TrustState = 'Unchecked' | 'Verified' | 'Refuted';
+
+/** Where a planet's vault is dialable.  Address is base64 transport bytes (Go []byte), NOT a base32 UID. */
+export interface VaultEndpoint {
+  Transport: string;     // "tcp", "udp", "reticulum", …
+  Address: string;       // base64 transport-specific encoding
+}
+
+/** An exact-match FQDN → planet resolution (webapi.ResolveResponse). */
+export interface ResolveResponse {
+  FQDN: string;
+  PlanetID: string;             // base32 tag.UID — the planet the FQDN names
+  AnsweredBy: string;           // base32 tag.UID — the federation that answered
+  VaultAddrs?: VaultEndpoint[]; // dialable bootstrap addrs — returned in full by resolve
+  TrustState: TrustState;
+  PinPrecedence: boolean;
+  Ambiguous: boolean;           // >1 federation claims this FQDN
+  Hops: number;                 // forwarding hops to the answer
+}
+
+/** One ranked search result (webapi.SearchMatch — mirrors nameservice.Match + Snippet). */
+export interface SearchMatch {
+  PlanetID: string;
+  FQDN: string;
+  AnsweredBy: string;
+  Score: number;
+  AppName: string;
+  AppDesc: string;
+  Platforms?: string[];
+}
+
+/** A peer / parent pointer a federation enumerates for cross-federation forwarding. */
+export interface FederationPeerEntry {
+  FederationID: string;         // base32 tag.UID
+  VaultAddrs?: VaultEndpoint[];
+  Label?: string;
+}
+
+// ── Brand — substrate planet identity (wire shapes) ─────────────────
+//
+// One Brand item per planet at the head-node anchor (std.Attr.Brand), read
+// over the standard items rail.  DISPLAY-ONLY by rule (SKILL §10): admin-
+// mutable, so never a source of app behavior.
+
+/**
+ * The amp.Tag JSON wire shape (every field omitempty Go-side).  BlobRef is
+ * the media-specific view of the same wire Tag; this is the general form
+ * (Brand.Identity.NamedBy, Brand.TemplateSet).
+ */
+export interface AmpTag {
+  UID?: string;          // base32 tag.UID
+  I?: number;
+  J?: number;
+  K?: number;
+  Units?: number;
+  ContentTypeRaw?: string;
+  URI?: string;
+  Text?: string;
+}
+
+/** A planet's identity field set (amp.BrandIdentity). */
+export interface BrandIdentity {
+  AppName?: string;      // public name of the planet ("Tunr")
+  OrgName?: string;      // operator / sponsoring org ("SoundSpectrum")
+  AppDomain?: string;    // canonical domain the planet presents as
+  AppDesc?: string;
+  URLSchemes?: string[]; // deep-link schemes the planet answers to
+  NamedBy?: AmpTag;      // the federation naming this planet — the §4.6 back-edge
+}
+
+/** One per-platform install target (amp.AppTarget).  Platform is the PlatformID enum's wire integer. */
+export interface AppTarget {
+  Platform?: number;
+  DownloadURL?: string;
+  BundleID?: string;
+  MinOSVersion?: string;
+  AppleTeamID?: string;
+}
+
+/** One curated entry point (amp.AppLink). */
+export interface AppLink {
+  Label?: string;
+  URL?: string;
+}
+
+/** A crate reference (amp.CrateRef JSON: BlobID rides as base32). */
+export interface CrateRef {
+  CrateURI?: string;
+  BlobID?: string;
+}
+
+/** A planet's substrate Brand record (amp.Brand; admin-mutable → display-only). */
+export interface Brand {
+  Identity?: BrandIdentity;
+  OrgHomeURL?: string;
+  AppHomeURL?: string;
+  Targets?: AppTarget[];
+  CrateSnapshotURL?: string;
+  Links?: AppLink[];
+  BundledCrates?: CrateRef[];
+  TemplateSet?: AmpTag;
+}
+
+/**
+ * getBrand()'s composite result (SDK ergonomic shape).
+ *
+ * `trustState` is the host resolver's verdict on the Brand's CLAIMED
+ * `Identity.AppDomain` record — 'Unchecked' when the Brand claims no domain
+ * or no federation names it.  The verdict binds (FQDN → resolution.PlanetID),
+ * not the planet you queried: when `resolution.PlanetID` differs from your
+ * planet's UID, the domain claim points elsewhere — surface it, never render
+ * a Verified badge (TrustState is load-bearing, SKILL §4.6).
+ */
+export interface PlanetBrand {
+  brand: Brand;                  // the substrate Brand (display-only, SKILL §10)
+  namedBy: string;               // base32 federation UID from Brand.Identity.NamedBy ('' = unset)
+  trustState: TrustState;
+  resolution?: ResolveResponse;  // present when the claimed AppDomain resolved
+}
+
+/** useAmpResolve() result.  resolution === null with no error = no federation names that FQDN. */
+export interface AmpResolveResult {
+  resolution: ResolveResponse | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+/** useAmpBrand() result.  brand === null with no error = the planet carries no Brand (naked home planet). */
+export interface AmpBrandResult {
+  brand: PlanetBrand | null;
+  loading: boolean;
+  error: Error | null;
+}
+
 // ── Withdrawal & addresses ──────────────────────────────────────────
 
 export type WithdrawReason =

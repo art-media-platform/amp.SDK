@@ -17,18 +17,27 @@ export * as safe from './generated/safe.consts.js';
 // Core types
 export type {
   AmpAuth,
+  AmpBrandResult,
   AmpItemMeta,
   AmpMediaResult,
   AmpMember,
   AmpMutationResult,
   AmpQueryOpts,
   AmpQueryResult,
+  AmpResolveResult,
   AmpSession,
+  AmpTag,
   AmpUploadResult,
   Address,
+  AppLink,
+  AppTarget,
   BlobRef,
+  Brand,
+  BrandIdentity,
   ClaimAccountOpts,
+  CrateRef,
   EmailCredential,
+  FederationPeerEntry,
   InviteIssueOpts,
   InviteIssueResult,
   InviteAcceptOpts,
@@ -36,13 +45,18 @@ export type {
   InviteRevokeOpts,
   InviteListResult,
   LoginCredentials,
+  PlanetBrand,
   RedeemEmailOpts,
+  ResolveResponse,
+  SearchMatch,
   SubscriptionEvent,
   TagResolution,
+  TrustState,
   TxOp,
   TxOpKind,
   TxResult,
   UploadOpts,
+  VaultEndpoint,
   WalletChallenge,
   WithdrawNote,
   WithdrawOpts,
@@ -73,6 +87,8 @@ export { useAmpMutation } from './hooks/useAmpMutation.js';
 export { useAmpUpload } from './hooks/useAmpUpload.js';
 export { useAmpMedia } from './hooks/useAmpMedia.js';
 export { useAmpCrypto } from './hooks/useAmpCrypto.js';
+export { useAmpResolve } from './hooks/useAmpResolve.js';
+export { useAmpBrand } from './hooks/useAmpBrand.js';
 
 // Sealed-box BYOK — seal/open via the session-bound client (client.seal / .open)
 // or the useAmpCrypto() hook.  base64 helpers ride sealed bytes through JSON.

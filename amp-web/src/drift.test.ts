@@ -28,7 +28,7 @@ import { CryptoKitID } from './crypto/types.js';
 import { Attr, Session, type UID } from './generated/amp.std.consts.js';
 import { Crypto } from './generated/safe.consts.js';
 import { AmpWebClient } from './web-client.js';
-import type { AccessLevel, InvitePolicyEntry, WithdrawReason } from './types.js';
+import type { AccessLevel, InvitePolicyEntry, TrustState, WithdrawReason } from './types.js';
 
 // Fixture root, probed for both views this file ships in: the amp.SDK repo
 // (amp/webapi/testdata) and the amp-web-SDK bundle (pack.sh stages the same
@@ -184,7 +184,8 @@ const SHAPES: Record<string, ShapeSpec> = {
   GovernanceGrantResponse: { required: ['PlanetID', 'Channel'] },
 
   // Address is BASE64 — opaque transport bytes (Go []byte), NOT a base32 UID.
-  // No TS interface models the resolve/federation family yet.
+  // types.ts VaultEndpoint / ResolveResponse / SearchMatch /
+  // FederationPeerEntry mirror these (client.resolve/search/federationPeers).
   VaultEndpoint: { required: ['Transport', 'Address'] },
   ResolveRequest: { required: ['FQDN'] },
   ResolveResponse: {
@@ -251,7 +252,9 @@ const SHAPES: Record<string, ShapeSpec> = {
   },
   ForumsReserveResponse: { required: ['MemberID'] },
   // amp.Brand / amp.BrandIdentity (proto-generated; every field omitempty).
-  // Targets/Links/BundledCrates elements are unexercised by fixtures today.
+  // types.ts mirrors them read-side (client.getBrand over the items rail);
+  // the operator WRITE verbs above stay Go-only.  Targets/Links/BundledCrates
+  // elements are unexercised by fixtures today.
   Brand: {
     required: [],
     optional: ['Identity', 'OrgHomeURL', 'AppHomeURL', 'Targets',
@@ -456,6 +459,10 @@ const INVITE_STATUSES = [
   'InviteActive', 'InviteRevoked',
 ] as const satisfies readonly InvitePolicyEntry['Status'][];
 
+const TRUST_STATES = [
+  'Unchecked', 'Verified', 'Refuted',
+] as const satisfies readonly TrustState[];
+
 describe('enum-name goldens', () => {
   const golden = loadFixture('access.json') as {
     AccessLevels: string[];
@@ -476,8 +483,9 @@ describe('enum-name goldens', () => {
     expect(golden.InviteStatuses).toEqual([...INVITE_STATUSES]);
   });
 
-  // TrustStates golden is Go-verified only: no TS type models the resolve
-  // family yet (see ResolveResponse note above).
+  it('TrustState union matches the golden', () => {
+    expect(golden.TrustStates).toEqual([...TRUST_STATES]);
+  });
 });
 
 // ── CryptoKitID golden ───────────────────────────────────────────────

@@ -13,6 +13,7 @@ import type {
   AmpSession,
   BlobRef,
   ClaimAccountOpts,
+  FederationPeerEntry,
   InviteAcceptOpts,
   InviteAcceptResult,
   InviteIssueOpts,
@@ -20,7 +21,10 @@ import type {
   InviteListResult,
   InviteRevokeOpts,
   LoginCredentials,
+  PlanetBrand,
   RedeemEmailOpts,
+  ResolveResponse,
+  SearchMatch,
   SubscriptionEvent,
   TagResolution,
   TxOp,
@@ -110,6 +114,22 @@ export interface AmpAdapter {
 
   resolveTag(expr: string): Promise<TagResolution>;
   resolveTags(exprs: string[]): Promise<TagResolution[]>;
+
+  // ── NameService / federation directory (SKILL §4.6) ───────────────
+
+  /** Resolve a registered FQDN to its planet (anonymous; AmpError 404 = no record).  TrustState is load-bearing. */
+  resolve(fqdn: string): Promise<ResolveResponse>;
+
+  /** Ranked search over the session's joined federations (Bearer; membership-gated enumeration). */
+  search(query: string, limit?: number): Promise<SearchMatch[]>;
+
+  /** A federation's peer / parent pointers for cross-federation forwarding (Bearer; UID required). */
+  federationPeers(federationID: string): Promise<FederationPeerEntry[]>;
+
+  // ── Brand (read-only substrate identity — SKILL §10) ──────────────
+
+  /** A planet's substrate Brand + NamedBy + the resolver's TrustState verdict on its claimed AppDomain; null = no Brand authored.  Display-only. */
+  getBrand(planetTag?: string): Promise<PlanetBrand | null>;
 
   // ── Media ─────────────────────────────────────────────────────────
 
