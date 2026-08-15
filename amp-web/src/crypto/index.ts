@@ -83,3 +83,14 @@ export function createAmpCrypto(): AmpCrypto {
 export { CryptoKitID } from './types.js';
 export type { AmpCrypto, KeyPair, KitOps, PubKeyRef } from './types.js';
 export { base64ToBytes, bytesToBase64 } from './base64.js';
+export {
+  PhraseChecksumSize,
+  PhraseWordCount,
+  decodePhrase,
+  derivePhraseKey,
+  encodePhrase,
+  parsePhrase,
+  phraseToString,
+  phraseWordAt,
+  phraseWordIndex,
+} from './phrase.js';

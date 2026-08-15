@@ -81,6 +81,21 @@ export { useAmpCrypto } from './hooks/useAmpCrypto.js';
 export { CryptoKitID, base64ToBytes, bytesToBase64, open, seal } from './crypto/index.js';
 export type { AmpCrypto, KeyPair, KitOps, PubKeyRef } from './crypto/index.js';
 
+// safe.Phrase — the canonical identity-seed export vocabulary (SD-did-identity
+// §12.1); byte-compatible with the Go codec, so a phrase written down in one
+// AMP app restores in any other.
+export {
+  PhraseChecksumSize,
+  PhraseWordCount,
+  decodePhrase,
+  derivePhraseKey,
+  encodePhrase,
+  parsePhrase,
+  phraseToString,
+  phraseWordAt,
+  phraseWordIndex,
+} from './crypto/index.js';
+
 // Device-local EncryptKey storage (auto-managed on login; override to customize)
 export {
   IndexedDBKeyStorage,

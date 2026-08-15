@@ -3,6 +3,7 @@ package safe_test
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/hex"
 	"strings"
 	"testing"
 
@@ -192,6 +193,71 @@ func TestPhrase_KeyPairRejectsBadChecksum(t *testing.T) {
 	}
 	if _, err := safe.KeyPairFromPhrase(bad, spec, "founder-sig"); err == nil {
 		t.Fatal("expected checksum rejection before key derivation")
+	}
+}
+
+// Golden phrase vectors — generated ONCE from this package and checked in as
+// literals here and in amp-web/src/crypto/phrase.test.ts.  Both suites pin the
+// SAME vectors: byte-identical round-trips on both sides are the wordlist's
+// freeze contract (SD-did-identity §12.1), so any byte motion in the generated
+// PhraseWords const trips both.
+const phraseGoldenPurpose = "golden.purpose.v1"
+
+var phraseGolden = []struct {
+	seedHex string
+	words   string
+	keyHex  string // DeriveKey(phraseGoldenPurpose)
+}{
+	{
+		seedHex: "000102030405060708090a0b0c0d0e0f",
+		words: "able acid acre agent album alert alien alloy amber anchor angel anger ankle apple arena armor " +
+			"scout laser calm planet",
+		keyHex: "1a9b422a2e49008ffb5f7703b8bc0e1eda0af571549213cf23d8c3ff4d5f6a4e",
+	},
+	{
+		seedHex: "9f8e7d6c5b4a39281706f5e4d3c2b1a0ff00eeddccbbaa998877665544332211",
+		words: "fuel evil dome cotton chest cable born bird baby alien sonic river otter linen helmet galaxy " +
+			"swan able satin poem needle jelly grove flower edge dawn cobra cedar buddy boat beam atlas " +
+			"angel forge black hickory",
+		keyHex: "c33407ee95831f951c4fed138bd5b1bd89ada41b4487d4a67dfa7bd819ab0670",
+	},
+}
+
+// phraseGolden[0]'s phrase with word[0] swapped for wordlist[1] — a verified
+// checksum mismatch, so rejection is deterministic on both sides.
+const phraseGoldenReject = "acid acid acre agent album alert alien alloy amber anchor angel anger ankle apple arena armor " +
+	"scout laser calm planet"
+
+func TestPhrase_GoldenVectors(t *testing.T) {
+	for gi, golden := range phraseGolden {
+		seed, err := hex.DecodeString(golden.seedHex)
+		if err != nil {
+			t.Fatal(err)
+		}
+		phrase := safe.EncodePhrase(seed)
+		if phrase.String() != golden.words {
+			t.Fatalf("vector %d: encode mismatch:\n got %q\nwant %q", gi, phrase.String(), golden.words)
+		}
+		decoded, err := safe.DecodePhrase(safe.ParsePhrase(golden.words))
+		if err != nil {
+			t.Fatalf("vector %d: decode: %v", gi, err)
+		}
+		if !bytes.Equal(decoded, seed) {
+			t.Fatalf("vector %d: decode mismatch: got %x want %x", gi, decoded, seed)
+		}
+		key, err := phrase.DeriveKey(phraseGoldenPurpose)
+		if err != nil {
+			t.Fatalf("vector %d: derive: %v", gi, err)
+		}
+		if hex.EncodeToString(key) != golden.keyHex {
+			t.Fatalf("vector %d: derived key mismatch: got %x want %s", gi, key, golden.keyHex)
+		}
+	}
+}
+
+func TestPhrase_GoldenChecksumReject(t *testing.T) {
+	if _, err := safe.DecodePhrase(safe.ParsePhrase(phraseGoldenReject)); err == nil {
+		t.Fatal("expected checksum rejection on the golden word-swap phrase")
 	}
 }
 
