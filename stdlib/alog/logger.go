@@ -184,19 +184,21 @@ const (
 
 	// labelColumnMin is the floor the source column pads to: the gutter never narrows
 	// below this, so short labels stay aligned and the column doesn't start from zero
-	// and creep wider line by line.  A dot-grid stop (see gridWidth).
-	labelColumnMin = 23
+	// and creep wider line by line.  Set high enough that real sources (id + label)
+	// land under it, so the width holds still and the relax machinery is a backstop
+	// for pathological labels, not a per-page event.  A dot-grid stop (see gridWidth).
+	labelColumnMin = 39
 
 	// labelColumnMax caps the source column so one wide label can't swallow the message
 	// column; a source longer than this overflows without realigning the rest.
 	// A dot-grid stop, like labelColumnMin (see gridWidth).
-	labelColumnMax = 43
+	labelColumnMax = 63
 
 	// widthRelaxLines is how long a width persists before the column relaxes toward the
-	// widest source actually seen in that window (never to zero) — long enough that the
-	// gutter settles instead of fighting between narrow and wide, short enough that one
-	// wide label doesn't hold the pad hostage for pages.
-	widthRelaxLines = 100
+	// widest source actually seen in that window (never to zero).  High: a moving gutter
+	// is the distraction the floor exists to prevent, so an over-floor excursion holds
+	// for pages and decays once, rather than the column flapping between grid stops.
+	widthRelaxLines = 400
 )
 
 const ellipsis = "…"
