@@ -4,11 +4,53 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"golang.org/x/crypto/hkdf"
 )
+
+// PhraseWordCount is the fixed size of the canonical wordlist used by Phrase.
+// Power-of-two sizing yields a clean bits-per-word ratio (8 bits/word → byte-aligned entropy).
+const PhraseWordCount = 256
+
+// phraseLookup maps word → index for O(1) decode.  The wordlist itself is the
+// generated PhraseWords const (safe.consts.sdl — SD-did-identity §12.1).
+var phraseLookup = func() map[string]uint8 {
+	list := phraseList()
+	if len(list) != PhraseWordCount {
+		panic("safe: PhraseWords must contain exactly PhraseWordCount words; got " + strconv.Itoa(len(list)))
+	}
+	lookup := make(map[string]uint8, PhraseWordCount)
+	for i, w := range list {
+		if _, exists := lookup[w]; exists {
+			panic("safe: PhraseWords contains duplicate: " + w)
+		}
+		lookup[w] = uint8(i)
+	}
+	return lookup
+}()
+
+func phraseList() []string {
+	return strings.Fields(PhraseWords)
+}
+
+// PhraseWordAt returns the canonical word at the given index (0..PhraseWordCount-1).
+// Panics if idx is out of range.
+func PhraseWordAt(idx int) string {
+	list := phraseList()
+	return list[idx]
+}
+
+// PhraseWordIndex returns the index of word in the canonical wordlist,
+// or -1 if word is not present. Word matching is case-sensitive.
+func PhraseWordIndex(word string) int {
+	if idx, ok := phraseLookup[word]; ok {
+		return int(idx)
+	}
+	return -1
+}
 
 // PhraseChecksumSize is the number of checksum bytes appended before encoding.
 // Each word carries 8 bits (PhraseWordCount=256), so the checksum adds

@@ -14,3 +14,18 @@ export const Crypto = {
     P256     : { id: [0x188DC92BB63ACCBDn, 0xE22053F8FFA3A09Fn], text: "amp.crypto.p256" },  // 0sj-r4krejutky-y482mz3zu7-84z
     Secp256k1: { id: [0x1906FAF4F88AB854n, 0x6328B92D89014254n], text: "amp.crypto.secp256k1" },  // 0t0-vxg9y4br1b-66b5t5q4h2-hkn
 } satisfies Record<string, TagName>;
+
+// ─── Phrase — the canonical safe.Phrase vocabulary (SD-did-identity §12.1): a ───
+// phrase written down in one AMP app must restore in any other, so every
+// consumer (Go, C#, web) parses this ONE whitespace-separated string at
+// runtime.  Properties:
+//   - exactly 256 unique words (8 bits/word → byte-aligned entropy)
+//   - short (3–7 characters), common, casual-English familiar
+//   - no homophones, no near-duplicates on the first three characters
+//   - alphabetized for reviewability
+// Any change to this list is a breaking change — existing phrases become
+// unparseable; the golden fixtures in stdlib/safe and amp-web trip on any
+// byte motion here.
+export const Phrase = {
+    Words: "\nable acid acre agent album alert alien alloy amber anchor angel anger ankle apple arena armor\nartist atlas atom auto avid awake axis baby bacon badge baker balm band bark barn base\nbath beach beam bear bench berry bike bill bird black blade blaze bliss block blood bloom\nblue blur board boat bold bolt bone book boot born bottle brain brass brave bread brick\nbridge brook brown brush buddy budget build bulb bunny cabin cable cake calm camel camera candy\ncanyon cargo carrot castle cave cedar cello center chain chair cherry chest chime chip chorus church\ncider circle cliff clock cloud coast cobra cocoa comet copper coral cosmic cotton couch cradle crane\ncrate crown crystal cube daisy dance dart dawn deep desk diamond disco doll dome donut dove\ndozen drift drum dune dusk eagle earth echo edge eight ember emerald energy ether evil falcon\nfeast feather felt ferry field flag flame fleece flock flower flute focus forge frame frost fuel\ngalaxy gate giant glacier globe glow golden grape gravel green grove guard harbor harvest hatch hawk\nheart helmet hero hickory honey hood horizon horn island ivory jade jelly kelp kitten ladder lantern\nlaser lemon linen lotus lunar magnet maple marble meadow melon mint moss needle nickel north ocean\nolive opal orchid otter oyster paper parade peach pebble petal pine pixel planet poem puzzle quartz\nquiet radio raven ribbon river robot rodeo rope rose rust saber sable safari salt satin scout\nshadow silver smoke snow solar sonic spark spire spruce star steel stone storm sugar summit swan\n",
+} as const;
