@@ -55,6 +55,25 @@ each carries `_FromID`, the author; see Attribution below.)
   whether or not the email is bound to a member; the magic-link email is the only
   channel that signals existence (to the real inbox owner).
 
+### Key custody on the web rail
+
+For every web login — wallet, DID, and email alike — the host mints and holds a
+**node-custodial AMP signing key** for the member. Your wallet signature or
+`did:key` proves control of the login identity to the HTTP endpoint; it is
+**not** the member's substrate signing key, which lives host-side along with the
+member's planet epoch keys. Consequences to design around:
+
+- **Losing the login credential is an authentication loss, not a key loss.**
+  The host's keys for the member still exist — there is simply no way left to
+  prove ownership of them. For a `did:key` member this is permanent: the
+  MemberID is the hash of the key URI and can never be re-bound.
+- **The host is a trusted custodian of a web member's content keys.** The
+  sealed-box BYOK below is the exception — its private key is device-local and
+  never reaches the host — which is exactly why it exists.
+- Client-side sealing (the member's device signs, the node verifies and
+  relays) exists on the native CLI/TCP rail and is the eventual web-rail
+  custody upgrade; do not assume it in a web app today.
+
 ---
 
 ## Session tokens in URLs
@@ -91,7 +110,7 @@ What that storage means:
   expires or is revoked — your app's CSP / XSS posture is part of the session
   trust boundary. Ship a strict CSP.
 - **The server bounds the exposure, not the client.** The token is an
-  opaque 32-byte (256-bit) random Bearer with a host-side expiry (`ExpiresAt`); logout
+  opaque 16-byte (128-bit) random Bearer with a host-side expiry (`ExpiresAt`); logout
   drops it server-side, and the SDK clears the persisted copy on `logout()`
   and on any 401. A JS string cannot be zeroized in place — expiry and
   revocation are the real backstops.
