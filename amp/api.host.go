@@ -39,6 +39,14 @@ type TransportInfo struct {
 	// If set, the host must perform challenge-response authentication before granting access.
 	// True for remote transports (e.g. TCP), false for local/embedded transports (e.g. lib).
 	RequiresAuth bool
+
+	// If set, the host trusts sessions on this transport as node operators — the
+	// node-custodian capability behind operator-only actions (e.g. node-local
+	// planet drop).  Set ONLY by transports the host itself runs as its operator
+	// rail (embedded/in-proc, host-owned service sessions); a bridge or proxy
+	// transport fronting remote callers never sets it, and it is never derived
+	// from RequiresAuth or challenge posture (SD-security-sync §8.5).
+	OperatorRail bool
 }
 
 // Transport wraps a TxMsg transport abstraction, allowing a Host to connect over any data transport layer.
@@ -290,11 +298,15 @@ type HostSession interface {
 // rejects, and nothing about the rejected first contact persists.  Both
 // AdoptDeclared and ChallengeRequired derive from the same transport predicate
 // in the login handler, so "adoption ⇒ verified proof-of-possession" holds
-// structurally, never by flag convention (SD-security-sync §8.5).
+// structurally, never by flag convention (SD-security-sync §8.5).  NodeOperator
+// is NOT key custody: it carries the transport's operator-rail declaration
+// (TransportInfo.OperatorRail) through the session, and MintNodeKey never
+// implies it — a challenge-free login is a custody fact, not operator trust.
 type KeyAdmission struct {
 	ChallengeRequired bool // a challenge is issued AND verified this login
 	AdoptDeclared     bool // import the client-declared pubkey, pub-only
 	MintNodeKey       bool // generate a node-held keypair (node-custodial only)
+	NodeOperator      bool // session may take node-operator actions (transport-declared)
 }
 
 // ACCEngine is the host's access-control resolver: it answers "who may do what" from a
