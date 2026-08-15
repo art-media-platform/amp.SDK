@@ -110,10 +110,16 @@ What that storage means:
   expires or is revoked — your app's CSP / XSS posture is part of the session
   trust boundary. Ship a strict CSP.
 - **The server bounds the exposure, not the client.** The token is an
-  opaque 16-byte (128-bit) random Bearer with a host-side expiry (`ExpiresAt`); logout
+  opaque 32-byte (256-bit) random Bearer with a host-side expiry (`ExpiresAt`); logout
   drops it server-side, and the SDK clears the persisted copy on `logout()`
-  and on any 401. A JS string cannot be zeroized in place — expiry and
-  revocation are the real backstops.
+  and on any 401. A JS string cannot be zeroized in place — the flat expiry
+  (no refresh) and host-side revocation bound a leaked token's life: beyond
+  per-token logout, the host persists a per-member session GENERATION, every
+  token records the generation it was minted under, and validation requires a
+  match — so the operator's `POST /api/v1/admin/session/revoke` ("sign out
+  everywhere") invalidates every outstanding token for the member instantly,
+  surviving host restarts. The SDK needs nothing new: a revoked token reads
+  as 401 and the normal re-login path runs.
 - **No key material rides with it.** The session record is the Bearer + public
   member facts; the EncryptKey lives in its own store and never enters the
   session record.
