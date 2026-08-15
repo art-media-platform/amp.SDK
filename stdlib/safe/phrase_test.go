@@ -211,14 +211,14 @@ var phraseGolden = []struct {
 	{
 		seedHex: "000102030405060708090a0b0c0d0e0f",
 		words: "able acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist " +
-			"sonic magnet candy radio",
+			"stone moss canyon rope",
 		keyHex: "1a9b422a2e49008ffb5f7703b8bc0e1eda0af571549213cf23d8c3ff4d5f6a4e",
 	},
 	{
 		seedHex: "9f8e7d6c5b4a39281706f5e4d3c2b1a0ff00eeddccbbaa998877665544332211",
-		words: "globe ferry drum crown cider calm brain black bacon alien stone rust pebble marble horizon glow " +
-			"zebra able solar raven opal laser hawk frost ether doll cosmic cherry build bolt bear atom " +
-			"angel gate blade island",
+		words: "grove flower eagle daisy cliff camel brass black bacon alien torch shadow puzzle nickel kelp guard " +
+			"zebra able steel rose peach maple hood globe felt dove cradle chest bulb bone bear atom " +
+			"angel grape blade ladder",
 		keyHex: "c33407ee95831f951c4fed138bd5b1bd89ada41b4487d4a67dfa7bd819ab0670",
 	},
 }
@@ -226,7 +226,7 @@ var phraseGolden = []struct {
 // phraseGolden[0]'s phrase with word[0] swapped for wordlist[1] — a verified
 // checksum mismatch, so rejection is deterministic on both sides.
 const phraseGoldenReject = "acid acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist " +
-	"sonic magnet candy radio"
+	"stone moss canyon rope"
 
 func TestPhrase_GoldenVectors(t *testing.T) {
 	for gi, golden := range phraseGolden {
@@ -285,14 +285,14 @@ func TestPhrase_WordlistInvariants(t *testing.T) {
 // properties safe.consts.sdl claims (280 D-wordlist-prefix-claims): every
 // word is unique on its first FOUR characters (abbreviation entry needs at
 // least four typed characters — three-char prefixes are NOT unique),
-// 3–7 characters long, and the list is alphabetized.
+// 4–7 characters long, and the list is alphabetized.
 func TestPhrase_WordlistPrefixUnique4(t *testing.T) {
 	prefixes := make(map[string]string, safe.PhraseWordCount)
 	prev := ""
 	for i := range safe.PhraseWordCount {
 		word := safe.PhraseWordAt(i)
-		if len(word) < 3 || len(word) > 7 {
-			t.Errorf("word %q: length %d outside 3-7", word, len(word))
+		if len(word) < 4 || len(word) > 7 {
+			t.Errorf("word %q: length %d outside 4-7", word, len(word))
 		}
 		if word <= prev {
 			t.Errorf("word %q: not alphabetized after %q", word, prev)

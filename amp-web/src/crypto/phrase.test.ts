@@ -29,15 +29,15 @@ const GOLDEN = [
     seed: '000102030405060708090a0b0c0d0e0f',
     words:
       'able acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist ' +
-      'sonic magnet candy radio',
+      'stone moss canyon rope',
     key: '1a9b422a2e49008ffb5f7703b8bc0e1eda0af571549213cf23d8c3ff4d5f6a4e',
   },
   {
     seed: '9f8e7d6c5b4a39281706f5e4d3c2b1a0ff00eeddccbbaa998877665544332211',
     words:
-      'globe ferry drum crown cider calm brain black bacon alien stone rust pebble marble horizon glow ' +
-      'zebra able solar raven opal laser hawk frost ether doll cosmic cherry build bolt bear atom ' +
-      'angel gate blade island',
+      'grove flower eagle daisy cliff camel brass black bacon alien torch shadow puzzle nickel kelp guard ' +
+      'zebra able steel rose peach maple hood globe felt dove cradle chest bulb bone bear atom ' +
+      'angel grape blade ladder',
     key: 'c33407ee95831f951c4fed138bd5b1bd89ada41b4487d4a67dfa7bd819ab0670',
   },
 ];
@@ -46,7 +46,7 @@ const GOLDEN = [
 // checksum mismatch, so rejection is deterministic.
 const GOLDEN_REJECT =
   'acid acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist ' +
-  'sonic magnet candy radio';
+  'stone moss canyon rope';
 
 describe('Go↔TS safe.Phrase golden vectors', () => {
   it.each(GOLDEN)('encodes seed $seed to the golden words', ({ seed, words }) => {
@@ -110,5 +110,23 @@ describe('safe.Phrase codec', () => {
       expect(phraseWordIndex(word)).toBe(idx);
     }
     expect(phraseWordIndex('NotInList')).toBe(-1);
+  });
+
+  // Mirrors stdlib/safe TestPhrase_WordlistPrefixUnique4: the properties
+  // safe.consts.sdl claims — unique on the first FOUR characters (three-char
+  // prefixes are NOT unique), 4–7 characters long, alphabetized.
+  it('holds the wordlist prefix, length, and order claims', () => {
+    const prefixes = new Map<string, string>();
+    let prev = '';
+    for (let idx = 0; idx < PhraseWordCount; idx++) {
+      const word = phraseWordAt(idx);
+      expect(word.length, `word ${word}: length outside 4-7`).toBeGreaterThanOrEqual(4);
+      expect(word.length, `word ${word}: length outside 4-7`).toBeLessThanOrEqual(7);
+      expect(word > prev, `word ${word}: not alphabetized after ${prev}`).toBe(true);
+      prev = word;
+      const prefix = word.slice(0, 4);
+      expect(prefixes.has(prefix), `4-char prefix collision: ${word} vs ${prefixes.get(prefix)}`).toBe(false);
+      prefixes.set(prefix, word);
+    }
   });
 });
