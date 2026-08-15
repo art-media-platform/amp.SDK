@@ -29,15 +29,15 @@ const GOLDEN = [
     seed: '000102030405060708090a0b0c0d0e0f',
     words:
       'able acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist ' +
-      'stone moss canyon rope',
+      'storm nickel canyon rose',
     key: '1a9b422a2e49008ffb5f7703b8bc0e1eda0af571549213cf23d8c3ff4d5f6a4e',
   },
   {
     seed: '9f8e7d6c5b4a39281706f5e4d3c2b1a0ff00eeddccbbaa998877665544332211',
     words:
-      'grove flower eagle daisy cliff camel brass black bacon alien torch shadow puzzle nickel kelp guard ' +
-      'zebra able steel rose peach maple hood globe felt dove cradle chest bulb bone bear atom ' +
-      'angel grape blade ladder',
+      'harbor focus echo dart cloud camel brass black bacon alien torch silver quiet ocean ladder harvest ' +
+      'zebra able stone rust petal meadow horn golden field drift crate chime bulb bone bear atom ' +
+      'angel green blade laser',
     key: 'c33407ee95831f951c4fed138bd5b1bd89ada41b4487d4a67dfa7bd819ab0670',
   },
 ];
@@ -46,7 +46,7 @@ const GOLDEN = [
 // checksum mismatch, so rejection is deterministic.
 const GOLDEN_REJECT =
   'acid acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist ' +
-  'stone moss canyon rope';
+  'storm nickel canyon rose';
 
 describe('Go↔TS safe.Phrase golden vectors', () => {
   it.each(GOLDEN)('encodes seed $seed to the golden words', ({ seed, words }) => {
