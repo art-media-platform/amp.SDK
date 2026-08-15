@@ -35,6 +35,7 @@ const (
 	SigningDomain_VaultNode    SigningDomain = "amp.sig.vault.v1"  // node/device vault-transport handshake proof (vault.identity)
 	SigningDomain_InviteRedeem SigningDomain = "amp.sig.invite.v1" // invite redemption proof — RedeemKey binds a redemption to its invite policy (app.invite)
 	SigningDomain_FounderSet   SigningDomain = "amp.fp.founders.v1" // founder-set fingerprint — hash commitment to a planet's genesis founder authority root (amp.FounderFingerprint)
+	SigningDomain_MemberReKey  SigningDomain = "amp.sig.rekey.v1"  // member re-key quorum co-signature over the re-key digest (amp.MemberEpoch.ReKey; SD-member-rekey)
 )
 
 // AllSigningDomains enumerates every registered SigningDomain — the audit
@@ -48,6 +49,7 @@ var AllSigningDomains = []SigningDomain{
 	SigningDomain_VaultNode,
 	SigningDomain_InviteRedeem,
 	SigningDomain_FounderSet,
+	SigningDomain_MemberReKey,
 }
 
 // SigningDomainTag returns the length-prefixed domain bytes that prefix every

@@ -965,6 +965,25 @@ message MemberEpoch {
     // (ensembles descending from multiple prior identities; AI agents trained
     // on multiple ancestor chronicles; reconstituted backups).
     repeated Address    ContinuesFrom = 34;
+
+    // Quorum co-signatures authorizing a governance re-key of this member (a
+    // member who lost their key is re-issued a new signing identity).  Each
+    // signature covers the re-key digest (MemberEpoch.ReKeyCoSignatureDigest):
+    // planet + member + the retired ReKeyPrior + the new SigningKey and
+    // EncryptKey, under safe.SigningDomain_MemberReKey.  The threshold mirrors
+    // epoch rotation — the genesis-frozen Charter.GenesisRequiredSignatures
+    // (0 = all founders); the quorum, not the submitting author, is the
+    // authority, and the vault key cache re-verifies it independently against
+    // the pinned founder keys.  (AOM SD-member-rekey.md.)
+    repeated CoSignature ReKey = 35;
+
+    // The signing KeyRef this re-key retires — the prior-key half of the
+    // signed re-key digest, carried so any verifier reconstructs the digest
+    // from the record alone.  The vault admits the key swap only when it
+    // equals the member's cached current SigningKey, so a re-key blob replayed
+    // after a later rotation names a stale key and is refused (the replay
+    // guard).  Set ONLY alongside ReKey.
+    safe.KeyRef         ReKeyPrior = 36;
 }
 
 
