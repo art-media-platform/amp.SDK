@@ -307,6 +307,14 @@ type KeyAdmission struct {
 	AdoptDeclared     bool // import the client-declared pubkey, pub-only
 	MintNodeKey       bool // generate a node-held keypair (node-custodial only)
 	NodeOperator      bool // session may take node-operator actions (transport-declared)
+
+	// GovernanceKey is the signing key an admitted MemberEpoch currently
+	// records for the member on the login planet (zero when none resolves).
+	// The member's pub-only Enclave record FOLLOWS it: after a quorum re-key
+	// the adopt path overwrites a stale pub-only key with the declared key the
+	// governance record now names — governance-recorded keys outrank
+	// TOFU-recorded ones, fail-closed (SD-member-rekey §5).
+	GovernanceKey safe.PubKey
 }
 
 // ACCEngine is the host's access-control resolver: it answers "who may do what" from a
