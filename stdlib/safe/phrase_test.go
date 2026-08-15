@@ -210,23 +210,23 @@ var phraseGolden = []struct {
 }{
 	{
 		seedHex: "000102030405060708090a0b0c0d0e0f",
-		words: "able acid acre agent album alert alien alloy amber anchor angel anger ankle apple arena armor " +
-			"scout laser calm planet",
+		words: "able acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist " +
+			"sonic magnet candy radio",
 		keyHex: "1a9b422a2e49008ffb5f7703b8bc0e1eda0af571549213cf23d8c3ff4d5f6a4e",
 	},
 	{
 		seedHex: "9f8e7d6c5b4a39281706f5e4d3c2b1a0ff00eeddccbbaa998877665544332211",
-		words: "fuel evil dome cotton chest cable born bird baby alien sonic river otter linen helmet galaxy " +
-			"swan able satin poem needle jelly grove flower edge dawn cobra cedar buddy boat beam atlas " +
-			"angel forge black hickory",
+		words: "globe ferry drum crown cider calm brain black bacon alien stone rust pebble marble horizon glow " +
+			"zebra able solar raven opal laser hawk frost ether doll cosmic cherry build bolt bear atom " +
+			"angel gate blade island",
 		keyHex: "c33407ee95831f951c4fed138bd5b1bd89ada41b4487d4a67dfa7bd819ab0670",
 	},
 }
 
 // phraseGolden[0]'s phrase with word[0] swapped for wordlist[1] — a verified
 // checksum mismatch, so rejection is deterministic on both sides.
-const phraseGoldenReject = "acid acid acre agent album alert alien alloy amber anchor angel anger ankle apple arena armor " +
-	"scout laser calm planet"
+const phraseGoldenReject = "acid acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist " +
+	"sonic magnet candy radio"
 
 func TestPhrase_GoldenVectors(t *testing.T) {
 	for gi, golden := range phraseGolden {
@@ -278,5 +278,33 @@ func TestPhrase_WordlistInvariants(t *testing.T) {
 	}
 	if safe.PhraseWordIndex("NotInList") != -1 {
 		t.Fatal("expected -1 for unknown word")
+	}
+}
+
+// TestPhrase_WordlistPrefixUnique4 mechanically enforces the wordlist
+// properties safe.consts.sdl claims (280 D-wordlist-prefix-claims): every
+// word is unique on its first FOUR characters (abbreviation entry needs at
+// least four typed characters — three-char prefixes are NOT unique),
+// 3–7 characters long, and the list is alphabetized.
+func TestPhrase_WordlistPrefixUnique4(t *testing.T) {
+	prefixes := make(map[string]string, safe.PhraseWordCount)
+	prev := ""
+	for i := range safe.PhraseWordCount {
+		word := safe.PhraseWordAt(i)
+		if len(word) < 3 || len(word) > 7 {
+			t.Errorf("word %q: length %d outside 3-7", word, len(word))
+		}
+		if word <= prev {
+			t.Errorf("word %q: not alphabetized after %q", word, prev)
+		}
+		prev = word
+		prefix := word
+		if len(prefix) > 4 {
+			prefix = prefix[:4]
+		}
+		if other, dup := prefixes[prefix]; dup {
+			t.Errorf("4-char prefix collision: %q vs %q", word, other)
+		}
+		prefixes[prefix] = word
 	}
 }
