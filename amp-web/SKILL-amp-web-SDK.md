@@ -281,7 +281,7 @@ they are URL params, not JSON body fields.
 
 `channel` and `attr` in the URL path can be either canonic names (`projects`, `labels`) or pre-resolved base32 UIDs — the server parses through `tag.Parse` so both forms work. On the wire, an absent `planetTag` resolves to the session's bound planet. Through the SDK, the client sends its constructor `planetTag` on every call by default; a per-call `planetTag` (e.g. `query(ch, attr, { planetTag })`) overrides it for that call — the cross-planet read (§5.7), anonymous against a registered share planet (§6.4). Either way the server is sole authority: a tag the session can't touch fails the epoch/ACC gates.
 
-**Current web-rail limitation:** encoded path characters are unsupported on the web API — a percent-encoded `/` (`%2F`) inside a `channel`/`attr`/`itemID` path segment, or a malformed percent-encoding, is refused with `400 BadRequest` naming this rule. Use dot-separated names (`shares.link`, not `shares/link`). This is a limitation of the web rail only, not attr-space law: the native attr space admits `/` in names.
+Encoded path characters are supported: the server splits the raw path and percent-decodes each `channel`/`attr`/`itemID` segment after the split, so an encoded `/` (`%2F`), `#` (`%23`), or `?` (`%3F`) lands in segment content and routes to the name it spells (`shares%2Flink` → attr `shares/link`) — web parity with the native attr space, which admits `/` in names. A malformed percent-encoding is refused with `400 BadRequest`. Dot-separated names (`shares.link`) remain a style option, not a requirement.
 
 ```typescript
 interface Item {
@@ -848,7 +848,7 @@ POST /api/v1/tag/resolve   Body: { Exprs: [...] }   → { Results: [{ Expr, Cano
 - `(channel, attr)` is a logical bucket addressing CRDT items via `tag.UID`. Both names are tag.UIDs derived from string identifiers (forge-keycomb generated).
 - Well-known names live in `amp.std.consts.sdl` under `amp.law/*`, `amp.ledger/*`, `amp.member/*`, `amp.home/*`, `amp.blob/*`, `channel/*`, `item/*`, `session/*`. App-specific names are added in the app's own `consts.sdl` and regenerated via `make generate`. The TS build of that vocabulary ships in this SDK: `import { std } from '@art-media-platform/web'` (§5.8).
 - App-specific names should use a deploy-prefix (e.g. `maplable.projects` rather than bare `projects`) to avoid collision with future shared names.
-- Names containing `/` are legal in the native attr space but currently unreachable through the web API — encoded path characters are unsupported on the web rail (§4.2); use dot-separated names.
+- Names containing `/` are legal in the native attr space and reachable through the web API by percent-encoding the segment (`shares%2Flink`, §4.2); dot-separated names remain a style option.
 
 **Maplable's channel layout (the worked example throughout this SKILL):**
 
