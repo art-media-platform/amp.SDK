@@ -2430,7 +2430,7 @@ func (x *LoginCheckpoint) GetURI() string {
 // present and disagree, BrandMark wins (it is the quorum-signed authority).
 type BrandIdentity struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Public name of the planet ("Tunr", "Pentagon", "The Martinez treehouse").
+	// Public name of the planet ("Tunr", "Hexosphere", "Grandma's Record Shelf").
 	AppName string `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`
 	// Operator / sponsoring organization name ("SoundSpectrum").
 	OrgName string `protobuf:"bytes,2,opt,name=OrgName,proto3" json:"OrgName,omitempty"`

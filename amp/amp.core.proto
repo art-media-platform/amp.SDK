@@ -467,7 +467,7 @@ enum PrivacyMode {
 // present and disagree, BrandMark wins (it is the quorum-signed authority).
 message BrandIdentity {
 
-    // Public name of the planet ("Tunr", "Pentagon", "The Martinez treehouse").
+    // Public name of the planet ("Tunr", "Hexosphere", "Grandma's Record Shelf").
     string              AppName = 1;
 
     // Operator / sponsoring organization name ("SoundSpectrum").
