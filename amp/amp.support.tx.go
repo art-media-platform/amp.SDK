@@ -192,21 +192,47 @@ func (tx *TxMsg) LoadValue(want *tag.Address, dst proto.Message) error {
 	return tx.UnmarshalOpValue(idx, dst)
 }
 
-// Normalizes and validates a TxMsg prior to handling.
+// Normalize validates and canonicalizes a TxMsg prior to handling — the
+// session/authoring rail's gate (peer-wire ingest never calls it; the
+// materializer validates per op, order-free).  After a nil return:
+//
+//  1. every op's Addr.EditID is set;
+//  2. tx.Ops is strictly ascending by full Address — a duplicate full address
+//     rejects: within one authored tx every op shares EditID = TxID, so two
+//     writes to one element would fold as same-identity divergent bytes, an
+//     arrival-order hazard (SD-edit-resolution §6.2);
+//  3. every op's value span [DataOfs, DataOfs+DataLen) lies inside DataStore
+//     with no uint64 wrap — an out-of-range span previously skipped silently
+//     at each read site;
+//  4. Normalized is process-local: every decode exit resets it, so a wire
+//     peer can never assert pre-normalization.
+//
+// Out of scope, enforced at their own doors: value-header admission (commit
+// intake + the materializer, SD-edit-resolution §6.1), signature/AEAD
+// verification (OpenTx), size ceilings, and Tag syntax (checkTagSyntax).
 func (tx *TxMsg) Normalize(force bool) error {
 	if !force && tx.Normalized {
 		return nil
 	}
-	for _, op := range tx.Ops {
+	storeLen := uint64(len(tx.DataStore))
+	for i := range tx.Ops {
+		op := &tx.Ops[i]
 		if op.Addr.EditID.IsNil() {
 			return status.ErrBadTxEdit
+		}
+		spanEnd := op.DataOfs + op.DataLen
+		if spanEnd < op.DataOfs || spanEnd > storeLen {
+			return status.ErrBadTxOp
 		}
 	}
 	sort.Slice(tx.Ops, func(i, j int) bool {
 		return tx.Ops[i].Addr.Compare(&tx.Ops[j].Addr) < 0
 	})
-
-	// TODO: validate other parts of TxMsg?
+	for i := 1; i < len(tx.Ops); i++ {
+		if tx.Ops[i-1].Addr.Compare(&tx.Ops[i].Addr) == 0 {
+			return status.ErrBadTxOp
+		}
+	}
 
 	tx.Normalized = true
 	return nil
