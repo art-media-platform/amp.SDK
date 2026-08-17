@@ -588,6 +588,9 @@ func (l *logger) Infof(level int32, f string, a ...any) {
 // A repeated signal is never a no-op, at any interval.  A caller wanting only
 // graceful stop ignores repeated; a caller needing a hard exit bound arms its own
 // watchdog off these stages rather than re-implementing the ladder.
+//
+// A general-purpose tool for any daemon consuming this SDK; kept by ruling with
+// no in-tree consumer (ampd owns its own richer contract — AOM O2 §2.1).
 func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 	onFirst := make(chan struct{})
 	onRepeated := make(chan struct{})
