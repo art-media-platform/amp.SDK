@@ -148,11 +148,10 @@ func sign(msg []byte, signerPrvKey []byte) ([]byte, error) {
 		return nil, status.Code_BadKeyFormat.Errorf("P-256 private key must be %d bytes, got %d", PrvKeySize, len(signerPrvKey))
 	}
 
-	priv := &ecdsa.PrivateKey{
-		PublicKey: ecdsa.PublicKey{Curve: elliptic.P256()},
-		D:         new(big.Int).SetBytes(signerPrvKey),
+	priv, err := ecdsa.ParseRawPrivateKey(elliptic.P256(), signerPrvKey)
+	if err != nil {
+		return nil, status.Code_BadKeyFormat.Wrap(err)
 	}
-	priv.PublicKey.X, priv.PublicKey.Y = elliptic.P256().ScalarBaseMult(signerPrvKey)
 
 	digest := sha256.Sum256(msg)
 	r, s, err := ecdsa.Sign(rand.Reader, priv, digest[:])
@@ -176,11 +175,10 @@ func verify(sig []byte, msg []byte, signerPubKey []byte) error {
 		return status.Code_BadKeyFormat.Errorf("P-256 public key must be %d bytes, got %d", PubKeySize, len(signerPubKey))
 	}
 
-	pubX, pubY := elliptic.Unmarshal(elliptic.P256(), signerPubKey)
-	if pubX == nil {
+	pub, err := ecdsa.ParseUncompressedPublicKey(elliptic.P256(), signerPubKey)
+	if err != nil {
 		return status.Code_BadKeyFormat.Error("P-256 public key failed to unmarshal")
 	}
-	pub := &ecdsa.PublicKey{Curve: elliptic.P256(), X: pubX, Y: pubY}
 
 	r := new(big.Int).SetBytes(sig[:PrvKeySize])
 	s := new(big.Int).SetBytes(sig[PrvKeySize:])
