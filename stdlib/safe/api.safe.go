@@ -168,8 +168,12 @@ type EpochKeyStore interface {
 	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
 	GetCurrentKey(containerID tag.UID, role KeyRole) (SymKey, error)
 
-	// SetCurrentEpoch marks an epoch as the current one for a container.
-	SetCurrentEpoch(containerID, epochID tag.UID) error
+	// SetCurrentEpoch marks an epoch as the current one for a container — including
+	// an epoch OLDER than the newest held.  The election is durable at method
+	// return: the re-sealed tome persists BEFORE SetCurrentEpoch reports success,
+	// so a crash after return cannot regress the current pointer to the
+	// newest-per-container fallback on reopen.
+	SetCurrentEpoch(ctx context.Context, containerID, epochID tag.UID) error
 
 	// ShredKeys permanently deletes ALL key material held for the given epochs —
 	// every role, every container.  The removal is durable at method return: the

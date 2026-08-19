@@ -971,19 +971,92 @@ func (x *EpochKeyEntry) GetRoleKeys() []*RoleKey {
 	return nil
 }
 
+// EpochElection records one container's current-epoch election.  Persisted in
+// the tome so an explicit election — which may name an OLDER epoch — survives
+// reopen; a container with no persisted election falls back to
+// newest-per-container on Open.
+type EpochElection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ContainerID_0 uint64                 `protobuf:"fixed64,1,opt,name=ContainerID_0,json=ContainerID0,proto3" json:"ContainerID_0,omitempty"` // Planet or channel UID, bytes 0..7
+	ContainerID_1 uint64                 `protobuf:"fixed64,2,opt,name=ContainerID_1,json=ContainerID1,proto3" json:"ContainerID_1,omitempty"` // Planet or channel UID, bytes 8..15
+	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`             // Elected current epoch UID, bytes 0..7
+	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Elected current epoch UID, bytes 8..15
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EpochElection) Reset() {
+	*x = EpochElection{}
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EpochElection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EpochElection) ProtoMessage() {}
+
+func (x *EpochElection) ProtoReflect() protoreflect.Message {
+	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EpochElection.ProtoReflect.Descriptor instead.
+func (*EpochElection) Descriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *EpochElection) GetContainerID_0() uint64 {
+	if x != nil {
+		return x.ContainerID_0
+	}
+	return 0
+}
+
+func (x *EpochElection) GetContainerID_1() uint64 {
+	if x != nil {
+		return x.ContainerID_1
+	}
+	return 0
+}
+
+func (x *EpochElection) GetEpochID_0() uint64 {
+	if x != nil {
+		return x.EpochID_0
+	}
+	return 0
+}
+
+func (x *EpochElection) GetEpochID_1() uint64 {
+	if x != nil {
+		return x.EpochID_1
+	}
+	return 0
+}
+
 // EpochKeyTome is the persistence format for all symmetric epoch keys.
 // Sealed at rest using the same Guard/DEK mechanism as the identity KeyTome.
 type EpochKeyTome struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"` // Incremented on each mutation
 	Keys          []*EpochKeyEntry       `protobuf:"bytes,2,rep,name=Keys,proto3" json:"Keys,omitempty"`          // All epoch keys (sorted by ContainerID, then EpochID)
+	Current       []*EpochElection       `protobuf:"bytes,3,rep,name=Current,proto3" json:"Current,omitempty"`    // Current-epoch election per container
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *EpochKeyTome) Reset() {
 	*x = EpochKeyTome{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -995,7 +1068,7 @@ func (x *EpochKeyTome) String() string {
 func (*EpochKeyTome) ProtoMessage() {}
 
 func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[8]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1008,7 +1081,7 @@ func (x *EpochKeyTome) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EpochKeyTome.ProtoReflect.Descriptor instead.
 func (*EpochKeyTome) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{8}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EpochKeyTome) GetRevision() int64 {
@@ -1021,6 +1094,13 @@ func (x *EpochKeyTome) GetRevision() int64 {
 func (x *EpochKeyTome) GetKeys() []*EpochKeyEntry {
 	if x != nil {
 		return x.Keys
+	}
+	return nil
+}
+
+func (x *EpochKeyTome) GetCurrent() []*EpochElection {
+	if x != nil {
+		return x.Current
 	}
 	return nil
 }
@@ -1051,7 +1131,7 @@ type EncryptedSymKey struct {
 
 func (x *EncryptedSymKey) Reset() {
 	*x = EncryptedSymKey{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1063,7 +1143,7 @@ func (x *EncryptedSymKey) String() string {
 func (*EncryptedSymKey) ProtoMessage() {}
 
 func (x *EncryptedSymKey) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[9]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1076,7 +1156,7 @@ func (x *EncryptedSymKey) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EncryptedSymKey.ProtoReflect.Descriptor instead.
 func (*EncryptedSymKey) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{9}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *EncryptedSymKey) GetCryptoKitID_0() uint64 {
@@ -1137,7 +1217,7 @@ type SealedValue struct {
 
 func (x *SealedValue) Reset() {
 	*x = SealedValue{}
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1149,7 +1229,7 @@ func (x *SealedValue) String() string {
 func (*SealedValue) ProtoMessage() {}
 
 func (x *SealedValue) ProtoReflect() protoreflect.Message {
-	mi := &file_stdlib_safe_safe_proto_msgTypes[10]
+	mi := &file_stdlib_safe_safe_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1162,7 +1242,7 @@ func (x *SealedValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SealedValue.ProtoReflect.Descriptor instead.
 func (*SealedValue) Descriptor() ([]byte, []int) {
-	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{10}
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SealedValue) GetContainerID_0() uint64 {
@@ -1292,10 +1372,16 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12#\n" +
 	"\rCryptoKitID_0\x18\x05 \x01(\x06R\fCryptoKitID0\x12#\n" +
 	"\rCryptoKitID_1\x18\x06 \x01(\x06R\fCryptoKitID1\x12)\n" +
-	"\bRoleKeys\x18\b \x03(\v2\r.safe.RoleKeyR\bRoleKeys\"S\n" +
+	"\bRoleKeys\x18\b \x03(\v2\r.safe.RoleKeyR\bRoleKeys\"\x93\x01\n" +
+	"\rEpochElection\x12#\n" +
+	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
+	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
+	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
+	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\"\x82\x01\n" +
 	"\fEpochKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
-	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\"\xb5\x01\n" +
+	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\x12-\n" +
+	"\aCurrent\x18\x03 \x03(\v2\x13.safe.EpochElectionR\aCurrent\"\xb5\x01\n" +
 	"\x0fEncryptedSymKey\x12#\n" +
 	"\rCryptoKitID_0\x18\x01 \x01(\x06R\fCryptoKitID0\x12#\n" +
 	"\rCryptoKitID_1\x18\x02 \x01(\x06R\fCryptoKitID1\x12\x1b\n" +
@@ -1349,7 +1435,7 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 }
 
 var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),              // 0: safe.Const
 	(KeyType)(0),            // 1: safe.KeyType
@@ -1363,9 +1449,10 @@ var file_stdlib_safe_safe_proto_goTypes = []any{
 	(*KeyTome)(nil),         // 9: safe.KeyTome
 	(*RoleKey)(nil),         // 10: safe.RoleKey
 	(*EpochKeyEntry)(nil),   // 11: safe.EpochKeyEntry
-	(*EpochKeyTome)(nil),    // 12: safe.EpochKeyTome
-	(*EncryptedSymKey)(nil), // 13: safe.EncryptedSymKey
-	(*SealedValue)(nil),     // 14: safe.SealedValue
+	(*EpochElection)(nil),   // 12: safe.EpochElection
+	(*EpochKeyTome)(nil),    // 13: safe.EpochKeyTome
+	(*EncryptedSymKey)(nil), // 14: safe.EncryptedSymKey
+	(*SealedValue)(nil),     // 15: safe.SealedValue
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	5,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
@@ -1375,12 +1462,13 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	3,  // 4: safe.RoleKey.Role:type_name -> safe.KeyRole
 	10, // 5: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
 	11, // 6: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	3,  // 7: safe.SealedValue.Role:type_name -> safe.KeyRole
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	12, // 7: safe.EpochKeyTome.Current:type_name -> safe.EpochElection
+	3,  // 8: safe.SealedValue.Role:type_name -> safe.KeyRole
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1394,7 +1482,7 @@ func file_stdlib_safe_safe_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   11,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

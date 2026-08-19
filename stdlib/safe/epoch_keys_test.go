@@ -170,6 +170,69 @@ func TestEpochKeys_PutDurableAtReturn(t *testing.T) {
 	}
 }
 
+// TestEpochKeys_SetCurrentDurableAtReturn pins the election durability
+// contract: an explicit SetCurrentEpoch of an OLDER epoch persists BEFORE the
+// method returns, so a crash after return (modeled by reopening the tome
+// WITHOUT Close) cannot regress the current pointer to the
+// newest-per-container fallback.
+func TestEpochKeys_SetCurrentDurableAtReturn(t *testing.T) {
+	ctx := context.Background()
+	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("set-current"))
+	defer guard.Close()
+
+	eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("set-current"))
+	if err != nil {
+		t.Fatalf("OpenEpochKeyStore: %v", err)
+	}
+
+	containerID := tag.NewID()
+	olderEpoch := tag.UID{100, 1} // EpochID is time-based: [0] then [1] orders it
+	newerEpoch := tag.UID{200, 2}
+	olderContent := randomKeyBytes(t)
+	putEpochKey(t, eks, containerID, olderEpoch, safe.KeyRole_ContentKey, olderContent)
+	putEpochKey(t, eks, containerID, newerEpoch, safe.KeyRole_ContentKey, randomKeyBytes(t))
+
+	// Precondition: PutKey auto-elected the newer epoch.
+	current, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey)
+	if err != nil {
+		t.Fatalf("GetCurrentKey precondition: %v", err)
+	}
+	if current.EpochID != newerEpoch {
+		t.Fatalf("precondition: current %s, want auto-elected newer %s", current.EpochID.Base32(), newerEpoch.Base32())
+	}
+	current.Zero()
+
+	if err := eks.SetCurrentEpoch(ctx, containerID, olderEpoch); err != nil {
+		t.Fatalf("SetCurrentEpoch(older): %v", err)
+	}
+
+	// Crash model: NO Close — reopen straight from the persisted tome.  The
+	// explicit election must survive; a recompute would regress to newerEpoch.
+	reopened, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("set-current"))
+	if err != nil {
+		t.Fatalf("reopen without Close: %v", err)
+	}
+	defer reopened.Close(ctx)
+
+	elected, err := reopened.GetCurrentKey(containerID, safe.KeyRole_ContentKey)
+	if err != nil {
+		t.Fatalf("GetCurrentKey after reopen: %v", err)
+	}
+	if elected.EpochID != olderEpoch {
+		t.Fatalf("election regressed across a no-Close reopen: current %s, want elected %s — SetCurrentEpoch is not durable at return",
+			elected.EpochID.Base32(), olderEpoch.Base32())
+	}
+	if !bytes.Equal(elected.Bytes, olderContent) {
+		t.Fatal("elected epoch key bytes did not round-trip the election persist")
+	}
+	elected.Zero()
+
+	if err := eks.Close(ctx); err != nil {
+		t.Fatalf("Close (electing session): %v", err)
+	}
+}
+
 // faultTomeStore delegates to a real TomeStore but fails the next failSaves
 // Save calls — the fault seam for the shred durability contract.
 type faultTomeStore struct {
@@ -336,7 +399,7 @@ func TestEpochKeys_ShredCurrentEpochFailsClosed(t *testing.T) {
 	if _, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
 		t.Fatalf("current pointer at a shredded epoch must fail closed, got %v", err)
 	}
-	if err := eks.SetCurrentEpoch(containerID, successor); err != nil {
+	if err := eks.SetCurrentEpoch(ctx, containerID, successor); err != nil {
 		t.Fatalf("SetCurrentEpoch(successor): %v", err)
 	}
 	if _, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey); err != nil {
@@ -375,7 +438,7 @@ func TestEpochKeys_ClosedStoreSentinel(t *testing.T) {
 	if err := eks.PutKey(ctx, containerID, safe.SymKey{EpochID: epochID, Bytes: randomKeyBytes(t)}); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("PutKey on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
-	if err := eks.SetCurrentEpoch(containerID, epochID); !errors.Is(err, safe.ErrStoreClosed) {
+	if err := eks.SetCurrentEpoch(ctx, containerID, epochID); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("SetCurrentEpoch on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
 	if err := eks.ShredKeys(ctx, []tag.UID{epochID}); !errors.Is(err, safe.ErrStoreClosed) {

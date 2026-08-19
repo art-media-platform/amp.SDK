@@ -16,9 +16,10 @@ import (
 // Map is keyed by EpochID; role lookup is a short linear scan within the entry.
 //
 // All epoch keys are loaded on Open via the same Guard/TomeStore mechanism used by the
-// identity Enclave.  Mutations are durable at return: PutKey and ShredKeys persist the
-// re-sealed tome before reporting success, so an unclean kill never loses an installed
-// key (a founded planet's only ContentKey copy must not ride on a clean Close).  For
+// identity Enclave.  Mutations are durable at return: PutKey, SetCurrentEpoch, and
+// ShredKeys persist the re-sealed tome before reporting success, so an unclean kill
+// never loses an installed key or regresses a current-epoch election (a founded
+// planet's only ContentKey copy must not ride on a clean Close).  For
 // extreme scale (millions of historical keys), a future implementation can add LRU
 // eviction and lazy disk loading — the interface is unchanged.
 type epochKeyStore struct {
@@ -94,6 +95,17 @@ func OpenEpochKeyStore(
 			if epochID[0] > cur[0] || (epochID[0] == cur[0] && epochID[1] > cur[1]) {
 				eks.current[containerID] = epochID
 			}
+		}
+	}
+
+	// A persisted election overrides the newest-per-container fallback —
+	// SetCurrentEpoch is durable at return, so an explicit election (possibly
+	// of an older epoch) survives reopen.  An election at an epoch no longer
+	// held is skipped (fail-closed: the fallback stands).
+	for _, elected := range tome.Current {
+		epochID := elected.EpochID()
+		if _, held := eks.keys[epochID]; held {
+			eks.current[elected.ContainerID()] = epochID
 		}
 	}
 
@@ -215,7 +227,10 @@ func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID, role KeyRole) (SymK
 	return SymKey{}, status.Code_KeyringNotFound.Errorf("current epoch key role missing: %s role=%s", epochID.Base32(), role)
 }
 
-func (eks *epochKeyStore) SetCurrentEpoch(containerID, epochID tag.UID) error {
+// SetCurrentEpoch implements EpochKeyStore: the election persists before
+// return — it may name an OLDER epoch, which the newest-per-container reopen
+// fallback would otherwise regress after a crash.
+func (eks *epochKeyStore) SetCurrentEpoch(ctx context.Context, containerID, epochID tag.UID) error {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
 
@@ -228,8 +243,12 @@ func (eks *epochKeyStore) SetCurrentEpoch(containerID, epochID tag.UID) error {
 	}
 
 	eks.current[containerID] = epochID
+
+	// Dirty BEFORE the persist attempt (the PutKey/ShredKeys discipline): a
+	// failed Save returns the error with the election tracked as unsaved, so
+	// both a caller retry and a later Close carry it to disk.
 	eks.changed = true
-	return nil
+	return eks.persistLocked(ctx)
 }
 
 // ShredKeys implements EpochKeyStore: the removal persists before return —
@@ -296,15 +315,24 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 }
 
 // persistLocked seals the in-memory map into an EpochKeyTome and saves it via
-// the Guard/TomeStore pair — the one persist site (PutKey, ShredKeys, Close).
-// Caller holds eks.mu.
+// the Guard/TomeStore pair — the one persist site (PutKey, SetCurrentEpoch,
+// ShredKeys, Close).  Caller holds eks.mu.
 func (eks *epochKeyStore) persistLocked(ctx context.Context) error {
 	tome := &EpochKeyTome{
 		Revision: 1,
 		Keys:     make([]*EpochKeyEntry, 0, len(eks.keys)),
+		Current:  make([]*EpochElection, 0, len(eks.current)),
 	}
 	for _, entry := range eks.keys {
 		tome.Keys = append(tome.Keys, entry)
+	}
+	for containerID, epochID := range eks.current {
+		tome.Current = append(tome.Current, &EpochElection{
+			ContainerID_0: containerID[0],
+			ContainerID_1: containerID[1],
+			EpochID_0:     epochID[0],
+			EpochID_1:     epochID[1],
+		})
 	}
 
 	tomeBytes, err := proto.Marshal(tome)

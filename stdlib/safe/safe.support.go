@@ -33,6 +33,16 @@ func (ek *EpochKeyEntry) EpochID() tag.UID {
 	return tag.UID{ek.EpochID_0, ek.EpochID_1}
 }
 
+// ContainerID returns the ContainerID as a tag.UID.
+func (ee *EpochElection) ContainerID() tag.UID {
+	return tag.UID{ee.ContainerID_0, ee.ContainerID_1}
+}
+
+// EpochID returns the elected current epoch as a tag.UID.
+func (ee *EpochElection) EpochID() tag.UID {
+	return tag.UID{ee.EpochID_0, ee.EpochID_1}
+}
+
 // Label returns a human readable label string for this KeyRef.
 func (kref *KeyRef) Label() string {
 	return fmt.Sprintf("%s / %s", kref.KeyringID().Base32(), encode.ToBase32(kref.PubKey))

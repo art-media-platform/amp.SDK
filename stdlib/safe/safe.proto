@@ -182,11 +182,23 @@ message EpochKeyEntry {
     repeated RoleKey    RoleKeys        = 8;    // 1-4 role-tagged materials held for this epoch
 }
 
+// EpochElection records one container's current-epoch election.  Persisted in
+// the tome so an explicit election — which may name an OLDER epoch — survives
+// reopen; a container with no persisted election falls back to
+// newest-per-container on Open.
+message EpochElection {
+    fixed64             ContainerID_0   = 1;    // Planet or channel UID, bytes 0..7
+    fixed64             ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
+    fixed64             EpochID_0       = 3;    // Elected current epoch UID, bytes 0..7
+    fixed64             EpochID_1       = 4;    // Elected current epoch UID, bytes 8..15
+}
+
 // EpochKeyTome is the persistence format for all symmetric epoch keys.
 // Sealed at rest using the same Guard/DEK mechanism as the identity KeyTome.
 message EpochKeyTome {
     int64                   Revision    = 1;    // Incremented on each mutation
     repeated EpochKeyEntry  Keys        = 2;    // All epoch keys (sorted by ContainerID, then EpochID)
+    repeated EpochElection  Current     = 3;    // Current-epoch election per container
 }
 
 
