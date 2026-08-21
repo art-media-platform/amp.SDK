@@ -554,6 +554,7 @@ const (
 	ErrUnsupported     = "Unsupported"
 	ErrTxRejected      = "TxRejected"
 	ErrPayloadTooLarge = "PayloadTooLarge"
+	ErrRateLimited     = "RateLimited"
 	ErrInternal        = "Internal"
 	ErrUnimplemented   = "Unimplemented"
 )

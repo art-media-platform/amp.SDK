@@ -22,6 +22,7 @@ export const AmpErrorCode = {
   Unsupported:     'Unsupported',
   TxRejected:      'TxRejected',
   PayloadTooLarge: 'PayloadTooLarge',
+  RateLimited:     'RateLimited',
   Internal:        'Internal',
   Unimplemented:   'Unimplemented',
 } as const;
