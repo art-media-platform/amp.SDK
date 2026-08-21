@@ -1,6 +1,6 @@
 // Package bucket provides a steady-rate + burst token-bucket rate limiter — a
-// pure sync+time primitive with a blocking gate (Take) and a non-blocking
-// reject gate (TryTake).
+// pure sync+time primitive with a blocking gate (Take) and non-blocking
+// reject gates (TryTake, TryTakeN).
 //
 // A token bucket bounds bursts as well as steady-state rate: a caller may burn
 // a small reserve, then settles into the refill cadence — where fixed-window
@@ -39,8 +39,8 @@ func NewTokenBucket(capacity, refillRatePerSec float64) *TokenBucket {
 // context's error if it is cancelled before a token frees up.
 func (b *TokenBucket) Take(ctx context.Context) error {
 	for {
-		wait := b.consume()
-		if wait <= 0 {
+		admitted, wait := b.TryTakeN(1)
+		if admitted {
 			return nil
 		}
 		// Sleep out the deficit, then re-check; another taker may have raced us.
@@ -55,13 +55,16 @@ func (b *TokenBucket) Take(ctx context.Context) error {
 // TryTake consumes one token without blocking.  Returns true when a token was
 // available (the action is admitted), false when the bucket is empty (reject).
 func (b *TokenBucket) TryTake() bool {
-	return b.consume() <= 0
+	admitted, _ := b.TryTakeN(1)
+	return admitted
 }
 
-// consume refills the bucket based on elapsed time, then attempts to consume one
-// token.  Returns 0 on success, or the duration the caller should wait before a
-// token frees up.
-func (b *TokenBucket) consume() time.Duration {
+// TryTakeN consumes `count` tokens atomically without blocking: either all
+// `count` are taken (admitted, zero wait) or none are (rejected, with the
+// duration until the full count refills — the Retry-After a refusal carries).
+// A count above capacity can never be admitted; size the burst so the largest
+// legitimate take fits.
+func (b *TokenBucket) TryTakeN(count float64) (bool, time.Duration) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -70,13 +73,13 @@ func (b *TokenBucket) consume() time.Duration {
 	b.tokens = min(b.capacity, b.tokens+elapsed*b.refillRate)
 	b.lastFill = now
 
-	if b.tokens >= 1 {
-		b.tokens -= 1
-		return 0
+	if b.tokens >= count {
+		b.tokens -= count
+		return true, 0
 	}
-	// Wait until enough refill accumulates for one token.
-	deficit := 1 - b.tokens
-	return time.Duration(deficit / b.refillRate * float64(time.Second))
+	// Wait until enough refill accumulates for the full count.
+	deficit := count - b.tokens
+	return false, time.Duration(deficit / b.refillRate * float64(time.Second))
 }
 
 // Reset re-initializes the bucket to `prefill` tokens (capped at capacity).
