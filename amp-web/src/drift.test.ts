@@ -87,6 +87,11 @@ const SHAPES: Record<string, ShapeSpec> = {
     required: ['Member', 'ExpiresAt'],
     nested: { Member: 'AmpMember' },
   },
+  // NOTE: no TS interface / client method models the member self-revoke yet;
+  // this asserts the Go shape so the fixture stays honest for the client that
+  // adds it (POST /api/v1/session/revoke — own Bearer, no body, full revoke
+  // including the calling session).
+  SessionRevokeResponse: { required: ['MemberID', 'Dropped'] },
   EmailCredential: {
     required: [],
     optional: ['Email', 'Password', 'Token', 'NewPassword', 'PlanetTag'],

@@ -120,12 +120,20 @@ What that storage means:
   flat expiry (no refresh) and host-side revocation bound a leaked token's
   life: beyond per-token logout, the host persists a per-member session
   GENERATION, every token records the generation it was minted under, and
-  validation requires a match — so the operator's
-  `POST /api/v1/admin/session/revoke` ("sign out everywhere") invalidates
-  every outstanding token for the member instantly, surviving host
-  restarts. The generation counter is also the reuse-detection story — no
-  per-request token counters. The SDK needs nothing new: a revoked token
-  reads as 401 and the normal re-login path runs.
+  validation requires a match. Two verbs drive the bump: the member's own
+  `POST /api/v1/session/revoke` ("sign out everywhere" — the caller's Bearer
+  names the subject; no request body) and the operator's
+  `POST /api/v1/admin/session/revoke` (any member; admin allowlist). Either
+  invalidates every outstanding token for the member instantly, surviving
+  host restarts. The revoke is **full — everywhere, including the session
+  that calls it**: the `200` response (`SessionRevokeResponse{MemberID,
+  Dropped}`) is the last act the presenting Bearer performs, and a fresh
+  login is required afterward. An "everywhere else" variant exempting the
+  current session was rejected — the exemption is a larger security surface
+  than the re-login it saves. The generation counter is also the
+  reuse-detection story — no per-request token counters. The SDK needs
+  nothing new: a revoked token reads as 401 and the normal re-login path
+  runs.
 - **No key material rides with it.** The session record is the Bearer + public
   member facts; the EncryptKey lives in its own store and never enters the
   session record.

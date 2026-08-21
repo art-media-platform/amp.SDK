@@ -42,6 +42,7 @@ var shapeCtors = map[string]func() any{
 	"LoginResponse":           func() any { return &webapi.LoginResponse{} },
 	"AmpMember":               func() any { return &webapi.AmpMember{} },
 	"SessionResponse":         func() any { return &webapi.SessionResponse{} },
+	"SessionRevokeResponse":   func() any { return &webapi.SessionRevokeResponse{} },
 	"EmailCredential":         func() any { return &webapi.EmailCredential{} },
 	"EmailIssueResponse":      func() any { return &webapi.EmailIssueResponse{} },
 	"ErrorResponse":           func() any { return &webapi.ErrorResponse{} },

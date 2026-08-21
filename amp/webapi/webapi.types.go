@@ -103,6 +103,20 @@ type SessionResponse struct {
 	ExpiresAt int64     `json:"ExpiresAt"`
 }
 
+// SessionRevokeResponse is the body of POST /api/v1/session/revoke — the
+// member-scoped "sign out everywhere".  The caller's own Bearer names the
+// subject (no request body), and the revoke is FULL: every outstanding
+// session for the member is invalidated, INCLUDING the one making the call —
+// the 200 carrying this shape is the last act the presenting Bearer performs,
+// and a fresh login is required afterward.  Dropped counts the live sessions
+// dropped in-process; outstanding tokens elsewhere die at next validation.
+// The operator sibling (POST /api/v1/admin/session/revoke) shares this
+// response; its request shape stays Go-side per the operator-tier rule below.
+type SessionRevokeResponse struct {
+	MemberID tag.UID `json:"MemberID"`
+	Dropped  int     `json:"Dropped"`
+}
+
 // Email credential request/response shapes:
 //   - Request body for all four endpoints (admin issue, recover, redeem,
 //     account claim) is the proto webapi.EmailCredential (defined in
