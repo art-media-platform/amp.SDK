@@ -208,6 +208,7 @@ func newBlobHashKit(kitID safe.HashKitID) (safe.HashKit, error) {
 type BlobChunkHasher struct {
 	fine    safe.HashKit // level 0: raw grain bytes
 	compose safe.HashKit // level 1: tagged fine-digest runs
+	sumBuf  []byte       // grain-digest scratch, reused across grains (never escapes)
 	inGrain int64        // bytes fed into the current (partial) grain
 	tagged  bool         // compose tag written for the current chunk
 }
@@ -247,8 +248,11 @@ func (bch *BlobChunkHasher) Write(chunk []byte) (int, error) {
 }
 
 // finishGrain closes the current grain and feeds its digest to the run.
+// The digest lands in the reused scratch — one grain per 4 KiB means a
+// per-grain Sum allocation is a per-byte tax on every store and verify.
 func (bch *BlobChunkHasher) finishGrain() {
-	digest := bch.fine.Hasher.Sum(nil)
+	bch.sumBuf = bch.fine.Hasher.Sum(bch.sumBuf[:0])
+	digest := bch.sumBuf
 	bch.fine.Hasher.Reset()
 	bch.inGrain = 0
 	if !bch.tagged {
@@ -288,11 +292,13 @@ func BlobGrainRun(kitID safe.HashKitID, chunk []byte) ([]byte, error) {
 	grainSize := int64(1) << BlobGrainSizeLog2
 	grainCount := (int64(len(chunk)) + grainSize - 1) >> BlobGrainSizeLog2
 	run := make([]byte, 0, grainCount*BlobMetaHashSize)
+	var sumBuf []byte // grain-digest scratch, reused across grains
 	for len(chunk) > 0 {
 		span := min(grainSize, int64(len(chunk)))
 		fine.Hasher.Reset()
 		fine.Hasher.Write(chunk[:span])
-		run = append(run, fine.Hasher.Sum(nil)[:BlobMetaHashSize]...)
+		sumBuf = fine.Hasher.Sum(sumBuf[:0])
+		run = append(run, sumBuf[:BlobMetaHashSize]...)
 		chunk = chunk[span:]
 	}
 	return run, nil
@@ -342,6 +348,7 @@ type blobMetaLane struct {
 type BlobMetaBuilder struct {
 	kitID   safe.HashKitID
 	fine    safe.HashKit   // level 0: raw grain bytes
+	sumBuf  []byte         // grain-digest scratch, reused across grains (never escapes)
 	inGrain int64          // bytes fed into the current (partial) grain
 	total   int64          // stored bytes seen
 	runBuf  []byte         // buffered grain digests (until spill)
@@ -382,9 +389,13 @@ func (bld *BlobMetaBuilder) Write(stored []byte) (int, error) {
 	return written, nil
 }
 
-// absorbGrain closes the current grain and routes its digest.
+// absorbGrain closes the current grain and routes its digest.  The digest
+// lands in the reused scratch (runBuf/feedLanes copy what they keep) — one
+// grain per 4 KiB means a per-grain Sum allocation is a per-byte tax on
+// every store.
 func (bld *BlobMetaBuilder) absorbGrain() {
-	digest := bld.fine.Hasher.Sum(nil)
+	bld.sumBuf = bld.fine.Hasher.Sum(bld.sumBuf[:0])
+	digest := bld.sumBuf
 	bld.fine.Hasher.Reset()
 	bld.inGrain = 0
 
