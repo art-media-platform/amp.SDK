@@ -11,7 +11,7 @@ import (
 // registration is the shared-const site.
 var (
 	// TerminalTape carries a session's TermIO frames (EditFlow_Tape): zero
-	// cabinet rows; serve replays the journal window (SD-planet-storage §8.1).
+	// cabinet rows; serve replays the journal window (AOM SD-planet-storage.md §8.1).
 	TerminalTape = RegisterAttrTape(Attr.ItemSeries, &amp.TermIO{}, "main.terminal")
 
 	// TerminalHead is the folded live-keyframe cell (Folded, K=1) — the
@@ -20,7 +20,7 @@ var (
 )
 
 // Terminal track lanes — constant ItemIDs on the tape attr (t rides EditID,
-// freeing the ItemID to discriminate lanes; AD-app-terminal §4.2).
+// freeing the ItemID to discriminate lanes; AOM AD-app-terminal.md §4.2).
 var (
 	TerminalTrackOut      = tag.UID_HashLiteral([]byte("amp.terminal/track/out"))
 	TerminalTrackIn       = tag.UID_HashLiteral([]byte("amp.terminal/track/in"))

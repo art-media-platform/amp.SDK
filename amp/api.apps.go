@@ -116,7 +116,7 @@ type TxMsg struct {
 type TxOp struct {
 	Addr    tag.Address // CRDT item address
 	Flags   TxOpFlags   // operation to perform
-	Logical uint64      // HLC logical tiebreak slot (SD-edit-resolution §4.3); writers write 0 until the comparator ships
+	Logical uint64      // HLC logical tiebreak slot (AOM SD-edit-resolution.md §4.3); writers write 0 until the comparator ships
 	DataOfs uint64      // byte offset to where serialized data is stored
 	DataLen uint64      // byte length of associated serialized data
 }
@@ -136,12 +136,14 @@ type TxScope struct {
 	MemberSigned bool
 }
 
-// Binds an proto.Message prototype to its associated attribute tag.
+// AttrDef binds a proto.Message prototype to its associated attribute tag.
 type AttrDef struct {
-	tag.Name                  // maps the value Prototype to an explicit attr ID
-	Prototype   proto.Message // cloned when this attribute is instantiated
-	EditFlow    EditFlow     // how the attr's edits materialize; zero value = Folded
-	RetainEdits int32         // Folded only: cell fold depth K; 0 = unset → 1; the host
-	                          // clamps to its node-local DefaultRetainEditsCap.
-	                          // Meaningless for Tape (must be 0).
+	tag.Name                // maps the value Prototype to an explicit attr ID
+	Prototype proto.Message // cloned when this attribute is instantiated
+	EditFlow  EditFlow      // how the attr's edits materialize; 0 = Folded
+
+	// Folded only: cell fold depth K; 0 = unset → 1.  The host clamps to its
+	// node-local DefaultRetainEditsCap (host-side).  Meaningless for Tape
+	// (must be 0).
+	RetainEdits int32
 }

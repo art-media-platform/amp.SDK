@@ -63,7 +63,7 @@ func (v *FileInfo) SetCreatedAt(t time.Time) {
 // IsGovernanceLawAttr reports whether attrID is a governance-law attr — the
 // channel/member/planet authority records that flow only through founder/admin
 // paths, never a member content write or a content-bearing artifact stream
-// (SD-channel-governance.md §6).  Web-bridge member writes and codex content
+// (AOM SD-channel-governance.md §6).  Web-bridge member writes and codex content
 // imports both reject these.  LawWithdraw is intentionally excluded: a member may
 // withdraw their own content.
 func IsGovernanceLawAttr(attrID tag.UID) bool {

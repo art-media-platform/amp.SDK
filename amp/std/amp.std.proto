@@ -12,8 +12,8 @@ enum TRS_Flags {
 }
 
 
-// TRS (Translate Rotate Scale)
-// General purpose placement time, space, orientation, and/or geo-position.
+// TRS (Translate, Rotate, Scale) is a general-purpose placement: time, space,
+// orientation, and/or geo-position.
 message TRS {
 
     // Uniform spatial scale; if 0, scale is implicitly 1.0
@@ -106,7 +106,7 @@ message CameraOptions {
 }
 
 
-// FileInfo a general-purpose file system meta info block.
+// FileInfo is a general-purpose file system meta info block.
 message FileInfo {
     string Mode        = 1; // unix file mode label
     bool   IsDir       = 2; // true if item is a directory
@@ -114,7 +114,7 @@ message FileInfo {
     string DirName     = 4; // prepended to FileName forms full path
     string ItemName    = 5; // file/dir item name
     int32  ExtLen      = 6; // length of the file extension (0 if none)
-    string ContentType = 8; // MIME type of the file (e.g. "image/png", "text/html", etc.);
+    string ContentType = 8; // MIME type of the file (e.g. "image/png", "text/html")
 
     int64  CreatedAt   = 10; // UTC << 16
     int64  ModifiedAt  = 11; // UTC << 16
@@ -180,8 +180,9 @@ message ModuleRef {
     string   Version = 4; // maturity "v{TRL}[.{minor}]"; see TRL-versioning.md
 }
 
-// General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
-// The units are typically mid H3 resolution with rectangular dimensions in units of font glyph size.
+// Rect is a lightweight set of geo tiles forming a rectangle, composed from a
+// center plus width/height.  The units are typically mid H3 resolution, with
+// rectangular dimensions in units of font glyph size.
 message Rect {
 
     PointFormat Format = 1; // specifies the type and format of Coords
@@ -235,7 +236,7 @@ message MediaInfo {
 
     float      Popularity = 16; // 0.0 to 1.0
 
-    // Unused — order lives in item.MediaRank (AD-playlists §3); field number
+    // Unused — order lives in item.MediaRank (AOM AD-playlists.md §3); field number
     // held until re-genesis.
     float      Ordering   = 17;
 }
@@ -263,7 +264,7 @@ enum MediaFlags {
 
 // MediaTags is what the audio says about itself, on a TRACK node
 // (item.MediaTags).  Labels is DERIVED from this, never the reverse — a
-// display line is not a data source (AD-playlists §2).
+// display line is not a data source (AOM AD-playlists.md §2).
 message MediaTags {
     string Title       = 1;
     string Artist      = 2;
@@ -311,7 +312,7 @@ message MediaEntry {
 
 // MediaRank is a playlist row's position, keyed by entryID on the PLAYLIST
 // node (item.MediaRank) — its own cell, so a reorder and a metadata refresh
-// never collide (AD-playlists §4).  The rank is a fractional-index UID minted
+// never collide (AOM AD-playlists.md §4).  The rank is a fractional-index UID minted
 // by tag.RankBetween / tag.RanksAcross; render order is (Rank, entryID).
 // Absent => order by entryID; a single interactive append writes none.
 message MediaRank {
@@ -336,7 +337,7 @@ message Segment {
     amp.BlobRef Blob        = 7; // the durable content-addressed bytes; nil for inline-only
 }
 
-// Arg is a any-purpose key/value pair
+// Arg is an any-purpose key/value pair.
 message Arg {
     string Key   = 1;
     string Value = 2;

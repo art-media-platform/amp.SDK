@@ -595,7 +595,7 @@ func (id UID) HashLiteral(tagLiteral []byte) UID {
 
 // Returns this tag.UID in canonic Base32 text form: 26 lowercase geohash
 // digits grouped 3-10-10-3 with '-' separators — dashes after digits 3, 13,
-// and 23 (SD-canonization-spec §1.7).  The tail group is the log label's
+// and 23 (AOM SD-canonization-spec.md §1.7).  The tail group is the log label's
 // tail verbatim (AsLabel).  Decoding strips '-' and whitespace and accepts either
 // case, so grouping carries no identity weight.  Digits 17–26 are pure
 // entropy (EntropyBits = 50); digits 1–16 are a NowID's time-ordered head,
@@ -631,7 +631,7 @@ func (id UID) Base32() string {
 
 // AsLabel returns the log label "N…NNN": the first and last three Base32
 // digits joined by the single ellipsis glyph '…' (U+2026, never "..") — the
-// standing compact render for logs (SD-canonization-spec §1.7).  The tail is
+// standing compact render for logs (AOM SD-canonization-spec.md §1.7).  The tail is
 // the 3-10-10-3 render's tail group verbatim — the entropy end, 32³
 // distinguishing states; the head digit is the guaranteed-tall 0–7 anchor
 // and signals timestamp-vs-item kind at a glance.

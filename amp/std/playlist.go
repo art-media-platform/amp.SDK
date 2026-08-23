@@ -33,7 +33,7 @@ func WriteMediaRank(tx *amp.TxMsg, listNode, entryID, rank tag.UID) error {
 // AppendMediaEntry appends ONE interactively added row: it mints the entryID
 // and writes no rank, so the row orders by its mint time.  A programmatic
 // multi-row add must use AppendMediaEntries instead — inside one clock tick
-// NowID order is entropy, not sequence (AD-playlists §3).
+// NowID order is entropy, not sequence (AOM AD-playlists.md §3).
 func AppendMediaEntry(tx *amp.TxMsg, listNode tag.UID, entry *MediaEntry) (tag.UID, error) {
 	entryID := tag.NowID()
 	return entryID, WriteMediaEntry(tx, listNode, entryID, entry)
@@ -81,7 +81,7 @@ func MediaRankOf(rank tag.UID) *MediaRank {
 }
 
 // A track's item.media.sources.Tags is the set of ways to get the bytes, one
-// Tag per source (AD-playlists §5).  The three source kinds are peers,
+// Tag per source (AOM AD-playlists.md §5).  The three source kinds are peers,
 // distinguished only by which field carries the pointer:
 //
 //   - UID set, no URI  — a content-addressed blob: resolve amp.blob.ref[UID]

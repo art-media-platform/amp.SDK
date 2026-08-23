@@ -16,7 +16,7 @@ import (
 const PhraseWordCount = 256
 
 // phraseLookup maps word → index for O(1) decode.  The wordlist itself is the
-// generated PhraseWords const (safe.consts.sdl — SD-did-identity §12.1).
+// generated PhraseWords const (safe.consts.sdl — AOM SD-did-identity.md §12.1).
 var phraseLookup = func() map[string]uint8 {
 	list := phraseList()
 	if len(list) != PhraseWordCount {

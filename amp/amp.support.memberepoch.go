@@ -2,7 +2,7 @@ package amp
 
 // MemberEpoch item merge — per-field custody for the (HeadNode, LawMemberEpoch,
 // memberID) governance item, replacing whole-value LWW wherever a binding
-// observes MemberEpoch records (SD-channel-governance §3.2: member keys are
+// observes MemberEpoch records (AOM SD-channel-governance.md §3.2: member keys are
 // member-owned — an issuer seeds a key on admission, only the member's own
 // record rotates it thereafter; Status is issuer-owned).  The clock semantics
 // mirror the vault member-key cache (amp.planet indexMemberEpochsFromTx): each
@@ -14,7 +14,7 @@ package amp
 //
 //   - Custody lane — the op's EditID equals its carrying TxID: a live authored
 //     governance record (MemberEpoch ops are authored with a nil edit seed, so
-//     EditID == TxID exactly; SD-security-sync §4.4), whose FromID names the
+//     EditID == TxID exactly; AOM SD-security-sync.md §4.4), whose FromID names the
 //     author.  Custody rules apply.
 //   - Base lane — everything else: a snapshot serve re-emission rides a
 //     synthetic tx (its own TxID, the stamped original EditID on the op), and a

@@ -31,7 +31,7 @@ func TagText(contentType, text string) *Tag {
 // TagFromData returns a leaf Tag carrying an inline binary payload of the given IANA media
 // type — the attachment leaf (a verifier record, cover art, a glyph).  The type is canonized
 // to lower case and is REQUIRED (Tag.Validate); unlike TagText it is never stripped, because
-// an empty ContentTypeRaw on a Data leaf is a refusal, not a default (SD-content-substrate §3.6).
+// an empty ContentTypeRaw on a Data leaf is a refusal, not a default (AOM SD-content-substrate.md §3.6).
 func TagFromData(contentType string, data []byte) *Tag {
 	return &Tag{
 		ContentTypeRaw: strings.ToLower(contentType),
@@ -60,7 +60,7 @@ func (leaf *Tag) ContentType() string {
 var ErrTagNoContentType = status.Code_BadRequest.Error("amp.Tag: Data requires ContentTypeRaw")
 
 // Validate reports whether a leaf's field combination is legal — the ONE statement of Tag
-// syntax (SD-content-substrate.md §3.6).  Data (an inline attachment) requires
+// syntax (AOM SD-content-substrate.md §3.6).  Data (an inline attachment) requires
 // ContentTypeRaw.  URI and Data together are legal and expected — the post-fetch cache, where
 // URI is the object's location and Data a copy materialized inline — and carry no precedence
 // rule.  Nil-safe.

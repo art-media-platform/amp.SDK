@@ -74,7 +74,7 @@ const (
 
 	// DefaultMemberAdmission is the admission posture an epoch with an unset
 	// Admission field resolves to: invite-only — admission is invite-first and
-	// open registration is opt-in per epoch (O4 §4.9, SD-security-sync §8.5).
+	// open registration is opt-in per epoch (O4 §4.9, AOM SD-security-sync.md §8.5).
 	DefaultMemberAdmission MemberAdmission = MemberAdmission_AdmissionInviteOnly
 )
 

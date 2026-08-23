@@ -12,7 +12,7 @@ import (
 //
 // A safe.SealedValue is the payload of a sealed attr: a value sealed under a
 // subkey of an epoch ContentKey, stored as ordinary CRDT state that only
-// keyholders open (SD-security-sync.md §6.4 composition; ZO §3.1 custody).
+// keyholders open (AOM SD-security-sync.md §6.4 composition; ZO §3.1 custody).
 // Seal and open live here as the one authoritative pair; the element address
 // the record lives at binds the AEAD as AAD so a sealed box cannot be
 // transplanted onto a different element undetected.

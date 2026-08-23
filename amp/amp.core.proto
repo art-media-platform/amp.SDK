@@ -56,7 +56,7 @@ enum UriScheme {
 // Data requires ContentTypeRaw (bytes with no media type are unrenderable) and is legal on
 // Tags.Head or any Tags.SubTag.  The substrate sets NO per-Tag size ceiling, so an attachment
 // reaches every subscriber and stays in the journal ungated by BlobPullPolicy, and the
-// producer owns its own limit.  (SD-content-substrate.md §3.1, §3.6)
+// producer owns its own limit.  (AOM SD-content-substrate.md §3.1, §3.6)
 message Tag {
 
     /// open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
@@ -184,11 +184,9 @@ enum ValueHeaderFlags {
     None = 0;
 
     FromID   = 0x01; // author or other originator
-    TxID     = 0x02; // authoring tx (op EditID); materialize-stamped, read on serve (SD-edit-resolution §6.1)
+    TxID     = 0x02; // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
     UID_C    = 0x04; // reserved
     UID_D    = 0x08; // reserved
-
-    // FromSelf = 0x10; // equivalent to FromID of owner (saves 16 bytes)
 }
 
 
@@ -200,7 +198,7 @@ enum ValueHeaderFlags {
 // the whole payload, so every op must be readable by any holder of that epoch
 // key.  To write under a different domain (e.g. another private channel),
 // author a separate TxMsg.  (AOM ZO-design-conventions.md §3.3,
-// SD-security-sync.md §3.)
+// AOM SD-security-sync.md §3.)
 //
 // Epoch modes:
 //   - nil/zero   → planet-public: plaintext, signed-only (governance ops).
@@ -350,7 +348,7 @@ message ItemSpan {
 
     // Edit-axis time window, inclusive; an unset bound widens to the tape
     // start / the open live tail.  EditID == TxID is time-true
-    // (SD-edit-resolution §6.1).  On a Tape attr the journal is the store:
+    // (AOM SD-edit-resolution.md §6.1).  On a Tape attr the journal is the store:
     // items are tracks, this window selects the replay span, and EditsPerItem
     // caps samples per track.  On a Folded attr the window filters the cell's
     // retained edits.
@@ -363,7 +361,7 @@ message ItemSpan {
 
 // EditFlow is where an attr's edits materialize, fixed at registration
 // (1-of-N; never a bool or bitfield).  Folded: the cabinet folds the attr's
-// present per cell (SD-planet-storage §8.1, §8.6) — the zero value, so an
+// present per cell (AOM SD-planet-storage.md §8.1, §8.6) — the zero value, so an
 // undeclared attr folds exactly as every attr always has.  Tape: the edit
 // axis is the attr's time axis — the journal IS the tape; the attr is
 // fold-exempt, holds zero cabinet rows, and serve sources from journal
@@ -443,7 +441,7 @@ enum SealState {
 // because who may join is a governance act.  Unset resolves to
 // DefaultMemberAdmission (AdmissionInviteOnly) via EffectiveAdmission — the
 // invite-first doctrine is the default; open registration is opt-in per epoch
-// (O4 §4.9, SD-security-sync §8.5).
+// (O4 §4.9, AOM SD-security-sync.md §8.5).
 enum MemberAdmission {
     AdmissionUnset      = 0; // unset → DefaultMemberAdmission at point of use
     AdmissionInviteOnly = 1; // seat only an invite/allowlist-covered identity
@@ -1264,7 +1262,7 @@ message PlanetInvite {
     // genesis.  The acceptor registers it as the planet's expected founder
     // root BEFORE first sync, so a forged genesis delivered ahead of the real
     // one is refused at the engine's founder scan.  Empty = unpinned
-    // (first-sight TOFU).  SD-channel-governance.md §8.
+    // (first-sight TOFU).  AOM SD-channel-governance.md §8.
     bytes               FounderFingerprint = 30;
 }
 
@@ -1282,7 +1280,7 @@ message PlanetInviteOp {
 
     // The invite artifact being redeemed/accepted, as the string the caller
     // holds: the full invite URL or its amp-base32 body (either carrier decodes
-    // to the sealed token — one codec, invite.DecodeCarrier).  Empty on issue;
+    // to the sealed token — one codec, invite.DecodeCarrier, host-side).  Empty on issue;
     // the issue response returns the sealed token bytes here.
     bytes               SealedInvite = 10;
 
@@ -1361,7 +1359,7 @@ message PlanetInvitePolicy {
 // the audit / legal trail of who joined via which invite and when.  The redeem
 // and accept engines write one per redemption in the same tx as the joining
 // MemberEpoch; the ACC invite rule gates its admission on every vault, and
-// in-rank records project root-channel member grants (SD-invite-governance §6).
+// in-rank records project root-channel member grants (AOM SD-invite-governance.md §6).
 message PlanetInviteRedemption {
 
     // The redeemed invite, keyed by the hash of its sealed body (stable across
@@ -1448,7 +1446,7 @@ message BlobRef {
     // canonical BlobMeta encoding for this blob's STORED bytes.
     // Zero ⇒ single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no meta object;
     // the whole transfer is one implicit chunk verified by BlobTag.UID.
-    // (SD-planet-storage §13.10)
+    // (AOM SD-planet-storage.md §13.10)
     fixed64             MetaRoot_0 = 22;
     fixed64             MetaRoot_1 = 23;
 
@@ -1465,19 +1463,19 @@ message BlobRef {
 // BlobRef.MetaRoot commits to.  Kept as a companion object beside the blob,
 // served through the same pull vocabulary (BlobPullKind_Meta); a receiver
 // verifies each arriving chunk against its meta entry, and the meta itself
-// against the ref's MetaRoot before trusting any chunk (SD-planet-storage §13.10).
+// against the ref's MetaRoot before trusting any chunk (AOM SD-planet-storage.md §13.10).
 message BlobMeta {
     uint32          ChunkSizeLog2 = 1;  // matches the ref
     uint64          TotalLen      = 2;  // stored byte length (== BlobTag.I)
-    bytes           ChunkHashes   = 3;  // concatenated 32-byte entries, one per chunk, index-ordered: tagged HashKit digest over the chunk's 4 KiB grain-digest run (amp.support.blobmeta.go; SD-planet-storage §13.10)
+    bytes           ChunkHashes   = 3;  // concatenated 32-byte entries, one per chunk, index-ordered: tagged HashKit digest over the chunk's 4 KiB grain-digest run (amp.support.blobmeta.go; AOM SD-planet-storage.md §13.10)
 }
 
 
 // BlobPullRequest is one receiver-driven pull: one span of chunks (or the
 // meta) from one holder.  Chunk indexes address the ref's BlobMeta chunk
-// space; index ⇔ offset is a shift by ChunkSizeLog2 (SD-planet-storage §13.10).
+// space; index ⇔ offset is a shift by ChunkSizeLog2 (AOM SD-planet-storage.md §13.10).
 message BlobPullRequest {
-    BlobRef         Ref        = 1;  // wire-stripped (SD-security-sync §13.2.1)
+    BlobRef         Ref        = 1;  // wire-stripped (AOM SD-security-sync.md §13.2.1)
     BlobPullKind    Kind       = 2;
     uint64          ChunkBegin = 3;  // first chunk index (Kind=Chunks)
     uint64          ChunkCount = 4;  // 0 ⇒ through end-of-blob
@@ -1600,7 +1598,7 @@ message CodexHeader {
 
     // Content-model epoch: the SDK proto semantics governing artifact payloads (the
     // Tag/Tags content model).  An importer whose host epoch differs MUST refuse,
-    // not silently mis-decode persisted bytes (DD-chronicle-and-codex.md §5.5).
+    // not silently mis-decode persisted bytes (AOM DD-chronicle-and-codex.md §5.5).
     // Orthogonal to FormatVersion (on-disk layout) — this is payload meaning.  Bump
     // on each wire-incompatible content-model change; amp.ContentModelEpoch is current.
     uint32              ContentModelEpoch = 8;
@@ -1782,7 +1780,7 @@ message Brand {
     // surfaces — names a template-set channel (NodeID) on the naming federation
     // planet that app.www reads template Segments from.  Empty = the federation's
     // default set.  Members select among federation-published sets; the markup is
-    // federation-authored (DD-name-service.md §12.3).
+    // federation-authored (AOM DD-name-service.md §12.3).
     Tag                 TemplateSet      = 31;
 }
 
@@ -1837,9 +1835,9 @@ message NameServiceRecord {
     // GenesisRequiredSignatures) under the fixed v1 kit (amp.fp.founders.v1;
     // amp.FounderFingerprint).  Stamped host-side by the registering federation
     // from the target's verified genesis; empty = unpinned (first contact stays
-    // TOFU via the trusted federation, DD-name-service.md §3.2).  A consumer
+    // TOFU via the trusted federation, AOM DD-name-service.md §3.2).  A consumer
     // syncing the target corroborates its genesis against this pin at the
-    // founder scan and refuses a mismatch (SD-channel-governance.md §8).
+    // founder scan and refuses a mismatch (AOM SD-channel-governance.md §8).
     bytes               FounderFingerprint = 5;
 
     // Where the target planet can be pinned for bootstrap.

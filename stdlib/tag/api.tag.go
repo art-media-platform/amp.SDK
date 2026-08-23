@@ -17,15 +17,19 @@ type (
 	// UID is a big-endian value, so UID[0] is most significant, etc.
 	UID [2]uint64
 
-	// tag.Name expresses a set UTF-8 literals and its corresponding hash (UID).
+	// Name expresses a set of UTF-8 literals and its corresponding hash (UID).
 	//
-	//	tag.Name := "[{TagOp}]*[{utf8_literal}]*"
+	//	Name := "[{TagOp}]*[{utf8_literal}]*"
 	Name struct {
-		ID   UID    // hash of any art-media-platform or other tag expression
-		Text string // optional case-preserved tag expression; canonize(Text) yields the canonic string hashed into ID.  May be dropped (identity is ID alone) so a UID can be matched without disclosing what it names.
+		ID UID // hash of any art-media-platform or other tag expression
+
+		// Optional case-preserved tag expression; canonize(Text) yields the
+		// canonic string hashed into ID.  May be dropped (identity is ID
+		// alone) so a UID can be matched without disclosing what it names.
+		Text string
 	}
 
-	// Addresses a value element in amp's CRDT schema.
+	// Address addresses a value element in amp's CRDT schema.
 	//
 	// When EditID is zero, this signals to get/set the most appropriate EditID.
 	Address struct {
@@ -66,14 +70,16 @@ const (
 	UID_1_Wildcard          = 0xFFFFFFFFFFFFFFFA   // match any UID
 	UID_1_Drop              = 0xFFFFFFFFFFFFFFFD   // drop entire attribute (all items) or singular item
 
-	// Splits a tag expression into component literals, splitting on common punctuation and whitespace.
+	// SeparatorRegex splits a tag expression into component literals on common
+	// punctuation and whitespace.
 	SeparatorRegex = `[\s\.,!:¿?"&\(\)\[\]\{\}\<\>+-]+`
 
-	// Reserved tag name that denotes a wildcard match
+	// CanonicWildcard is the reserved tag name denoting a wildcard match.
 	CanonicWildcard = "*"
 
-	// Separates literals in a canonic tag string.
-	// A '.' by convention helps visually identify a tag string, it's compatible with domain names, and is already a familiar scoping character.
+	// CanonicSeparator separates literals in a canonic tag string.  A '.'
+	// helps visually identify a tag string, is compatible with domain names,
+	// and is already a familiar scoping character.
 	CanonicSeparator     = "."
 	CanonicSeparatorChar = byte('.')
 )

@@ -82,7 +82,7 @@ func minAccess(level1, level2 Access) Access {
 // { high: time/entropy, low: AuthorSlot64(author) }, so the ACC gate can bind a content cell to
 // its author from the address alone — no payload read, no item-existence state.  The fold is the
 // full 64 bits: forging another member's slot is a 2^64 second-preimage, and member UIDs are not
-// attacker-chosen (SD-channel-governance.md §4).
+// attacker-chosen (AOM SD-channel-governance.md §4).
 func AuthorSlot64(author tag.UID) uint64 {
 	return tag.UID_HashLiteral(author.AppendTo(nil))[0]
 }

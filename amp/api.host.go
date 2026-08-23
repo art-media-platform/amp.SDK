@@ -45,7 +45,7 @@ type TransportInfo struct {
 	// planet drop).  Set ONLY by transports the host itself runs as its operator
 	// rail (embedded/in-proc, host-owned service sessions); a bridge or proxy
 	// transport fronting remote callers never sets it, and it is never derived
-	// from RequiresAuth or challenge posture (SD-security-sync §8.5).
+	// from RequiresAuth or challenge posture (AOM SD-security-sync.md §8.5).
 	OperatorRail bool
 }
 
@@ -68,7 +68,7 @@ type Transport interface {
 	RecvTx() (*TxMsg, error)
 }
 
-// HostService attaches to a amp.Host as a child, extending host functionality.
+// HostService attaches to an amp.Host as a child, extending host functionality.
 type HostService interface {
 	task.Context
 
@@ -115,7 +115,7 @@ type Requester interface {
 	RecvEvent(evt PinEvent)
 }
 
-// Session in an open client session with an amp.Host.
+// Session is an open client session with an amp.Host.
 // Closing is initiated via task.Context.Close().
 type Session interface {
 	task.Context // Underlying task context
@@ -125,7 +125,7 @@ type Session interface {
 	// Returns the active data.Publisher instance for this session.
 	AssetPublisher() data.Publisher
 
-	// Returns info about this user and session -- READ ONLY
+	// Returns info about this user and session — READ ONLY
 	Login() *Login
 
 	// Creates a new tx ready for use, scoped to a target planet (default: home).
@@ -145,7 +145,7 @@ type Session interface {
 	// runtime — the VaultAddrs carried by a PlanetInvite or a NameService record —
 	// so a fresh peer can bootstrap a connection without a static, operator-
 	// configured peer.  Best-effort and asynchronous; a no-op when the host runs
-	// without a vault transport.  See vault.Transport.AddPeer.
+	// without a vault transport.  See vault.Transport.AddPeer (host-side).
 	DialVaultPeers(addrs []*VaultAddr) error
 
 	// WatchPlanet starts syncing a planet's journal without joining as a member —
@@ -210,7 +210,7 @@ type Session interface {
 
 	// PrefetchBlobs names refs as admitted for the planet and pulls any still missing —
 	// the admission surface for a playback-queue or spatial-neighborhood prefetch signal
-	// (SD-planet-storage §13.5, D17).  Best-effort and asynchronous; a no-op without vault sync.
+	// (AOM SD-planet-storage.md §13.5, D17).  Best-effort and asynchronous; a no-op without vault sync.
 	PrefetchBlobs(planetID tag.UID, refs []*BlobRef)
 }
 
@@ -282,7 +282,7 @@ type HostSession interface {
 
 	// KeyAdmission returns the login boundary's member-signing-key custody
 	// ruling for this session, computed once in the host's login handler
-	// before app.home MakeReady (SD-security-sync §8.5).
+	// before app.home MakeReady (AOM SD-security-sync.md §8.5).
 	KeyAdmission() KeyAdmission
 
 	// access control
@@ -298,7 +298,7 @@ type HostSession interface {
 // rejects, and nothing about the rejected first contact persists.  Both
 // AdoptDeclared and ChallengeRequired derive from the same transport predicate
 // in the login handler, so "adoption ⇒ verified proof-of-possession" holds
-// structurally, never by flag convention (SD-security-sync §8.5).  NodeOperator
+// structurally, never by flag convention (AOM SD-security-sync.md §8.5).  NodeOperator
 // is NOT key custody: it carries the transport's operator-rail declaration
 // (TransportInfo.OperatorRail) through the session, and MintNodeKey never
 // implies it — a challenge-free login is a custody fact, not operator trust.
@@ -313,7 +313,7 @@ type KeyAdmission struct {
 	// The member's pub-only Enclave record FOLLOWS it: after a quorum re-key
 	// the adopt path overwrites a stale pub-only key with the declared key the
 	// governance record now names — governance-recorded keys outrank
-	// TOFU-recorded ones, fail-closed (SD-member-rekey §5).
+	// TOFU-recorded ones, fail-closed (AOM SD-member-rekey.md §5).
 	GovernanceKey safe.PubKey
 }
 
@@ -344,7 +344,7 @@ type ACCEngine interface {
 
 	// FounderFingerprint returns planetID's resolved founder fingerprint — the
 	// commitment to its genesis founder authority root (FounderFingerprint fn;
-	// SD-channel-governance §8) — or nil until the genesis resolves.
+	// AOM SD-channel-governance.md §8) — or nil until the genesis resolves.
 	FounderFingerprint(planetID tag.UID) []byte
 
 	// PinFounderFingerprint registers the founder fingerprint planetID's
@@ -397,7 +397,7 @@ type TxJournal interface {
 // TxOutbox queues locally authored TxMsgs for propagation to vaults.  Entries persist across
 // restarts — the outbox is drained when vault connectivity is available.  Blob bytes never
 // queue: the relayed TxMsg is the announce, and receivers pull what its BlobRef ops name
-// (receiver-driven transfer, SD-planet-storage §13.10).
+// (receiver-driven transfer, AOM SD-planet-storage.md §13.10).
 type TxOutbox interface {
 	EnqueueTx(planetID tag.UID, txTimeID tag.UID, raw []byte) error
 	DrainTx(cb func(planetID tag.UID, txTimeID tag.UID, raw []byte) error) error
@@ -439,7 +439,7 @@ type BlobStore interface {
 	StoreValidated(planetID tag.UID, ref *BlobRef, data io.Reader) error
 }
 
-// Registry is where apps and types are registered -- concurrency safe.
+// Registry is where apps and types are registered — concurrency safe.
 type Registry interface {
 
 	// Registers a value as a prototype with a UID

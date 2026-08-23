@@ -15,7 +15,7 @@ import (
 // CoSignatures over the re-key digest below.  Same-MemberID re-key exists ONLY
 // for identities whose canonic URI outlives the key (eth:, email:); a did:key
 // MemberID IS the fold of its key and is refused structurally
-// (SD-did-identity §2, §12).  Authority model, vault admission, and ceremony:
+// (AOM SD-did-identity.md §2, §12).  Authority model, vault admission, and ceremony:
 // AOM SD-member-rekey.md.
 
 // VerifyCoSignatureQuorum is the frame-agnostic quorum-verify core shared by
@@ -25,7 +25,7 @@ import (
 // the threshold enforced — required > 0 demands that many DISTINCT valid
 // signatures, required <= 0 demands all declared signers, and an empty signer
 // set never passes (fail-closed floor).  Returns the verified signer IDs.
-// (SD-security-sync §4.4, SD-channel-governance §3, §8.)
+// (AOM SD-security-sync.md §4.4, AOM SD-channel-governance.md §3, §8.)
 func VerifyCoSignatureQuorum(signatures []*CoSignature, digest []byte, signerKeys map[tag.UID]safe.PubKey, required int) ([]tag.UID, error) {
 	verified := make([]tag.UID, 0, len(signatures))
 	seen := make(map[tag.UID]struct{}, len(signatures))
@@ -82,7 +82,7 @@ func reKeyFramePart(ref *safe.KeyRef, role string) ([]byte, error) {
 // cannot re-install a dead key after a later rotation nor transplant to
 // another member or planet.  All three keys are required — the lost device
 // lost the wrap endpoint too, so a re-key without a fresh EncryptKey is
-// malformed.  (SD-member-rekey §3.)
+// malformed.  (AOM SD-member-rekey.md §3.)
 func (me *MemberEpoch) ReKeyCoSignatureDigest(planetID tag.UID, hashKit safe.HashKitID) ([]byte, error) {
 	if me == nil || me.MemberTag == nil || me.MemberTag.UID().IsNil() {
 		return nil, status.Code_BadRequest.Error("amp: re-key record names no member")
@@ -114,7 +114,7 @@ func (me *MemberEpoch) ReKeyCoSignatureDigest(planetID tag.UID, hashKit safe.Has
 
 // VerifyReKeyQuorum verifies a re-key MemberEpoch's quorum: the structural
 // gate (a did:key member is refused — its MemberID IS the fold of the key
-// being retired, SD-did-identity §2 — and the record must reinstate
+// being retired, AOM SD-did-identity.md §2 — and the record must reinstate
 // Status = Active, since Status rides outside the signed digest and must not
 // become a submitter-controlled smuggling lane), then every ReKey CoSignature
 // over ReKeyCoSignatureDigest against founderKeys with the genesis-frozen
@@ -123,7 +123,7 @@ func (me *MemberEpoch) ReKeyCoSignatureDigest(planetID tag.UID, hashKit safe.Has
 // ONE re-key verify site: the ACC authority gate and the vault key cache both
 // call it.  What it does NOT check — and the vault must — is that ReKeyPrior
 // equals the member's cached current SigningKey (the replay guard's grounding)
-// and that the member was Suspended first.  (SD-member-rekey §2-§4.)
+// and that the member was Suspended first.  (AOM SD-member-rekey.md §2-§4.)
 func (me *MemberEpoch) VerifyReKeyQuorum(planetID tag.UID, hashKit safe.HashKitID, founderKeys map[tag.UID]safe.PubKey, required int) ([]tag.UID, error) {
 	if me == nil || len(me.ReKey) == 0 {
 		return nil, status.Code_BadRequest.Error("amp: not a re-key record (no ReKey CoSignatures)")
@@ -181,13 +181,13 @@ func base58btcEncode(raw []byte) string {
 	return string(encoded)
 }
 
-// DIDKeyUID returns the MemberID the SD-did-identity §2 fold mints for a
+// DIDKeyUID returns the MemberID the AOM SD-did-identity.md §2 fold mints for a
 // signing key — tag.HashName over the canonical did:key URI ("did:key:z" +
 // base58btc(multicodec-varint ‖ pubkey)) — and whether the kit has a did:key
 // form at all (Ed25519 via Poly25519 is the shipped form; a kit with no
 // did:key encoding reads false).  A re-key verifier uses it structurally:
 // when the fold of the key being retired IS the MemberID, the identity cannot
-// outlive the key and re-key is refused (SD-did-identity §2, §12.1).
+// outlive the key and re-key is refused (AOM SD-did-identity.md §2, §12.1).
 func DIDKeyUID(kit safe.CryptoKitID, pubKey []byte) (tag.UID, bool) {
 	if kit != safe.Crypto.Poly25519.ID || len(pubKey) != 32 {
 		return tag.UID{}, false

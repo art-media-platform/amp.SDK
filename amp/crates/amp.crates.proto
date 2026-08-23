@@ -59,7 +59,7 @@ message AssetEntry {
     float                   ExtentsY = 16;
     float                   ExtentsZ = 17;
 
-    // Reserved for runtime use -- defaults to empty.
+    // Reserved for runtime use — defaults to empty.
     string                  LocalURI = 30;
 
     // Comma-delimited and whitespace-trimmed list of tags.

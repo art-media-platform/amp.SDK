@@ -6,7 +6,7 @@ syntax = "proto3";
 // EditID stamped at commit is the time axis, and the constant ItemID
 // discriminates the track (out / in / keyframe).  The persisted tape is a
 // read-only "console"; its live tail driven interactively is a "terminal".
-// See AOM/AD-app-terminal.md.
+// See AOM AD-app-terminal.md.
 package amp;
 
 option go_package    = "github.com/art-media-platform/amp.SDK/amp";

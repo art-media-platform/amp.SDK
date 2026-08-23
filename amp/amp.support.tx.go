@@ -200,14 +200,14 @@ func (tx *TxMsg) LoadValue(want *tag.Address, dst proto.Message) error {
 //  2. tx.Ops is strictly ascending by full Address — a duplicate full address
 //     rejects: within one authored tx every op shares EditID = TxID, so two
 //     writes to one element would fold as same-identity divergent bytes, an
-//     arrival-order hazard (SD-edit-resolution §6.2);
+//     arrival-order hazard (AOM SD-edit-resolution.md §6.2);
 //  3. every op's value span [DataOfs, DataOfs+DataLen) lies inside DataStore
 //     with no uint64 wrap, so no read site can address outside it;
 //  4. Normalized is process-local: every decode exit resets it, so a wire
 //     peer can never assert pre-normalization.
 //
 // Out of scope, enforced at their own doors: value-header admission (commit
-// intake + the materializer, SD-edit-resolution §6.1), signature/AEAD
+// intake + the materializer, AOM SD-edit-resolution.md §6.1), signature/AEAD
 // verification (OpenTx), size ceilings, and Tag syntax (checkTagSyntax).
 func (tx *TxMsg) Normalize(force bool) error {
 	if !force && tx.Normalized {
@@ -266,7 +266,7 @@ func (tx *TxMsg) Delete(elemID tag.ElementID, val proto.Message) error {
 //   - TxOp is appended to TxMsg.Ops
 func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 
-	// EditID == TxID on every write (SD-edit-resolution §6.1); in-memory /
+	// EditID == TxID on every write (AOM SD-edit-resolution.md §6.1); in-memory /
 	// cabinet-key identity only — the op wire does not carry it.
 	op.Addr.EditID = tx.TxID()
 
@@ -582,7 +582,7 @@ func readOps(tx *TxMsg, src []byte) error {
 }
 
 // reconstructEditIDs restores each op's identity after decode — the ONE
-// authoritative site (SD-edit-resolution §6.1): the envelope TxID, unless the
+// authoritative site (AOM SD-edit-resolution.md §6.1): the envelope TxID, unless the
 // op's value header carries an authoring TxID (ValueHeaderFlags_TxID, stamped
 // at materialize so served ops survive session-tx re-bundling).  Called only
 // at decode exits where the DataStore is populated; nothing downstream ever

@@ -71,11 +71,11 @@ tags Attr {
         MediaLink      "media.link.Tag"       // disposable cache of ONE resolved URL; authority = media.sources.Tags
         MediaRelease   "media.release.Tag"
         MediaInfo      "MediaInfo"
-        MediaSources   "media.sources.Tags"   // ways to get the bytes: blob UID / URL / provider scheme (AD-playlists §5)
+        MediaSources   "media.sources.Tags"   // ways to get the bytes: blob UID / URL / provider scheme (AOM AD-playlists.md §5)
         MediaTags      "MediaTags"            // track node — what the audio says about itself
         MediaEntry     "MediaEntry"           // playlist node, keyed by entryID — one row
         MediaRank      "MediaRank"            // playlist node, keyed by entryID — 16-byte reorder cell
-        MediaPlacement "media.placement.TRS"  // optional free-placement cell, keyed by entryID (AD-playlists §7)
+        MediaPlacement "media.placement.TRS"  // optional free-placement cell, keyed by entryID (AOM AD-playlists.md §7)
     }
 
     // Channel metadata and catalog
@@ -380,7 +380,7 @@ const Terminal {
     int32 DefaultCols           = 80;      // PTY grid columns
     int32 DefaultRows           = 24;      // PTY grid rows
     int32 DefaultScrollbackRows = 1000;    // emulator scrollback rows
-    int64 DefaultKeyframeMs     = 10000;   // keyframe cadence — the DVR replay bound (AD-app-terminal §10-4)
+    int64 DefaultKeyframeMs     = 10000;   // keyframe cadence — the DVR replay bound (AOM AD-app-terminal.md §10-4)
     int64 DefaultJogMs          = 16000;   // transport jog step
     int64 DefaultReplayResidentBytes = 8388608; // replay-window residency budget (Buffered cap)
 }

@@ -45,7 +45,7 @@ const int32 DefaultServicePort = 5192;
 // Content-model epoch — the SDK proto semantics under which artifact payloads are
 // encoded (the Tag/Tags content model).  A Codex stamps this in its header; an
 // importer refuses a Codex whose epoch differs rather than silently mis-decoding
-// persisted bytes (DD-chronicle-and-codex.md §5.5).  Bump on each wire-incompatible
+// persisted bytes (AOM DD-chronicle-and-codex.md §5.5).  Bump on each wire-incompatible
 // content-model change.
 const uint32 ContentModelEpoch = 1;
 

@@ -265,7 +265,7 @@ func hashBytes(kitID safe.HashKitID, data []byte) ([]byte, error) {
 // FounderFingerprint returns the 32-byte commitment to a planet's founder
 // authority root — the pin a NameServiceRecord / PlanetInvite carries so a
 // cold consumer corroborates a first-seen genesis against the founder set it
-// was told to expect (SD-channel-governance §8).  Each founder contributes one
+// was told to expect (AOM SD-channel-governance.md §8).  Each founder contributes one
 // entry — CryptoKitID (16 bytes) ‖ signing pubkey bytes — and entries are
 // sorted lexicographically so the commitment is founder-order independent; the
 // charter's raw GenesisRequiredSignatures rides as a u32-BE trailer part.
@@ -299,7 +299,7 @@ func FounderFingerprint(founderKeys map[tag.UID]safe.PubKey, requiredSignatures 
 //
 // An EpochLink publishes ToEpoch's planet ContentKey sealed under a subkey of
 // FromEpoch's, so holding any newer key transitively unlocks the archive back
-// to the nearest deliberate cut (SD-security-sync.md §5.6).  Seal and open live
+// to the nearest deliberate cut (AOM SD-security-sync.md §5.6).  Seal and open live
 // here as the one authoritative pair; both epoch UIDs bind the AEAD as AAD so a
 // box cannot be transplanted onto a different link.
 

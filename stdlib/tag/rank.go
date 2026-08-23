@@ -6,8 +6,8 @@ import (
 	"math/bits"
 )
 
-// Fractional-index rank minting for ordered channels (AD-playlists §3,
-// AD-docs-channel §5.2).  A rank is a UID ordered by UID.CompareTo; render
+// Fractional-index rank minting for ordered channels (AOM AD-playlists.md §3,
+// AOM AD-docs-channel.md §5.2).  A rank is a UID ordered by UID.CompareTo; render
 // order is (Rank, itemID).  Ranks are minted RANDOMLY inside the open
 // interval (lo, hi) — unlike the deterministic, commutative Midpoint, two
 // writers inserting into the same gap draw distinct ranks, so their runs do

@@ -173,7 +173,7 @@ func (req *localCommit) RecvEvent(evt amp.PinEvent) {
 // LoadItems loads a snapshot and dispatches the result through a NodeResponder.
 // This replaces manual TxMsg unwrapping patterns — the responder (typically an FoldBinding)
 // receives typed callbacks for each matching item.  The snapshot serve honors the
-// request tx's planet scope (SD-private-channels §6): pass a TxScope naming the
+// request tx's planet scope (AOM SD-private-channels.md §6): pass a TxScope naming the
 // planet the items live on; no scope (or a zero Planet) reads the home planet.
 func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.NodeResponder, scope ...amp.TxScope) error {
 	tx := appCtx.NewTx(scope...)

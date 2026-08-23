@@ -83,8 +83,3 @@ message EmailCredential {
     string              PlanetTag   = 5;
 }
 
-// WithdrawNote (the wire-shape carrier for AOM SD-withdrawal-consent.md withdrawal facts) is a
-// hand-written Go struct in webapi.types.go, not a proto message: it is never
-// marshaled to binary, and as a struct its UID fields are typed tag.UID /
-// amp.Address so they ride the JSON wire as base32 strings — consistent with
-// every other webapi shape.
