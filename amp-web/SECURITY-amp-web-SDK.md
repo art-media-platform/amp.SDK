@@ -34,10 +34,13 @@ each carries `_FromID`, the author; see Attribution below.)
 - **Private planet** — every transaction is encrypted under the planet's current
   **epoch key**. Only members holding that key decrypt. Removing a member rotates
   the epoch; the revoked member never receives the new key.
-- **Public / share planet** — `PlanetEpoch.IsPublic = true` at genesis: signed but
-  not encrypted, anonymous-readable, member-writable. This is the *only* mode that
-  allows anonymous reads. amp has **no per-item visibility flag** — public content
-  lives on a separate public planet (SKILL §6.4).
+- **Public / share planet** — `PlanetCharter.Privacy = PrivacyMode_Public`, set at
+  genesis and fixed for the planet's life: signed but not encrypted,
+  anonymous-readable, member-writable. This is the *only* mode that allows
+  anonymous reads. The charter is carried byte-identically on every
+  `PlanetEpoch`, so the mode is verifiable offline from any single epoch and
+  cannot be flipped by a later one. amp has **no per-item visibility flag** —
+  public content lives on a separate public planet (SKILL §6.4).
 - Encrypted blobs are decrypted on demand by the host and served as plaintext over
   the (TLS-terminated) wire. **Plaintext is never persisted to vault disk.**
 
@@ -199,10 +202,10 @@ To override the auto-installed key (e.g. derive it from a wallet), call
 
 ## Attribution & anonymity (your responsibility, not the wire's)
 
-- **`fromID` rides every read, subscribe, and withdraw frame** — it names the member
+- **`_FromID` rides every read, subscribe, and withdraw frame** — it names the member
   who authored the op. On a share planet that is the author's identity. **Anonymity
   is an app-layer policy**, not a wire guarantee: if your UI must not reveal authors,
-  don't render `fromID`.
+  don't render `_FromID`.
 - **Share-planet attribution stripping is app-layer.** When you copy content to a
   public share planet, strip owner attribution by default unless the owner opts in.
 - **Never persist ephemeral credentials in channels** (collab room tokens, short-lived

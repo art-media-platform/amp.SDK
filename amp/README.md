@@ -54,15 +54,15 @@ Every long-lived object is a node in a [`task.Context`](../stdlib/task/api.task.
 
 ## Channel Conventions
 
-Most channels are one of two shapes.  The [`amp/std`](std/) package gives you a skeleton for both via `std.AppModule[*yourApp]`.
+Most channels are one of two shapes.  The [`amp/std`](std/) package gives you a skeleton for both: embed [`std.App`](std/api.std.go) for the lifecycle (`AppContext` plus no-op `MakeReady` / `OnClosing`), and the generic `std.Item[T]` / `std.Pin[T]` / `std.ItemNode[T]` types carry your instance type `T` through.
 
 ### 1. Send-Only — Serve State to Clients
 
-For listings, catalogs, exports, read models.  Implement [`std.Item`](std/api.std.go) and hand it to `PinAndServe`; the runtime walks your item tree, serializes attrs, and pushes a synced `TxMsg`.
+For listings, catalogs, exports, read models.  Implement [`std.Item`](std/api.std.go) and hand it to `std.PinAndServe`; the runtime walks your item tree, serializes attrs, and pushes a synced `TxMsg`.
 
 ```go
 func (app *appInst) StartPin(req *amp.Request) (amp.Pin, error) {
-    return app.PinAndServe(&notesRoot{}, req)
+    return std.PinAndServe[*appInst](&notesRoot{}, app, req)
 }
 
 type notesRoot struct {
@@ -127,25 +127,26 @@ var AppName = std.Attr.App.With("notes") // invocation tag: amp://{planet}/notes
 func RegisterWith(reg amp.Registry) {
     reg.RegisterModule(&amp.AppModule{
         Info: amp.AppModuleInfo{
-            Name:     AppName,
+            Name:    AppName,
             Version: "v000",
             Aliases: []string{"notes"},
         },
         NewAppInstance: func(ctx amp.AppContext) (amp.AppInstance, error) {
-            app := &appInst{}
-            app.Instance = app
-            app.AppContext = ctx
-            return app, nil
+            return &appInst{
+                App: std.App{
+                    AppContext: ctx,
+                },
+            }, nil
         },
     })
 }
 
 type appInst struct {
-    std.AppModule[*appInst] // skeleton: MakeReady/OnClosing/PinAndServe
+    std.App // skeleton: AppContext + no-op MakeReady / OnClosing
 }
 
 func (app *appInst) StartPin(req *amp.Request) (amp.Pin, error) {
-    return app.PinAndServe(&notesRoot{}, req)
+    return std.PinAndServe[*appInst](&notesRoot{}, app, req)
 }
 ```
 
@@ -224,7 +225,7 @@ And Unity already models it this way, 1:1.  A `LiveCrate` is literally an `IResp
 | [`amp.support.tx.go`](amp.support.tx.go) | `TxMsg` construction, marshaling, `Upsert` |
 | [`amp.support.epoch.go`](amp.support.epoch.go) | Planet/channel epoch key plumbing |
 | [`amp.core.proto`](amp.core.proto) | The wire format: every serialized type, cast in stone |
-| [`std/`](std/) | `AppModule[T]`, `Item`, `Pin[T]`, `PinAndServe`, `ItemWriter` — the app-builder's toolkit |
+| [`std/`](std/) | `App`, `Item[T]`, `Pin[T]`, `PinAndServe[T]`, `ItemWriter` — the app-builder's toolkit |
 | [`webapi/`](webapi/) | The `/api/v1/*` HTTP/JSON contract the web SDK speaks |
 
 ### Public API Surface
