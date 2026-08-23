@@ -26,6 +26,7 @@ enum AssetKind {
 }
 
 
+// AssetEntry is one addressable asset within a crate's bundle.
 message AssetEntry {
 
     AssetKind               Kind = 1;
@@ -87,6 +88,8 @@ message AssetEntry {
     repeated string         Aliases = 37;
 }
 
+// BundleManifest is the catalog of one built asset bundle — its identity, the
+// assets it carries, and the content address of the built file.
 message BundleManifest {
 
     // BundleTitle is how the outside world sees this bundle and has no other impact.
@@ -99,6 +102,8 @@ message BundleManifest {
 
     repeated AssetEntry     Assets = 10;
 
+    // When set, a runtime is advised to load this bundle's assets together
+    // rather than individually on demand.
     bool                    LoadAllHint = 20;
 
     // Content-addressing handle for the built bundle file: leading 16 bytes of its plaintext

@@ -91,6 +91,8 @@ type Task struct {
 //   - the OnClosing() hook, allowing cleanup to occur when a Context is closed but before its parent is closed.
 //   - PrintTreePeriodically() which visualizes a Context's child tree and is helpful for debugging in large projects.
 type Context interface {
+
+	// Log returns this Context's logger, labeled with Info.Label.
 	Log() alog.Logger
 
 	// Includes functionality and behavior of a context.Context, with these

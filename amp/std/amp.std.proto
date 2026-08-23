@@ -6,6 +6,7 @@ option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 
 import "amp/amp.core.proto";
 
+// TRS_Flags selects special placement behavior for a TRS.
 enum TRS_Flags {
     FixedScale = 0;
     AutoScale  = 1;  // Dynamically adjust scale based on observer position.
@@ -38,6 +39,7 @@ message TRS {
     fixed64             S2_1 = 15;
 }
 
+// Matrix4x4 is a double-precision 4x4 transform.
 message Matrix4x4 {
 
     // 16 doubles in row-major order
@@ -98,6 +100,8 @@ message CameraState {
     CameraModeID ModeID = 21;
 }
 
+// CameraOptions carries a viewer's camera preferences — how the camera should
+// behave, as opposed to CameraState, which is where the camera currently is.
 message CameraOptions {
     float  MoveSpeed   = 1; // movement speed multiplier
     string Mode        = 2; // e.g. "orbit", "first-person", "flight", etc.
@@ -219,6 +223,8 @@ message GeoPath {
 }
 
 
+// PointFormat declares how a packed sequence of tile indices is encoded — which
+// grid (S2 or H3) and whether each point carries a trailing time component.
 enum PointFormat {
     S2  = 0; // (S2)      (1) uint64: lat,lng, (res)
     H3  = 1; // (H3)      (1) uint64: lat,lng, (res)
@@ -242,6 +248,7 @@ message MediaInfo {
 }
 
 
+// MediaFlags describes what a media item is and what it supports.
 enum MediaFlags {
     NoMedia             = 0;
 
@@ -343,6 +350,7 @@ message Arg {
     string Value = 2;
 }
 
+// ColormapFlags selects which color channels a visual layer drives.
 enum ColormapFlags {
     ColormapFlags_None = 0;
     ColormapFlags_Full = 0x01;
@@ -350,16 +358,20 @@ enum ColormapFlags {
     ColormapFlags_Fore = 0x04;
 }
 
+// SensorFlags selects which device sensor inputs a visual layer consumes.
 enum SensorFlags {
     SensorFlags_None    = 0;
     SensorFlags_GyroUp  = 0x01;
 }
 
+// AudioFlags selects which audio-analysis inputs a visual layer consumes.
 enum AudioFlags {
     AudioFlags_None     = 0;
     AudioFlags_FFT      = 0x01;
 }
 
+// VisPreset is one named visual-layer preset: its presentation labels, the
+// input axes it consumes, its aspect-ratio pegs, and the layer asset it drives.
 message VisPreset {
     amp.Tag         Title       = 1; // label — preset display name
     amp.Tag         Collection  = 2; // label — the pack/collection the preset ships in

@@ -5,11 +5,14 @@ option csharp_namespace = "art.media.platform.status";
 option go_package = "github.com/art-media-platform/amp.SDK/stdlib/status";
 
 
-// Code expresses status and error codes.
+// Code expresses status and error codes.  Nil (0) is success; every failure is
+// negative, banded by concern so a reader can place an unfamiliar code:
+// -2300x/-2301x general, -2302x/-2303x request and storage, -2304x data
+// serving, -2305x permissions, -231xx keys and crypto.
 enum Code {
-    Nil                         = 0;
+    Nil                         = 0;    // success — no status to report
 
-    Unnamed                     = -23001;
+    Unnamed                     = -23001;   // failure with no more specific code
     AssertFailed                = -23002;
     Unimplemented               = -23004;
     Timeout                     = -23005;
@@ -23,19 +26,19 @@ enum Code {
     ItemNotFound                = -23013;
     ParseFailed                 = -23014;
 
-    ContextNotReady             = -23020;
+    ContextNotReady             = -23020;   // the task.Context is not yet serving
     RequestClosed               = -23021;
     BadRequest                  = -23022;
-    BadTag                      = -23023;
+    BadTag                      = -23023;   // tag expression is malformed or unresolvable
     BadValue                    = -23024;
     AlreadyExists               = -23025;
     CommitFailed                = -23028;
     StorageFailure              = -23030;
-    MalformedTx                 = -23032;
+    MalformedTx                 = -23032;   // a TxMsg failed structural validation
 
-    DataFailure                 = -23041;
-    PinFailed                   = -23043;
-    ProviderErr                 = -23045;
+    DataFailure                 = -23041;   // stored data could not be read or decoded
+    PinFailed                   = -23043;   // a pin request could not be served
+    ProviderErr                 = -23045;   // an upstream provider refused or failed
 
     InsufficientPermissions     = -23051;
 

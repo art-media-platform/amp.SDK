@@ -5,6 +5,7 @@ option go_package = "github.com/art-media-platform/amp.SDK/stdlib/safe";
 option csharp_namespace = "art.media.platform.safe";
 
 
+// Const carries safe package constants that must agree across languages.
 enum Const {
     Nil                             = 0;
     SealedTomeVersion               = 1;
