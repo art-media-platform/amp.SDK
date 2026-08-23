@@ -38,7 +38,7 @@ var ErrStoreClosed = status.Code_NotReady.Error("safe: key store is closed")
 // Guard protects and recovers the DEK used to encrypt a KeyTome payload.
 //
 // Implementations:
-//   - fileGuard  — derives a wrapping key from a passphrase via HKDF
+//   - fileGuard  — derives a wrapping key from a passphrase
 type Guard interface {
 
 	// Info returns metadata about this Guard's capabilities.
@@ -112,8 +112,8 @@ type Enclave interface {
 	// signing contexts go through SignDomain.
 	SignRaw(ref *KeyRef, msg []byte) ([]byte, error)
 
-	// EncryptSym encrypts plaintext using the SymmetricKey referenced by ref
-	// (XChaCha20-Poly1305).  Output: nonce (24) || ciphertext+tag.
+	// EncryptSym encrypts plaintext using the SymmetricKey referenced by ref.
+	// Output: nonce (24) || ciphertext+tag.
 	EncryptSym(ref *KeyRef, plaintext []byte) ([]byte, error)
 
 	// DecryptSym decrypts a buffer produced by EncryptSym using the same
@@ -131,7 +131,7 @@ type Enclave interface {
 	//
 	// This is intentionally limited to symmetric keys — signing and asymmetric private keys
 	// MUST NOT leave the Enclave.  Symmetric epoch keys are exported so that CryptoProvider
-	// can derive subkeys (content_key, proof_key) via HKDF for payload encryption and
+	// can derive subkeys (content_key, proof_key) for payload encryption and
 	// relay membership proofs.  The trust boundary is the process, not the Enclave API.
 	ExportSymmetricKey(ref *KeyRef) ([]byte, error)
 
@@ -143,7 +143,7 @@ type Enclave interface {
 //
 // Symmetric epoch keys have fundamentally different access patterns from identity keys:
 //   - High volume: up to millions of keys per user across all planets/channels
-//   - Must be exported for HKDF derivation (content_key, proof_key)
+//   - Must be exported for subkey derivation (content_key, proof_key)
 //   - Hot/cold separation: only current epoch keys need to be in memory
 //   - Each epoch may carry up to 4 distinct key materials (one per KeyRole) —
 //     access-tiered channel key distribution puts different roles in different
@@ -240,8 +240,8 @@ type SigningOps struct {
 // EncryptOps bundles the asymmetric-encryption primitives of a Kit.
 // All non-nil functions must be threadsafe.
 //
-// The Seal/Open shape is anonymous-sender (RFC 9180 HPKE base mode, libsodium
-// crypto_box_seal):  Seal generates a fresh ephemeral keypair in this kit per
+// The Seal/Open shape is an anonymous-sender sealed box:  Seal generates a
+// fresh ephemeral keypair in this kit per
 // call, performs ECDH against the recipient's pubkey, and embeds the ephemeral
 // pubkey in the output.  Open recovers the ephemeral pubkey from the front of
 // the ciphertext and ECDHs against the recipient's private key.  No sender

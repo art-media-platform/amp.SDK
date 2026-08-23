@@ -1413,7 +1413,7 @@ message BlobRef {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
 
-    // Hash algorithm used for blob integrity (default: Blake2s_256).
+    // Hash kit used for blob integrity (0 = the epoch's default kit).
     // Each BlobRef is self-describing — the validator reads this field
     // to select the correct HashKit for verification.
     safe.HashKitID      HashKitID = 8;
@@ -1595,7 +1595,7 @@ message CodexHeader {
     string              Label = 6;
 
     // HashKit that computed the container integrity digest (the trailing digest
-    // over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
+    // over preamble + header + entries).  0 = the default hash kit.
     safe.HashKitID      DigestHashKit = 7;
 
     // Content-model epoch: the SDK proto semantics governing artifact payloads (the
@@ -1696,8 +1696,8 @@ message ChronicleHeader {
     // Compact lineage.  Nil if this chronicle has never been compacted.
     ChronicleCompactHistory CompactHistory = 6;
 
-    // HashKit that computed the container integrity digest.  0 = Blake2s_256
-    // (the back-compat default).
+    // HashKit that computed the container integrity digest.  0 = the default
+    // hash kit.
     safe.HashKitID          DigestHashKit = 7;
 
     // Reserved for future redaction manifest (AOM DD-chronicle-and-codex.md §4.7.4).

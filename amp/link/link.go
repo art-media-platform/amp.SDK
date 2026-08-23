@@ -5,7 +5,7 @@
 //	https://{org}/link/{planet}/{node}/{item}
 //
 // Tier 2 (private): opaque encrypted token containing the address tuple,
-// sealed with an HKDF-derived subkey of the planet or channel epoch key.
+// sealed with a derived subkey of the planet or channel epoch key.
 // Intermediaries (SMS, Slack, email) see a random string — zero metadata leakage.
 //
 //	https://{org}/link/{opaque-token}
@@ -37,7 +37,7 @@ const (
 	// tokenPlaintextSize = 1 (version) + 3×16 (UIDs) = 49 bytes.
 	tokenPlaintextSize = 1 + 3*tag.UID_Size
 
-	// HKDF purpose string for link token encryption.
+	// Subkey purpose string for link token encryption.
 	hkdfPurpose = "link-token"
 )
 

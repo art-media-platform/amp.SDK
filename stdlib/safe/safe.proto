@@ -74,13 +74,12 @@ enum KeyType {
     SigningKey          = 3;    // Signature (Ed25519, ML-DSA)
 }
 
-// HashKitID selects a content-integrity hash.  Blake2s-256 is the default by being
-// the zero value; an absent field means Blake2s-256 globally and forever — so a
-// BlobRef verifies from the ref alone, no epoch present.
+// HashKitID selects a content-integrity hash.  The zero value is the default
+// kit, fixed globally so a BlobRef verifies from the ref alone, no epoch present.
 // (The name->tag.UID identity hash is a separate, hardwired primitive — not a HashKit.)
 enum HashKitID {
     Blake2s_256 = 0;    // default. IETF RFC 7693 — BLAKE2 Cryptographic Hash and MAC (2015)
-    Blake3_256  = 1;    // verified streaming / parallel. BLAKE3 official spec, BLAKE3-team (2021); not yet standardized
+    Blake3_256  = 1;    // verified streaming / parallel. BLAKE3 official spec, BLAKE3-team
     SHA2_256    = 2;    // external-ecosystem interop (Git/OCI/IPFS), HW-accelerated. NIST FIPS 180-4 (2015); ISO/IEC 10118-3:2018
     SHA3_256    = 3;    // diverse family (sponge), break-glass. NIST FIPS 202 (2015)
 }
