@@ -456,7 +456,7 @@ message AtmosphereEffect {
 //   Sun — time-of-day phenomena that get in the way of legibility during map work
 //         (sunset glow, terminator color, Henyey-Greenstein forward scatter).
 //   Night — night-side dim and cool tinting; off → uniform daylight everywhere.
-//   Fog — exponential aerial perspective on tiles; seam-hider for distant edges.  Usually on.
+//   Fog — exponential aerial perspective on tiles; hides distant tile edges.  Usually on.
 message AtmosphereSpec {
     repeated AtmosphereEffect Effects = 1;
 }

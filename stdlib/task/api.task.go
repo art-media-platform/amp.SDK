@@ -78,7 +78,7 @@ type Task struct {
 	Info
 
 	OnStart        func(ctx Context) error // Blocking fn called in StartChild(). If it errors, the child is closed, StartChild() returns the err, and OnRun is never called.
-	OnRun          func(ctx Context)       // Async work body run in its own goroutine. When it returns, idle-close is armed if Info.IdleClose > 0.
+	OnRun          func(ctx Context)       // Async work body run in its own goroutine. When it returns, idle-close is enabled if Info.IdleClose > 0.
 	OnClosing      func()                  // Called immediately after Close() is first called, while self & children are closing.
 	OnChildClosing func(child Context)     // Called immediately after the child's OnClosing() is called.
 	OnClosed       func()                  // Called after Close() and all children have completed Close() (but immediately before Done() is released).

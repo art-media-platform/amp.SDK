@@ -30,9 +30,13 @@ type AppEnvironment struct {
 	BundledPath string  // read-only fs root of trusted factory/bundled assets
 }
 
-// AppModule is how an app module registers with amp.Host and is used for internal components as well as for third parties. During runtime, amp.Host instantiates an amp.AppModule when a client request invokes one of the app's registered tags.
+// AppModule is how an app module registers with amp.Host.  At runtime amp.Host
+// instantiates an amp.AppModule when a client request invokes one of the app's
+// registered tags.
 //
-// Like a traditional OS service, an amp.AppModule responds to queries it recognizes and operates on client requests. The stock amp runtime offers essential apps, such as file system access and user account services.
+// Like a traditional OS service, an amp.AppModule responds to queries it
+// recognizes and operates on client requests.  The stock amp runtime offers
+// essential apps, such as file system access and user account services.
 type AppModule struct {
 	Info AppModuleInfo // identifying and invocation information
 

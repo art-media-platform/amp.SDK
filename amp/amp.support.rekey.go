@@ -51,7 +51,7 @@ func VerifyCoSignatureQuorum(signatures []*CoSignature, digest []byte, signerKey
 		verified = append(verified, signerID)
 	}
 	if required <= 0 {
-		required = len(signerKeys) // 0 = all declared signers must sign (paranoid default)
+		required = len(signerKeys) // 0 = all declared signers must sign (the strict default)
 	}
 	if required < 1 {
 		required = 1 // never fail-open: no resolved signers (or a zero quorum) is unauthorized

@@ -321,7 +321,7 @@ const Atmosphere {
     string SkyNoir       = "asset:atmosphere/sky/noir";         // monochrome cool blue
     string SunStandard   = "asset:atmosphere/sun/standard";     // sunset / terminator / HG forward scatter (legibility-cost)
     string NightStandard = "asset:atmosphere/night/standard";   // night-side dim + cool tint
-    string FogExponential = "asset:atmosphere/fog/exponential"; // exponential aerial perspective; seam-hider, on by default
+    string FogExponential = "asset:atmosphere/fog/exponential"; // exponential aerial perspective; hides distant tile edges, on by default
 
     // Inspector defaults — 0 on the serialized field means "unset, use this".
     float  DefaultNightDimmer     = 0.30;   // 0 = pitch black night limb; default reaches 70% dim

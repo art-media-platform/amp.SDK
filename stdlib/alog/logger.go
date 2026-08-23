@@ -115,7 +115,7 @@ func SetColor(on bool) { gUseColor.Store(on) }
 // itself.
 type MirrorFunc func(level int32, sevTag byte, line string)
 
-// SetMirror installs (nil removes) the process-wide emit mirror — the seam an
+// SetMirror installs (nil removes) the process-wide emit mirror — the interface an
 // embedding host (ampd-lib) uses to surface alog output where the embedder is
 // looking (e.g. the Unity console), which stderr never reaches.
 func SetMirror(mirror MirrorFunc) {
@@ -603,9 +603,10 @@ func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 	// a backgrounded daemon.  SIGINT/SIGTERM are the shutdown signals; for a daemon a
 	// hangup means "reload", not "die".
 	//
-	// Notify is installed HERE, synchronously — the ladder is armed the moment this
-	// function returns.  Armed inside the goroutine, a signal landing between return
-	// and the goroutine's first run takes the OS default and kills the process.
+	// Notify is installed HERE, synchronously — the ladder is enabled the moment
+	// this function returns.  Enabled inside the goroutine instead, a signal
+	// landing between return and the goroutine's first run takes the OS default
+	// and kills the process.
 	signal.Notify(sigInbox, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {

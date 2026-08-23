@@ -216,7 +216,7 @@ type Session interface {
 
 // HostSession is the host's privileged session surface, deliberately OFF the
 // public read/write Session API — one authoritative interface replacing the
-// per-concern downcast seams.  The host's session is the sole implementation.
+// per-concern downcast interfaces.  The host's session is the sole implementation.
 type HostSession interface {
 
 	// key custody

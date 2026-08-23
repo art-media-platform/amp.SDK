@@ -495,7 +495,7 @@ message BrandIdentity {
 // surface.  It is embedded in EpochTerms (quorum-signed), NOT the admin-mutable
 // Brand attr, so changing a planet's public face requires convening the
 // governing quorum.  This is the anti-spoof boundary: a lone admin key cannot
-// silently rename "119th Congress" to "War Profiteers".
+// silently change a planet's public name.
 //
 // The separate Brand attr remains the admin-mutable record for NON-identity,
 // cosmetic/operational fields (home URLs, link lists, install targets, and the
@@ -643,7 +643,7 @@ message PlanetCharter {
     repeated Tag        Founders = 8;
 
     // Genesis quorum threshold: how many Founders must have validly co-signed the
-    // genesis epoch.  0 = all Founders (paranoid default).  Frozen: the rule under
+    // genesis epoch.  0 = all Founders (the strict default).  Frozen: the rule under
     // which the planet legitimately came into being cannot be restated.
     int32               GenesisRequiredSignatures = 9;
 }
@@ -715,7 +715,7 @@ message EpochTerms {
     Tag                 GovernanceGroup = 16;
 
     // Threshold of GovernanceGroup co-signatures required for this epoch to be
-    // valid.  0 = all members of the resolved group (paranoid default).
+    // valid.  0 = all members of the resolved group (the strict default).
     int32               RequiredSignatures = 18;
 
     // Lifecycle posture asserted by this epoch's quorum (Open / Paused / Sealed).
@@ -1083,8 +1083,8 @@ message Attestation {
     // Kind of observation.
     AttestationType     Type = 2;
 
-    // TxMsg being cited as evidence.  Already present in the journal and
-    // independently verifiable by any member — false attestations are self-refuting.
+    // TxMsg being cited as evidence.  Already present in the journal, so any
+    // member can verify the cited TxMsg independently.
     fixed64             CitedTxID_0 = 4;
     fixed64             CitedTxID_1 = 5;
 

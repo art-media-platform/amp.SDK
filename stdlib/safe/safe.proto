@@ -111,7 +111,7 @@ enum KeyRole {
 // In wire form:   PubKey contains the full materialized public key bytes; Kit
 // names the CryptoKit that produced them; Type names what the key is for.
 // KeyringID is typically the owning member's UID for traceability but is not
-// load-bearing for verification (the surrounding message provides the actor).
+// required for verification (the surrounding message provides the actor).
 message KeyRef {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
     fixed64     KeyringID_1         = 2;    // Keyring UID, bytes 8..15

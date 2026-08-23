@@ -50,8 +50,8 @@ func (id ID) Ord() uint32 {
 // IDSz is the byte size of a symbol.ID (big endian).
 // The tradeoff is between key bytes idle (wasted) in a massive db and exponentially more IDs available.
 //
-// A 4 byte ID reflects that a symbol table exceeding 100 million entries is impractical and inefficient.
-// If a billion symbol IDs is "not enough", then IDs are being issued for the wrong purpose.
+// 4 bytes covers roughly 4.3 billion IDs, and a symbol table beyond about
+// 100 million entries is impractical and inefficient.
 const IDSz = 4
 
 // DefaultIssuerMin specifies the default minimum ID value for newly issued IDs.
