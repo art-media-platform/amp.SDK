@@ -255,8 +255,8 @@ message TxHeader {
     fixed64             ContextID_0 = 1;
     fixed64             ContextID_1 = 2;
 
-    // Author identity — moved from TxEnvelope into encrypted payload
-    // so passive observers cannot correlate sender identity with traffic.
+    // Author identity — carried in the encrypted payload so passive observers
+    // cannot correlate sender identity with traffic.
     fixed64             FromID_0 = 3;
     fixed64             FromID_1 = 4;
 

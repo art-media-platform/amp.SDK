@@ -54,7 +54,7 @@ tags Attr {
         TileAttr          "tile"
         // series is the ITEM axis, not the EDIT axis: these fold — a
         // consumer wants the best/latest value per item (the Space sheet
-        // binds all five as folds; 280 D-series-editflow).  A tape lane
+        // binds all five as folds).  A tape lane
         // over TRS history is a NEW attr when wanted, never a re-class.
         // The unit-tail leaves (S2R/S2T) carry no stored message and
         // never register.
@@ -306,7 +306,7 @@ const Manifold {
 const Atmosphere {
     // Category labels — AtmosphereEffect.Label values that identify which of
     // the four functional axes an entry contributes to.  Mods may register
-    // additional labels in their own consts.sdl, but the v240 renderer only
+    // additional labels in their own consts.sdl, but the renderer only
     // honors the four canonical categories.
     string LabelSky   = "Sky";
     string LabelSun   = "Sun";

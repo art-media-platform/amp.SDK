@@ -56,7 +56,7 @@ func PhraseWordIndex(word string) int {
 // Each word carries 8 bits (PhraseWordCount=256), so the checksum adds
 // PhraseChecksumSize words.
 //
-// Width math (280 D-phrase-checksum-width, ruled "widen now"): at 1 byte a
+// Width math: at 1 byte a
 // single mistyped/swapped word passed the checksum at 2⁻⁸ (measured 1/247.8
 // over 200k trials) and silently derived a WRONG keypair — for founder-phrase
 // custody that is a lost identity, not a login retry.  4 bytes puts a false

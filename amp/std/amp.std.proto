@@ -448,8 +448,8 @@ message AtmosphereEffect {
 // AtmosphereSpec composes a manifold's atmosphere from tagged effect entries.  Each
 // category (Sky / Sun / Night / Fog) is independently overridable; a planet author can
 // ship a partial set and inherit the rest.  Multiple entries with the same Label are
-// reserved for future stacking (e.g., two compatible Sky layers); v240 honors the first
-// entry per category.
+// reserved for future stacking (e.g., two compatible Sky layers); the renderer
+// honors the first entry per category.
 //
 // Category functional split:
 //   Sky — the always-on base aesthetic (zenith / horizon shell, limb sheen at the edge).

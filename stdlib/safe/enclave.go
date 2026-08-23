@@ -111,10 +111,10 @@ func OpenEnclave(
 
 // ImportKey inserts a keypair into the given keyring.
 // The install is durable at return: the re-sealed tome persists BEFORE ImportKey
-// reports success (280/D-enclave-identity-flush — the epoch-key PutKey
-// discipline, one layer down).  Success ⟹ the key is on disk; a persist failure
-// returns the error and is a durability failure the caller must not read as
-// success.  An exact-duplicate no-op does not re-persist.
+// reports success (the epoch-key PutKey discipline, one layer down).  Success ⟹
+// the key is on disk; a persist failure returns the error and is a durability
+// failure the caller must not read as success.  An exact-duplicate no-op does
+// not re-persist.
 func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -157,7 +157,7 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 // disk.  A persist failure returns the error and the caller must treat it as a
 // durability failure — the guard must be open at install, which every real
 // flow satisfies (the session enclave's guard closes only at teardown, after
-// all installs; 280/D-enclave-identity-flush).
+// all installs).
 func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec KeySpec) (PubKey, error) {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -501,7 +501,7 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 //   - ref.Type explicit + PubKey empty: returns newest record of that type.
 //   - ref.Type explicit + PubKey set:   prefix lookup, type must match.
 //   - ref.Type Unspecified + PubKey empty: returns newest record across any type
-//     (backward-compatible default for single-stream rings).
+//     (the default for single-stream rings).
 //   - ref.Type Unspecified + PubKey set:   prefix lookup, no type filter.
 //
 // Must be called with enc.mu held.

@@ -92,7 +92,7 @@ func (merger *MemberEpochMerger) MergeItem(arrival AttrItem[*MemberEpoch], prev 
 
 	// Custody lane, mirroring the vault member-key cache clause for clause.
 	// EncryptKey custody sits inside the SigningKey-declared gate exactly as
-	// the vault indexes it (the D-encryptkey-gated posture rides along).
+	// the vault indexes it.
 	if custodyLane {
 		if declaredKey(incoming.SigningKey) {
 			priorSignEmpty := !declaredKey(state.signKey)

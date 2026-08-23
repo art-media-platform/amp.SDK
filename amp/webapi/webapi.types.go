@@ -298,8 +298,8 @@ type EditEntry struct {
 //
 // Original is the first chronicled record on the item (the Add).  Edits is
 // the full replay in commit order, INCLUDING the original entry as its
-// first element, so an auditor can iterate one slice.  Sealed in for the
-// v300 wire freeze; new entry kinds extend EditOp without a shape change.
+// first element, so an auditor can iterate one slice.  New entry kinds extend
+// EditOp without a shape change.
 type EditChainResponse struct {
 	Original *Item       `json:"Original,omitempty"`
 	Edits    []EditEntry `json:"Edits"`

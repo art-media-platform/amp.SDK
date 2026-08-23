@@ -202,8 +202,7 @@ func (tx *TxMsg) LoadValue(want *tag.Address, dst proto.Message) error {
 //     writes to one element would fold as same-identity divergent bytes, an
 //     arrival-order hazard (SD-edit-resolution §6.2);
 //  3. every op's value span [DataOfs, DataOfs+DataLen) lies inside DataStore
-//     with no uint64 wrap — an out-of-range span previously skipped silently
-//     at each read site;
+//     with no uint64 wrap, so no read site can address outside it;
 //  4. Normalized is process-local: every decode exit resets it, so a wire
 //     peer can never assert pre-normalization.
 //

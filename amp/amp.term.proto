@@ -24,7 +24,7 @@ message TermBlock {
         ClientToHost = 2; // keystrokes  -> PTY stdin
     }
 
-    reserved 3; // freed: per-block CapturedAt
+    reserved 3;
 
     // Raw, opaque terminal bytes.  Never UTF-8-validated or transformed; ANSI is
     // rendered only by the receiving emulator.
@@ -49,10 +49,10 @@ message TermIO {
     enum TermMode {
         Unspecified = 0; // ordinary terminal byte stream
         Keyframe    = 1; // self-contained full-screen snapshot
-        Resize      = 2; // new cols x rows dimensions (M4)
+        Resize      = 2; // new cols x rows dimensions
     }
 
-    reserved 1, 2, 6, 7; // freed: SessionID_0/1 (now the NodeID), FlushedAt, Keyframe bool
+    reserved 1, 2, 6, 7;
 
     // Monotonic batch sequence within the session+direction (0,1,2,...).  Earns
     // its place precisely because the series is sparse: a time gap is normal
@@ -61,7 +61,7 @@ message TermIO {
     uint64 BatchSeq = 5;
 
     // Frame classification (default Unspecified = ordinary stream).  Keyframe is
-    // the DVR seek target; Resize carries dimensions (M4).
+    // the DVR seek target; Resize carries dimensions.
     TermMode Mode = 8;
 
     // The ordered byte blocks in this flush.  Concatenate Data in order to

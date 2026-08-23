@@ -81,7 +81,7 @@ message AssetEntry {
     fixed64                 BlobID_0 = 35;
     fixed64                 BlobID_1 = 36;
 
-    // Alternate URIs that also resolve to this asset (e.g. legacy gen2 paths).  Each is matched
+    // Alternate URIs that also resolve to this asset.  Each is matched
     // verbatim against an inbound EntryURI.
     repeated string         Aliases = 37;
 }
@@ -207,9 +207,9 @@ message CrateSnapshot {
 enum CrateSchema {
     UndefinedSchema         = 0;
 
-    // v100 (April 2020) should be used for CrateInfo.CrateSchema
+    // v100 should be used for CrateInfo.CrateSchema
     v100                    = 100;
 
-    // v300 (2026) — unified LiveCrate/LiveAsset authoring, tag.UID asset identity, content-addressed bundles.
+    // v300 — unified LiveCrate/LiveAsset authoring, tag.UID asset identity, content-addressed bundles.
     v300                    = 300;
 }
