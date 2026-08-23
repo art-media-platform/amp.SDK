@@ -44,8 +44,8 @@ type Guard interface {
 	// Info returns metadata about this Guard's capabilities.
 	Info(ctx context.Context) (*GuardInfo, error)
 
-	// WrapDEK protects a DEK under the Guard's root material.
-	// The returned WrappedDEK is self-describing and sufficient to recover the DEK.
+	// WrapDEK protects a DEK under the Guard's root material.  The returned
+	// WrappedDEK is self-describing and sufficient to recover the DEK.
 	WrapDEK(ctx context.Context, dek []byte, aad []byte) (*WrappedDEK, error)
 
 	// UnwrapDEK recovers the original DEK from a WrappedDEK.
@@ -106,8 +106,8 @@ type Enclave interface {
 	// pubkey" is not "can sign."  Self-signing authorship must gate on CanSign.
 	CanSign(ref *KeyRef) bool
 
-	// SignRaw signs msg exactly as given — NO domain is applied.  Every call
-	// site must pass a registry-derived digest (SigningDigest / CoSignatureDigest /
+	// SignRaw signs msg exactly as given — NO domain is applied.  Every call site
+	// must pass a registry-derived digest (SigningDigest / CoSignatureDigest /
 	// TxSignedDigest) or the documented MemberToken text-message exception; new
 	// signing contexts go through SignDomain.
 	SignRaw(ref *KeyRef, msg []byte) ([]byte, error)
@@ -126,13 +126,15 @@ type Enclave interface {
 	// wire format.
 	OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error)
 
-	// ExportSymmetricKey returns a copy of the raw symmetric key bytes for the referenced keyring.
-	// The caller is responsible for zeroing the returned slice after use.
+	// ExportSymmetricKey returns a copy of the raw symmetric key bytes for the
+	// referenced keyring.  The caller is responsible for zeroing the returned
+	// slice after use.
 	//
-	// This is intentionally limited to symmetric keys — signing and asymmetric private keys
-	// MUST NOT leave the Enclave.  Symmetric epoch keys are exported so that CryptoProvider
-	// can derive subkeys (content_key, proof_key) for payload encryption and
-	// relay membership proofs.  The trust boundary is the process, not the Enclave API.
+	// This is intentionally limited to symmetric keys — signing and asymmetric
+	// private keys MUST NOT leave the Enclave.  Symmetric epoch keys are exported
+	// so that CryptoProvider can derive subkeys (content_key, proof_key) for
+	// payload encryption and relay membership proofs.  The trust boundary is the
+	// process, not the Enclave API.
 	ExportSymmetricKey(ref *KeyRef) ([]byte, error)
 
 	// Close re-seals the key index and persists it, then zeros sensitive material.
@@ -141,7 +143,8 @@ type Enclave interface {
 
 // EpochKeyStore manages symmetric epoch keys separately from identity keys.
 //
-// Symmetric epoch keys have fundamentally different access patterns from identity keys:
+// Symmetric epoch keys have fundamentally different access patterns from
+// identity keys:
 //   - High volume: up to millions of keys per user across all planets/channels
 //   - Must be exported for subkey derivation (content_key, proof_key)
 //   - Hot/cold separation: only current epoch keys need to be in memory
@@ -153,25 +156,28 @@ type Enclave interface {
 // All methods are threadsafe.
 type EpochKeyStore interface {
 
-	// PutKey stores a symmetric epoch key for the given container (planet or channel).
-	// key.EpochID, key.Role, and key.Bytes must be set; key.CryptoKitID selects the crypto suite.
-	// The install is durable at method return: the re-sealed tome persists BEFORE
-	// PutKey reports success, so an unclean kill after return cannot lose the key —
-	// a founded confidential planet's ContentKey must never ride on a clean Close.
+	// PutKey stores a symmetric epoch key for the given container (planet or
+	// channel).  key.EpochID, key.Role, and key.Bytes must be set; key.CryptoKitID
+	// selects the crypto suite.  The install is durable at method return: the
+	// re-sealed tome persists BEFORE PutKey reports success, so an unclean kill
+	// after return cannot lose the key — a founded confidential planet's
+	// ContentKey must never ride on a clean Close.
 	PutKey(ctx context.Context, containerID tag.UID, key SymKey) error
 
 	// GetKey retrieves a symmetric epoch key by its container + epoch UIDs + role.
-	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
+	// The returned SymKey owns its Bytes; the caller must call key.Zero() after
+	// use.
 	GetKey(containerID, epochID tag.UID, role KeyRole) (SymKey, error)
 
-	// GetCurrentKey returns the current (most recent) epoch key for a container + role.
-	// The returned SymKey owns its Bytes; the caller must call key.Zero() after use.
+	// GetCurrentKey returns the current (most recent) epoch key for a container +
+	// role.  The returned SymKey owns its Bytes; the caller must call key.Zero()
+	// after use.
 	GetCurrentKey(containerID tag.UID, role KeyRole) (SymKey, error)
 
-	// SetCurrentEpoch marks an epoch as the current one for a container — including
-	// an epoch OLDER than the newest held.  The election is durable at method
-	// return: the re-sealed tome persists BEFORE SetCurrentEpoch reports success,
-	// so a crash after return cannot regress the current pointer to the
+	// SetCurrentEpoch marks an epoch as the current one for a container —
+	// including an epoch OLDER than the newest held.  The election is durable at
+	// method return: the re-sealed tome persists BEFORE SetCurrentEpoch reports
+	// success, so a crash after return cannot regress the current pointer to the
 	// newest-per-container fallback on reopen.
 	SetCurrentEpoch(ctx context.Context, containerID, epochID tag.UID) error
 
@@ -212,7 +218,8 @@ type CryptoKitID = tag.UID
 // HashSpec / RegisterHashKit).
 //
 // Nil capability pointers mean "not supported by this kit" (e.g. a future
-// Dilithium kit would expose Signing only; a Kyber kit would expose Encrypt only).
+// Dilithium kit would expose Signing only; a Kyber kit would expose Encrypt
+// only).
 type Kit struct {
 	ID      CryptoKitID
 	Signing *SigningOps // identity / signatures; nil if kit doesn't sign
@@ -226,7 +233,8 @@ type SigningOps struct {
 	SignatureSize int
 
 	// Generate populates kp.Pub.Bytes and kp.Prv with a fresh SigningKey keypair
-	// in this kit. The caller sets kp.Pub.CryptoKitID and kp.Pub.KeyType beforehand.
+	// in this kit. The caller sets kp.Pub.CryptoKitID and kp.Pub.KeyType
+	// beforehand.
 	Generate func(rng io.Reader, kp *KeyPair) error
 
 	// Sign produces a cryptographic signature of digest.
@@ -271,13 +279,14 @@ type EncryptOps struct {
 	Open func(msg, prvKey []byte) ([]byte, error)
 }
 
-// SealFor encrypts msg for a recipient's pubkey in the recipient's kit.
-// No Enclave required — the wrap is anonymous-sender (ephemeral keypair generated
+// SealFor encrypts msg for a recipient's pubkey in the recipient's kit.  No
+// Enclave required — the wrap is anonymous-sender (ephemeral keypair generated
 // per call inside the kit).  Returns ciphertext containing the ephemeral pubkey
 // embedded at the front per the kit's wire format.
 //
 // peerKit must match the kit that generated peerPubKey; the caller typically
-// reads both from MemberEpoch.EncryptKey, a safe.KeyRef carrying kit and pubkey.
+// reads both from MemberEpoch.EncryptKey, a safe.KeyRef carrying kit and
+// pubkey.
 func SealFor(peerKit CryptoKitID, peerPubKey, msg []byte) ([]byte, error) {
 	kit, err := CryptoKit(peerKit)
 	if err != nil {

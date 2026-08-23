@@ -9,10 +9,10 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// AppModuleInfo is the in-process handle an app hands to Registry.RegisterModule:
-// what invokes the module (Tag, Aliases) plus the minimum needed to name and
-// version it.  Its wire-facing projection (long-form About, glyphs, SBOM row) is
-// std.ModuleRef, built via std.NewModuleRef.
+// AppModuleInfo is the in-process handle an app hands to
+// Registry.RegisterModule:  what invokes the module (Tag, Aliases) plus the
+// minimum needed to name and version it.  Its wire-facing projection (long-form
+// About, glyphs, SBOM row) is std.ModuleRef, built via std.NewModuleRef.
 type AppModuleInfo struct {
 	Name    tag.Name // what invokes this module (registry lookup)
 	About   string   // 1-line description -> ModuleRef.Labels.Caption
@@ -20,8 +20,9 @@ type AppModuleInfo struct {
 	Aliases []string // invocation aliases for an AppModule
 }
 
-// AppEnvironment is the runtime environment the amp runtime hands an AppContext: the app
-// instance's identity within its home planet and its three file-system roots.
+// AppEnvironment is the runtime environment the amp runtime hands an
+// AppContext: the app instance's identity within its home planet and its three
+// file-system roots.
 type AppEnvironment struct {
 	HomeID      tag.UID // home node ID for this app instance
 	MemberID    tag.UID // member identity running this app instance
@@ -40,13 +41,15 @@ type AppEnvironment struct {
 type AppModule struct {
 	Info AppModuleInfo // identifying and invocation information
 
-	// NewAppInstance is the instantiation entry point for an AppModule called when an AppModule is first invoked on a User session and is not yet running.
+	// NewAppInstance is the instantiation entry point for an AppModule called when
+	// an AppModule is first invoked on a User session and is not yet running.
 	//
 	// Implementations should not block and should return quickly.
 	NewAppInstance func(ctx AppContext) (AppInstance, error)
 }
 
-// AppContext is provided by the amp runtime to an AppInstance for support and context.
+// AppContext is provided by the amp runtime to an AppInstance for support and
+// context.
 type AppContext interface {
 	task.Context   // Allows select{} for graceful handling of app shutdown
 	data.Publisher // Allows an app to publish assets for client consumption
@@ -61,8 +64,9 @@ type AppInstance interface {
 	AppContext
 	Pinner
 
-	// Validates an incoming request and performs any needed setup before StartPin() is called.
-	// This is a chance for an app to perform operations such as refreshing an auth token.
+	// Validates an incoming request and performs any needed setup before
+	// StartPin() is called.  This is a chance for an app to perform operations
+	// such as refreshing an auth token.
 	MakeReady(req *Request) error
 
 	// Called exactly once when this AppInstance has been closed.
@@ -80,10 +84,11 @@ type Pinner interface {
 type Pin interface {
 	Pinner
 
-	// Context returns the task.Context associated with this Pin.
-	// Apps start a Pin as a child Context of amp.AppContext.Context or as a child of another Pin.
-	// This means an AppContext contains all its Pins, and Close() will close all Pins (and children).
-	// This can be used to determine if a request is still being served and to close it if needed.
+	// Context returns the task.Context associated with this Pin.  Apps start a Pin
+	// as a child Context of amp.AppContext.Context or as a child of another Pin.
+	// This means an AppContext contains all its Pins, and Close() will close all
+	// Pins (and children).  This can be used to determine if a request is still
+	// being served and to close it if needed.
 	Context() task.Context
 }
 
@@ -111,8 +116,8 @@ type TxMsg struct {
 	cryptOfs   uint64 // byte offset from preamble start to start of TxHeader
 }
 
-// TxOp is a transaction op and the most granular unit of change.
-// A TxOp's serialized data is located in a TxMsg.DataStore or some other data segment.
+// TxOp is a transaction op and the most granular unit of change.  A TxOp's
+// serialized data is located in a TxMsg.DataStore or some other data segment.
 type TxOp struct {
 	Addr    tag.Address // CRDT item address
 	Flags   TxOpFlags   // operation to perform
@@ -121,11 +126,12 @@ type TxOp struct {
 	DataLen uint64      // byte length of associated serialized data
 }
 
-// TxScope is the optional NewTx parameter fixing a tx's target planet — the planet lever, set
-// once at creation.  The zero value (and a bare NewTx()) targets the caller's home planet; set
-// Planet to commit to an explicit planet.  MemberSigned optionally couples the signer to the
-// resolved planet's adopted member (the common durable-write pairing); privacy (TxMsg.Epoch)
-// stays an independent lever set separately.  See AOM SD-security-sync.md §7.6.
+// TxScope is the optional NewTx parameter fixing a tx's target planet — the
+// planet lever, set once at creation.  The zero value (and a bare NewTx())
+// targets the caller's home planet; set Planet to commit to an explicit planet.
+// MemberSigned optionally couples the signer to the resolved planet's adopted
+// member (the common durable-write pairing); privacy (TxMsg.Epoch) stays an
+// independent lever set separately.  See AOM SD-security-sync.md §7.6.
 type TxScope struct {
 	Planet tag.UID // unset → the caller's home planet; set → that explicit planet
 

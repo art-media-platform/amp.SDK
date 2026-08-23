@@ -78,7 +78,8 @@ type LoginResponse struct {
 
 // AmpMember describes the authenticated identity on the wire.  `Kind` is a
 // human-readable label (e.g. "Person") sourced from a `LawMemberKind_*`
-// definition (AOM SD-substrate-agnostic-members.md); apps surface it but do not gate behavior on it.
+// definition (AOM SD-substrate-agnostic-members.md); apps surface it but do not
+// gate behavior on it.
 type AmpMember struct {
 	ID          tag.UID `json:"ID"`
 	DisplayName string  `json:"DisplayName,omitempty"`
@@ -148,11 +149,11 @@ type ForumsReserveResponse struct {
 	MemberID tag.UID `json:"MemberID"`
 }
 
-// WithdrawNote is the wire-shape carrier for AOM SD-withdrawal-consent.md withdrawal facts,
-// carried in TxOp.Withdraw / EditEntry.Withdraw / Item.Withdrawn /
-// SubscribeFrame.Withdraw.  It is never marshaled to binary, so its UID
-// fields are typed tag.UID / amp.Address and ride the JSON wire as base32
-// strings — consistent with every other webapi shape.
+// WithdrawNote is the wire-shape carrier for AOM SD-withdrawal-consent.md
+// withdrawal facts, carried in TxOp.Withdraw / EditEntry.Withdraw /
+// Item.Withdrawn / SubscribeFrame.Withdraw.  It is never marshaled to binary,
+// so its UID fields are typed tag.UID / amp.Address and ride the JSON wire as
+// base32 strings — consistent with every other webapi shape.
 //
 // Sender sets Reason/Rationale/Subject/Delegation; the server fills
 // WithdrawnAt/WithdrawnBy on the response side.  Reason rides as its enum
@@ -188,8 +189,8 @@ const (
 // server-side schema knowledge.
 //
 // Withdraw is non-nil only on withdraw ops (Kind = TxOpWithdraw); it carries
-// the withdrawal facts (Reason/Rationale/Subject/Delegation) — see WithdrawNote.
-// Non-nil on a non-withdraw op is ignored.
+// the withdrawal facts (Reason/Rationale/Subject/Delegation) — see
+// WithdrawNote.  Non-nil on a non-withdraw op is ignored.
 type TxOp struct {
 	Kind     TxOpKind        `json:"Kind"`
 	Channel  string          `json:"Channel"`
@@ -285,7 +286,8 @@ type EditEntry struct {
 	Body        json.RawMessage `json:"Body,omitempty"`
 }
 
-// EditChainResponse is the body of GET /api/v1/channels/:ch/attrs/:attr/items/:itemID/edits.
+// EditChainResponse is the body of GET
+// /api/v1/channels/:ch/attrs/:attr/items/:itemID/edits.
 //
 // Original is the first chronicled record on the item (the Add).  Edits is
 // the full replay in commit order, INCLUDING the original entry as its
@@ -316,7 +318,8 @@ type MediaResolveRequest struct {
 
 // SubscribeFrame is the WebSocket fan-out shape for /ws.  Clients send
 // {Type:"subscribe"|"unsubscribe", Channel, Attr}; the server pushes
-// {Type:"update"|"delete"|"withdraw", Channel, Attr, ItemID, Value?, EditID?, FromID?}.
+// {Type:"update"|"delete"|"withdraw", Channel, Attr, ItemID, Value?, EditID?,
+// FromID?}.
 //
 // Channel + Attr stay as string for the same canonic-or-UID reason as TxOp.
 // ItemID/EditID/FromID are typed UIDs.
@@ -340,13 +343,13 @@ type SubscribeFrame struct {
 // POST /api/v1/search, GET /api/v1/federation/peers.
 //
 // These mirror the substrate resolver (nameservice.Resolution / Match /
-// amp.FederationPeer).  POST /api/v1/resolve is anonymous: exact-match resolution
-// answers off the host's federation resolver and returns VaultAddrs in full so any
-// caller — a fresh install, a deep-link source — can dial + pin the named planet
-// (FQDN keys are low-entropy and dictionary-reversible, so namespace privacy comes
-// from federation unreachability, not key secrecy).  Search and federation/peers
-// require Bearer auth: ranked enumeration is the scraping surface, so a session
-// walks only the federations it has joined.
+// amp.FederationPeer).  POST /api/v1/resolve is anonymous: exact-match
+// resolution answers off the host's federation resolver and returns VaultAddrs
+// in full so any caller — a fresh install, a deep-link source — can dial + pin
+// the named planet (FQDN keys are low-entropy and dictionary-reversible, so
+// namespace privacy comes from federation unreachability, not key secrecy).
+// Search and federation/peers require Bearer auth: ranked enumeration is the
+// scraping surface, so a session walks only the federations it has joined.
 
 // ResolveRequest is the body of POST /api/v1/resolve.
 type ResolveRequest struct {
@@ -420,9 +423,9 @@ type FederationPeerEntry struct {
 
 // InviteIssueRequest is the body of POST /api/v1/invite/issue (Bearer).
 // MaxRedemptions == 0 mints a single-use pre-minted slot; > 0 mints a multi-use
-// self-mint policy.  Access is the enum name a redeemer is granted ("ReadWrite",
-// …); empty = the planet's default.  ExpiresAt is unix seconds; 0 = the planet's
-// bootstrap TTL.
+// self-mint policy.  Access is the enum name a redeemer is granted
+// ("ReadWrite", …); empty = the planet's default.  ExpiresAt is unix seconds; 0
+// = the planet's bootstrap TTL.
 type InviteIssueRequest struct {
 	Planet         string   `json:"Planet"`                   // amp-base32 UID of the planet to invite to
 	Passphrase     string   `json:"Passphrase"`               // seals the returned invite (out-of-band from the URL)

@@ -4,9 +4,9 @@
 //
 //	https://{org}/link/{planet}/{node}/{item}
 //
-// Tier 2 (private): opaque encrypted token containing the address tuple,
-// sealed with a derived subkey of the planet or channel epoch key.
-// Intermediaries (SMS, Slack, email) see a random string — zero metadata leakage.
+// Tier 2 (private): opaque encrypted token containing the address tuple, sealed
+// with a derived subkey of the planet or channel epoch key.  Intermediaries
+// (SMS, Slack, email) see a random string — zero metadata leakage.
 //
 //	https://{org}/link/{opaque-token}
 //
@@ -73,8 +73,9 @@ func SealToken(tok LinkToken, epochKey []byte) (string, error) {
 	return encode.Base32Encoding.EncodeToString(wire), nil
 }
 
-// OpenToken decodes a base32 token string and decrypts it with the given epoch key.
-// Returns ErrBadToken if decryption fails (wrong key, corrupted, or tampered).
+// OpenToken decodes a base32 token string and decrypts it with the given epoch
+// key.  Returns ErrBadToken if decryption fails (wrong key, corrupted, or
+// tampered).
 func OpenToken(encoded string, epochKey []byte) (LinkToken, error) {
 	wire, err := encode.Base32Encoding.DecodeString(encoded)
 	if err != nil {
@@ -116,7 +117,8 @@ func IsEncryptedToken(pathSegment string) bool {
 	return len(pathSegment) >= 120 && len(pathSegment) <= 160
 }
 
-// ErrBadToken indicates the token could not be decrypted (wrong key, corrupted, or tampered).
+// ErrBadToken indicates the token could not be decrypted (wrong key, corrupted,
+// or tampered).
 var ErrBadToken = fmt.Errorf("link: bad or unreadable token")
 
 func marshalToken(tok LinkToken) []byte {

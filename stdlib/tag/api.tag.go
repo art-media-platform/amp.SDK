@@ -10,9 +10,11 @@ import (
 
 type (
 
-	// UID is a 16-byte universally unique identifier and/or is a timestamp with discrete fixed precision.
+	// UID is a 16-byte universally unique identifier and/or is a timestamp with
+	// discrete fixed precision.
 	//
-	// As a timestamp, the first 6 bytes are UTC whole seconds followed by 10 bytes (80 bits) of fractional precision.
+	// As a timestamp, the first 6 bytes are UTC whole seconds followed by 10 bytes
+	// (80 bits) of fractional precision.
 	//
 	// UID is a big-endian value, so UID[0] is most significant, etc.
 	UID [2]uint64

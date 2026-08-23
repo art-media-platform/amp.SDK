@@ -121,33 +121,37 @@ tags Attr {
     }
 
     // Brand — substrate-native planet identity (AOM DD-name-service.md §2).
-    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the genesis
-    // TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
+    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the
+    // genesis TxOp at EditID=0 welds identity-tier fields to the planet's
+    // cryptographic root.
     Brand "amp.Brand"
 
-    // NameService — substrate-native naming primitive (AOM DD-name-service.md §3).
-    // A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.
-    // Federations propagate their channel to members via normal CRDT sync.
-    // Generalized beyond planet naming — any UID-bearing entity is namable.
+    // NameService — substrate-native naming primitive (AOM DD-name-service.md
+    // §3).  A channel any planet may host; records map FQDN → tag.UID with
+    // bootstrap metadata.  Federations propagate their channel to members via
+    // normal CRDT sync.  Generalized beyond planet naming — any UID-bearing
+    // entity is namable.
     NameService "amp.name.service" {
         NameServiceRecord "NameServiceRecord"
     }
 
-    // Invite governance — policy + redemption ledger for governed multi-use invites
-    // (app.invite).  Policies live at (PlanetInvites, PlanetInvitePolicy, inviteID);
-    // each invite's ledger at (inviteID, PlanetInviteRedemption, RedeemedAt NowID).
+    // Invite governance — policy + redemption ledger for governed multi-use
+    // invites (app.invite).  Policies live at (PlanetInvites,
+    // PlanetInvitePolicy, inviteID); each invite's ledger at (inviteID,
+    // PlanetInviteRedemption, RedeemedAt NowID).
     PlanetInvites "amp.planet.invites" {
         PlanetInvitePolicy     "PlanetInvitePolicy"
         PlanetInviteRedemption "PlanetInviteRedemption"
     }
 
-    // Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.4).
-    // NS-record-style cross-federation forwarding without DNS dependency.
+    // Federation directory — peer / parent federation pointers (AOM
+    // DD-name-service.md §4.4).  NS-record-style cross-federation forwarding
+    // without DNS dependency.
     FederationDirectory "amp.FederationDirectory"
 
-    // Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate).
-    // "Law" names the role concretely: this channel grants, revises, and revokes
-    // the permissions other channels inherit.
+    // Planet governance — the law-making channel (sibling of amp.ledger +
+    // amp.arbitrate).  "Law" names the role concretely: this channel grants,
+    // revises, and revokes the permissions other channels inherit.
     LawAttr "amp.law" {
         LawPlanetEpoch  "PlanetEpoch"
         LawMemberEpoch  "MemberEpoch"
@@ -157,7 +161,8 @@ tags Attr {
         LawEquivalence  "Equivalence"
         LawWithdraw     "Withdraw"
 
-        // Substrate-agnostic Member Kind (AOM SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
+        // Substrate-agnostic Member Kind (AOM
+        // SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
         // resolving to one of these UIDs.  Communities + apps may register
         // additional Kinds in their own consts.sdl.  Zero UID = unspecified.
         LawMemberKind "MemberKind" {
@@ -170,9 +175,10 @@ tags Attr {
             LawMemberKind_Process   "Process"
         }
 
-        // Modal Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a
-        // Tag resolving to one of these UIDs.  Communities + apps may register
-        // additional modalities.  Zero UID = unspecified.
+        // Modal Attestation modalities (AOM SD-modal-attestation.md).
+        // Attestation.Modality is a Tag resolving to one of these UIDs.
+        // Communities + apps may register additional modalities.  Zero UID =
+        // unspecified.
         LawAttestationModality "AttestationModality" {
             LawAttestationModality_Asserted    "Asserted"
             LawAttestationModality_Witnessed   "Witnessed"
@@ -186,8 +192,9 @@ tags Attr {
             LawAttestationModality_Retracted   "Retracted"
         }
 
-        // Equivalence strengths (AOM SD-address-equivalence.md).  Equivalence.Strength is a Tag
-        // resolving to one of these UIDs.  Zero UID = unspecified.
+        // Equivalence strengths (AOM SD-address-equivalence.md).
+        // Equivalence.Strength is a Tag resolving to one of these UIDs.  Zero
+        // UID = unspecified.
         LawEquivalenceStrength "EquivalenceStrength" {
             LawEquivalenceStrength_Identity    "Identity"
             LawEquivalenceStrength_Translation "Translation"
@@ -200,7 +207,8 @@ tags Attr {
     // Planet ledger — durable record of observations and citations.
     // Attestations (strikes, endorsements, witness records, audits, amnesties)
     // live here as convergent TxOps.  Admin acts in the ACC cite entries from
-    // the ledger via AttestationRef, making every governance decision auditable.
+    // the ledger via AttestationRef, making every governance decision
+    // auditable.
     LedgerAttr "amp.ledger" {
         LedgerAttestation "Attestation"
     }
@@ -262,7 +270,8 @@ const Amp {
 }
 
 const Asset {
-    // Canonic URI scheme prefix for amp asset references (matches UriScheme.Asset).
+    // Canonic URI scheme prefix for amp asset references (matches
+    // UriScheme.Asset).
     string Scheme = "asset:";
 }
 
@@ -332,10 +341,11 @@ const Atmosphere {
 }
 
 // Bundled crate URIs — platform-wide crates every amp client imports at boot.
-// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live in
-// Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is asset:PublisherID/CrateID
-// per the wire scheme declared in amp.core.proto:Asset; the build pipeline stages
-// matching .crate files under StreamingAssets/Bundled/CrateDepot.
+// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live
+// in Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is
+// asset:PublisherID/CrateID per the wire scheme declared in
+// amp.core.proto:Asset; the build pipeline stages matching .crate files under
+// StreamingAssets/Bundled/CrateDepot.
 const Crates {
     string BaseAssets    = "asset:crates.planet.tools/amp.3D.base.assets";
     string HelloWorld    = "asset:crates.planet.tools/amp.3D.hello.world";
@@ -354,9 +364,10 @@ const Actor {
     float  DefaultOrbitDegPerSec   = 8;     // signature orbit rate (deg/s) when the field is 0
 }
 
-// Theme — the unified chrome skin contract.  asset:theme/<slot> is the chrome analog of asset:glyph/
-// (ContentGlyphURI); ThemeMap resolves it from the bound atlas.  A theme = ONE atlas crate (DefaultAtlas)
-// whose named sub-sprites match the slots; a mod ships its own atlas crate and points selection there
+// Theme — the unified chrome skin contract.  asset:theme/<slot> is the chrome
+// analog of asset:glyph/ (ContentGlyphURI); ThemeMap resolves it from the bound
+// atlas.  A theme = ONE atlas crate (DefaultAtlas) whose named sub-sprites
+// match the slots; a mod ships its own atlas crate and points selection there
 // without touching code.
 const Theme {
     string SlotPrefix   = "asset:theme/";                                               // ThemeMap owns this namespace

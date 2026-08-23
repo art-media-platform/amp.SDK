@@ -1,8 +1,9 @@
 // Package std provides Go support classes for building amp apps.
 //
 // Most amp apps embed App and use Pin to manage bidirectional state flow.
-// Send-only apps (e.g. serving a file listing) use the Item/PinAndServe pattern.
-// Interactive apps (e.g. planet viewers, editors) use Pin.Bind/MergeIncoming with FoldBinding.
+// Send-only apps (e.g. serving a file listing) use the Item/PinAndServe
+// pattern.  Interactive apps (e.g. planet viewers, editors) use
+// Pin.Bind/MergeIncoming with FoldBinding.
 package std
 
 import (
@@ -67,9 +68,10 @@ func (pin *Pin[AppT]) Bind(resp amp.NodeResponder) {
 	pin.responders = append(pin.responders, resp)
 }
 
-// MergeIncoming processes an incoming TxMsg by dispatching ops to bound responders.
-// Supports multi-pass iteration: if a responder adds new responders during its callback,
-// additional passes ensure the new responders also process the tx.
+// MergeIncoming processes an incoming TxMsg by dispatching ops to bound
+// responders.  Supports multi-pass iteration: if a responder adds new
+// responders during its callback, additional passes ensure the new responders
+// also process the tx.
 func (pin *Pin[AppT]) MergeIncoming(tx *amp.TxMsg) {
 	revision := tag.NowID()
 

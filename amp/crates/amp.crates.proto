@@ -31,10 +31,10 @@ message AssetEntry {
 
     AssetKind               Kind = 1;
 
-    // EntryURI is a Unix-style pathname that identifies an asset within a crate.
-    // By convention, this URI does *not* start or end with '/'
-    // An asset URI has the form "{CrateURI}/{EntryURI}"
-    // If two or more assets have the same EntryURI, then only one is accessible.
+    // EntryURI is a Unix-style pathname that identifies an asset within a
+    // crate.  By convention, this URI does *not* start or end with '/' An asset
+    // URI has the form "{CrateURI}/{EntryURI}" If two or more assets have the
+    // same EntryURI, then only one is accessible.
     string                  EntryURI = 2;
 
     // Label is the human-readable label for this asset.
@@ -48,14 +48,16 @@ message AssetEntry {
     bool                    AutoScale       = 9;    // place with auto-scale enabled by default
     bool                    IsSurface       = 13;   // self-collidable world surface (nav/raycast target; skips proxy collider)
 
-    // CenterX and CenterZ specify the positional center of this asset (and are typically 0).
-    // CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
-    // Y is considered to be the *vertical* (up) direction and by convention rests on the plane y=0.
+    // CenterX and CenterZ specify the positional center of this asset (and are
+    // typically 0).  CenterY is the distance above the baseline (y=0) to the y
+    // center-point height of this asset.  Y is considered to be the *vertical*
+    // (up) direction and by convention rests on the plane y=0.
     float                   CenterX = 10;
     float                   CenterY = 11;
     float                   CenterZ = 12;
 
-    // Extents specify the distance from the center to the extent of the asset on each axis.
+    // Extents specify the distance from the center to the extent of the asset
+    // on each axis.
     float                   ExtentsX = 15;
     float                   ExtentsY = 16;
     float                   ExtentsZ = 17;
@@ -66,20 +68,23 @@ message AssetEntry {
     // Comma-delimited and whitespace-trimmed list of tags.
     string                  Tags = 31;
 
-    // A short phrase or fragment describing this asset, starting with an article where appropriate. e.g.:
+    // A short phrase or fragment describing this asset, starting with an
+    // article where appropriate. e.g.:
     //      "A typical 6 crew member fire truck"
     //      "A leading U.S. naval ship-based helicopter"
     //      "The Texas capitol building located in Austin"
     //      "An animated sacred-geometry inspired flat seal"
     string                  ShortDesc = 32;
 
-    // Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI leaf).
-    // Survives re-tagging and rebuilds, letting references resolve by UID independent of path.
+    // Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI
+    // leaf).  Survives re-tagging and rebuilds, letting references resolve by
+    // UID independent of path.
     fixed64                 UID_0 = 33;
     fixed64                 UID_1 = 34;
 
-    // Content-addressing handle for the built asset: leading 16 bytes of the plaintext hash
-    // (a BlobID), for dedup and AMP p2p blob-store retrieval.  Zero = not built / unknown.
+    // Content-addressing handle for the built asset: leading 16 bytes of the
+    // plaintext hash (a BlobID), for dedup and AMP p2p blob-store retrieval.
+    // Zero = not built / unknown.
     fixed64                 BlobID_0 = 35;
     fixed64                 BlobID_1 = 36;
 
@@ -92,12 +97,15 @@ message AssetEntry {
 // assets it carries, and the content address of the built file.
 message BundleManifest {
 
-    // BundleTitle is how the outside world sees this bundle and has no other impact.
-    // This means it can change from build to build and contain any Unicode characters.
+    // BundleTitle is how the outside world sees this bundle and has no other
+    // impact.  This means it can change from build to build and contain any
+    // Unicode characters.
     string                  BundleTitle = 2;
 
-    // BundleNameID is how this bundle is internally identified and expressed as the filename of this bundle.
-    // This is case sensitive, contains only path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or whitespace.
+    // BundleNameID is how this bundle is internally identified and expressed as
+    // the filename of this bundle.  This is case sensitive, contains only
+    // path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or
+    // whitespace.
     string                  BundleNameID = 3;
 
     repeated AssetEntry     Assets = 10;
@@ -106,29 +114,35 @@ message BundleManifest {
     // rather than individually on demand.
     bool                    LoadAllHint = 20;
 
-    // Content-addressing handle for the built bundle file: leading 16 bytes of its plaintext
-    // hash (a BlobID).  Zero = not built / unknown.
+    // Content-addressing handle for the built bundle file: leading 16 bytes of
+    // its plaintext hash (a BlobID).  Zero = not built / unknown.
     fixed64                 BlobID_0 = 30;
     fixed64                 BlobID_1 = 31;
 }
 
 
-// CrateInfo represents a Crate, the fundamental unit of amp's asset/package manager.
+// CrateInfo represents a Crate, the fundamental unit of amp's asset/package
+// manager.
 message CrateInfo {
 
-    // CrateSchema communicates which build and packaging schema was used for this crate build.
-    // This value should be the integer value of a valid CrateSchema.vNNN enum.
+    // CrateSchema communicates which build and packaging schema was used for
+    // this crate build.  This value should be the integer value of a valid
+    // CrateSchema.vNNN enum.
     int32                   CrateSchema = 1;
 
-    // InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
-    // If non-zero, it will not change and no other instance will have the same value.
+    // InstID is 0 by default and reserved for a runtime manager to reference a
+    // crate via issuing integers.  If non-zero, it will not change and no other
+    // instance will have the same value.
     uint32                  InstID = 2;
 
-    // CrateURI takes the form "asset:{PublisherID}/{CrateID}" per the wire scheme declared in
-    // amp.core.proto:UriScheme.Asset; an asset within the crate is "asset:{PublisherID}/{CrateID}/{EntryURI}".
-    // The {PublisherID}/{CrateID} segment can only contain chars in [A-Za-z0-9_.-] (other than the separating '/' char).
-    // PublisherID uniquely identifies the author/owner/publisher of this crate (and potentially other crates).
-    // CrateID uniquely identifies this crate for the given publisher and all subsequent revisions.
+    // CrateURI takes the form "asset:{PublisherID}/{CrateID}" per the wire
+    // scheme declared in amp.core.proto:UriScheme.Asset; an asset within the
+    // crate is "asset:{PublisherID}/{CrateID}/{EntryURI}".  The
+    // {PublisherID}/{CrateID} segment can only contain chars in [A-Za-z0-9_.-]
+    // (other than the separating '/' char).  PublisherID uniquely identifies
+    // the author/owner/publisher of this crate (and potentially other crates).
+    // CrateID uniquely identifies this crate for the given publisher and all
+    // subsequent revisions.
     //    "asset:plan-systems.org/plan.app.ui"
     //    "asset:plan-systems.org/about-plan-systems"
     //    "asset:themushroom.farm/land"
@@ -136,10 +150,12 @@ message CrateInfo {
     //    "asset:the-smiths.family/123-Maple"
     string                  CrateURI = 4;
 
-    // PublisherName is a human-readable name of the author/owner/publisher of this crate and can change without repercussions (i.e. is purely optical).
+    // PublisherName is a human-readable name of the author/owner/publisher of
+    // this crate and can change without repercussions (i.e. is purely optical).
     string                  PublisherName = 6;
 
-    // CrateName is a human-readable title for this crate and can change without repercussions.
+    // CrateName is a human-readable title for this crate and can change without
+    // repercussions.
     string                  CrateName = 10;
 
     // ShortDesc describes this crate in a brief phrase.
@@ -148,7 +164,8 @@ message CrateInfo {
     // Comma-delimited and whitespace-trimmed list of tags.
     string                  Tags = 15;
 
-    // TimeCreated is the UTC value (in seconds) when this crate was first created (and does not change).
+    // TimeCreated is the UTC value (in seconds) when this crate was first
+    // created (and does not change).
     int64                   TimeCreated  = 30;
 
     // TimeBuilt is the UTC value (in seconds) when this crate was built.
@@ -160,16 +177,19 @@ message CrateInfo {
     int32                   MinorVersion = 41;
     int32                   BuildNumber  = 42;
 
-    // BuildID uniquely identifies a particular crate build/version.
-    // This value should have no spaces and only have '.', '_', or '-' (and starts and ends with an alphanumeric character).
-    // By convention, the format is "yyMMdd-" plus the version string above (so that sorting by BuildID string yields the most recent release).
-    // e.g. "210320-v0.1.11"
+    // BuildID uniquely identifies a particular crate build/version.  This value
+    // should have no spaces and only have '.', '_', or '-' (and starts and ends
+    // with an alphanumeric character).  By convention, the format is "yyMMdd-"
+    // plus the version string above (so that sorting by BuildID string yields
+    // the most recent release).  e.g. "210320-v0.1.11"
     string                  BuildID = 45;
 
-    // HomeURL is an optional link that allows a human to learn more about this crate.
+    // HomeURL is an optional link that allows a human to learn more about this
+    // crate.
     string                  HomeURL = 50;
 
-    // URL is an optional string available to specify a URL to download this crate.
+    // URL is an optional string available to specify a URL to download this
+    // crate.
     string                  URL = 55;
 
     // Approximate size of this crate in bytes (or 0 if unknown).
@@ -177,8 +197,9 @@ message CrateInfo {
 }
 
 // CrateManifest is the top-level manifest/catalog for an amp asset module
-// called a "crate".
-// It contains catalog and type info that amp loads at runtime to know what's inside binary asset bundles without having to load them.
+// called a "crate".  It contains catalog and type info that amp loads at
+// runtime to know what's inside binary asset bundles without having to load
+// them.
 //
 // A reference to an amp asset is an "asset:" URI — see CrateInfo.CrateURI for
 // the grammar and examples.
@@ -187,20 +208,23 @@ message CrateManifest {
 
     CrateInfo               Info = 1;
 
-    // IconBundleName is the bundle name ID of the bundle containing icons (Sprites) used to represent the "real" crate assets.
-    // Asset name IDs in this bundle correspond to assets in all the other Crate's bundles.
+    // IconBundleName is the bundle name ID of the bundle containing icons
+    // (Sprites) used to represent the "real" crate assets.  Asset name IDs in
+    // this bundle correspond to assets in all the other Crate's bundles.
     string                  IconBundleName = 5;
 
     repeated BundleManifest Bundles = 10;
 }
 
-// CrateSnapshot is a general purpose container to track multiple crates and associated build IDs.
+// CrateSnapshot is a general purpose container to track multiple crates and
+// associated build IDs.
 message CrateSnapshot {
 
     int64                   RevID = 1;
 
-    // This is a template URL where the symbols "CrateURI", "CrateBuildID", "PlatformID" are delimited with { }.
-    // The symbol "{.}" is to be replaced with a local pathname if the URL refers to a local file system pathname.
+    // This is a template URL where the symbols "CrateURI", "CrateBuildID",
+    // "PlatformID" are delimited with { }.  The symbol "{.}" is to be replaced
+    // with a local pathname if the URL refers to a local file system pathname.
     // e.g. "https://whatever.com/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
     //      "{.}/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
     string                  DownloadURL = 3;
@@ -209,13 +233,15 @@ message CrateSnapshot {
 }
 
 
-// Enum values should be three base-10 digits corresponding to the major, minor, and revision number.
+// Enum values should be three base-10 digits corresponding to the major, minor,
+// and revision number.
 enum CrateSchema {
     UndefinedSchema         = 0;
 
     // v100 should be used for CrateInfo.CrateSchema
     v100                    = 100;
 
-    // v300 — unified LiveCrate/LiveAsset authoring, tag.UID asset identity, content-addressed bundles.
+    // v300 — unified LiveCrate/LiveAsset authoring, tag.UID asset identity,
+    // content-addressed bundles.
     v300                    = 300;
 }

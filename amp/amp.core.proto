@@ -1,15 +1,19 @@
 syntax = "proto3";
 
-// Package amp is an implementation-independent API for a pluggable client-server UI/UX system,
-// featuring support and integration for files, media, and communication.
+// Package amp is an implementation-independent API for a pluggable
+// client-server UI/UX system, featuring support and integration for files,
+// media, and communication.
 //
-// Welcome to art.media.platform (c) 2024 ("amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
+// Welcome to art.media.platform (c) 2024 ("amp"): a runtime model and
+// specification to securely share and experience digital media under their own
+// agreed terms and permissions,
 //   something we can all agree on.
 package amp;
 
 import "stdlib/safe/safe.proto";
 
-// Tells protoc that a .proto file importing amp.proto what package import to use within Go.
+// Tells protoc that a .proto file importing amp.proto what package import to
+// use within Go.
 option go_package = "github.com/art-media-platform/amp.SDK/amp";
 
 // ── Closed-vocabulary convention ──────────────────────────────────────────
@@ -41,22 +45,25 @@ enum UriScheme {
 }
 
 
-// Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
+// Tag is a versatile and lightweight way to fuse any URL, ID, precise
+// geo-location, crypto address, content-type, or payload text.
 //
-// All fields are optional and their meaning is contextual; a Tag plays one or more roles —
-// identity (UID), reference (URI / ContentTypeRaw), label (Text), measure (I/J/K + Units),
-// attachment (Data).
+// All fields are optional and their meaning is contextual; a Tag plays one or
+// more roles — identity (UID), reference (URI / ContentTypeRaw), label (Text),
+// measure (I/J/K + Units), attachment (Data).
 //
-// URI + Data together is the POST-FETCH CACHE: URI names where the object lives, Data is a
-// copy of it materialized inline, so holding Data IS the cache hit and there is no precedence
-// to resolve.  A content-addressed handle cannot go stale — a BlobID is the leading 16 bytes
-// of the content hash, so the bytes it names never change.  A location-addressed URI has no
-// such guarantee: the copy is as of write time and the producer owns its refresh.
+// URI + Data together is the POST-FETCH CACHE: URI names where the object
+// lives, Data is a copy of it materialized inline, so holding Data IS the cache
+// hit and there is no precedence to resolve.  A content-addressed handle cannot
+// go stale — a BlobID is the leading 16 bytes of the content hash, so the bytes
+// it names never change.  A location-addressed URI has no such guarantee: the
+// copy is as of write time and the producer owns its refresh.
 //
-// Data requires ContentTypeRaw (bytes with no media type are unrenderable) and is legal on
-// Tags.Head or any Tags.SubTag.  The substrate sets NO per-Tag size ceiling, so an attachment
-// reaches every subscriber and stays in the journal ungated by BlobPullPolicy, and the
-// producer owns its own limit.  (AOM SD-content-substrate.md §3.1, §3.6)
+// Data requires ContentTypeRaw (bytes with no media type are unrenderable) and
+// is legal on Tags.Head or any Tags.SubTag.  The substrate sets NO per-Tag size
+// ceiling, so an attachment reaches every subscriber and stays in the journal
+// ungated by BlobPullPolicy, and the producer owns its own limit.  (AOM
+// SD-content-substrate.md §3.1, §3.6)
 message Tag {
 
     /// open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
@@ -105,10 +112,10 @@ enum Units {
 }
 
 
-// Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID, ItemID, EditID)
-// tuple addressing a single CRDT cell across any planet.  PlanetID = 0 means
-// "this planet" (the planet of the containing TxMsg).
-// Used to cite a specific TxOp address across planets without dereferencing.
+// Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID,
+// ItemID, EditID) tuple addressing a single CRDT cell across any planet.
+// PlanetID = 0 means "this planet" (the planet of the containing TxMsg).  Used
+// to cite a specific TxOp address across planets without dereferencing.
 message Address {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
@@ -152,8 +159,8 @@ enum TxOpFlags {
 
 // TxField maps a fixed count of int64 payload fields.
 //
-// Why not a proto message? Compression is much better since values usually repeat.
-// TxField indexes the per-op u64 slots in the hand-rolled TxOp codec.
+// Why not a proto message? Compression is much better since values usually
+// repeat.  TxField indexes the per-op u64 slots in the hand-rolled TxOp codec.
 // Bit order = change frequency: the hasFields mask is a uvarint sized by its
 // highest set bit, so ItemID (differs on nearly every op) sits in the low bits
 // and NodeID (rarely differs) sits high.  An op's EditID is not a wire field:
@@ -244,12 +251,13 @@ message TxEnvelope {
 }
 
 
-// TxHeader contains primary information about a tx and is encrypted based on TxEnvelope fields.
+// TxHeader contains primary information about a tx and is encrypted based on
+// TxEnvelope fields.
 message TxHeader {
 
-    // Refers to a tag ID (usually a TxID) for subsequent requests and responses.
-    // Used to reference a tx thread to a request.
-    // If nil or equal to TxID, then this tx is context-free and TxID is implied context ID.
+    // Refers to a tag ID (usually a TxID) for subsequent requests and
+    // responses.  Used to reference a tx thread to a request.  If nil or equal
+    // to TxID, then this tx is context-free and TxID is implied context ID.
     fixed64             ContextID_0 = 1;
     fixed64             ContextID_1 = 2;
 
@@ -293,13 +301,14 @@ enum PinMode {
     // Used when instantaneous state is sufficient (e.g. applying a setting)
     Snapshot = 1;
 
-    // If set, the request will remain open after the initial state snapshot is sent.
-    // Requester will receive state updates until this request is closed.
+    // If set, the request will remain open after the initial state snapshot is
+    // sent.  Requester will receive state updates until this request is closed.
     MaintainSync = 2;
 }
 
 
-// PinRequest is a peer request to "pin" a set of element IDs, where selected attrs and items will be pushed to the peer.
+// PinRequest is a peer request to "pin" a set of element IDs, where selected
+// attrs and items will be pushed to the peer.
 message PinRequest {
 
     // Used for easy sorting and ordering of requests
@@ -346,9 +355,9 @@ message ItemSpan {
     int64    ItemsPerAttr = 14; // max items returned per unique attr ID (0 denotes no limit)
     int64    EditsPerItem = 15; // max edits returned per unique item ID, newest first
 
-    // Edit-axis time window, inclusive; an unset bound widens to the tape
-    // start / the open live tail.  EditID == TxID is time-true
-    // (AOM SD-edit-resolution.md §6.1).  On a Tape attr the journal is the store:
+    // Edit-axis time window, inclusive; an unset bound widens to the tape start
+    // / the open live tail.  EditID == TxID is time-true (AOM
+    // SD-edit-resolution.md §6.1).  On a Tape attr the journal is the store:
     // items are tracks, this window selects the replay span, and EditsPerItem
     // caps samples per track.  On a Folded attr the window filters the cell's
     // retained edits.
@@ -359,13 +368,12 @@ message ItemSpan {
 }
 
 
-// EditFlow is where an attr's edits materialize, fixed at registration
-// (1-of-N; never a bool or bitfield).  Folded: the cabinet folds the attr's
-// present per cell (AOM SD-planet-storage.md §8.1, §8.6) — the zero value, so an
-// undeclared attr folds exactly as every attr always has.  Tape: the edit
-// axis is the attr's time axis — the journal IS the tape; the attr is
-// fold-exempt, holds zero cabinet rows, and serve sources from journal
-// replay.
+// EditFlow is where an attr's edits materialize, fixed at registration (1-of-N;
+// never a bool or bitfield).  Folded: the cabinet folds the attr's present per
+// cell (AOM SD-planet-storage.md §8.1, §8.6) — the zero value, so an undeclared
+// attr folds exactly as every attr always has.  Tape: the edit axis is the
+// attr's time axis — the journal IS the tape; the attr is fold-exempt, holds
+// zero cabinet rows, and serve sources from journal replay.
 enum EditFlow {
     Fold = 0; // edits also fold into the cabinet's present (the universal default)
     Tape = 1; // edits stay on the journal tape — the journal IS the store; no fold, zero cabinet rows
@@ -379,19 +387,20 @@ message Login {
     Tag                Planet = 2; // identity — the target home planet (UID; Text optionally its display label)
     Tag                Device = 5; // identity — the client device (UID)
 
-    // HostAddress is the network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
-    // amp.Host uses this as the host name when serving URLs for the client to consume.
+    // HostAddress is the network address of the server known to the client
+    // (e.g. IP address, localhost, domain name, etc) amp.Host uses this as the
+    // host name when serving URLs for the client to consume.
     string             HostAddress = 8;
 
     // Checkpoint allows the client to resume an auth session.
     LoginCheckpoint    Checkpoint = 12;
 
     // SigningKey carries the client's signing identity — pubkey + suite + type
-    // in the same wire shape MemberEpoch publishes (safe.KeyRef) — so a remotely
-    // self-generated identity can be bound to a Member.  The host verifies the
-    // challenge-response signature against the key it holds for Member; when the
-    // host has no key recorded yet it may adopt this one if trust-on-first-use
-    // (TOFU) is set.
+    // in the same wire shape MemberEpoch publishes (safe.KeyRef) — so a
+    // remotely self-generated identity can be bound to a Member.  The host
+    // verifies the challenge-response signature against the key it holds for
+    // Member; when the host has no key recorded yet it may adopt this one if
+    // trust-on-first-use (TOFU) is set.
     safe.KeyRef        SigningKey = 17;
 
 }
@@ -465,7 +474,8 @@ enum PrivacyMode {
 // present and disagree, BrandMark wins (it is the quorum-signed authority).
 message BrandIdentity {
 
-    // Public name of the planet ("Tunr", "Hexosphere", "Grandma's Record Shelf").
+    // Public name of the planet ("Tunr", "Hexosphere", "Grandma's Record
+    // Shelf").
     string              AppName = 1;
 
     // Operator / sponsoring organization name ("SoundSpectrum").
@@ -504,17 +514,18 @@ message BrandMark {
     // The planet's identity field set — quorum-signed here.
     BrandIdentity       Identity = 1;
 
-    // Visual glyph variants (HTML <picture>-shaped Tags tree): size/theme/density/
-    // content-type variants consumers pick from.  The visual impersonation
-    // surface, hence quorum-signed.
+    // Visual glyph variants (HTML <picture>-shaped Tags tree):
+    // size/theme/density/ content-type variants consumers pick from.  The
+    // visual impersonation surface, hence quorum-signed.
     Tags                Glyphs = 7;
 }
 
 
-// VaultConfig bundles the per-planet workload tunables that relay vaults enforce.
-// All fields are advisory — unset (zero) means "use the protocol default" from
-// amp.support.attrs.go DefaultXxx consts.  Passed around as *VaultConfig; helpers
-// on the pointer receiver are nil-safe so callers don't have to guard.
+// VaultConfig bundles the per-planet workload tunables that relay vaults
+// enforce.  All fields are advisory — unset (zero) means "use the protocol
+// default" from amp.support.attrs.go DefaultXxx consts.  Passed around as
+// *VaultConfig; helpers on the pointer receiver are nil-safe so callers don't
+// have to guard.
 message VaultConfig {
 
     // Rate limiting (per-member, sliding window):
@@ -523,69 +534,73 @@ message VaultConfig {
     int64   MaxTxPerWindow       = 3;   // Max TxMsg count per member per window (default: 10000)
     int64   RateLimitWindowSecs  = 4;   // Sliding window duration in seconds (default: 86400 = 24h)
 
-    // Quarantine retention for TxMsgs that fail MemberProof or signature verification.
-    // Quarantined entries are excluded from fanout + ReadSince but remain in the journal
-    // so Strike attestations citing the rejected TxID can be audited against the bytes.
-    // After expiry, Badger GC evicts; the Strike still stands (canonical bytes include TxID).
-    // If 0, DefaultQuarantineRetention applies (7 days).
+    // Quarantine retention for TxMsgs that fail MemberProof or signature
+    // verification.  Quarantined entries are excluded from fanout + ReadSince
+    // but remain in the journal so Strike attestations citing the rejected TxID
+    // can be audited against the bytes.  After expiry, Badger GC evicts; the
+    // Strike still stands (canonical bytes include TxID).  If 0,
+    // DefaultQuarantineRetention applies (7 days).
     int64   QuarantineRetentionSecs = 5;
 
-    // Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
-    // TxMsgs stamped further into the future are dropped at intake.  Past-stamped TxMsgs
-    // are unrestricted (catchup/resync).  If 0, DefaultMaxFutureSkew applies (5 minutes).
+    // Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's
+    // wall clock.  TxMsgs stamped further into the future are dropped at
+    // intake.  Past-stamped TxMsgs are unrestricted (catchup/resync).  If 0,
+    // DefaultMaxFutureSkew applies (5 minutes).
     int64   MaxFutureSkewSecs = 6;
 
-    // Late-key pending queue caps.  Bound memory used tracking encrypted TxMsgs awaiting
-    // their epoch key.  Saturation is not data loss — entries remain in the journal and
-    // are decryptable when the key arrives; saturation just skips the audit-drain re-verify.
-    // If 0, the DefaultMaxPendingPerEpoch / DefaultMaxPendingEpochs apply.
+    // Late-key pending queue caps.  Bound memory used tracking encrypted TxMsgs
+    // awaiting their epoch key.  Saturation is not data loss — entries remain
+    // in the journal and are decryptable when the key arrives; saturation just
+    // skips the audit-drain re-verify.  If 0, the DefaultMaxPendingPerEpoch /
+    // DefaultMaxPendingEpochs apply.
     uint32  MaxPendingPerEpoch = 7;
     uint32  MaxPendingEpochs   = 8;
 
-    // Bootstrap TTL for invite tokens, in seconds.  An invite created at time T is
-    // accepted only while time.Now().Unix() <= T + BootstrapTTLSecs.  Bounds the
-    // exposure window of a leaked invite token.  Enforced on accept; the issuing
-    // admin cannot retract early but may publish an explicit revocation op.
-    // If 0, DefaultBootstrapTTL applies (7 days).
+    // Bootstrap TTL for invite tokens, in seconds.  An invite created at time T
+    // is accepted only while time.Now().Unix() <= T + BootstrapTTLSecs.  Bounds
+    // the exposure window of a leaked invite token.  Enforced on accept; the
+    // issuing admin cannot retract early but may publish an explicit revocation
+    // op.  If 0, DefaultBootstrapTTL applies (7 days).
     int64   BootstrapTTLSecs = 9;
 
     // Blob-plane metering (per-peer, sliding window).  Bounds the byte volume a
-    // single authenticated peer can drive through the blob transfer plane — charged
-    // at both ingest (StoreValidated) and egress (SendBlob) — so a misbehaving peer
-    // cannot force unbounded hash+write or disk-read+send work.  The unsolicited-push
-    // ingest gate (accept only referenced blobs) is the precise first line; this
-    // budget is the coarse backstop and the only bound on the egress side.  Sized for
-    // large-media sync: the default is generous so legitimate transfers pass, and a
-    // hostile-environment operator tightens it.  If 0, DefaultMaxBlobBytesPerWindow
-    // applies (1 TiB).
+    // single authenticated peer can drive through the blob transfer plane —
+    // charged at both ingest (StoreValidated) and egress (SendBlob) — so a
+    // misbehaving peer cannot force unbounded hash+write or disk-read+send
+    // work.  The unsolicited-push ingest gate (accept only referenced blobs) is
+    // the precise first line; this budget is the coarse backstop and the only
+    // bound on the egress side.  Sized for large-media sync: the default is
+    // generous so legitimate transfers pass, and a hostile-environment operator
+    // tightens it.  If 0, DefaultMaxBlobBytesPerWindow applies (1 TiB).
     int64   MaxBlobBytesPerWindow = 10;
 
-    // Sliding window for the blob byte budget, in seconds.  The blob plane moves
-    // large media on a slower cadence than the TxMsg plane, so it may want its own
-    // window.  If 0, RateLimitWindowSecs is used; if that is also 0,
-    // DefaultBlobRateLimitWindow applies (24h).
+    // Sliding window for the blob byte budget, in seconds.  The blob plane
+    // moves large media on a slower cadence than the TxMsg plane, so it may
+    // want its own window.  If 0, RateLimitWindowSecs is used; if that is also
+    // 0, DefaultBlobRateLimitWindow applies (24h).
     int64   BlobRateLimitWindowSecs = 11;
 
-    // Per-object blob size ceiling: the maximum stored byte size of a SINGLE blob this vault will
-    // ingest, distinct from the per-window byte budget above.  Bounds the otherwise 1 PiB-declarable
-    // transfer the sliding-window budget alone admits.  If 0, DefaultMaxBlobBytesPerObject applies
-    // (1 TiB).
+    // Per-object blob size ceiling: the maximum stored byte size of a SINGLE
+    // blob this vault will ingest, distinct from the per-window byte budget
+    // above.  Bounds the otherwise 1 PiB-declarable transfer the sliding-window
+    // budget alone admits.  If 0, DefaultMaxBlobBytesPerObject applies (1 TiB).
     int64   MaxBlobBytesPerObject = 13;
 
     // Bootstrap vault endpoints advertised for this planet — the admin-signed,
     // governance home for "where can a fresh peer dial to reach this planet?".
-    // InviteCreate stamps these into every PlanetInvite it issues, so a peerless
-    // acceptor can DialVaultPeers its way onto the planet.  Reuses the transport-
-    // tagged VaultAddr envelope shared with NameServiceRecord / FederationPeer.
-    // Empty means the planet publishes no bootstrap address (reachable only via a
-    // federation NameServiceRecord or static -vault.peers).
+    // InviteCreate stamps these into every PlanetInvite it issues, so a
+    // peerless acceptor can DialVaultPeers its way onto the planet.  Reuses the
+    // transport- tagged VaultAddr envelope shared with NameServiceRecord /
+    // FederationPeer.  Empty means the planet publishes no bootstrap address
+    // (reachable only via a federation NameServiceRecord or static
+    // -vault.peers).
     repeated VaultAddr VaultAddrs = 12;
 }
 
 
 // PlanetCharter holds a planet's lifetime-IMMUTABLE founding terms.  It is
-// marshaled exactly once at genesis, stored verbatim in PlanetEpoch.Charter, and
-// carried byte-identically on every epoch for the planet's whole life.
+// marshaled exactly once at genesis, stored verbatim in PlanetEpoch.Charter,
+// and carried byte-identically on every epoch for the planet's whole life.
 //
 // FREEZE INVARIANT: the Charter bytes are signed verbatim (see PlanetEpoch).  A
 // verifier hashes the STORED bytes and never re-marshals this message, so
@@ -609,8 +624,8 @@ message PlanetCharter {
     Tag                 GenesisEpoch = 3;
 
     // Containment hierarchy: the parent planet this one was founded under.
-    // Genesis-immutable — a planet's place in the parent/child tree is a founding
-    // fact, not a governance toggle.  Nil for a root planet.
+    // Genesis-immutable — a planet's place in the parent/child tree is a
+    // founding fact, not a governance toggle.  Nil for a root planet.
     Tag                 ParentPlanet = 4;
 
     // Forward-only fork provenance: the planet this one was forked from, the
@@ -619,38 +634,39 @@ message PlanetCharter {
     // original (non-forked) planet.
     PlanetOrigin        Origin = 5;
 
-    // Privacy mode, fixed for the planet's life.  Public operates signature-only
-    // with no payload encryption (anyone may syndicate/view, only members author);
-    // Confidential encrypts payloads to members.  Changing it would retroactively
-    // re-classify all prior content — a Confidential planet that wants to go Public
-    // forks instead.
+    // Privacy mode, fixed for the planet's life.  Public operates
+    // signature-only with no payload encryption (anyone may syndicate/view,
+    // only members author); Confidential encrypts payloads to members.
+    // Changing it would retroactively re-classify all prior content — a
+    // Confidential planet that wants to go Public forks instead.
     PrivacyMode         Privacy = 6;
 
-    // Founding declaration of intent — the vows, operating clause, house rules the
-    // founders read and signed.  Structured (Tags) so founding terms are machine-
-    // walkable: Head names the covenant; SubTags/Children carry clauses,
-    // jurisdiction, language variants, signed riders.  Immutable: the declaration
-    // each founder bound themselves to cannot be edited after.
+    // Founding declaration of intent — the vows, operating clause, house rules
+    // the founders read and signed.  Structured (Tags) so founding terms are
+    // machine- walkable: Head names the covenant; SubTags/Children carry
+    // clauses, jurisdiction, language variants, signed riders.  Immutable: the
+    // declaration each founder bound themselves to cannot be edited after.
     Tags                Declaration = 7;
 
     // Founding member set, by UID.  Genesis is self-ratifying: each founder
     // co-signs Charter+Terms bytes that include this list, and their signing
-    // pubkeys ride the genesis TxMsg's MemberEpoch ops.  An explicit UID set (not
-    // a GovernanceGroup reference) avoids any chicken-and-egg at founding — a group
-    // cannot be cited before the planet that defines it exists.
+    // pubkeys ride the genesis TxMsg's MemberEpoch ops.  An explicit UID set
+    // (not a GovernanceGroup reference) avoids any chicken-and-egg at founding
+    // — a group cannot be cited before the planet that defines it exists.
     repeated Tag        Founders = 8;
 
-    // Genesis quorum threshold: how many Founders must have validly co-signed the
-    // genesis epoch.  0 = all Founders (the strict default).  Frozen: the rule under
-    // which the planet legitimately came into being cannot be restated.
+    // Genesis quorum threshold: how many Founders must have validly co-signed
+    // the genesis epoch.  0 = all Founders (the strict default).  Frozen: the
+    // rule under which the planet legitimately came into being cannot be
+    // restated.
     int32               GenesisRequiredSignatures = 9;
 }
 
 
 // EpochTerms holds a planet's per-epoch GOVERNANCE terms.  Each epoch rotation
 // produces a fresh EpochTerms, marshaled once and stored verbatim in
-// PlanetEpoch.Terms, then co-signed by the governing quorum.  Verifiers hash the
-// STORED bytes; this message is never re-marshaled on the verify path.
+// PlanetEpoch.Terms, then co-signed by the governing quorum.  Verifiers hash
+// the STORED bytes; this message is never re-marshaled on the verify path.
 //
 // Everything here is quorum-signed.  In particular the planet's public identity
 // (Mark) lives here so a spoof rename requires convening the quorum, not a lone
@@ -661,43 +677,48 @@ message EpochTerms {
     // Layout version of this EpochTerms.
     uint32              TermsSchema = 1;
 
-    // Identity of this epoch (time-ordered UID).  Matches PlanetEpoch.EpochTag and
-    // every MemberEpoch.Epoch published alongside it.
+    // Identity of this epoch (time-ordered UID).  Matches PlanetEpoch.EpochTag
+    // and every MemberEpoch.Epoch published alongside it.
     Tag                 EpochTag = 2;
 
     // The epoch this one supersedes, forming the authority chain.  Nil ONLY for
-    // the genesis epoch.  A verifier walks this back to PlanetCharter.GenesisEpoch.
+    // the genesis epoch.  A verifier walks this back to
+    // PlanetCharter.GenesisEpoch.
     Tag                 PreviousEpoch = 3;
 
-    // Monotonic epoch height: genesis = 0, each rotation + 1.  A clock-independent
-    // total order (UIDs encode wall-clock, which a malicious minter could skew);
-    // lets verifiers reject out-of-order / replayed epochs and bound chain length.
+    // Monotonic epoch height: genesis = 0, each rotation + 1.  A
+    // clock-independent total order (UIDs encode wall-clock, which a malicious
+    // minter could skew); lets verifiers reject out-of-order / replayed epochs
+    // and bound chain length.
     uint64              EpochHeight = 4;
 
     // HashKit is this epoch's content/digest hash policy — per-epoch and
     // rotatable (a migration may move it alongside CryptoKitID), selected by ID
     // so a verifier picks the hasher rather than hardcoding an algorithm.
     // CharterHash is the digest of the planet's immutable PlanetCharter bytes
-    // under HashKit: it binds every epoch to the one Charter so a charter swap is
-    // detectable from the small Terms alone, without re-shipping Charter bytes.
+    // under HashKit: it binds every epoch to the one Charter so a charter swap
+    // is detectable from the small Terms alone, without re-shipping Charter
+    // bytes.
     safe.HashKitID      HashKit = 5;
     bytes               CharterHash = 6;
 
-    // Crypto suite in force for this epoch — the SOLE home for the planet's suite
-    // (no separate founding-kit slot; the genesis epoch's value IS the founding
-    // suite).  Unset resolves to Poly25519 via EffectiveCryptoKit.  A quorum-
-    // approved migration (e.g. post-quantum) rotates the suite by issuing an epoch
-    // with a new value.
+    // Crypto suite in force for this epoch — the SOLE home for the planet's
+    // suite (no separate founding-kit slot; the genesis epoch's value IS the
+    // founding suite).  Unset resolves to Poly25519 via EffectiveCryptoKit.  A
+    // quorum- approved migration (e.g. post-quantum) rotates the suite by
+    // issuing an epoch with a new value.
     fixed64             CryptoKitID_0 = 7;    // CryptoKit UID (suite in force this epoch), bytes 0..7
     fixed64             CryptoKitID_1 = 8;    // CryptoKit UID, bytes 8..15
 
-    // Human-readable label for THIS epoch ("Genesis", "Rotation 3") — an operator/
-    // audit display string, NOT the planet's public name (that is Mark.AppName).
+    // Human-readable label for THIS epoch ("Genesis", "Rotation 3") — an
+    // operator/ audit display string, NOT the planet's public name (that is
+    // Mark.AppName).
     string              Label = 10;
 
-    // The planet's quorum-signed public identity (name/org/domain/description/URL
-    // schemes/federation back-edge/glyphs).  The impersonation surface — here, not
-    // the admin-mutable Brand attr, so a public-face change requires the quorum.
+    // The planet's quorum-signed public identity
+    // (name/org/domain/description/URL schemes/federation back-edge/glyphs).
+    // The impersonation surface — here, not the admin-mutable Brand attr, so a
+    // public-face change requires the quorum.
     BrandMark           Mark = 11;
 
     // Default entry channel — where members land when opening the planet.
@@ -709,28 +730,31 @@ message EpochTerms {
 
     // The ACC group whose members are the authorized co-signers of this epoch.
     // Zero/unset for genesis (the signers are PlanetCharter.Founders directly);
-    // for rotations, resolves to a group defined in the prior epoch's member set.
+    // for rotations, resolves to a group defined in the prior epoch's member
+    // set.
     Tag                 GovernanceGroup = 16;
 
     // Threshold of GovernanceGroup co-signatures required for this epoch to be
     // valid.  0 = all members of the resolved group (the strict default).
     int32               RequiredSignatures = 18;
 
-    // Lifecycle posture asserted by this epoch's quorum (Open / Paused / Sealed).
+    // Lifecycle posture asserted by this epoch's quorum (Open / Paused /
+    // Sealed).
     SealState           Seal = 20;
 
     // Member-admission posture asserted by this epoch's quorum (see
     // MemberAdmission).  Unset resolves via EffectiveAdmission.
     MemberAdmission     Admission = 21;
 
-    // Address of the immutable Codex edition this epoch publishes / seals against
-    // ("the printed edition").  Typically set on a Paused/Sealed sealing epoch.
-    // Zero when this epoch publishes no edition.
+    // Address of the immutable Codex edition this epoch publishes / seals
+    // against ("the printed edition").  Typically set on a Paused/Sealed
+    // sealing epoch.  Zero when this epoch publishes no edition.
     Address             CodexEdition = 22;
 
-    // Vault workload tunables (rate limits, quarantine retention, intake guards,
-    // pending-queue caps).  Quorum-signed so an operator cannot unilaterally loosen
-    // them.  Null-safe: unset fields fall back to the DefaultXxx consts.
+    // Vault workload tunables (rate limits, quarantine retention, intake
+    // guards, pending-queue caps).  Quorum-signed so an operator cannot
+    // unilaterally loosen them.  Null-safe: unset fields fall back to the
+    // DefaultXxx consts.
     VaultConfig         VaultConfig = 25;
 
     // Seconds after rotation during which old-epoch TxMsgs are still accepted
@@ -759,40 +783,43 @@ message EpochTerms {
 // version tag.
 message PlanetEpoch {
 
-    // Verbatim PlanetCharter bytes — marshaled once at genesis and carried byte-
-    // identically on EVERY epoch (self-contained; a single epoch is fully
+    // Verbatim PlanetCharter bytes — marshaled once at genesis and carried
+    // byte- identically on EVERY epoch (self-contained; a single epoch is fully
     // verifiable offline without fetching genesis).  First half of the FRAME.
     bytes               Charter = 1;
 
     // Verbatim EpochTerms bytes for THIS epoch.  Second half of the FRAME.
     bytes               Terms = 2;
 
-    // Advisory denormalized copy of EpochTerms.EpochTag, in the clear so vaults and
-    // routers can index/address (HeadNodeID, LawPlanetEpoch, EpochTag) without
-    // parsing Terms.  UNSIGNED: verifiers MUST treat the value inside Terms as
-    // authoritative and reject a mismatch.
+    // Advisory denormalized copy of EpochTerms.EpochTag, in the clear so vaults
+    // and routers can index/address (HeadNodeID, LawPlanetEpoch, EpochTag)
+    // without parsing Terms.  UNSIGNED: verifiers MUST treat the value inside
+    // Terms as authoritative and reject a mismatch.
     Tag                 EpochTag = 3;
 
-    // Quorum co-signatures over the FRAME.  Each signer's CryptoKit is resolved via
+    // Quorum co-signatures over the FRAME.  Each signer's CryptoKit is resolved
+    // via
     // MemberTag -> MemberEpoch, enabling mixed-suite quorums.  Excluded from the
     // FRAME so signers append incrementally.
     repeated CoSignature Signatures = 4;
 
-    // Non-voting attestors (notary, officiant, friend, auditor, AI monitor) signing
-    // the SAME FRAME as Signatures, distinguished by slice not by form.  Excluded
-    // from the FRAME so witnesses can be added after-the-fact.
+    // Non-voting attestors (notary, officiant, friend, auditor, AI monitor)
+    // signing the SAME FRAME as Signatures, distinguished by slice not by form.
+    // Excluded from the FRAME so witnesses can be added after-the-fact.
     repeated CoSignature Witnesses = 5;
 
-    // Host-only runtime flag, NEVER signed and NEVER announced: if true, this planet
-    // is local to one host (the vault refuses to announce it, rejects remote claims,
-    // and skips it in watch-list exchanges).  A per-host deployment fact — two hosts
-    // may legitimately disagree — so it lives outside the signed Charter/Terms.
+    // Host-only runtime flag, NEVER signed and NEVER announced: if true, this
+    // planet is local to one host (the vault refuses to announce it, rejects
+    // remote claims, and skips it in watch-list exchanges).  A per-host
+    // deployment fact — two hosts may legitimately disagree — so it lives
+    // outside the signed Charter/Terms.
     bool                LocalOnly = 6;
 }
 
 
 // CoSignature is one member's signature contribution to a multi-sig epoch.
-// Used for Planet genesis (Founders) and for epoch rotation under M-of-N governance.
+// Used for Planet genesis (Founders) and for epoch rotation under M-of-N
+// governance.
 message CoSignature {
 
     // The signing member. Their CryptoKitID is resolved via MemberEpoch,
@@ -806,8 +833,8 @@ message CoSignature {
 
 // PlanetOrigin is a forward-only provenance pointer recording that this planet
 // was forked from another.  Carries no authority over this planet; the origin
-// is informational.  Stored as a planet-public attribute
-// (HeadNodeID / std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
+// is informational.  Stored as a planet-public attribute (HeadNodeID /
+// std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
 message PlanetOrigin {
 
     // The planet this fork came from.
@@ -876,14 +903,14 @@ enum MemberStatus {
 }
 
 
-// WrappedKey carries one role-tagged symmetric key, sealed to a specific member's
-// EncryptKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A MemberEpoch
-// publishes one WrappedKey per role the recipient is authorized for (up to 4
-// roles per epoch — see safe.KeyRole).
+// WrappedKey carries one role-tagged symmetric key, sealed to a specific
+// member's EncryptKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A
+// MemberEpoch publishes one WrappedKey per role the recipient is authorized for
+// (up to 4 roles per epoch — see safe.KeyRole).
 //
 // Planet scope: one entry with Role=ContentKey (the planet content key).
-// Channel scope: one entry with Role=ContentKey (for ReadOnly+), and if ReadWrite+,
-// a second entry with Role=WriteSeed.
+// Channel scope: one entry with Role=ContentKey (for ReadOnly+), and if
+// ReadWrite+, a second entry with Role=WriteSeed.
 //
 // Invariant: symmetric key material only — see safe.RoleKey for the statement
 // of the rule.
@@ -898,33 +925,38 @@ message WrappedKey {
 }
 
 
-// MemberEpoch delivers epoch-scoped key material and status for one member on one node.
-// Node = planet head (amp.HeadNodeID) for planet-level records, channel UID for channel records.
-// Published as an op in the ACC channel by the node's admin when:
+// MemberEpoch delivers epoch-scoped key material and status for one member on
+// one node.  Node = planet head (amp.HeadNodeID) for planet-level records,
+// channel UID for channel records.  Published as an op in the ACC channel by
+// the node's admin when:
 //   - The node's epoch rotates (fresh keys for all members)
 //   - A member is added / removed / changed
 //
-// WrappedKeys are access-tiered: ReadOnly+ members receive Role=Content; ReadWrite+
-// additionally receive Role=WriteSeed.  The WriteSeed is the substrate for MemberProof
-// HMAC, so members without it cannot forge write proofs — the vault's enforcement of
-// channel ACC becomes cryptographic rather than policy-based.
+// WrappedKeys are access-tiered: ReadOnly+ members receive Role=Content;
+// ReadWrite+ additionally receive Role=WriteSeed.  The WriteSeed is the
+// substrate for MemberProof HMAC, so members without it cannot forge write
+// proofs — the vault's enforcement of channel ACC becomes cryptographic rather
+// than policy-based.
 message MemberEpoch {
 
     // Member identity (recipient of the wrapped keys).
     Tag                 MemberTag = 1;
 
-    // Node this epoch record applies to — planet head for planet-level, channel UID otherwise.
+    // Node this epoch record applies to — planet head for planet-level, channel
+    // UID otherwise.
     Tag                 Node = 3;
 
-    // Epoch this entry belongs to (planet epoch or channel epoch).
-    // Must match PlanetEpoch.EpochTag / ChannelEpoch.Epoch so recipients store keys under the correct ID.
+    // Epoch this entry belongs to (planet epoch or channel epoch).  Must match
+    // PlanetEpoch.EpochTag / ChannelEpoch.Epoch so recipients store keys under
+    // the correct ID.
     Tag                 Epoch = 2;
 
     // Role-tagged wrapped keys, encrypted to the recipient via EncryptToPeer.
     // Empty for Revoked/Suspended records.
     repeated WrappedKey WrappedKeys = 30;
 
-    // Lifecycle state as of this MemberEpoch.  Meaningful at planet scope; reserved at channel scope.
+    // Lifecycle state as of this MemberEpoch.  Meaningful at planet scope;
+    // reserved at channel scope.
     MemberStatus        Status = 8;
 
     // Member's identity SigningKey — pubkey + kit, used for signature
@@ -939,11 +971,11 @@ message MemberEpoch {
     safe.KeyRef         EncryptKey = 32;
 
     // Citations referenced as the basis for this epoch.  For suspensions and
-    // revocations, these point to ledger entries (strikes, audits, witness records)
-    // that informed the decision — making every governance act reviewable and
-    // appealable.  Empty for routine epochs (e.g. initial Active, key rotation).
-    // AttrID and EditID may be left zero when citing an item rather than a
-    // specific edit (the common case).
+    // revocations, these point to ledger entries (strikes, audits, witness
+    // records) that informed the decision — making every governance act
+    // reviewable and appealable.  Empty for routine epochs (e.g. initial
+    // Active, key rotation).  AttrID and EditID may be left zero when citing an
+    // item rather than a specific edit (the common case).
     repeated Address    Cites = 20;
 
     // Substrate-agnostic Kind, addressed by Tag.  The Tag's UID resolves to a
@@ -995,7 +1027,8 @@ enum Access {
 }
 
 
-// AccessGrant maps a member (or default, if MemberTag is nil) to an Access level.
+// AccessGrant maps a member (or default, if MemberTag is nil) to an Access
+// level.
 message AccessGrant {
     Tag                 MemberTag = 1; // Member identity (nil = default grant)
     Access              Access    = 2;
@@ -1008,12 +1041,13 @@ message AccessGrants {
 }
 
 
-// ContentPolicy constrains HOW a channel's content cells may be written — orthogonal
-// to the AccessGrants axis, which gates WHO may write.  Default Unbound keeps classic
-// semantics (any Access_ReadWrite holder writes any cell on the node).  AuthorBound
-// restricts a non-moderator writer to cells whose ItemID is bound to their own
-// identity, so members self-author on one shared channel without being able to
-// overwrite another member's cell (AOM SD-channel-governance.md §4).
+// ContentPolicy constrains HOW a channel's content cells may be written —
+// orthogonal to the AccessGrants axis, which gates WHO may write.  Default
+// Unbound keeps classic semantics (any Access_ReadWrite holder writes any cell
+// on the node).  AuthorBound restricts a non-moderator writer to cells whose
+// ItemID is bound to their own identity, so members self-author on one shared
+// channel without being able to overwrite another member's cell (AOM
+// SD-channel-governance.md §4).
 enum ContentPolicy {
     Unbound     = 0; // any Access_ReadWrite holder may write any cell on the node
     AuthorBound = 1; // a non-moderator writer may write only cells bound to their own identity
@@ -1040,8 +1074,8 @@ message ChannelEpoch {
     // records, or prior epochs that informed the access decision, making every
     // governance act reviewable and appealable.  Empty for routine grants.
     // Informational: protocol does not gate access on Cites.  Mirrors
-    // MemberEpoch.Cites.  AttrID and EditID may be left zero when citing an item
-    // rather than a specific edit (the common case).
+    // MemberEpoch.Cites.  AttrID and EditID may be left zero when citing an
+    // item rather than a specific edit (the common case).
     repeated Address    Cites = 22;
 }
 
@@ -1050,8 +1084,9 @@ message ChannelEpoch {
 // Ledger & Attestation
 // ══════════════════════════════════════════════════════════════════════
 
-// AttestationType names the kind of observation being recorded in the planet ledger.
-// Apps may use values above 100 for domain-specific types; 0-99 are reserved.
+// AttestationType names the kind of observation being recorded in the planet
+// ledger.  Apps may use values above 100 for domain-specific types; 0-99 are
+// reserved.
 enum AttestationType {
     NotSpecified       = 0;
     Strike             = 1;  // ACC violation observed
@@ -1062,17 +1097,18 @@ enum AttestationType {
 }
 
 
-// Attestation is a durable observation referencing a specific TxMsg as evidence.
-// Attestations live in the planet ledger (well-known channel amp.ledger) and are
-// written as ordinary TxOps — signed, synced, and journaled by the vault machinery.
+// Attestation is a durable observation referencing a specific TxMsg as
+// evidence.  Attestations live in the planet ledger (well-known channel
+// amp.ledger) and are written as ordinary TxOps — signed, synced, and journaled
+// by the vault machinery.
 //
 // Convergence: independent observers of the same fact compute the same ItemID
-// (derived from Type + Subject + CitedTxID + CitedOpIndex), so their filings CRDT-merge
-// into a single record rather than N duplicates.
+// (derived from Type + Subject + CitedTxID + CitedOpIndex), so their filings
+// CRDT-merge into a single record rather than N duplicates.
 //
-// Attestations INFORM decisions; they do not execute them.  Admin acts (issued via
-// MemberEpoch or ChannelEpoch) cite attestations via CitedAttestations, making the
-// basis of every governance decision publicly auditable.
+// Attestations INFORM decisions; they do not execute them.  Admin acts (issued
+// via MemberEpoch or ChannelEpoch) cite attestations via CitedAttestations,
+// making the basis of every governance decision publicly auditable.
 message Attestation {
 
     // What or whom the attestation is about (member UID, channel UID, etc).
@@ -1086,11 +1122,13 @@ message Attestation {
     fixed64             CitedTxID_0 = 4;
     fixed64             CitedTxID_1 = 5;
 
-    // Which op within the cited TxMsg (0 if the attestation is about the TxMsg as a whole).
+    // Which op within the cited TxMsg (0 if the attestation is about the TxMsg
+    // as a whole).
     uint32              CitedOpIndex = 6;
 
-    // Observer identity — who filed.  Not trust-authoritative: the observer's word
-    // carries no inherent weight beyond their ability to cite verifiable evidence.
+    // Observer identity — who filed.  Not trust-authoritative: the observer's
+    // word carries no inherent weight beyond their ability to cite verifiable
+    // evidence.
     Tag                 ObserverID = 8;
 
     // When observed (unix seconds).  Used for windowed aggregation
@@ -1139,9 +1177,9 @@ message Equivalence {
 }
 
 
-// WithdrawReason categorizes a withdrawal per AOM SD-withdrawal-consent.md.  Used by both
-// amp.Withdraw (substrate-side TxMsg payload) and webapi.WithdrawNote
-// (REST/WebSocket wire shape).
+// WithdrawReason categorizes a withdrawal per AOM SD-withdrawal-consent.md.
+// Used by both amp.Withdraw (substrate-side TxMsg payload) and
+// webapi.WithdrawNote (REST/WebSocket wire shape).
 //
 // Go const names are emitted by protoc-gen-go as `WithdrawReason_<Value>`
 // (e.g. WithdrawReason_Consent).
@@ -1182,8 +1220,8 @@ message Withdraw {
     // rather than a specific edit).
     repeated Address    Withdrawn = 4;
 
-    // Reason for withdrawal, per AOM SD-withdrawal-consent.md.  Same enum used substrate +
-    // wire; webapi.WithdrawNote.Reason is the same type.
+    // Reason for withdrawal, per AOM SD-withdrawal-consent.md.  Same enum used
+    // substrate + wire; webapi.WithdrawNote.Reason is the same type.
     WithdrawReason      Reason = 6;
 
     // Optional delegation address — proves the signer's authority to withdraw
@@ -1200,9 +1238,9 @@ message Withdraw {
 // Planet invites
 // ══════════════════════════════════════════════════════════════════════
 
-// PlanetInvite is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
-// It is passphrase-encrypted via safe.Enclave export before leaving the admin's device.
-// File extension: .planet-invite
+// PlanetInvite is the out-of-band payload delivered to a new member (USB, QR,
+// NFC, email).  It is passphrase-encrypted via safe.Enclave export before
+// leaving the admin's device.  File extension: .planet-invite
 message PlanetInvite {
 
     // Planet being invited to.
@@ -1214,14 +1252,15 @@ message PlanetInvite {
     // Newly generated member identity assigned by the admin.
     Tag                 MemberTag = 3;
 
-    // Temporary keypair for the invited member.  Prv is cleartext within the invite;
-    // the invite itself is passphrase-sealed before leaving the admin's device.
-    // The acceptor imports this keypair and rotates it immediately after join.
+    // Temporary keypair for the invited member.  Prv is cleartext within the
+    // invite; the invite itself is passphrase-sealed before leaving the admin's
+    // device.  The acceptor imports this keypair and rotates it immediately
+    // after join.
     safe.KeyPairRecord  TempKey = 5;
 
     // Known vault endpoints for initial peer discovery — unified with the typed
-    // VaultAddr used by NameServiceRecord / FederationPeer.  For Transport="tcp",
-    // Address is UTF-8 "host:port".
+    // VaultAddr used by NameServiceRecord / FederationPeer.  For
+    // Transport="tcp", Address is UTF-8 "host:port".
     repeated VaultAddr  VaultAddrs = 15;
 
     // Planet epoch key sealed to TempKey via safe.SealFor (anonymous-sender, so
@@ -1235,14 +1274,15 @@ message PlanetInvite {
     // expiry (only accepted from issuers that intentionally opt out).
     int64               ExpiresAt = 25;
 
-    // Max times this invite may be redeemed.  0 = unset → single-use: the invite
-    // carries the one pre-minted MemberTag (field 3).  For a multi-use invite
-    // MemberTag is empty and each redeemer self-mints its own identity, so the
-    // issuer never holds the joiner's key.
+    // Max times this invite may be redeemed.  0 = unset → single-use: the
+    // invite carries the one pre-minted MemberTag (field 3).  For a multi-use
+    // invite MemberTag is empty and each redeemer self-mints its own identity,
+    // so the issuer never holds the joiner's key.
     uint32              MaxRedemptions = 26;
 
     // Access level a redeemer is granted on join.  NotAllowed (0) = unset → the
-    // planet's default member access; snapshotted into each PlanetInviteRedemption.
+    // planet's default member access; snapshotted into each
+    // PlanetInviteRedemption.
     Access              GrantedAccess = 27;
 
     // Proof-signing keypair.  Prv is cleartext within the passphrase-sealed
@@ -1274,14 +1314,14 @@ message PlanetInviteOp {
     // Planet to create or accept an invite for.
     Tag                 PlanetTag = 1;
 
-    // Passphrase used to encrypt the PlanetInvite for out-of-band delivery (create),
-    // or to decrypt an incoming encrypted invite blob (accept).
+    // Passphrase used to encrypt the PlanetInvite for out-of-band delivery
+    // (create), or to decrypt an incoming encrypted invite blob (accept).
     string              Passphrase = 5;
 
     // The invite artifact being redeemed/accepted, as the string the caller
     // holds: the full invite URL or its amp-base32 body (either carrier decodes
-    // to the sealed token — one codec, invite.DecodeCarrier, host-side).  Empty on issue;
-    // the issue response returns the sealed token bytes here.
+    // to the sealed token — one codec, invite.DecodeCarrier, host-side).  Empty
+    // on issue; the issue response returns the sealed token bytes here.
     bytes               SealedInvite = 10;
 
     // Redemption ceiling for the invite being issued.  0 = unset → single-use
@@ -1355,11 +1395,12 @@ message PlanetInvitePolicy {
 }
 
 
-// PlanetInviteRedemption is the durable, signed record of one invite redemption —
-// the audit / legal trail of who joined via which invite and when.  The redeem
-// and accept engines write one per redemption in the same tx as the joining
-// MemberEpoch; the ACC invite rule gates its admission on every vault, and
-// in-rank records project root-channel member grants (AOM SD-invite-governance.md §6).
+// PlanetInviteRedemption is the durable, signed record of one invite redemption
+// — the audit / legal trail of who joined via which invite and when.  The
+// redeem and accept engines write one per redemption in the same tx as the
+// joining MemberEpoch; the ACC invite rule gates its admission on every vault,
+// and in-rank records project root-channel member grants (AOM
+// SD-invite-governance.md §6).
 message PlanetInviteRedemption {
 
     // The redeemed invite, keyed by the hash of its sealed body (stable across
@@ -1367,8 +1408,9 @@ message PlanetInviteRedemption {
     fixed64             InviteID_0 = 7;
     fixed64             InviteID_1 = 8;
 
-    // Member identity that joined via this redemption — self-minted by the redeemer
-    // for a multi-use invite, or the invite's pre-assigned member for single-use.
+    // Member identity that joined via this redemption — self-minted by the
+    // redeemer for a multi-use invite, or the invite's pre-assigned member for
+    // single-use.
     fixed64             MemberID_0 = 9;
     fixed64             MemberID_1 = 10;
 
@@ -1377,8 +1419,8 @@ message PlanetInviteRedemption {
     fixed64             RedeemedAt_0 = 3;   // bytes 0..7
     fixed64             RedeemedAt_1 = 4;   // bytes 8..15
 
-    // Access granted at redemption — a snapshot of the invite's GrantedAccess so the
-    // record stands alone as the authoritative grant proof.
+    // Access granted at redemption — a snapshot of the invite's GrantedAccess
+    // so the record stands alone as the authoritative grant proof.
     Access              GrantedAccess = 5;
 
     // The member signing key the RedeemProof binds — carried so the record
@@ -1386,10 +1428,11 @@ message PlanetInviteRedemption {
     // same-tx MemberEpoch.SigningKey at admission.
     safe.KeyRef         MemberSigningKey = 11;
 
-    // Domain-separated RedeemKey signature (safe.SigningDomain amp.sig.invite.v1)
-    // over (planet, invite, member, RedeemedAt, member signing key) — proves the
-    // redeemer opened the sealed token, verifiable by any third party against the
-    // policy's anchored RedeemKey.  A record without a valid proof is void.
+    // Domain-separated RedeemKey signature (safe.SigningDomain
+    // amp.sig.invite.v1) over (planet, invite, member, RedeemedAt, member
+    // signing key) — proves the redeemer opened the sealed token, verifiable by
+    // any third party against the policy's anchored RedeemKey.  A record
+    // without a valid proof is void.
     bytes               RedeemProof = 6;
 }
 
@@ -1398,13 +1441,14 @@ message PlanetInviteRedemption {
 // Blobs & assets
 // ══════════════════════════════════════════════════════════════════════
 
-// BlobRef is a content-addressed reference to a media blob stored outside a TxMsg.
-// It binds two content addresses: AssetTag names WHAT the content is (the plaintext
-// identity), BlobTag names HOW its bytes are stored (the on-disk / on-wire identity).
-// For a planet-public blob the stored bytes are the plaintext, so BlobTag.UID ==
-// AssetTag.UID; for an epoch-sealed blob the stored bytes are ciphertext, so the two
-// diverge and EpochID is set.  A relay routes, stores, and integrity-checks against
-// BlobTag without decrypting or learning the asset; AssetTag stays member-side.
+// BlobRef is a content-addressed reference to a media blob stored outside a
+// TxMsg.  It binds two content addresses: AssetTag names WHAT the content is
+// (the plaintext identity), BlobTag names HOW its bytes are stored (the on-disk
+// / on-wire identity).  For a planet-public blob the stored bytes are the
+// plaintext, so BlobTag.UID == AssetTag.UID; for an epoch-sealed blob the
+// stored bytes are ciphertext, so the two diverge and EpochID is set.  A relay
+// routes, stores, and integrity-checks against BlobTag without decrypting or
+// learning the asset; AssetTag stays member-side.
 message BlobRef {
 
     // Planet this blob belongs to.
@@ -1417,8 +1461,9 @@ message BlobRef {
     safe.HashKitID      HashKitID = 8;
 
     // HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
-    // This is the asset's full hash; AssetTag.UID is its leading 16 bytes.  Lets a
-    // member validate content after decryption regardless of how it was stored.
+    // This is the asset's full hash; AssetTag.UID is its leading 16 bytes.
+    // Lets a member validate content after decryption regardless of how it was
+    // stored.
     fixed64             Hash_0 = 10;
     fixed64             Hash_1 = 11;
     fixed64             Hash_2 = 12;
@@ -1431,22 +1476,24 @@ message BlobRef {
     //   AssetTag.I (Units=Bytes) — authoritative plaintext byte length.
     Tag                 AssetTag = 16;
 
-    // HOW it is stored — the on-disk / on-wire byte identity.  Lean, relay-facing.
+    // HOW it is stored — the on-disk / on-wire byte identity.  Lean,
+    // relay-facing.
     //   BlobTag.UID         — leading 16 bytes of hash(stored bytes): ciphertext for a
     //                         sealed blob, == AssetTag.UID for a planet-public one.
     //   BlobTag.I (Units=Bytes) — stored byte length.  No ContentType / label.
     Tag                 BlobTag = 17;
 
-    // Epoch key used to seal this blob (zero = unsealed / planet-public ⇒ BlobTag.UID == AssetTag.UID).
-    // Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
+    // Epoch key used to seal this blob (zero = unsealed / planet-public ⇒
+    // BlobTag.UID == AssetTag.UID).  Receivers look up the key via (planetID,
+    // epochID) in the EpochKeyStore.
     fixed64             EpochID_0 = 20;
     fixed64             EpochID_1 = 21;
 
     // BlobMeta commitment: leading 16 bytes of the HashKitID-hash of the
-    // canonical BlobMeta encoding for this blob's STORED bytes.
-    // Zero ⇒ single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no meta object;
-    // the whole transfer is one implicit chunk verified by BlobTag.UID.
-    // (AOM SD-planet-storage.md §13.10)
+    // canonical BlobMeta encoding for this blob's STORED bytes.  Zero ⇒
+    // single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no meta object; the
+    // whole transfer is one implicit chunk verified by BlobTag.UID.  (AOM
+    // SD-planet-storage.md §13.10)
     fixed64             MetaRoot_0 = 22;
     fixed64             MetaRoot_1 = 23;
 
@@ -1458,12 +1505,12 @@ message BlobRef {
 }
 
 
-// BlobMeta is the transfer/verification manifest for one blob's STORED
-// bytes.  Canonical encoding (this proto, fields in order) is what
-// BlobRef.MetaRoot commits to.  Kept as a companion object beside the blob,
-// served through the same pull vocabulary (BlobPullKind_Meta); a receiver
-// verifies each arriving chunk against its meta entry, and the meta itself
-// against the ref's MetaRoot before trusting any chunk (AOM SD-planet-storage.md §13.10).
+// BlobMeta is the transfer/verification manifest for one blob's STORED bytes.
+// Canonical encoding (this proto, fields in order) is what BlobRef.MetaRoot
+// commits to.  Kept as a companion object beside the blob, served through the
+// same pull vocabulary (BlobPullKind_Meta); a receiver verifies each arriving
+// chunk against its meta entry, and the meta itself against the ref's MetaRoot
+// before trusting any chunk (AOM SD-planet-storage.md §13.10).
 message BlobMeta {
     uint32          ChunkSizeLog2 = 1;  // matches the ref
     uint64          TotalLen      = 2;  // stored byte length (== BlobTag.I)
@@ -1471,11 +1518,12 @@ message BlobMeta {
 }
 
 
-// BlobPullRequest is one receiver-driven pull: one span of chunks (or the
-// meta) from one holder.  Chunk indexes address the ref's BlobMeta chunk
-// space; index ⇔ offset is a shift by ChunkSizeLog2 (AOM SD-planet-storage.md §13.10).
+// BlobPullRequest is one receiver-driven pull: one span of chunks (or the meta)
+// from one holder.  Chunk indexes address the ref's BlobMeta chunk space; index
+// ⇔ offset is a shift by ChunkSizeLog2 (AOM SD-planet-storage.md §13.10).
 message BlobPullRequest {
-    BlobRef         Ref        = 1;  // wire-stripped (AOM SD-security-sync.md §13.2.1)
+    // wire-stripped (AOM SD-security-sync.md §13.2.1)
+    BlobRef         Ref        = 1;
     BlobPullKind    Kind       = 2;
     uint64          ChunkBegin = 3;  // first chunk index (Kind=Chunks)
     uint64          ChunkCount = 4;  // 0 ⇒ through end-of-blob
@@ -1490,9 +1538,10 @@ enum BlobPullKind {
 }
 
 
-// PlanetStorageOpts configures per-planet storage priority and budgets.
-// Stored as a home planet attribute alongside PlanetBinding, keyed by planet UID.
-// Drives cache eviction: lower-priority planets have their decrypted cache evicted first.
+// PlanetStorageOpts configures per-planet storage priority and budgets.  Stored
+// as a home planet attribute alongside PlanetBinding, keyed by planet UID.
+// Drives cache eviction: lower-priority planets have their decrypted cache
+// evicted first.
 message PlanetStorageOpts {
 
     // Storage priority (higher = more important, 0 = default).
@@ -1582,8 +1631,8 @@ message CodexHeader {
     // Wall-clock time of export (UTC seconds since epoch).
     int64               CodexTime = 3;
 
-    // Provenance pointer to materialize as PlanetOrigin on the importing planet's
-    // genesis.  Nil for external-source imports with no amp origin.
+    // Provenance pointer to materialize as PlanetOrigin on the importing
+    // planet's genesis.  Nil for external-source imports with no amp origin.
     PlanetOrigin        Origin = 4;
 
     // Summary for pre-flight validation.
@@ -1596,11 +1645,12 @@ message CodexHeader {
     // over preamble + header + entries).  0 = the default hash kit.
     safe.HashKitID      DigestHashKit = 7;
 
-    // Content-model epoch: the SDK proto semantics governing artifact payloads (the
-    // Tag/Tags content model).  An importer whose host epoch differs MUST refuse,
-    // not silently mis-decode persisted bytes (AOM DD-chronicle-and-codex.md §5.5).
-    // Orthogonal to FormatVersion (on-disk layout) — this is payload meaning.  Bump
-    // on each wire-incompatible content-model change; amp.ContentModelEpoch is current.
+    // Content-model epoch: the SDK proto semantics governing artifact payloads
+    // (the Tag/Tags content model).  An importer whose host epoch differs MUST
+    // refuse, not silently mis-decode persisted bytes (AOM
+    // DD-chronicle-and-codex.md §5.5).  Orthogonal to FormatVersion (on-disk
+    // layout) — this is payload meaning.  Bump on each wire-incompatible
+    // content-model change; amp.ContentModelEpoch is current.
     uint32              ContentModelEpoch = 8;
 }
 
@@ -1642,7 +1692,8 @@ message ChronicleCompactHistory {
 // form plus post-rebase TxMsgs.  See AOM DD-chronicle-and-codex.md §4.7.
 message ChronicleCompact {
 
-    // TxID up to which the chronicle has been rebased; older TxMsgs discardable.
+    // TxID up to which the chronicle has been rebased; older TxMsgs
+    // discardable.
     fixed64             UpToTxID_0 = 1;
     fixed64             UpToTxID_1 = 2;
 
@@ -1655,7 +1706,8 @@ message ChronicleCompact {
     // Optional rationale for audit trails.
     string              Label = 5;
 
-    // Reserved for future redaction manifest (AOM DD-chronicle-and-codex.md §4.7.4).
+    // Reserved for future redaction manifest (AOM DD-chronicle-and-codex.md
+    // §4.7.4).
     reserved 10 to 19;
 }
 
@@ -1698,7 +1750,8 @@ message ChronicleHeader {
     // hash kit.
     safe.HashKitID          DigestHashKit = 7;
 
-    // Reserved for future redaction manifest (AOM DD-chronicle-and-codex.md §4.7.4).
+    // Reserved for future redaction manifest (AOM DD-chronicle-and-codex.md
+    // §4.7.4).
     reserved 10 to 19;
 
     // Summary for pre-flight validation.
@@ -1744,11 +1797,11 @@ message AppLink {
 }
 
 
-// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
-// Used wherever a brand or manifest needs to cite a crate without embedding its full
-// CrateInfo (e.g. Brand.BundledCrates).  BlobID is the leading 16 bytes of the built
-// crate's plaintext hash, matching the AssetEntry/BundleManifest convention; zero =
-// unknown / not pinned.
+// CrateRef is a lightweight reference to a crate by URI, with optional
+// content-addressing.  Used wherever a brand or manifest needs to cite a crate
+// without embedding its full CrateInfo (e.g. Brand.BundledCrates).  BlobID is
+// the leading 16 bytes of the built crate's plaintext hash, matching the
+// AssetEntry/BundleManifest convention; zero = unknown / not pinned.
 message CrateRef {
     string              CrateURI = 1;    // "asset:{PublisherID}/{CrateID}"
     fixed64             BlobID_0 = 2;
@@ -1778,9 +1831,9 @@ message Brand {
 
     // TemplateSet selects which portal template set renders this planet's HTTP
     // surfaces — names a template-set channel (NodeID) on the naming federation
-    // planet that app.www reads template Segments from.  Empty = the federation's
-    // default set.  Members select among federation-published sets; the markup is
-    // federation-authored (AOM DD-name-service.md §12.3).
+    // planet that app.www reads template Segments from.  Empty = the
+    // federation's default set.  Members select among federation-published
+    // sets; the markup is federation-authored (AOM DD-name-service.md §12.3).
     Tag                 TemplateSet      = 31;
 }
 
@@ -1813,16 +1866,17 @@ enum TrustState {
 // NameServiceRecord — one FQDN → PlanetID record published by a federation.
 // Lives in a NameService channel at
 //   (NodeID = channel_node, AttrID = amp.name.service.NameServiceRecord, ItemID = hash(fqdn)).
-// Signed under the publishing federation's epoch admin.  AOM DD-name-service.md §3.1.
+// Signed under the publishing federation's epoch admin.  AOM DD-name-service.md
+// §3.1.
 message NameServiceRecord {
 
     string              FQDN          = 1;    // "spaces.plan.tools" — exact-match key for Resolve
     Tag                 PlanetID      = 2;    // target planet UID
 
-    // First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=0).
-    // Consumers may dereference this to read the founders-signed first Brand
-    // record when one was published in the genesis envelope; absent that, the
-    // first admin-signed Brand edit fills this slot.
+    // First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand,
+    // amp.brand.UID, EditID=0).  Consumers may dereference this to read the
+    // founders-signed first Brand record when one was published in the genesis
+    // envelope; absent that, the first admin-signed Brand edit fills this slot.
     Address             BrandAddr     = 3;
 
     // Full Brand snapshot for offline Search ranking — copy of the latest
@@ -1835,9 +1889,10 @@ message NameServiceRecord {
     // GenesisRequiredSignatures) under the fixed v1 kit (amp.fp.founders.v1;
     // amp.FounderFingerprint).  Stamped host-side by the registering federation
     // from the target's verified genesis; empty = unpinned (first contact stays
-    // TOFU via the trusted federation, AOM DD-name-service.md §3.2).  A consumer
-    // syncing the target corroborates its genesis against this pin at the
-    // founder scan and refuses a mismatch (AOM SD-channel-governance.md §8).
+    // TOFU via the trusted federation, AOM DD-name-service.md §3.2).  A
+    // consumer syncing the target corroborates its genesis against this pin at
+    // the founder scan and refuses a mismatch (AOM SD-channel-governance.md
+    // §8).
     bytes               FounderFingerprint = 5;
 
     // Where the target planet can be pinned for bootstrap.
@@ -1892,8 +1947,8 @@ message FederationPeer {
 }
 
 
-// FederationDirectory — federation peer pointers, NS-record style cross-federation
-// forwarding (AOM DD-name-service.md §4.4).  Lives at
+// FederationDirectory — federation peer pointers, NS-record style
+// cross-federation forwarding (AOM DD-name-service.md §4.4).  Lives at
 //   (HeadNodeID, amp.FederationDirectory, its own UID)
 // on a federation planet.  Single CRDT item per federation; admin-signed like
 // any governance change.  Analogous to DNS NS records — bounded, opt-in.
@@ -1907,46 +1962,52 @@ message FederationDirectory {
 // (AOM SD-planet-storage.md §9)
 // ══════════════════════════════════════════════════════════════════════
 
-// SyncMsg is the envelope for all delta sync control messages between vault peers.
-// Exactly one of the body fields is set per message — peers detect by nil pointer.
+// SyncMsg is the envelope for all delta sync control messages between vault
+// peers.  Exactly one of the body fields is set per message — peers detect by
+// nil pointer.
 message SyncMsg {
     SyncWatchList       WatchList       = 1;
     SyncRangeOffer      RangeOffer      = 2;
     SyncRangeRequest    RangeRequest    = 3;
-    SyncNodeSpanRequest NodeSpanRequest = 4; // lazy-subtree span query (AOM SD-planet-storage.md §9.4) — reserved for v-c
-    SyncNodeSpans       NodeSpans       = 5; // lazy-subtree span answer (AOM SD-planet-storage.md §9.4) — reserved for v-c
-    SyncTxRefused       TxRefused       = 6; // advisory refusal notice (AOM SD-planet-storage.md §9.2; O4 §4.24)
+    // Lazy-subtree span query / answer; not yet implemented
+    // (AOM SD-planet-storage.md §9.4).
+    SyncNodeSpanRequest NodeSpanRequest = 4;
+    SyncNodeSpans       NodeSpans       = 5;
+
+    // Advisory refusal notice (AOM SD-planet-storage.md §9.2; O4 §4.24).
+    SyncTxRefused       TxRefused       = 6;
 }
 
 
-// SyncWatchList announces which planets a peer has data for, with high-water marks.
-// Sent on peer connect and whenever the watch list changes.
+// SyncWatchList announces which planets a peer has data for, with high-water
+// marks.  Sent on peer connect and whenever the watch list changes.
 message SyncWatchList {
     repeated SyncPlanetStatus Planets = 1;
 }
 
 
-// ArchiveMode is a peer's replication posture for a planet: how much of the journal it
-// holds and advertises.  Archive (the zero value) is total replication — a peer that
-// sends no ArchiveMode reads as a full holder.  Suffix holds only a recent txTimeID
-// window (AOM SD-planet-storage.md §9).  The reserved 1–6 / 8+ gaps leave room
-// for segmented / subtree modes.
+// ArchiveMode is a peer's replication posture for a planet: how much of the
+// journal it holds and advertises.  Archive (the zero value) is total
+// replication — a peer that sends no ArchiveMode reads as a full holder.
+// Suffix holds only a recent txTimeID window (AOM SD-planet-storage.md §9).
+// The reserved 1–6 / 8+ gaps leave room for segmented / subtree modes.
 enum ArchiveMode {
     Archive = 0; // full replication / totality — the default; an unset field reads as this
     Suffix  = 7; // holds only a recent txTimeID suffix (opt-in; enables suffix eviction)
 }
 
 
-// SyncPlanetStatus carries a planet UID and the peer's current high-water mark, plus
-// (partial replication, AOM SD-planet-storage.md §9) its held-range manifest.
+// SyncPlanetStatus carries a planet UID and the peer's current high-water mark,
+// plus (partial replication, AOM SD-planet-storage.md §9) its held-range
+// manifest.
 message SyncPlanetStatus {
     fixed64             PlanetID_0  = 1;
     fixed64             PlanetID_1  = 2;
     fixed64             HighWater_0 = 3;  // most recent TxTimeID
     fixed64             HighWater_1 = 4;
-    // The peer holds and advertises [HoldSince, HighWater]; Held lists pinned segments
-    // below HoldSince; ArchiveMode Suffix opts into suffix eviction (Archive/unset = full
-    // holder, so a pre-manifest peer reads as totality)
+    // The peer holds and advertises [HoldSince, HighWater]; Held lists pinned
+    // segments below HoldSince; ArchiveMode Suffix opts into suffix eviction
+    // (Archive/unset = full holder, so a pre-manifest peer reads as totality)
     // (AOM SD-planet-storage.md §9.1–9.2).
     fixed64             HoldSince_0 = 5;
     fixed64             HoldSince_1 = 6;
@@ -1964,21 +2025,25 @@ message SyncRangeOffer {
     fixed64             Start_1     = 4;
     fixed64             End_0       = 5;  // range end (inclusive)
     fixed64             End_1       = 6;
-    // Combined marks RangeHash as a fold of the sender's per-day bucket digests over [Start, End]
+    // Combined marks RangeHash as a fold of the sender's per-day bucket digests
+    // over [Start, End]
     // — one "converged over this whole span?" probe; a mismatch drills down to per-bucket offers
-    // (AOM SD-planet-storage.md §9.2).  An old/unset peer reads it as a plain RangeHash offer and bisects — still converges,
-    // just without the O(1) fast path.
+    // (AOM SD-planet-storage.md §9.2).  An old/unset peer reads it as a plain
+    // RangeHash offer and bisects — still converges, just without the O(1) fast
+    // path.
     bool                Combined    = 7;
-    // 128-bit fingerprint: leading 16 bytes of the digest over [Start, End] (or, when Combined,
-    // the fold of that span's per-day bucket digests).  Folds ACCEPTED entries only —
-    // quarantined ('Q') entries are excluded (O4 §4.24).
+    // 128-bit fingerprint: leading 16 bytes of the digest over [Start, End]
+    // (or, when Combined, the fold of that span's per-day bucket digests).
+    // Folds ACCEPTED entries only — quarantined ('Q') entries are excluded (O4
+    // §4.24).
     fixed64             RangeHash_0 = 10;
     fixed64             RangeHash_1 = 11;
-    // AllHash is the membership fingerprint over the same range: the identical fold
-    // INCLUDING quarantined entries (verdict-blind, value-bound).  Two-level digest law:
-    // RangeHash mismatch + AllHash match ⇒ the peers hold the SAME tx set and only
-    // verdicts differ — both sides suppress descent/re-stream and reconcile verdicts
-    // locally (O4 §4.24).  (0,0) = absent (a pre-AllHash peer): fall back to bisection.
+    // AllHash is the membership fingerprint over the same range: the identical
+    // fold INCLUDING quarantined entries (verdict-blind, value-bound).
+    // Two-level digest law:  RangeHash mismatch + AllHash match ⇒ the peers
+    // hold the SAME tx set and only verdicts differ — both sides suppress
+    // descent/re-stream and reconcile verdicts locally (O4 §4.24).  (0,0) =
+    // absent (a pre-AllHash peer): fall back to bisection.
     fixed64             AllHash_0   = 12;
     fixed64             AllHash_1   = 13;
 }
@@ -1997,7 +2062,8 @@ message SyncRangeRequest {
 
 
 // RefusalClass names why a peer refused an arriving TxMsg WITHOUT journaling it
-// (SyncTxRefused).  Rate-limit refusals are transient and deliberately emit nothing.
+// (SyncTxRefused).  Rate-limit refusals are transient and deliberately emit
+// nothing.
 enum RefusalClass {
     RefusalUnspecified = 0; // unset — never emitted
     ConflictingBytes   = 1; // the TxTimeID already names different verified bytes on the refuser
@@ -2006,13 +2072,13 @@ enum RefusalClass {
 }
 
 
-// SyncTxRefused tells the sending peer that a TxMsg it streamed was refused without
-// being journaled — the refusal memory that stops the anti-entropy floor from
-// re-requesting and re-streaming the same refused tx every resync tick
-// (AOM SD-planet-storage.md §9.2).
-// Emitted at most once per (peer, tx) per refusal-ledger TTL.  ADVISORY ONLY: a
-// receiver may stop re-offering the tx to this peer, but a refusal notice never
-// changes what any node journals or serves.
+// SyncTxRefused tells the sending peer that a TxMsg it streamed was refused
+// without being journaled — the refusal memory that stops the anti-entropy
+// floor from re-requesting and re-streaming the same refused tx every resync
+// tick (AOM SD-planet-storage.md §9.2).  Emitted at most once per (peer, tx)
+// per refusal-ledger TTL.  ADVISORY ONLY: a receiver may stop re-offering the
+// tx to this peer, but a refusal notice never changes what any node journals or
+// serves.
 message SyncTxRefused {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
@@ -2023,10 +2089,10 @@ message SyncTxRefused {
 }
 
 
-// SyncNodeSpanRequest asks a peer that materialized a subtree to answer, from its 'N'
-// index, the txTimeID spans covering NodeID — the bootstrap for lazy subtree
-// materialization when the local node never held the subtree
-// (AOM SD-planet-storage.md §9.4).  Reserved for v-c.
+// SyncNodeSpanRequest asks a peer that materialized a subtree to answer, from
+// its 'N' index, the txTimeID spans covering NodeID — the bootstrap for lazy
+// subtree materialization when the local node never held the subtree (AOM
+// SD-planet-storage.md §9.4).  Not yet implemented.
 message SyncNodeSpanRequest {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
@@ -2035,9 +2101,9 @@ message SyncNodeSpanRequest {
 }
 
 
-// SyncNodeSpans answers SyncNodeSpanRequest with the coalesced txTimeID ranges that touch
-// NodeID (capped; Complete=false when truncated)
-// (AOM SD-planet-storage.md §9.4).  Reserved for v-c.
+// SyncNodeSpans answers SyncNodeSpanRequest with the coalesced txTimeID ranges
+// that touch NodeID (capped; Complete=false when truncated) (AOM
+// SD-planet-storage.md §9.4).  Not yet implemented.
 message SyncNodeSpans {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;

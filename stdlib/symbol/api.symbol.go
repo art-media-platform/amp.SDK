@@ -1,4 +1,5 @@
-// Package symbol provides value interning: a Table maps byte string values to compact integer IDs and back.
+// Package symbol provides value interning: a Table maps byte string values to
+// compact integer IDs and back.
 package symbol
 
 import (
@@ -18,15 +19,17 @@ type Table interface {
 	// Returns the symbol ID associated with the given string/buffer value.
 	// The given value buffer is never retained.
 	//
-	// If value not found and autoIssue == true, then a new ID is issued, bound to the given value, and true is returned.
+	// If value not found and autoIssue == true, then a new ID is issued, bound to
+	// the given value, and true is returned.
 	GetSymbolID(value []byte, autoIssue bool) (symbol ID, issued bool)
 
-	// Associates the given buffer value to the given symbol ID, allowing multiple values to be mapped to a single ID.
-	// If ID == 0, then this is the equivalent to GetSymbolID(value, true).
+	// Associates the given buffer value to the given symbol ID, allowing multiple
+	// values to be mapped to a single ID.  If ID == 0, then this is the equivalent
+	// to GetSymbolID(value, true).
 	SetSymbolID(value []byte, ID ID) (symbol ID, issued bool)
 
-	// Looks up and appends the byte string associated with the given symbol ID to the given buf.
-	// If ID is invalid or not found, nil is returned.
+	// Looks up and appends the byte string associated with the given symbol ID to
+	// the given buf.  If ID is invalid or not found, nil is returned.
 	GetSymbol(ID ID, io []byte) []byte
 }
 
@@ -34,12 +37,13 @@ type Table interface {
 type Issuer interface {
 	closer.Wrapper
 
-	// Issues the next sequential unique ID, however that may be defined in the context.
+	// Issues the next sequential unique ID, however that may be defined in the
+	// context.
 	MintNext() (ID, error)
 }
 
-// ID is a persistent integer value associated with an immutable string or buffer value.
-// ID == 0 always maps to the empty string / buf.
+// ID is a persistent integer value associated with an immutable string or
+// buffer value.  ID == 0 always maps to the empty string / buf.
 type ID uint32
 
 // Ord returns the ordinal value of this ID (a type recasting to uint32)
@@ -47,8 +51,8 @@ func (id ID) Ord() uint32 {
 	return uint32(id)
 }
 
-// IDSz is the byte size of a symbol.ID (big endian).
-// The tradeoff is between key bytes idle (wasted) in a massive db and exponentially more IDs available.
+// IDSz is the byte size of a symbol.ID (big endian).  The tradeoff is between
+// key bytes idle (wasted) in a massive db and exponentially more IDs available.
 //
 // 4 bytes covers roughly 4.3 billion IDs, and a symbol table beyond about
 // 100 million entries is impractical and inefficient.
@@ -56,9 +60,10 @@ const IDSz = 4
 
 // DefaultIssuerMin specifies the default minimum ID value for newly issued IDs.
 //
-// ID values less than this value are reserved for clients to represent hard-wired or "out of band" meaning.
-// "Hard-wired" meaning that Table.SetSymbolID() can be called with IDs less than DefaultIssuerMin without risk
-// of an auto-issued ID contending with it.
+// ID values less than this value are reserved for clients to represent
+// hard-wired or "out of band" meaning.  "Hard-wired" meaning that
+// Table.SetSymbolID() can be called with IDs less than DefaultIssuerMin without
+// risk of an auto-issued ID contending with it.
 const DefaultIssuerMin = 600
 
 var ErrIssuerNotOpen = errors.New("issuer not open")

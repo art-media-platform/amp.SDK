@@ -12,7 +12,7 @@ option go_package = "github.com/art-media-platform/amp.SDK/stdlib/status";
 enum Code {
     Nil                         = 0;    // success — no status to report
 
-    Unnamed                     = -23001;   // failure with no more specific code
+    Unnamed                     = -23001;   // no specific code applies
     AssertFailed                = -23002;
     Unimplemented               = -23004;
     Timeout                     = -23005;
@@ -26,19 +26,19 @@ enum Code {
     ItemNotFound                = -23013;
     ParseFailed                 = -23014;
 
-    ContextNotReady             = -23020;   // the task.Context is not yet serving
+    ContextNotReady             = -23020;   // task.Context not serving
     RequestClosed               = -23021;
     BadRequest                  = -23022;
-    BadTag                      = -23023;   // tag expression is malformed or unresolvable
+    BadTag                      = -23023;   // malformed tag expression
     BadValue                    = -23024;
     AlreadyExists               = -23025;
     CommitFailed                = -23028;
     StorageFailure              = -23030;
-    MalformedTx                 = -23032;   // a TxMsg failed structural validation
+    MalformedTx                 = -23032;   // TxMsg failed validation
 
-    DataFailure                 = -23041;   // stored data could not be read or decoded
-    PinFailed                   = -23043;   // a pin request could not be served
-    ProviderErr                 = -23045;   // an upstream provider refused or failed
+    DataFailure                 = -23041;   // stored data unreadable
+    PinFailed                   = -23043;   // pin request not served
+    ProviderErr                 = -23045;   // upstream provider failed
 
     InsufficientPermissions     = -23051;
 
@@ -51,7 +51,8 @@ enum Code {
     KeyringNotFound             = -23106;
 }
 
-// Severity expresses the severity of a status message for logging and alerting purposes.
+// Severity expresses the severity of a status message for logging and alerting
+// purposes.
 enum Severity {
     Debug   = 0;
     Info    = 1;

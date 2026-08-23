@@ -1,9 +1,10 @@
 // safe.consts.sdl — crypto-kit identity UIDs + the canonical phrase wordlist.
 //
-// A CryptoKit is named in an open namespace (a sovereign may roll its own suite),
-// so its identity is a name-derived tag.UID baked at forge time — never hashed in
-// an SDK at runtime.  The UID rides the wire and, for trust, is pinned in signed
-// EpochTerms; an unregistered/untrusted kit fails closed at safe.CryptoKit(id).
+// A CryptoKit is named in an open namespace (a sovereign may roll its own
+// suite), so its identity is a name-derived tag.UID baked at forge time — never
+// hashed in an SDK at runtime.  The UID rides the wire and, for trust, is
+// pinned in signed EpochTerms; an unregistered/untrusted kit fails closed at
+// safe.CryptoKit(id).
 //
 // Compiled by `forge consts` into .go / .cs.  Use Crypto.X.ID for the bare UID.
 // amp:gen=csharp
@@ -19,8 +20,8 @@ tags Crypto {
     Secp256k1 "amp.crypto.secp256k1" // secp256k1 (EVM-wallet interop)
 }
 
-// Phrase — the canonical safe.Phrase vocabulary (AOM SD-did-identity.md §12.1): a
-// phrase written down in one AMP app must restore in any other, so every
+// Phrase — the canonical safe.Phrase vocabulary (AOM SD-did-identity.md §12.1):
+// a phrase written down in one AMP app must restore in any other, so every
 // consumer (Go, C#, web) parses this ONE whitespace-separated string at
 // runtime.  Properties:
 //   - exactly 256 unique words (8 bits/word → byte-aligned entropy)

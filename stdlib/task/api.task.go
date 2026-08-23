@@ -1,5 +1,6 @@
-// Package task provides task.Context, a goroutine lifecycle wrapper modeled on a
-// conventional parent-child process tree: close propagation, idle-close, and integrated logging.
+// Package task provides task.Context, a goroutine lifecycle wrapper modeled on
+// a conventional parent-child process tree: close propagation, idle-close, and
+// integrated logging.
 package task
 
 import (
@@ -15,13 +16,13 @@ func Start(task Task) (Context, error) {
 	return Context((*ctx)(nil)).StartChild(task)
 }
 
-// Go starts fn as a new child Context of parent that runs to completion and then
-// idle-closes — the Context equivalent of launching a goroutine. fn runs in its
-// own goroutine; the child idle-closes once fn returns. For a long-lived worker,
-// fn blocks on ctx.Closing() and returns on shutdown.
+// Go starts fn as a new child Context of parent that runs to completion and
+// then idle-closes — the Context equivalent of launching a goroutine. fn runs
+// in its own goroutine; the child idle-closes once fn returns. For a long-lived
+// worker, fn blocks on ctx.Closing() and returns on shutdown.
 //
-// A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent is
-// no longer running. Equivalent to:
+// A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent
+// is no longer running. Equivalent to:
 //
 //	parent.StartChild(Task{
 //	    Info:  Info{Label: label, IdleClose: time.Nanosecond},
@@ -40,17 +41,19 @@ func Go(parent Context, label string, fn func(ctx Context)) (Context, error) {
 	})
 }
 
-// NewChild starts a supervision-only Context as a child of parent: it has no work body and no
-// idle-close, so it stays Running until Close() is called on it (or until parent closes, which
-// propagates Close down to it). Use it for a named join/grouping node whose lifetime a caller
-// manages explicitly — e.g. a per-connection container whose children are the real workers, or a
-// marker that stays open for the duration of an external transfer. Unlike Go (which enables IdleClose
-// and runs fn in its own goroutine), NewChild spawns no goroutine of its own beyond the lifecycle
-// monitor and never idle-closes; its Done() fires only after Close() and after every child it
-// adopted has drained.
+// NewChild starts a supervision-only Context as a child of parent: it has no
+// work body and no idle-close, so it stays Running until Close() is called on
+// it (or until parent closes, which propagates Close down to it). Use it for a
+// named join/grouping node whose lifetime a caller manages explicitly — e.g. a
+// per-connection container whose children are the real workers, or a marker
+// that stays open for the duration of an external transfer. Unlike Go (which
+// enables IdleClose and runs fn in its own goroutine), NewChild spawns no
+// goroutine of its own beyond the lifecycle monitor and never idle-closes; its
+// Done() fires only after Close() and after every child it adopted has drained.
 //
-// A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent is no longer running.
-// Equivalent to parent.StartChild(Task{Info: Info{Label: label}}).
+// A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent
+// is no longer running.  Equivalent to parent.StartChild(Task{Info: Info{Label:
+// label}}).
 func NewChild(parent Context, label string) (Context, error) {
 	if parent == nil {
 		parent = Context((*ctx)(nil))
@@ -58,22 +61,25 @@ func NewChild(parent Context, label string) (Context, error) {
 	return parent.StartChild(Task{Info: Info{Label: label}})
 }
 
-// Info is the descriptor a Context is started with: its identity, its log label, and optional
-// caller-supplied metadata. It is set once at StartChild and exposed read-only via Context.Info();
-// the framework reads Label (logging) and IdleClose (idle-close), the rest is for the caller.
+// Info is the descriptor a Context is started with: its identity, its log
+// label, and optional caller-supplied metadata. It is set once at StartChild
+// and exposed read-only via Context.Info(); the framework reads Label (logging)
+// and IdleClose (idle-close), the rest is for the caller.
 type Info struct {
 	TaskID     tag.UID // universally unique instance ID — assigned automatically when unset
 	Label      string  // logging and debugging label — empty inherits the parent's label at StartChild
 	Attachment any     // optional user-defined value
 	DebugMode  bool    // when set, a context logs more verbosely and can perform (or log) expensive diagnostics
 
-	// If > 0, Context.CloseWhenIdle() is automatically called when the last remaining child is closed or when OnRun() completes, whichever occurs later.
+	// If > 0, Context.CloseWhenIdle() is automatically called when the last
+	// remaining child is closed or when OnRun() completes, whichever occurs later.
 	//
 	// This does not take effect unless OnRun is given or a child is started.
 	IdleClose time.Duration
 }
 
-// Task is a parameter block used to start a new Context and contains hooks for each stage of the Context's lifecycle.
+// Task is a parameter block used to start a new Context and contains hooks for
+// each stage of the Context's lifecycle.
 type Task struct {
 	Info
 
@@ -105,40 +111,47 @@ type Context interface {
 	Info() Info
 
 	// Creates a new child Context for the given Task — the sole spawn primitive.
-	// If OnStart() returns an error, then child.Close() is immediately called and the error is returned.
-	// The package-level Start, Go, and NewChild wrap this for the common cases.
+	// If OnStart() returns an error, then child.Close() is immediately called and
+	// the error is returned.  The package-level Start, Go, and NewChild wrap this
+	// for the common cases.
 	StartChild(task Task) (Context, error)
 
-	// Atomically appends all child Contexts to the given slice and returns the new slice.
-	// The total blocking time is minimal as only a slice is populated.
+	// Atomically appends all child Contexts to the given slice and returns the new
+	// slice.  The total blocking time is minimal as only a slice is populated.
 	GetChildren(in []Context) []Context
 
 	// Atomically iterates over all child Contexts and calls the given function.
-	// The total blocking time is proportional to the number of children and running time of the given function.
+	// The total blocking time is proportional to the number of children and
+	// running time of the given function.
 	ForEachChild(fn func(child Context))
 
-	// Initiates task shutdown and causes all children's Close() to be called — non-blocking.
-	// Close can be called multiple times but calls after the first are in effect ignored.
-	// Closing() fires and OnClosing() runs, while children are closed concurrently in breadth-first order.
-	// Once all children and OnRun() have drained, OnClosed() runs and then Done() fires.
+	// Initiates task shutdown and causes all children's Close() to be called —
+	// non-blocking.  Close can be called multiple times but calls after the first
+	// are in effect ignored.  Closing() fires and OnClosing() runs, while children
+	// are closed concurrently in breadth-first order.  Once all children and
+	// OnRun() have drained, OnClosed() runs and then Done() fires.
 	Close() error
 
-	// Schedules Close() to run once this Context has been idle for the given delay.
-	// A Context is idle when OnRun() has completed and it has no children.
-	// Subsequent calls update the delay, restarting the countdown; a delay <= 0 disables the pending idle-close.
-	// A later PreventIdleClose() floor takes precedence over the delay.
+	// Schedules Close() to run once this Context has been idle for the given
+	// delay.  A Context is idle when OnRun() has completed and it has no children.
+	// Subsequent calls update the delay, restarting the countdown; a delay <= 0
+	// disables the pending idle-close.  A later PreventIdleClose() floor takes
+	// precedence over the delay.
 	CloseWhenIdle(delay time.Duration)
 
-	// Ensures that this Context will not automatically idle-close until the given delay has passed.
-	// If previous PreventIdleClose calls were made, the more limiting (later) delay is retained.
+	// Ensures that this Context will not automatically idle-close until the given
+	// delay has passed.  If previous PreventIdleClose calls were made, the more
+	// limiting (later) delay is retained.
 	//
 	// Returns false if this Context has already begun closing.
 	PreventIdleClose(delay time.Duration) bool
 
-	// Signals when Close() has been called — ahead of Done().
-	// OnClosing() then runs and children close concurrently; once they (and OnRun) drain, OnClosed() runs before Done() fires.
+	// Signals when Close() has been called — ahead of Done().  OnClosing() then
+	// runs and children close concurrently; once they (and OnRun) drain,
+	// OnClosed() runs before Done() fires.
 	Closing() <-chan struct{}
 
-	// Signals when Close() has fully executed, no children remain, and OnClosed() has been completed.
+	// Signals when Close() has fully executed, no children remain, and OnClosed()
+	// has been completed.
 	Done() <-chan struct{}
 }

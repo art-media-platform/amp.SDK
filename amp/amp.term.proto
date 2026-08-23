@@ -26,13 +26,13 @@ message TermBlock {
 
     reserved 3;
 
-    // Raw, opaque terminal bytes.  Never UTF-8-validated or transformed; ANSI is
-    // rendered only by the receiving emulator.
+    // Raw, opaque terminal bytes.  Never UTF-8-validated or transformed; ANSI
+    // is rendered only by the receiving emulator.
     bytes Data = 1;
 
-    // Monotonic byte offset of this block's first byte from session start in this
-    // direction.  Lets a receiver detect a gap (a dropped laggard) and order or
-    // dedupe blocks independently of arrival.
+    // Monotonic byte offset of this block's first byte from session start in
+    // this direction.  Lets a receiver detect a gap (a dropped laggard) and
+    // order or dedupe blocks independently of arrival.
     int64 SeqOffset = 2;
 
     // Flow direction.  Per block so a captured batch is self-describing and a
@@ -44,8 +44,8 @@ message TermBlock {
 message TermIO {
 
     // TermMode flags a frame that is more than ordinary stream bytes: a
-    // self-contained Keyframe (the DVR's scrub seek target — jump to the nearest
-    // keyframe <= T, then replay forward to T) or a Resize.
+    // self-contained Keyframe (the DVR's scrub seek target — jump to the
+    // nearest keyframe <= T, then replay forward to T) or a Resize.
     enum TermMode {
         Unspecified = 0; // ordinary terminal byte stream
         Keyframe    = 1; // self-contained full-screen snapshot
@@ -60,8 +60,8 @@ message TermIO {
     // frame.  SeqOffset gives byte-exact detail within a direction.
     uint64 BatchSeq = 5;
 
-    // Frame classification (default Unspecified = ordinary stream).  Keyframe is
-    // the DVR seek target; Resize carries dimensions.
+    // Frame classification (default Unspecified = ordinary stream).  Keyframe
+    // is the DVR seek target; Resize carries dimensions.
     TermMode Mode = 8;
 
     // The ordered byte blocks in this flush.  Concatenate Data in order to

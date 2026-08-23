@@ -26,7 +26,8 @@ message GuardInfo {
 }
 
 
-// WrappedDEK holds a protected Data Encryption Key and all parameters needed to recover it.
+// WrappedDEK holds a protected Data Encryption Key and all parameters needed to
+// recover it.
 message WrappedDEK {
     uint32  Version                 = 1;
     string  Provider                = 2;    // Guard provider that created this wrapping
@@ -44,7 +45,8 @@ message WrappedDEK {
 }
 
 
-// SealedTome is a serialized and encrypted KeyTome, ready for persistent storage.
+// SealedTome is a serialized and encrypted KeyTome, ready for persistent
+// storage.
 //
 // Lifecycle:
 //   Open:  TomeStore.Load() -> Guard.UnwrapDEK() -> AEAD_Decrypt(DEK, Cipherblob) -> KeyTome
@@ -63,11 +65,11 @@ message SealedTome {
 // Algorithm, hybrid composition, lifecycle, and hardware backing are
 // expressed elsewhere (CryptoKit, lifecycle metadata, GuardInfo).
 //
-// The three roles span the operation space: shared-secret encryption (Symmetric),
-// keypair-based shared-secret agreement / encapsulation (Asymmetric), and
-// keypair-based authentication (Signing).  A CryptoKit may derive one role
-// from another internally (e.g. Poly25519 derives an Asymmetric key from a
-// Signing key via the Edwards-to-Montgomery birational map).
+// The three roles span the operation space: shared-secret encryption
+// (Symmetric), keypair-based shared-secret agreement / encapsulation
+// (Asymmetric), and keypair-based authentication (Signing).  A CryptoKit may
+// derive one role from another internally (e.g. Poly25519 derives an Asymmetric
+// key from a Signing key via the Edwards-to-Montgomery birational map).
 enum KeyType {
     Unspecified         = 0;
     SymmetricKey        = 1;
@@ -76,7 +78,8 @@ enum KeyType {
 }
 
 // HashKitID selects a content-integrity hash.  The zero value is the default
-// kit, fixed globally so a BlobRef verifies from the ref alone, no epoch present.
+// kit, fixed globally so a BlobRef verifies from the ref alone, no epoch
+// present.
 // (The name->tag.UID identity hash is a separate, hardwired primitive — not a HashKit.)
 enum HashKitID {
     Blake2s_256 = 0;    // default. IETF RFC 7693 — BLAKE2 Cryptographic Hash and MAC (2015)
@@ -86,12 +89,13 @@ enum HashKitID {
 }
 
 // KeyRole is a 2-bit role tag for symmetric epoch keys.  Each epoch may carry
-// up to 4 roles of distributed key material, keyed on (containerID, epochID, role).
+// up to 4 roles of distributed key material, keyed on (containerID, epochID,
+// role).
 //
-// Roles gate different capabilities: Content admits decryption; WriteSeed admits
-// MemberProof forgery (and thus cryptographic write-access enforcement at the vault).
-// Access-tiered key distribution is the substrate that makes channel-level ACC
-// enforcement cryptographic rather than policy-based.
+// Roles gate different capabilities: Content admits decryption; WriteSeed
+// admits MemberProof forgery (and thus cryptographic write-access enforcement
+// at the vault).  Access-tiered key distribution is the substrate that makes
+// channel-level ACC enforcement cryptographic rather than policy-based.
 enum KeyRole {
     ContentKey      = 0;    // planet content key / channel read key — drives decryption
     WriteSeed       = 1;    // channel write seed — drives MemberProof (ReadWrite+ only)
@@ -122,8 +126,8 @@ message KeyRef {
 }
 
 
-// KeyPairRecord is the flat on-disk representation of a single key.
-// The runtime layer uses the Go-native PubKey / KeyPair types; this proto exists
+// KeyPairRecord is the flat on-disk representation of a single key.  The
+// runtime layer uses the Go-native PubKey / KeyPair types; this proto exists
 // only so KeyTome can be marshaled into a SealedTome.
 message KeyPairRecord {
     fixed64     KeyringID_0         = 1;    // Keyring UID, bytes 0..7
@@ -138,16 +142,16 @@ message KeyPairRecord {
 }
 
 
-// KeyTome is the root container for all keypair records.
-// Persistence format only; the runtime indexes these in memory by (KeyringID, PubKey).
+// KeyTome is the root container for all keypair records.  Persistence format
+// only; the runtime indexes these in memory by (KeyringID, PubKey).
 message KeyTome {
     int64                   Revision    = 1;    // Incremented on each mutation
     repeated KeyPairRecord  Keys        = 2;
 }
 
 
-// RoleKey is one role-tagged symmetric key material — the decrypted, at-rest form
-// held inside an EpochKeyEntry.  Parallels amp.WrappedKey (the in-transit,
+// RoleKey is one role-tagged symmetric key material — the decrypted, at-rest
+// form held inside an EpochKeyEntry.  Parallels amp.WrappedKey (the in-transit,
 // encrypted-to-peer form carried in MemberEpoch): same 2-bit role namespace,
 // different storage context.
 //
@@ -161,11 +165,12 @@ message RoleKey {
     bytes               Key  = 2;    // symmetric key material (typically 32 bytes; HKDF input)
 }
 
-// EpochKeyEntry stores the symmetric key materials for one epoch on one container.
-// Each epoch may carry up to 4 role-tagged materials (see KeyRole) — access-tiered
-// distribution places different roles in different members' hands.  The epoch is the
-// unit of rotation, grant, and eviction, so its roles live together.
-// EpochID is time-based (from tag.NowID), providing natural temporal ordering.
+// EpochKeyEntry stores the symmetric key materials for one epoch on one
+// container.  Each epoch may carry up to 4 role-tagged materials (see KeyRole)
+// — access-tiered distribution places different roles in different members'
+// hands.  The epoch is the unit of rotation, grant, and eviction, so its roles
+// live together.  EpochID is time-based (from tag.NowID), providing natural
+// temporal ordering.
 message EpochKeyEntry {
     fixed64             ContainerID_0   = 1;    // Planet or channel UID, bytes 0..7
     fixed64             ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
@@ -196,7 +201,8 @@ message EpochKeyTome {
 }
 
 
-// EncryptedSymKey carries a symmetric key sealed-to-peer for out-of-band delivery.
+// EncryptedSymKey carries a symmetric key sealed-to-peer for out-of-band
+// delivery.
 //
 // Primary use cases:
 //   - PlanetInvite: admin seals current epoch key to a new member's temp encrypt pubkey
