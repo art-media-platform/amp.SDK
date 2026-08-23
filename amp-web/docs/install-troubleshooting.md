@@ -45,7 +45,8 @@ are **different origins**; dev and prod origins both need listing.
 Your `vaultUrl` is `http://` on a non-loopback host. The session token
 rides the WS URL, so the SDK refuses to send it in cleartext. Use
 `https://` (the node terminates TLS on 443); plain `http://` is allowed
-only to `localhost` / `127.0.0.1` (`SECURITY-amp-web-SDK.md`).
+only to loopback — `localhost`, `127.0.0.1`, or `[::1]`
+(`SECURITY-amp-web-SDK.md`).
 
 ## `401` on Every Call After Login Worked Earlier
 

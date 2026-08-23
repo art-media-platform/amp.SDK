@@ -50,7 +50,7 @@ Only if you build `ampd` yourself — not part of a web-SDK integration
    invokes through its custodian):
 
    ```
-   ampd -forums.host "AMP Forums" -login.unsafe   # -login.unsafe for local dev only
+   ampd -forums.host "AMP Forums"
    ```
 
    At boot it logs `forums custodian ready: board planet <UID> (public)`.

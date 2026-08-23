@@ -52,7 +52,17 @@ type Name struct {
 
 `Text` is **optional and may be dropped**. The UID is the sole identity, so a processor can match, route, and serve tags with `Text` stripped — fielding queries over opaque UIDs without learning what they name. Dropping `Text` before a request reaches an untrusted relay (e.g. `tag.DarkProjectsDivision.ClassifiedProjectTitle.Q3.2026` collapses to bare UIDs) is an information-leakage control; on the wire `Tag.Text` is an optional field, so omitting it is a no-op.
 
-The hash is deterministic, cross-language, and small enough to compare with `==`, use as a map key, or fit in a database column. It has a short human-readable form via `id.Base32()`: 26 digits grouped `3-10-10-3` with `-` separators (e.g. `7rf-xvrfxvrfxv-j4e2qg2ect-rrh`), drawn from a 32-character **lowercase** alphabet that omits easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). Lowercase matches the canonic fold, so a UID embedded in a tag expression reads the same before and after folding, and decoding is case-insensitive (an upper-cased copy still parses to the same UID). The grouping carries no identity weight either — decoding strips `-` and whitespace, so the solid 26-digit form parses to the same UID. This human-friendly form is safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. For compact log lines and debug output, `id.AsLabel()` returns the **log label** `N…NNN` — the first digit and the last three, joined by the single ellipsis glyph `…` (e.g. `7…rrh`; `N..NNN` is typing shorthand only, never emitted). The tail is the grouped render's tail group verbatim — the entropy end, 32³ distinguishing states — while the head digit is the guaranteed-tall `0`–`7` anchor and signals timestamp-vs-item kind: distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
+The hash is deterministic, cross-language, and small enough to compare with `==`, use as a map key, or fit in a database column. It renders three ways:
+
+| Form | Example | Notes |
+|---|---|---|
+| **Grouped** — `id.Base32()` | `7rf-xvrfxvrfxv-j4e2qg2ect-rrh` | The canonic human form: 26 digits grouped `3-10-10-3`. Safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. |
+| **Solid** | `7rfxvrfxvrfxvj4e2qg2ectrrh` | The same 26 digits, no separators. Grouping carries no identity weight — decoding strips `-` and whitespace, so this parses to the same UID. |
+| **Log label** — `id.AsLabel()` | `7…rrh` | For compact log lines: the first digit and the last three, joined by the single ellipsis glyph `…`. (`N..NNN` is typing shorthand only, never emitted.) |
+
+In the log label the **tail** is the grouped render's last group verbatim — the entropy end, 32³ distinguishing states — while the **head digit** is the guaranteed-tall `0`–`7` anchor that signals timestamp-vs-item kind: distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
+
+The alphabet is 32 **lowercase** characters omitting easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). Lowercase matches the canonic fold, so a UID embedded in a tag expression reads the same before and after folding, and decoding is case-insensitive: an upper-cased copy still parses to the same UID.
 
 The canonic word fold is intentionally lossy in ways that improve usability without compressing the namespace into anything close to dangerous.
 
@@ -98,7 +108,7 @@ The canonic fold is **case-insensitive** and is the same rule [DNS](https://en.w
 
 Authored case is not lost — it lives in `Text` (`amp.law.PlanetEpoch`), which is what you display and log; only the UID-bearing canonic form is lowercased and hashed. Search lowercases its needle the same way, so legibility and search-across-variants are delivered at the presentation layer without putting case in the identity hash.
 
-Because the fold consults **no Unicode case table** (pure ASCII), it reproduces bit-identically across languages and Unicode revisions — a property the wire freeze depends on. Non-ASCII letters are therefore matched byte-exact (case-sensitive); a **F**ully-**Q**ualified **D**omain **N**ame (`FQDN`) is its DNS-normalized form.
+Because the fold consults **no Unicode case table** (pure ASCII), it reproduces bit-identically across languages and Unicode revisions — a property the wire freeze depends on. Non-ASCII letters are therefore matched byte-exact (case-sensitive); a fully-qualified domain name (`FQDN`) is its DNS-normalized form.
 
 ## URLs Preserved
 
@@ -141,9 +151,9 @@ The identifier (URL part) is hashed exact-as-is *by design*. Pre-lowercase it so
 Tag UIDs can be cited as literals inside other tag expressions, allowing a tag's identity to incorporate references to other tags:
 
 ```
-"We can cite 12VWSDH3ZB4W0ZY5RHVM9ZZGHP and 4VKB1MHN9J4YTYZPQ7HRZT5TBT as literals,
- demonstrating a convenient way to cryptographically chain and validate tags,
- allowing us to validate ancestry."
+"We can cite 12v-wsdh3zb4w0-zy5rhvm9zz-ghp and 4vk-b1mhn9j4yt-yzpq7hrzt5-tbt as
+ literals, demonstrating a convenient way to cryptographically chain and validate
+ tags, allowing us to validate ancestry."
 ```
 
 The cited UIDs become part of the new tag's content hash — a lightweight, cryptographically verifiable provenance chain. Geospatial tiles ([S2 cell IDs](https://s2geometry.io/)) can be cited the same way to bind tags to locations.
