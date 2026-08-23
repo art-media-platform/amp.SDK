@@ -106,7 +106,7 @@ notes.Bind(nodeID)
 notes.UpsertItem(tx, itemID, &NoteValue{ /* ... */ })
 ```
 
-> The interfaces above are real (`api.apps.go`, `amp/std/api.std.go`, `amp.support.bindings.go`); the bodies are illustrative.  For a complete, runnable channel that stays strictly within the public `amp` / `amp/std` API, read [`app.hello`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.hello/app.hello.go) — the minimal send-only example, registered in [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet/blob/main/amp/host/std-apps.go).  For interactive bindings, [`app.home`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.home/home.go) binds the home planet's typed item state via `FoldBinding`.
+> The interfaces above are real (`api.apps.go`, `amp/std/api.std.go`, `amp.support.bindings.go`); the bodies are illustrative.  For a complete, runnable channel that stays strictly within the public `amp` / `amp/std` API, read `amp.planet/amp/apps/app.hello/app.hello.go` (internal) — the minimal send-only example, registered in `amp.planet/amp/host/std-apps.go` (internal).  For interactive bindings, `amp.planet/amp/apps/app.home/home.go` (internal) binds the home planet's typed item state via `FoldBinding`.
 
 ---
 
@@ -150,7 +150,7 @@ func (app *appInst) StartPin(req *amp.Request) (amp.Pin, error) {
 }
 ```
 
-Register it in your `ampd` build where the host assembles its registry — in amp.planet that site is [`amp/host/std-apps.go`](https://github.com/art-media-platform/amp.planet/blob/main/amp/host/std-apps.go), alongside the stock apps:
+Register it in your `ampd` build where the host assembles its registry — in amp.planet that site is `amp/host/std-apps.go` (internal), alongside the stock apps:
 
 ```go
 reg := std.Registry()   // the host's module registry
@@ -224,7 +224,7 @@ And Unity already models it this way, 1:1.  A `LiveCrate` is literally an `IResp
 | [`amp.support.attrs.go`](amp.support.attrs.go) | Attr helpers and well-known attr definitions |
 | [`amp.support.tx.go`](amp.support.tx.go) | `TxMsg` construction, marshaling, `Upsert` |
 | [`amp.support.epoch.go`](amp.support.epoch.go) | Planet/channel epoch key plumbing |
-| [`amp.core.proto`](amp.core.proto) | The wire format: every serialized type, cast in stone |
+| [`amp.core.proto`](amp.core.proto) | The wire format: every serialized type |
 | [`std/`](std/) | `App`, `Item[T]`, `Pin[T]`, `PinAndServe[T]`, `ItemWriter` — the app-builder's toolkit |
 | [`webapi/`](webapi/) | The `/api/v1/*` HTTP/JSON contract the web SDK speaks |
 
@@ -234,7 +234,7 @@ A third party imports only `amp`, `amp/std`, and `stdlib/*` from this SDK.  Ever
 assembles on top — `amp.planet/amp/{vault,codex,host}` and the first-party `apps/*` — is
 **internal**: useful to read, not API to depend on.  If your channel needs something only an
 internal package exposes, that is a gap to raise, not an import to reach for.  The runnable
-example that stays inside this line is [`app.hello`](https://github.com/art-media-platform/amp.planet/blob/main/amp/apps/app.hello/app.hello.go).
+example that stays inside this line is `amp.planet/amp/apps/app.hello/app.hello.go` (internal).
 
 ### Then Go Deeper
 
@@ -243,7 +243,7 @@ example that stays inside this line is [`app.hello`](https://github.com/art-medi
 - [`../stdlib/tag/`](../stdlib/tag/README.md) — UID derivation, `Address`, the addressing algebra
 - [`../stdlib/task/`](../stdlib/task/api.task.go) — the goroutine lifecycle model every Pin lives in
 - [`../amp-web/`](../amp-web/) — `@art-media-platform/web`, the TypeScript/React consumer; full contract in [`SKILL-amp-web-SDK.md`](../amp-web/SKILL-amp-web-SDK.md)
-- [`amp.planet/AOM/0-amp-operations-manual.md`](https://github.com/art-media-platform/amp.planet/blob/main/AOM/0-amp-operations-manual.md) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Manifold, commerce
+- `amp.planet/AOM/0-amp-operations-manual.md` (internal) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Manifold, commerce
 
 ---
 

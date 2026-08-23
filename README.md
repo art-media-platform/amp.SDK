@@ -61,7 +61,7 @@ Identity and key-receipt have opposing rotation needs, so AMP splits them:
 
 ### [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) Addressing
 
-Every piece of state has a unique [`tag.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is [guaranteed](https://crdt.tech/).  The [`amp.Tag` system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/README.md) provides UID derivation from strings.
+Every piece of state has a unique [`tag.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is [guaranteed](https://crdt.tech/).  The [`tag` system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/README.md) provides UID derivation from strings.
 
 ### Epoch Rotation
 
@@ -90,7 +90,7 @@ Forks are morally neutral — the same primitive serves a community pruning bad-
 
 ## Identity
 
-Members are identified by a `MemberID` derived from a canonic identity URI (`tag.HashName("eth:0xabc…").ID` and similar).  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `safe.Kit` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password, and W3C [DID](https://www.w3.org/TR/did-1.0/) (login-only — `did:key` Ed25519 and `did:pkh:eip155`, the latter folding onto the same member as the wallet path).  Additional DID curves/methods (`did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) and hardware-token (YubiKey) login are on the v300 trajectory — the kit registry already covers their crypto; what remains per method is the URI-decode/verify surface.
+Members are identified by a `MemberID` derived from a canonic identity URI (`tag.HashName("eth:0xabc…").ID` and similar).  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `safe.Kit` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password, and W3C [DID](https://www.w3.org/TR/did-1.0/) (login-only — `did:key` Ed25519 and `did:pkh:eip155`, the latter folding onto the same member as the wallet path).  Additional DID curves/methods (`did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) and hardware-token (YubiKey) login are not yet shipped — the kit registry already covers their crypto; what remains per method is the URI-decode/verify surface.
 
 
 ## Federation & Naming
@@ -139,7 +139,7 @@ A Unity app with AMP embedded has end-to-end encrypted federated communication, 
 
 ## Package Management
 
-At the v300 wire freeze, a planet's root will carry `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.
+A planet's root will carry `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.
 
 Because it is a structural property of every planet rather than a bolt-on, federal contractors, regulated verticals, and supply-chain-conscious vendors inherit it by construction.
 
@@ -194,7 +194,7 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 4. `make build` produces `ampd` (standalone server) and `libampd` (embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
 
-> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in [`amp.planet/AOM/0-amp-operations-manual.md`](https://github.com/art-media-platform/amp.planet/blob/main/AOM/0-amp-operations-manual.md).
+> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in `amp.planet/AOM/0-amp-operations-manual.md` (internal).
 
 ---
 
