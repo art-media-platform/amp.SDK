@@ -4,7 +4,7 @@ import { useAmpContext } from '../provider.js';
 /**
  * useAmpCrypto — sealed-box BYOK helpers bound to the session member.
  *
- * `seal(plaintext)` returns anonymous-sender HPKE bytes safe to upsert into a
+ * `seal(plaintext)` returns sealed-box (anonymous-sender) bytes safe to upsert into a
  * channel item; `open(sealed)` recovers plaintext using the session's
  * EncryptKey.  The adapter installs that key on login (device-local, generated
  * on first use), so seal/open work for any logged-in member; both throw if

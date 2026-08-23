@@ -197,8 +197,8 @@ export interface TagResolution {
 
 /**
  * The three-state back-edge verdict on a NameService record (amp.TrustState
- * enum names; DD-name-service §3.3).  Load-bearing: never silently follow a
- * non-Verified or Ambiguous answer — surface it and let the user choose.
+ * enum names; DD-name-service §3.3).  Never silently follow a non-Verified or
+ * Ambiguous answer — surface it and let the user choose.
  */
 export type TrustState = 'Unchecked' | 'Verified' | 'Refuted';
 
@@ -311,7 +311,7 @@ export interface Brand {
  * or no federation names it.  The verdict binds (FQDN → resolution.PlanetID),
  * not the planet you queried: when `resolution.PlanetID` differs from your
  * planet's UID, the domain claim points elsewhere — surface it, never render
- * a Verified badge (TrustState is load-bearing, SKILL §4.6).
+ * a Verified badge (never follow a non-Verified TrustState, SKILL §4.6).
  */
 export interface PlanetBrand {
   brand: Brand;                  // the substrate Brand (display-only, SKILL §10)

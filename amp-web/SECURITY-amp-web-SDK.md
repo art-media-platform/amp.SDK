@@ -160,7 +160,7 @@ const sealed = bytesToBase64(await client.seal(new TextEncoder().encode(plaintex
 await client.upsert('users', 'api_keys_overrides', member.ID, { cesium: sealed });
 ```
 
-`seal`/`open` wrap anonymous-sender HPKE (default kit Poly25519, pure JS) and are
+`seal`/`open` wrap a sealed box (anonymous-sender; default kit Poly25519, pure JS) and are
 byte-compatible with the Go side. **Plaintext API keys in a channel item are the
 single most common security mistake — never do it.**
 

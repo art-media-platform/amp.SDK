@@ -8,8 +8,7 @@ import type { AmpResolveResult } from '../types.js';
  * anonymous NameService resolve (POST /api/v1/resolve — SKILL §4.6), so a
  * deep-link landing can dial + pin before any session exists.  A missing
  * record is an answer, not a failure: resolution === null with no error.
- * TrustState is load-bearing — render non-Verified / Ambiguous results as
- * such, never auto-follow.
+ * Never auto-follow a non-Verified / Ambiguous TrustState — render it as such.
  */
 export function useAmpResolve(fqdn: string): AmpResolveResult {
   const { adapter } = useAmpContext();

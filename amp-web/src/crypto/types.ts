@@ -48,7 +48,7 @@ export interface PubKeyRef {
 export interface KitOps {
   readonly kit: CryptoKitID;
   /**
-   * Seal plaintext for `recipientPubKey` via anonymous-sender HPKE base mode.
+   * Seal plaintext for `recipientPubKey` as a sealed box (anonymous-sender).
    * Output is `eph_pub || nonce || ciphertext+tag` (kit-specific layout).
    */
   seal(plaintext: Uint8Array, recipientPubKey: Uint8Array): Promise<Uint8Array>;

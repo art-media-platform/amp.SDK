@@ -34,7 +34,7 @@ In crisis scenarios — natural disasters, infrastructure collapse, conflict zon
 | **Hardware Agnostic** | No restriction on device count or type | Builds for iOS, Android, macOS, Windows, Linux; one binary serves TCP clients and HTTP browsers; same protocol over radio and fiber |
 | **Pluggable & Extensible** | Anyone can grow, enhance, or fork | Apps register via [`amp.Registry`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go); a new [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) = a new capability; transport is an interface, not a dependency |
 | **Gatekeeperless** | No third parties to deploy, access, or manage data | `make ampd` and then you run a sovereign peer |
-| **Distributed Redundancy** | Built-in replication, recovery, and failure tolerance | Vault-to-vault sync with no global clock; component failure is expected and tolerated — three nodes across two countries survive anything short of extinction |
+| **Distributed Redundancy** | Built-in replication, recovery, and failure tolerance | Vault-to-vault sync with no global clock; component failure is expected and tolerated — three nodes across two countries survive the loss of any one site |
 
 
 ## Planet

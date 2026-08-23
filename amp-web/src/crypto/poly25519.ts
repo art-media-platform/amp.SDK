@@ -30,7 +30,7 @@ function deriveSharedKey(prv: Uint8Array, peerPub: Uint8Array, myPub: Uint8Array
   }
 }
 
-/** Seal `plaintext` for the recipient under HPKE base mode (anonymous sender). */
+/** Seal `plaintext` for the recipient as a sealed box (anonymous-sender). */
 async function seal(plaintext: Uint8Array, peerPub: Uint8Array): Promise<Uint8Array> {
   if (peerPub.length !== X25519KeySize) {
     throw new Error(`poly25519: peer pub must be ${X25519KeySize} bytes, got ${peerPub.length}`);

@@ -1,6 +1,6 @@
 # `tag` — Universal Addressing
 
-The AMP tag system is **phonetic, AI-friendly, search-friendly, and privacy-friendly**. It offers powerful and flexible linking similar to how #hashtags and [wikis](https://www.wikipedia.org/) add value, with a precise canonic form so the same idea always hashes to the same identifier no matter who typed it. We see this system as an excellent candidate to become an [IEEE](https://www.ieee.org/) standard for markup and hashing.
+The AMP tag system is **phonetic, AI-friendly, search-friendly, and privacy-friendly**. It offers powerful and flexible linking similar to how #hashtags and [wikis](https://www.wikipedia.org/) add value, with a precise canonic form so the same idea always hashes to the same identifier no matter who typed it.
 
 ## Quick start
 
@@ -157,4 +157,10 @@ The cited UIDs become part of the new tag's content hash — a lightweight, cryp
 Most projects need named constants — string keys, version numbers, size limits, asset paths, feature-flag names — and only some of those are UIDs. [**forge**](https://github.com/art-media-platform/forge) generates them all from a single [`.consts.sdl`](https://github.com/art-media-platform/forge#the-solution) source: scalar constants (`string`, integer, and float types, plus hex and UUID literals) alongside hierarchical `tag.Name` / `tag.UID` identifiers, emitted as typed declarations in Go and C# (with other languages coming).
 
 Declaring constants this way makes them compile-time literals in your binary — no startup parsing, no hand-mirroring the same value across languages, no drift. For tag UIDs specifically, the hash is pre-computed once at codegen time, so equivalent inputs collapse to the same value automatically.
+
+---
+
+*Standardization is an aspiration, not a status: AMP would like to see this
+scheme put forward as an [IEEE](https://www.ieee.org/) standard for markup and
+hashing. No standards body has adopted it.*
 

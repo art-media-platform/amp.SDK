@@ -117,7 +117,7 @@ export interface AmpAdapter {
 
   // ── NameService / federation directory (SKILL §4.6) ───────────────
 
-  /** Resolve a registered FQDN to its planet (anonymous; AmpError 404 = no record).  TrustState is load-bearing. */
+  /** Resolve a registered FQDN to its planet (anonymous; AmpError 404 = no record).  Never silently follow a non-Verified TrustState. */
   resolve(fqdn: string): Promise<ResolveResponse>;
 
   /** Ranked search over the session's joined federations (Bearer; membership-gated enumeration). */
@@ -175,7 +175,7 @@ export interface AmpAdapter {
    */
   setEncryptKey(keyPair: KeyPair | null): void;
 
-  /** Seal plaintext to the session member (anonymous-sender HPKE base mode). */
+  /** Seal plaintext to the session member as a sealed box (anonymous-sender). */
   seal(plaintext: Uint8Array): Promise<Uint8Array>;
 
   /** Open sealed bytes with the session member's EncryptKey. */

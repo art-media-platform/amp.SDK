@@ -580,8 +580,8 @@ export class AmpWebClient implements AmpAdapter {
    * Resolve a registered FQDN to the planet that serves it — POST
    * /api/v1/resolve.  Anonymous (works signed-out): a fresh install or a
    * deep-link source can dial + pin a named planet before it has any session.
-   * No record is AmpError 404 'NotFound'.  TrustState is load-bearing — never
-   * silently follow a non-Verified or Ambiguous answer.
+   * No record is AmpError 404 'NotFound'.  Never silently follow a
+   * non-Verified or Ambiguous TrustState.
    */
   async resolve(fqdn: string): Promise<ResolveResponse> {
     return this.apiFetch<ResolveResponse>('/resolve', {

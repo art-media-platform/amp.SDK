@@ -27,7 +27,7 @@ planet  →  node  →  attr  →  item  →  edit
 
 ## "Channel" Precisely: Nodes as Channels
 
-"Channel" is convenient slang for a load-bearing addressing pattern:
+"Channel" is convenient slang for the addressing pattern everything else depends on:
 
 ```
 channel ≈ (NodeID, AttrID) + behavior contract

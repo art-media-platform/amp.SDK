@@ -443,7 +443,7 @@ const peers: FederationPeerEntry[] = await client.federationPeers(fedUID); // Be
 
 React: `useAmpResolve(fqdn)` wraps the anonymous resolve for deep-link landings — `{ resolution, loading, error }`, where `resolution === null` with no error means no federation names that FQDN (a 404 is an answer, not a failure). The golden fixtures (`webapi/testdata/vault.json`) pin all four shapes on both the Go and TS sides.
 
-**`TrustState` is load-bearing — never silently pick.** A record is `Verified` only when the answering federation matches the planet's own `Brand` back-edge (the planet consents to being named there). `Refuted` flags a third party claiming a name the planet never authorized; `Unchecked` means the back-edge wasn't confirmed. When `Ambiguous` is set or `TrustState != 'Verified'`, surface it and let the user choose — do not auto-follow.
+**Never silently follow a non-`Verified` record.** A record is `Verified` only when the answering federation matches the planet's own `Brand` back-edge (the planet consents to being named there). `Refuted` flags a third party claiming a name the planet never authorized; `Unchecked` means the back-edge wasn't confirmed. When `Ambiguous` is set or `TrustState != 'Verified'`, surface it and let the user choose — do not auto-follow.
 
 **Posture — `resolve` is anonymous; bulk discovery is gated.** `resolve` answers one exact FQDN off the host's federation resolver with no Bearer, returning that planet's `VaultAddrs` in full so any caller can dial it. FQDN keys are low-entropy and dictionary-reversible, so a private namespace's privacy comes from federation **unreachability** (not a member → can't reach the federation that names it), never from key secrecy. What *is* gated is enumeration:
 - **`search` is best-effort discovery over the federations you've joined — Bearer-only, not a scrape endpoint.** Ranked enumeration is the scraping surface, so a session walks only its joined federations. Don't build features that depend on bulk-enumerating the namespace.
@@ -903,7 +903,7 @@ async function useCesiumIonToken() {
 }
 ```
 
-The `seal/open` primitives wrap `safe.Encrypt.Seal` / `safe.Encrypt.Open` against the session member's `EncryptKey` — anonymous-sender HPKE base mode. The sealed bytes are opaque to anyone but the sealing member, including admins, vault relays, other planet members, and even a future memory snapshot of `eks.keys`.
+The `seal/open` primitives wrap `safe.Encrypt.Seal` / `safe.Encrypt.Open` against the session member's `EncryptKey` — a sealed box (anonymous-sender). The sealed bytes are opaque to anyone but the sealing member, including admins, vault relays, other planet members, and even a future memory snapshot of `eks.keys`.
 
 That `EncryptKey` is **device-local and auto-managed**: the client generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-SDK.md`. Surface the trade-off in your UI so it isn't a surprise — e.g. label a BYOK field *"Stored on this device only — re-enter it when you sign in elsewhere."*
 
