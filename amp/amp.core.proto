@@ -1934,6 +1934,7 @@ message SyncMsg {
     SyncRangeRequest    RangeRequest    = 3;
     SyncNodeSpanRequest NodeSpanRequest = 4; // lazy-subtree span query (§9.4) — reserved for v-c
     SyncNodeSpans       NodeSpans       = 5; // lazy-subtree span answer (§9.4) — reserved for v-c
+    SyncTxRefused       TxRefused       = 6; // advisory refusal notice (§9.2; O4 §4.24)
 }
 
 
@@ -1986,9 +1987,17 @@ message SyncRangeOffer {
     // just without the O(1) fast path.
     bool                Combined    = 7;
     // 128-bit fingerprint: leading 16 bytes of the digest over [Start, End] (or, when Combined,
-    // the fold of that span's per-day bucket digests).
+    // the fold of that span's per-day bucket digests).  Folds ACCEPTED entries only —
+    // quarantined ('Q') entries are excluded (O4 §4.24).
     fixed64             RangeHash_0 = 10;
     fixed64             RangeHash_1 = 11;
+    // AllHash is the membership fingerprint over the same range: the identical fold
+    // INCLUDING quarantined entries (verdict-blind, value-bound).  Two-level digest law:
+    // RangeHash mismatch + AllHash match ⇒ the peers hold the SAME tx set and only
+    // verdicts differ — both sides suppress descent/re-stream and reconcile verdicts
+    // locally (O4 §4.24).  (0,0) = absent (a pre-AllHash peer): fall back to bisection.
+    fixed64             AllHash_0   = 12;
+    fixed64             AllHash_1   = 13;
 }
 
 
@@ -2001,6 +2010,32 @@ message SyncRangeRequest {
     fixed64             After_1 = 4;
     fixed64             End_0   = 5;      // inclusive upper bound; the window is (After, End] — 0 = unbounded tail (§9.2)
     fixed64             End_1   = 6;
+}
+
+
+// RefusalClass names why a peer refused an arriving TxMsg WITHOUT journaling it
+// (SyncTxRefused).  Rate-limit refusals are transient and deliberately emit nothing.
+enum RefusalClass {
+    RefusalUnspecified = 0; // unset — never emitted
+    ConflictingBytes   = 1; // the TxTimeID already names different verified bytes on the refuser
+    Oversized          = 2; // exceeds the refuser's MaxTxMsgSize (Detail = that limit, bytes)
+    FutureSkew         = 3; // stamped past the refuser's MaxFutureSkew (Detail = that window, seconds)
+}
+
+
+// SyncTxRefused tells the sending peer that a TxMsg it streamed was refused without
+// being journaled — the refusal memory that stops the anti-entropy floor from
+// re-requesting and re-streaming the same refused tx every resync tick (§9.2).
+// Emitted at most once per (peer, tx) per refusal-ledger TTL.  ADVISORY ONLY: a
+// receiver may stop re-offering the tx to this peer, but a refusal notice never
+// changes what any node journals or serves.
+message SyncTxRefused {
+    fixed64             PlanetID_0 = 1;
+    fixed64             PlanetID_1 = 2;
+    fixed64             TxTimeID_0 = 3;
+    fixed64             TxTimeID_1 = 4;
+    RefusalClass        Class      = 5;
+    uint64              Detail     = 6;   // class-scoped explanatory value (see RefusalClass)
 }
 
 

@@ -1237,6 +1237,60 @@ func (ArchiveMode) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{20}
 }
 
+// RefusalClass names why a peer refused an arriving TxMsg WITHOUT journaling it
+// (SyncTxRefused).  Rate-limit refusals are transient and deliberately emit nothing.
+type RefusalClass int32
+
+const (
+	RefusalClass_RefusalUnspecified RefusalClass = 0 // unset — never emitted
+	RefusalClass_ConflictingBytes   RefusalClass = 1 // the TxTimeID already names different verified bytes on the refuser
+	RefusalClass_Oversized          RefusalClass = 2 // exceeds the refuser's MaxTxMsgSize (Detail = that limit, bytes)
+	RefusalClass_FutureSkew         RefusalClass = 3 // stamped past the refuser's MaxFutureSkew (Detail = that window, seconds)
+)
+
+// Enum value maps for RefusalClass.
+var (
+	RefusalClass_name = map[int32]string{
+		0: "RefusalUnspecified",
+		1: "ConflictingBytes",
+		2: "Oversized",
+		3: "FutureSkew",
+	}
+	RefusalClass_value = map[string]int32{
+		"RefusalUnspecified": 0,
+		"ConflictingBytes":   1,
+		"Oversized":          2,
+		"FutureSkew":         3,
+	}
+)
+
+func (x RefusalClass) Enum() *RefusalClass {
+	p := new(RefusalClass)
+	*p = x
+	return p
+}
+
+func (x RefusalClass) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RefusalClass) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_amp_core_proto_enumTypes[21].Descriptor()
+}
+
+func (RefusalClass) Type() protoreflect.EnumType {
+	return &file_amp_amp_core_proto_enumTypes[21]
+}
+
+func (x RefusalClass) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RefusalClass.Descriptor instead.
+func (RefusalClass) EnumDescriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{21}
+}
+
 // Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
 //
 // All fields are optional and their meaning is contextual; a Tag plays one or more roles —
@@ -6643,6 +6697,7 @@ type SyncMsg struct {
 	RangeRequest    *SyncRangeRequest      `protobuf:"bytes,3,opt,name=RangeRequest,proto3" json:"RangeRequest,omitempty"`
 	NodeSpanRequest *SyncNodeSpanRequest   `protobuf:"bytes,4,opt,name=NodeSpanRequest,proto3" json:"NodeSpanRequest,omitempty"` // lazy-subtree span query (§9.4) — reserved for v-c
 	NodeSpans       *SyncNodeSpans         `protobuf:"bytes,5,opt,name=NodeSpans,proto3" json:"NodeSpans,omitempty"`             // lazy-subtree span answer (§9.4) — reserved for v-c
+	TxRefused       *SyncTxRefused         `protobuf:"bytes,6,opt,name=TxRefused,proto3" json:"TxRefused,omitempty"`             // advisory refusal notice (§9.2; O4 §4.24)
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -6708,6 +6763,13 @@ func (x *SyncMsg) GetNodeSpanRequest() *SyncNodeSpanRequest {
 func (x *SyncMsg) GetNodeSpans() *SyncNodeSpans {
 	if x != nil {
 		return x.NodeSpans
+	}
+	return nil
+}
+
+func (x *SyncMsg) GetTxRefused() *SyncTxRefused {
+	if x != nil {
+		return x.TxRefused
 	}
 	return nil
 }
@@ -6879,9 +6941,17 @@ type SyncRangeOffer struct {
 	// just without the O(1) fast path.
 	Combined bool `protobuf:"varint,7,opt,name=Combined,proto3" json:"Combined,omitempty"`
 	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End] (or, when Combined,
-	// the fold of that span's per-day bucket digests).
-	RangeHash_0   uint64 `protobuf:"fixed64,10,opt,name=RangeHash_0,json=RangeHash0,proto3" json:"RangeHash_0,omitempty"`
-	RangeHash_1   uint64 `protobuf:"fixed64,11,opt,name=RangeHash_1,json=RangeHash1,proto3" json:"RangeHash_1,omitempty"`
+	// the fold of that span's per-day bucket digests).  Folds ACCEPTED entries only —
+	// quarantined ('Q') entries are excluded (O4 §4.24).
+	RangeHash_0 uint64 `protobuf:"fixed64,10,opt,name=RangeHash_0,json=RangeHash0,proto3" json:"RangeHash_0,omitempty"`
+	RangeHash_1 uint64 `protobuf:"fixed64,11,opt,name=RangeHash_1,json=RangeHash1,proto3" json:"RangeHash_1,omitempty"`
+	// AllHash is the membership fingerprint over the same range: the identical fold
+	// INCLUDING quarantined entries (verdict-blind, value-bound).  Two-level digest law:
+	// RangeHash mismatch + AllHash match ⇒ the peers hold the SAME tx set and only
+	// verdicts differ — both sides suppress descent/re-stream and reconcile verdicts
+	// locally (O4 §4.24).  (0,0) = absent (a pre-AllHash peer): fall back to bisection.
+	AllHash_0     uint64 `protobuf:"fixed64,12,opt,name=AllHash_0,json=AllHash0,proto3" json:"AllHash_0,omitempty"`
+	AllHash_1     uint64 `protobuf:"fixed64,13,opt,name=AllHash_1,json=AllHash1,proto3" json:"AllHash_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -6979,6 +7049,20 @@ func (x *SyncRangeOffer) GetRangeHash_1() uint64 {
 	return 0
 }
 
+func (x *SyncRangeOffer) GetAllHash_0() uint64 {
+	if x != nil {
+		return x.AllHash_0
+	}
+	return 0
+}
+
+func (x *SyncRangeOffer) GetAllHash_1() uint64 {
+	if x != nil {
+		return x.AllHash_1
+	}
+	return 0
+}
+
 // SyncRangeRequest asks a peer to stream all TxMsgs in a range for a planet.
 // Sent when a range hash mismatch is detected after bisection converges.
 type SyncRangeRequest struct {
@@ -7065,6 +7149,96 @@ func (x *SyncRangeRequest) GetEnd_1() uint64 {
 	return 0
 }
 
+// SyncTxRefused tells the sending peer that a TxMsg it streamed was refused without
+// being journaled — the refusal memory that stops the anti-entropy floor from
+// re-requesting and re-streaming the same refused tx every resync tick (§9.2).
+// Emitted at most once per (peer, tx) per refusal-ledger TTL.  ADVISORY ONLY: a
+// receiver may stop re-offering the tx to this peer, but a refusal notice never
+// changes what any node journals or serves.
+type SyncTxRefused struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	TxTimeID_0    uint64                 `protobuf:"fixed64,3,opt,name=TxTimeID_0,json=TxTimeID0,proto3" json:"TxTimeID_0,omitempty"`
+	TxTimeID_1    uint64                 `protobuf:"fixed64,4,opt,name=TxTimeID_1,json=TxTimeID1,proto3" json:"TxTimeID_1,omitempty"`
+	Class         RefusalClass           `protobuf:"varint,5,opt,name=Class,proto3,enum=amp.RefusalClass" json:"Class,omitempty"`
+	Detail        uint64                 `protobuf:"varint,6,opt,name=Detail,proto3" json:"Detail,omitempty"` // class-scoped explanatory value (see RefusalClass)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SyncTxRefused) Reset() {
+	*x = SyncTxRefused{}
+	mi := &file_amp_amp_core_proto_msgTypes[60]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SyncTxRefused) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncTxRefused) ProtoMessage() {}
+
+func (x *SyncTxRefused) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_amp_core_proto_msgTypes[60]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncTxRefused.ProtoReflect.Descriptor instead.
+func (*SyncTxRefused) Descriptor() ([]byte, []int) {
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{60}
+}
+
+func (x *SyncTxRefused) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *SyncTxRefused) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *SyncTxRefused) GetTxTimeID_0() uint64 {
+	if x != nil {
+		return x.TxTimeID_0
+	}
+	return 0
+}
+
+func (x *SyncTxRefused) GetTxTimeID_1() uint64 {
+	if x != nil {
+		return x.TxTimeID_1
+	}
+	return 0
+}
+
+func (x *SyncTxRefused) GetClass() RefusalClass {
+	if x != nil {
+		return x.Class
+	}
+	return RefusalClass_RefusalUnspecified
+}
+
+func (x *SyncTxRefused) GetDetail() uint64 {
+	if x != nil {
+		return x.Detail
+	}
+	return 0
+}
+
 // SyncNodeSpanRequest asks a peer that materialized a subtree to answer, from its 'N'
 // index, the txTimeID spans covering NodeID — the bootstrap for lazy subtree
 // materialization when the local node never held the subtree (§9.4).  Reserved for v-c.
@@ -7080,7 +7254,7 @@ type SyncNodeSpanRequest struct {
 
 func (x *SyncNodeSpanRequest) Reset() {
 	*x = SyncNodeSpanRequest{}
-	mi := &file_amp_amp_core_proto_msgTypes[60]
+	mi := &file_amp_amp_core_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7092,7 +7266,7 @@ func (x *SyncNodeSpanRequest) String() string {
 func (*SyncNodeSpanRequest) ProtoMessage() {}
 
 func (x *SyncNodeSpanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[60]
+	mi := &file_amp_amp_core_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7105,7 +7279,7 @@ func (x *SyncNodeSpanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncNodeSpanRequest.ProtoReflect.Descriptor instead.
 func (*SyncNodeSpanRequest) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{60}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *SyncNodeSpanRequest) GetPlanetID_0() uint64 {
@@ -7152,7 +7326,7 @@ type SyncNodeSpans struct {
 
 func (x *SyncNodeSpans) Reset() {
 	*x = SyncNodeSpans{}
-	mi := &file_amp_amp_core_proto_msgTypes[61]
+	mi := &file_amp_amp_core_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7164,7 +7338,7 @@ func (x *SyncNodeSpans) String() string {
 func (*SyncNodeSpans) ProtoMessage() {}
 
 func (x *SyncNodeSpans) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_amp_core_proto_msgTypes[61]
+	mi := &file_amp_amp_core_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7177,7 +7351,7 @@ func (x *SyncNodeSpans) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncNodeSpans.ProtoReflect.Descriptor instead.
 func (*SyncNodeSpans) Descriptor() ([]byte, []int) {
-	return file_amp_amp_core_proto_rawDescGZIP(), []int{61}
+	return file_amp_amp_core_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *SyncNodeSpans) GetPlanetID_0() uint64 {
@@ -7710,7 +7884,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"VaultAddrs\x12\x14\n" +
 	"\x05Label\x18\x03 \x01(\tR\x05LabelJ\x04\b\x04\x10\x05J\x04\b\x05\x10\x06\"@\n" +
 	"\x13FederationDirectory\x12)\n" +
-	"\x05Peers\x18\x01 \x03(\v2\x13.amp.FederationPeerR\x05Peers\"\xa1\x02\n" +
+	"\x05Peers\x18\x01 \x03(\v2\x13.amp.FederationPeerR\x05Peers\"\xd3\x02\n" +
 	"\aSyncMsg\x120\n" +
 	"\tWatchList\x18\x01 \x01(\v2\x12.amp.SyncWatchListR\tWatchList\x123\n" +
 	"\n" +
@@ -7718,7 +7892,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"RangeOffer\x129\n" +
 	"\fRangeRequest\x18\x03 \x01(\v2\x15.amp.SyncRangeRequestR\fRangeRequest\x12B\n" +
 	"\x0fNodeSpanRequest\x18\x04 \x01(\v2\x18.amp.SyncNodeSpanRequestR\x0fNodeSpanRequest\x120\n" +
-	"\tNodeSpans\x18\x05 \x01(\v2\x12.amp.SyncNodeSpansR\tNodeSpans\"@\n" +
+	"\tNodeSpans\x18\x05 \x01(\v2\x12.amp.SyncNodeSpansR\tNodeSpans\x120\n" +
+	"\tTxRefused\x18\x06 \x01(\v2\x12.amp.SyncTxRefusedR\tTxRefused\"@\n" +
 	"\rSyncWatchList\x12/\n" +
 	"\aPlanets\x18\x01 \x03(\v2\x15.amp.SyncPlanetStatusR\aPlanets\"\xab\x02\n" +
 	"\x10SyncPlanetStatus\x12\x1d\n" +
@@ -7735,7 +7910,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vHoldSince_1\x18\x06 \x01(\x06R\n" +
 	"HoldSince1\x12!\n" +
 	"\x04Held\x18\a \x03(\v2\r.amp.UIDRangeR\x04Held\x122\n" +
-	"\vArchiveMode\x18\b \x01(\x0e2\x10.amp.ArchiveModeR\vArchiveMode\"\x88\x02\n" +
+	"\vArchiveMode\x18\b \x01(\x0e2\x10.amp.ArchiveModeR\vArchiveMode\"\xc2\x02\n" +
 	"\x0eSyncRangeOffer\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -7750,7 +7925,9 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	" \x01(\x06R\n" +
 	"RangeHash0\x12\x1f\n" +
 	"\vRangeHash_1\x18\v \x01(\x06R\n" +
-	"RangeHash1\"\xac\x01\n" +
+	"RangeHash1\x12\x1b\n" +
+	"\tAllHash_0\x18\f \x01(\x06R\bAllHash0\x12\x1b\n" +
+	"\tAllHash_1\x18\r \x01(\x06R\bAllHash1\"\xac\x01\n" +
 	"\x10SyncRangeRequest\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -7759,7 +7936,18 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\aAfter_0\x18\x03 \x01(\x06R\x06After0\x12\x17\n" +
 	"\aAfter_1\x18\x04 \x01(\x06R\x06After1\x12\x13\n" +
 	"\x05End_0\x18\x05 \x01(\x06R\x04End0\x12\x13\n" +
-	"\x05End_1\x18\x06 \x01(\x06R\x04End1\"\x89\x01\n" +
+	"\x05End_1\x18\x06 \x01(\x06R\x04End1\"\xcc\x01\n" +
+	"\rSyncTxRefused\x12\x1d\n" +
+	"\n" +
+	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
+	"\n" +
+	"PlanetID_1\x18\x02 \x01(\x06R\tPlanetID1\x12\x1d\n" +
+	"\n" +
+	"TxTimeID_0\x18\x03 \x01(\x06R\tTxTimeID0\x12\x1d\n" +
+	"\n" +
+	"TxTimeID_1\x18\x04 \x01(\x06R\tTxTimeID1\x12'\n" +
+	"\x05Class\x18\x05 \x01(\x0e2\x11.amp.RefusalClassR\x05Class\x12\x16\n" +
+	"\x06Detail\x18\x06 \x01(\x04R\x06Detail\"\x89\x01\n" +
 	"\x13SyncNodeSpanRequest\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -7919,7 +8107,13 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vArchiveMode\x12\v\n" +
 	"\aArchive\x10\x00\x12\n" +
 	"\n" +
-	"\x06Suffix\x10\aB@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
+	"\x06Suffix\x10\a*[\n" +
+	"\fRefusalClass\x12\x16\n" +
+	"\x12RefusalUnspecified\x10\x00\x12\x14\n" +
+	"\x10ConflictingBytes\x10\x01\x12\r\n" +
+	"\tOversized\x10\x02\x12\x0e\n" +
+	"\n" +
+	"FutureSkew\x10\x03B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_amp_core_proto_rawDescOnce sync.Once
@@ -7933,8 +8127,8 @@ func file_amp_amp_core_proto_rawDescGZIP() []byte {
 	return file_amp_amp_core_proto_rawDescData
 }
 
-var file_amp_amp_core_proto_enumTypes = make([]protoimpl.EnumInfo, 21)
-var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 62)
+var file_amp_amp_core_proto_enumTypes = make([]protoimpl.EnumInfo, 22)
+var file_amp_amp_core_proto_msgTypes = make([]protoimpl.MessageInfo, 63)
 var file_amp_amp_core_proto_goTypes = []any{
 	(UriScheme)(0),                  // 0: amp.UriScheme
 	(Units)(0),                      // 1: amp.Units
@@ -7957,219 +8151,223 @@ var file_amp_amp_core_proto_goTypes = []any{
 	(PlatformID)(0),                 // 18: amp.PlatformID
 	(TrustState)(0),                 // 19: amp.TrustState
 	(ArchiveMode)(0),                // 20: amp.ArchiveMode
-	(*Tag)(nil),                     // 21: amp.Tag
-	(*Tags)(nil),                    // 22: amp.Tags
-	(*Address)(nil),                 // 23: amp.Address
-	(*UIDRange)(nil),                // 24: amp.UIDRange
-	(*TxEnvelope)(nil),              // 25: amp.TxEnvelope
-	(*TxHeader)(nil),                // 26: amp.TxHeader
-	(*PinRequest)(nil),              // 27: amp.PinRequest
-	(*ItemSelector)(nil),            // 28: amp.ItemSelector
-	(*ItemSpan)(nil),                // 29: amp.ItemSpan
-	(*Login)(nil),                   // 30: amp.Login
-	(*LoginChallenge)(nil),          // 31: amp.LoginChallenge
-	(*LoginResponse)(nil),           // 32: amp.LoginResponse
-	(*LoginCheckpoint)(nil),         // 33: amp.LoginCheckpoint
-	(*BrandIdentity)(nil),           // 34: amp.BrandIdentity
-	(*BrandMark)(nil),               // 35: amp.BrandMark
-	(*VaultConfig)(nil),             // 36: amp.VaultConfig
-	(*PlanetCharter)(nil),           // 37: amp.PlanetCharter
-	(*EpochTerms)(nil),              // 38: amp.EpochTerms
-	(*PlanetEpoch)(nil),             // 39: amp.PlanetEpoch
-	(*CoSignature)(nil),             // 40: amp.CoSignature
-	(*PlanetOrigin)(nil),            // 41: amp.PlanetOrigin
-	(*EpochLink)(nil),               // 42: amp.EpochLink
-	(*WrappedKey)(nil),              // 43: amp.WrappedKey
-	(*MemberEpoch)(nil),             // 44: amp.MemberEpoch
-	(*AccessGrant)(nil),             // 45: amp.AccessGrant
-	(*AccessGrants)(nil),            // 46: amp.AccessGrants
-	(*ChannelEpoch)(nil),            // 47: amp.ChannelEpoch
-	(*Attestation)(nil),             // 48: amp.Attestation
-	(*Equivalence)(nil),             // 49: amp.Equivalence
-	(*Withdraw)(nil),                // 50: amp.Withdraw
-	(*PlanetInvite)(nil),            // 51: amp.PlanetInvite
-	(*PlanetInviteOp)(nil),          // 52: amp.PlanetInviteOp
-	(*PlanetInvitePolicy)(nil),      // 53: amp.PlanetInvitePolicy
-	(*PlanetInviteRedemption)(nil),  // 54: amp.PlanetInviteRedemption
-	(*BlobRef)(nil),                 // 55: amp.BlobRef
-	(*BlobMeta)(nil),                // 56: amp.BlobMeta
-	(*BlobPullRequest)(nil),         // 57: amp.BlobPullRequest
-	(*PlanetStorageOpts)(nil),       // 58: amp.PlanetStorageOpts
-	(*BlobEntry)(nil),               // 59: amp.BlobEntry
-	(*Artifact)(nil),                // 60: amp.Artifact
-	(*CodexManifest)(nil),           // 61: amp.CodexManifest
-	(*CodexHeader)(nil),             // 62: amp.CodexHeader
-	(*ChronicleCompactPoint)(nil),   // 63: amp.ChronicleCompactPoint
-	(*ChronicleCompactHistory)(nil), // 64: amp.ChronicleCompactHistory
-	(*ChronicleCompact)(nil),        // 65: amp.ChronicleCompact
-	(*ChronicleManifest)(nil),       // 66: amp.ChronicleManifest
-	(*ChronicleHeader)(nil),         // 67: amp.ChronicleHeader
-	(*AppTarget)(nil),               // 68: amp.AppTarget
-	(*AppLink)(nil),                 // 69: amp.AppLink
-	(*CrateRef)(nil),                // 70: amp.CrateRef
-	(*Brand)(nil),                   // 71: amp.Brand
-	(*VaultAddr)(nil),               // 72: amp.VaultAddr
-	(*NameServiceRecord)(nil),       // 73: amp.NameServiceRecord
-	(*FederationPeer)(nil),          // 74: amp.FederationPeer
-	(*FederationDirectory)(nil),     // 75: amp.FederationDirectory
-	(*SyncMsg)(nil),                 // 76: amp.SyncMsg
-	(*SyncWatchList)(nil),           // 77: amp.SyncWatchList
-	(*SyncPlanetStatus)(nil),        // 78: amp.SyncPlanetStatus
-	(*SyncRangeOffer)(nil),          // 79: amp.SyncRangeOffer
-	(*SyncRangeRequest)(nil),        // 80: amp.SyncRangeRequest
-	(*SyncNodeSpanRequest)(nil),     // 81: amp.SyncNodeSpanRequest
-	(*SyncNodeSpans)(nil),           // 82: amp.SyncNodeSpans
-	(*safe.KeyRef)(nil),             // 83: safe.KeyRef
-	(safe.HashKitID)(0),             // 84: safe.HashKitID
-	(*safe.EncryptedSymKey)(nil),    // 85: safe.EncryptedSymKey
-	(safe.KeyRole)(0),               // 86: safe.KeyRole
-	(*safe.KeyPairRecord)(nil),      // 87: safe.KeyPairRecord
+	(RefusalClass)(0),               // 21: amp.RefusalClass
+	(*Tag)(nil),                     // 22: amp.Tag
+	(*Tags)(nil),                    // 23: amp.Tags
+	(*Address)(nil),                 // 24: amp.Address
+	(*UIDRange)(nil),                // 25: amp.UIDRange
+	(*TxEnvelope)(nil),              // 26: amp.TxEnvelope
+	(*TxHeader)(nil),                // 27: amp.TxHeader
+	(*PinRequest)(nil),              // 28: amp.PinRequest
+	(*ItemSelector)(nil),            // 29: amp.ItemSelector
+	(*ItemSpan)(nil),                // 30: amp.ItemSpan
+	(*Login)(nil),                   // 31: amp.Login
+	(*LoginChallenge)(nil),          // 32: amp.LoginChallenge
+	(*LoginResponse)(nil),           // 33: amp.LoginResponse
+	(*LoginCheckpoint)(nil),         // 34: amp.LoginCheckpoint
+	(*BrandIdentity)(nil),           // 35: amp.BrandIdentity
+	(*BrandMark)(nil),               // 36: amp.BrandMark
+	(*VaultConfig)(nil),             // 37: amp.VaultConfig
+	(*PlanetCharter)(nil),           // 38: amp.PlanetCharter
+	(*EpochTerms)(nil),              // 39: amp.EpochTerms
+	(*PlanetEpoch)(nil),             // 40: amp.PlanetEpoch
+	(*CoSignature)(nil),             // 41: amp.CoSignature
+	(*PlanetOrigin)(nil),            // 42: amp.PlanetOrigin
+	(*EpochLink)(nil),               // 43: amp.EpochLink
+	(*WrappedKey)(nil),              // 44: amp.WrappedKey
+	(*MemberEpoch)(nil),             // 45: amp.MemberEpoch
+	(*AccessGrant)(nil),             // 46: amp.AccessGrant
+	(*AccessGrants)(nil),            // 47: amp.AccessGrants
+	(*ChannelEpoch)(nil),            // 48: amp.ChannelEpoch
+	(*Attestation)(nil),             // 49: amp.Attestation
+	(*Equivalence)(nil),             // 50: amp.Equivalence
+	(*Withdraw)(nil),                // 51: amp.Withdraw
+	(*PlanetInvite)(nil),            // 52: amp.PlanetInvite
+	(*PlanetInviteOp)(nil),          // 53: amp.PlanetInviteOp
+	(*PlanetInvitePolicy)(nil),      // 54: amp.PlanetInvitePolicy
+	(*PlanetInviteRedemption)(nil),  // 55: amp.PlanetInviteRedemption
+	(*BlobRef)(nil),                 // 56: amp.BlobRef
+	(*BlobMeta)(nil),                // 57: amp.BlobMeta
+	(*BlobPullRequest)(nil),         // 58: amp.BlobPullRequest
+	(*PlanetStorageOpts)(nil),       // 59: amp.PlanetStorageOpts
+	(*BlobEntry)(nil),               // 60: amp.BlobEntry
+	(*Artifact)(nil),                // 61: amp.Artifact
+	(*CodexManifest)(nil),           // 62: amp.CodexManifest
+	(*CodexHeader)(nil),             // 63: amp.CodexHeader
+	(*ChronicleCompactPoint)(nil),   // 64: amp.ChronicleCompactPoint
+	(*ChronicleCompactHistory)(nil), // 65: amp.ChronicleCompactHistory
+	(*ChronicleCompact)(nil),        // 66: amp.ChronicleCompact
+	(*ChronicleManifest)(nil),       // 67: amp.ChronicleManifest
+	(*ChronicleHeader)(nil),         // 68: amp.ChronicleHeader
+	(*AppTarget)(nil),               // 69: amp.AppTarget
+	(*AppLink)(nil),                 // 70: amp.AppLink
+	(*CrateRef)(nil),                // 71: amp.CrateRef
+	(*Brand)(nil),                   // 72: amp.Brand
+	(*VaultAddr)(nil),               // 73: amp.VaultAddr
+	(*NameServiceRecord)(nil),       // 74: amp.NameServiceRecord
+	(*FederationPeer)(nil),          // 75: amp.FederationPeer
+	(*FederationDirectory)(nil),     // 76: amp.FederationDirectory
+	(*SyncMsg)(nil),                 // 77: amp.SyncMsg
+	(*SyncWatchList)(nil),           // 78: amp.SyncWatchList
+	(*SyncPlanetStatus)(nil),        // 79: amp.SyncPlanetStatus
+	(*SyncRangeOffer)(nil),          // 80: amp.SyncRangeOffer
+	(*SyncRangeRequest)(nil),        // 81: amp.SyncRangeRequest
+	(*SyncTxRefused)(nil),           // 82: amp.SyncTxRefused
+	(*SyncNodeSpanRequest)(nil),     // 83: amp.SyncNodeSpanRequest
+	(*SyncNodeSpans)(nil),           // 84: amp.SyncNodeSpans
+	(*safe.KeyRef)(nil),             // 85: safe.KeyRef
+	(safe.HashKitID)(0),             // 86: safe.HashKitID
+	(*safe.EncryptedSymKey)(nil),    // 87: safe.EncryptedSymKey
+	(safe.KeyRole)(0),               // 88: safe.KeyRole
+	(*safe.KeyPairRecord)(nil),      // 89: safe.KeyPairRecord
 }
 var file_amp_amp_core_proto_depIdxs = []int32{
 	1,   // 0: amp.Tag.Units:type_name -> amp.Units
-	21,  // 1: amp.Tags.Head:type_name -> amp.Tag
-	21,  // 2: amp.Tags.SubTags:type_name -> amp.Tag
-	22,  // 3: amp.Tags.Children:type_name -> amp.Tags
+	22,  // 1: amp.Tags.Head:type_name -> amp.Tag
+	22,  // 2: amp.Tags.SubTags:type_name -> amp.Tag
+	23,  // 3: amp.Tags.Children:type_name -> amp.Tags
 	5,   // 4: amp.TxHeader.Status:type_name -> amp.PinStatus
-	27,  // 5: amp.TxHeader.Request:type_name -> amp.PinRequest
+	28,  // 5: amp.TxHeader.Request:type_name -> amp.PinRequest
 	6,   // 6: amp.PinRequest.Mode:type_name -> amp.PinMode
-	28,  // 7: amp.PinRequest.Selector:type_name -> amp.ItemSelector
-	29,  // 8: amp.ItemSelector.Spans:type_name -> amp.ItemSpan
-	21,  // 9: amp.Login.Member:type_name -> amp.Tag
-	21,  // 10: amp.Login.Planet:type_name -> amp.Tag
-	21,  // 11: amp.Login.Device:type_name -> amp.Tag
-	33,  // 12: amp.Login.Checkpoint:type_name -> amp.LoginCheckpoint
-	83,  // 13: amp.Login.SigningKey:type_name -> safe.KeyRef
-	21,  // 14: amp.BrandIdentity.NamedBy:type_name -> amp.Tag
-	34,  // 15: amp.BrandMark.Identity:type_name -> amp.BrandIdentity
-	22,  // 16: amp.BrandMark.Glyphs:type_name -> amp.Tags
-	72,  // 17: amp.VaultConfig.VaultAddrs:type_name -> amp.VaultAddr
-	21,  // 18: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
-	21,  // 19: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
-	21,  // 20: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
-	41,  // 21: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
+	29,  // 7: amp.PinRequest.Selector:type_name -> amp.ItemSelector
+	30,  // 8: amp.ItemSelector.Spans:type_name -> amp.ItemSpan
+	22,  // 9: amp.Login.Member:type_name -> amp.Tag
+	22,  // 10: amp.Login.Planet:type_name -> amp.Tag
+	22,  // 11: amp.Login.Device:type_name -> amp.Tag
+	34,  // 12: amp.Login.Checkpoint:type_name -> amp.LoginCheckpoint
+	85,  // 13: amp.Login.SigningKey:type_name -> safe.KeyRef
+	22,  // 14: amp.BrandIdentity.NamedBy:type_name -> amp.Tag
+	35,  // 15: amp.BrandMark.Identity:type_name -> amp.BrandIdentity
+	23,  // 16: amp.BrandMark.Glyphs:type_name -> amp.Tags
+	73,  // 17: amp.VaultConfig.VaultAddrs:type_name -> amp.VaultAddr
+	22,  // 18: amp.PlanetCharter.PlanetID:type_name -> amp.Tag
+	22,  // 19: amp.PlanetCharter.GenesisEpoch:type_name -> amp.Tag
+	22,  // 20: amp.PlanetCharter.ParentPlanet:type_name -> amp.Tag
+	42,  // 21: amp.PlanetCharter.Origin:type_name -> amp.PlanetOrigin
 	10,  // 22: amp.PlanetCharter.Privacy:type_name -> amp.PrivacyMode
-	22,  // 23: amp.PlanetCharter.Declaration:type_name -> amp.Tags
-	21,  // 24: amp.PlanetCharter.Founders:type_name -> amp.Tag
-	21,  // 25: amp.EpochTerms.EpochTag:type_name -> amp.Tag
-	21,  // 26: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
-	84,  // 27: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
-	35,  // 28: amp.EpochTerms.Mark:type_name -> amp.BrandMark
-	21,  // 29: amp.EpochTerms.Foyer:type_name -> amp.Tag
-	21,  // 30: amp.EpochTerms.Index:type_name -> amp.Tag
-	21,  // 31: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
+	23,  // 23: amp.PlanetCharter.Declaration:type_name -> amp.Tags
+	22,  // 24: amp.PlanetCharter.Founders:type_name -> amp.Tag
+	22,  // 25: amp.EpochTerms.EpochTag:type_name -> amp.Tag
+	22,  // 26: amp.EpochTerms.PreviousEpoch:type_name -> amp.Tag
+	86,  // 27: amp.EpochTerms.HashKit:type_name -> safe.HashKitID
+	36,  // 28: amp.EpochTerms.Mark:type_name -> amp.BrandMark
+	22,  // 29: amp.EpochTerms.Foyer:type_name -> amp.Tag
+	22,  // 30: amp.EpochTerms.Index:type_name -> amp.Tag
+	22,  // 31: amp.EpochTerms.GovernanceGroup:type_name -> amp.Tag
 	8,   // 32: amp.EpochTerms.Seal:type_name -> amp.SealState
 	9,   // 33: amp.EpochTerms.Admission:type_name -> amp.MemberAdmission
-	23,  // 34: amp.EpochTerms.CodexEdition:type_name -> amp.Address
-	36,  // 35: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
-	21,  // 36: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
-	40,  // 37: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
-	40,  // 38: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
-	21,  // 39: amp.CoSignature.MemberTag:type_name -> amp.Tag
-	21,  // 40: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
-	21,  // 41: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
-	21,  // 42: amp.EpochLink.FromEpoch:type_name -> amp.Tag
-	21,  // 43: amp.EpochLink.ToEpoch:type_name -> amp.Tag
-	85,  // 44: amp.EpochLink.Box:type_name -> safe.EncryptedSymKey
-	86,  // 45: amp.WrappedKey.Role:type_name -> safe.KeyRole
-	21,  // 46: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
-	21,  // 47: amp.MemberEpoch.Node:type_name -> amp.Tag
-	21,  // 48: amp.MemberEpoch.Epoch:type_name -> amp.Tag
-	43,  // 49: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
+	24,  // 34: amp.EpochTerms.CodexEdition:type_name -> amp.Address
+	37,  // 35: amp.EpochTerms.VaultConfig:type_name -> amp.VaultConfig
+	22,  // 36: amp.PlanetEpoch.EpochTag:type_name -> amp.Tag
+	41,  // 37: amp.PlanetEpoch.Signatures:type_name -> amp.CoSignature
+	41,  // 38: amp.PlanetEpoch.Witnesses:type_name -> amp.CoSignature
+	22,  // 39: amp.CoSignature.MemberTag:type_name -> amp.Tag
+	22,  // 40: amp.PlanetOrigin.FromPlanet:type_name -> amp.Tag
+	22,  // 41: amp.PlanetOrigin.FromEpoch:type_name -> amp.Tag
+	22,  // 42: amp.EpochLink.FromEpoch:type_name -> amp.Tag
+	22,  // 43: amp.EpochLink.ToEpoch:type_name -> amp.Tag
+	87,  // 44: amp.EpochLink.Box:type_name -> safe.EncryptedSymKey
+	88,  // 45: amp.WrappedKey.Role:type_name -> safe.KeyRole
+	22,  // 46: amp.MemberEpoch.MemberTag:type_name -> amp.Tag
+	22,  // 47: amp.MemberEpoch.Node:type_name -> amp.Tag
+	22,  // 48: amp.MemberEpoch.Epoch:type_name -> amp.Tag
+	44,  // 49: amp.MemberEpoch.WrappedKeys:type_name -> amp.WrappedKey
 	11,  // 50: amp.MemberEpoch.Status:type_name -> amp.MemberStatus
-	83,  // 51: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
-	83,  // 52: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
-	23,  // 53: amp.MemberEpoch.Cites:type_name -> amp.Address
-	21,  // 54: amp.MemberEpoch.Kind:type_name -> amp.Tag
-	23,  // 55: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
-	40,  // 56: amp.MemberEpoch.ReKey:type_name -> amp.CoSignature
-	83,  // 57: amp.MemberEpoch.ReKeyPrior:type_name -> safe.KeyRef
-	21,  // 58: amp.AccessGrant.MemberTag:type_name -> amp.Tag
+	85,  // 51: amp.MemberEpoch.SigningKey:type_name -> safe.KeyRef
+	85,  // 52: amp.MemberEpoch.EncryptKey:type_name -> safe.KeyRef
+	24,  // 53: amp.MemberEpoch.Cites:type_name -> amp.Address
+	22,  // 54: amp.MemberEpoch.Kind:type_name -> amp.Tag
+	24,  // 55: amp.MemberEpoch.ContinuesFrom:type_name -> amp.Address
+	41,  // 56: amp.MemberEpoch.ReKey:type_name -> amp.CoSignature
+	85,  // 57: amp.MemberEpoch.ReKeyPrior:type_name -> safe.KeyRef
+	22,  // 58: amp.AccessGrant.MemberTag:type_name -> amp.Tag
 	12,  // 59: amp.AccessGrant.Access:type_name -> amp.Access
-	45,  // 60: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
-	21,  // 61: amp.ChannelEpoch.Channel:type_name -> amp.Tag
-	21,  // 62: amp.ChannelEpoch.Parent:type_name -> amp.Tag
-	21,  // 63: amp.ChannelEpoch.ChType:type_name -> amp.Tag
+	46,  // 60: amp.AccessGrants.Grants:type_name -> amp.AccessGrant
+	22,  // 61: amp.ChannelEpoch.Channel:type_name -> amp.Tag
+	22,  // 62: amp.ChannelEpoch.Parent:type_name -> amp.Tag
+	22,  // 63: amp.ChannelEpoch.ChType:type_name -> amp.Tag
 	13,  // 64: amp.ChannelEpoch.ContentPolicy:type_name -> amp.ContentPolicy
-	46,  // 65: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
-	46,  // 66: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
-	23,  // 67: amp.ChannelEpoch.Cites:type_name -> amp.Address
-	21,  // 68: amp.Attestation.Subject:type_name -> amp.Tag
+	47,  // 65: amp.ChannelEpoch.MemberGrants:type_name -> amp.AccessGrants
+	47,  // 66: amp.ChannelEpoch.DefaultGrants:type_name -> amp.AccessGrants
+	24,  // 67: amp.ChannelEpoch.Cites:type_name -> amp.Address
+	22,  // 68: amp.Attestation.Subject:type_name -> amp.Tag
 	14,  // 69: amp.Attestation.Type:type_name -> amp.AttestationType
-	21,  // 70: amp.Attestation.ObserverID:type_name -> amp.Tag
-	21,  // 71: amp.Attestation.Modality:type_name -> amp.Tag
-	21,  // 72: amp.Equivalence.LeftAddress:type_name -> amp.Tag
-	21,  // 73: amp.Equivalence.RightAddress:type_name -> amp.Tag
-	21,  // 74: amp.Equivalence.Context:type_name -> amp.Tag
-	21,  // 75: amp.Equivalence.Strength:type_name -> amp.Tag
-	21,  // 76: amp.Withdraw.Subject:type_name -> amp.Tag
-	23,  // 77: amp.Withdraw.Withdrawn:type_name -> amp.Address
+	22,  // 70: amp.Attestation.ObserverID:type_name -> amp.Tag
+	22,  // 71: amp.Attestation.Modality:type_name -> amp.Tag
+	22,  // 72: amp.Equivalence.LeftAddress:type_name -> amp.Tag
+	22,  // 73: amp.Equivalence.RightAddress:type_name -> amp.Tag
+	22,  // 74: amp.Equivalence.Context:type_name -> amp.Tag
+	22,  // 75: amp.Equivalence.Strength:type_name -> amp.Tag
+	22,  // 76: amp.Withdraw.Subject:type_name -> amp.Tag
+	24,  // 77: amp.Withdraw.Withdrawn:type_name -> amp.Address
 	15,  // 78: amp.Withdraw.Reason:type_name -> amp.WithdrawReason
-	23,  // 79: amp.Withdraw.Delegation:type_name -> amp.Address
-	21,  // 80: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
-	21,  // 81: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
-	21,  // 82: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
-	87,  // 83: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
-	72,  // 84: amp.PlanetInvite.VaultAddrs:type_name -> amp.VaultAddr
-	85,  // 85: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
+	24,  // 79: amp.Withdraw.Delegation:type_name -> amp.Address
+	22,  // 80: amp.PlanetInvite.PlanetTag:type_name -> amp.Tag
+	22,  // 81: amp.PlanetInvite.EpochTag:type_name -> amp.Tag
+	22,  // 82: amp.PlanetInvite.MemberTag:type_name -> amp.Tag
+	89,  // 83: amp.PlanetInvite.TempKey:type_name -> safe.KeyPairRecord
+	73,  // 84: amp.PlanetInvite.VaultAddrs:type_name -> amp.VaultAddr
+	87,  // 85: amp.PlanetInvite.EpochKey:type_name -> safe.EncryptedSymKey
 	12,  // 86: amp.PlanetInvite.GrantedAccess:type_name -> amp.Access
-	87,  // 87: amp.PlanetInvite.RedeemKey:type_name -> safe.KeyPairRecord
-	84,  // 88: amp.PlanetInvite.HashKitID:type_name -> safe.HashKitID
-	21,  // 89: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
+	89,  // 87: amp.PlanetInvite.RedeemKey:type_name -> safe.KeyPairRecord
+	86,  // 88: amp.PlanetInvite.HashKitID:type_name -> safe.HashKitID
+	22,  // 89: amp.PlanetInviteOp.PlanetTag:type_name -> amp.Tag
 	12,  // 90: amp.PlanetInviteOp.GrantedAccess:type_name -> amp.Access
 	12,  // 91: amp.PlanetInvitePolicy.GrantedAccess:type_name -> amp.Access
 	16,  // 92: amp.PlanetInvitePolicy.Status:type_name -> amp.InviteStatus
-	83,  // 93: amp.PlanetInvitePolicy.RedeemKey:type_name -> safe.KeyRef
+	85,  // 93: amp.PlanetInvitePolicy.RedeemKey:type_name -> safe.KeyRef
 	12,  // 94: amp.PlanetInviteRedemption.GrantedAccess:type_name -> amp.Access
-	83,  // 95: amp.PlanetInviteRedemption.MemberSigningKey:type_name -> safe.KeyRef
-	84,  // 96: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
-	21,  // 97: amp.BlobRef.AssetTag:type_name -> amp.Tag
-	21,  // 98: amp.BlobRef.BlobTag:type_name -> amp.Tag
-	55,  // 99: amp.BlobPullRequest.Ref:type_name -> amp.BlobRef
+	85,  // 95: amp.PlanetInviteRedemption.MemberSigningKey:type_name -> safe.KeyRef
+	86,  // 96: amp.BlobRef.HashKitID:type_name -> safe.HashKitID
+	22,  // 97: amp.BlobRef.AssetTag:type_name -> amp.Tag
+	22,  // 98: amp.BlobRef.BlobTag:type_name -> amp.Tag
+	56,  // 99: amp.BlobPullRequest.Ref:type_name -> amp.BlobRef
 	17,  // 100: amp.BlobPullRequest.Kind:type_name -> amp.BlobPullKind
-	55,  // 101: amp.Artifact.BlobValue:type_name -> amp.BlobRef
-	21,  // 102: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
-	21,  // 103: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
-	21,  // 104: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
-	41,  // 105: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
-	61,  // 106: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
-	84,  // 107: amp.CodexHeader.DigestHashKit:type_name -> safe.HashKitID
-	63,  // 108: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
-	21,  // 109: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
-	21,  // 110: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
-	24,  // 111: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
-	64,  // 112: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
-	84,  // 113: amp.ChronicleHeader.DigestHashKit:type_name -> safe.HashKitID
-	66,  // 114: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
+	56,  // 101: amp.Artifact.BlobValue:type_name -> amp.BlobRef
+	22,  // 102: amp.CodexManifest.AttributeKinds:type_name -> amp.Tag
+	22,  // 103: amp.CodexHeader.SourcePlanet:type_name -> amp.Tag
+	22,  // 104: amp.CodexHeader.SourceEpoch:type_name -> amp.Tag
+	42,  // 105: amp.CodexHeader.Origin:type_name -> amp.PlanetOrigin
+	62,  // 106: amp.CodexHeader.Manifest:type_name -> amp.CodexManifest
+	86,  // 107: amp.CodexHeader.DigestHashKit:type_name -> safe.HashKitID
+	64,  // 108: amp.ChronicleCompactHistory.Points:type_name -> amp.ChronicleCompactPoint
+	22,  // 109: amp.ChronicleHeader.SourcePlanet:type_name -> amp.Tag
+	22,  // 110: amp.ChronicleHeader.SourceEpoch:type_name -> amp.Tag
+	25,  // 111: amp.ChronicleHeader.Range:type_name -> amp.UIDRange
+	65,  // 112: amp.ChronicleHeader.CompactHistory:type_name -> amp.ChronicleCompactHistory
+	86,  // 113: amp.ChronicleHeader.DigestHashKit:type_name -> safe.HashKitID
+	67,  // 114: amp.ChronicleHeader.Manifest:type_name -> amp.ChronicleManifest
 	18,  // 115: amp.AppTarget.Platform:type_name -> amp.PlatformID
-	34,  // 116: amp.Brand.Identity:type_name -> amp.BrandIdentity
-	68,  // 117: amp.Brand.Targets:type_name -> amp.AppTarget
-	69,  // 118: amp.Brand.Links:type_name -> amp.AppLink
-	70,  // 119: amp.Brand.BundledCrates:type_name -> amp.CrateRef
-	21,  // 120: amp.Brand.TemplateSet:type_name -> amp.Tag
-	21,  // 121: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
-	23,  // 122: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
-	71,  // 123: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
-	72,  // 124: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
-	21,  // 125: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
-	21,  // 126: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
-	21,  // 127: amp.FederationPeer.FederationID:type_name -> amp.Tag
-	72,  // 128: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
-	74,  // 129: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
-	77,  // 130: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	79,  // 131: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	80,  // 132: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	81,  // 133: amp.SyncMsg.NodeSpanRequest:type_name -> amp.SyncNodeSpanRequest
-	82,  // 134: amp.SyncMsg.NodeSpans:type_name -> amp.SyncNodeSpans
-	78,  // 135: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	24,  // 136: amp.SyncPlanetStatus.Held:type_name -> amp.UIDRange
-	20,  // 137: amp.SyncPlanetStatus.ArchiveMode:type_name -> amp.ArchiveMode
-	24,  // 138: amp.SyncNodeSpans.Spans:type_name -> amp.UIDRange
-	139, // [139:139] is the sub-list for method output_type
-	139, // [139:139] is the sub-list for method input_type
-	139, // [139:139] is the sub-list for extension type_name
-	139, // [139:139] is the sub-list for extension extendee
-	0,   // [0:139] is the sub-list for field type_name
+	35,  // 116: amp.Brand.Identity:type_name -> amp.BrandIdentity
+	69,  // 117: amp.Brand.Targets:type_name -> amp.AppTarget
+	70,  // 118: amp.Brand.Links:type_name -> amp.AppLink
+	71,  // 119: amp.Brand.BundledCrates:type_name -> amp.CrateRef
+	22,  // 120: amp.Brand.TemplateSet:type_name -> amp.Tag
+	22,  // 121: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
+	24,  // 122: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
+	72,  // 123: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
+	73,  // 124: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
+	22,  // 125: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
+	22,  // 126: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
+	22,  // 127: amp.FederationPeer.FederationID:type_name -> amp.Tag
+	73,  // 128: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
+	75,  // 129: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
+	78,  // 130: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	80,  // 131: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	81,  // 132: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	83,  // 133: amp.SyncMsg.NodeSpanRequest:type_name -> amp.SyncNodeSpanRequest
+	84,  // 134: amp.SyncMsg.NodeSpans:type_name -> amp.SyncNodeSpans
+	82,  // 135: amp.SyncMsg.TxRefused:type_name -> amp.SyncTxRefused
+	79,  // 136: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	25,  // 137: amp.SyncPlanetStatus.Held:type_name -> amp.UIDRange
+	20,  // 138: amp.SyncPlanetStatus.ArchiveMode:type_name -> amp.ArchiveMode
+	21,  // 139: amp.SyncTxRefused.Class:type_name -> amp.RefusalClass
+	25,  // 140: amp.SyncNodeSpans.Spans:type_name -> amp.UIDRange
+	141, // [141:141] is the sub-list for method output_type
+	141, // [141:141] is the sub-list for method input_type
+	141, // [141:141] is the sub-list for extension type_name
+	141, // [141:141] is the sub-list for extension extendee
+	0,   // [0:141] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }
@@ -8182,8 +8380,8 @@ func file_amp_amp_core_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_amp_core_proto_rawDesc), len(file_amp_amp_core_proto_rawDesc)),
-			NumEnums:      21,
-			NumMessages:   62,
+			NumEnums:      22,
+			NumMessages:   63,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
