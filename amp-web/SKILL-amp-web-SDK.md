@@ -596,7 +596,7 @@ resolves `Unchecked`; one whose Brand names a federation that doesn't carry its
 record resolves `Refuted` — so brand and register together.
 
 **Private vs public.** There is no per-item visibility flag (§6.4). Privacy is a
-genesis-time fact of the planet (`PlanetEpoch.IsPublic`), not a runtime toggle,
+genesis-time fact of the planet (`PlanetCharter.Privacy`), not a runtime toggle,
 so it can never be flipped later from any surface. A web client's planets are:
 its own private home planet, plus whatever planets its operator minted and
 admitted it to. An additional planet of *either* privacy — including a private
@@ -943,7 +943,7 @@ Where the third-party API supports it (OpenRouter scoped tokens, Stripe Connect 
 
 ### 6.4 Public reads & sharing
 
-amp does NOT have a per-item visibility flag. Public-readable content lives on a separate planet operating in public mode (`PlanetEpoch.IsPublic = true` at genesis — see `SECURITY-amp-web-SDK.md`). Genesis-time means exactly that: no surface flips a planet's privacy afterwards, and a web client cannot genesis one (§4.8).
+amp does NOT have a per-item visibility flag. Public-readable content lives on a separate planet operating in public mode (`PlanetCharter.Privacy = PrivacyMode_Public` at genesis — see `SECURITY-amp-web-SDK.md`). Genesis-time means exactly that: no surface flips a planet's privacy afterwards, and a web client cannot genesis one (§4.8).
 
 #### Operator setup (one time per deploy)
 
@@ -1297,7 +1297,7 @@ The durable model: per-deploy configuration is **signed, chronicle-tracked facts
 
 **2. Host gating config — CORS origins + admin allowlist.** The web origins authorized to call the host (the CORS allow-list) and the operator-admin allowlist (who may hit `/api/v1/admin/*`) are **operator HTTP-gating config, not planet governance**. Stable field semantics: a list of allowed origins (`https://maplable.com`, `*.maplable.com` — never pair `"*"` with credentials; see `SECURITY-amp-web-SDK.md`) and a list of admin member-IDs (`eth:0x…`, `email:…`; empty fails closed → every admin call `403`). Stored operator-side, per whitelabel domain — never in your bundle or code path.
 
-**3. The share planet.** Anonymous-readable content lives on a separate public planet (`PlanetEpoch.IsPublic = true`); the operator genesis's it once and registers it host-side (§6.4). Your client points at it via `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`.
+**3. The share planet.** Anonymous-readable content lives on a separate public planet (`PlanetCharter.Privacy = PrivacyMode_Public`); the operator genesis's it once and registers it host-side (§6.4). Your client points at it via `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`.
 
 **What this means for you:** none of this is in your bundle or code path — construct with `vaultUrl` + `planetTag` (+ share tag). What your operator needs *from you*, once, at deploy time is a short, stable list: the web origins to allow (CORS) and the share-planet name. The field *semantics* are the stable integration surface; where they're stored is operator-side and changes nothing in your integration.
 
@@ -1421,7 +1421,7 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque (use the base32 string as-is). Carries the element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else (`AOM/SD-withdrawal-consent.md`). |
-| **Share planet** | A planet operating in `PlanetEpoch.IsPublic = true` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
+| **Share planet** | A planet operating in `PlanetCharter.Privacy = PrivacyMode_Public` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
 | **Admin endpoint** | The operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no browser client method** (§12); email-credential issue binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
 | **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6; `AOM/DD-name-service.md`. |
