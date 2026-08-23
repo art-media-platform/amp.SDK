@@ -134,6 +134,32 @@ fi
 #     pack — never warn-and-skip.  See README "Authoring Notes".
 node "$HERE/pack-delink.mjs" "$STAGE" "$AOM_SRC"
 
+# 3d. AOM-reference gate for the shipped TypeScript.  The de-link pass (3c)
+#     walks .md only, so an AOM doc named in a src/ comment would ship raw
+#     where the same reference in a .md is rewritten to `(internal)` or fails
+#     the pack.  This is a hard gate, not a rewrite: a code comment is fixed at
+#     source, never edited at pack time.
+#     src/generated/ is EXCLUDED — forge writes it from the .sdl / .proto
+#     comments in amp.SDK, so a citation there is corrected at that source and
+#     regenerated; this gate covers the hand-written client.
+AOM_REF_RE='\b(DD|SD|AD|QO|ZO|O[0-9]|Q[0-9]?)-[a-z0-9]+(-[a-z0-9]+)*(\.md)?'
+AOM_ALLOWED="$(printf '%s\n' "${AOM_DOCS[@]}" "${AOM_PUBLIC_SUBSET[@]}" \
+               | sed 's/\.md$//' | sort -u)"
+AOM_OFFENDERS="$(grep -rhoE "$AOM_REF_RE" "$STAGE/src" --exclude-dir=generated \
+                 | sed 's/\.md$//' | sort -u | grep -vxF "$AOM_ALLOWED" || true)"
+if [ -n "$AOM_OFFENDERS" ]; then
+  echo "ERROR: shipped src/ cites AOM doc(s) not on the bundle allowlist:" >&2
+  while IFS= read -r doc; do
+    grep -rnE "\b$doc\b" "$STAGE/src" --exclude-dir=generated \
+      | sed "s|^$STAGE/|       |" >&2 || true
+  done <<< "$AOM_OFFENDERS"
+  echo "       Allowlisted: $(printf '%s ' $AOM_ALLOWED)" >&2
+  echo "       Fix the citation at source: name a doc the bundle ships, or" >&2
+  echo "       state the reason without the coordinate." >&2
+  exit 1
+fi
+echo "+++ AOM-ref gate: shipped src/ cites only allowlisted AOM docs"
+
 # 4. Strip cruft.
 find "$STAGE" -name '.DS_Store' -delete 2>/dev/null || true
 
