@@ -18,7 +18,7 @@ import (
 // ref commits to it via MetaRoot — the leading 16 bytes of the ref's
 // HashKit digest over the meta's canonical encoding — and the ref rides a
 // member-signed TxMsg, so a receiver verifies the meta against a signed
-// commitment before trusting any chunk (SD-planet-storage §13.10).
+// commitment before trusting any chunk (AOM SD-planet-storage.md §13.10).
 //
 // The chunk hash is two-level (composable):
 //
@@ -46,7 +46,7 @@ const (
 	// 4 KiB keeps a grain retry at seconds even on baud-class links, gives
 	// message-scale (4 KB+) payloads grain resume, and is page/FS-block
 	// aligned.  Grain digests are transient — derived, sent, verified,
-	// discarded — so grain size never costs stored or meta bytes (§13.10).
+	// discarded — so grain size never costs stored or meta bytes (AOM SD-planet-storage.md §13.10).
 	BlobGrainSizeLog2 = 12
 
 	// BlobChunkSizeLog2Min floors the encoder-chosen meta chunk size at 1 MiB.
@@ -54,7 +54,7 @@ const (
 	// it, never restate): it bounds the meta's weight at 32 B per MiB of
 	// stored bytes (~0.003%) and keeps the chunk — the broadband transfer's
 	// verify quantum — no finer than the 1 MiB default wire frame
-	// (SD-planet-storage §13.10).  Meta chunk boundaries are stored-byte
+	// (AOM SD-planet-storage.md §13.10).  Meta chunk boundaries are stored-byte
 	// shifts and do NOT align to seal AEAD frames (frame pitch carries
 	// per-frame overhead); all verification is frame-blind.
 	BlobChunkSizeLog2Min = 20
@@ -70,7 +70,7 @@ const (
 
 	// BlobLenMax bounds a blob's declared stored length (1 PiB): a generous,
 	// finite guard so a garbled or hostile length can never drive an
-	// unbounded transfer or overflow span arithmetic (§13.10).
+	// unbounded transfer or overflow span arithmetic (AOM SD-planet-storage.md §13.10).
 	BlobLenMax = int64(1) << 50
 
 	// blobMetaComposeTag prefixes every level-1 (digest-run) hash — the
@@ -121,38 +121,38 @@ func BlobChunkCount(storedLen int64, chunkSizeLog2 uint32) uint64 {
 // ── Meta-chunk address arithmetic ───────────────────────────────────────
 //
 // The single authoritative site for the meta's index ⇔ STORED-byte-offset
-// mapping — a shift by the ref's ChunkSizeLog2 (SD-planet-storage §13.10).
+// mapping — a shift by the ref's ChunkSizeLog2 (AOM SD-planet-storage.md §13.10).
 // Serve-span resolution, the wire frame address, and staging absorb all
 // address this space.  Meta chunks are NOT aligned to seal AEAD frames
 // (frame pitch carries per-frame overhead); no caller may assume otherwise.
 
-// BlobChunkOffset is the stored-byte offset of a meta chunk index (§13.10).
+// BlobChunkOffset is the stored-byte offset of a meta chunk index (AOM SD-planet-storage.md §13.10).
 func BlobChunkOffset(chunkIndex uint64, chunkSizeLog2 uint32) int64 {
 	return int64(chunkIndex) << chunkSizeLog2
 }
 
 // BlobChunkIndex is the meta chunk index containing a stored-byte position
-// (§13.10).
+// (AOM SD-planet-storage.md §13.10).
 func BlobChunkIndex(position int64, chunkSizeLog2 uint32) uint64 {
 	return uint64(position) >> chunkSizeLog2
 }
 
 // BlobChunkRemaining is the byte count from a stored-byte position to the
 // end of its meta chunk — a full chunk when the position sits on a boundary
-// (§13.10).
+// (AOM SD-planet-storage.md §13.10).
 func BlobChunkRemaining(position int64, chunkSizeLog2 uint32) int64 {
 	chunkSize := int64(1) << chunkSizeLog2
 	return chunkSize - position&(chunkSize-1)
 }
 
 // BlobChunkAligned reports whether a stored-byte position sits on a meta
-// chunk boundary (§13.10).
+// chunk boundary (AOM SD-planet-storage.md §13.10).
 func BlobChunkAligned(position int64, chunkSizeLog2 uint32) bool {
 	return position&((int64(1)<<chunkSizeLog2)-1) == 0
 }
 
 // BlobWireAddress is the wire frame's (chunkIndex, offsetInChunk) address of
-// a stored-byte position (§13.10; frame layout in SD-security-sync §13.8).
+// a stored-byte position (AOM SD-planet-storage.md §13.10; frame layout in AOM SD-security-sync.md §13.8).
 // ChunkSizeLog2 0 = a blob with no meta: one implicit chunk, the position is
 // the in-chunk offset.
 func BlobWireAddress(position int64, chunkSizeLog2 uint32) (chunkIndex, offsetInChunk uint64) {
@@ -164,7 +164,7 @@ func BlobWireAddress(position int64, chunkSizeLog2 uint32) (chunkIndex, offsetIn
 
 // BlobPullSpan resolves a {ChunkBegin, ChunkCount} pull against a blob of
 // blobLen stored bytes: the span's start offset and byte length on the
-// meta's index space (§13.10; ChunkCount 0 = through end-of-blob).
+// meta's index space (AOM SD-planet-storage.md §13.10; ChunkCount 0 = through end-of-blob).
 // ok=false ⇒ a malformed exponent or a span outside the blob (chunk indexes
 // are bounded by BlobLenMax so the shift can never overflow).
 func BlobPullSpan(blobLen int64, chunkSizeLog2 uint32, chunkBegin, chunkCount uint64) (startOffset, spanLen int64, ok bool) {
@@ -186,7 +186,7 @@ func BlobPullSpan(blobLen int64, chunkSizeLog2 uint32, chunkBegin, chunkCount ui
 	return startOffset, spanLen, true
 }
 
-// ── Two-level chunk hashing (§13.10) ────────────────────────────────────
+// ── Two-level chunk hashing (AOM SD-planet-storage.md §13.10) ──────
 
 // newBlobHashKit resolves a HashKit for meta hashing, enforcing the entry
 // width floor.
@@ -283,7 +283,7 @@ func (bch *BlobChunkHasher) Reset() {
 
 // BlobGrainRun derives a chunk's fine-digest run from its stored bytes —
 // what a full holder sends ahead of grains to a narrow-link receiver.  The
-// run is transient: derived, sent, verified, discarded (§13.10).
+// run is transient: derived, sent, verified, discarded (AOM SD-planet-storage.md §13.10).
 func BlobGrainRun(kitID safe.HashKitID, chunk []byte) ([]byte, error) {
 	fine, err := newBlobHashKit(kitID)
 	if err != nil {
@@ -593,7 +593,7 @@ func (meta *BlobMeta) ChunkHash(chunkIndex uint64) []byte {
 }
 
 // ChunkUID is one chunk's hashname — the leading 16 bytes of its meta entry
-// as a tag.UID, the swarm-addressable identity of that chunk (§13.10).
+// as a tag.UID, the swarm-addressable identity of that chunk (AOM SD-planet-storage.md §13.10).
 func (meta *BlobMeta) ChunkUID(chunkIndex uint64) tag.UID {
 	entry := meta.ChunkHash(chunkIndex)
 	return tag.UID{

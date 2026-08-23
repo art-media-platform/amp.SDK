@@ -242,7 +242,7 @@ func (terms *EpochTerms) TxWithinGracePeriod(txTimeID, newEpochTimeID tag.UID) b
 // signatures lose authority and TxMsgs are rejected.
 //
 // Direction: tx is NEWER than (or concurrent with) the cut event.  This is
-// the revocation cliff per amp.security PRD §G.6.
+// the revocation cliff per AOM SD-security-sync.md §5.3.1.
 func (terms *EpochTerms) WithinRevocationCliff(txTimeID, cutTimeID tag.UID) bool {
 	txUnix := txTimeID.Unix()
 	cutUnix := cutTimeID.Unix()

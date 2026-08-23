@@ -75,7 +75,8 @@ func (leaf *Tag) Validate() error {
 }
 
 // Validate checks every leaf of the tree — Head, SubTags, and Children alike, since an
-// attachment is legal at any depth (§3.6) — and returns the first refusal.  Nil-safe.
+// attachment is legal at any depth (AOM SD-content-substrate.md §3.6) — and
+// returns the first refusal.  Nil-safe.
 func (t *Tags) Validate() error {
 	var refused error
 	t.Walk(func(leaf *Tag) {

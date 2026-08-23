@@ -118,7 +118,8 @@ func (me *MemberEpoch) ReKeyCoSignatureDigest(planetID tag.UID, hashKit safe.Has
 // Status = Active, since Status rides outside the signed digest and must not
 // become a submitter-controlled smuggling lane), then every ReKey CoSignature
 // over ReKeyCoSignatureDigest against founderKeys with the genesis-frozen
-// threshold (required <= 0 = all founders — the §4.4 rotation mirror).  The
+// threshold (required <= 0 = all founders — the AOM SD-security-sync.md §4.4
+// rotation mirror).  The
 // ONE re-key verify site: the ACC authority gate and the vault key cache both
 // call it.  What it does NOT check — and the vault must — is that ReKeyPrior
 // equals the member's cached current SigningKey (the replay guard's grounding)
