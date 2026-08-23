@@ -275,7 +275,7 @@ type EncryptOps struct {
 // embedded at the front per the kit's wire format.
 //
 // peerKit must match the kit that generated peerPubKey; the caller typically
-// reads it from MemberEpoch.EncryptCryptoKitID alongside MemberEpoch.EncryptPubKey.
+// reads both from MemberEpoch.EncryptKey, a safe.KeyRef carrying kit and pubkey.
 func SealFor(peerKit CryptoKitID, peerPubKey, msg []byte) ([]byte, error) {
 	kit, err := CryptoKit(peerKit)
 	if err != nil {

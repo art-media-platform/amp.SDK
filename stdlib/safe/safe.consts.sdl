@@ -3,7 +3,7 @@
 // A CryptoKit is named in an open namespace (a sovereign may roll its own suite),
 // so its identity is a name-derived tag.UID baked at forge time — never hashed in
 // an SDK at runtime.  The UID rides the wire and, for trust, is pinned in signed
-// EpochTerms; an unregistered/untrusted kit fails closed at safe.GetCryptoKit.
+// EpochTerms; an unregistered/untrusted kit fails closed at safe.CryptoKit(id).
 //
 // Compiled by `forge consts` into .go / .cs.  Use Crypto.X.ID for the bare UID.
 // amp:gen=csharp

@@ -141,7 +141,7 @@ tags Attr {
         PlanetInviteRedemption "PlanetInviteRedemption"
     }
 
-    // Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.3).
+    // Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.4).
     // NS-record-style cross-federation forwarding without DNS dependency.
     FederationDirectory "amp.FederationDirectory"
 

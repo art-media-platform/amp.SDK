@@ -209,8 +209,8 @@ message GeoPath {
     }
 
     RenderType Type      = 1;
-    float      ExtrudeLo = 4;  // If non-zero, extrude the path to this height
-    float      ExtrudeHi = 5;  // If non-zero, extrude the path to this height
+    float      ExtrudeLo = 4;  // if non-zero, the extrusion's lower bound
+    float      ExtrudeHi = 5;  // if non-zero, the extrusion's upper bound
 
     PointFormat      Format = 14; // specifies the type and format of Coords
     repeated fixed64 Points = 15; // tile indices interleaved with associated UTC64 or Rmm based on Format.
@@ -526,7 +526,7 @@ message TileServer {
     TileServerScheme    Scheme        = 6;
 
     // URL template; supports {z} {x} {y} {s} {access_token} {key}
-    // e.g. "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" or
+    // e.g. "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
     string              URLTemplate   = 10;
 
     // Subdomains for {s} substitution (e.g. ["a","b","c"]).

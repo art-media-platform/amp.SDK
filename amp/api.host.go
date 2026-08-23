@@ -180,7 +180,7 @@ type Session interface {
 	// meta describes the blob's MIME type (ContentType), human label (Text), and
 	// byte size (I with Units = Bytes, used as the progress denominator); or may be nil.
 	// The stored BlobRef's AssetTag carries ContentType and Text from meta; AssetTag.UID is the
-	// leading 16 bytes of the plaintext hash (content-addressed, §13.2), and for a planet-public
+	// leading 16 bytes of the plaintext hash (content-addressed, AOM SD-security-sync.md §13.2), and for a planet-public
 	// blob BlobTag.UID coincides with it.  BlobTag itself stays lean — UID + stored byte count.
 	//
 	// For large files, data is streamed — not buffered in memory.
@@ -193,7 +193,7 @@ type Session interface {
 	// attr is appropriate on a target node (e.g. std.Attr.NodeBlobs keyed by BlobTag.UID).
 	//
 	// Content-addressed: re-seeding the same file produces the same BlobRef and is a no-op
-	// at the BlobStore layer (§13.2). ContentType is inferred from the file extension.
+	// at the BlobStore layer (AOM SD-security-sync.md §13.2). ContentType is inferred from the file extension.
 	SeedBlob(planetID tag.UID, path string) (*BlobRef, error)
 
 	// BlobStore returns the session's BlobStore for retrieving blobs by (planetID, blobID).
@@ -202,7 +202,7 @@ type Session interface {
 
 	// OpenBlob resolves a BlobRef to a seekable plaintext reader — the read-side twin of StoreBlob.
 	// An epoch-sealed blob is retrieved as ciphertext, decrypted once under its epoch key, and the
-	// recovered plaintext is validated against the asset hash (Hash_0..3, §13.5); a public blob
+	// recovered plaintext is validated against the asset hash (Hash_0..3, AOM SD-security-sync.md §13.5); a public blob
 	// streams straight from the BlobStore. Decrypted plaintext is served from a Tier-2 cache so
 	// repeat reads (e.g. HTTP range requests while scrubbing media) skip the decrypt. Apps use this
 	// to back a data.Asset over a stored blob.
@@ -420,7 +420,7 @@ type BlobStore interface {
 	// Caller pre-populates ref.PlanetID_0/1, ref.HashKitID (0 = default Blake2s_256), and optionally
 	// the asset identity ref.AssetTag.ContentType() / ref.AssetTag.Text.
 	// On success, StoreHashed populates ref.Hash_0..3 from the content hash and both content
-	// addresses (§13.2): the asset identity AssetTag (UID = leading 16 bytes of the plaintext hash,
+	// addresses (AOM SD-security-sync.md §13.2): the asset identity AssetTag (UID = leading 16 bytes of the plaintext hash,
 	// I / Units = Bytes = authoritative plaintext byte count) and the lean storage identity BlobTag.
 	// A public blob's stored bytes are the plaintext, so BlobTag.UID == AssetTag.UID.
 	// Idempotent: if the hash-derived on-disk path already exists, the temp write is discarded.
@@ -430,7 +430,7 @@ type BlobStore interface {
 	// with ref.HashKitID, and publishes it at the content-addressed path only when the streamed
 	// bytes satisfy hash(stream)[:16] == ref.BlobTag.UID() — the address of the bytes as stored
 	// (ciphertext for a sealed blob, plaintext for a public one), validated without the epoch key
-	// (§13.2.1). This is the receiver's O(1)-memory ingest: no whole-blob buffer, atomic temp+rename
+	// (AOM SD-security-sync.md §13.2.1). This is the receiver's O(1)-memory ingest: no whole-blob buffer, atomic temp+rename
 	// mirroring StoreHashed. On hash mismatch or I/O error the temp is discarded and an error
 	// returned, so the durable store and any presence tracking are never poisoned by a partial or
 	// invalid transfer. It validates against the existing BlobTag.UID and does not recompute the

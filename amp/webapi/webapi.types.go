@@ -219,10 +219,11 @@ type TxRequest struct {
 
 	// InvokeURL, when set, routes the whole batch to an app verb handler instead
 	// of the default cabinet-commit path: the host delivers the ops to the named
-	// verb's StartPin as RPC arguments (PinMode_Invoke — not journaled as planet
-	// state), carrying the session member as the tx FromID, and the app authors any
-	// durable writes itself (custodially).  Form: "amp://~/{app}/{verb}" (e.g.
-	// "amp://~/forums/post").  Empty = a normal cabinet commit.  One batch = one verb.
+	// verb's StartPin as RPC arguments via the host-internal amp.TxCommit.Invoke
+	// flag — not journaled as planet state — carrying the session member as the tx
+	// FromID, and the app authors any durable writes itself (custodially).  Form:
+	// "amp://~/{app}/{verb}" (e.g. "amp://~/forums/post").  Empty = a normal
+	// cabinet commit.  One batch = one verb.
 	InvokeURL string `json:"InvokeURL,omitempty"`
 }
 

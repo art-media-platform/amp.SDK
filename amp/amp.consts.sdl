@@ -20,7 +20,7 @@ const Tx {
     //    14:16  Reserved
     const string PreambleSignature = "AMP1";
 
-	// Fixed-size header that leads every TxMsg (see amp.consts.sdl for layout).
+	// Fixed-size header that leads every TxMsg; the layout is above.
 	const int32  PreambleSize = 16;
 }
 

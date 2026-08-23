@@ -15,7 +15,7 @@ type (
 
 	// tag.Name expresses a set UTF-8 literals and its corresponding hash (UID).
 	//
-	//	tag.Name := "[{TagOp}*[{utf8_literal}]*"
+	//	tag.Name := "[{TagOp}]*[{utf8_literal}]*"
 	Name struct {
 		ID   UID    // hash of any art-media-platform or other tag expression
 		Text string // optional case-preserved tag expression; canonize(Text) yields the canonic string hashed into ID.  May be dropped (identity is ID alone) so a UID can be matched without disclosing what it names.

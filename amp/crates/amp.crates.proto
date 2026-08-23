@@ -148,15 +148,15 @@ message CrateInfo {
     // TimeBuilt is the UTC value (in seconds) when this crate was built.
     int64                   TimeBuilt    = 31;
 
-    // VersionID uniquely identifies this build and has the form "v{MajorNum}.{MinorNum}.{BuildNum}"
-    // e.g. "v0.700.0"
+    // MajorVersion, MinorVersion, and BuildNumber compose the version string
+    // "v{MajorVersion}.{MinorVersion}.{BuildNumber}" — e.g. "v0.700.0".
     int32                   MajorVersion = 40;
     int32                   MinorVersion = 41;
     int32                   BuildNumber  = 42;
 
     // BuildID uniquely identifies a particular crate build/version.
     // This value should have no spaces and only have '.', '_', or '-' (and starts and ends with an alphanumeric character).
-    // By convention, the format is "yyMMdd-{VersionID}" (so that sorting by BuildID string yields the most recent release).
+    // By convention, the format is "yyMMdd-" plus the version string above (so that sorting by BuildID string yields the most recent release).
     // e.g. "210320-v0.1.11"
     string                  BuildID = 45;
 
@@ -174,8 +174,8 @@ message CrateInfo {
 // called a "crate".
 // It contains catalog and type info that amp loads at runtime to know what's inside binary asset bundles without having to load them.
 //
-// A reference to an amp asset is via a URI with the form:
-//   assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.EntryURI}"
+// A reference to an amp asset is an "asset:" URI — see CrateInfo.CrateURI for
+// the grammar and examples.
 //
 message CrateManifest {
 

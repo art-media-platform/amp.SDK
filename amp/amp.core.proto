@@ -107,7 +107,7 @@ enum Units {
 
 // Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID, ItemID, EditID)
 // tuple addressing a single CRDT cell across any planet.  PlanetID = 0 means
-// "this planet" (the planet of the containing TxMsg), matching Citation's convention.
+// "this planet" (the planet of the containing TxMsg).
 // Used to cite a specific TxOp address across planets without dereferencing.
 message Address {
     fixed64             PlanetID_0 = 1;
@@ -736,7 +736,7 @@ message EpochTerms {
     VaultConfig         VaultConfig = 25;
 
     // Seconds after rotation during which old-epoch TxMsgs are still accepted
-    // (offline / mesh authors).  If 0, DefaultGracePeriod is used.
+    // (offline / mesh authors).  If 0, DefaultMaxGracePeriod applies (90 days).
     int64               MaxGracePeriod = 32;
 }
 
@@ -1479,7 +1479,7 @@ message BlobMeta {
 // meta) from one holder.  Chunk indexes address the ref's BlobMeta chunk
 // space; index ⇔ offset is a shift by ChunkSizeLog2 (SD-planet-storage §13.10).
 message BlobPullRequest {
-    BlobRef         Ref        = 1;  // wire-stripped (SD-planet-storage §13.2.1)
+    BlobRef         Ref        = 1;  // wire-stripped (SD-security-sync §13.2.1)
     BlobPullKind    Kind       = 2;
     uint64          ChunkBegin = 3;  // first chunk index (Kind=Chunks)
     uint64          ChunkCount = 4;  // 0 ⇒ through end-of-blob
@@ -1804,9 +1804,9 @@ message VaultAddr {
 }
 
 
-// TrustState is the three-state verdict for a NameService record's §3.3 back-edge
-// consent check. Unchecked (the resolver lacked the target's
-// live Brand to verify) must never map to Verified.  AOM DD-name-service.md §3.3/§15.1.
+// TrustState is the three-state verdict for a NameService record's back-edge
+// consent check (AOM DD-name-service.md §3.3/§15.1).  Unchecked (the resolver
+// lacked the target's live Brand to verify) must never map to Verified.
 enum TrustState {
     Unchecked = 0;  // not yet verifiable — cold resolve, no live Brand held (proto3 default)
     Verified  = 1;  // back-edge holds: target Brand.Identity.NamedBy == the answering federation
@@ -1923,7 +1923,8 @@ message FederationDirectory {
 
 
 // ══════════════════════════════════════════════════════════════════════
-// Vault sync
+// Vault sync — partial replication and anti-entropy
+// (AOM SD-planet-storage.md §9)
 // ══════════════════════════════════════════════════════════════════════
 
 // SyncMsg is the envelope for all delta sync control messages between vault peers.
@@ -1932,9 +1933,9 @@ message SyncMsg {
     SyncWatchList       WatchList       = 1;
     SyncRangeOffer      RangeOffer      = 2;
     SyncRangeRequest    RangeRequest    = 3;
-    SyncNodeSpanRequest NodeSpanRequest = 4; // lazy-subtree span query (§9.4) — reserved for v-c
-    SyncNodeSpans       NodeSpans       = 5; // lazy-subtree span answer (§9.4) — reserved for v-c
-    SyncTxRefused       TxRefused       = 6; // advisory refusal notice (§9.2; O4 §4.24)
+    SyncNodeSpanRequest NodeSpanRequest = 4; // lazy-subtree span query (AOM SD-planet-storage.md §9.4) — reserved for v-c
+    SyncNodeSpans       NodeSpans       = 5; // lazy-subtree span answer (AOM SD-planet-storage.md §9.4) — reserved for v-c
+    SyncTxRefused       TxRefused       = 6; // advisory refusal notice (AOM SD-planet-storage.md §9.2; O4 §4.24)
 }
 
 
@@ -1948,7 +1949,8 @@ message SyncWatchList {
 // ArchiveMode is a peer's replication posture for a planet: how much of the journal it
 // holds and advertises.  Archive (the zero value) is total replication — a peer that
 // sends no ArchiveMode reads as a full holder.  Suffix holds only a recent txTimeID
-// window (§9).  The reserved 1–6 / 8+ gaps leave room for segmented / subtree modes.
+// window (AOM SD-planet-storage.md §9).  The reserved 1–6 / 8+ gaps leave room
+// for segmented / subtree modes.
 enum ArchiveMode {
     Archive = 0; // full replication / totality — the default; an unset field reads as this
     Suffix  = 7; // holds only a recent txTimeID suffix (opt-in; enables suffix eviction)
@@ -1956,7 +1958,7 @@ enum ArchiveMode {
 
 
 // SyncPlanetStatus carries a planet UID and the peer's current high-water mark, plus
-// (partial replication, §9) its held-range manifest.
+// (partial replication, AOM SD-planet-storage.md §9) its held-range manifest.
 message SyncPlanetStatus {
     fixed64             PlanetID_0  = 1;
     fixed64             PlanetID_1  = 2;
@@ -1964,7 +1966,8 @@ message SyncPlanetStatus {
     fixed64             HighWater_1 = 4;
     // The peer holds and advertises [HoldSince, HighWater]; Held lists pinned segments
     // below HoldSince; ArchiveMode Suffix opts into suffix eviction (Archive/unset = full
-    // holder, so a pre-manifest peer reads as totality) (§9.1–9.2).
+    // holder, so a pre-manifest peer reads as totality)
+    // (AOM SD-planet-storage.md §9.1–9.2).
     fixed64             HoldSince_0 = 5;
     fixed64             HoldSince_1 = 6;
     repeated UIDRange   Held        = 7;
@@ -1983,7 +1986,7 @@ message SyncRangeOffer {
     fixed64             End_1       = 6;
     // Combined marks RangeHash as a fold of the sender's per-day bucket digests over [Start, End]
     // — one "converged over this whole span?" probe; a mismatch drills down to per-bucket offers
-    // (§9.2).  An old/unset peer reads it as a plain RangeHash offer and bisects — still converges,
+    // (AOM SD-planet-storage.md §9.2).  An old/unset peer reads it as a plain RangeHash offer and bisects — still converges,
     // just without the O(1) fast path.
     bool                Combined    = 7;
     // 128-bit fingerprint: leading 16 bytes of the digest over [Start, End] (or, when Combined,
@@ -2008,7 +2011,7 @@ message SyncRangeRequest {
     fixed64             PlanetID_1 = 2;
     fixed64             After_0 = 3;      // stream TxMsgs with TxTimeID > After (exclusive)
     fixed64             After_1 = 4;
-    fixed64             End_0   = 5;      // inclusive upper bound; the window is (After, End] — 0 = unbounded tail (§9.2)
+    fixed64             End_0   = 5;      // inclusive upper bound; the window is (After, End] — 0 = unbounded tail (AOM SD-planet-storage.md §9.2)
     fixed64             End_1   = 6;
 }
 
@@ -2025,7 +2028,8 @@ enum RefusalClass {
 
 // SyncTxRefused tells the sending peer that a TxMsg it streamed was refused without
 // being journaled — the refusal memory that stops the anti-entropy floor from
-// re-requesting and re-streaming the same refused tx every resync tick (§9.2).
+// re-requesting and re-streaming the same refused tx every resync tick
+// (AOM SD-planet-storage.md §9.2).
 // Emitted at most once per (peer, tx) per refusal-ledger TTL.  ADVISORY ONLY: a
 // receiver may stop re-offering the tx to this peer, but a refusal notice never
 // changes what any node journals or serves.
@@ -2041,7 +2045,8 @@ message SyncTxRefused {
 
 // SyncNodeSpanRequest asks a peer that materialized a subtree to answer, from its 'N'
 // index, the txTimeID spans covering NodeID — the bootstrap for lazy subtree
-// materialization when the local node never held the subtree (§9.4).  Reserved for v-c.
+// materialization when the local node never held the subtree
+// (AOM SD-planet-storage.md §9.4).  Reserved for v-c.
 message SyncNodeSpanRequest {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
@@ -2051,7 +2056,8 @@ message SyncNodeSpanRequest {
 
 
 // SyncNodeSpans answers SyncNodeSpanRequest with the coalesced txTimeID ranges that touch
-// NodeID (capped; Complete=false when truncated) (§9.4).  Reserved for v-c.
+// NodeID (capped; Complete=false when truncated)
+// (AOM SD-planet-storage.md §9.4).  Reserved for v-c.
 message SyncNodeSpans {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
