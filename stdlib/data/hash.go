@@ -13,8 +13,7 @@ func HashBuf(data []byte) uint64 {
 
 // HashStr hashes str using the Go runtime's map hash (hardware-accelerated where available).
 //
-// WARNING: the hash seed is randomized per process, so values are NOT stable across
-// runs or machines — never persist, wire-carry, or compare these hashes across processes.
+// Carries the same cross-process instability WARNING as HashBuf.
 func HashStr(str string) uint64 {
 	ss := (*stringStruct)(unsafe.Pointer(&str))
 	return uint64(memhash(ss.str, 0, uintptr(ss.len)))

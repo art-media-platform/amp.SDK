@@ -1,4 +1,5 @@
-// package amp provides core types and interfaces for art.media.platform.
+// Authoritative package documentation: amp.core.proto.
+
 package amp
 
 import (
@@ -92,12 +93,11 @@ type PinCommitter interface {
 	CommitTx(tx *TxMsg) error
 }
 
-// TxMsg is the serialized transport container of CRDT (append-only modeled) operations
+// TxMsg is the serialized transport container of CRDT (append-only modeled)
+// operations.
 //
-// A TxMsg carries one encryption context: TxEnvelope.Epoch selects a single planet or
-// channel epoch key that encrypts the entire payload (TxHeader + TxOps + DataStore).
-// All ops in a TxMsg must belong to the same encryption domain.  To write ops under
-// different keys (e.g. two private channels), then author separate TxMsgs.
+// One TxMsg carries one encryption context — see TxEnvelope in amp.core.proto
+// for the invariant and the epoch modes.
 type TxMsg struct {
 	TxEnvelope        // tx fields for tx routing and decryption (in the clear)
 	TxHeader          // tx fields encrypted by Epoch key

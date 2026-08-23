@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-// Contains data structures used by the client for content management and deployment
+// Package crates defines the content-management and deployment structures a
+// client uses to describe, publish, and load an amp asset module (a "crate").
 package crates;
 
 option csharp_namespace = "art.media.platform";

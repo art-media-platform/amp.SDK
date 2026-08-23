@@ -4,10 +4,14 @@ syntax = "proto3";
 // the contract between amp web/native SDKs and an amp host (`ampd`).
 //
 // Field names MUST match the wire shape one-to-one — every external SDK
-// (TypeScript, C#, Swift, future Python) reflects against these names.  These
-// messages are encoded/decoded via encoding/json (not protojson) so the
-// base32 UID marshalers in amp.support.json.go apply: JSON keys are PascalCase
-// and UIDs ride as base32 strings.
+// (TypeScript, C#, Swift, future Python) reflects against these names; do not
+// rename without version-bumping the API surface.  These messages are
+// encoded/decoded via encoding/json (not protojson) so the base32 UID
+// marshalers in amp.support.json.go apply: JSON keys are PascalCase, matching
+// the Go and C# identifiers, and UIDs ride as base32 strings.  Two deliberate
+// exceptions: the protocol-metadata keys on `Item` carry a leading `_`
+// (`_ItemID`, `_EditID`, …) to stay clear of app data keys, and URL query
+// params (`?after=`, `?limit=`, `?planetTag=`) are lowerCamelCase.
 package webapi;
 
 option csharp_namespace = "art.media.platform.webapi";

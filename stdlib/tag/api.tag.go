@@ -1,3 +1,7 @@
+// Package tag defines amp's identity and addressing primitives: the 16-byte
+// UID (also usable as a fixed-precision timestamp), the Name that binds a
+// UTF-8 tag expression to its hash, and the ElementID / Address tuples that
+// locate a value element in amp's CRDT schema.
 package tag
 
 import (

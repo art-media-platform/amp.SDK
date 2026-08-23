@@ -113,8 +113,8 @@ func (mark *BrandMark) IdentityOrZero() *BrandIdentity {
 	return mark.Identity
 }
 
-// IdentityOrZero returns the brand's BrandIdentity, never nil (a zero-value
-// instance when absent) — the nil-safe read path for both Brand and BrandMark.
+// IdentityOrZero returns the brand's BrandIdentity — the Brand twin of
+// BrandMark.IdentityOrZero, with the same nil-safe contract.
 func (brand *Brand) IdentityOrZero() *BrandIdentity {
 	if brand == nil || brand.Identity == nil {
 		return brandIdentityZero

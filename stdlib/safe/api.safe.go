@@ -189,10 +189,12 @@ type EpochKeyStore interface {
 }
 
 // CryptoKitID is a crypto kit's identity — the name-derived tag.UID of its Kit
-// (see the Kit consts, e.g. safe.Crypto.Poly25519.ID).  It is an alias, so
-// a CryptoKitID IS a tag.UID: the open suite namespace carried on the wire and the
-// key into the Kit registry.  The nil UID means "unspecified" — resolve to the
-// epoch default (EffectiveCryptoKit).
+// (see the Kit consts, e.g. safe.Crypto.Poly25519.ID).  It is an alias, so a
+// CryptoKitID IS a tag.UID: the open suite namespace, carried on the wire as a
+// fixed64 X_0/X_1 pair, and the key into the Kit registry.  Trust is pinned in
+// signed EpochTerms — an unrecognized suite UID fails closed at verification.
+// The nil UID means "unspecified" — resolve to the epoch default
+// (EffectiveCryptoKit).
 type CryptoKitID = tag.UID
 
 /*****************************************************

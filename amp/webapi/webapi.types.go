@@ -1,16 +1,6 @@
-// Package webapi defines the wire-level JSON shapes for the amp /api/v1/*
-// surface — the contract between the amp web SDK (@art-media-platform/web and
-// other language bindings) and an amp host (ampd).
+// Authoritative package documentation: webapi.proto.
 //
-// Field names MUST match the wire shape one-to-one — every external SDK
-// (TypeScript, C#, Swift, future Python) reflects against these names.  Do not
-// rename without version-bumping the API surface.  JSON keys are PascalCase,
-// matching the Go (and C#) identifiers — one identifier set across all
-// platforms.  Two deliberate exceptions: the protocol-metadata keys on `Item`
-// carry a leading `_` (`_ItemID`, `_EditID`, …) to stay clear of app data keys,
-// and URL query params (`?after=`, `?limit=`, `?planetTag=`) are lowerCamelCase.
-//
-// Field-type discipline:
+// Go-side field-type discipline for the shapes in this file:
 //   - tag.UID for fields that are ALWAYS UIDs (member IDs, item/edit/from
 //     IDs, citation triples, blob IDs).  The custom MarshalJSON /
 //     UnmarshalJSON on tag.UID encodes/decodes via base32 — string transport
@@ -21,6 +11,7 @@
 //     addresses, free text).
 //   - omitzero (Go 1.24+) on optional tag.UID fields so a zero-UID
 //     suppresses the JSON entry, matching the omitempty behaviour of "".
+
 package webapi
 
 import (
@@ -197,8 +188,8 @@ const (
 // server-side schema knowledge.
 //
 // Withdraw is non-nil only on withdraw ops (Kind = TxOpWithdraw); it carries
-// the AOM SD-withdrawal-consent.md facts (Reason/Rationale/Subject/Delegation).  Non-nil on a
-// non-withdraw op is ignored.
+// the withdrawal facts (Reason/Rationale/Subject/Delegation) — see WithdrawNote.
+// Non-nil on a non-withdraw op is ignored.
 type TxOp struct {
 	Kind     TxOpKind        `json:"Kind"`
 	Channel  string          `json:"Channel"`
@@ -331,8 +322,7 @@ type MediaResolveRequest struct {
 // ItemID/EditID/FromID are typed UIDs.
 //
 // Withdraw is non-nil on withdraw frames (Type = "withdraw") and carries the
-// full AOM SD-withdrawal-consent.md record so subscribers can reconstruct it without a
-// follow-up read.
+// full WithdrawNote so subscribers can reconstruct it without a follow-up read.
 type SubscribeFrame struct {
 	Type      string          `json:"Type"`
 	Channel   string          `json:"Channel,omitempty"`
