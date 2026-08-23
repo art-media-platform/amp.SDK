@@ -20,7 +20,7 @@ tags Crypto {
     Secp256k1 "amp.crypto.secp256k1" // secp256k1 (EVM-wallet interop)
 }
 
-// Phrase — the canonical safe.Phrase vocabulary (AOM SD-did-identity.md §12.1):
+// Phrase — the canonical safe.Phrase vocabulary (AOM SD-canonization-spec.md §1.5):
 // a phrase written down in one AMP app must restore in any other, so every
 // consumer (Go, C#, web) parses this ONE whitespace-separated string at
 // runtime.  Properties:

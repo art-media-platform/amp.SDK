@@ -175,10 +175,9 @@ tags Attr {
             LawMemberKind_Process   "Process"
         }
 
-        // Modal Attestation modalities (AOM SD-modal-attestation.md).
-        // Attestation.Modality is a Tag resolving to one of these UIDs.
-        // Communities + apps may register additional modalities.  Zero UID =
-        // unspecified.
+        // Modal Attestation modalities.  Attestation.Modality is a Tag
+        // resolving to one of these UIDs.  Communities + apps may register
+        // additional modalities.  Zero UID = unspecified.
         LawAttestationModality "AttestationModality" {
             LawAttestationModality_Asserted    "Asserted"
             LawAttestationModality_Witnessed   "Witnessed"
@@ -192,9 +191,8 @@ tags Attr {
             LawAttestationModality_Retracted   "Retracted"
         }
 
-        // Equivalence strengths (AOM SD-address-equivalence.md).
-        // Equivalence.Strength is a Tag resolving to one of these UIDs.  Zero
-        // UID = unspecified.
+        // Equivalence strengths.  Equivalence.Strength is a Tag resolving to
+        // one of these UIDs.  Zero UID = unspecified.
         LawEquivalenceStrength "EquivalenceStrength" {
             LawEquivalenceStrength_Identity    "Identity"
             LawEquivalenceStrength_Translation "Translation"
@@ -382,16 +380,16 @@ const HomeVars {
     int32 MaxTargetFPS     = 120;
 }
 
-// amp.Terminal emulator/grid + shuttle transport defaults (AD-app-terminal
-// §4.4, §5.3).  A zero serialized/config field resolves here at point of use,
-// never in a C# field initializer.  Ms fields multiply at use.
+// amp.Terminal emulator/grid + shuttle transport defaults.  A zero
+// serialized/config field resolves here at point of use, never in a C# field
+// initializer.  Ms fields multiply at use.
 const Terminal {
     string ContentType = "application/x-amp-terminal"; // session MediaLink label — routes the channel to the terminal shuttle runtime
 
     int32 DefaultCols           = 80;      // PTY grid columns
     int32 DefaultRows           = 24;      // PTY grid rows
     int32 DefaultScrollbackRows = 1000;    // emulator scrollback rows
-    int64 DefaultKeyframeMs     = 10000;   // keyframe cadence — the DVR replay bound (AOM AD-app-terminal.md §10-4)
+    int64 DefaultKeyframeMs     = 10000;   // keyframe cadence — the DVR replay bound
     int64 DefaultJogMs          = 16000;   // transport jog step
     int64 DefaultReplayResidentBytes = 8388608; // replay-window residency budget (Buffered cap)
 }
