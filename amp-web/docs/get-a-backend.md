@@ -11,7 +11,7 @@ Your amp contact hands you three things:
 
 | Item | Example | Where it goes |
 |---|---|---|
-| Node URL | `https://prod.plan.tools` | `vaultUrl` / `VITE_AMP_VAULT_URL` |
+| Node URL | `https://{your-node}` | `vaultUrl` / `VITE_AMP_VAULT_URL` |
 | Planet tag | `my-app-planet` | `planetTag` / `VITE_AMP_PLANET_TAG` |
 | Invite URL + passphrase | `https://{fqdn}/invite#…` | `client.acceptInvite(…)` after login (SKILL §4.7) |
 

@@ -25,7 +25,7 @@ You connect to an `ampd` node an operator runs — you do not run one
 
    ```
    cp .env.example .env.local
-   # VITE_AMP_VAULT_URL=<the operated node, e.g. https://prod.plan.tools>
+   # VITE_AMP_VAULT_URL=<the operated node, e.g. https://{your-node}>
    # VITE_AMP_PLANET_TAG=<the board planet tag or UID, handed to you>
    ```
 

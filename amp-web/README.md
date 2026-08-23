@@ -14,7 +14,8 @@ and copied into this SDK bundle at `webapi/webapi.types.go`.
 
 > **You connect to an operated node — you do not run one.** The vault (`ampd`) is
 > server software an operator runs; this package is a browser / Node **client**
-> that talks to it over HTTPS. For Maplable that node is `https://prod.plan.tools`.
+> that talks to it over HTTPS. Your operator supplies the node URL — this SDK's
+> examples write it `https://{your-node}`.
 > Building a Go server means you're off the path — see `SKILL-amp-web-SDK.md` §0.
 
 ## Install
@@ -56,7 +57,7 @@ import { AmpProvider, AmpWebClient, useAmpAuth, useAmpClient, useAmpQuery, useAm
 
 // 1. Point the client at the operated amp node + your planet (you don't run the node).
 const client = new AmpWebClient({
-  vaultUrl:  import.meta.env.VITE_AMP_VAULT_URL,   // operated node — e.g. https://prod.plan.tools
+  vaultUrl:  import.meta.env.VITE_AMP_VAULT_URL,   // operated node — e.g. https://{your-node}
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG,  // the planet your app reads/writes
 });
 

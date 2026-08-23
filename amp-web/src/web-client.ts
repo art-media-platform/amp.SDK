@@ -68,7 +68,7 @@ const BRAND_ATTR = 'amp.Brand';
 const BRAND_ITEM_ID = '5r1-24qj5wjft5-vbp7wg1pf4-8ef';
 
 export interface AmpWebClientOpts {
-  vaultUrl: string;       // operated node URL — e.g. https://prod.plan.tools
+  vaultUrl: string;       // operated node URL — e.g. https://{your-node}
 
   /**
    * The planet this client reads/writes by default — it rides every REST call

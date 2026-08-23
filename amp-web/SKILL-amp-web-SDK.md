@@ -18,10 +18,11 @@ stop — wrong path. Your whole footprint is one TypeScript package + HTTPS call
   registry is **not** available during beta — it lands when the SDK publishes at
   **v400**. We're pre-v400 today, so install the versioned bundle locally.
 - **Your server already exists.** You connect over HTTPS to an `ampd` node an
-  **operator runs for you** — you do not run, build, or host one. For Maplable that
-  node is **`https://prod.plan.tools`**. (`:5193`, seen elsewhere in this doc, is
-  only the local-dev default; an operated node is plain TLS on 443.) Where your
-  node and planet come from: [`docs/get-a-backend.md`](docs/get-a-backend.md).
+  **operator runs for you** — you do not run, build, or host one. Your operator
+  supplies its URL; this document writes it **`https://{your-node}`**. (`:5193`,
+  seen elsewhere in this doc, is only the local-dev default; an operated node is
+  plain TLS on 443.) Where your node and planet come from:
+  [`docs/get-a-backend.md`](docs/get-a-backend.md).
 - **First goal — one round-trip:** log in → write one item → read it back (~20
   lines, below). If that round-trips, you're talking to the vault and the rest of
   this document is detail.
@@ -38,7 +39,7 @@ stop — wrong path. Your whole footprint is one TypeScript package + HTTPS call
 import { AmpWebClient } from '@art-media-platform/web';
 
 const client = new AmpWebClient({
-  vaultUrl:  'https://prod.plan.tools',   // the operated node (NOT one you run)
+  vaultUrl:  'https://{your-node}',       // the operated node (NOT one you run)
   planetTag: '<handed to you>',
 });
 
@@ -129,13 +130,13 @@ Publishing to npm as `@art-media-platform/web` lands at v400 — until then, ins
 
 ### Provider Configuration
 
-`vaultUrl` is the HTTPS address of an `ampd` node an **operator runs for you** — you never run, build, or host one (§0). For Maplable it is `https://prod.plan.tools`.
+`vaultUrl` is the HTTPS address of an `ampd` node an **operator runs for you** — you never run, build, or host one (§0).  Your operator supplies it (`https://{your-node}`).
 
 ```tsx
 import { AmpProvider, AmpWebClient } from '@art-media-platform/web';
 
 const client = new AmpWebClient({
-  vaultUrl: import.meta.env.VITE_AMP_VAULT_URL,    // operated node — e.g. https://prod.plan.tools
+  vaultUrl: import.meta.env.VITE_AMP_VAULT_URL,    // operated node — e.g. https://{your-node}
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG,  // the planet your app reads/writes
 });
 // planetTag is the client's default planet: it rides every REST call unless a
@@ -154,7 +155,7 @@ export default function App() {
 ### Environment Variables
 
 ```env
-VITE_AMP_VAULT_URL=https://prod.plan.tools   # the operated node (:5193 is only the local-dev default)
+VITE_AMP_VAULT_URL=https://{your-node}   # the operated node (:5193 is only the local-dev default)
 VITE_AMP_PLANET_TAG=my-planet-tag
 
 # When reading anonymous shares, point at the share planet:
@@ -483,7 +484,7 @@ POST /api/v1/invite/accept            (Bearer)
   brute-forceable — see SECURITY-amp-web-SDK.md.
 - Returns `501` `Code: "Unimplemented"` on the in-memory dev backend (§14.7 —
   the invite family needs the host-bridged backend); live on a host-bridged
-  node such as `prod.plan.tools`.
+  operated node.
 - Issuing invites is the operator side of this — `POST /api/v1/invite/issue` (§14.4).
 
 From the SDK:
@@ -532,14 +533,14 @@ response into `$AMP_TOKEN`:
 ```bash
 # Wallet (SIWE) needs a signed challenge — easiest via the SDK login, which then
 # holds the session for you; the email scheme is a plain POST once provisioned.
-AMP_TOKEN=$(curl -sX POST https://prod.plan.tools/api/v1/login \
+AMP_TOKEN=$(curl -sX POST https://{your-node}/api/v1/login \
   -H 'Content-Type: application/json' \
   -d '{"Scheme":"email","Email":"you@org","Password":"…"}' | jq -r .SessionToken)
 
-curl -sX POST https://prod.plan.tools/api/v1/invite/accept \
+curl -sX POST https://{your-node}/api/v1/invite/accept \
   -H "Authorization: Bearer $AMP_TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"InviteText":"https://prod.plan.tools/invite#…","Passphrase":"…"}'
+  -d '{"InviteText":"https://{your-node}/invite#…","Passphrase":"…"}'
 ```
 
 ---
@@ -1474,7 +1475,7 @@ This section answers the architecture questions that come up when an existing pr
 
 An `ampd` host is a full peer: it stores, signs, encrypts, and relays.
 
-- **Shared cloud vault (the default for a web app).** One `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab; your client connects to it over HTTPS (for Maplable, `https://prod.plan.tools`). Simplest to operate; the app needs the server reachable to read / write.
+- **Shared cloud vault (the default for a web app).** One `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab; your client connects to it over HTTPS (`https://{your-node}`). Simplest to operate; the app needs the server reachable to read / write.
 - **Embedded local vault (ADVANCED — bundled desktop/Electron only; *not* a web build).** Bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; reads, writes, and seals work with no network — this is what preserves an **offline-first** desktop product. It is the one topology that ships the Go host (cross-compile per target — darwin-arm64/x64, win-x64/arm64, linux-x64 — and code-sign each), and it is **not** part of a web-SDK integration. Reach for it only if you are explicitly building a bundled native app.
 - **Hybrid.** An embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. The native amp model for a desktop app, not a bolt-on.
 - **Self-hosted & federated (the licensee path).** A partner runs their *own* `ampd` and is therefore their own operator — their own CORS, planets, and admin, with no per-deploy config handoff to you. They join the wider network by **federating** with a parent deploy, so their planets are discoverable through it (and vice-versa). See §14.8.

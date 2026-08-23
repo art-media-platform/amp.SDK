@@ -16,7 +16,7 @@ import { ampErrorFromResponse } from './errors.js';
 import type { EmailCredential } from './types.js';
 
 export interface AmpAdminClientOpts {
-  vaultUrl: string;      // operated node URL — e.g. https://prod.plan.tools
+  vaultUrl: string;      // operated node URL — e.g. https://{your-node}
   adminToken: string;    // operator Bearer (allowlist-gated host-side); lives in server env only
 }
 

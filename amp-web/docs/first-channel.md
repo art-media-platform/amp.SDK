@@ -22,7 +22,7 @@ npm install ./amp-web-SDK
 Create `.env.local`:
 
 ```env
-VITE_AMP_VAULT_URL=https://prod.plan.tools
+VITE_AMP_VAULT_URL=https://{your-node}
 VITE_AMP_PLANET_TAG=
 ```
 
