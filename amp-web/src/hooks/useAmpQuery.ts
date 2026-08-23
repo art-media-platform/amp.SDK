@@ -88,7 +88,7 @@ export function useAmpQuery<T>(
             next[idx] = updated;
             return next;
           }
-          // Insert in _ItemID byte order — the documented list order (§4.2);
+          // Insert in _ItemID byte order — the documented list order (SKILL §4.2);
           // a tail append would break it for any UID below the last row.
           const at = prev.findIndex(row => row._ItemID > event.ItemID);
           if (at < 0) return [...prev, updated];

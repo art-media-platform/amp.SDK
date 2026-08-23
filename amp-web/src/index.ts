@@ -97,9 +97,9 @@ export { useAmpBrand } from './hooks/useAmpBrand.js';
 export { CryptoKitID, base64ToBytes, bytesToBase64, open, seal } from './crypto/index.js';
 export type { AmpCrypto, KeyPair, KitOps, PubKeyRef } from './crypto/index.js';
 
-// safe.Phrase — the canonical identity-seed export vocabulary (SD-did-identity
-// §12.1); byte-compatible with the Go codec, so a phrase written down in one
-// AMP app restores in any other.
+// safe.Phrase — the canonical identity-seed export vocabulary (`Phrase.Words`
+// in src/generated/safe.consts.ts); byte-compatible with the Go codec, so a
+// phrase written down in one AMP app restores in any other.
 export {
   PhraseChecksumSize,
   PhraseWordCount,

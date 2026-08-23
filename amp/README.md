@@ -14,9 +14,9 @@ A **channel** is a `(NodeID, AttrID)` address space with a behavior contract.
 - **`AttrID`** — a typed attribute on that node (the "what"): a proto.Message schema you register.
 - **Behavior** — what your code does when a client *pins* (subscribes to) that address: what state it serves, and how it handles writes.
 
-Every piece of state in AMP has an [`amp.Address`](../stdlib/tag/api.tag.go) — `planet → node → attr → item → edit`.  A channel is the slice of that address space your app owns.  Writes are [`TxMsg`](api.apps.go) transactions of CRDT ops; two members editing the same item offline converge automatically on sync.
+Every piece of state in AMP has a [`tag.Address`](../stdlib/tag/api.tag.go) — `planet → node → attr → item → edit`.  A channel is the slice of that address space your app owns.  Writes are [`TxMsg`](api.apps.go) transactions of CRDT ops; two members editing the same item offline converge automatically on sync.
 
-> **Addressing:**  A `tag.UID` is `[2]uint64` — **16 bytes**.  An [`Address`](../stdlib/tag/api.tag.go) is built from them: `NodeID · AttrID · ItemID · EditID`.  So targeting one independently-addressed, access-controlled, individually-encryptable cell costs **64 bytes** on the wire, plus a compact AEAD envelope.  Spend UIDs like they're free — because they very nearly are.  A planet carries *billions* of channels and items before the address space is ever what runs out.
+> **Addressing:**  A `tag.UID` is `[2]uint64` — **16 bytes**.  A [`tag.Address`](../stdlib/tag/api.tag.go) is built from them: `NodeID · AttrID · ItemID · EditID`.  So targeting one independently-addressed, access-controlled, individually-encryptable cell costs **64 bytes** on the wire, plus a compact AEAD envelope.  Spend UIDs like they're free — because they very nearly are.  A planet carries *billions* of channels and items before the address space is ever what runs out.
 
 > **Vocabulary:** "Channel" is everyday shorthand.  The addressing primitive is always `(NodeID, AttrID)` with a behavior — keep that exact when it matters; stay casual when it doesn't.
 
@@ -243,7 +243,7 @@ example that stays inside this line is [`app.hello`](https://github.com/art-medi
 - [`../stdlib/tag/`](../stdlib/tag/README.md) — UID derivation, `Address`, the addressing algebra
 - [`../stdlib/task/`](../stdlib/task/api.task.go) — the goroutine lifecycle model every Pin lives in
 - [`../amp-web/`](../amp-web/) — `@art-media-platform/web`, the TypeScript/React consumer; full contract in [`SKILL-amp-web-SDK.md`](../amp-web/SKILL-amp-web-SDK.md)
-- [`amp.planet/AOM/AOM.md`](https://github.com/art-media-platform/amp.planet/blob/main/AOM/AOM.md) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Manifold, commerce
+- [`amp.planet/AOM/0-amp-operations-manual.md`](https://github.com/art-media-platform/amp.planet/blob/main/AOM/0-amp-operations-manual.md) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Manifold, commerce
 
 ---
 

@@ -2,8 +2,8 @@
  * Crypto entry point — kit registry + session-bound AmpCrypto.
  *
  * Poly25519 is registered eagerly (default kit, bundled).  P-256 and
- * secp256k1 lazy-load on first use per AUDIT §2.10 — they're absent from
- * the default bundle so cards/widgets that only need BYOK stay small.
+ * secp256k1 lazy-load on first use — they are absent from the default bundle
+ * so cards/widgets that only need BYOK stay small.
  */
 
 import { poly25519KitOps } from './poly25519.js';

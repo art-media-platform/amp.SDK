@@ -1,7 +1,7 @@
 /**
  * safe.Phrase codec — the canonical identity-seed export vocabulary
- * (SD-did-identity §12.1): a phrase written down in one AMP app restores in
- * any other.
+ * (`Phrase.Words` in src/generated/safe.consts.ts): a phrase written down in
+ * one AMP app restores in any other.
  *
  * Byte-compatible with amp.SDK/stdlib/safe/phrase.go: each word carries 8
  * bits, the trailing PhraseChecksumSize words are the leading bytes of the

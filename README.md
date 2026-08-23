@@ -61,7 +61,7 @@ Identity and key-receipt have opposing rotation needs, so AMP splits them:
 
 ### [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) Addressing
 
-Every piece of state has a unique [`amp.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is [guaranteed](https://crdt.tech/).  The [`amp.Tag` system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/README.md) provides UID derivation from strings.
+Every piece of state has a unique [`tag.Address`](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/api.tag.go): _planet → channel → attribute → item → edit_.  When two members edit the same item offline and later sync, their edits merge automatically.  No authoritative server; every peer holds a replica; convergence is [guaranteed](https://crdt.tech/).  The [`amp.Tag` system](https://github.com/art-media-platform/amp.SDK/blob/main/stdlib/tag/README.md) provides UID derivation from strings.
 
 ### Epoch Rotation
 
@@ -194,7 +194,7 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 4. `make build` produces `ampd` (standalone server) and `libampd` (embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
 
-> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in [`amp.planet/AOM/AOM.md`](https://github.com/art-media-platform/amp.planet/blob/main/AOM/AOM.md).
+> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in [`amp.planet/AOM/0-amp-operations-manual.md`](https://github.com/art-media-platform/amp.planet/blob/main/AOM/0-amp-operations-manual.md).
 
 ---
 

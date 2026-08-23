@@ -173,8 +173,9 @@ const SHAPES: Record<string, ShapeSpec> = {
   InviteRedemptionEntry: { required: ['Member', 'RedeemedAt', 'Rank', 'InRank'] },
 
   // NOTE: no TS interface models the governance-grant family yet (the SDK has
-  // no governance API — raw-fetch per the §12.1 carve-out); these assert the
-  // Go shape so the fixture stays honest for the client that adds it.
+  // no governance API — raw-fetch per the SKILL §12 item-1 carve-out for
+  // endpoints with no client method); these assert the Go shape so the fixture
+  // stays honest for the client that adds it.
   // GrantEntry.Access takes any AccessLevel name; CitedAttestations elements
   // are packed base32 Address strings (opaque — not nested wire objects).
   GrantEntry: {

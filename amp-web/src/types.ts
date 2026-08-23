@@ -267,7 +267,7 @@ export interface BrandIdentity {
   AppDomain?: string;    // canonical domain the planet presents as
   AppDesc?: string;
   URLSchemes?: string[]; // deep-link schemes the planet answers to
-  NamedBy?: AmpTag;      // the federation naming this planet — the §4.6 back-edge
+  NamedBy?: AmpTag;      // the federation naming this planet — the SKILL §4.6 back-edge
 }
 
 /** One per-platform install target (amp.AppTarget).  Platform is the PlatformID enum's wire integer. */
