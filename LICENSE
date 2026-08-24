@@ -19,7 +19,17 @@ else.
    formats, and behavior may change before general availability. AMP has no
    obligation to provide support, updates, or backward compatibility during beta.
 
-3. RESTRICTIONS
+3. DAEMON (ampd) — DEVELOPMENT AND EVALUATION ONLY
+   Where this SDK is delivered as a kit that includes the ampd node daemon, that
+   daemon is licensed for DEVELOPMENT AND EVALUATION USE ONLY. You may run it to
+   develop, test, and evaluate against AMP. You may NOT operate it in production
+   — serving real users or real data, or backing any live, public, or
+   revenue-bearing service, internal or external. Production operation of ampd,
+   and any use of the libampd embedding library, require a separate commercial
+   license from AMP. This clause limits the daemon only; applications you build
+   with it remain governed by Section 1.
+
+4. RESTRICTIONS
    You may not:
    (a) redistribute, sublicense, sell, or publish the Software itself, except as
        compiled or embedded into, and required to run, your own application;
@@ -29,27 +39,27 @@ else.
    Connecting to AMP-operated infrastructure may additionally require accepting a
    separate developer agreement and identifying yourself to AMP.
 
-4. RESERVATION OF RIGHTS
+5. RESERVATION OF RIGHTS
    All rights not expressly granted are reserved by AMP. No rights are granted by
    implication or estoppel.
 
-5. PATH TO OPEN SOURCE
+6. PATH TO OPEN SOURCE
    AMP intends to release this SDK under an open-source license when resources
    allow and the business is more stable. No particular license, timeline, or
    release milestone is committed. Unless and until such a release occurs,
    these beta terms govern.
 
-6. NO WARRANTY
+7. NO WARRANTY
    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
-7. LIMITATION OF LIABILITY
+8. LIMITATION OF LIABILITY
    IN NO EVENT SHALL AMP BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
    WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
    IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-8. TERMINATION
+9. TERMINATION
    This license terminates automatically if you breach it, or upon notice from AMP.
    On termination you must stop using and destroy your copies of the Software,
    except as embedded in already-deployed applications.
