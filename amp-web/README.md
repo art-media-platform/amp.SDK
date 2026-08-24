@@ -7,6 +7,7 @@ Talks the `ampd` `app.www` wire contract — defined in
 and copied into this SDK bundle at `webapi/webapi.types.go`.
 
 > **Beta.** Distributed in the `amp-web-SDK` bundle — not yet on npm.
+> Publishing to npm as `@art-media-platform/web` lands at **v400**.
 > Get the latest from your amp contact, or build it from an `amp.SDK`
 > checkout: `amp-web/pack.sh` → `dist/amp-web-SDK-vNNN[.P].zip`.
 > AMP intends to move to public releases under an open license when resources
@@ -230,9 +231,14 @@ there is no public npm channel yet — you integrate a versioned bundle
 at build time (the committed `package.json` carries only the `0.0.0-dev`
 placeholder). **Pin the bundle you integrated** (vendor it, or commit the version)
 rather than floating;
-upgrade deliberately and re-run your contract tests. AMP intends to move the SDK
-to public releases under an open license, with a semver compatibility promise,
-when resources allow and the business is more stable.
+upgrade deliberately and re-run your contract tests.
+
+The version number is a TRL maturity band, not a feature count — the major
+digit states how ready the software is. AMP is pre-**v400**: **v300** is beta
+stable (architecture complete and dependable, still labeled beta), **v400** is
+production ready. **v400** is what the npm channel waits on — publishing to npm
+as `@art-media-platform/web`, under an open license with a semver compatibility
+promise, lands at that band. No timeline is committed.
 
 Deployment topologies, offline-auth, device identity, and membership-tier
 guidance live in [`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md) §14.

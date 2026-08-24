@@ -14,13 +14,23 @@
 | `000` | Conceptual | An idea with maybe some code. Could become anything. | You have a repo. |
 | `100` | Alpha | Basic implementation exists.  Demonstrates value proposition. | It runs and does things related to its claims. |
 | `200` | Beta (early) | Useful, testable, value is self-evident. | External people can use it and file meaningful bugs. |
-| `300` | Beta (late) | Core capability maturity; architecture complete and encompassing. | Architecture survives adversarial review.  Core claims are proven under pressure, not just demos. |
+| `300` | Beta (stable) | Core capability maturity; architecture complete and encompassing.  Dependable enough to build on — and to stay in. | Architecture survives adversarial review.  Core claims are proven under pressure, not just demos. |
 | `400` | Production Ready | Core behavior validated, users see value decisively. | You'd give this to a paying customer with a straight face.  Docs, error handling, and upgrade paths exist. |
 | `500` | In-Production | Real teams and workflows depend on this. | Actual humans rely on it daily.  Feedback is flowing.  Breaking changes require migration paths. |
 | `600` | Scaled | Operates under large-scale real-world workloads. | Performance, observability, and ops tooling are proven — not just the features.  You have on-call stories. |
 | `700` | Mature | Polished, predictable, sorted. | The API is stable.  Upgrades are boring.  New contributors can onboard without archaeology.  The codebase teaches itself. |
 | `800` | Reference | Industry reference — what others measure against. | External projects depend on or cite yours.  Auditors, standards bodies, or regulatory reviews have signed off.  Runs critical infrastructure. |
 | `900` | Venerable | Generational durability.  Software people forget is there because it just works. | Multi-year production across diverse environments.  The failure modes are documented because they happened and were survived.  Think SQLite, OpenSSH, zlib. |
+
+---
+
+## `300` — Beta Stable
+
+`300` is a band a product can honestly live in for years.  The architecture is complete, the core claims have survived pressure, and people can build real work on it — while the label still reads *beta*, because the production bar at `400` (docs, error handling, upgrade paths, handing it to a paying customer with a straight face) has not been cleared yet.
+
+Gmail ran in beta for five years with millions of people depending on it daily.  That is the shape: a long-lived, dependable beta is a legitimate place to be, not a failure to ship.  `400` is a different claim, earned separately.
+
+So `300` is a commitment rather than a hedge — it says the architecture is settled and the intent is to keep it that way.
 
 ---
 
@@ -50,7 +60,7 @@ If a team burns through an entire band without moving up, that's useful signal: 
 
 ## Where is art.media.platform?
 
-The amp **substrate** — the wire format, CRDT addressing, key/identity primitives, and the channel contract — is late beta: architecture-complete, approaching **v300**.
+The amp **substrate** — the wire format, CRDT addressing, key/identity primitives, and the channel contract — is architecture-complete and approaching **v300**, the beta-stable band above.
 
 Release tags read `v0.NNN` (e.g. `v0.278.0`) — `NNN` counts toward the three-digit band above, and the leading `0.` says that band is not yet reached.  **A pre-v300 `v0.NNN` tag is a freeze candidate:** the wire format is in draft freeze and still open to change as fixes and polish land.  **`v300` and later are frozen.**
 
