@@ -2,12 +2,13 @@
 
 The native rail of AMP's two partner kits. Its sibling, **amp-web-SDK**, is the
 web rail — a pure JS/TS package that never carries a native binary. This kit
-carries the native surface: the `amp` CLI plus the curated AMP Operations
-Manual (AOM) shelves a CLI partner works from.
+carries the native surface: the `amp` CLI and the `ampd` node daemon, plus the
+curated AMP Operations Manual (AOM) shelves a CLI partner works from.
 
 Use of this kit is governed by the bundled `LICENSE` (Beta Evaluation
 License) — evaluation and interoperating-app use, AS-IS, no redistribution of
-the kit itself.
+the kit itself. `bin/ampd` carries one further limit: development and
+evaluation only, production operation not licensed (`LICENSE` §3).
 
 References marked (internal) name AMP-internal design docs not shipped in this bundle — background provenance, not required reading.
 
@@ -16,6 +17,7 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 | Path | What It Is |
 |---|---|
 | `bin/amp` | the `amp` CLI, built for the platform in the kit filename |
+| `bin/ampd` | the `ampd` node daemon — development and evaluation use only (see Running a Node Locally) |
 | `AOM/O4-standard-procedures.md` | the partner subset of AMP's standard procedures — retrieve/embed/redeem an invite (§4.4–§4.6), publish a name (§4.10), bring up a local follower node (§4.17), the mint-and-connect walk (§4.18) |
 | `AOM/DD-name-service.md` | the naming and trust design: how planets are named, branded, resolved, and verified |
 | `SKILL-amp-web-SDK.md` | the web-rail skill doc — drop it into a web project to build against `app.www`; the web kit itself ships separately as amp-web-SDK |
@@ -39,9 +41,37 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 4. Confirm membership by publishing a name (§4.10). The end-to-end ladder —
    found, invite, redeem, brand, publish, resolve — is §4.18.
 
-No reachable node yet? §4.17 brings up a local follower node for client
-dogfooding. No AMP-operated eval planet endpoint is named in this kit
-revision — first contact runs against your operator's node.
+No reachable node yet? `bin/ampd` is one — §4.17 brings up a local follower
+node for client dogfooding. No AMP-operated eval planet endpoint is named in
+this kit revision; first contact runs against your operator's node, or against
+the node you run yourself.
+
+## Running a Node Locally
+
+`bin/ampd` is the AMP node daemon: the server software an operator runs, the
+thing `bin/amp` and an amp-web-SDK app both talk to. It ships here so the kit
+is self-contained — you can work the whole ladder (found, invite, redeem,
+brand, publish, resolve) on your own machine without waiting on someone else's
+endpoint.
+
+What it is for in this kit:
+
+- the local follower node of `AOM/O4-standard-procedures.md` §4.17 — a real
+  peer for the CLI and for a web app under development;
+- serving your own AppModule against a node you control while you build it;
+- running the §4.18 mint-and-connect walk end to end.
+
+`ampd -h` prints the full flag set. §4.17 gives the working invocation and the
+one trap worth knowing up front: `-port.host` does not move the HTTP port, so
+set `-port.http` too, or a second local node collides on the default. Point
+`-path.persist` and `-path.cache` at directories reserved for the development
+node.
+
+**Production operation is not licensed.** Serving real users or real data —
+any live, public, or revenue-bearing service, internal or external — needs a
+commercial license (`LICENSE` §3), as does `libampd`, the embedding library,
+which this kit does not carry. The line is simple: clients are free, running
+a node for others and embedding AMP in a shipped product are not.
 
 ## Invite Passphrase Floor
 
@@ -67,8 +97,8 @@ follow the legend above.
 
 AMP is pre-release; the kit is versioned by its build record, not a source
 tag. `VERSION` carries one line: build time (UTC), the kit's full name, the
-SHA-256 of `bin/amp`, and the source commits it was built from. The kit
-filename carries the rest of the identity:
+SHA-256 of each shipped binary, and the source commits it was built from. The
+kit filename carries the rest of the identity:
 
 ```
 amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip
@@ -76,10 +106,11 @@ amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip
 
 ## SDK Access Tiers
 
-This is the **Free — Evaluation** kit: the client surface. Higher SDK access
-tiers add the operator and embedding surfaces (production `ampd`, `libampd`,
-and the whitelabel authoring slice) under commercial license. The kit name
-never changes across tiers — contents and license do. Ask your AMP contact
-about Creator and Whitelabel/OEM licensing.
+This is the **Free — Evaluation** kit: the client surface, plus a node you may
+run for development and evaluation. Higher SDK access tiers add the operator
+and embedding surfaces — production `ampd` operation, `libampd`, and the
+whitelabel authoring slice — under commercial license. The kit name never
+changes across tiers; contents and license do. Ask your AMP contact about
+Creator and Whitelabel/OEM licensing.
 
 Contact: licensing@art.media.platform

@@ -4,13 +4,19 @@
 #   amp.SDK/amp-native/pack.sh v0.NNN.N
 #     →  amp.SDK/dist/amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip
 #
+# Binaries: the `amp` CLI and `ampd`, the node daemon.  The free tier's `ampd`
+# is the SAME binary the paid tiers ship, with production operation forbidden
+# by the bundled LICENSE (§3) — so an evaluator can run the SDK's Integration
+# Flow end to end.  `libampd` (the embedding surface) and production node
+# operation stay paid-tier (ED-whitelabel-stampout §9.9).
+#
 # Pre-release version identity: amp.planet carries no release tags, so the
 # version is the REQUIRED argument (the release-record version), and the kit
-# carries a VERSION build record (UTC time, kit name, binary SHA-256, source
-# commits).  Platform is the build host's go env (darwin-arm64 first).
+# carries a VERSION build record (UTC time, kit name, per-binary SHA-256,
+# source commits).  Platform is the build host's go env (darwin-arm64 first).
 #
-# Inputs: the sibling amp.planet checkout (CLI source + private AOM) and this
-# repo.  AOM shipping is an explicit allowlist with the same tooling as
+# Inputs: the sibling amp.planet checkout (CLI + daemon source + private AOM)
+# and this repo.  AOM shipping is an explicit allowlist with the same tooling as
 # amp-web-SDK (pack-aom-public.mjs marker subset + pack-delink.mjs link gate —
 # one authoritative site, reused from ../amp-web).  A listed doc that is
 # missing FAILS the build — never warn-and-skip.
@@ -43,11 +49,14 @@ KIT="amp-native-SDK-$TIER-$VER-$PLATFORM"
 STAGE="$SDK/build/amp-native-SDK"                       # extracts to ./amp-native-SDK
 OUT="$SDK/dist"
 ZIP="$OUT/$KIT.zip"
+BINARIES=(amp ampd)
 
-if [ ! -d "$PLANET/cmd/amp" ]; then
-  echo "ERROR: amp CLI source not found at $PLANET/cmd/amp (set AMP_PLANET_SRC)" >&2
-  exit 1
-fi
+for cmd in "${BINARIES[@]}"; do
+  if [ ! -d "$PLANET/cmd/$cmd" ]; then
+    echo "ERROR: $cmd source not found at $PLANET/cmd/$cmd (set AMP_PLANET_SRC)" >&2
+    exit 1
+  fi
+done
 if [ ! -d "$AOM_SRC" ]; then
   echo "ERROR: AOM not found at $AOM_SRC — the kit ships the AOM shelves (set AMP_NATIVE_AOM_SRC)" >&2
   exit 1
@@ -55,10 +64,13 @@ fi
 
 echo "+++ $KIT"
 
-# 1. Build the amp CLI for the host platform.
+# 1. Build the host-platform binaries.  The planet checkout is a read-only
+#    input: go build writes only to $STAGE.
 rm -rf "$STAGE"
 mkdir -p "$STAGE/bin"
-( cd "$PLANET/cmd/amp" && touch main.go && go build -o "$STAGE/bin/amp" . )
+for cmd in "${BINARIES[@]}"; do
+  ( cd "$PLANET/cmd/$cmd" && go build -o "$STAGE/bin/$cmd" . )
+done
 
 # 2. Stage the entry docs + license.  The web-rail SKILL doc ships with its
 #    own support docs (its relative links must resolve in-bundle; delink gates).
@@ -100,13 +112,16 @@ done
 #    bundle, or is rewritten to the `(internal)` token; dangling links FAIL.
 node "$SDK/amp-web/pack-delink.mjs" "$STAGE" "$AOM_SRC"
 
-# 5. VERSION build record (one line, deploy-log shape: time, name, hash,
-#    source commits).
-BIN_SHA="$(shasum -a 256 "$STAGE/bin/amp" | cut -d' ' -f1)"
+# 5. VERSION build record (one line, deploy-log shape: time, name, per-binary
+#    hash, source commits).
+BIN_SHAS=""
+for cmd in "${BINARIES[@]}"; do
+  BIN_SHAS="$BIN_SHAS $cmd:$(shasum -a 256 "$STAGE/bin/$cmd" | cut -d' ' -f1)"
+done
 PLANET_REV="$(git -C "$PLANET" rev-parse --short HEAD)"
 SDK_REV="$(git -C "$SDK" rev-parse --short HEAD)"
 printf '%s  %s  %s  amp.planet@%s amp.SDK@%s\n' \
-  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$KIT" "$BIN_SHA" "$PLANET_REV" "$SDK_REV" \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$KIT" "${BIN_SHAS# }" "$PLANET_REV" "$SDK_REV" \
   > "$STAGE/VERSION"
 
 # 6. Strip cruft; zip from the build root so the archive contains a single
