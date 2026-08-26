@@ -15,8 +15,8 @@ export const Crypto = {
     Secp256k1: { id: [0x1906FAF4F88AB854n, 0x6328B92D89014254n], text: "amp.crypto.secp256k1" },  // 0t0-vxg9y4br1b-66b5t5q4h2-hkn
 } satisfies Record<string, TagName>;
 
-// ─── Phrase — the canonical safe.Phrase vocabulary (SD-did-identity §12.1): a ───
-// phrase written down in one AMP app must restore in any other, so every
+// ─── Phrase — the canonical safe.Phrase vocabulary (AOM SD-canonization-spec.md §1.5): ───
+// a phrase written down in one AMP app must restore in any other, so every
 // consumer (Go, C#, web) parses this ONE whitespace-separated string at
 // runtime.  Properties:
 //   - exactly 256 unique words (8 bits/word → byte-aligned entropy)

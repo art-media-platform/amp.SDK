@@ -21,6 +21,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Const carries safe package constants that must agree across languages.
 type Const int32
 
 const (
@@ -71,11 +72,11 @@ func (Const) EnumDescriptor() ([]byte, []int) {
 // Algorithm, hybrid composition, lifecycle, and hardware backing are
 // expressed elsewhere (CryptoKit, lifecycle metadata, GuardInfo).
 //
-// The three roles span the operation space: shared-secret encryption (Symmetric),
-// keypair-based shared-secret agreement / encapsulation (Asymmetric), and
-// keypair-based authentication (Signing).  A CryptoKit may derive one role
-// from another internally (e.g. Poly25519 derives an Asymmetric key from a
-// Signing key via the Edwards-to-Montgomery birational map).
+// The three roles span the operation space: shared-secret encryption
+// (Symmetric), keypair-based shared-secret agreement / encapsulation
+// (Asymmetric), and keypair-based authentication (Signing).  A CryptoKit may
+// derive one role from another internally (e.g. Poly25519 derives an Asymmetric
+// key from a Signing key via the Edwards-to-Montgomery birational map).
 type KeyType int32
 
 const (
@@ -128,15 +129,15 @@ func (KeyType) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{1}
 }
 
-// HashKitID selects a content-integrity hash.  Blake2s-256 is the default by being
-// the zero value; an absent field means Blake2s-256 globally and forever — so a
-// BlobRef verifies from the ref alone, no epoch present.
+// HashKitID selects a content-integrity hash.  The zero value is the default
+// kit, fixed globally so a BlobRef verifies from the ref alone, no epoch
+// present.
 // (The name->tag.UID identity hash is a separate, hardwired primitive — not a HashKit.)
 type HashKitID int32
 
 const (
 	HashKitID_Blake2s_256 HashKitID = 0 // default. IETF RFC 7693 — BLAKE2 Cryptographic Hash and MAC (2015)
-	HashKitID_Blake3_256  HashKitID = 1 // verified streaming / parallel. BLAKE3 official spec, BLAKE3-team (2021); not yet standardized
+	HashKitID_Blake3_256  HashKitID = 1 // verified streaming / parallel. BLAKE3 official spec, BLAKE3-team
 	HashKitID_SHA2_256    HashKitID = 2 // external-ecosystem interop (Git/OCI/IPFS), HW-accelerated. NIST FIPS 180-4 (2015); ISO/IEC 10118-3:2018
 	HashKitID_SHA3_256    HashKitID = 3 // diverse family (sponge), break-glass. NIST FIPS 202 (2015)
 )
@@ -185,12 +186,13 @@ func (HashKitID) EnumDescriptor() ([]byte, []int) {
 }
 
 // KeyRole is a 2-bit role tag for symmetric epoch keys.  Each epoch may carry
-// up to 4 roles of distributed key material, keyed on (containerID, epochID, role).
+// up to 4 roles of distributed key material, keyed on (containerID, epochID,
+// role).
 //
-// Roles gate different capabilities: Content admits decryption; WriteSeed admits
-// MemberProof forgery (and thus cryptographic write-access enforcement at the vault).
-// Access-tiered key distribution is the substrate that makes channel-level ACC
-// enforcement cryptographic rather than policy-based.
+// Roles gate different capabilities: Content admits decryption; WriteSeed
+// admits MemberProof forgery (and thus cryptographic write-access enforcement
+// at the vault).  Access-tiered key distribution is the substrate that makes
+// channel-level ACC enforcement cryptographic rather than policy-based.
 type KeyRole int32
 
 const (
@@ -344,7 +346,8 @@ func (x *GuardInfo) GetExportableRoot() bool {
 	return false
 }
 
-// WrappedDEK holds a protected Data Encryption Key and all parameters needed to recover it.
+// WrappedDEK holds a protected Data Encryption Key and all parameters needed to
+// recover it.
 type WrappedDEK struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Version         uint32                 `protobuf:"varint,1,opt,name=Version,proto3" json:"Version,omitempty"`
@@ -461,7 +464,8 @@ func (x *WrappedDEK) GetCipherblob() []byte {
 	return nil
 }
 
-// SealedTome is a serialized and encrypted KeyTome, ready for persistent storage.
+// SealedTome is a serialized and encrypted KeyTome, ready for persistent
+// storage.
 //
 // Lifecycle:
 //
@@ -562,7 +566,7 @@ func (x *SealedTome) GetCipherblob() []byte {
 // In wire form:   PubKey contains the full materialized public key bytes; Kit
 // names the CryptoKit that produced them; Type names what the key is for.
 // KeyringID is typically the owning member's UID for traceability but is not
-// load-bearing for verification (the surrounding message provides the actor).
+// required for verification (the surrounding message provides the actor).
 type KeyRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	KeyringID_0   uint64                 `protobuf:"fixed64,1,opt,name=KeyringID_0,json=KeyringID0,proto3" json:"KeyringID_0,omitempty"` // Keyring UID, bytes 0..7
@@ -647,8 +651,8 @@ func (x *KeyRef) GetPubKey() []byte {
 	return nil
 }
 
-// KeyPairRecord is the flat on-disk representation of a single key.
-// The runtime layer uses the Go-native PubKey / KeyPair types; this proto exists
+// KeyPairRecord is the flat on-disk representation of a single key.  The
+// runtime layer uses the Go-native PubKey / KeyPair types; this proto exists
 // only so KeyTome can be marshaled into a SealedTome.
 type KeyPairRecord struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -758,8 +762,8 @@ func (x *KeyPairRecord) GetPrvKey() []byte {
 	return nil
 }
 
-// KeyTome is the root container for all keypair records.
-// Persistence format only; the runtime indexes these in memory by (KeyringID, PubKey).
+// KeyTome is the root container for all keypair records.  Persistence format
+// only; the runtime indexes these in memory by (KeyringID, PubKey).
 type KeyTome struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"` // Incremented on each mutation
@@ -812,8 +816,8 @@ func (x *KeyTome) GetKeys() []*KeyPairRecord {
 	return nil
 }
 
-// RoleKey is one role-tagged symmetric key material — the decrypted, at-rest form
-// held inside an EpochKeyEntry.  Parallels amp.WrappedKey (the in-transit,
+// RoleKey is one role-tagged symmetric key material — the decrypted, at-rest
+// form held inside an EpochKeyEntry.  Parallels amp.WrappedKey (the in-transit,
 // encrypted-to-peer form carried in MemberEpoch): same 2-bit role namespace,
 // different storage context.
 //
@@ -874,11 +878,12 @@ func (x *RoleKey) GetKey() []byte {
 	return nil
 }
 
-// EpochKeyEntry stores the symmetric key materials for one epoch on one container.
-// Each epoch may carry up to 4 role-tagged materials (see KeyRole) — access-tiered
-// distribution places different roles in different members' hands.  The epoch is the
-// unit of rotation, grant, and eviction, so its roles live together.
-// EpochID is time-based (from tag.NowID), providing natural temporal ordering.
+// EpochKeyEntry stores the symmetric key materials for one epoch on one
+// container.  Each epoch may carry up to 4 role-tagged materials (see KeyRole)
+// — access-tiered distribution places different roles in different members'
+// hands.  The epoch is the unit of rotation, grant, and eviction, so its roles
+// live together.  EpochID is time-based (from tag.NowID), providing natural
+// temporal ordering.
 type EpochKeyEntry struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ContainerID_0 uint64                 `protobuf:"fixed64,1,opt,name=ContainerID_0,json=ContainerID0,proto3" json:"ContainerID_0,omitempty"` // Planet or channel UID, bytes 0..7
@@ -1105,19 +1110,17 @@ func (x *EpochKeyTome) GetCurrent() []*EpochElection {
 	return nil
 }
 
-// EncryptedSymKey carries a symmetric key sealed-to-peer for out-of-band delivery.
+// EncryptedSymKey carries a symmetric key sealed-to-peer for out-of-band
+// delivery.
 //
 // Primary use cases:
 //   - PlanetInvite: admin seals current epoch key to a new member's temp encrypt pubkey
 //   - Epoch rotation: members receive the next epoch key sealed to their EncryptPubKey
 //   - Any "here's a symmetric key for you" handoff to a known recipient pubkey
 //
-// The wrap is anonymous-sender (RFC 9180 HPKE base mode): an ephemeral keypair
-// is generated per-call in the recipient's kit, ECDHs against the recipient's
-// pubkey, and is embedded in Ciphertext.  The recipient calls
-// safe.Enclave.OpenFromPub(ref, Ciphertext) using only their EncryptKey; no
-// sender identity participates in the wrap.  Sender authentication is the
-// surrounding signed TxMsg's responsibility.
+// The wrap is an anonymous-sender sealed box (safe.EncryptOps): the recipient
+// calls safe.Enclave.OpenFromPub(ref, Ciphertext) using only their EncryptKey.
+// Sender authentication is the surrounding signed TxMsg's responsibility.
 type EncryptedSymKey struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CryptoKitID_0 uint64                 `protobuf:"fixed64,1,opt,name=CryptoKitID_0,json=CryptoKitID0,proto3" json:"CryptoKitID_0,omitempty"` // Recipient's CryptoKit UID (which curve the wrap is in), bytes 0..7

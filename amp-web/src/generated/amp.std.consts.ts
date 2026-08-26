@@ -51,7 +51,7 @@ export const Attr = {
     TileAttr                          : { id: [0xBF3216B40F0EE8E3n, 0x9E0C1A4B0E2789C8n], text: "item.tile" },                   // 5z6-8cc83sfx3j-tw30u9d72g-2f8
     // series is the ITEM axis, not the EDIT axis: these fold — a
     // consumer wants the best/latest value per item (the Space sheet
-    // binds all five as folds; 280 D-series-editflow).  A tape lane
+    // binds all five as folds).  A tape lane
     // over TRS history is a NEW attr when wanted, never a re-class.
     // The unit-tail leaves (S2R/S2T) carry no stored message and
     // never register.
@@ -115,33 +115,37 @@ export const Attr = {
     ChannelTypeTerminal               : { id: [0xA2A7D0965CBFE1C2n, 0x203CD7FD9136CB7Bn], text: "channel.type.Terminal" },              // 52n-z89dr5zw71-20g6rzq8me-kvv
 
     // ─── Brand — substrate-native planet identity (AOM DD-name-service.md §2). ───
-    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the genesis
-    // TxOp at EditID=0 welds identity-tier fields to the planet's cryptographic root.
+    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the
+    // genesis TxOp at EditID=0 welds identity-tier fields to the planet's
+    // cryptographic root.
     Brand                             : { id: [0xB70889689791764Bn, 0xB554FC786AE221AEn], text: "amp.Brand" },  // 5r1-24qj5wjft5-vbp7wg1pf4-8ef
 
-    // ─── NameService — substrate-native naming primitive (AOM DD-name-service.md §3). ───
-    // A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.
-    // Federations propagate their channel to members via normal CRDT sync.
-    // Generalized beyond planet naming — any UID-bearing entity is namable.
+    // ─── NameService — substrate-native naming primitive (AOM DD-name-service.md ───
+    // §3).  A channel any planet may host; records map FQDN → tag.UID with
+    // bootstrap metadata.  Federations propagate their channel to members via
+    // normal CRDT sync.  Generalized beyond planet naming — any UID-bearing
+    // entity is namable.
     NameService                       : { id: [0xB363152A99B543E3n, 0x44B6A07DD731D29Dn], text: "amp.name.service" },                    // 5md-dbkp6ep8gj-n9ep0grcm3-nnx
 
     NameServiceRecord                 : { id: [0x6E05972FB0B532A2n, 0xB69FF72616AB00CCn], text: "amp.name.service.NameServiceRecord" },  // 3f0-qckzd5p6bj-ce7zr4scbq-06d
 
-    // ─── Invite governance — policy + redemption ledger for governed multi-use invites ───
-    // (app.invite).  Policies live at (PlanetInvites, PlanetInvitePolicy, inviteID);
-    // each invite's ledger at (inviteID, PlanetInviteRedemption, RedeemedAt NowID).
+    // ─── Invite governance — policy + redemption ledger for governed multi-use ───
+    // invites (app.invite).  Policies live at (PlanetInvites,
+    // PlanetInvitePolicy, inviteID); each invite's ledger at (inviteID,
+    // PlanetInviteRedemption, RedeemedAt NowID).
     PlanetInvites                     : { id: [0x5402ED235E2EB7C4n, 0xB00FB2AE73715FDAn], text: "amp.planet.invites" },                         // 2n0-cqk6rjfqz2-c03xkpttr2-ryu
 
     PlanetInvitePolicy                : { id: [0x35006E57AE1732A7n, 0xD6B3A48D909DCD7Bn], text: "amp.planet.invites.PlanetInvitePolicy" },      // 1p0-1r5gchr6bm-xedx4jq89v-mcv
     PlanetInviteRedemption            : { id: [0x8F5FB55B7D431CACn, 0x9764F863FE96B27Cn], text: "amp.planet.invites.PlanetInviteRedemption" },  // 4gc-yupqzb33kq-9ft7sdgz9e-dmw
 
-    // ─── Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.3). ───
-    // NS-record-style cross-federation forwarding without DNS dependency.
+    // ─── Federation directory — peer / parent federation pointers (AOM ───
+    // DD-name-service.md §4.4).  NS-record-style cross-federation forwarding
+    // without DNS dependency.
     FederationDirectory               : { id: [0x789DCD00BF6F38E2n, 0x57A509477C47DA43n], text: "amp.FederationDirectory" },  // 3sm-r6h1gvg73j-5g9898xy4g-qk3
 
-    // ─── Planet governance — the law-making channel (sibling of amp.ledger + amp.arbitrate). ───
-    // "Law" names the role concretely: this channel grants, revises, and revokes
-    // the permissions other channels inherit.
+    // ─── Planet governance — the law-making channel (sibling of amp.ledger + ───
+    // amp.arbitrate).  "Law" names the role concretely: this channel grants,
+    // revises, and revokes the permissions other channels inherit.
     LawAttr                           : { id: [0xB8D21569231305B8n, 0xF74881C639EB11E5n], text: "amp.law" },                                  // 5su-8bqk8sm0qw-gfk41sswyq-4g5
 
     LawPlanetEpoch                    : { id: [0x62F9D4DD32683CE3n, 0x1D28B3308B06594Fn], text: "amp.law.PlanetEpoch" },                      // 32z-7beudm87mj-jub5m625hd-qbg
@@ -151,7 +155,8 @@ export const Attr = {
     LawPlanetOrigin                   : { id: [0x6C8CDF082B47A29En, 0xCC572ADCF4282E79n], text: "amp.law.PlanetOrigin" },                     // 3dj-mghhbu7nbg-dsptbvmu2h-cmt
     LawEquivalence                    : { id: [0x99F3808D1F407BE6n, 0x2E656BA55F1738FEn], text: "amp.law.Equivalence" },                      // 4ty-f08u7u0ggm-2wtccnpgjf-f7y
     LawWithdraw                       : { id: [0x850B8DAE8EC87EF2n, 0x228AC81879D663EDn], text: "amp.law.Withdraw" },                         // 451-f6ux3q8gvt-252q831wxd-sze
-    // Substrate-agnostic Member Kind (AOM SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
+    // Substrate-agnostic Member Kind (AOM
+    // SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag
     // resolving to one of these UIDs.  Communities + apps may register
     // additional Kinds in their own consts.sdl.  Zero UID = unspecified.
     LawMemberKind                     : { id: [0x102047CBC77F0A3En, 0x5C2BBD3DA4EA137Cn], text: "amp.law.MemberKind" },                       // 0h4-13wrjvz18z-5sbxx7qkfn-4vw
@@ -163,8 +168,8 @@ export const Attr = {
     LawMemberKind_Successor           : { id: [0x627C11221E4584F9n, 0xCD00ACCD3211B4F9n], text: "amp.law.MemberKind.Successor" },             // 32g-h8k47k5hmw-wu05dtnt13-e7t
     LawMemberKind_Memorial            : { id: [0xBA335B3927C0252Bn, 0xB791D002F55B477Fn], text: "amp.law.MemberKind.Memorial" },              // 5u6-eemk9y04np-vg4fh0cupq-jvz
     LawMemberKind_Process             : { id: [0x98ECE8E691BE5BD5n, 0x7E0A29F6F4393466n], text: "amp.law.MemberKind.Process" },               // 4sx-mnfe4eycgb-rw2j9yvu3k-e36
-    // Modal Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a
-    // Tag resolving to one of these UIDs.  Communities + apps may register
+    // Modal Attestation modalities.  Attestation.Modality is a Tag
+    // resolving to one of these UIDs.  Communities + apps may register
     // additional modalities.  Zero UID = unspecified.
     LawAttestationModality            : { id: [0x9F5377F513757A9Fn, 0x74B304390F47261Bn], text: "amp.law.AttestationModality" },              // 4zb-evzb4vpgbg-r9ds4747nf-9hv
 
@@ -178,8 +183,8 @@ export const Attr = {
     LawAttestationModality_Conditional: { id: [0x84466F1352512715n, 0x29E493F726901576n], text: "amp.law.AttestationModality.Conditional" },  // 448-trj6nkj4wb-kmt4mywm90-5cq
     LawAttestationModality_Contested  : { id: [0x0502182AD6D3BDB4n, 0xC9F14651631969E3n], text: "amp.law.AttestationModality.Contested" },    // 050-8d2ppqmrqu-dmwb6b5jjk-ug3
     LawAttestationModality_Retracted  : { id: [0xCA955565A08728E6n, 0x4FCC6CCB72D595CBn], text: "amp.law.AttestationModality.Retracted" },    // 6bk-pbqc84753m-4zm3dtetec-5fc
-    // Equivalence strengths (AOM SD-address-equivalence.md).  Equivalence.Strength is a Tag
-    // resolving to one of these UIDs.  Zero UID = unspecified.
+    // Equivalence strengths.  Equivalence.Strength is a Tag resolving to
+    // one of these UIDs.  Zero UID = unspecified.
     LawEquivalenceStrength            : { id: [0x17501E56DC9B1A5Dn, 0x19F49F4EF6B49F84n], text: "amp.law.EquivalenceStrength" },              // 0rb-0g5er4v39f-jmx4z9vvc9-7w4
 
     LawEquivalenceStrength_Identity   : { id: [0x7A180A04688254AFn, 0xEDCDADDC2F98FC54n], text: "amp.law.EquivalenceStrength.Identity" },     // 3u3-0508u42bkr-yvmeevhrtj-z2n
@@ -190,7 +195,8 @@ export const Attr = {
     // ─── Planet ledger — durable record of observations and citations. ───
     // Attestations (strikes, endorsements, witness records, audits, amnesties)
     // live here as convergent TxOps.  Admin acts in the ACC cite entries from
-    // the ledger via AttestationRef, making every governance decision auditable.
+    // the ledger via AttestationRef, making every governance decision
+    // auditable.
     LedgerAttr                        : { id: [0x82BC4E1F6FB05241n, 0x03CA388E1C44C848n], text: "amp.ledger" },              // 42r-j71yvxhb90-h7kjsjsf49-k28
 
     LedgerAttestation                 : { id: [0x3C774A8A36241368n, 0x2074703AFA0EF846n], text: "amp.ledger.Attestation" },  // 1wf-x58nej42en-20x3h7cx0x-y26
@@ -255,7 +261,8 @@ export const Amp = {
 } as const;
 
 export const Asset = {
-    // Canonic URI scheme prefix for amp asset references (matches UriScheme.Asset).
+    // Canonic URI scheme prefix for amp asset references (matches
+    // UriScheme.Asset).
     Scheme: "asset:",
 } as const;
 
@@ -293,7 +300,7 @@ export const Manifold = {
 export const Atmosphere = {
     // Category labels — AtmosphereEffect.Label values that identify which of
     // the four functional axes an entry contributes to.  Mods may register
-    // additional labels in their own consts.sdl, but the v240 renderer only
+    // additional labels in their own consts.sdl, but the renderer only
     // honors the four canonical categories.
     LabelSky:              "Sky",
     LabelSun:              "Sun",
@@ -307,7 +314,7 @@ export const Atmosphere = {
     SkyNoir:               "asset:atmosphere/sky/noir",  // monochrome cool blue
     SunStandard:           "asset:atmosphere/sun/standard",  // sunset / terminator / HG forward scatter (legibility-cost)
     NightStandard:         "asset:atmosphere/night/standard",  // night-side dim + cool tint
-    FogExponential:        "asset:atmosphere/fog/exponential",  // exponential aerial perspective; seam-hider, on by default
+    FogExponential:        "asset:atmosphere/fog/exponential",  // exponential aerial perspective; hides distant tile edges, on by default
     // Inspector defaults — 0 on the serialized field means "unset, use this".
     DefaultNightDimmer:    0.3,  // 0 = pitch black night limb; default reaches 70% dim
     DefaultFogScaleMeters: 100000,  // e-folding distance; ~63% opacity at this distance, asymptotes
@@ -317,10 +324,11 @@ export const Atmosphere = {
 } as const;
 
 // ─── Bundled crate URIs — platform-wide crates every amp client imports at boot. ───
-// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live in
-// Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is asset:PublisherID/CrateID
-// per the wire scheme declared in amp.core.proto:Asset; the build pipeline stages
-// matching .crate files under StreamingAssets/Bundled/CrateDepot.
+// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live
+// in Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is
+// asset:PublisherID/CrateID per the wire scheme declared in
+// amp.core.proto:Asset; the build pipeline stages matching .crate files under
+// StreamingAssets/Bundled/CrateDepot.
 export const Crates = {
     BaseAssets: "asset:crates.planet.tools/amp.3D.base.assets",
     HelloWorld: "asset:crates.planet.tools/amp.3D.hello.world",
@@ -339,9 +347,10 @@ export const Actor = {
     DefaultOrbitDegPerSec:   8,  // signature orbit rate (deg/s) when the field is 0
 } as const;
 
-// ─── Theme — the unified chrome skin contract.  asset:theme/<slot> is the chrome analog of asset:glyph/ ───
-// (ContentGlyphURI); ThemeMap resolves it from the bound atlas.  A theme = ONE atlas crate (DefaultAtlas)
-// whose named sub-sprites match the slots; a mod ships its own atlas crate and points selection there
+// ─── Theme — the unified chrome skin contract.  asset:theme/<slot> is the chrome ───
+// analog of asset:glyph/ (ContentGlyphURI); ThemeMap resolves it from the bound
+// atlas.  A theme = ONE atlas crate (DefaultAtlas) whose named sub-sprites
+// match the slots; a mod ships its own atlas crate and points selection there
 // without touching code.
 export const Theme = {
     SlotPrefix:   "asset:theme/",  // ThemeMap owns this namespace
@@ -356,15 +365,15 @@ export const HomeVars = {
     MaxTargetFPS:     120,
 } as const;
 
-// ─── amp.Terminal emulator/grid + shuttle transport defaults (AD-app-terminal ───
-// §4.4, §5.3).  A zero serialized/config field resolves here at point of use,
-// never in a C# field initializer.  Ms fields multiply at use.
+// ─── amp.Terminal emulator/grid + shuttle transport defaults.  A zero ───
+// serialized/config field resolves here at point of use, never in a C# field
+// initializer.  Ms fields multiply at use.
 export const Terminal = {
     ContentType:                "application/x-amp-terminal",  // session MediaLink label — routes the channel to the terminal shuttle runtime
     DefaultCols:                80,  // PTY grid columns
     DefaultRows:                24,  // PTY grid rows
     DefaultScrollbackRows:      1000,  // emulator scrollback rows
-    DefaultKeyframeMs:          10000n,  // keyframe cadence — the DVR replay bound (AD-app-terminal §10-4)
+    DefaultKeyframeMs:          10000n,  // keyframe cadence — the DVR replay bound
     DefaultJogMs:               16000n,  // transport jog step
     DefaultReplayResidentBytes: 8388608n,  // replay-window residency budget (Buffered cap)
 } as const;

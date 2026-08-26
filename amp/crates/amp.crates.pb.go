@@ -4,7 +4,8 @@
 // 	protoc        (unknown)
 // source: amp/crates/amp.crates.proto
 
-// Contains data structures used by the client for content management and deployment
+// Package crates defines the content-management and deployment structures a
+// client uses to describe, publish, and load an amp asset module (a "crate").
 
 package crates
 
@@ -100,14 +101,16 @@ func (AssetKind) EnumDescriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{0}
 }
 
-// Enum values should be three base-10 digits corresponding to the major, minor, and revision number.
+// Enum values should be three base-10 digits corresponding to the major, minor,
+// and revision number.
 type CrateSchema int32
 
 const (
 	CrateSchema_UndefinedSchema CrateSchema = 0
-	// v100 (April 2020) should be used for CrateInfo.CrateSchema
+	// v100 should be used for CrateInfo.CrateSchema
 	CrateSchema_v100 CrateSchema = 100
-	// v300 (2026) — unified LiveCrate/LiveAsset authoring, tag.UID asset identity, content-addressed bundles.
+	// v300 — unified LiveCrate/LiveAsset authoring, tag.UID asset identity,
+	// content-addressed bundles.
 	CrateSchema_v300 CrateSchema = 300
 )
 
@@ -152,13 +155,14 @@ func (CrateSchema) EnumDescriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{1}
 }
 
+// AssetEntry is one addressable asset within a crate's bundle.
 type AssetEntry struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Kind  AssetKind              `protobuf:"varint,1,opt,name=Kind,proto3,enum=crates.AssetKind" json:"Kind,omitempty"`
-	// EntryURI is a Unix-style pathname that identifies an asset within a crate.
-	// By convention, this URI does *not* start or end with '/'
-	// An asset URI has the form "{CrateURI}/{EntryURI}"
-	// If two or more assets have the same EntryURI, then only one is accessible.
+	// EntryURI is a Unix-style pathname that identifies an asset within a
+	// crate.  By convention, this URI does *not* start or end with '/' An asset
+	// URI has the form "{CrateURI}/{EntryURI}" If two or more assets have the
+	// same EntryURI, then only one is accessible.
 	EntryURI string `protobuf:"bytes,2,opt,name=EntryURI,proto3" json:"EntryURI,omitempty"`
 	// Label is the human-readable label for this asset.
 	Label string `protobuf:"bytes,3,opt,name=Label,proto3" json:"Label,omitempty"`
@@ -169,36 +173,41 @@ type AssetEntry struct {
 	IsPrivate       bool `protobuf:"varint,8,opt,name=IsPrivate,proto3" json:"IsPrivate,omitempty"`             // not normally visible to end users
 	AutoScale       bool `protobuf:"varint,9,opt,name=AutoScale,proto3" json:"AutoScale,omitempty"`             // place with auto-scale enabled by default
 	IsSurface       bool `protobuf:"varint,13,opt,name=IsSurface,proto3" json:"IsSurface,omitempty"`            // self-collidable world surface (nav/raycast target; skips proxy collider)
-	// CenterX and CenterZ specify the positional center of this asset (and are typically 0).
-	// CenterY is the distance above the baseline (y=0) to the y center-point height of this asset.
-	// Y is considered to be the *vertical* (up) direction and by convention rests on the plane y=0.
+	// CenterX and CenterZ specify the positional center of this asset (and are
+	// typically 0).  CenterY is the distance above the baseline (y=0) to the y
+	// center-point height of this asset.  Y is considered to be the *vertical*
+	// (up) direction and by convention rests on the plane y=0.
 	CenterX float32 `protobuf:"fixed32,10,opt,name=CenterX,proto3" json:"CenterX,omitempty"`
 	CenterY float32 `protobuf:"fixed32,11,opt,name=CenterY,proto3" json:"CenterY,omitempty"`
 	CenterZ float32 `protobuf:"fixed32,12,opt,name=CenterZ,proto3" json:"CenterZ,omitempty"`
-	// Extents specify the distance from the center to the extent of the asset on each axis.
+	// Extents specify the distance from the center to the extent of the asset
+	// on each axis.
 	ExtentsX float32 `protobuf:"fixed32,15,opt,name=ExtentsX,proto3" json:"ExtentsX,omitempty"`
 	ExtentsY float32 `protobuf:"fixed32,16,opt,name=ExtentsY,proto3" json:"ExtentsY,omitempty"`
 	ExtentsZ float32 `protobuf:"fixed32,17,opt,name=ExtentsZ,proto3" json:"ExtentsZ,omitempty"`
-	// Reserved for runtime use -- defaults to empty.
+	// Reserved for runtime use — defaults to empty.
 	LocalURI string `protobuf:"bytes,30,opt,name=LocalURI,proto3" json:"LocalURI,omitempty"`
 	// Comma-delimited and whitespace-trimmed list of tags.
 	Tags string `protobuf:"bytes,31,opt,name=Tags,proto3" json:"Tags,omitempty"`
-	// A short phrase or fragment describing this asset, starting with an article where appropriate. e.g.:
+	// A short phrase or fragment describing this asset, starting with an
+	// article where appropriate. e.g.:
 	//
 	//	"A typical 6 crew member fire truck"
 	//	"A leading U.S. naval ship-based helicopter"
 	//	"The Texas capitol building located in Austin"
 	//	"An animated sacred-geometry inspired flat seal"
 	ShortDesc string `protobuf:"bytes,32,opt,name=ShortDesc,proto3" json:"ShortDesc,omitempty"`
-	// Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI leaf).
-	// Survives re-tagging and rebuilds, letting references resolve by UID independent of path.
+	// Stable asset identity: the tag.UID of the canonized AssetID (the EntryURI
+	// leaf).  Survives re-tagging and rebuilds, letting references resolve by
+	// UID independent of path.
 	UID_0 uint64 `protobuf:"fixed64,33,opt,name=UID_0,json=UID0,proto3" json:"UID_0,omitempty"`
 	UID_1 uint64 `protobuf:"fixed64,34,opt,name=UID_1,json=UID1,proto3" json:"UID_1,omitempty"`
-	// Content-addressing handle for the built asset: leading 16 bytes of the plaintext hash
-	// (a BlobID), for dedup and AMP p2p blob-store retrieval.  Zero = not built / unknown.
+	// Content-addressing handle for the built asset: leading 16 bytes of the
+	// plaintext hash (a BlobID), for dedup and AMP p2p blob-store retrieval.
+	// Zero = not built / unknown.
 	BlobID_0 uint64 `protobuf:"fixed64,35,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
 	BlobID_1 uint64 `protobuf:"fixed64,36,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
-	// Alternate URIs that also resolve to this asset (e.g. legacy gen2 paths).  Each is matched
+	// Alternate URIs that also resolve to this asset.  Each is matched
 	// verbatim against an inbound EntryURI.
 	Aliases       []string `protobuf:"bytes,37,rep,name=Aliases,proto3" json:"Aliases,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -396,18 +405,25 @@ func (x *AssetEntry) GetAliases() []string {
 	return nil
 }
 
+// BundleManifest is the catalog of one built asset bundle — its identity, the
+// assets it carries, and the content address of the built file.
 type BundleManifest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// BundleTitle is how the outside world sees this bundle and has no other impact.
-	// This means it can change from build to build and contain any Unicode characters.
+	// BundleTitle is how the outside world sees this bundle and has no other
+	// impact.  This means it can change from build to build and contain any
+	// Unicode characters.
 	BundleTitle string `protobuf:"bytes,2,opt,name=BundleTitle,proto3" json:"BundleTitle,omitempty"`
-	// BundleNameID is how this bundle is internally identified and expressed as the filename of this bundle.
-	// This is case sensitive, contains only path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or whitespace.
+	// BundleNameID is how this bundle is internally identified and expressed as
+	// the filename of this bundle.  This is case sensitive, contains only
+	// path-safe characters (sans /:\<>|?*\"), and does not terminate in '.' or
+	// whitespace.
 	BundleNameID string        `protobuf:"bytes,3,opt,name=BundleNameID,proto3" json:"BundleNameID,omitempty"`
 	Assets       []*AssetEntry `protobuf:"bytes,10,rep,name=Assets,proto3" json:"Assets,omitempty"`
-	LoadAllHint  bool          `protobuf:"varint,20,opt,name=LoadAllHint,proto3" json:"LoadAllHint,omitempty"`
-	// Content-addressing handle for the built bundle file: leading 16 bytes of its plaintext
-	// hash (a BlobID).  Zero = not built / unknown.
+	// When set, a runtime is advised to load this bundle's assets together
+	// rather than individually on demand.
+	LoadAllHint bool `protobuf:"varint,20,opt,name=LoadAllHint,proto3" json:"LoadAllHint,omitempty"`
+	// Content-addressing handle for the built bundle file: leading 16 bytes of
+	// its plaintext hash (a BlobID).  Zero = not built / unknown.
 	BlobID_0      uint64 `protobuf:"fixed64,30,opt,name=BlobID_0,json=BlobID0,proto3" json:"BlobID_0,omitempty"`
 	BlobID_1      uint64 `protobuf:"fixed64,31,opt,name=BlobID_1,json=BlobID1,proto3" json:"BlobID_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -486,20 +502,26 @@ func (x *BundleManifest) GetBlobID_1() uint64 {
 	return 0
 }
 
-// CrateInfo represents a Crate, the fundamental unit of amp's asset/package manager.
+// CrateInfo represents a Crate, the fundamental unit of amp's asset/package
+// manager.
 type CrateInfo struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// CrateSchema communicates which build and packaging schema was used for this crate build.
-	// This value should be the integer value of a valid CrateSchema.vNNN enum.
+	// CrateSchema communicates which build and packaging schema was used for
+	// this crate build.  This value should be the integer value of a valid
+	// CrateSchema.vNNN enum.
 	CrateSchema int32 `protobuf:"varint,1,opt,name=CrateSchema,proto3" json:"CrateSchema,omitempty"`
-	// InstID is 0 by default and reserved for a runtime manager to reference a crate via issuing integers.
-	// If non-zero, it will not change and no other instance will have the same value.
+	// InstID is 0 by default and reserved for a runtime manager to reference a
+	// crate via issuing integers.  If non-zero, it will not change and no other
+	// instance will have the same value.
 	InstID uint32 `protobuf:"varint,2,opt,name=InstID,proto3" json:"InstID,omitempty"`
-	// CrateURI takes the form "asset:{PublisherID}/{CrateID}" per the wire scheme declared in
-	// amp.core.proto:UriScheme.Asset; an asset within the crate is "asset:{PublisherID}/{CrateID}/{EntryURI}".
-	// The {PublisherID}/{CrateID} segment can only contain chars in [A-Za-z0-9_.-] (other than the separating '/' char).
-	// PublisherID uniquely identifies the author/owner/publisher of this crate (and potentially other crates).
-	// CrateID uniquely identifies this crate for the given publisher and all subsequent revisions.
+	// CrateURI takes the form "asset:{PublisherID}/{CrateID}" per the wire
+	// scheme declared in amp.core.proto:UriScheme.Asset; an asset within the
+	// crate is "asset:{PublisherID}/{CrateID}/{EntryURI}".  The
+	// {PublisherID}/{CrateID} segment can only contain chars in [A-Za-z0-9_.-]
+	// (other than the separating '/' char).  PublisherID uniquely identifies
+	// the author/owner/publisher of this crate (and potentially other crates).
+	// CrateID uniquely identifies this crate for the given publisher and all
+	// subsequent revisions.
 	//
 	//	"asset:plan-systems.org/plan.app.ui"
 	//	"asset:plan-systems.org/about-plan-systems"
@@ -507,31 +529,37 @@ type CrateInfo struct {
 	//	"asset:themushroom.farm/mycology-201"
 	//	"asset:the-smiths.family/123-Maple"
 	CrateURI string `protobuf:"bytes,4,opt,name=CrateURI,proto3" json:"CrateURI,omitempty"`
-	// PublisherName is a human-readable name of the author/owner/publisher of this crate and can change without repercussions (i.e. is purely optical).
+	// PublisherName is a human-readable name of the author/owner/publisher of
+	// this crate and can change without repercussions (i.e. is purely optical).
 	PublisherName string `protobuf:"bytes,6,opt,name=PublisherName,proto3" json:"PublisherName,omitempty"`
-	// CrateName is a human-readable title for this crate and can change without repercussions.
+	// CrateName is a human-readable title for this crate and can change without
+	// repercussions.
 	CrateName string `protobuf:"bytes,10,opt,name=CrateName,proto3" json:"CrateName,omitempty"`
 	// ShortDesc describes this crate in a brief phrase.
 	ShortDesc string `protobuf:"bytes,11,opt,name=ShortDesc,proto3" json:"ShortDesc,omitempty"`
 	// Comma-delimited and whitespace-trimmed list of tags.
 	Tags string `protobuf:"bytes,15,opt,name=Tags,proto3" json:"Tags,omitempty"`
-	// TimeCreated is the UTC value (in seconds) when this crate was first created (and does not change).
+	// TimeCreated is the UTC value (in seconds) when this crate was first
+	// created (and does not change).
 	TimeCreated int64 `protobuf:"varint,30,opt,name=TimeCreated,proto3" json:"TimeCreated,omitempty"`
 	// TimeBuilt is the UTC value (in seconds) when this crate was built.
 	TimeBuilt int64 `protobuf:"varint,31,opt,name=TimeBuilt,proto3" json:"TimeBuilt,omitempty"`
-	// VersionID uniquely identifies this build and has the form "v{MajorNum}.{MinorNum}.{BuildNum}"
-	// e.g. "v0.700.0"
+	// MajorVersion, MinorVersion, and BuildNumber compose the version string
+	// "v{MajorVersion}.{MinorVersion}.{BuildNumber}" — e.g. "v0.700.0".
 	MajorVersion int32 `protobuf:"varint,40,opt,name=MajorVersion,proto3" json:"MajorVersion,omitempty"`
 	MinorVersion int32 `protobuf:"varint,41,opt,name=MinorVersion,proto3" json:"MinorVersion,omitempty"`
 	BuildNumber  int32 `protobuf:"varint,42,opt,name=BuildNumber,proto3" json:"BuildNumber,omitempty"`
-	// BuildID uniquely identifies a particular crate build/version.
-	// This value should have no spaces and only have '.', '_', or '-' (and starts and ends with an alphanumeric character).
-	// By convention, the format is "yyMMdd-{VersionID}" (so that sorting by BuildID string yields the most recent release).
-	// e.g. "210320-v0.1.11"
+	// BuildID uniquely identifies a particular crate build/version.  This value
+	// should have no spaces and only have '.', '_', or '-' (and starts and ends
+	// with an alphanumeric character).  By convention, the format is "yyMMdd-"
+	// plus the version string above (so that sorting by BuildID string yields
+	// the most recent release).  e.g. "210320-v0.1.11"
 	BuildID string `protobuf:"bytes,45,opt,name=BuildID,proto3" json:"BuildID,omitempty"`
-	// HomeURL is an optional link that allows a human to learn more about this crate.
+	// HomeURL is an optional link that allows a human to learn more about this
+	// crate.
 	HomeURL string `protobuf:"bytes,50,opt,name=HomeURL,proto3" json:"HomeURL,omitempty"`
-	// URL is an optional string available to specify a URL to download this crate.
+	// URL is an optional string available to specify a URL to download this
+	// crate.
 	URL string `protobuf:"bytes,55,opt,name=URL,proto3" json:"URL,omitempty"`
 	// Approximate size of this crate in bytes (or 0 if unknown).
 	ApproxSize    int64 `protobuf:"varint,60,opt,name=ApproxSize,proto3" json:"ApproxSize,omitempty"`
@@ -682,17 +710,18 @@ func (x *CrateInfo) GetApproxSize() int64 {
 }
 
 // CrateManifest is the top-level manifest/catalog for an amp asset module
-// called a "crate".
-// It contains catalog and type info that amp loads at runtime to know what's inside binary asset bundles without having to load them.
+// called a "crate".  It contains catalog and type info that amp loads at
+// runtime to know what's inside binary asset bundles without having to load
+// them.
 //
-// A reference to an amp asset is via a URI with the form:
-//
-//	assetURI := "PublisherID/CrateID[@CrateBuildID]/{AssetEntry.EntryURI}"
+// A reference to an amp asset is an "asset:" URI — see CrateInfo.CrateURI for
+// the grammar and examples.
 type CrateManifest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Info  *CrateInfo             `protobuf:"bytes,1,opt,name=Info,proto3" json:"Info,omitempty"`
-	// IconBundleName is the bundle name ID of the bundle containing icons (Sprites) used to represent the "real" crate assets.
-	// Asset name IDs in this bundle correspond to assets in all the other Crate's bundles.
+	// IconBundleName is the bundle name ID of the bundle containing icons
+	// (Sprites) used to represent the "real" crate assets.  Asset name IDs in
+	// this bundle correspond to assets in all the other Crate's bundles.
 	IconBundleName string            `protobuf:"bytes,5,opt,name=IconBundleName,proto3" json:"IconBundleName,omitempty"`
 	Bundles        []*BundleManifest `protobuf:"bytes,10,rep,name=Bundles,proto3" json:"Bundles,omitempty"`
 	unknownFields  protoimpl.UnknownFields
@@ -750,12 +779,14 @@ func (x *CrateManifest) GetBundles() []*BundleManifest {
 	return nil
 }
 
-// CrateSnapshot is a general purpose container to track multiple crates and associated build IDs.
+// CrateSnapshot is a general purpose container to track multiple crates and
+// associated build IDs.
 type CrateSnapshot struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	RevID int64                  `protobuf:"varint,1,opt,name=RevID,proto3" json:"RevID,omitempty"`
-	// This is a template URL where the symbols "CrateURI", "CrateBuildID", "PlatformID" are delimited with { }.
-	// The symbol "{.}" is to be replaced with a local pathname if the URL refers to a local file system pathname.
+	// This is a template URL where the symbols "CrateURI", "CrateBuildID",
+	// "PlatformID" are delimited with { }.  The symbol "{.}" is to be replaced
+	// with a local pathname if the URL refers to a local file system pathname.
 	// e.g. "https://whatever.com/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"
 	//
 	//	"{.}/{CrateURI}__{CrateBuildID}.{PlatformID}.crate"

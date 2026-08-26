@@ -22,6 +22,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// TRS_Flags selects special placement behavior for a TRS.
 type TRS_Flags int32
 
 const (
@@ -195,6 +196,8 @@ func (ValueKind) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{2}
 }
 
+// PointFormat declares how a packed sequence of tile indices is encoded — which
+// grid (S2 or H3) and whether each point carries a trailing time component.
 type PointFormat int32
 
 const (
@@ -247,6 +250,7 @@ func (PointFormat) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{3}
 }
 
+// MediaFlags describes what a media item is and what it supports.
 type MediaFlags int32
 
 const (
@@ -322,6 +326,7 @@ func (MediaFlags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{4}
 }
 
+// ColormapFlags selects which color channels a visual layer drives.
 type ColormapFlags int32
 
 const (
@@ -374,6 +379,7 @@ func (ColormapFlags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{5}
 }
 
+// SensorFlags selects which device sensor inputs a visual layer consumes.
 type SensorFlags int32
 
 const (
@@ -420,6 +426,7 @@ func (SensorFlags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{6}
 }
 
+// AudioFlags selects which audio-analysis inputs a visual layer consumes.
 type AudioFlags int32
 
 const (
@@ -466,7 +473,8 @@ func (AudioFlags) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{7}
 }
 
-// TileEase controls how a TileBand's profile transitions from its inner to outer radius.
+// TileEase controls how a TileBand's profile transitions from its inner to
+// outer radius.
 type TileEase int32
 
 const (
@@ -891,8 +899,8 @@ func (GeoPath_RenderType) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{10, 0}
 }
 
-// TRS (Translate Rotate Scale)
-// General purpose placement time, space, orientation, and/or geo-position.
+// TRS (Translate, Rotate, Scale) is a general-purpose placement: time, space,
+// orientation, and/or geo-position.
 type TRS struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Uniform spatial scale; if 0, scale is implicitly 1.0
@@ -1022,6 +1030,7 @@ func (x *TRS) GetS2_1() uint64 {
 	return 0
 }
 
+// Matrix4x4 is a double-precision 4x4 transform.
 type Matrix4X4 struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// 16 doubles in row-major order
@@ -1328,6 +1337,8 @@ func (x *CameraState) GetModeID() CameraModeID {
 	return CameraModeID_CameraModeUnset
 }
 
+// CameraOptions carries a viewer's camera preferences — how the camera should
+// behave, as opposed to CameraState, which is where the camera currently is.
 type CameraOptions struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MoveSpeed     float32                `protobuf:"fixed32,1,opt,name=MoveSpeed,proto3" json:"MoveSpeed,omitempty"` // movement speed multiplier
@@ -1396,7 +1407,7 @@ func (x *CameraOptions) GetShowUnits() int32 {
 	return 0
 }
 
-// FileInfo a general-purpose file system meta info block.
+// FileInfo is a general-purpose file system meta info block.
 type FileInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Mode          string                 `protobuf:"bytes,1,opt,name=Mode,proto3" json:"Mode,omitempty"`               // unix file mode label
@@ -1404,7 +1415,7 @@ type FileInfo struct {
 	DirName       string                 `protobuf:"bytes,4,opt,name=DirName,proto3" json:"DirName,omitempty"`         // prepended to FileName forms full path
 	ItemName      string                 `protobuf:"bytes,5,opt,name=ItemName,proto3" json:"ItemName,omitempty"`       // file/dir item name
 	ExtLen        int32                  `protobuf:"varint,6,opt,name=ExtLen,proto3" json:"ExtLen,omitempty"`          // length of the file extension (0 if none)
-	ContentType   string                 `protobuf:"bytes,8,opt,name=ContentType,proto3" json:"ContentType,omitempty"` // MIME type of the file (e.g. "image/png", "text/html", etc.);
+	ContentType   string                 `protobuf:"bytes,8,opt,name=ContentType,proto3" json:"ContentType,omitempty"` // MIME type of the file (e.g. "image/png", "text/html")
 	CreatedAt     int64                  `protobuf:"varint,10,opt,name=CreatedAt,proto3" json:"CreatedAt,omitempty"`   // UTC << 16
 	ModifiedAt    int64                  `protobuf:"varint,11,opt,name=ModifiedAt,proto3" json:"ModifiedAt,omitempty"` // UTC << 16
 	ByteSize      int64                  `protobuf:"varint,14,opt,name=ByteSize,proto3" json:"ByteSize,omitempty"`     // data fork byte length
@@ -1739,10 +1750,11 @@ func (x *Labels) GetAbout() string {
 	return ""
 }
 
-// ModuleRef is the wire / attr-value descriptor of one app module: its identity,
-// human presentation, and maturity.  It is the serializable projection of an
-// in-process amp.AppModuleInfo (see std.NewModuleRef) for app-listing / about
-// surfaces and as a software-bill-of-materials row (one per installed module).
+// ModuleRef is the wire / attr-value descriptor of one app module: its
+// identity, human presentation, and maturity.  It is the serializable
+// projection of an in-process amp.AppModuleInfo (see std.NewModuleRef) for
+// app-listing / about surfaces and as a software-bill-of-materials row (one per
+// installed module).
 type ModuleRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Module        *amp.Tag               `protobuf:"bytes,1,opt,name=Module,proto3" json:"Module,omitempty"`   // the module this describes (its invocation tag)
@@ -1811,8 +1823,9 @@ func (x *ModuleRef) GetVersion() string {
 	return ""
 }
 
-// General purpose lightweight set of geo tiles in the shape of a rectangle - composed rectangle given a center and width/height.
-// The units are typically mid H3 resolution with rectangular dimensions in units of font glyph size.
+// Rect is a lightweight set of geo tiles forming a rectangle, composed from a
+// center plus width/height.  The units are typically mid H3 resolution, with
+// rectangular dimensions in units of font glyph size.
 type Rect struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Format        PointFormat            `protobuf:"varint,1,opt,name=Format,proto3,enum=std.PointFormat" json:"Format,omitempty"` // specifies the type and format of Coords
@@ -1917,8 +1930,8 @@ func (x *Rect) GetK() int32 {
 type GeoPath struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Type          GeoPath_RenderType     `protobuf:"varint,1,opt,name=Type,proto3,enum=std.GeoPath_RenderType" json:"Type,omitempty"`
-	ExtrudeLo     float32                `protobuf:"fixed32,4,opt,name=ExtrudeLo,proto3" json:"ExtrudeLo,omitempty"`                // If non-zero, extrude the path to this height
-	ExtrudeHi     float32                `protobuf:"fixed32,5,opt,name=ExtrudeHi,proto3" json:"ExtrudeHi,omitempty"`                // If non-zero, extrude the path to this height
+	ExtrudeLo     float32                `protobuf:"fixed32,4,opt,name=ExtrudeLo,proto3" json:"ExtrudeLo,omitempty"`                // if non-zero, the extrusion's lower bound
+	ExtrudeHi     float32                `protobuf:"fixed32,5,opt,name=ExtrudeHi,proto3" json:"ExtrudeHi,omitempty"`                // if non-zero, the extrusion's upper bound
 	Format        PointFormat            `protobuf:"varint,14,opt,name=Format,proto3,enum=std.PointFormat" json:"Format,omitempty"` // specifies the type and format of Coords
 	Points        []uint64               `protobuf:"fixed64,15,rep,packed,name=Points,proto3" json:"Points,omitempty"`              // tile indices interleaved with associated UTC64 or Rmm based on Format.
 	unknownFields protoimpl.UnknownFields
@@ -1990,7 +2003,8 @@ func (x *GeoPath) GetPoints() []uint64 {
 	return nil
 }
 
-// MediaInfo wraps a media track, feature, featurette, collection, album, or playlist.
+// MediaInfo wraps a media track, feature, featurette, collection, album, or
+// playlist.
 type MediaInfo struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
 	Flags      MediaFlags             `protobuf:"varint,1,opt,name=Flags,proto3,enum=std.MediaFlags" json:"Flags,omitempty"` // describes this item
@@ -1998,8 +2012,8 @@ type MediaInfo struct {
 	StartAt    float64                `protobuf:"fixed64,5,opt,name=StartAt,proto3" json:"StartAt,omitempty"`                // starts playback at the given seconds offset
 	Seconds    float64                `protobuf:"fixed64,6,opt,name=Seconds,proto3" json:"Seconds,omitempty"`                // playback duration in seconds
 	Popularity float32                `protobuf:"fixed32,16,opt,name=Popularity,proto3" json:"Popularity,omitempty"`         // 0.0 to 1.0
-	// Unused — order lives in item.MediaRank (AD-playlists §3); field number
-	// held until re-genesis.
+	// Unused — order lives in item.MediaRank (AOM AD-playlists.md §3); field
+	// number held until re-genesis.
 	Ordering      float32 `protobuf:"fixed32,17,opt,name=Ordering,proto3" json:"Ordering,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2079,7 +2093,7 @@ func (x *MediaInfo) GetOrdering() float32 {
 
 // MediaTags is what the audio says about itself, on a TRACK node
 // (item.MediaTags).  Labels is DERIVED from this, never the reverse — a
-// display line is not a data source (AD-playlists §2).
+// display line is not a data source (AOM AD-playlists.md §2).
 type MediaTags struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Title       string                 `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`
@@ -2403,9 +2417,9 @@ func (x *MediaEntry) GetCover() *amp.Tags {
 	return nil
 }
 
-// MediaRank is a playlist row's position, keyed by entryID on the PLAYLIST
-// node (item.MediaRank) — its own cell, so a reorder and a metadata refresh
-// never collide (AD-playlists §4).  The rank is a fractional-index UID minted
+// MediaRank is a playlist row's position, keyed by entryID on the PLAYLIST node
+// (item.MediaRank) — its own cell, so a reorder and a metadata refresh never
+// collide (AOM AD-playlists.md §4).  The rank is a fractional-index UID minted
 // by tag.RankBetween / tag.RanksAcross; render order is (Rank, entryID).
 // Absent => order by entryID; a single interactive append writes none.
 type MediaRank struct {
@@ -2461,12 +2475,13 @@ func (x *MediaRank) GetRank_1() uint64 {
 }
 
 // Segment is one unit of content: an inline on-chain copy of the bytes and/or a
-// reference to the durable content-addressed blob.  The timeline fields are optional —
-// zero for an atomic asset (a file, an image, a portal template), set for a slice of a
-// live or recorded stream.  When timed, playback time is the exact integer rational
-// TickDelta / TickRate (the QuickTime time model), so consecutive segments tile a stream
-// exactly: TickOffset + TickDelta == the next segment's TickOffset.  For a byte-rate
-// stream the natural tick is the byte.
+// reference to the durable content-addressed blob.  The timeline fields are
+// optional — zero for an atomic asset (a file, an image, a portal template),
+// set for a slice of a live or recorded stream.  When timed, playback time is
+// the exact integer rational TickDelta / TickRate (the QuickTime time model),
+// so consecutive segments tile a stream exactly: TickOffset + TickDelta == the
+// next segment's TickOffset.  For a byte-rate stream the natural tick is the
+// byte.
 type Segment struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TickOffset    int64                  `protobuf:"varint,1,opt,name=TickOffset,proto3" json:"TickOffset,omitempty"`      // cumulative tick offset of this segment's start on the stream timeline (0 if untimed)
@@ -2559,7 +2574,7 @@ func (x *Segment) GetBlob() *amp.BlobRef {
 	return nil
 }
 
-// Arg is a any-purpose key/value pair
+// Arg is an any-purpose key/value pair.
 type Arg struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
@@ -2612,6 +2627,8 @@ func (x *Arg) GetValue() string {
 	return ""
 }
 
+// VisPreset is one named visual-layer preset: its presentation labels, the
+// input axes it consumes, its aspect-ratio pegs, and the layer asset it drives.
 type VisPreset struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`           // label — preset display name
@@ -2728,9 +2745,10 @@ func (x *VisPreset) GetArgs() []*Arg {
 	return nil
 }
 
-// TileBand is the profile of one beveled ring of a tiled polygon mesh — the shareable, data
-// form of the Unity authoring struct.  Bands stack back-to-front in array order.
-// +X is 3 o'clock on the tile, +Y is up (outward), +Z is 12 o'clock.
+// TileBand is the profile of one beveled ring of a tiled polygon mesh — the
+// shareable, data form of the Unity authoring struct.  Bands stack
+// back-to-front in array order.  +X is 3 o'clock on the tile, +Y is up
+// (outward), +Z is 12 o'clock.
 type TileBand struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Label          string                 `protobuf:"bytes,1,opt,name=Label,proto3" json:"Label,omitempty"` // authoring label (cosmetic)
@@ -2943,8 +2961,9 @@ func (x *TileBand) GetTextureScaleW() float32 {
 	return 0
 }
 
-// TileMeshSpec is a procedural tile-mesh recipe: a polygon swept into beveled bands.
-// The geometry-side analog of VisPreset; consumed by the runtime tile mesher.
+// TileMeshSpec is a procedural tile-mesh recipe: a polygon swept into beveled
+// bands.  The geometry-side analog of VisPreset; consumed by the runtime tile
+// mesher.
 type TileMeshSpec struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Bands         []*TileBand            `protobuf:"bytes,1,rep,name=Bands,proto3" json:"Bands,omitempty"`
@@ -3013,10 +3032,11 @@ func (x *TileMeshSpec) GetRotate() float32 {
 	return 0
 }
 
-// SkinSpec is the shareable unit of a visual mod: a geometry source composed with an ordered
-// stack of VisualLayers (skins / effects).  Geometry is TileMesh (procedural recipe) when its
-// Bands are set, else the built asset at MeshAssetURI.  Layers apply back-to-front; each
-// VisPreset.AssetURI names a VisualLayer (VisShader / VisPlexus / GForce / …).
+// SkinSpec is the shareable unit of a visual mod: a geometry source composed
+// with an ordered stack of VisualLayers (skins / effects).  Geometry is
+// TileMesh (procedural recipe) when its Bands are set, else the built asset at
+// MeshAssetURI.  Layers apply back-to-front; each VisPreset.AssetURI names a
+// VisualLayer (VisShader / VisPlexus / GForce / …).
 type SkinSpec struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MeshAssetURI  string                 `protobuf:"bytes,1,opt,name=MeshAssetURI,proto3" json:"MeshAssetURI,omitempty"` // built mesh / Model / VisualScope prototype
@@ -3077,9 +3097,10 @@ func (x *SkinSpec) GetLayers() []*VisPreset {
 	return nil
 }
 
-// AtmosphereEffect is one tagged entry in an AtmosphereSpec.  Label identifies the
-// category the entry contributes to (Sky / Sun / Night / Fog — see std.Atmosphere.Label*
-// for canonical strings); URI selects the variant within that category.
+// AtmosphereEffect is one tagged entry in an AtmosphereSpec.  Label identifies
+// the category the entry contributes to (Sky / Sun / Night / Fog — see
+// std.Atmosphere.Label* for canonical strings); URI selects the variant within
+// that category.
 //
 // URI semantics, when Enabled = true:
 //
@@ -3148,11 +3169,11 @@ func (x *AtmosphereEffect) GetEnabled() bool {
 	return false
 }
 
-// AtmosphereSpec composes a manifold's atmosphere from tagged effect entries.  Each
-// category (Sky / Sun / Night / Fog) is independently overridable; a planet author can
-// ship a partial set and inherit the rest.  Multiple entries with the same Label are
-// reserved for future stacking (e.g., two compatible Sky layers); v240 honors the first
-// entry per category.
+// AtmosphereSpec composes a manifold's atmosphere from tagged effect entries.
+// Each category (Sky / Sun / Night / Fog) is independently overridable; a
+// planet author can ship a partial set and inherit the rest.  Multiple entries
+// with the same Label are reserved for future stacking (e.g., two compatible
+// Sky layers); the renderer honors the first entry per category.
 //
 // Category functional split:
 //
@@ -3160,7 +3181,7 @@ func (x *AtmosphereEffect) GetEnabled() bool {
 //	Sun — time-of-day phenomena that get in the way of legibility during map work
 //	      (sunset glow, terminator color, Henyey-Greenstein forward scatter).
 //	Night — night-side dim and cool tinting; off → uniform daylight everywhere.
-//	Fog — exponential aerial perspective on tiles; seam-hider for distant edges.  Usually on.
+//	Fog — exponential aerial perspective on tiles; hides distant tile edges.  Usually on.
 type AtmosphereSpec struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Effects       []*AtmosphereEffect    `protobuf:"bytes,1,rep,name=Effects,proto3" json:"Effects,omitempty"`
@@ -3225,7 +3246,7 @@ type TileServer struct {
 	// Y-axis convention + addressing scheme.
 	Scheme TileServerScheme `protobuf:"varint,6,opt,name=Scheme,proto3,enum=std.TileServerScheme" json:"Scheme,omitempty"`
 	// URL template; supports {z} {x} {y} {s} {access_token} {key}
-	// e.g. "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" or
+	// e.g. "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 	URLTemplate string `protobuf:"bytes,10,opt,name=URLTemplate,proto3" json:"URLTemplate,omitempty"`
 	// Subdomains for {s} substitution (e.g. ["a","b","c"]).
 	Subdomains []string `protobuf:"bytes,11,rep,name=Subdomains,proto3" json:"Subdomains,omitempty"`
@@ -3234,19 +3255,23 @@ type TileServer struct {
 	APIKeyToken string `protobuf:"bytes,12,opt,name=APIKeyToken,proto3" json:"APIKeyToken,omitempty"`
 	// How the API key is delivered.
 	AuthMethod TileServerAuth `protobuf:"varint,13,opt,name=AuthMethod,proto3,enum=std.TileServerAuth" json:"AuthMethod,omitempty"`
-	// Header name when AuthMethod = HeaderKey (e.g. "Authorization", "X-API-Key").
+	// Header name when AuthMethod = HeaderKey (e.g. "Authorization",
+	// "X-API-Key").
 	AuthHeader string `protobuf:"bytes,14,opt,name=AuthHeader,proto3" json:"AuthHeader,omitempty"`
 	// Zoom range supported by the provider.
 	MinZoom int32 `protobuf:"varint,20,opt,name=MinZoom,proto3" json:"MinZoom,omitempty"`
 	MaxZoom int32 `protobuf:"varint,21,opt,name=MaxZoom,proto3" json:"MaxZoom,omitempty"`
-	// Tile pixel dimension (typically 256 or 512).  0 = unspecified, treat as 256.
+	// Tile pixel dimension (typically 256 or 512).  0 = unspecified, treat as
+	// 256.
 	TileSizePx int32 `protobuf:"varint,22,opt,name=TileSizePx,proto3" json:"TileSizePx,omitempty"`
 	// Per-host minimum interval between requests (provider politeness hint).
 	// 0 = unspecified.  OSM ≈ 500.
 	MinIntervalMs int32 `protobuf:"varint,23,opt,name=MinIntervalMs,proto3" json:"MinIntervalMs,omitempty"`
-	// MIME content type of returned tiles ("image/png", "image/jpeg", "application/x-protobuf").
+	// MIME content type of returned tiles ("image/png", "image/jpeg",
+	// "application/x-protobuf").
 	ContentType string `protobuf:"bytes,30,opt,name=ContentType,proto3" json:"ContentType,omitempty"`
-	// For terrain kinds, the elevation encoding scheme ("mapbox-rgb", "terrarium").
+	// For terrain kinds, the elevation encoding scheme ("mapbox-rgb",
+	// "terrarium").
 	ElevationEncoding string `protobuf:"bytes,31,opt,name=ElevationEncoding,proto3" json:"ElevationEncoding,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
@@ -3522,11 +3547,13 @@ func (x *MemberVars) GetReticleOverlayURI() string {
 	return ""
 }
 
-// LoginForm is the recipe for exchanging a username + password for a session token:
-// POST the credentials to an endpoint and read the minted token from the response.
+// LoginForm is the recipe for exchanging a username + password for a session
+// token:  POST the credentials to an endpoint and read the minted token from
+// the response.
 //
-// A LoginForm carries NO secrets — only the *shape* of that exchange (where to POST,
-// how the body is encoded, and how the credential and token fields are named).
+// A LoginForm carries NO secrets — only the *shape* of that exchange (where to
+// POST, how the body is encoded, and how the credential and token fields are
+// named).
 type LoginForm struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Encoding      BodyEncoding           `protobuf:"varint,1,opt,name=Encoding,proto3,enum=std.BodyEncoding" json:"Encoding,omitempty"` // how the request body is encoded

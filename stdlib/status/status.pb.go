@@ -21,12 +21,15 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Code expresses status and error codes.
+// Code expresses status and error codes.  Nil (0) is success; every failure is
+// negative, banded by concern so a reader can place an unfamiliar code:
+// -2300x/-2301x general, -2302x/-2303x request and storage, -2304x data
+// serving, -2305x permissions, -231xx keys and crypto.
 type Code int32
 
 const (
-	Code_Nil                     Code = 0
-	Code_Unnamed                 Code = -23001
+	Code_Nil                     Code = 0      // success — no status to report
+	Code_Unnamed                 Code = -23001 // no specific code applies
 	Code_AssertFailed            Code = -23002
 	Code_Unimplemented           Code = -23004
 	Code_Timeout                 Code = -23005
@@ -39,18 +42,18 @@ const (
 	Code_Cancelled               Code = -23012
 	Code_ItemNotFound            Code = -23013
 	Code_ParseFailed             Code = -23014
-	Code_ContextNotReady         Code = -23020
+	Code_ContextNotReady         Code = -23020 // task.Context not serving
 	Code_RequestClosed           Code = -23021
 	Code_BadRequest              Code = -23022
-	Code_BadTag                  Code = -23023
+	Code_BadTag                  Code = -23023 // malformed tag expression
 	Code_BadValue                Code = -23024
 	Code_AlreadyExists           Code = -23025
 	Code_CommitFailed            Code = -23028
 	Code_StorageFailure          Code = -23030
-	Code_MalformedTx             Code = -23032
-	Code_DataFailure             Code = -23041
-	Code_PinFailed               Code = -23043
-	Code_ProviderErr             Code = -23045
+	Code_MalformedTx             Code = -23032 // TxMsg failed validation
+	Code_DataFailure             Code = -23041 // stored data unreadable
+	Code_PinFailed               Code = -23043 // pin request not served
+	Code_ProviderErr             Code = -23045 // upstream provider failed
 	Code_InsufficientPermissions Code = -23051
 	Code_AlreadyRegistered       Code = -23100
 	Code_DecryptFailed           Code = -23102
@@ -164,7 +167,8 @@ func (Code) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_status_status_proto_rawDescGZIP(), []int{0}
 }
 
-// Severity expresses the severity of a status message for logging and alerting purposes.
+// Severity expresses the severity of a status message for logging and alerting
+// purposes.
 type Severity int32
 
 const (

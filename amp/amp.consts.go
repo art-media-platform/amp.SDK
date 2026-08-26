@@ -14,24 +14,25 @@ var (
 )
 
 const (
-	// Connection-type prefix — the first 4 bytes a peer writes on a new amp.Host TCP
-	// connection so the host demultiplexes traffic types on one port without rewinding
-	// the stream.  A client login connection continues with a TxMsg stream (whose own
-	// preamble is Tx.PreambleSignature); a vault peer continues with sync framing.
-	// New traffic types add a new prefix here.
+	// Connection-type prefix — the first 4 bytes a peer writes on a new amp.Host
+	// TCP connection so the host demultiplexes traffic types on one port without
+	// rewinding the stream.  A client login connection continues with a TxMsg
+	// stream (whose own preamble is Tx.PreambleSignature); a vault peer continues
+	// with sync framing.  New traffic types add a new prefix here.
 	ClientLoginMagic = "AMPL" // client login / session connection
 	VaultAccessMagic = "AMPV" // node-to-node vault sync peer connection
 	// Default TCP port used to expose amp.Host service.
 	DefaultServicePort = int32(5192)
-	// Content-model epoch — the SDK proto semantics under which artifact payloads are
-	// encoded (the Tag/Tags content model).  A Codex stamps this in its header; an
-	// importer refuses a Codex whose epoch differs rather than silently mis-decoding
-	// persisted bytes (DD-chronicle-and-codex.md §5.5).  Bump on each wire-incompatible
-	// content-model change.
+	// Content-model epoch — the SDK proto semantics under which artifact payloads
+	// are encoded (the Tag/Tags content model).  A Codex stamps this in its header;
+	// an importer refuses a Codex whose epoch differs rather than silently
+	// mis-decoding persisted bytes (AOM DD-chronicle-and-codex.md §5.5).  Bump on
+	// each wire-incompatible content-model change.
 	ContentModelEpoch = uint32(1)
-	// Default IANA media type a Tag carries when its ContentTypeRaw field is empty.  Tag.ContentType()
-	// resolves the empty field to this; TagText strips an explicit text/plain so a plain-text leaf
-	// costs 0 wire bytes.  Lower-case (media types are case-insensitive) for portable comparison.
+	// Default IANA media type a Tag carries when its ContentTypeRaw field is empty.
+	// Tag.ContentType() resolves the empty field to this; TagText strips an
+	// explicit text/plain so a plain-text leaf costs 0 wire bytes.  Lower-case
+	// (media types are case-insensitive) for portable comparison.
 	DefaultContentType = "text/plain"
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 	// oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
@@ -49,6 +50,6 @@ const (
 	//    12:14  SignatureLength (uint16 BE; 0 = unsigned)
 	//    14:16  Reserved
 	TxPreambleSignature = "AMP1"
-	// Fixed-size header that leads every TxMsg (see amp.consts.sdl for layout).
+	// Fixed-size header that leads every TxMsg; the layout is above.
 	TxPreambleSize = int32(16)
 )

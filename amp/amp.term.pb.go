@@ -10,7 +10,7 @@
 // EditID stamped at commit is the time axis, and the constant ItemID
 // discriminates the track (out / in / keyframe).  The persisted tape is a
 // read-only "console"; its live tail driven interactively is a "terminal".
-// See AOM/AD-app-terminal.md.
+// See AOM AD-app-terminal.md.
 
 package amp
 
@@ -80,14 +80,14 @@ func (TermBlock_TermDir) EnumDescriptor() ([]byte, []int) {
 }
 
 // TermMode flags a frame that is more than ordinary stream bytes: a
-// self-contained Keyframe (the DVR's scrub seek target — jump to the nearest
-// keyframe <= T, then replay forward to T) or a Resize.
+// self-contained Keyframe (the DVR's scrub seek target — jump to the
+// nearest keyframe <= T, then replay forward to T) or a Resize.
 type TermIO_TermMode int32
 
 const (
 	TermIO_Unspecified TermIO_TermMode = 0 // ordinary terminal byte stream
 	TermIO_Keyframe    TermIO_TermMode = 1 // self-contained full-screen snapshot
-	TermIO_Resize      TermIO_TermMode = 2 // new cols x rows dimensions (M4)
+	TermIO_Resize      TermIO_TermMode = 2 // new cols x rows dimensions
 )
 
 // Enum value maps for TermIO_TermMode.
@@ -136,12 +136,12 @@ func (TermIO_TermMode) EnumDescriptor() ([]byte, []int) {
 // raw stream.
 type TermBlock struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Raw, opaque terminal bytes.  Never UTF-8-validated or transformed; ANSI is
-	// rendered only by the receiving emulator.
+	// Raw, opaque terminal bytes.  Never UTF-8-validated or transformed; ANSI
+	// is rendered only by the receiving emulator.
 	Data []byte `protobuf:"bytes,1,opt,name=Data,proto3" json:"Data,omitempty"`
-	// Monotonic byte offset of this block's first byte from session start in this
-	// direction.  Lets a receiver detect a gap (a dropped laggard) and order or
-	// dedupe blocks independently of arrival.
+	// Monotonic byte offset of this block's first byte from session start in
+	// this direction.  Lets a receiver detect a gap (a dropped laggard) and
+	// order or dedupe blocks independently of arrival.
 	SeqOffset int64 `protobuf:"varint,2,opt,name=SeqOffset,proto3" json:"SeqOffset,omitempty"`
 	// Flow direction.  Per block so a captured batch is self-describing and a
 	// future muxed stream stays valid.
@@ -209,8 +209,8 @@ type TermIO struct {
 	// (idle), so this counter is how a reader tells idle apart from a dropped
 	// frame.  SeqOffset gives byte-exact detail within a direction.
 	BatchSeq uint64 `protobuf:"varint,5,opt,name=BatchSeq,proto3" json:"BatchSeq,omitempty"`
-	// Frame classification (default Unspecified = ordinary stream).  Keyframe is
-	// the DVR seek target; Resize carries dimensions (M4).
+	// Frame classification (default Unspecified = ordinary stream).  Keyframe
+	// is the DVR seek target; Resize carries dimensions.
 	Mode TermIO_TermMode `protobuf:"varint,8,opt,name=Mode,proto3,enum=amp.TermIO_TermMode" json:"Mode,omitempty"`
 	// The ordered byte blocks in this flush.  Concatenate Data in order to
 	// reconstruct the raw stream.

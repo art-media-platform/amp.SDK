@@ -4,10 +4,13 @@
 // 	protoc        (unknown)
 // source: amp/amp.core.proto
 
-// package amp is an implementation-independent API for a pluggable client-server UI/UX system,
-// featuring support and integration for files, media, and communication.
+// Package amp is an implementation-independent API for a pluggable
+// client-server UI/UX system, featuring support and integration for files,
+// media, and communication.
 //
-// Welcome to art.media.platform (c) 2024 ("amp"): a runtime model and specification to securely share and experience digital media under their own agreed terms and permissions,
+// Welcome to art.media.platform (c) 2024 ("amp"): a runtime model and
+// specification to securely share and experience digital media under their own
+// agreed terms and permissions,
 //   something we can all agree on.
 
 package amp
@@ -221,8 +224,8 @@ func (TxOpFlags) EnumDescriptor() ([]byte, []int) {
 
 // TxField maps a fixed count of int64 payload fields.
 //
-// Why not a proto message? Compression is much better since values usually repeat.
-// TxField indexes the per-op u64 slots in the hand-rolled TxOp codec.
+// Why not a proto message? Compression is much better since values usually
+// repeat.  TxField indexes the per-op u64 slots in the hand-rolled TxOp codec.
 // Bit order = change frequency: the hasFields mask is a uvarint sized by its
 // highest set bit, so ItemID (differs on nearly every op) sits in the low bits
 // and NodeID (rarely differs) sits high.  An op's EditID is not a wire field:
@@ -300,7 +303,7 @@ type ValueHeaderFlags int32
 const (
 	ValueHeaderFlags_None   ValueHeaderFlags = 0
 	ValueHeaderFlags_FromID ValueHeaderFlags = 1 // author or other originator
-	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // authoring tx (op EditID); materialize-stamped, read on serve (SD-edit-resolution §6.1)
+	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
 	ValueHeaderFlags_UID_C  ValueHeaderFlags = 4 // reserved
 	ValueHeaderFlags_UID_D  ValueHeaderFlags = 8 // reserved
 )
@@ -419,8 +422,8 @@ const (
 	// Send requested attrs, then auto-close this request
 	// Used when instantaneous state is sufficient (e.g. applying a setting)
 	PinMode_Snapshot PinMode = 1
-	// If set, the request will remain open after the initial state snapshot is sent.
-	// Requester will receive state updates until this request is closed.
+	// If set, the request will remain open after the initial state snapshot is
+	// sent.  Requester will receive state updates until this request is closed.
 	PinMode_MaintainSync PinMode = 2
 )
 
@@ -465,13 +468,12 @@ func (PinMode) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{6}
 }
 
-// EditFlow is where an attr's edits materialize, fixed at registration
-// (1-of-N; never a bool or bitfield).  Folded: the cabinet folds the attr's
-// present per cell (SD-planet-storage §8.1, §8.6) — the zero value, so an
-// undeclared attr folds exactly as every attr always has.  Tape: the edit
-// axis is the attr's time axis — the journal IS the tape; the attr is
-// fold-exempt, holds zero cabinet rows, and serve sources from journal
-// replay.
+// EditFlow is where an attr's edits materialize, fixed at registration (1-of-N;
+// never a bool or bitfield).  Folded: the cabinet folds the attr's present per
+// cell (AOM SD-planet-storage.md §8.1, §8.6) — the zero value, so an undeclared
+// attr folds exactly as every attr always has.  Tape: the edit axis is the
+// attr's time axis — the journal IS the tape; the attr is fold-exempt, holds
+// zero cabinet rows, and serve sources from journal replay.
 type EditFlow int32
 
 const (
@@ -576,7 +578,7 @@ func (SealState) EnumDescriptor() ([]byte, []int) {
 // because who may join is a governance act.  Unset resolves to
 // DefaultMemberAdmission (AdmissionInviteOnly) via EffectiveAdmission — the
 // invite-first doctrine is the default; open registration is opt-in per epoch
-// (O4 §4.9, SD-security-sync §8.5).
+// (O4 §4.9, AOM SD-security-sync.md §8.5).
 type MemberAdmission int32
 
 const (
@@ -792,12 +794,13 @@ func (Access) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{12}
 }
 
-// ContentPolicy constrains HOW a channel's content cells may be written — orthogonal
-// to the AccessGrants axis, which gates WHO may write.  Default Unbound keeps classic
-// semantics (any Access_ReadWrite holder writes any cell on the node).  AuthorBound
-// restricts a non-moderator writer to cells whose ItemID is bound to their own
-// identity, so members self-author on one shared channel without being able to
-// overwrite another member's cell (AOM SD-channel-governance.md §4).
+// ContentPolicy constrains HOW a channel's content cells may be written —
+// orthogonal to the AccessGrants axis, which gates WHO may write.  Default
+// Unbound keeps classic semantics (any Access_ReadWrite holder writes any cell
+// on the node).  AuthorBound restricts a non-moderator writer to cells whose
+// ItemID is bound to their own identity, so members self-author on one shared
+// channel without being able to overwrite another member's cell (AOM
+// SD-channel-governance.md §4).
 type ContentPolicy int32
 
 const (
@@ -844,8 +847,9 @@ func (ContentPolicy) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{13}
 }
 
-// AttestationType names the kind of observation being recorded in the planet ledger.
-// Apps may use values above 100 for domain-specific types; 0-99 are reserved.
+// AttestationType names the kind of observation being recorded in the planet
+// ledger.  Apps may use values above 100 for domain-specific types; 0-99 are
+// reserved.
 type AttestationType int32
 
 const (
@@ -904,9 +908,9 @@ func (AttestationType) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{14}
 }
 
-// WithdrawReason categorizes a withdrawal per AOM SD-withdrawal-consent.md.  Used by both
-// amp.Withdraw (substrate-side TxMsg payload) and webapi.WithdrawNote
-// (REST/WebSocket wire shape).
+// WithdrawReason categorizes a withdrawal per AOM SD-withdrawal-consent.md.
+// Used by both amp.Withdraw (substrate-side TxMsg payload) and
+// webapi.WithdrawNote (REST/WebSocket wire shape).
 //
 // Go const names are emitted by protoc-gen-go as `WithdrawReason_<Value>`
 // (e.g. WithdrawReason_Consent).
@@ -1135,9 +1139,9 @@ func (PlatformID) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{18}
 }
 
-// TrustState is the three-state verdict for a NameService record's §3.3 back-edge
-// consent check. Unchecked (the resolver lacked the target's
-// live Brand to verify) must never map to Verified.  AOM DD-name-service.md §3.3/§15.1.
+// TrustState is the three-state verdict for a NameService record's back-edge
+// consent check (AOM DD-name-service.md §3.3/§15.1).  Unchecked (the resolver
+// lacked the target's live Brand to verify) must never map to Verified.
 type TrustState int32
 
 const (
@@ -1187,10 +1191,11 @@ func (TrustState) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{19}
 }
 
-// ArchiveMode is a peer's replication posture for a planet: how much of the journal it
-// holds and advertises.  Archive (the zero value) is total replication — a peer that
-// sends no ArchiveMode reads as a full holder.  Suffix holds only a recent txTimeID
-// window (§9).  The reserved 1–6 / 8+ gaps leave room for segmented / subtree modes.
+// ArchiveMode is a peer's replication posture for a planet: how much of the
+// journal it holds and advertises.  Archive (the zero value) is total
+// replication — a peer that sends no ArchiveMode reads as a full holder.
+// Suffix holds only a recent txTimeID window (AOM SD-planet-storage.md §9).
+// The reserved 1–6 / 8+ gaps leave room for segmented / subtree modes.
 type ArchiveMode int32
 
 const (
@@ -1238,7 +1243,8 @@ func (ArchiveMode) EnumDescriptor() ([]byte, []int) {
 }
 
 // RefusalClass names why a peer refused an arriving TxMsg WITHOUT journaling it
-// (SyncTxRefused).  Rate-limit refusals are transient and deliberately emit nothing.
+// (SyncTxRefused).  Rate-limit refusals are transient and deliberately emit
+// nothing.
 type RefusalClass int32
 
 const (
@@ -1291,22 +1297,25 @@ func (RefusalClass) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{21}
 }
 
-// Tag is a versatile and lightweight way to fuse any URL, ID, precise geo-location, crypto address, content-type, or payload text.
+// Tag is a versatile and lightweight way to fuse any URL, ID, precise
+// geo-location, crypto address, content-type, or payload text.
 //
-// All fields are optional and their meaning is contextual; a Tag plays one or more roles —
-// identity (UID), reference (URI / ContentTypeRaw), label (Text), measure (I/J/K + Units),
-// attachment (Data).
+// All fields are optional and their meaning is contextual; a Tag plays one or
+// more roles — identity (UID), reference (URI / ContentTypeRaw), label (Text),
+// measure (I/J/K + Units), attachment (Data).
 //
-// URI + Data together is the POST-FETCH CACHE: URI names where the object lives, Data is a
-// copy of it materialized inline, so holding Data IS the cache hit and there is no precedence
-// to resolve.  A content-addressed handle cannot go stale — a BlobID is the leading 16 bytes
-// of the content hash, so the bytes it names never change.  A location-addressed URI has no
-// such guarantee: the copy is as of write time and the producer owns its refresh.
+// URI + Data together is the POST-FETCH CACHE: URI names where the object
+// lives, Data is a copy of it materialized inline, so holding Data IS the cache
+// hit and there is no precedence to resolve.  A content-addressed handle cannot
+// go stale — a BlobID is the leading 16 bytes of the content hash, so the bytes
+// it names never change.  A location-addressed URI has no such guarantee: the
+// copy is as of write time and the producer owns its refresh.
 //
-// Data requires ContentTypeRaw (bytes with no media type are unrenderable) and is legal on
-// Tags.Head or any Tags.SubTag.  The substrate sets NO per-Tag size ceiling, so an attachment
-// reaches every subscriber and stays in the journal ungated by BlobPullPolicy, and the
-// producer owns its own limit.  (SD-content-substrate.md §3.1, §3.6)
+// Data requires ContentTypeRaw (bytes with no media type are unrenderable) and
+// is legal on Tags.Head or any Tags.SubTag.  The substrate sets NO per-Tag size
+// ceiling, so an attachment reaches every subscriber and stays in the journal
+// ungated by BlobPullPolicy, and the producer owns its own limit.  (AOM
+// SD-content-substrate.md §3.1, §3.6)
 type Tag struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// / open-use inline fields; typical encoded size is 10-20 bytes, max possible size is 170 bytes
@@ -1490,10 +1499,10 @@ func (x *Tags) GetChildren() []*Tags {
 	return nil
 }
 
-// Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID, ItemID, EditID)
-// tuple addressing a single CRDT cell across any planet.  PlanetID = 0 means
-// "this planet" (the planet of the containing TxMsg), matching Citation's convention.
-// Used to cite a specific TxOp address across planets without dereferencing.
+// Address is the wire form of tag.Address — a (PlanetID, NodeID, AttrID,
+// ItemID, EditID) tuple addressing a single CRDT cell across any planet.
+// PlanetID = 0 means "this planet" (the planet of the containing TxMsg).  Used
+// to cite a specific TxOp address across planets without dereferencing.
 type Address struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
@@ -1688,7 +1697,7 @@ func (x *UIDRange) GetEnd_1() uint64 {
 // the whole payload, so every op must be readable by any holder of that epoch
 // key.  To write under a different domain (e.g. another private channel),
 // author a separate TxMsg.  (AOM ZO-design-conventions.md §3.3,
-// SD-security-sync.md §3.)
+// AOM SD-security-sync.md §3.)
 //
 // Epoch modes:
 //   - nil/zero   → planet-public: plaintext, signed-only (governance ops).
@@ -1823,16 +1832,17 @@ func (x *TxEnvelope) GetPlanetEpoch_1() uint64 {
 	return 0
 }
 
-// TxHeader contains primary information about a tx and is encrypted based on TxEnvelope fields.
+// TxHeader contains primary information about a tx and is encrypted based on
+// TxEnvelope fields.
 type TxHeader struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Refers to a tag ID (usually a TxID) for subsequent requests and responses.
-	// Used to reference a tx thread to a request.
-	// If nil or equal to TxID, then this tx is context-free and TxID is implied context ID.
+	// Refers to a tag ID (usually a TxID) for subsequent requests and
+	// responses.  Used to reference a tx thread to a request.  If nil or equal
+	// to TxID, then this tx is context-free and TxID is implied context ID.
 	ContextID_0 uint64 `protobuf:"fixed64,1,opt,name=ContextID_0,json=ContextID0,proto3" json:"ContextID_0,omitempty"`
 	ContextID_1 uint64 `protobuf:"fixed64,2,opt,name=ContextID_1,json=ContextID1,proto3" json:"ContextID_1,omitempty"`
-	// Author identity — moved from TxEnvelope into encrypted payload
-	// so passive observers cannot correlate sender identity with traffic.
+	// Author identity — carried in the encrypted payload so passive observers
+	// cannot correlate sender identity with traffic.
 	FromID_0 uint64 `protobuf:"fixed64,3,opt,name=FromID_0,json=FromID0,proto3" json:"FromID_0,omitempty"`
 	FromID_1 uint64 `protobuf:"fixed64,4,opt,name=FromID_1,json=FromID1,proto3" json:"FromID_1,omitempty"`
 	// Status of the most recent PinRequest revision.
@@ -1915,7 +1925,8 @@ func (x *TxHeader) GetRequest() *PinRequest {
 	return nil
 }
 
-// PinRequest is a peer request to "pin" a set of element IDs, where selected attrs and items will be pushed to the peer.
+// PinRequest is a peer request to "pin" a set of element IDs, where selected
+// attrs and items will be pushed to the peer.
 type PinRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Used for easy sorting and ordering of requests
@@ -2067,9 +2078,9 @@ type ItemSpan struct {
 	ItemID_Max_1 uint64                 `protobuf:"fixed64,13,opt,name=ItemID_Max_1,json=ItemIDMax1,proto3" json:"ItemID_Max_1,omitempty"` // "
 	ItemsPerAttr int64                  `protobuf:"varint,14,opt,name=ItemsPerAttr,proto3" json:"ItemsPerAttr,omitempty"`                  // max items returned per unique attr ID (0 denotes no limit)
 	EditsPerItem int64                  `protobuf:"varint,15,opt,name=EditsPerItem,proto3" json:"EditsPerItem,omitempty"`                  // max edits returned per unique item ID, newest first
-	// Edit-axis time window, inclusive; an unset bound widens to the tape
-	// start / the open live tail.  EditID == TxID is time-true
-	// (SD-edit-resolution §6.1).  On a Tape attr the journal is the store:
+	// Edit-axis time window, inclusive; an unset bound widens to the tape start
+	// / the open live tail.  EditID == TxID is time-true (AOM
+	// SD-edit-resolution.md §6.1).  On a Tape attr the journal is the store:
 	// items are tracks, this window selects the replay span, and EditsPerItem
 	// caps samples per track.  On a Folded attr the window filters the cell's
 	// retained edits.
@@ -2215,17 +2226,18 @@ type Login struct {
 	Member *Tag                   `protobuf:"bytes,1,opt,name=Member,proto3" json:"Member,omitempty"` // identity — the member logging in (UID; Text optionally a label, e.g. a wallet address)
 	Planet *Tag                   `protobuf:"bytes,2,opt,name=Planet,proto3" json:"Planet,omitempty"` // identity — the target home planet (UID; Text optionally its display label)
 	Device *Tag                   `protobuf:"bytes,5,opt,name=Device,proto3" json:"Device,omitempty"` // identity — the client device (UID)
-	// HostAddress is the network address of the server known to the client (e.g. IP address, localhost, domain name, etc)
-	// amp.Host uses this as the host name when serving URLs for the client to consume.
+	// HostAddress is the network address of the server known to the client
+	// (e.g. IP address, localhost, domain name, etc) amp.Host uses this as the
+	// host name when serving URLs for the client to consume.
 	HostAddress string `protobuf:"bytes,8,opt,name=HostAddress,proto3" json:"HostAddress,omitempty"`
 	// Checkpoint allows the client to resume an auth session.
 	Checkpoint *LoginCheckpoint `protobuf:"bytes,12,opt,name=Checkpoint,proto3" json:"Checkpoint,omitempty"`
 	// SigningKey carries the client's signing identity — pubkey + suite + type
-	// in the same wire shape MemberEpoch publishes (safe.KeyRef) — so a remotely
-	// self-generated identity can be bound to a Member.  The host verifies the
-	// challenge-response signature against the key it holds for Member; when the
-	// host has no key recorded yet it may adopt this one if trust-on-first-use
-	// (TOFU) is set.
+	// in the same wire shape MemberEpoch publishes (safe.KeyRef) — so a
+	// remotely self-generated identity can be bound to a Member.  The host
+	// verifies the challenge-response signature against the key it holds for
+	// Member; when the host has no key recorded yet it may adopt this one if
+	// trust-on-first-use (TOFU) is set.
 	SigningKey    *safe.KeyRef `protobuf:"bytes,17,opt,name=SigningKey,proto3" json:"SigningKey,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2484,7 +2496,8 @@ func (x *LoginCheckpoint) GetURI() string {
 // present and disagree, BrandMark wins (it is the quorum-signed authority).
 type BrandIdentity struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Public name of the planet ("Tunr", "Hexosphere", "Grandma's Record Shelf").
+	// Public name of the planet ("Tunr", "Hexosphere", "Grandma's Record
+	// Shelf").
 	AppName string `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`
 	// Operator / sponsoring organization name ("SoundSpectrum").
 	OrgName string `protobuf:"bytes,2,opt,name=OrgName,proto3" json:"OrgName,omitempty"`
@@ -2580,19 +2593,19 @@ func (x *BrandIdentity) GetNamedBy() *Tag {
 // surface.  It is embedded in EpochTerms (quorum-signed), NOT the admin-mutable
 // Brand attr, so changing a planet's public face requires convening the
 // governing quorum.  This is the anti-spoof boundary: a lone admin key cannot
-// silently rename "119th Congress" to "War Profiteers".
+// silently change a planet's public name.
 //
 // The separate Brand attr remains the admin-mutable record for NON-identity,
 // cosmetic/operational fields (home URLs, link lists, install targets, and the
-// content-addressed BundledCrates SBOM — hash-pinned + change-logged).  When the
-// two disagree, BrandMark (here, quorum-signed) is the authoritative identity.
+// content-addressed BundledCrates SBOM — hash-pinned + change-logged).
+// BrandIdentity states precedence where the two disagree.
 type BrandMark struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The planet's identity field set — quorum-signed here.
 	Identity *BrandIdentity `protobuf:"bytes,1,opt,name=Identity,proto3" json:"Identity,omitempty"`
-	// Visual glyph variants (HTML <picture>-shaped Tags tree): size/theme/density/
-	// content-type variants consumers pick from.  The visual impersonation
-	// surface, hence quorum-signed.
+	// Visual glyph variants (HTML <picture>-shaped Tags tree):
+	// size/theme/density/ content-type variants consumers pick from.  The
+	// visual impersonation surface, hence quorum-signed.
 	Glyphs        *Tags `protobuf:"bytes,7,opt,name=Glyphs,proto3" json:"Glyphs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2642,10 +2655,11 @@ func (x *BrandMark) GetGlyphs() *Tags {
 	return nil
 }
 
-// VaultConfig bundles the per-planet workload tunables that relay vaults enforce.
-// All fields are advisory — unset (zero) means "use the protocol default" from
-// amp.support.attrs.go DefaultXxx consts.  Passed around as *VaultConfig; helpers
-// on the pointer receiver are nil-safe so callers don't have to guard.
+// VaultConfig bundles the per-planet workload tunables that relay vaults
+// enforce.  All fields are advisory — unset (zero) means "use the protocol
+// default" from amp.support.attrs.go DefaultXxx consts.  Passed around as
+// *VaultConfig; helpers on the pointer receiver are nil-safe so callers don't
+// have to guard.
 type VaultConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Rate limiting (per-member, sliding window):
@@ -2653,55 +2667,59 @@ type VaultConfig struct {
 	MaxBytesPerWindow   int64 `protobuf:"varint,2,opt,name=MaxBytesPerWindow,proto3" json:"MaxBytesPerWindow,omitempty"`     // Max bytes per member per window (default: 100 MB)
 	MaxTxPerWindow      int64 `protobuf:"varint,3,opt,name=MaxTxPerWindow,proto3" json:"MaxTxPerWindow,omitempty"`           // Max TxMsg count per member per window (default: 10000)
 	RateLimitWindowSecs int64 `protobuf:"varint,4,opt,name=RateLimitWindowSecs,proto3" json:"RateLimitWindowSecs,omitempty"` // Sliding window duration in seconds (default: 86400 = 24h)
-	// Quarantine retention for TxMsgs that fail MemberProof or signature verification.
-	// Quarantined entries are excluded from fanout + ReadSince but remain in the journal
-	// so Strike attestations citing the rejected TxID can be audited against the bytes.
-	// After expiry, Badger GC evicts; the Strike still stands (canonical bytes include TxID).
-	// If 0, DefaultQuarantineRetention applies (7 days).
+	// Quarantine retention for TxMsgs that fail MemberProof or signature
+	// verification.  Quarantined entries are excluded from fanout + ReadSince
+	// but remain in the journal so Strike attestations citing the rejected TxID
+	// can be audited against the bytes.  After expiry, Badger GC evicts; the
+	// Strike still stands (canonical bytes include TxID).  If 0,
+	// DefaultQuarantineRetention applies (7 days).
 	QuarantineRetentionSecs int64 `protobuf:"varint,5,opt,name=QuarantineRetentionSecs,proto3" json:"QuarantineRetentionSecs,omitempty"`
-	// Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's wall clock.
-	// TxMsgs stamped further into the future are dropped at intake.  Past-stamped TxMsgs
-	// are unrestricted (catchup/resync).  If 0, DefaultMaxFutureSkew applies (5 minutes).
+	// Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's
+	// wall clock.  TxMsgs stamped further into the future are dropped at
+	// intake.  Past-stamped TxMsgs are unrestricted (catchup/resync).  If 0,
+	// DefaultMaxFutureSkew applies (5 minutes).
 	MaxFutureSkewSecs int64 `protobuf:"varint,6,opt,name=MaxFutureSkewSecs,proto3" json:"MaxFutureSkewSecs,omitempty"`
-	// Late-key pending queue caps.  Bound memory used tracking encrypted TxMsgs awaiting
-	// their epoch key.  Saturation is not data loss — entries remain in the journal and
-	// are decryptable when the key arrives; saturation just skips the audit-drain re-verify.
-	// If 0, the DefaultMaxPendingPerEpoch / DefaultMaxPendingEpochs apply.
+	// Late-key pending queue caps.  Bound memory used tracking encrypted TxMsgs
+	// awaiting their epoch key.  Saturation is not data loss — entries remain
+	// in the journal and are decryptable when the key arrives; saturation just
+	// skips the audit-drain re-verify.  If 0, the DefaultMaxPendingPerEpoch /
+	// DefaultMaxPendingEpochs apply.
 	MaxPendingPerEpoch uint32 `protobuf:"varint,7,opt,name=MaxPendingPerEpoch,proto3" json:"MaxPendingPerEpoch,omitempty"`
 	MaxPendingEpochs   uint32 `protobuf:"varint,8,opt,name=MaxPendingEpochs,proto3" json:"MaxPendingEpochs,omitempty"`
-	// Bootstrap TTL for invite tokens, in seconds.  An invite created at time T is
-	// accepted only while time.Now().Unix() <= T + BootstrapTTLSecs.  Bounds the
-	// exposure window of a leaked invite token.  Enforced on accept; the issuing
-	// admin cannot retract early but may publish an explicit revocation op.
-	// If 0, DefaultBootstrapTTL applies (7 days).
+	// Bootstrap TTL for invite tokens, in seconds.  An invite created at time T
+	// is accepted only while time.Now().Unix() <= T + BootstrapTTLSecs.  Bounds
+	// the exposure window of a leaked invite token.  Enforced on accept; the
+	// issuing admin cannot retract early but may publish an explicit revocation
+	// op.  If 0, DefaultBootstrapTTL applies (7 days).
 	BootstrapTTLSecs int64 `protobuf:"varint,9,opt,name=BootstrapTTLSecs,proto3" json:"BootstrapTTLSecs,omitempty"`
 	// Blob-plane metering (per-peer, sliding window).  Bounds the byte volume a
-	// single authenticated peer can drive through the blob transfer plane — charged
-	// at both ingest (StoreValidated) and egress (SendBlob) — so a misbehaving peer
-	// cannot force unbounded hash+write or disk-read+send work.  The unsolicited-push
-	// ingest gate (accept only referenced blobs) is the precise first line; this
-	// budget is the coarse backstop and the only bound on the egress side.  Sized for
-	// large-media sync: the default is generous so legitimate transfers pass, and a
-	// hostile-environment operator tightens it.  If 0, DefaultMaxBlobBytesPerWindow
-	// applies (1 TiB).
+	// single authenticated peer can drive through the blob transfer plane —
+	// charged at both ingest (StoreValidated) and egress (SendBlob) — so a
+	// misbehaving peer cannot force unbounded hash+write or disk-read+send
+	// work.  The unsolicited-push ingest gate (accept only referenced blobs) is
+	// the precise first line; this budget is the coarse backstop and the only
+	// bound on the egress side.  Sized for large-media sync: the default is
+	// generous so legitimate transfers pass, and a hostile-environment operator
+	// tightens it.  If 0, DefaultMaxBlobBytesPerWindow applies (1 TiB).
 	MaxBlobBytesPerWindow int64 `protobuf:"varint,10,opt,name=MaxBlobBytesPerWindow,proto3" json:"MaxBlobBytesPerWindow,omitempty"`
-	// Sliding window for the blob byte budget, in seconds.  The blob plane moves
-	// large media on a slower cadence than the TxMsg plane, so it may want its own
-	// window.  If 0, RateLimitWindowSecs is used; if that is also 0,
-	// DefaultBlobRateLimitWindow applies (24h).
+	// Sliding window for the blob byte budget, in seconds.  The blob plane
+	// moves large media on a slower cadence than the TxMsg plane, so it may
+	// want its own window.  If 0, RateLimitWindowSecs is used; if that is also
+	// 0, DefaultBlobRateLimitWindow applies (24h).
 	BlobRateLimitWindowSecs int64 `protobuf:"varint,11,opt,name=BlobRateLimitWindowSecs,proto3" json:"BlobRateLimitWindowSecs,omitempty"`
-	// Per-object blob size ceiling: the maximum stored byte size of a SINGLE blob this vault will
-	// ingest, distinct from the per-window byte budget above.  Bounds the otherwise 1 PiB-declarable
-	// transfer the sliding-window budget alone admits.  If 0, DefaultMaxBlobBytesPerObject applies
-	// (1 TiB).
+	// Per-object blob size ceiling: the maximum stored byte size of a SINGLE
+	// blob this vault will ingest, distinct from the per-window byte budget
+	// above.  Bounds the otherwise 1 PiB-declarable transfer the sliding-window
+	// budget alone admits.  If 0, DefaultMaxBlobBytesPerObject applies (1 TiB).
 	MaxBlobBytesPerObject int64 `protobuf:"varint,13,opt,name=MaxBlobBytesPerObject,proto3" json:"MaxBlobBytesPerObject,omitempty"`
 	// Bootstrap vault endpoints advertised for this planet — the admin-signed,
 	// governance home for "where can a fresh peer dial to reach this planet?".
-	// InviteCreate stamps these into every PlanetInvite it issues, so a peerless
-	// acceptor can DialVaultPeers its way onto the planet.  Reuses the transport-
-	// tagged VaultAddr envelope shared with NameServiceRecord / FederationPeer.
-	// Empty means the planet publishes no bootstrap address (reachable only via a
-	// federation NameServiceRecord or static -vault.peers).
+	// InviteCreate stamps these into every PlanetInvite it issues, so a
+	// peerless acceptor can DialVaultPeers its way onto the planet.  Reuses the
+	// transport- tagged VaultAddr envelope shared with NameServiceRecord /
+	// FederationPeer.  Empty means the planet publishes no bootstrap address
+	// (reachable only via a federation NameServiceRecord or static
+	// -vault.peers).
 	VaultAddrs    []*VaultAddr `protobuf:"bytes,12,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2829,8 +2847,8 @@ func (x *VaultConfig) GetVaultAddrs() []*VaultAddr {
 }
 
 // PlanetCharter holds a planet's lifetime-IMMUTABLE founding terms.  It is
-// marshaled exactly once at genesis, stored verbatim in PlanetEpoch.Charter, and
-// carried byte-identically on every epoch for the planet's whole life.
+// marshaled exactly once at genesis, stored verbatim in PlanetEpoch.Charter,
+// and carried byte-identically on every epoch for the planet's whole life.
 //
 // FREEZE INVARIANT: the Charter bytes are signed verbatim (see PlanetEpoch).  A
 // verifier hashes the STORED bytes and never re-marshals this message, so
@@ -2851,35 +2869,36 @@ type PlanetCharter struct {
 	// root of the epoch chain inside the immutable layer.
 	GenesisEpoch *Tag `protobuf:"bytes,3,opt,name=GenesisEpoch,proto3" json:"GenesisEpoch,omitempty"`
 	// Containment hierarchy: the parent planet this one was founded under.
-	// Genesis-immutable — a planet's place in the parent/child tree is a founding
-	// fact, not a governance toggle.  Nil for a root planet.
+	// Genesis-immutable — a planet's place in the parent/child tree is a
+	// founding fact, not a governance toggle.  Nil for a root planet.
 	ParentPlanet *Tag `protobuf:"bytes,4,opt,name=ParentPlanet,proto3" json:"ParentPlanet,omitempty"`
 	// Forward-only fork provenance: the planet this one was forked from, the
 	// source epoch, and fork time.  Carries no authority over this planet.
 	// Immutable because "where we came from" is a founding fact.  Nil for an
 	// original (non-forked) planet.
 	Origin *PlanetOrigin `protobuf:"bytes,5,opt,name=Origin,proto3" json:"Origin,omitempty"`
-	// Privacy mode, fixed for the planet's life.  Public operates signature-only
-	// with no payload encryption (anyone may syndicate/view, only members author);
-	// Confidential encrypts payloads to members.  Changing it would retroactively
-	// re-classify all prior content — a Confidential planet that wants to go Public
-	// forks instead.
+	// Privacy mode, fixed for the planet's life.  Public operates
+	// signature-only with no payload encryption (anyone may syndicate/view,
+	// only members author); Confidential encrypts payloads to members.
+	// Changing it would retroactively re-classify all prior content — a
+	// Confidential planet that wants to go Public forks instead.
 	Privacy PrivacyMode `protobuf:"varint,6,opt,name=Privacy,proto3,enum=amp.PrivacyMode" json:"Privacy,omitempty"`
-	// Founding declaration of intent — the vows, operating clause, house rules the
-	// founders read and signed.  Structured (Tags) so founding terms are machine-
-	// walkable: Head names the covenant; SubTags/Children carry clauses,
-	// jurisdiction, language variants, signed riders.  Immutable: the declaration
-	// each founder bound themselves to cannot be edited after.
+	// Founding declaration of intent — the vows, operating clause, house rules
+	// the founders read and signed.  Structured (Tags) so founding terms are
+	// machine- walkable: Head names the covenant; SubTags/Children carry
+	// clauses, jurisdiction, language variants, signed riders.  Immutable: the
+	// declaration each founder bound themselves to cannot be edited after.
 	Declaration *Tags `protobuf:"bytes,7,opt,name=Declaration,proto3" json:"Declaration,omitempty"`
 	// Founding member set, by UID.  Genesis is self-ratifying: each founder
 	// co-signs Charter+Terms bytes that include this list, and their signing
-	// pubkeys ride the genesis TxMsg's MemberEpoch ops.  An explicit UID set (not
-	// a GovernanceGroup reference) avoids any chicken-and-egg at founding — a group
-	// cannot be cited before the planet that defines it exists.
+	// pubkeys ride the genesis TxMsg's MemberEpoch ops.  An explicit UID set
+	// (not a GovernanceGroup reference) avoids any chicken-and-egg at founding
+	// — a group cannot be cited before the planet that defines it exists.
 	Founders []*Tag `protobuf:"bytes,8,rep,name=Founders,proto3" json:"Founders,omitempty"`
-	// Genesis quorum threshold: how many Founders must have validly co-signed the
-	// genesis epoch.  0 = all Founders (paranoid default).  Frozen: the rule under
-	// which the planet legitimately came into being cannot be restated.
+	// Genesis quorum threshold: how many Founders must have validly co-signed
+	// the genesis epoch.  0 = all Founders (the strict default).  Frozen: the
+	// rule under which the planet legitimately came into being cannot be
+	// restated.
 	GenesisRequiredSignatures int32 `protobuf:"varint,9,opt,name=GenesisRequiredSignatures,proto3" json:"GenesisRequiredSignatures,omitempty"`
 	unknownFields             protoimpl.UnknownFields
 	sizeCache                 protoimpl.SizeCache
@@ -2980,8 +2999,8 @@ func (x *PlanetCharter) GetGenesisRequiredSignatures() int32 {
 
 // EpochTerms holds a planet's per-epoch GOVERNANCE terms.  Each epoch rotation
 // produces a fresh EpochTerms, marshaled once and stored verbatim in
-// PlanetEpoch.Terms, then co-signed by the governing quorum.  Verifiers hash the
-// STORED bytes; this message is never re-marshaled on the verify path.
+// PlanetEpoch.Terms, then co-signed by the governing quorum.  Verifiers hash
+// the STORED bytes; this message is never re-marshaled on the verify path.
 //
 // Everything here is quorum-signed.  In particular the planet's public identity
 // (Mark) lives here so a spoof rename requires convening the quorum, not a lone
@@ -2991,37 +3010,42 @@ type EpochTerms struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Layout version of this EpochTerms.
 	TermsSchema uint32 `protobuf:"varint,1,opt,name=TermsSchema,proto3" json:"TermsSchema,omitempty"`
-	// Identity of this epoch (time-ordered UID).  Matches PlanetEpoch.EpochTag and
-	// every MemberEpoch.Epoch published alongside it.
+	// Identity of this epoch (time-ordered UID).  Matches PlanetEpoch.EpochTag
+	// and every MemberEpoch.Epoch published alongside it.
 	EpochTag *Tag `protobuf:"bytes,2,opt,name=EpochTag,proto3" json:"EpochTag,omitempty"`
 	// The epoch this one supersedes, forming the authority chain.  Nil ONLY for
-	// the genesis epoch.  A verifier walks this back to PlanetCharter.GenesisEpoch.
+	// the genesis epoch.  A verifier walks this back to
+	// PlanetCharter.GenesisEpoch.
 	PreviousEpoch *Tag `protobuf:"bytes,3,opt,name=PreviousEpoch,proto3" json:"PreviousEpoch,omitempty"`
-	// Monotonic epoch height: genesis = 0, each rotation + 1.  A clock-independent
-	// total order (UIDs encode wall-clock, which a malicious minter could skew);
-	// lets verifiers reject out-of-order / replayed epochs and bound chain length.
+	// Monotonic epoch height: genesis = 0, each rotation + 1.  A
+	// clock-independent total order (UIDs encode wall-clock, which a malicious
+	// minter could skew); lets verifiers reject out-of-order / replayed epochs
+	// and bound chain length.
 	EpochHeight uint64 `protobuf:"varint,4,opt,name=EpochHeight,proto3" json:"EpochHeight,omitempty"`
 	// HashKit is this epoch's content/digest hash policy — per-epoch and
 	// rotatable (a migration may move it alongside CryptoKitID), selected by ID
 	// so a verifier picks the hasher rather than hardcoding an algorithm.
 	// CharterHash is the digest of the planet's immutable PlanetCharter bytes
-	// under HashKit: it binds every epoch to the one Charter so a charter swap is
-	// detectable from the small Terms alone, without re-shipping Charter bytes.
+	// under HashKit: it binds every epoch to the one Charter so a charter swap
+	// is detectable from the small Terms alone, without re-shipping Charter
+	// bytes.
 	HashKit     safe.HashKitID `protobuf:"varint,5,opt,name=HashKit,proto3,enum=safe.HashKitID" json:"HashKit,omitempty"`
 	CharterHash []byte         `protobuf:"bytes,6,opt,name=CharterHash,proto3" json:"CharterHash,omitempty"`
-	// Crypto suite in force for this epoch — the SOLE home for the planet's suite
-	// (no separate founding-kit slot; the genesis epoch's value IS the founding
-	// suite).  Unset resolves to Poly25519 via EffectiveCryptoKit.  A quorum-
-	// approved migration (e.g. post-quantum) rotates the suite by issuing an epoch
-	// with a new value.
+	// Crypto suite in force for this epoch — the SOLE home for the planet's
+	// suite (no separate founding-kit slot; the genesis epoch's value IS the
+	// founding suite).  Unset resolves to Poly25519 via EffectiveCryptoKit.  A
+	// quorum- approved migration (e.g. post-quantum) rotates the suite by
+	// issuing an epoch with a new value.
 	CryptoKitID_0 uint64 `protobuf:"fixed64,7,opt,name=CryptoKitID_0,json=CryptoKitID0,proto3" json:"CryptoKitID_0,omitempty"` // CryptoKit UID (suite in force this epoch), bytes 0..7
 	CryptoKitID_1 uint64 `protobuf:"fixed64,8,opt,name=CryptoKitID_1,json=CryptoKitID1,proto3" json:"CryptoKitID_1,omitempty"` // CryptoKit UID, bytes 8..15
-	// Human-readable label for THIS epoch ("Genesis", "Rotation 3") — an operator/
-	// audit display string, NOT the planet's public name (that is Mark.AppName).
+	// Human-readable label for THIS epoch ("Genesis", "Rotation 3") — an
+	// operator/ audit display string, NOT the planet's public name (that is
+	// Mark.AppName).
 	Label string `protobuf:"bytes,10,opt,name=Label,proto3" json:"Label,omitempty"`
-	// The planet's quorum-signed public identity (name/org/domain/description/URL
-	// schemes/federation back-edge/glyphs).  The impersonation surface — here, not
-	// the admin-mutable Brand attr, so a public-face change requires the quorum.
+	// The planet's quorum-signed public identity
+	// (name/org/domain/description/URL schemes/federation back-edge/glyphs).
+	// The impersonation surface — here, not the admin-mutable Brand attr, so a
+	// public-face change requires the quorum.
 	Mark *BrandMark `protobuf:"bytes,11,opt,name=Mark,proto3" json:"Mark,omitempty"`
 	// Default entry channel — where members land when opening the planet.
 	// Foyer is to play as Index is to search.
@@ -3030,26 +3054,29 @@ type EpochTerms struct {
 	Index *Tag `protobuf:"bytes,13,opt,name=Index,proto3" json:"Index,omitempty"`
 	// The ACC group whose members are the authorized co-signers of this epoch.
 	// Zero/unset for genesis (the signers are PlanetCharter.Founders directly);
-	// for rotations, resolves to a group defined in the prior epoch's member set.
+	// for rotations, resolves to a group defined in the prior epoch's member
+	// set.
 	GovernanceGroup *Tag `protobuf:"bytes,16,opt,name=GovernanceGroup,proto3" json:"GovernanceGroup,omitempty"`
 	// Threshold of GovernanceGroup co-signatures required for this epoch to be
-	// valid.  0 = all members of the resolved group (paranoid default).
+	// valid.  0 = all members of the resolved group (the strict default).
 	RequiredSignatures int32 `protobuf:"varint,18,opt,name=RequiredSignatures,proto3" json:"RequiredSignatures,omitempty"`
-	// Lifecycle posture asserted by this epoch's quorum (Open / Paused / Sealed).
+	// Lifecycle posture asserted by this epoch's quorum (Open / Paused /
+	// Sealed).
 	Seal SealState `protobuf:"varint,20,opt,name=Seal,proto3,enum=amp.SealState" json:"Seal,omitempty"`
 	// Member-admission posture asserted by this epoch's quorum (see
 	// MemberAdmission).  Unset resolves via EffectiveAdmission.
 	Admission MemberAdmission `protobuf:"varint,21,opt,name=Admission,proto3,enum=amp.MemberAdmission" json:"Admission,omitempty"`
-	// Address of the immutable Codex edition this epoch publishes / seals against
-	// ("the printed edition").  Typically set on a Paused/Sealed sealing epoch.
-	// Zero when this epoch publishes no edition.
+	// Address of the immutable Codex edition this epoch publishes / seals
+	// against ("the printed edition").  Typically set on a Paused/Sealed
+	// sealing epoch.  Zero when this epoch publishes no edition.
 	CodexEdition *Address `protobuf:"bytes,22,opt,name=CodexEdition,proto3" json:"CodexEdition,omitempty"`
-	// Vault workload tunables (rate limits, quarantine retention, intake guards,
-	// pending-queue caps).  Quorum-signed so an operator cannot unilaterally loosen
-	// them.  Null-safe: unset fields fall back to the DefaultXxx consts.
+	// Vault workload tunables (rate limits, quarantine retention, intake
+	// guards, pending-queue caps).  Quorum-signed so an operator cannot
+	// unilaterally loosen them.  Null-safe: unset fields fall back to the
+	// DefaultXxx consts.
 	VaultConfig *VaultConfig `protobuf:"bytes,25,opt,name=VaultConfig,proto3" json:"VaultConfig,omitempty"`
 	// Seconds after rotation during which old-epoch TxMsgs are still accepted
-	// (offline / mesh authors).  If 0, DefaultGracePeriod is used.
+	// (offline / mesh authors).  If 0, DefaultMaxGracePeriod applies (90 days).
 	MaxGracePeriod int64 `protobuf:"varint,32,opt,name=MaxGracePeriod,proto3" json:"MaxGracePeriod,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
@@ -3238,29 +3265,31 @@ func (x *EpochTerms) GetMaxGracePeriod() int64 {
 // version tag.
 type PlanetEpoch struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Verbatim PlanetCharter bytes — marshaled once at genesis and carried byte-
-	// identically on EVERY epoch (self-contained; a single epoch is fully
+	// Verbatim PlanetCharter bytes — marshaled once at genesis and carried
+	// byte- identically on EVERY epoch (self-contained; a single epoch is fully
 	// verifiable offline without fetching genesis).  First half of the FRAME.
 	Charter []byte `protobuf:"bytes,1,opt,name=Charter,proto3" json:"Charter,omitempty"`
 	// Verbatim EpochTerms bytes for THIS epoch.  Second half of the FRAME.
 	Terms []byte `protobuf:"bytes,2,opt,name=Terms,proto3" json:"Terms,omitempty"`
-	// Advisory denormalized copy of EpochTerms.EpochTag, in the clear so vaults and
-	// routers can index/address (HeadNodeID, LawPlanetEpoch, EpochTag) without
-	// parsing Terms.  UNSIGNED: verifiers MUST treat the value inside Terms as
-	// authoritative and reject a mismatch.
+	// Advisory denormalized copy of EpochTerms.EpochTag, in the clear so vaults
+	// and routers can index/address (HeadNodeID, LawPlanetEpoch, EpochTag)
+	// without parsing Terms.  UNSIGNED: verifiers MUST treat the value inside
+	// Terms as authoritative and reject a mismatch.
 	EpochTag *Tag `protobuf:"bytes,3,opt,name=EpochTag,proto3" json:"EpochTag,omitempty"`
-	// Quorum co-signatures over the FRAME.  Each signer's CryptoKit is resolved via
+	// Quorum co-signatures over the FRAME.  Each signer's CryptoKit is resolved
+	// via
 	// MemberTag -> MemberEpoch, enabling mixed-suite quorums.  Excluded from the
 	// FRAME so signers append incrementally.
 	Signatures []*CoSignature `protobuf:"bytes,4,rep,name=Signatures,proto3" json:"Signatures,omitempty"`
-	// Non-voting attestors (notary, officiant, friend, auditor, AI monitor) signing
-	// the SAME FRAME as Signatures, distinguished by slice not by form.  Excluded
-	// from the FRAME so witnesses can be added after-the-fact.
+	// Non-voting attestors (notary, officiant, friend, auditor, AI monitor)
+	// signing the SAME FRAME as Signatures, distinguished by slice not by form.
+	// Excluded from the FRAME so witnesses can be added after-the-fact.
 	Witnesses []*CoSignature `protobuf:"bytes,5,rep,name=Witnesses,proto3" json:"Witnesses,omitempty"`
-	// Host-only runtime flag, NEVER signed and NEVER announced: if true, this planet
-	// is local to one host (the vault refuses to announce it, rejects remote claims,
-	// and skips it in watch-list exchanges).  A per-host deployment fact — two hosts
-	// may legitimately disagree — so it lives outside the signed Charter/Terms.
+	// Host-only runtime flag, NEVER signed and NEVER announced: if true, this
+	// planet is local to one host (the vault refuses to announce it, rejects
+	// remote claims, and skips it in watch-list exchanges).  A per-host
+	// deployment fact — two hosts may legitimately disagree — so it lives
+	// outside the signed Charter/Terms.
 	LocalOnly     bool `protobuf:"varint,6,opt,name=LocalOnly,proto3" json:"LocalOnly,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3339,7 +3368,8 @@ func (x *PlanetEpoch) GetLocalOnly() bool {
 }
 
 // CoSignature is one member's signature contribution to a multi-sig epoch.
-// Used for Planet genesis (Founders) and for epoch rotation under M-of-N governance.
+// Used for Planet genesis (Founders) and for epoch rotation under M-of-N
+// governance.
 type CoSignature struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The signing member. Their CryptoKitID is resolved via MemberEpoch,
@@ -3397,8 +3427,8 @@ func (x *CoSignature) GetSignature() []byte {
 
 // PlanetOrigin is a forward-only provenance pointer recording that this planet
 // was forked from another.  Carries no authority over this planet; the origin
-// is informational.  Stored as a planet-public attribute
-// (HeadNodeID / std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
+// is informational.  Stored as a planet-public attribute (HeadNodeID /
+// std.Attr.PlanetOrigin / fromPlanetID) on the fork's genesis epoch.
 type PlanetOrigin struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The planet this fork came from.
@@ -3576,21 +3606,19 @@ func (x *EpochLink) GetBox() *safe.EncryptedSymKey {
 	return nil
 }
 
-// WrappedKey carries one role-tagged symmetric key, sealed to a specific member's
-// EncryptKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A MemberEpoch
-// publishes one WrappedKey per role the recipient is authorized for (up to 4
-// roles per epoch — see safe.KeyRole).
+// WrappedKey carries one role-tagged symmetric key, sealed to a specific
+// member's EncryptKey via anonymous-sender ECDH+AEAD (safe.SealFor).  A
+// MemberEpoch publishes one WrappedKey per role the recipient is authorized for
+// (up to 4 roles per epoch — see safe.KeyRole).
 //
 // Planet scope: one entry with Role=ContentKey (the planet content key).
-// Channel scope: one entry with Role=ContentKey (for ReadOnly+), and if ReadWrite+,
-// a second entry with Role=WriteSeed.
+// Channel scope: one entry with Role=ContentKey (for ReadOnly+), and if
+// ReadWrite+, a second entry with Role=WriteSeed.
 //
-// Invariant: symmetric key material only.  Asymmetric private keys never ride
-// this channel — they live in Enclave and are distributed (if at all) via
-// Enclave-to-Enclave transfer, not MemberEpoch.
+// Invariant: symmetric key material only — see safe.RoleKey for the statement
+// of the rule.
 //
-// The wrap is anonymous-sender; the ephemeral sender pubkey is embedded in
-// Encrypted per the recipient kit's wire format.  Recipient decrypts with
+// The wrap is anonymous-sender (safe.EncryptOps): the recipient decrypts with
 // safe.Enclave.OpenFromPub using only their EncryptKey.
 type WrappedKey struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -3645,29 +3673,34 @@ func (x *WrappedKey) GetEncrypted() []byte {
 	return nil
 }
 
-// MemberEpoch delivers epoch-scoped key material and status for one member on one node.
-// Node = planet head (amp.HeadNodeID) for planet-level records, channel UID for channel records.
-// Published as an op in the ACC channel by the node's admin when:
+// MemberEpoch delivers epoch-scoped key material and status for one member on
+// one node.  Node = planet head (amp.HeadNodeID) for planet-level records,
+// channel UID for channel records.  Published as an op in the ACC channel by
+// the node's admin when:
 //   - The node's epoch rotates (fresh keys for all members)
 //   - A member is added / removed / changed
 //
-// WrappedKeys are access-tiered: ReadOnly+ members receive Role=Content; ReadWrite+
-// additionally receive Role=WriteSeed.  The WriteSeed is the substrate for MemberProof
-// HMAC, so members without it cannot forge write proofs — the vault's enforcement of
-// channel ACC becomes cryptographic rather than policy-based.
+// WrappedKeys are access-tiered: ReadOnly+ members receive Role=Content;
+// ReadWrite+ additionally receive Role=WriteSeed.  The WriteSeed is the
+// substrate for MemberProof HMAC, so members without it cannot forge write
+// proofs — the vault's enforcement of channel ACC becomes cryptographic rather
+// than policy-based.
 type MemberEpoch struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Member identity (recipient of the wrapped keys).
 	MemberTag *Tag `protobuf:"bytes,1,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"`
-	// Node this epoch record applies to — planet head for planet-level, channel UID otherwise.
+	// Node this epoch record applies to — planet head for planet-level, channel
+	// UID otherwise.
 	Node *Tag `protobuf:"bytes,3,opt,name=Node,proto3" json:"Node,omitempty"`
-	// Epoch this entry belongs to (planet epoch or channel epoch).
-	// Must match PlanetEpoch.EpochTag / ChannelEpoch.Epoch so recipients store keys under the correct ID.
+	// Epoch this entry belongs to (planet epoch or channel epoch).  Must match
+	// PlanetEpoch.EpochTag / ChannelEpoch.Epoch so recipients store keys under
+	// the correct ID.
 	Epoch *Tag `protobuf:"bytes,2,opt,name=Epoch,proto3" json:"Epoch,omitempty"`
 	// Role-tagged wrapped keys, encrypted to the recipient via EncryptToPeer.
 	// Empty for Revoked/Suspended records.
 	WrappedKeys []*WrappedKey `protobuf:"bytes,30,rep,name=WrappedKeys,proto3" json:"WrappedKeys,omitempty"`
-	// Lifecycle state as of this MemberEpoch.  Meaningful at planet scope; reserved at channel scope.
+	// Lifecycle state as of this MemberEpoch.  Meaningful at planet scope;
+	// reserved at channel scope.
 	Status MemberStatus `protobuf:"varint,8,opt,name=Status,proto3,enum=amp.MemberStatus" json:"Status,omitempty"`
 	// Member's identity SigningKey — pubkey + kit, used for signature
 	// verification.  Lives in the member's chosen kit (may be hardware-bound).
@@ -3679,11 +3712,11 @@ type MemberEpoch struct {
 	// this key independently of any planet-wide cadence.
 	EncryptKey *safe.KeyRef `protobuf:"bytes,32,opt,name=EncryptKey,proto3" json:"EncryptKey,omitempty"`
 	// Citations referenced as the basis for this epoch.  For suspensions and
-	// revocations, these point to ledger entries (strikes, audits, witness records)
-	// that informed the decision — making every governance act reviewable and
-	// appealable.  Empty for routine epochs (e.g. initial Active, key rotation).
-	// AttrID and EditID may be left zero when citing an item rather than a
-	// specific edit (the common case).
+	// revocations, these point to ledger entries (strikes, audits, witness
+	// records) that informed the decision — making every governance act
+	// reviewable and appealable.  Empty for routine epochs (e.g. initial
+	// Active, key rotation).  AttrID and EditID may be left zero when citing an
+	// item rather than a specific edit (the common case).
 	Cites []*Address `protobuf:"bytes,20,rep,name=Cites,proto3" json:"Cites,omitempty"`
 	// Substrate-agnostic Kind, addressed by Tag.  The Tag's UID resolves to a
 	// LawMemberKind_* definition in amp.consts.sdl (or any community/app's
@@ -3834,7 +3867,8 @@ func (x *MemberEpoch) GetReKeyPrior() *safe.KeyRef {
 	return nil
 }
 
-// AccessGrant maps a member (or default, if MemberTag is nil) to an Access level.
+// AccessGrant maps a member (or default, if MemberTag is nil) to an Access
+// level.
 type AccessGrant struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	MemberTag     *Tag                   `protobuf:"bytes,1,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"` // Member identity (nil = default grant)
@@ -3949,8 +3983,8 @@ type ChannelEpoch struct {
 	// records, or prior epochs that informed the access decision, making every
 	// governance act reviewable and appealable.  Empty for routine grants.
 	// Informational: protocol does not gate access on Cites.  Mirrors
-	// MemberEpoch.Cites.  AttrID and EditID may be left zero when citing an item
-	// rather than a specific edit (the common case).
+	// MemberEpoch.Cites.  AttrID and EditID may be left zero when citing an
+	// item rather than a specific edit (the common case).
 	Cites         []*Address `protobuf:"bytes,22,rep,name=Cites,proto3" json:"Cites,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4049,31 +4083,34 @@ func (x *ChannelEpoch) GetCites() []*Address {
 	return nil
 }
 
-// Attestation is a durable observation referencing a specific TxMsg as evidence.
-// Attestations live in the planet ledger (well-known channel amp.ledger) and are
-// written as ordinary TxOps — signed, synced, and journaled by the vault machinery.
+// Attestation is a durable observation referencing a specific TxMsg as
+// evidence.  Attestations live in the planet ledger (well-known channel
+// amp.ledger) and are written as ordinary TxOps — signed, synced, and journaled
+// by the vault machinery.
 //
 // Convergence: independent observers of the same fact compute the same ItemID
-// (derived from Type + Subject + CitedTxID + CitedOpIndex), so their filings CRDT-merge
-// into a single record rather than N duplicates.
+// (derived from Type + Subject + CitedTxID + CitedOpIndex), so their filings
+// CRDT-merge into a single record rather than N duplicates.
 //
-// Attestations INFORM decisions; they do not execute them.  Admin acts (issued via
-// MemberEpoch or ChannelEpoch) cite attestations via CitedAttestations, making the
-// basis of every governance decision publicly auditable.
+// Attestations INFORM decisions; they do not execute them.  Admin acts (issued
+// via MemberEpoch or ChannelEpoch) cite attestations via CitedAttestations,
+// making the basis of every governance decision publicly auditable.
 type Attestation struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// What or whom the attestation is about (member UID, channel UID, etc).
 	Subject *Tag `protobuf:"bytes,1,opt,name=Subject,proto3" json:"Subject,omitempty"`
 	// Kind of observation.
 	Type AttestationType `protobuf:"varint,2,opt,name=Type,proto3,enum=amp.AttestationType" json:"Type,omitempty"`
-	// TxMsg being cited as evidence.  Already present in the journal and
-	// independently verifiable by any member — false attestations are self-refuting.
+	// TxMsg being cited as evidence.  Already present in the journal, so any
+	// member can verify the cited TxMsg independently.
 	CitedTxID_0 uint64 `protobuf:"fixed64,4,opt,name=CitedTxID_0,json=CitedTxID0,proto3" json:"CitedTxID_0,omitempty"`
 	CitedTxID_1 uint64 `protobuf:"fixed64,5,opt,name=CitedTxID_1,json=CitedTxID1,proto3" json:"CitedTxID_1,omitempty"`
-	// Which op within the cited TxMsg (0 if the attestation is about the TxMsg as a whole).
+	// Which op within the cited TxMsg (0 if the attestation is about the TxMsg
+	// as a whole).
 	CitedOpIndex uint32 `protobuf:"varint,6,opt,name=CitedOpIndex,proto3" json:"CitedOpIndex,omitempty"`
-	// Observer identity — who filed.  Not trust-authoritative: the observer's word
-	// carries no inherent weight beyond their ability to cite verifiable evidence.
+	// Observer identity — who filed.  Not trust-authoritative: the observer's
+	// word carries no inherent weight beyond their ability to cite verifiable
+	// evidence.
 	ObserverID *Tag `protobuf:"bytes,8,opt,name=ObserverID,proto3" json:"ObserverID,omitempty"`
 	// When observed (unix seconds).  Used for windowed aggregation
 	// (e.g. "strikes in the last 30 days").
@@ -4298,8 +4335,8 @@ type Withdraw struct {
 	// addresses supported.  AttrID and EditID typically zero (citing an item
 	// rather than a specific edit).
 	Withdrawn []*Address `protobuf:"bytes,4,rep,name=Withdrawn,proto3" json:"Withdrawn,omitempty"`
-	// Reason for withdrawal, per AOM SD-withdrawal-consent.md.  Same enum used substrate +
-	// wire; webapi.WithdrawNote.Reason is the same type.
+	// Reason for withdrawal, per AOM SD-withdrawal-consent.md.  Same enum used
+	// substrate + wire; webapi.WithdrawNote.Reason is the same type.
 	Reason WithdrawReason `protobuf:"varint,6,opt,name=Reason,proto3,enum=amp.WithdrawReason" json:"Reason,omitempty"`
 	// Optional delegation address — proves the signer's authority to withdraw
 	// on behalf of Subject when Subject != signer.  Zero (no Address set)
@@ -4376,9 +4413,9 @@ func (x *Withdraw) GetRationale() string {
 	return ""
 }
 
-// PlanetInvite is the out-of-band payload delivered to a new member (USB, QR, NFC, email).
-// It is passphrase-encrypted via safe.Enclave export before leaving the admin's device.
-// File extension: .planet-invite
+// PlanetInvite is the out-of-band payload delivered to a new member (USB, QR,
+// NFC, email).  It is passphrase-encrypted via safe.Enclave export before
+// leaving the admin's device.  File extension: .planet-invite
 type PlanetInvite struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Planet being invited to.
@@ -4387,13 +4424,14 @@ type PlanetInvite struct {
 	EpochTag *Tag `protobuf:"bytes,2,opt,name=EpochTag,proto3" json:"EpochTag,omitempty"`
 	// Newly generated member identity assigned by the admin.
 	MemberTag *Tag `protobuf:"bytes,3,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"`
-	// Temporary keypair for the invited member.  Prv is cleartext within the invite;
-	// the invite itself is passphrase-sealed before leaving the admin's device.
-	// The acceptor imports this keypair and rotates it immediately after join.
+	// Temporary keypair for the invited member.  Prv is cleartext within the
+	// invite; the invite itself is passphrase-sealed before leaving the admin's
+	// device.  The acceptor imports this keypair and rotates it immediately
+	// after join.
 	TempKey *safe.KeyPairRecord `protobuf:"bytes,5,opt,name=TempKey,proto3" json:"TempKey,omitempty"`
 	// Known vault endpoints for initial peer discovery — unified with the typed
-	// VaultAddr used by NameServiceRecord / FederationPeer.  For Transport="tcp",
-	// Address is UTF-8 "host:port".
+	// VaultAddr used by NameServiceRecord / FederationPeer.  For
+	// Transport="tcp", Address is UTF-8 "host:port".
 	VaultAddrs []*VaultAddr `protobuf:"bytes,15,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
 	// Planet epoch key sealed to TempKey via safe.SealFor (anonymous-sender, so
 	// the issuing admin is not revealed).  InviteAccept decrypts it immediately
@@ -4404,13 +4442,14 @@ type PlanetInvite struct {
 	// VaultConfig.BootstrapTTLSecs (or DefaultBootstrapTTL).  Zero means no
 	// expiry (only accepted from issuers that intentionally opt out).
 	ExpiresAt int64 `protobuf:"varint,25,opt,name=ExpiresAt,proto3" json:"ExpiresAt,omitempty"`
-	// Max times this invite may be redeemed.  0 = unset → single-use: the invite
-	// carries the one pre-minted MemberTag (field 3).  For a multi-use invite
-	// MemberTag is empty and each redeemer self-mints its own identity, so the
-	// issuer never holds the joiner's key.
+	// Max times this invite may be redeemed.  0 = unset → single-use: the
+	// invite carries the one pre-minted MemberTag (field 3).  For a multi-use
+	// invite MemberTag is empty and each redeemer self-mints its own identity,
+	// so the issuer never holds the joiner's key.
 	MaxRedemptions uint32 `protobuf:"varint,26,opt,name=MaxRedemptions,proto3" json:"MaxRedemptions,omitempty"`
 	// Access level a redeemer is granted on join.  NotAllowed (0) = unset → the
-	// planet's default member access; snapshotted into each PlanetInviteRedemption.
+	// planet's default member access; snapshotted into each
+	// PlanetInviteRedemption.
 	GrantedAccess Access `protobuf:"varint,27,opt,name=GrantedAccess,proto3,enum=amp.Access" json:"GrantedAccess,omitempty"`
 	// Proof-signing keypair.  Prv is cleartext within the passphrase-sealed
 	// invite (like TempKey); a redeemer signs its redemption's RedeemProof with
@@ -4427,7 +4466,7 @@ type PlanetInvite struct {
 	// genesis.  The acceptor registers it as the planet's expected founder
 	// root BEFORE first sync, so a forged genesis delivered ahead of the real
 	// one is refused at the engine's founder scan.  Empty = unpinned
-	// (first-sight TOFU).  SD-channel-governance.md §8.
+	// (first-sight TOFU).  AOM SD-channel-governance.md §8.
 	FounderFingerprint []byte `protobuf:"bytes,30,opt,name=FounderFingerprint,proto3" json:"FounderFingerprint,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
@@ -4553,13 +4592,13 @@ type PlanetInviteOp struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Planet to create or accept an invite for.
 	PlanetTag *Tag `protobuf:"bytes,1,opt,name=PlanetTag,proto3" json:"PlanetTag,omitempty"`
-	// Passphrase used to encrypt the PlanetInvite for out-of-band delivery (create),
-	// or to decrypt an incoming encrypted invite blob (accept).
+	// Passphrase used to encrypt the PlanetInvite for out-of-band delivery
+	// (create), or to decrypt an incoming encrypted invite blob (accept).
 	Passphrase string `protobuf:"bytes,5,opt,name=Passphrase,proto3" json:"Passphrase,omitempty"`
 	// The invite artifact being redeemed/accepted, as the string the caller
 	// holds: the full invite URL or its amp-base32 body (either carrier decodes
-	// to the sealed token — one codec, invite.DecodeCarrier).  Empty on issue;
-	// the issue response returns the sealed token bytes here.
+	// to the sealed token — one codec, invite.DecodeCarrier, host-side).  Empty
+	// on issue; the issue response returns the sealed token bytes here.
 	SealedInvite []byte `protobuf:"bytes,10,opt,name=SealedInvite,proto3" json:"SealedInvite,omitempty"`
 	// Redemption ceiling for the invite being issued.  0 = unset → single-use
 	// pre-minted slot; > 0 → multi-use self-mint policy.
@@ -4808,36 +4847,39 @@ func (x *PlanetInvitePolicy) GetMemberID_1() uint64 {
 	return 0
 }
 
-// PlanetInviteRedemption is the durable, signed record of one invite redemption —
-// the audit / legal trail of who joined via which invite and when.  The redeem
-// and accept engines write one per redemption in the same tx as the joining
-// MemberEpoch; the ACC invite rule gates its admission on every vault, and
-// in-rank records project root-channel member grants (SD-invite-governance §6).
+// PlanetInviteRedemption is the durable, signed record of one invite redemption
+// — the audit / legal trail of who joined via which invite and when.  The
+// redeem and accept engines write one per redemption in the same tx as the
+// joining MemberEpoch; the ACC invite rule gates its admission on every vault,
+// and in-rank records project root-channel member grants (AOM
+// SD-invite-governance.md §6).
 type PlanetInviteRedemption struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The redeemed invite, keyed by the hash of its sealed body (stable across
 	// copies).
 	InviteID_0 uint64 `protobuf:"fixed64,7,opt,name=InviteID_0,json=InviteID0,proto3" json:"InviteID_0,omitempty"`
 	InviteID_1 uint64 `protobuf:"fixed64,8,opt,name=InviteID_1,json=InviteID1,proto3" json:"InviteID_1,omitempty"`
-	// Member identity that joined via this redemption — self-minted by the redeemer
-	// for a multi-use invite, or the invite's pre-assigned member for single-use.
+	// Member identity that joined via this redemption — self-minted by the
+	// redeemer for a multi-use invite, or the invite's pre-assigned member for
+	// single-use.
 	MemberID_0 uint64 `protobuf:"fixed64,9,opt,name=MemberID_0,json=MemberID0,proto3" json:"MemberID_0,omitempty"`
 	MemberID_1 uint64 `protobuf:"fixed64,10,opt,name=MemberID_1,json=MemberID1,proto3" json:"MemberID_1,omitempty"`
 	// Redemption NowID — a time-ordered UID that both uniquely stamps this
 	// redemption and encodes when it happened.
 	RedeemedAt_0 uint64 `protobuf:"fixed64,3,opt,name=RedeemedAt_0,json=RedeemedAt0,proto3" json:"RedeemedAt_0,omitempty"` // bytes 0..7
 	RedeemedAt_1 uint64 `protobuf:"fixed64,4,opt,name=RedeemedAt_1,json=RedeemedAt1,proto3" json:"RedeemedAt_1,omitempty"` // bytes 8..15
-	// Access granted at redemption — a snapshot of the invite's GrantedAccess so the
-	// record stands alone as the authoritative grant proof.
+	// Access granted at redemption — a snapshot of the invite's GrantedAccess
+	// so the record stands alone as the authoritative grant proof.
 	GrantedAccess Access `protobuf:"varint,5,opt,name=GrantedAccess,proto3,enum=amp.Access" json:"GrantedAccess,omitempty"`
 	// The member signing key the RedeemProof binds — carried so the record
 	// verifies standalone after the member later rotates keys.  Must equal the
 	// same-tx MemberEpoch.SigningKey at admission.
 	MemberSigningKey *safe.KeyRef `protobuf:"bytes,11,opt,name=MemberSigningKey,proto3" json:"MemberSigningKey,omitempty"`
-	// Domain-separated RedeemKey signature (safe.SigningDomain amp.sig.invite.v1)
-	// over (planet, invite, member, RedeemedAt, member signing key) — proves the
-	// redeemer opened the sealed token, verifiable by any third party against the
-	// policy's anchored RedeemKey.  A record without a valid proof is void.
+	// Domain-separated RedeemKey signature (safe.SigningDomain
+	// amp.sig.invite.v1) over (planet, invite, member, RedeemedAt, member
+	// signing key) — proves the redeemer opened the sealed token, verifiable by
+	// any third party against the policy's anchored RedeemKey.  A record
+	// without a valid proof is void.
 	RedeemProof   []byte `protobuf:"bytes,6,opt,name=RedeemProof,proto3" json:"RedeemProof,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4936,25 +4978,27 @@ func (x *PlanetInviteRedemption) GetRedeemProof() []byte {
 	return nil
 }
 
-// BlobRef is a content-addressed reference to a media blob stored outside a TxMsg.
-// It binds two content addresses: AssetTag names WHAT the content is (the plaintext
-// identity), BlobTag names HOW its bytes are stored (the on-disk / on-wire identity).
-// For a planet-public blob the stored bytes are the plaintext, so BlobTag.UID ==
-// AssetTag.UID; for an epoch-sealed blob the stored bytes are ciphertext, so the two
-// diverge and EpochID is set.  A relay routes, stores, and integrity-checks against
-// BlobTag without decrypting or learning the asset; AssetTag stays member-side.
+// BlobRef is a content-addressed reference to a media blob stored outside a
+// TxMsg.  It binds two content addresses: AssetTag names WHAT the content is
+// (the plaintext identity), BlobTag names HOW its bytes are stored (the on-disk
+// / on-wire identity).  For a planet-public blob the stored bytes are the
+// plaintext, so BlobTag.UID == AssetTag.UID; for an epoch-sealed blob the
+// stored bytes are ciphertext, so the two diverge and EpochID is set.  A relay
+// routes, stores, and integrity-checks against BlobTag without decrypting or
+// learning the asset; AssetTag stays member-side.
 type BlobRef struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Planet this blob belongs to.
 	PlanetID_0 uint64 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
 	PlanetID_1 uint64 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	// Hash algorithm used for blob integrity (default: Blake2s_256).
+	// Hash kit used for blob integrity (0 = the epoch's default kit).
 	// Each BlobRef is self-describing — the validator reads this field
 	// to select the correct HashKit for verification.
 	HashKitID safe.HashKitID `protobuf:"varint,8,opt,name=HashKitID,proto3,enum=safe.HashKitID" json:"HashKitID,omitempty"`
 	// HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
-	// This is the asset's full hash; AssetTag.UID is its leading 16 bytes.  Lets a
-	// member validate content after decryption regardless of how it was stored.
+	// This is the asset's full hash; AssetTag.UID is its leading 16 bytes.
+	// Lets a member validate content after decryption regardless of how it was
+	// stored.
 	Hash_0 uint64 `protobuf:"fixed64,10,opt,name=Hash_0,json=Hash0,proto3" json:"Hash_0,omitempty"`
 	Hash_1 uint64 `protobuf:"fixed64,11,opt,name=Hash_1,json=Hash1,proto3" json:"Hash_1,omitempty"`
 	Hash_2 uint64 `protobuf:"fixed64,12,opt,name=Hash_2,json=Hash2,proto3" json:"Hash_2,omitempty"`
@@ -4966,21 +5010,23 @@ type BlobRef struct {
 	//	AssetTag.Text        — caller-supplied label (e.g. the source file name).
 	//	AssetTag.I (Units=Bytes) — authoritative plaintext byte length.
 	AssetTag *Tag `protobuf:"bytes,16,opt,name=AssetTag,proto3" json:"AssetTag,omitempty"`
-	// HOW it is stored — the on-disk / on-wire byte identity.  Lean, relay-facing.
+	// HOW it is stored — the on-disk / on-wire byte identity.  Lean,
+	// relay-facing.
 	//
 	//	BlobTag.UID         — leading 16 bytes of hash(stored bytes): ciphertext for a
 	//	                      sealed blob, == AssetTag.UID for a planet-public one.
 	//	BlobTag.I (Units=Bytes) — stored byte length.  No ContentType / label.
 	BlobTag *Tag `protobuf:"bytes,17,opt,name=BlobTag,proto3" json:"BlobTag,omitempty"`
-	// Epoch key used to seal this blob (zero = unsealed / planet-public ⇒ BlobTag.UID == AssetTag.UID).
-	// Receivers look up the key via (planetID, epochID) in the EpochKeyStore.
+	// Epoch key used to seal this blob (zero = unsealed / planet-public ⇒
+	// BlobTag.UID == AssetTag.UID).  Receivers look up the key via (planetID,
+	// epochID) in the EpochKeyStore.
 	EpochID_0 uint64 `protobuf:"fixed64,20,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`
 	EpochID_1 uint64 `protobuf:"fixed64,21,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`
 	// BlobMeta commitment: leading 16 bytes of the HashKitID-hash of the
-	// canonical BlobMeta encoding for this blob's STORED bytes.
-	// Zero ⇒ single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no meta object;
-	// the whole transfer is one implicit chunk verified by BlobTag.UID.
-	// (SD-planet-storage §13.10)
+	// canonical BlobMeta encoding for this blob's STORED bytes.  Zero ⇒
+	// single-chunk blob (stored size ≤ 2^ChunkSizeLog2) — no meta object; the
+	// whole transfer is one implicit chunk verified by BlobTag.UID.  (AOM
+	// SD-planet-storage.md §13.10)
 	MetaRoot_0 uint64 `protobuf:"fixed64,22,opt,name=MetaRoot_0,json=MetaRoot0,proto3" json:"MetaRoot_0,omitempty"`
 	MetaRoot_1 uint64 `protobuf:"fixed64,23,opt,name=MetaRoot_1,json=MetaRoot1,proto3" json:"MetaRoot_1,omitempty"`
 	// Power-of-2 exponent of the meta chunk size in bytes, encoder-chosen per
@@ -5120,17 +5166,17 @@ func (x *BlobRef) GetChunkSizeLog2() uint32 {
 	return 0
 }
 
-// BlobMeta is the transfer/verification manifest for one blob's STORED
-// bytes.  Canonical encoding (this proto, fields in order) is what
-// BlobRef.MetaRoot commits to.  Kept as a companion object beside the blob,
-// served through the same pull vocabulary (BlobPullKind_Meta); a receiver
-// verifies each arriving chunk against its meta entry, and the meta itself
-// against the ref's MetaRoot before trusting any chunk (SD-planet-storage §13.10).
+// BlobMeta is the transfer/verification manifest for one blob's STORED bytes.
+// Canonical encoding (this proto, fields in order) is what BlobRef.MetaRoot
+// commits to.  Kept as a companion object beside the blob, served through the
+// same pull vocabulary (BlobPullKind_Meta); a receiver verifies each arriving
+// chunk against its meta entry, and the meta itself against the ref's MetaRoot
+// before trusting any chunk (AOM SD-planet-storage.md §13.10).
 type BlobMeta struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChunkSizeLog2 uint32                 `protobuf:"varint,1,opt,name=ChunkSizeLog2,proto3" json:"ChunkSizeLog2,omitempty"` // matches the ref
 	TotalLen      uint64                 `protobuf:"varint,2,opt,name=TotalLen,proto3" json:"TotalLen,omitempty"`           // stored byte length (== BlobTag.I)
-	ChunkHashes   []byte                 `protobuf:"bytes,3,opt,name=ChunkHashes,proto3" json:"ChunkHashes,omitempty"`      // concatenated 32-byte entries, one per chunk, index-ordered: tagged HashKit digest over the chunk's 4 KiB grain-digest run (amp.support.blobmeta.go; SD-planet-storage §13.10)
+	ChunkHashes   []byte                 `protobuf:"bytes,3,opt,name=ChunkHashes,proto3" json:"ChunkHashes,omitempty"`      // concatenated 32-byte entries, one per chunk, index-ordered: tagged HashKit digest over the chunk's 4 KiB grain-digest run (amp.support.blobmeta.go; AOM SD-planet-storage.md §13.10)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5186,16 +5232,17 @@ func (x *BlobMeta) GetChunkHashes() []byte {
 	return nil
 }
 
-// BlobPullRequest is one receiver-driven pull: one span of chunks (or the
-// meta) from one holder.  Chunk indexes address the ref's BlobMeta chunk
-// space; index ⇔ offset is a shift by ChunkSizeLog2 (SD-planet-storage §13.10).
+// BlobPullRequest is one receiver-driven pull: one span of chunks (or the meta)
+// from one holder.  Chunk indexes address the ref's BlobMeta chunk space; index
+// ⇔ offset is a shift by ChunkSizeLog2 (AOM SD-planet-storage.md §13.10).
 type BlobPullRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Ref           *BlobRef               `protobuf:"bytes,1,opt,name=Ref,proto3" json:"Ref,omitempty"` // wire-stripped (SD-planet-storage §13.2.1)
-	Kind          BlobPullKind           `protobuf:"varint,2,opt,name=Kind,proto3,enum=amp.BlobPullKind" json:"Kind,omitempty"`
-	ChunkBegin    uint64                 `protobuf:"varint,3,opt,name=ChunkBegin,proto3" json:"ChunkBegin,omitempty"` // first chunk index (Kind=Chunks)
-	ChunkCount    uint64                 `protobuf:"varint,4,opt,name=ChunkCount,proto3" json:"ChunkCount,omitempty"` // 0 ⇒ through end-of-blob
-	RequestID     uint64                 `protobuf:"varint,5,opt,name=RequestID,proto3" json:"RequestID,omitempty"`   // receiver-chosen; echoed in responses/rejects so every request gets an answer
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// wire-stripped (AOM SD-security-sync.md §13.2.1)
+	Ref           *BlobRef     `protobuf:"bytes,1,opt,name=Ref,proto3" json:"Ref,omitempty"`
+	Kind          BlobPullKind `protobuf:"varint,2,opt,name=Kind,proto3,enum=amp.BlobPullKind" json:"Kind,omitempty"`
+	ChunkBegin    uint64       `protobuf:"varint,3,opt,name=ChunkBegin,proto3" json:"ChunkBegin,omitempty"` // first chunk index (Kind=Chunks)
+	ChunkCount    uint64       `protobuf:"varint,4,opt,name=ChunkCount,proto3" json:"ChunkCount,omitempty"` // 0 ⇒ through end-of-blob
+	RequestID     uint64       `protobuf:"varint,5,opt,name=RequestID,proto3" json:"RequestID,omitempty"`   // receiver-chosen; echoed in responses/rejects so every request gets an answer
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -5265,9 +5312,10 @@ func (x *BlobPullRequest) GetRequestID() uint64 {
 	return 0
 }
 
-// PlanetStorageOpts configures per-planet storage priority and budgets.
-// Stored as a home planet attribute alongside PlanetBinding, keyed by planet UID.
-// Drives cache eviction: lower-priority planets have their decrypted cache evicted first.
+// PlanetStorageOpts configures per-planet storage priority and budgets.  Stored
+// as a home planet attribute alongside PlanetBinding, keyed by planet UID.
+// Drives cache eviction: lower-priority planets have their decrypted cache
+// evicted first.
 type PlanetStorageOpts struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Storage priority (higher = more important, 0 = default).
@@ -5596,21 +5644,22 @@ type CodexHeader struct {
 	SourceEpoch *Tag `protobuf:"bytes,2,opt,name=SourceEpoch,proto3" json:"SourceEpoch,omitempty"`
 	// Wall-clock time of export (UTC seconds since epoch).
 	CodexTime int64 `protobuf:"varint,3,opt,name=CodexTime,proto3" json:"CodexTime,omitempty"`
-	// Provenance pointer to materialize as PlanetOrigin on the importing planet's
-	// genesis.  Nil for external-source imports with no amp origin.
+	// Provenance pointer to materialize as PlanetOrigin on the importing
+	// planet's genesis.  Nil for external-source imports with no amp origin.
 	Origin *PlanetOrigin `protobuf:"bytes,4,opt,name=Origin,proto3" json:"Origin,omitempty"`
 	// Summary for pre-flight validation.
 	Manifest *CodexManifest `protobuf:"bytes,5,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
 	// Optional exporter-provided label.
 	Label string `protobuf:"bytes,6,opt,name=Label,proto3" json:"Label,omitempty"`
 	// HashKit that computed the container integrity digest (the trailing digest
-	// over preamble + header + entries).  0 = Blake2s_256 (the back-compat default).
+	// over preamble + header + entries).  0 = the default hash kit.
 	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
-	// Content-model epoch: the SDK proto semantics governing artifact payloads (the
-	// Tag/Tags content model).  An importer whose host epoch differs MUST refuse,
-	// not silently mis-decode persisted bytes (DD-chronicle-and-codex.md §5.5).
-	// Orthogonal to FormatVersion (on-disk layout) — this is payload meaning.  Bump
-	// on each wire-incompatible content-model change; amp.ContentModelEpoch is current.
+	// Content-model epoch: the SDK proto semantics governing artifact payloads
+	// (the Tag/Tags content model).  An importer whose host epoch differs MUST
+	// refuse, not silently mis-decode persisted bytes (AOM
+	// DD-chronicle-and-codex.md §5.5).  Orthogonal to FormatVersion (on-disk
+	// layout) — this is payload meaning.  Bump on each wire-incompatible
+	// content-model change; amp.ContentModelEpoch is current.
 	ContentModelEpoch uint32 `protobuf:"varint,8,opt,name=ContentModelEpoch,proto3" json:"ContentModelEpoch,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
@@ -5843,7 +5892,8 @@ func (x *ChronicleCompactHistory) GetPoints() []*ChronicleCompactPoint {
 // form plus post-rebase TxMsgs.  See AOM DD-chronicle-and-codex.md §4.7.
 type ChronicleCompact struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// TxID up to which the chronicle has been rebased; older TxMsgs discardable.
+	// TxID up to which the chronicle has been rebased; older TxMsgs
+	// discardable.
 	UpToTxID_0 uint64 `protobuf:"fixed64,1,opt,name=UpToTxID_0,json=UpToTxID0,proto3" json:"UpToTxID_0,omitempty"`
 	UpToTxID_1 uint64 `protobuf:"fixed64,2,opt,name=UpToTxID_1,json=UpToTxID1,proto3" json:"UpToTxID_1,omitempty"`
 	// Digest of the compacted chronicle at the time of rebase.
@@ -5981,8 +6031,8 @@ type ChronicleHeader struct {
 	ExportTime int64 `protobuf:"varint,5,opt,name=ExportTime,proto3" json:"ExportTime,omitempty"`
 	// Compact lineage.  Nil if this chronicle has never been compacted.
 	CompactHistory *ChronicleCompactHistory `protobuf:"bytes,6,opt,name=CompactHistory,proto3" json:"CompactHistory,omitempty"`
-	// HashKit that computed the container integrity digest.  0 = Blake2s_256
-	// (the back-compat default).
+	// HashKit that computed the container integrity digest.  0 = the default
+	// hash kit.
 	DigestHashKit safe.HashKitID `protobuf:"varint,7,opt,name=DigestHashKit,proto3,enum=safe.HashKitID" json:"DigestHashKit,omitempty"`
 	// Summary for pre-flight validation.
 	Manifest *ChronicleManifest `protobuf:"bytes,20,opt,name=Manifest,proto3" json:"Manifest,omitempty"`
@@ -6215,11 +6265,11 @@ func (x *AppLink) GetURL() string {
 	return ""
 }
 
-// CrateRef is a lightweight reference to a crate by URI, with optional content-addressing.
-// Used wherever a brand or manifest needs to cite a crate without embedding its full
-// CrateInfo (e.g. Brand.BundledCrates).  BlobID is the leading 16 bytes of the built
-// crate's plaintext hash, matching the AssetEntry/BundleManifest convention; zero =
-// unknown / not pinned.
+// CrateRef is a lightweight reference to a crate by URI, with optional
+// content-addressing.  Used wherever a brand or manifest needs to cite a crate
+// without embedding its full CrateInfo (e.g. Brand.BundledCrates).  BlobID is
+// the leading 16 bytes of the built crate's plaintext hash, matching the
+// AssetEntry/BundleManifest convention; zero = unknown / not pinned.
 type CrateRef struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	CrateURI      string                 `protobuf:"bytes,1,opt,name=CrateURI,proto3" json:"CrateURI,omitempty"` // "asset:{PublisherID}/{CrateID}"
@@ -6291,8 +6341,8 @@ func (x *CrateRef) GetBlobID_1() uint64 {
 // channel write.  AOM DD-name-service.md §2.
 type Brand struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// The planet's identity field set — admin-mutable here; where it disagrees
-	// with the quorum-signed BrandMark.Identity, BrandMark wins.
+	// The planet's identity field set — admin-mutable here; BrandIdentity
+	// states precedence against the quorum-signed BrandMark.
 	Identity         *BrandIdentity `protobuf:"bytes,1,opt,name=Identity,proto3" json:"Identity,omitempty"`
 	OrgHomeURL       string         `protobuf:"bytes,6,opt,name=OrgHomeURL,proto3" json:"OrgHomeURL,omitempty"`
 	AppHomeURL       string         `protobuf:"bytes,7,opt,name=AppHomeURL,proto3" json:"AppHomeURL,omitempty"`
@@ -6302,9 +6352,9 @@ type Brand struct {
 	BundledCrates    []*CrateRef    `protobuf:"bytes,26,rep,name=BundledCrates,proto3" json:"BundledCrates,omitempty"`
 	// TemplateSet selects which portal template set renders this planet's HTTP
 	// surfaces — names a template-set channel (NodeID) on the naming federation
-	// planet that app.www reads template Segments from.  Empty = the federation's
-	// default set.  Members select among federation-published sets; the markup is
-	// federation-authored (DD-name-service.md §12.3).
+	// planet that app.www reads template Segments from.  Empty = the
+	// federation's default set.  Members select among federation-published
+	// sets; the markup is federation-authored (AOM DD-name-service.md §12.3).
 	TemplateSet   *Tag `protobuf:"bytes,31,opt,name=TemplateSet,proto3" json:"TemplateSet,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6458,15 +6508,16 @@ func (x *VaultAddr) GetAddress() []byte {
 //
 //	(NodeID = channel_node, AttrID = amp.name.service.NameServiceRecord, ItemID = hash(fqdn)).
 //
-// Signed under the publishing federation's epoch admin.  AOM DD-name-service.md §3.1.
+// Signed under the publishing federation's epoch admin.  AOM DD-name-service.md
+// §3.1.
 type NameServiceRecord struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	FQDN     string                 `protobuf:"bytes,1,opt,name=FQDN,proto3" json:"FQDN,omitempty"`         // "spaces.plan.tools" — exact-match key for Resolve
 	PlanetID *Tag                   `protobuf:"bytes,2,opt,name=PlanetID,proto3" json:"PlanetID,omitempty"` // target planet UID
-	// First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=0).
-	// Consumers may dereference this to read the founders-signed first Brand
-	// record when one was published in the genesis envelope; absent that, the
-	// first admin-signed Brand edit fills this slot.
+	// First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand,
+	// amp.brand.UID, EditID=0).  Consumers may dereference this to read the
+	// founders-signed first Brand record when one was published in the genesis
+	// envelope; absent that, the first admin-signed Brand edit fills this slot.
 	BrandAddr *Address `protobuf:"bytes,3,opt,name=BrandAddr,proto3" json:"BrandAddr,omitempty"`
 	// Full Brand snapshot for offline Search ranking — copy of the latest
 	// Brand at the time the record was registered.  A federation refreshes
@@ -6477,9 +6528,10 @@ type NameServiceRecord struct {
 	// GenesisRequiredSignatures) under the fixed v1 kit (amp.fp.founders.v1;
 	// amp.FounderFingerprint).  Stamped host-side by the registering federation
 	// from the target's verified genesis; empty = unpinned (first contact stays
-	// TOFU via the trusted federation, DD-name-service.md §3.2).  A consumer
-	// syncing the target corroborates its genesis against this pin at the
-	// founder scan and refuses a mismatch (SD-channel-governance.md §8).
+	// TOFU via the trusted federation, AOM DD-name-service.md §3.2).  A
+	// consumer syncing the target corroborates its genesis against this pin at
+	// the founder scan and refuses a mismatch (AOM SD-channel-governance.md
+	// §8).
 	FounderFingerprint []byte `protobuf:"bytes,5,opt,name=FounderFingerprint,proto3" json:"FounderFingerprint,omitempty"`
 	// Where the target planet can be pinned for bootstrap.
 	VaultAddrs    []*VaultAddr `protobuf:"bytes,7,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
@@ -6637,8 +6689,8 @@ func (x *FederationPeer) GetLabel() string {
 	return ""
 }
 
-// FederationDirectory — federation peer pointers, NS-record style cross-federation
-// forwarding (AOM DD-name-service.md §4.4).  Lives at
+// FederationDirectory — federation peer pointers, NS-record style
+// cross-federation forwarding (AOM DD-name-service.md §4.4).  Lives at
 //
 //	(HeadNodeID, amp.FederationDirectory, its own UID)
 //
@@ -6688,18 +6740,22 @@ func (x *FederationDirectory) GetPeers() []*FederationPeer {
 	return nil
 }
 
-// SyncMsg is the envelope for all delta sync control messages between vault peers.
-// Exactly one of the body fields is set per message — peers detect by nil pointer.
+// SyncMsg is the envelope for all delta sync control messages between vault
+// peers.  Exactly one of the body fields is set per message — peers detect by
+// nil pointer.
 type SyncMsg struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	WatchList       *SyncWatchList         `protobuf:"bytes,1,opt,name=WatchList,proto3" json:"WatchList,omitempty"`
-	RangeOffer      *SyncRangeOffer        `protobuf:"bytes,2,opt,name=RangeOffer,proto3" json:"RangeOffer,omitempty"`
-	RangeRequest    *SyncRangeRequest      `protobuf:"bytes,3,opt,name=RangeRequest,proto3" json:"RangeRequest,omitempty"`
-	NodeSpanRequest *SyncNodeSpanRequest   `protobuf:"bytes,4,opt,name=NodeSpanRequest,proto3" json:"NodeSpanRequest,omitempty"` // lazy-subtree span query (§9.4) — reserved for v-c
-	NodeSpans       *SyncNodeSpans         `protobuf:"bytes,5,opt,name=NodeSpans,proto3" json:"NodeSpans,omitempty"`             // lazy-subtree span answer (§9.4) — reserved for v-c
-	TxRefused       *SyncTxRefused         `protobuf:"bytes,6,opt,name=TxRefused,proto3" json:"TxRefused,omitempty"`             // advisory refusal notice (§9.2; O4 §4.24)
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	WatchList    *SyncWatchList         `protobuf:"bytes,1,opt,name=WatchList,proto3" json:"WatchList,omitempty"`
+	RangeOffer   *SyncRangeOffer        `protobuf:"bytes,2,opt,name=RangeOffer,proto3" json:"RangeOffer,omitempty"`
+	RangeRequest *SyncRangeRequest      `protobuf:"bytes,3,opt,name=RangeRequest,proto3" json:"RangeRequest,omitempty"`
+	// Lazy-subtree span query / answer; not yet implemented
+	// (AOM SD-planet-storage.md §9.4).
+	NodeSpanRequest *SyncNodeSpanRequest `protobuf:"bytes,4,opt,name=NodeSpanRequest,proto3" json:"NodeSpanRequest,omitempty"`
+	NodeSpans       *SyncNodeSpans       `protobuf:"bytes,5,opt,name=NodeSpans,proto3" json:"NodeSpans,omitempty"`
+	// Advisory refusal notice (AOM SD-planet-storage.md §9.2; O4 §4.24).
+	TxRefused     *SyncTxRefused `protobuf:"bytes,6,opt,name=TxRefused,proto3" json:"TxRefused,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SyncMsg) Reset() {
@@ -6774,8 +6830,8 @@ func (x *SyncMsg) GetTxRefused() *SyncTxRefused {
 	return nil
 }
 
-// SyncWatchList announces which planets a peer has data for, with high-water marks.
-// Sent on peer connect and whenever the watch list changes.
+// SyncWatchList announces which planets a peer has data for, with high-water
+// marks.  Sent on peer connect and whenever the watch list changes.
 type SyncWatchList struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Planets       []*SyncPlanetStatus    `protobuf:"bytes,1,rep,name=Planets,proto3" json:"Planets,omitempty"`
@@ -6820,17 +6876,19 @@ func (x *SyncWatchList) GetPlanets() []*SyncPlanetStatus {
 	return nil
 }
 
-// SyncPlanetStatus carries a planet UID and the peer's current high-water mark, plus
-// (partial replication, §9) its held-range manifest.
+// SyncPlanetStatus carries a planet UID and the peer's current high-water mark,
+// plus (partial replication, AOM SD-planet-storage.md §9) its held-range
+// manifest.
 type SyncPlanetStatus struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	PlanetID_0  uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
 	PlanetID_1  uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
 	HighWater_0 uint64                 `protobuf:"fixed64,3,opt,name=HighWater_0,json=HighWater0,proto3" json:"HighWater_0,omitempty"` // most recent TxTimeID
 	HighWater_1 uint64                 `protobuf:"fixed64,4,opt,name=HighWater_1,json=HighWater1,proto3" json:"HighWater_1,omitempty"`
-	// The peer holds and advertises [HoldSince, HighWater]; Held lists pinned segments
-	// below HoldSince; ArchiveMode Suffix opts into suffix eviction (Archive/unset = full
-	// holder, so a pre-manifest peer reads as totality) (§9.1–9.2).
+	// The peer holds and advertises [HoldSince, HighWater]; Held lists pinned
+	// segments below HoldSince; ArchiveMode Suffix opts into suffix eviction
+	// (Archive/unset = full holder, so a pre-manifest peer reads as totality)
+	// (AOM SD-planet-storage.md §9.1–9.2).
 	HoldSince_0   uint64      `protobuf:"fixed64,5,opt,name=HoldSince_0,json=HoldSince0,proto3" json:"HoldSince_0,omitempty"`
 	HoldSince_1   uint64      `protobuf:"fixed64,6,opt,name=HoldSince_1,json=HoldSince1,proto3" json:"HoldSince_1,omitempty"`
 	Held          []*UIDRange `protobuf:"bytes,7,rep,name=Held,proto3" json:"Held,omitempty"`
@@ -6935,21 +6993,25 @@ type SyncRangeOffer struct {
 	Start_1    uint64                 `protobuf:"fixed64,4,opt,name=Start_1,json=Start1,proto3" json:"Start_1,omitempty"`
 	End_0      uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // range end (inclusive)
 	End_1      uint64                 `protobuf:"fixed64,6,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
-	// Combined marks RangeHash as a fold of the sender's per-day bucket digests over [Start, End]
+	// Combined marks RangeHash as a fold of the sender's per-day bucket digests
+	// over [Start, End]
 	// — one "converged over this whole span?" probe; a mismatch drills down to per-bucket offers
-	// (§9.2).  An old/unset peer reads it as a plain RangeHash offer and bisects — still converges,
-	// just without the O(1) fast path.
+	// (AOM SD-planet-storage.md §9.2).  An old/unset peer reads it as a plain
+	// RangeHash offer and bisects — still converges, just without the O(1) fast
+	// path.
 	Combined bool `protobuf:"varint,7,opt,name=Combined,proto3" json:"Combined,omitempty"`
-	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End] (or, when Combined,
-	// the fold of that span's per-day bucket digests).  Folds ACCEPTED entries only —
-	// quarantined ('Q') entries are excluded (O4 §4.24).
+	// 128-bit fingerprint: leading 16 bytes of the digest over [Start, End]
+	// (or, when Combined, the fold of that span's per-day bucket digests).
+	// Folds ACCEPTED entries only — quarantined ('Q') entries are excluded (O4
+	// §4.24).
 	RangeHash_0 uint64 `protobuf:"fixed64,10,opt,name=RangeHash_0,json=RangeHash0,proto3" json:"RangeHash_0,omitempty"`
 	RangeHash_1 uint64 `protobuf:"fixed64,11,opt,name=RangeHash_1,json=RangeHash1,proto3" json:"RangeHash_1,omitempty"`
-	// AllHash is the membership fingerprint over the same range: the identical fold
-	// INCLUDING quarantined entries (verdict-blind, value-bound).  Two-level digest law:
-	// RangeHash mismatch + AllHash match ⇒ the peers hold the SAME tx set and only
-	// verdicts differ — both sides suppress descent/re-stream and reconcile verdicts
-	// locally (O4 §4.24).  (0,0) = absent (a pre-AllHash peer): fall back to bisection.
+	// AllHash is the membership fingerprint over the same range: the identical
+	// fold INCLUDING quarantined entries (verdict-blind, value-bound).
+	// Two-level digest law:  RangeHash mismatch + AllHash match ⇒ the peers
+	// hold the SAME tx set and only verdicts differ — both sides suppress
+	// descent/re-stream and reconcile verdicts locally (O4 §4.24).  (0,0) =
+	// absent (a pre-AllHash peer): fall back to bisection.
 	AllHash_0     uint64 `protobuf:"fixed64,12,opt,name=AllHash_0,json=AllHash0,proto3" json:"AllHash_0,omitempty"`
 	AllHash_1     uint64 `protobuf:"fixed64,13,opt,name=AllHash_1,json=AllHash1,proto3" json:"AllHash_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -7071,7 +7133,7 @@ type SyncRangeRequest struct {
 	PlanetID_1    uint64                 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
 	After_0       uint64                 `protobuf:"fixed64,3,opt,name=After_0,json=After0,proto3" json:"After_0,omitempty"` // stream TxMsgs with TxTimeID > After (exclusive)
 	After_1       uint64                 `protobuf:"fixed64,4,opt,name=After_1,json=After1,proto3" json:"After_1,omitempty"`
-	End_0         uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // inclusive upper bound; the window is (After, End] — 0 = unbounded tail (§9.2)
+	End_0         uint64                 `protobuf:"fixed64,5,opt,name=End_0,json=End0,proto3" json:"End_0,omitempty"` // inclusive upper bound; the window is (After, End] — 0 = unbounded tail (AOM SD-planet-storage.md §9.2)
 	End_1         uint64                 `protobuf:"fixed64,6,opt,name=End_1,json=End1,proto3" json:"End_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -7149,12 +7211,13 @@ func (x *SyncRangeRequest) GetEnd_1() uint64 {
 	return 0
 }
 
-// SyncTxRefused tells the sending peer that a TxMsg it streamed was refused without
-// being journaled — the refusal memory that stops the anti-entropy floor from
-// re-requesting and re-streaming the same refused tx every resync tick (§9.2).
-// Emitted at most once per (peer, tx) per refusal-ledger TTL.  ADVISORY ONLY: a
-// receiver may stop re-offering the tx to this peer, but a refusal notice never
-// changes what any node journals or serves.
+// SyncTxRefused tells the sending peer that a TxMsg it streamed was refused
+// without being journaled — the refusal memory that stops the anti-entropy
+// floor from re-requesting and re-streaming the same refused tx every resync
+// tick (AOM SD-planet-storage.md §9.2).  Emitted at most once per (peer, tx)
+// per refusal-ledger TTL.  ADVISORY ONLY: a receiver may stop re-offering the
+// tx to this peer, but a refusal notice never changes what any node journals or
+// serves.
 type SyncTxRefused struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
@@ -7239,9 +7302,10 @@ func (x *SyncTxRefused) GetDetail() uint64 {
 	return 0
 }
 
-// SyncNodeSpanRequest asks a peer that materialized a subtree to answer, from its 'N'
-// index, the txTimeID spans covering NodeID — the bootstrap for lazy subtree
-// materialization when the local node never held the subtree (§9.4).  Reserved for v-c.
+// SyncNodeSpanRequest asks a peer that materialized a subtree to answer, from
+// its 'N' index, the txTimeID spans covering NodeID — the bootstrap for lazy
+// subtree materialization when the local node never held the subtree (AOM
+// SD-planet-storage.md §9.4).  Not yet implemented.
 type SyncNodeSpanRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
@@ -7310,8 +7374,9 @@ func (x *SyncNodeSpanRequest) GetNodeID_1() uint64 {
 	return 0
 }
 
-// SyncNodeSpans answers SyncNodeSpanRequest with the coalesced txTimeID ranges that touch
-// NodeID (capped; Complete=false when truncated) (§9.4).  Reserved for v-c.
+// SyncNodeSpans answers SyncNodeSpanRequest with the coalesced txTimeID ranges
+// that touch NodeID (capped; Complete=false when truncated) (AOM
+// SD-planet-storage.md §9.4).  Not yet implemented.
 type SyncNodeSpans struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
