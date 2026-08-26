@@ -202,7 +202,7 @@ the private `amp.planet`). They are **not the contract**: this README,
 
 ### Authoring Notes
 
-`pack.sh` runs a de-link pass over every staged `.md` (`pack-delink.mjs`): a
+`pack.sh` runs a de-link pass over every staged `.md` (`amp-kit delink`): a
 relative link whose target ships in the bundle is kept; a link to an AOM doc
 outside the bundle allowlist is rewritten to the greppable token
 `Text (internal)`; any other dangling relative link fails the pack (file:line).
@@ -218,7 +218,7 @@ Rules the pack enforces on partner-visible text:
 - Cite an internal doc as background, never instruction:
   `` Background (internal): `XYZ.md`. ``
 - An AOM operator chapter ships as its `[PUBLIC]`-marked sections only
-  (`pack-aom-public.mjs`): every `## N.M` heading in the source chapter carries
+  (`amp-kit aom-subset`): every `## N.M` heading in the source chapter carries
   a `[PUBLIC]` or `[OPERATOR]` marker or the pack fails, and a coordinate naming
   a withheld section is rewritten to the greppable token `§N.M (operator)`.
 

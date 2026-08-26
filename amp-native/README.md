@@ -20,7 +20,13 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 | `bin/ampd` | the `ampd` node daemon — development and evaluation use only (see Running a Node Locally) |
 | `AOM/O4-standard-procedures.md` | the partner subset of AMP's standard procedures — retrieve/embed/redeem an invite (§4.4–§4.6), publish a name (§4.10), bring up a local follower node (§4.17), the mint-and-connect walk (§4.18) |
 | `AOM/DD-name-service.md` | the naming and trust design: how planets are named, branded, resolved, and verified |
+| `docs/amp-cli.md` | the `amp` command reference, generated from the binary in this kit |
+| `docs/get-a-backend.md` | how to reach a node: your operator's, or the one in `bin/` |
+| `docs/install-troubleshooting.md` | what to try when a step above does not work |
+| `docs/siwe-primer.md` | signing in with a wallet, for the web rail |
+| `docs/aom-index.md` | what each shipped AOM shelf covers |
 | `SKILL-amp-web-SDK.md` | the web-rail skill doc — drop it into a web project to build against `app.www`; the web kit itself ships separately as amp-web-SDK |
+| `SECURITY-amp-web-SDK.md` | the web rail's security model: what the client may hold, and what it may never |
 | `LICENSE` | the Beta Evaluation License this kit is delivered under |
 | `VERSION` | the build record for this exact kit (see Version Identity) |
 
@@ -95,14 +101,39 @@ follow the legend above.
 
 ## Version Identity
 
-AMP is pre-release; the kit is versioned by its build record, not a source
-tag. `VERSION` carries one line: build time (UTC), the kit's full name, the
-SHA-256 of each shipped binary, and the source commits it was built from. The
-kit filename carries the rest of the identity:
+Ask the binary first:
+
+```
+bin/amp version
+```
+
+```
+amp v0.279.0
+  amp.planet  72b53af
+  amp.SDK     3c48e83
+  toolchain   go1.26.3  darwin/arm64
+```
+
+Two commits, because AMP's node and its SDK are separate sources — either one
+alone does not identify a build. `bin/ampd -version` prints the same record. A
+field the build could not resolve reads `ERR-BuildInfo`; that is a defect worth
+reporting, never a version.
+
+`VERSION` carries the same identity for the kit as a whole: the kit's full
+name, the SHA-256 of each shipped binary, and the source commits. The kit
+filename carries the rest:
 
 ```
 amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip
 ```
+
+## Checking What You Downloaded
+
+The kit ships alongside `checksums.txt` and `verify-release-binaries.sh`. Put
+them beside the archives and run the script; it checks each archive against its
+recorded digest, reports whether a signature over the manifest is present and
+verifiable, and on macOS confirms the shipped binaries are signed. It reports
+what it could NOT check rather than passing silently.
 
 ## SDK Access Tiers
 

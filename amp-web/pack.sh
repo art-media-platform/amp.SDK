@@ -3,11 +3,15 @@
 #
 #   amp.SDK/amp-web/pack.sh   →   amp.SDK/dist/amp-web-SDK-<vNNN>.zip
 #
-# Self-contained: assembles only from public amp.SDK content — the amp-web/
-# TypeScript client plus the canonical wire contract in amp/webapi.  No
-# amp.planet (private) inputs.  Version is derived from the amp.SDK git tag at
-# build time (resolution order below), so there is one source of truth for the
-# SDK revision — the committed package.json carries only a placeholder.
+# Assembles the amp-web/ TypeScript client plus the canonical wire contract in
+# amp/webapi.  Version is derived from the amp.SDK git tag at build time
+# (resolution order below), so there is one source of truth for the SDK
+# revision — the committed package.json carries only a placeholder.
+#
+# This script owns the TypeScript build, which is node's job.  The two document
+# passes are NOT its job: `amp-kit aom-subset` and `amp-kit delink`
+# (amp.planet/cmd/amp-kit) are the one authoritative site for both, shared with
+# the native kit.  AMP_KIT points the calls at that checkout.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # amp.SDK/amp-web
@@ -86,8 +90,10 @@ rm -rf "$STAGE/examples/forums/node_modules" \
 #     public/CI build without amp.planet opts out explicitly with AMP_WEB_NO_AOM=1.
 #     AMP_WEB_AOM_SRC points the read at a sibling worktree's AOM.
 #     AOM_DOCS ship whole; AOM_PUBLIC_SUBSET are operator chapters that ship only
-#     their `[PUBLIC]`-marked sections (pack-aom-public.mjs; O4 §4 front matter).
+#     their `[PUBLIC]`-marked sections (`amp-kit aom-subset`; O4 §4 front matter).
 AOM_SRC="${AMP_WEB_AOM_SRC:-$SDK/../amp.planet/AOM}"
+AMP_PLANET="${AMP_PLANET_SRC:-$SDK/../amp.planet}"
+amp_kit() { ( cd "$AMP_PLANET" && go run ./cmd/amp-kit "$@" ); }
 AOM_DOCS=(
   DD-architecture-overview.md
   DD-name-service.md
@@ -123,7 +129,7 @@ else
       echo "ERROR: allowlisted AOM chapter missing: $AOM_SRC/$doc" >&2
       exit 1
     fi
-    node "$HERE/pack-aom-public.mjs" "$AOM_SRC/$doc" "$STAGE/AOM/$doc"
+    amp_kit aom-subset "$AOM_SRC/$doc" "$STAGE/AOM/$doc"
   done
 fi
 
@@ -131,8 +137,8 @@ fi
 #     within the bundle.  A link to an AOM doc outside the allowlist is
 #     rewritten to the greppable `Text (internal)` token; any other dangling
 #     link (or an instruction-class line citing an unshipped doc) FAILS the
-#     pack — never warn-and-skip.  See README "Authoring Notes".
-node "$HERE/pack-delink.mjs" "$STAGE" "$AOM_SRC"
+#     pack — never warn-and-skip (`amp-kit delink`).  See README "Authoring Notes".
+amp_kit delink "$STAGE" "$AOM_SRC"
 
 # 3d. AOM-reference gate for the shipped TypeScript.  The de-link pass (3c)
 #     walks .md only, so an AOM doc named in a src/ comment would ship raw
