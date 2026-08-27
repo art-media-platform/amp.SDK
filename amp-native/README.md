@@ -32,7 +32,9 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 
 ## Quick Start
 
-1. Put `bin/amp` on your `PATH`.
+1. Put `bin/amp` on your `PATH`. On macOS, open the disk image first and
+   copy `bin/` wherever you keep tools — the image is a container, not an
+   installer, so where the binaries live is your choice.
 2. Get an invite URL and its passphrase from your operator (out-of-band).
 3. Redeem it — the full procedure, verification, and recovery steps are
    `AOM/O4-standard-procedures.md` §4.6:
@@ -124,16 +126,41 @@ name, the SHA-256 of each shipped binary, and the source commits. The kit
 filename carries the rest:
 
 ```
-amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip
+amp-native-SDK-{tier}-v0.NNN.N-{platform}.dmg    macOS
+amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip    Linux, Windows
 ```
+
+macOS ships a disk image because a notarization ticket can only be stapled into
+a container. The ticket then travels with the download, which is what lets the
+kit verify — and run — with no network.
 
 ## Checking What You Downloaded
 
-The kit ships alongside `checksums.txt` and `verify-release-binaries.sh`. Put
-them beside the archives and run the script; it checks each archive against its
-recorded digest, reports whether a signature over the manifest is present and
-verifiable, and on macOS confirms the shipped binaries are signed. It reports
+The kit ships alongside `checksums.txt` and `verify-release-binaries.sh` —
+together they are the whole attestation story. Put them beside the downloads and
+run the script:
+
+```
+./verify-release-binaries.sh
+```
+
+| What it establishes | Where |
+|---|---|
+| every download matches its recorded SHA-256 | everywhere |
+| the disk image is signed, notarized and stapled | macOS |
+| a binary you copied out is signed, and its ticket is readable | macOS |
+
+The macOS checks need no network. The ticket is stapled into the image, so once
+you have opened the image both it and the binaries you copy out of it verify
+offline.
+
+`checksums.txt` carries no detached signature; the digests and the macOS
+notarization are what this kit attests. The script says so on every run rather
+than implying a signature it does not have — read its `!!!` lines, which name
 what it could NOT check rather than passing silently.
+
+**Windows binaries are not code-signed.** SmartScreen will warn on first run;
+`checksums.txt` is how you confirm what you downloaded.
 
 ## SDK Access Tiers
 
