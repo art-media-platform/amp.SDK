@@ -134,6 +134,10 @@ macOS ships a disk image because a notarization ticket can only be stapled into
 a container. The ticket then travels with the download, which is what lets the
 kit verify — and run — with no network.
 
+Not on a Mac and need to look inside the macOS kit? `7z x <kit>.dmg` unpacks a
+disk image on Linux and Windows. That is extraction only — the notarization
+checks below are macOS-only.
+
 ## Checking What You Downloaded
 
 The kit ships alongside `checksums.txt` and `verify-release-binaries.sh` —
