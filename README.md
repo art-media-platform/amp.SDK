@@ -190,8 +190,8 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project
 2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) for your functionality
-3. Clone amp.planet and register your module
-4. `make build` produces `ampd` (standalone server) and `libampd` (embeddable C library)
+3. Get `ampd` from the [amp-native kit](amp-native/) — the **community tier** ships a ready-to-run `ampd` (standalone server) to develop and evaluate against
+4. Registering your module into an `ampd` build is the partner path (partners/internal: clone `amp.planet`; `make build` produces `ampd` and `libampd`, the embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
 
 > **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in `amp.planet/AOM/0-amp-operations-manual.md` (internal).

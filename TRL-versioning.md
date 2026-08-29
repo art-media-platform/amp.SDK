@@ -62,7 +62,7 @@ If a team burns through an entire band without moving up, that's useful signal: 
 
 The amp **substrate** — the wire format, CRDT addressing, key/identity primitives, and the channel contract — is architecture-complete and approaching **v300**, the beta-stable band above.
 
-Release tags read `v0.NNN` (e.g. `v0.278.0`) — `NNN` counts toward the three-digit band above, and the leading `0.` says that band is not yet reached.  **A pre-v300 `v0.NNN` tag is a freeze candidate:** the wire format is in draft freeze and still open to change as fixes and polish land.  **`v300` and later are frozen.**
+Release tags read `v0.NNN` — `NNN` counts toward the three-digit band above, and the leading `0.` says that band is not yet reached.  **A pre-v300 `v0.NNN` tag is a freeze candidate:** the wire format is in draft freeze and still open to change as fixes and polish land.  **`v300` and later are frozen.**
 
 **Apps version independently of the substrate.**  An `AppModuleInfo.Version` is the *app's* own maturity, not the platform's.  A `v000` (Conceptual) or `v100` (Alpha) app riding the substrate is normal and expected — the rails are mature; much of the cargo is still arriving.  Read a low app TRL as "this capability is early," never as "the platform is early."
 
