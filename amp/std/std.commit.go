@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// Loads the latest element from the app instance associated with the current user; useful for storing high-level app state such as auth tokens.
+// BlockingLoad loads the latest element from the app instance associated with the current user; useful for storing high-level app state such as auth tokens.
 func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) error {
 	appEnv := appCtx.AppEnvironment()
 
@@ -46,7 +46,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) erro
 	return err
 }
 
-// Write version of BlockingLoad()
+// BlockingStore is the write version of BlockingLoad()
 func BlockingStore(appCtx amp.AppContext, attrID tag.UID, src proto.Message) error {
 	if src == nil {
 		return status.ErrNothingToCommit

@@ -1,3 +1,7 @@
+// Package amp defines the art.media.platform SDK's core contract: the TxMsg
+// wire model and its CRDT addressing, planet / channel / member epochs and
+// their verification, and the Host / Session / App interfaces an AMP node
+// implements.
 package amp
 
 import (
@@ -521,7 +525,7 @@ type Registry interface {
 	NewValue(attrID tag.UID) (proto.Message, error)
 }
 
-// Parameter block for notifying a Requester
+// PinEvent is the parameter block for notifying a Requester
 type PinEvent struct {
 	Status PinStatus // pin status description
 	Tx     *TxMsg    // relevant tx (if applicable)
@@ -540,7 +544,7 @@ type Request struct {
 	Params    url.Values   // derived from PinRequest.URL in Request.Revise()
 }
 
-// CRDT kv entry pair
+// ValueEntry is a CRDT kv entry pair
 type ValueEntry struct {
 	Addr  tag.Address   // CRDT value address
 	Value proto.Message // initialized with default value of expected type

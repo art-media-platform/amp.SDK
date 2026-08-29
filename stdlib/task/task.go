@@ -328,35 +328,35 @@ func (c *ctx) StartChild(task Task) (Context, error) {
 
 // runMonitor drives a single child Context through its closing lifecycle.
 // Exactly one runs per Context, launched by StartChild.
-func (child *ctx) runMonitor(parent *ctx) {
-	// Propagate a parent close down to the child; otherwise wait for the child
+func (c *ctx) runMonitor(parent *ctx) {
+	// Propagate a parent close down to the c; otherwise wait for the c
 	// to be closed on its own.
 	if parent != nil {
 		select {
 		case <-parent.Closing():
-			child.Close()
-		case <-child.Closing():
+			c.Close()
+		case <-c.Closing():
 		}
 	}
-	<-child.Closing()
+	<-c.Closing()
 
 	// Closing has begun: run the cleanup hooks before draining children.
-	if child.task.OnClosing != nil {
-		child.task.OnClosing()
+	if c.task.OnClosing != nil {
+		c.task.OnClosing()
 	}
 	if parent != nil && parent.task.OnChildClosing != nil {
-		parent.task.OnChildClosing(child)
+		parent.task.OnChildClosing(c)
 	}
 
-	// Wait for the child's own work (its children and OnRun) to finish.
-	child.waitIdle()
+	// Wait for the c's own work (its children and OnRun) to finish.
+	c.waitIdle()
 
-	// Detach from the parent. If this was the parent's last child, the parent
+	// Detach from the parent. If this was the parent's last c, the parent
 	// may now idle-close.
 	var parentIdleClose time.Duration
 	if parent != nil {
 		parent.mu.Lock()
-		parent.removeChildLocked(child)
+		parent.removeChildLocked(c)
 		parent.active--
 		if parent.active == 0 {
 			parentIdleClose = parent.task.Info.IdleClose
@@ -366,13 +366,13 @@ func (child *ctx) runMonitor(parent *ctx) {
 	}
 
 	// Finalize: nothing remains but the OnClosed hook and releasing Done().
-	child.mu.Lock()
-	child.state = Closed
-	child.mu.Unlock()
-	if child.task.OnClosed != nil {
-		child.task.OnClosed()
+	c.mu.Lock()
+	c.state = Closed
+	c.mu.Unlock()
+	if c.task.OnClosed != nil {
+		c.task.OnClosed()
 	}
-	close(child.chClosed)
+	close(c.chClosed)
 
 	if parentIdleClose > 0 {
 		parent.CloseWhenIdle(parentIdleClose)

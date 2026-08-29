@@ -17,7 +17,7 @@ import (
 var (
 	goldenTxID   = tag.UID{0x1122334455667788, 0x99aabbccddeeff00}
 	goldenFromID = tag.UID{0x0102030405060708, 0x090a0b0c0d0e0f10}
-	authorTxID_A = tag.UID{0xa1a2a3a4a5a6a7a8, 0xb1b2b3b4b5b6b7b8}
+	authorTxIDA  = tag.UID{0xa1a2a3a4a5a6a7a8, 0xb1b2b3b4b5b6b7b8}
 )
 
 // goldenOps builds the fixed 3-op shape: op2 repeats op1's NodeID/AttrID
@@ -105,7 +105,7 @@ func TestEditIDReconstructionGolden(t *testing.T) {
 	// Op 2: served shape — FromID+TxID header (0x03); identity = header TxID.
 	servedValue := []byte{byte(ValueHeaderFlags_FromID | ValueHeaderFlags_TxID)}
 	servedValue = goldenFromID.AppendTo(servedValue)
-	servedValue = authorTxID_A.AppendTo(servedValue)
+	servedValue = authorTxIDA.AppendTo(servedValue)
 	servedValue = append(servedValue, 0xbe, 0xef)
 	op2 := TxOp{Flags: TxOpFlags_Upsert, Addr: baseAddr}
 	op2.Addr.ItemID = tag.UID{0x5000000000000007, 0x6000000000000008}
@@ -113,7 +113,7 @@ func TestEditIDReconstructionGolden(t *testing.T) {
 
 	// Op 3: TxID-only header (0x02) — header UID is first; identity = header TxID.
 	bareValue := []byte{byte(ValueHeaderFlags_TxID)}
-	bareValue = authorTxID_A.AppendTo(bareValue)
+	bareValue = authorTxIDA.AppendTo(bareValue)
 	op3 := TxOp{Flags: TxOpFlags_Upsert, Addr: baseAddr}
 	op3.Addr.ItemID = tag.UID{0x500000000000000b, 0x600000000000000c}
 	tx.MarshalOpAndData(&op3, bareValue)
@@ -132,7 +132,7 @@ func TestEditIDReconstructionGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadTxMsg: %v", err)
 	}
-	wantEditIDs := []tag.UID{goldenTxID, authorTxID_A, authorTxID_A}
+	wantEditIDs := []tag.UID{goldenTxID, authorTxIDA, authorTxIDA}
 	for i, want := range wantEditIDs {
 		if got := decoded.Ops[i].Addr.EditID; got != want {
 			t.Errorf("op %d EditID = %v, want %v", i, got, want)
@@ -148,7 +148,7 @@ func TestDeriveIDParityGolden(t *testing.T) {
 	}
 
 	const goldenMidpointHex = "59626b747d868f98a5aeb7c0c9d2db5c"
-	derived := goldenTxID.DeriveID(authorTxID_A)
+	derived := goldenTxID.DeriveID(authorTxIDA)
 	gotHex := hex.EncodeToString(derived.AppendTo(nil))
 	if gotHex != goldenMidpointHex {
 		t.Errorf("DeriveID(seeded) = %s, want %s", gotHex, goldenMidpointHex)

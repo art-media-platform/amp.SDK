@@ -20,7 +20,7 @@ func (addr *Address) ElementLSM() (lsm ElementLSM) {
 	return
 }
 
-// Converts this Address to an AddressLSM.
+// AsLSM converts this Address to an AddressLSM.
 func (addr *Address) AsLSM(lsm []byte) {
 	addr.putElementLSM(lsm)
 	binary.BigEndian.PutUint64(lsm[48:56], addr.EditID[0]) // EditID

@@ -349,85 +349,85 @@ func (terms *EpochTerms) EffectiveAdmission() MemberAdmission {
 // Clone returns a new *Tag with all user-visible fields copied from v.
 // Proto internals (MessageState, unknownFields, sizeCache) are freshly initialized.
 // Returns nil if v is nil.
-func (v *Tag) Clone() *Tag {
-	if v == nil {
+func (tagValue *Tag) Clone() *Tag {
+	if tagValue == nil {
 		return nil
 	}
 	return &Tag{
-		UID_0:          v.UID_0,
-		UID_1:          v.UID_1,
-		I:              v.I,
-		J:              v.J,
-		K:              v.K,
-		Units:          v.Units,
-		ContentTypeRaw: v.ContentTypeRaw,
-		URI:            v.URI,
-		Text:           v.Text,
-		Data:           bytes.Clone(v.Data), // deep: an attachment must not alias the source buffer
+		UID_0:          tagValue.UID_0,
+		UID_1:          tagValue.UID_1,
+		I:              tagValue.I,
+		J:              tagValue.J,
+		K:              tagValue.K,
+		Units:          tagValue.Units,
+		ContentTypeRaw: tagValue.ContentTypeRaw,
+		URI:            tagValue.URI,
+		Text:           tagValue.Text,
+		Data:           bytes.Clone(tagValue.Data), // deep: an attachment must not alias the source buffer
 	}
 }
 
-func (v *Tag) SetFromTime(t time.Time) {
+func (tagValue *Tag) SetFromTime(t time.Time) {
 	id := tag.UID_FromTime(t)
-	v.UID_0 = id[0]
-	v.UID_1 = id[1]
+	tagValue.UID_0 = id[0]
+	tagValue.UID_1 = id[1]
 }
 
-func (v *Tag) SetID(uid tag.UID) {
-	v.UID_0 = uid[0]
-	v.UID_1 = uid[1]
+func (tagValue *Tag) SetID(uid tag.UID) {
+	tagValue.UID_0 = uid[0]
+	tagValue.UID_1 = uid[1]
 }
 
 // NoUID reports whether the Tag carries no identity — UID unset.
 // Nil-safe: a nil *Tag reports true.
-func (v *Tag) NoUID() bool {
-	return v == nil || (v.UID_0 == 0 && v.UID_1 == 0)
+func (tagValue *Tag) NoUID() bool {
+	return tagValue == nil || (tagValue.UID_0 == 0 && tagValue.UID_1 == 0)
 }
 
 // NoURI reports whether the Tag carries no reference — URI unset.
 // Nil-safe: a nil *Tag reports true.
-func (v *Tag) NoURI() bool {
-	return v == nil || v.URI == ""
+func (tagValue *Tag) NoURI() bool {
+	return tagValue == nil || tagValue.URI == ""
 }
 
-func (v *Tag) UID() tag.UID {
-	if v == nil {
+func (tagValue *Tag) UID() tag.UID {
+	if tagValue == nil {
 		return tag.UID{}
 	}
 	return tag.UID{
-		v.UID_0,
-		v.UID_1,
+		tagValue.UID_0,
+		tagValue.UID_1,
 	}
 }
 
-func (v *Tag) Name() tag.Name {
-	if v == nil {
+func (tagValue *Tag) Name() tag.Name {
+	if tagValue == nil {
 		return tag.Name{}
 	}
 	return tag.Name{
-		ID:   v.UID(),
-		Text: v.Text,
+		ID:   tagValue.UID(),
+		Text: tagValue.Text,
 	}
 }
 
-func (v *Tag) AsLabel() string {
+func (tagValue *Tag) AsLabel() string {
 	str := make([]byte, 0, 128)
 
-	if v.URI != "" {
+	if tagValue.URI != "" {
 		if len(str) > 0 {
 			str = append(str, ',')
 		}
-		R := min(80, len(v.URI))
-		str = append(str, v.URI[:R]...)
+		R := min(80, len(tagValue.URI))
+		str = append(str, tagValue.URI[:R]...)
 	}
-	if v.Text != "" {
+	if tagValue.Text != "" {
 		if len(str) > 0 {
 			str = append(str, '.')
 		}
-		R := min(80, len(v.Text))
-		str = append(str, v.Text[:R]...)
+		R := min(80, len(tagValue.Text))
+		str = append(str, tagValue.Text[:R]...)
 	}
-	id := v.UID()
+	id := tagValue.UID()
 	if id.IsSet() {
 		if len(str) > 0 {
 			str = append(str, '.')
@@ -548,7 +548,7 @@ func (req *Request) Revise(pinReq *PinRequest) error {
 	return nil
 }
 
-// Interprets the request's URL as an ItemSpan and from the form:
+// ParseAsAddressURL interprets the request's URL as an ItemSpan and from the form:
 //
 //	"[scheme://]{Domain}/[{verb}/[{NodeID}/[{AttrID}/[{ItemID}]]]]"
 func (req *Request) ParseAsAddressURL() error {
@@ -602,7 +602,7 @@ func (req *Request) FilterLabel() string {
 	return string(label)
 }
 
-// Returns if any span admits the given op address (UID-interval containment).
+// Admits returns if any span admits the given op address (UID-interval containment).
 func (req *Request) Admits(addr tag.Address) bool {
 	for _, span := range req.Selector.Spans {
 		nodeID := span.NodeID()
@@ -746,7 +746,7 @@ func (sel *ItemSelector) Select(elem tag.ElementID) {
 	sel.AddSpan(elem.NodeID, elem.AttrID, itemMin, itemMax)
 }
 
-func (sel *ItemSelector) AddSpan(nodeID, attrID, itemID_min, itemID_max tag.UID) {
+func (sel *ItemSelector) AddSpan(nodeID, attrID, itemIDMin, itemIDMax tag.UID) {
 	span := &ItemSpan{
 		NodeID_0: nodeID[0],
 		NodeID_1: nodeID[1],
@@ -754,10 +754,10 @@ func (sel *ItemSelector) AddSpan(nodeID, attrID, itemID_min, itemID_max tag.UID)
 		AttrID_0: attrID[0],
 		AttrID_1: attrID[1],
 
-		ItemID_Min_0: itemID_min[0],
-		ItemID_Min_1: itemID_min[1],
-		ItemID_Max_0: itemID_max[0],
-		ItemID_Max_1: itemID_max[1],
+		ItemID_Min_0: itemIDMin[0],
+		ItemID_Min_1: itemIDMin[1],
+		ItemID_Max_0: itemIDMax[0],
+		ItemID_Max_1: itemIDMax[1],
 
 		EditsPerItem: 1,
 	}

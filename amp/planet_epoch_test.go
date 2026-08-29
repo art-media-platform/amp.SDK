@@ -99,8 +99,8 @@ func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 	}
 }
 
-// TestPlanetEpoch_MixedSuiteQuorum is the load-bearing demonstration that a
-// single genesis epoch can be co-signed by founders on different CryptoKits.
+// TestPlanetEpoch_MixedSuiteQuorum demonstrates that a single genesis epoch
+// can be co-signed by founders on different CryptoKits.
 // One Poly25519 founder + one P-256 founder both sign the same FRAME; each
 // signature is verified against its signer's native kit.
 //
@@ -169,7 +169,7 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 // TestPlanetEpoch_Declaration_ParticipatesInSigning confirms that the founders'
 // human-readable Declaration is part of the signed Charter bytes — swapping the
 // founders' stated intent must break verification, just like tampering with
-// EpochTag or GovernanceGroup.  This is what makes the declaration load-bearing
+// EpochTag or GovernanceGroup.  This is what makes the declaration binding
 // rather than decorative.
 func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 	mkEnv := func(declaration string) *amp.PlanetEpoch {

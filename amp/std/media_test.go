@@ -12,7 +12,7 @@ import (
 )
 
 // media_test.go proves the range-lazy contract of the media-stream reader without a
-// host: a synthetic segment index over a counting BlobOpener.  The load-bearing
+// host: a synthetic segment index over a counting BlobOpener.  The central
 // assertion is that serving the tail of a long stream opens ONLY the segments the
 // range touches — a four-hour mix is never read end-to-end into heap.
 

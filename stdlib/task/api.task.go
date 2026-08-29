@@ -11,7 +11,7 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-// Starts a new Context with no parent Context.
+// Start starts a new Context with no parent Context.
 func Start(task Task) (Context, error) {
 	return Context((*ctx)(nil)).StartChild(task)
 }

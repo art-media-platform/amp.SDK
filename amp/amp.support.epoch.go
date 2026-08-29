@@ -95,8 +95,8 @@ func (pe *PlanetEpoch) ParsedTerms() (*EpochTerms, error) {
 // The single discriminator the authority gate and the epoch-acceptance state machine share.
 // Nil-safe: a nil receiver / nil PreviousEpoch reads as genesis (the getter is nil-safe and
 // the `||` short-circuits before UID()).
-func (t *EpochTerms) IsGenesis() bool {
-	prev := t.GetPreviousEpoch()
+func (terms *EpochTerms) IsGenesis() bool {
+	prev := terms.GetPreviousEpoch()
 	return prev == nil || prev.UID().IsNil()
 }
 

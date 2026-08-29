@@ -23,13 +23,13 @@ func NewBufMap() BufMap {
 	}
 }
 
-// Returns the entry having a matching key (or nil)
+// Get returns the entry having a matching key (or nil)
 func (m *BufMap) Get(key []byte) MapEntry {
 	existing, _ := m.get(key)
 	return existing
 }
 
-// Returns the entry being replaced (or nil)
+// Put returns the entry being replaced (or nil)
 func (m *BufMap) Put(entry MapEntry) MapEntry {
 	existing, atHash := m.get(entry.MapKey())
 
@@ -37,7 +37,7 @@ func (m *BufMap) Put(entry MapEntry) MapEntry {
 	return existing
 }
 
-// Removes and returns the entry having a matching key (or nil)
+// Remove removes and returns the entry having a matching key (or nil)
 func (m *BufMap) Remove(key []byte) MapEntry {
 	existing, atHash := m.get(key)
 

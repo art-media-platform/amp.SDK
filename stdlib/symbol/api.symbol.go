@@ -68,13 +68,13 @@ const DefaultIssuerMin = 600
 
 var ErrIssuerNotOpen = errors.New("issuer not open")
 
-// Reads a big endian encoded uint32 ID from the given byte slice
+// ReadID reads a big endian encoded uint32 ID from the given byte slice
 func ReadID(in []byte) (uint32, []byte) {
 	ID := binary.BigEndian.Uint32(in)
 	return ID, in[IDSz:]
 }
 
-// Reads an ID from the given byte slice (reading IDSz=4 bytes)
+// ReadFrom reads an ID from the given byte slice (reading IDSz=4 bytes)
 func (id *ID) ReadFrom(in []byte) {
 	*id = ID(binary.BigEndian.Uint32(in))
 }

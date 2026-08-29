@@ -74,7 +74,7 @@ func HexCornerOffset(l Layout, c int) Point {
 	return Point{size.x * math.Cos(angle), size.y * math.Sin(angle)}
 }
 
-// Gets the corners of the hexagon for the given layout, starting at the E vertex and proceeding in a CCW order
+// HexagonCorners gets the corners of the hexagon for the given layout, starting at the E vertex and proceeding in a CCW order
 func HexagonCorners(l Layout, h Hex) []Point {
 
 	corners := make([]Point, 0)

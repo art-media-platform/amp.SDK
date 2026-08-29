@@ -53,7 +53,7 @@ func HashName(s string) Name {
 	return Name{}.With(s)
 }
 
-// Returns the filename representation of the tag.
+// Filename returns the filename representation of the tag.
 func (name Name) Filename() string {
 	if name.Text != "" {
 		return name.Text
@@ -340,7 +340,7 @@ func (name Name) LeafTags(n int) (string, string) {
 	return "", text
 }
 
-// Returns the index of the first path separator in the given text (':', '/', or '\\').
+// PathStart returns the index of the first path separator in the given text (':', '/', or '\\').
 // Onward from that index, the text is considered a case sensitive path or URL.
 func PathStart(text string) int {
 	for i, c := range []byte(text) {
@@ -351,17 +351,17 @@ func PathStart(text string) int {
 	return -1
 }
 
-// Returns highest possible value UID value (constant)
+// MaxID returns the highest possible UID value (constant)
 func MaxID() UID {
 	return UID{UID_0_Max, UID_1_Max}
 }
 
-// Returns reserved UID denoting a match with any UID value
+// WildcardID returns the reserved UID denoting a match with any UID value
 func WildcardID() UID {
 	return UID{UID_0_Max, UID_1_Wildcard}
 }
 
-// Returns reserved tag.Name denoting a match with any UID value..
+// Wildcard returns the reserved tag.Name denoting a match with any UID value.
 func Wildcard() Name {
 	return Name{
 		ID:   WildcardID(),
@@ -437,16 +437,16 @@ func NewID() UID {
 }
 
 func UID_FromTime(t time.Time) UID {
-	ns_b10 := uint64(t.Nanosecond()) // 0..999,999,999
-	ns_f64 := ns_b10 * TickStep64    // map to 0..(2^64-1)
+	nsB10 := uint64(t.Nanosecond()) // 0..999,999,999
+	nsF64 := nsB10 * TickStep64     // map to 0..(2^64-1)
 
-	t_00_06 := uint64(t.Unix()) << 16
-	t_06_08 := ns_f64 >> 48
-	t_08_15 := ns_f64 << 16
+	t00_06 := uint64(t.Unix()) << 16
+	t06_08 := nsF64 >> 48
+	t08_15 := nsF64 << 16
 
 	return UID{
-		t_00_06 | t_06_08,
-		t_08_15,
+		t00_06 | t06_08,
+		t08_15,
 	}
 }
 
@@ -506,7 +506,7 @@ func (id UID) Midpoint(oth UID) UID {
 	return UID{m0, m1}
 }
 
-// Commutative, associative UID combine — generates a new ID from two existing
+// With is a commutative, associative UID combine — generates a new ID from two existing
 // ones.  Canonization no longer folds NAME literals through this (a name part's
 // UID is the atomic hash of its canonic string — order significant); canonicID
 // still uses it to combine the name part with a scheme:identifier part, and its
@@ -516,12 +516,12 @@ func (id UID) With(other UID) UID {
 	return id.Add(other)
 }
 
-// Entangles this ID with another, producing a new ID -- non-commutative.
+// Then entangles this ID with another, producing a new ID -- non-commutative.
 func (id UID) Then(other UID) UID {
 	return id.Subtract(other)
 }
 
-// Commutative 128-bit modular add.  See [UID.With] for the order-independence
+// Add is a commutative 128-bit modular add.  See [UID.With] for the order-independence
 // caveat — this is UID arithmetic, not the tag canonization path.
 func (id UID) Add(oth UID) (out UID) {
 	carry := uint64(0)
@@ -537,7 +537,7 @@ func (id UID) Subtract(oth UID) (out UID) {
 	return out
 }
 
-// Increments this UID by 1.
+// Increment increments this UID by 1.
 // Returns false if the UID is already at its maximum value.
 func (id *UID) Increment() bool {
 	if id[1] < UID_1_Max {
@@ -556,7 +556,7 @@ func (id *UID) Increment() bool {
 	return true
 }
 
-// Decrements this UID by 1.
+// Decrement decrements this UID by 1.
 // Returns false if the UID is already zero.
 func (id *UID) Decrement() bool {
 	if id[1] > 0 {
@@ -593,7 +593,7 @@ func (id UID) HashLiteral(tagLiteral []byte) UID {
 	return UID_HashLiteral(buf)
 }
 
-// Returns this tag.UID in canonic Base32 text form: 26 lowercase geohash
+// Base32 returns this tag.UID in canonic Base32 text form: 26 lowercase geohash
 // digits grouped 3-10-10-3 with '-' separators — dashes after digits 3, 13,
 // and 23 (AOM SD-canonization-spec.md §1.7).  The tail group is the log label's
 // tail verbatim (AsLabel).  Decoding strips '-' and whitespace and accepts either
@@ -643,7 +643,7 @@ func (id UID) AsLabel() string {
 	return full[:1] + "…" + full[len(full)-3:]
 }
 
-// Converts this tag.UID to a 63-bit composite integer (i.e. always positive).
+// Int63 converts this tag.UID to a 63-bit composite integer (i.e. always positive).
 func (id UID) Int63() int64 {
 	u64 := id[0] + id[1]
 	return int64(u64 >> 1)
@@ -658,11 +658,11 @@ func (id UID) Base16() string {
 	L := -1
 	R := 0
 	for i := range 2 {
-		id_i := id[i]
+		idI := id[i]
 		shift := uint(64)
 		for range 16 { // Process all 16 nibbles of a uint64
 			shift -= 4
-			digit := (id_i >> shift) & 0xF
+			digit := (idI >> shift) & 0xF
 			if digit != 0 && L < 0 { // mark when we hit the first non-zero digit
 				L = R
 			}
@@ -729,9 +729,9 @@ func (id UID) Unix() int64 {
 
 func (id UID) AsTime() time.Time {
 	unix := id.Unix()
-	ns_f64 := ((id[0] & 0xFFFF) << 48) | (id[1] >> 16)
-	ns_b10 := 1 + ns_f64/(1+TickStep64)
-	return time.Unix(unix, int64(ns_b10))
+	nsF64 := ((id[0] & 0xFFFF) << 48) | (id[1] >> 16)
+	nsB10 := 1 + nsF64/(1+TickStep64)
+	return time.Unix(unix, int64(nsB10))
 }
 
 func (id UID) CompareTo(oth UID) int {
@@ -775,7 +775,7 @@ func (id *UID) EnsureSet(src UID) {
 	}
 }
 
-// UID_Parse parses a UID (typically in base32-encoded ascii) from the given text.
+// UID_ParseBase32 parses a UID (typically in base32-encoded ascii) from the given text.
 // It ignores whitespace and returns an error for invalid formats.
 func UID_ParseBase32(text string) (UID, error) {
 	digits := make([]byte, 0, UID_Base32Length)

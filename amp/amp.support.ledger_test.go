@@ -9,8 +9,8 @@ import (
 )
 
 // TestAttestationKey_Convergence verifies that two observers computing the
-// same AttestationKey produce the same ItemID — this is the load-bearing
-// property for CRDT convergence on the planet ledger.
+// same AttestationKey produce the same ItemID — the property CRDT
+// convergence on the planet ledger depends on.
 func TestAttestationKey_Convergence(t *testing.T) {
 	subject := tag.NewID()
 	citedTx := tag.NewID()

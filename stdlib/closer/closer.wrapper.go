@@ -18,7 +18,7 @@ type Wrapper interface {
 	Close() error
 }
 
-// Wraps the given io.Closer into a Wrapper, initializing its reference count to 1.
+// WrapCloser wraps the given io.Closer into a Wrapper, initializing its reference count to 1.
 func WrapCloser(target io.Closer) Wrapper {
 	wr := &wrapper{
 		closer:   target,

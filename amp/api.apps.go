@@ -73,7 +73,7 @@ type AppInstance interface {
 	OnClosing()
 }
 
-// Pinners process and "pin" requests, pushing responses to the client.
+// A Pinner processes and "pins" requests, pushing responses to the client.
 type Pinner interface {
 
 	// Creates and serves the given request, providing a wrapper for the request.

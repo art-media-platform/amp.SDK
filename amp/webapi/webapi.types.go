@@ -1,4 +1,6 @@
-// Authoritative package documentation: webapi.proto.
+// Package webapi defines the amp web wire contract — the JSON shapes served
+// by app.www and consumed by every language binding.  Authoritative package
+// documentation: webapi.proto.
 //
 // Go-side field-type discipline for the shapes in this file:
 //   - tag.UID for fields that are ALWAYS UIDs (member IDs, item/edit/from
@@ -11,7 +13,6 @@
 //     addresses, free text).
 //   - omitzero (Go 1.24+) on optional tag.UID fields so a zero-UID
 //     suppresses the JSON entry, matching the omitempty behaviour of "".
-
 package webapi
 
 import (

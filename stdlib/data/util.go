@@ -16,7 +16,7 @@ func NewLike(msg proto.Message) proto.Message {
 	return msg.ProtoReflect().New().Interface()
 }
 
-// Zeros out a given slice
+// Zero zeros out a given slice
 func Zero(buf []byte) {
 	N := int32(len(buf))
 	for i := int32(0); i < N; i++ {
@@ -24,7 +24,7 @@ func Zero(buf []byte) {
 	}
 }
 
-// Encodes an int64 to a zig-zag uint64
+// ToZigZag encodes an int64 to a zig-zag uint64
 func ToZigZag(x int64) uint64 {
 	ux := uint64(x) << 1
 	if x < 0 {
@@ -33,7 +33,7 @@ func ToZigZag(x int64) uint64 {
 	return ux
 }
 
-// Decodes a zig-zag uint64 to an int64
+// FromZigZag decodes a zig-zag uint64 to an int64
 func FromZigZag(ux uint64) int64 {
 	x := ux >> 1
 	if ux&1 != 0 {

@@ -44,17 +44,17 @@ func TagFromData(contentType string, data []byte) *Tag {
 // (text/plain).  It is the stable accessor — callers read the type through it, never off the
 // raw ContentTypeRaw field — so the raw representation can evolve (e.g. an interned type code)
 // without touching call sites.  Nil-safe (nil → "").
-func (leaf *Tag) ContentType() string {
-	if leaf == nil {
+func (tagValue *Tag) ContentType() string {
+	if tagValue == nil {
 		return ""
 	}
-	if leaf.ContentTypeRaw == "" {
+	if tagValue.ContentTypeRaw == "" {
 		return DefaultContentType
 	}
-	return strings.ToLower(leaf.ContentTypeRaw)
+	return strings.ToLower(tagValue.ContentTypeRaw)
 }
 
-// ErrTagNoContentType: a leaf carries Data with no ContentTypeRaw.  An attachment with no
+// ErrTagNoContentType flags a leaf carrying Data with no ContentTypeRaw.  An attachment with no
 // media type is unrenderable — nothing downstream can decide how to read the bytes — so it is
 // refused where the value is authored rather than stored and served as unusable payload.
 var ErrTagNoContentType = status.Code_BadRequest.Error("amp.Tag: Data requires ContentTypeRaw")
@@ -64,11 +64,11 @@ var ErrTagNoContentType = status.Code_BadRequest.Error("amp.Tag: Data requires C
 // ContentTypeRaw.  URI and Data together are legal and expected — the post-fetch cache, where
 // URI is the object's location and Data a copy materialized inline — and carry no precedence
 // rule.  Nil-safe.
-func (leaf *Tag) Validate() error {
-	if leaf == nil || len(leaf.Data) == 0 {
+func (tagValue *Tag) Validate() error {
+	if tagValue == nil || len(tagValue.Data) == 0 {
 		return nil
 	}
-	if leaf.ContentTypeRaw == "" {
+	if tagValue.ContentTypeRaw == "" {
 		return ErrTagNoContentType
 	}
 	return nil
@@ -77,9 +77,9 @@ func (leaf *Tag) Validate() error {
 // Validate checks every leaf of the tree — Head, SubTags, and Children alike, since an
 // attachment is legal at any depth (AOM SD-content-substrate.md §3.6) — and
 // returns the first refusal.  Nil-safe.
-func (t *Tags) Validate() error {
+func (tagsValue *Tags) Validate() error {
 	var refused error
-	t.Walk(func(leaf *Tag) {
+	tagsValue.Walk(func(leaf *Tag) {
 		if refused == nil {
 			refused = leaf.Validate()
 		}
@@ -98,29 +98,29 @@ func NewTags(head *Tag, subTags ...*Tag) *Tags {
 }
 
 // AddSubTag appends an amplifying leaf and returns t (chainable).
-func (t *Tags) AddSubTag(sub *Tag) *Tags {
-	t.SubTags = append(t.SubTags, sub)
-	return t
+func (tagsValue *Tags) AddSubTag(sub *Tag) *Tags {
+	tagsValue.SubTags = append(tagsValue.SubTags, sub)
+	return tagsValue
 }
 
 // AddChild appends a sequential sub-tree and returns t (chainable).
-func (t *Tags) AddChild(child *Tags) *Tags {
-	t.Children = append(t.Children, child)
-	return t
+func (tagsValue *Tags) AddChild(child *Tags) *Tags {
+	tagsValue.Children = append(tagsValue.Children, child)
+	return tagsValue
 }
 
 // ByContentType returns the first leaf (Head, then SubTags) whose ContentType matches,
 // or nil — the accessor a document-as-Tags value reads through, e.g.
 // post.Body.ByContentType("text/html").  Nil-safe.
-func (t *Tags) ByContentType(contentType string) *Tag {
-	if t == nil {
+func (tagsValue *Tags) ByContentType(contentType string) *Tag {
+	if tagsValue == nil {
 		return nil
 	}
 	contentType = strings.ToLower(contentType)
-	if t.Head != nil && t.Head.ContentType() == contentType {
-		return t.Head
+	if tagsValue.Head != nil && tagsValue.Head.ContentType() == contentType {
+		return tagsValue.Head
 	}
-	for _, sub := range t.SubTags {
+	for _, sub := range tagsValue.SubTags {
 		if sub.ContentType() == contentType {
 			return sub
 		}
@@ -129,8 +129,8 @@ func (t *Tags) ByContentType(contentType string) *Tag {
 }
 
 // TextByContentType returns the Text of the first leaf matching contentType, or "".
-func (t *Tags) TextByContentType(contentType string) string {
-	if leaf := t.ByContentType(contentType); leaf != nil {
+func (tagsValue *Tags) TextByContentType(contentType string) string {
+	if leaf := tagsValue.ByContentType(contentType); leaf != nil {
 		return leaf.Text
 	}
 	return ""
@@ -138,17 +138,17 @@ func (t *Tags) TextByContentType(contentType string) string {
 
 // Walk visits Head, each SubTag, then recurses into Children, depth-first — the flatten
 // used by renderers and the ACC content gate to reach every leaf.  Nil-safe.
-func (t *Tags) Walk(visit func(*Tag)) {
-	if t == nil {
+func (tagsValue *Tags) Walk(visit func(*Tag)) {
+	if tagsValue == nil {
 		return
 	}
-	if t.Head != nil {
-		visit(t.Head)
+	if tagsValue.Head != nil {
+		visit(tagsValue.Head)
 	}
-	for _, sub := range t.SubTags {
+	for _, sub := range tagsValue.SubTags {
 		visit(sub)
 	}
-	for _, child := range t.Children {
+	for _, child := range tagsValue.Children {
 		child.Walk(visit)
 	}
 }

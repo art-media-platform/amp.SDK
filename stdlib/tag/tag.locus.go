@@ -17,23 +17,23 @@ const (
 
 // LocusBase zeros the low 6 bits of UID[1], yielding the locus base AttrID.
 // A locus base + cell index spans 64 contiguous UIDs without additional hashing.
-func (uid UID) LocusBase() UID {
-	return UID{uid[0], uid[1] &^ locusMask}
+func (id UID) LocusBase() UID {
+	return UID{id[0], id[1] &^ locusMask}
 }
 
 // LocusCell returns the cell index (0..63) from the low 6 bits of UID[1].
-func (uid UID) LocusCell() int {
-	return int(uid[1] & locusMask)
+func (id UID) LocusCell() int {
+	return int(id[1] & locusMask)
 }
 
 // WithCell returns base | cellIndex.  The receiver must be a locus base (low 6 bits = 0).
-func (uid UID) WithCell(cell int) UID {
-	return UID{uid[0], uid[1] | uint64(cell)&locusMask}
+func (id UID) WithCell(cell int) UID {
+	return UID{id[0], id[1] | uint64(cell)&locusMask}
 }
 
-// LocusMatch reports whether uid falls within the locus span of base.
-func (base UID) LocusMatch(uid UID) bool {
-	return uid[0] == base[0] && (uid[1]&^locusMask) == (base[1]&^locusMask)
+// LocusMatch reports whether uid falls within the locus span of this UID (the locus base).
+func (id UID) LocusMatch(uid UID) bool {
+	return uid[0] == id[0] && (uid[1]&^locusMask) == (id[1]&^locusMask)
 }
 
 // ════════════════════════════════════════════════════════

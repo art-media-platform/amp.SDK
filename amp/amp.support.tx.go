@@ -91,7 +91,7 @@ func (tx *TxEnvelope) PlanetEpochID() tag.UID {
 	return tag.UID{tx.PlanetEpoch_0, tx.PlanetEpoch_1}
 }
 
-// SetPlanetEpoch records the planet epoch UID in the envelope (for channel TxMsgs).
+// SetPlanetEpochID records the planet epoch UID in the envelope (for channel TxMsgs).
 func (tx *TxEnvelope) SetPlanetEpochID(epochID tag.UID) {
 	tx.PlanetEpoch_0 = epochID[0]
 	tx.PlanetEpoch_1 = epochID[1]
@@ -267,7 +267,7 @@ func (tx *TxMsg) Delete(elemID tag.ElementID, val proto.Message) error {
 	return tx.MarshalOp(&op, val)
 }
 
-// Marshals and appends a TxOp and optional value to the given Tx's data store.
+// MarshalOp marshals and appends a TxOp and optional value to the given Tx's data store.
 //
 // On success:
 //   - TxMsg.DataStore is appended with the marshaled value
@@ -340,7 +340,7 @@ func checkTagSyntax(val proto.Message) error {
 	return nil
 }
 
-// Marshals a TxOp and it's raw value (value header then value content)
+// MarshalOpAndData marshals a TxOp and its raw value (value header then value content)
 // Used for low-level handling and should be used with care.
 func (tx *TxMsg) MarshalOpAndData(op *TxOp, opValue []byte) {
 	op.DataOfs = uint64(len(tx.DataStore))
@@ -401,7 +401,7 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 	return tx, nil
 }
 
-// Returns the ceiling byte size of this TxMsg as a serialized buffer.
+// CeilingSize returns the ceiling byte size of this TxMsg as a serialized buffer.
 func (tx *TxMsg) CeilingSize() int64 {
 	const (
 		txBaseSize = int(TxPreambleSize) +
@@ -476,8 +476,8 @@ func appendOps(dst []byte, ops []TxOp) []byte {
 	dst = append(dst, 0, 0, 0, 0) // u32 ops-length, backfilled below
 
 	var (
-		op_prv [TxField_MaxFields]uint64
-		op_cur [TxField_MaxFields]uint64
+		opPrv [TxField_MaxFields]uint64
+		opCur [TxField_MaxFields]uint64
 	)
 	for _, op := range ops {
 		dst = append(dst, byte(op.Flags))
@@ -487,30 +487,30 @@ func appendOps(dst []byte, ops []TxOp) []byte {
 		dst = binary.AppendUvarint(dst, 0) // skip bytes (future use)
 
 		// detect repeated fields and write only what changes (with corresponding flags)
-		op_cur[TxField_ItemID_0] = op.Addr.ItemID[0]
-		op_cur[TxField_ItemID_1] = op.Addr.ItemID[1]
+		opCur[TxField_ItemID_0] = op.Addr.ItemID[0]
+		opCur[TxField_ItemID_1] = op.Addr.ItemID[1]
 
-		op_cur[TxField_AttrID_0] = op.Addr.AttrID[0]
-		op_cur[TxField_AttrID_1] = op.Addr.AttrID[1]
+		opCur[TxField_AttrID_0] = op.Addr.AttrID[0]
+		opCur[TxField_AttrID_1] = op.Addr.AttrID[1]
 
-		op_cur[TxField_NodeID_0] = op.Addr.NodeID[0]
-		op_cur[TxField_NodeID_1] = op.Addr.NodeID[1]
+		opCur[TxField_NodeID_0] = op.Addr.NodeID[0]
+		opCur[TxField_NodeID_1] = op.Addr.NodeID[1]
 
 		hasFields := uint64(0)
-		for i, fi := range op_cur {
-			if fi != op_prv[i] {
+		for i, fi := range opCur {
+			if fi != opPrv[i] {
 				hasFields |= (1 << i)
 			}
 		}
 
 		dst = binary.AppendUvarint(dst, hasFields)
-		for i, fi := range op_cur {
+		for i, fi := range opCur {
 			if hasFields&(1<<i) != 0 {
 				dst = binary.BigEndian.AppendUint64(dst, fi)
 			}
 		}
 
-		op_prv = op_cur // current becomes previous
+		opPrv = opCur // current becomes previous
 	}
 
 	binary.BigEndian.PutUint32(dst[lenOfs:lenOfs+4], uint32(len(dst)-lenOfs-4))
@@ -541,7 +541,7 @@ func readOpsSection(tx *TxMsg, src []byte, pos *int) error {
 // authoritative decode walk; every parse path resolves op boundaries here.
 func readOps(tx *TxMsg, src []byte) error {
 	p := 0
-	var op_cur [TxField_MaxFields]uint64
+	var opCur [TxField_MaxFields]uint64
 
 	for p < len(src) {
 		var op TxOp
@@ -585,19 +585,19 @@ func readOps(tx *TxMsg, src []byte) error {
 				if p+8 > len(src) {
 					return status.ErrMalformedTx
 				}
-				op_cur[j] = binary.BigEndian.Uint64(src[p:])
+				opCur[j] = binary.BigEndian.Uint64(src[p:])
 				p += 8
 			}
 		}
 
-		op.Addr.ItemID[0] = op_cur[TxField_ItemID_0]
-		op.Addr.ItemID[1] = op_cur[TxField_ItemID_1]
+		op.Addr.ItemID[0] = opCur[TxField_ItemID_0]
+		op.Addr.ItemID[1] = opCur[TxField_ItemID_1]
 
-		op.Addr.AttrID[0] = op_cur[TxField_AttrID_0]
-		op.Addr.AttrID[1] = op_cur[TxField_AttrID_1]
+		op.Addr.AttrID[0] = opCur[TxField_AttrID_0]
+		op.Addr.AttrID[1] = opCur[TxField_AttrID_1]
 
-		op.Addr.NodeID[0] = op_cur[TxField_NodeID_0]
-		op.Addr.NodeID[1] = op_cur[TxField_NodeID_1]
+		op.Addr.NodeID[0] = opCur[TxField_NodeID_0]
+		op.Addr.NodeID[1] = opCur[TxField_NodeID_1]
 
 		tx.Ops = append(tx.Ops, op)
 	}

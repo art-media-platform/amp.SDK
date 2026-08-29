@@ -1,4 +1,4 @@
-package memory_table
+package memorytable
 
 import "github.com/art-media-platform/amp.SDK/stdlib/symbol"
 

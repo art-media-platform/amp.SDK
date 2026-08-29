@@ -1,3 +1,5 @@
+// Package tests holds the symbol.Table conformance and stress harness shared
+// by Table implementations.
 package tests
 
 import (
@@ -89,8 +91,8 @@ func (tt *tableTester) fillTable(table symbol.Table) {
 		for j := 0; j < hardwireTestCount; j++ {
 			idx := hardwireStart + j
 			symID := symbol.ID(idx)
-			symID_got, _ := table.SetSymbolID(vals[idx], symID)
-			if symID_got != symID {
+			symIDGot, _ := table.SetSymbolID(vals[idx], symID)
+			if symIDGot != symID {
 				tt.errs <- errors.New("SetSymbolID failed setup check")
 			}
 		}
@@ -118,8 +120,8 @@ func (tt *tableTester) fillTable(table symbol.Table) {
 					if !bytes.Equal(stored, vals[idx]) {
 						tt.errs <- errors.New("LookupID failed setup check")
 					}
-					symID_got, _ := table.SetSymbolID(vals[idx], symID)
-					if symID_got != symID {
+					symIDGot, _ := table.SetSymbolID(vals[idx], symID)
+					if symIDGot != symID {
 						tt.errs <- errors.New("SetSymbolID failed setup check")
 					}
 				}

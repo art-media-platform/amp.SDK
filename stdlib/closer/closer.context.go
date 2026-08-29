@@ -54,7 +54,7 @@ func (p *ctx) Close(err error) {
 	})
 }
 
-// Returns a new closer.Context that signals Done() once when either: the input context signals, or Close() is called.
+// WrapContext returns a new closer.Context that signals Done() once when either: the input context signals, or Close() is called.
 // If input == nil, the returned context only closes once Close() is called.
 func WrapContext(input context.Context) Context {
 	p := &ctx{
@@ -125,8 +125,8 @@ func (p *ctx) MergeValues(valueMap url.Values) {
 	if p.values == nil {
 		p.values = url.Values{}
 	}
-	for k, values_in := range valueMap {
-		p.values[k] = slices.Clone(values_in)
+	for k, valuesIn := range valueMap {
+		p.values[k] = slices.Clone(valuesIn)
 	}
 }
 

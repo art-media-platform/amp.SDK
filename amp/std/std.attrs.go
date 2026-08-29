@@ -14,7 +14,7 @@ const (
 	DDC_to_Fixed    = float64(uint64(1)<<31) / DDC_Max
 )
 
-// Constructs a standard tag.UID expressing "{DDC_Whole}.{DDC_Decimal}"
+// PublicTag_DDC constructs a standard tag.UID expressing "{DDC_Whole}.{DDC_Decimal}"
 func PublicTag_DDC(geoTile uint64, DDC_Whole, DDC_Decimal uint32) tag.UID {
 	fract := (uint64(DDC_Decimal) << 32) / DDC_MaxFraction
 	return tag.UID{

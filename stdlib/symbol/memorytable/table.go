@@ -1,4 +1,6 @@
-package memory_table
+// Package memorytable is the in-memory symbol.Table implementation — value
+// interning with no persistence, for tests and ephemeral hosts.
+package memorytable
 
 import (
 	"bytes"
