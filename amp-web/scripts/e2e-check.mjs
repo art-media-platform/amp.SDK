@@ -17,7 +17,7 @@ import { bytesToHex } from '@noble/hashes/utils';
 import { AmpWebClient, base64ToBytes, bytesToBase64 } from '../dist/index.js';
 
 const VAULT = process.env.VAULT_URL || 'http://127.0.0.1:5193';
-const PLANET = process.env.E2E_PLANET || 'testportal-planet';
+const PLANET = process.env.E2E_PLANET || 'live-test-planet';
 
 let pass = 0;
 let fail = 0;

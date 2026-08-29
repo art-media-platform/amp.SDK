@@ -1,13 +1,13 @@
 /**
  * Live wire check — BYOK over the real Go app.www handlers.
  *
- * Gated on SMOKE_LIVE=1 with a portal up (cmd/www-smoke on :5193); inert in the
+ * Gated on LIVE_TEST=1 with a portal up (cmd/www-live-test on :5193); inert in the
  * normal unit run.  Proves the device EncryptKey auto-installs on a real login
  * and that a sealed BYOK secret survives a real tx → read round-trip opaque,
  * then reopens.  Complements scripts/e2e-check.mjs (the dist-built harness).
  *
- *   (cd amp.planet && SMOKE_ADDR=127.0.0.1:5193 go run ./cmd/www-smoke) &
- *   SMOKE_LIVE=1 npx vitest run src/live-wire.test.ts
+ *   (cd amp.planet && LIVE_TEST_ADDR=127.0.0.1:5193 go run ./cmd/www-live-test) &
+ *   LIVE_TEST=1 npx vitest run src/live-wire.test.ts
  */
 
 import { describe, expect, it } from 'vitest';
@@ -21,8 +21,8 @@ import { base64ToBytes, bytesToBase64 } from './crypto/base64.js';
 // Read env without @types/node — the SDK stays browser-typed.
 const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
 const VAULT = env.VAULT_URL || 'http://127.0.0.1:5193';
-const PLANET = env.SMOKE_PLANET || 'smoke-planet';
-const run = env.SMOKE_LIVE ? describe : describe.skip;
+const PLANET = env.LIVE_TEST_PLANET || 'live-test-planet';
+const run = env.LIVE_TEST ? describe : describe.skip;
 
 function ethAddress(pubUncompressed: Uint8Array): string {
   return '0x' + bytesToHex(keccak_256(pubUncompressed.slice(1)).slice(-20));
