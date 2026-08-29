@@ -91,21 +91,32 @@ type HostService interface {
 	StopService()
 }
 
+// TxCommitFlags qualifies how the host handles a TxCommit submission.
+// Host-internal, never a wire field — the qualified paths are local by
+// construction and carry no wire mode.
+type TxCommitFlags int32
+
+const (
+	// TxCommitFlags_None is the normal path: the tx is sealed, journaled, and
+	// routed as planet state.
+	TxCommitFlags_None TxCommitFlags = 0
+
+	// TxCommitFlags_Invoke marks an in-process verb-RPC: the host delivers Tx's
+	// ops to the app verb named by Tx.Request.URL as StartPin arguments WITHOUT
+	// sealing or journaling them as planet state — the request is not signed,
+	// not written to the journal/outbox, and never propagated to peers, so it
+	// must originate from an already-authenticated local session.  The verb
+	// authors any durable writes itself (e.g. a custodial Commit).
+	TxCommitFlags_Invoke TxCommitFlags = 1
+)
+
 // TxCommit submits tx to be committed, a submission context, and where to send
 // state.
 type TxCommit struct {
 	Tx      *TxMsg          // tx to commit
 	Context context.Context // context for completion in that Done() aborts
 	Origin  TxReceiver      // where to send replies and status updates
-
-	// Invoke marks an in-process verb-RPC: the host delivers Tx's ops to the app
-	// verb named by Tx.Request.URL as StartPin arguments WITHOUT sealing or
-	// journaling them as planet state — the request is not signed, not written to
-	// the journal/outbox, and never propagated to peers, so it must originate from
-	// an already-authenticated local session.  The verb authors any durable writes
-	// itself (e.g. a custodial Commit).  This is a host-internal submit flag, not
-	// a wire field: verb-RPC is local by construction and carries no wire mode.
-	Invoke bool
+	Flags   TxCommitFlags   // submission qualifiers — see TxCommitFlags
 }
 
 // TxReceiver handles / processes incoming tx
