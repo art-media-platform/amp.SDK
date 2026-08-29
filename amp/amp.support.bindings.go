@@ -218,11 +218,26 @@ func (b *FoldBinding[V]) Bind(nodeID tag.UID) {
 }
 
 // UpsertItem writes an upsert op into tx using this binding's node and attr.
+// On a RetainEdits > 1 attr this is a deliberate unparented (wildcard) write —
+// an edit over a loaded base belongs on UpsertItemFrom (AOM
+// SD-edit-resolution.md §6.1).
 func (b *FoldBinding[V]) UpsertItem(tx *TxMsg, itemID tag.UID, value V) error {
 	if b.nodeID.IsNil() {
 		panic("FoldBinding: UpsertItem called before Bind or first update")
 	}
 	return tx.Upsert(b.nodeID, b.Attr.ID, itemID, value)
+}
+
+// UpsertItemFrom writes an upsert op parented on base — the EditID the caller's
+// buffer actually loaded, an honest provenance claim, never a high-water
+// fabrication (AOM SD-edit-resolution.md §6.1, §6.6).  The commit door admits
+// ParentEdit exactly on attrs registered RetainEdits > 1.  A nil base degrades
+// to UpsertItem's wildcard write.
+func (b *FoldBinding[V]) UpsertItemFrom(tx *TxMsg, itemID, base tag.UID, value V) error {
+	if b.nodeID.IsNil() {
+		panic("FoldBinding: UpsertItemFrom called before Bind or first update")
+	}
+	return tx.UpsertFrom(b.nodeID, b.Attr.ID, itemID, base, value)
 }
 
 // DeleteItem appends a delete op for a known item.  Returns false if the item is unknown.
