@@ -1,8 +1,6 @@
 package amp
 
 import (
-	"encoding/binary"
-
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -141,59 +139,4 @@ func (me *MemberEpoch) VerifyReKeyQuorum(planetID tag.UID, hashKit safe.HashKitI
 		return nil, err
 	}
 	return VerifyCoSignatureQuorum(me.ReKey, digest, founderKeys, required)
-}
-
-// ── did:key fold ──────────────────────────────────────────────────────────────
-
-// multicodecEd25519Pub is the multicodec registry code for ed25519-pub; its
-// unsigned-LEB128 varint (ED 01) prefixes the key bytes inside a did:key.
-const multicodecEd25519Pub = 0xED
-
-// base58btcAlphabet is the Bitcoin / multibase 'z' alphabet (no 0, O, I, l).
-const base58btcAlphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-
-// base58btcEncode encodes raw as base58btc.  Leading zero bytes encode as '1's.
-func base58btcEncode(raw []byte) string {
-	zeros := 0
-	for zeros < len(raw) && raw[zeros] == 0 {
-		zeros++
-	}
-	digits := make([]byte, 0, len(raw)*2)
-	for _, inByte := range raw[zeros:] {
-		carry := int(inByte)
-		for digitIdx := range digits {
-			carry += int(digits[digitIdx]) << 8
-			digits[digitIdx] = byte(carry % 58)
-			carry /= 58
-		}
-		for carry > 0 {
-			digits = append(digits, byte(carry%58))
-			carry /= 58
-		}
-	}
-	encoded := make([]byte, 0, zeros+len(digits))
-	for range zeros {
-		encoded = append(encoded, base58btcAlphabet[0])
-	}
-	for digitIdx := len(digits) - 1; digitIdx >= 0; digitIdx-- {
-		encoded = append(encoded, base58btcAlphabet[digits[digitIdx]])
-	}
-	return string(encoded)
-}
-
-// DIDKeyUID returns the MemberID the AOM SD-did-identity.md §2 fold mints for a
-// signing key — tag.HashName over the canonical did:key URI ("did:key:z" +
-// base58btc(multicodec-varint ‖ pubkey)) — and whether the kit has a did:key
-// form at all (Ed25519 via Poly25519 is the shipped form; a kit with no
-// did:key encoding reads false).  A re-key verifier uses it structurally:
-// when the fold of the key being retired IS the MemberID, the identity cannot
-// outlive the key and re-key is refused (AOM SD-did-identity.md §2, §12.1).
-func DIDKeyUID(kit safe.CryptoKitID, pubKey []byte) (tag.UID, bool) {
-	if kit != safe.Crypto.Poly25519.ID || len(pubKey) != 32 {
-		return tag.UID{}, false
-	}
-	payload := binary.AppendUvarint(make([]byte, 0, 2+len(pubKey)), multicodecEd25519Pub)
-	payload = append(payload, pubKey...)
-	uri := "did:key:z" + base58btcEncode(payload)
-	return tag.HashName(uri).ID, true
 }
