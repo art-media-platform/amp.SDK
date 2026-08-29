@@ -231,11 +231,12 @@ func (reg *registry) FindModule(moduleID tag.UID, moduleAlias string) *amp.AppMo
 	return mod
 }
 
-// Makes an instance of the given attribute "spec"" tag.UID
+// NewValue makes an instance of the value type for the given attr "spec" tag.UID.
 func (reg *registry) NewValue(attrID tag.UID) (proto.Message, error) {
 
-	// Often, an attrID will be a unnamed scalar attr (which means we can get the elemDef directly.
-	// This is also essential during bootstrapping when the client sends a RegisterDefs is not registered yet.
+	// An attrID is often an unnamed scalar attr, so its def resolves directly —
+	// including during bootstrapping, before the client has registered its own
+	// attr defs (RegisterAttr).
 	def, exists := reg.snap.Load().attrDefs[attrID]
 	if !exists {
 		return nil, status.Code_ItemNotFound.Errorf("attr %q not found", attrID.String())

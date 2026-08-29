@@ -19,9 +19,13 @@ type (
 	// UID is a big-endian value, so UID[0] is most significant, etc.
 	UID [2]uint64
 
-	// Name expresses a set of UTF-8 literals and its corresponding hash (UID).
+	// Name expresses a UTF-8 tag expression and its corresponding hash (UID).
 	//
-	//	Name := "[{TagOp}]*[{utf8_literal}]*"
+	//	Name := {word}("." {word})* [{url_or_identifier}]
+	//
+	// The name part case-folds to dot-joined words; a URL / identifier part
+	// (after the first '/', ':', or '\') is preserved verbatim — see
+	// stdlib/tag/README.md.
 	Name struct {
 		ID UID // hash of any art-media-platform or other tag expression
 

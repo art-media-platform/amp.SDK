@@ -28,8 +28,8 @@ import (
 //	                -> zeros all sensitive material
 //
 // The key index is fully internal; callers interact via ImportKey, GenerateKey,
-// FetchPubKey, DoCryptOp, and ExportSymmetricKey.  All methods are protected
-// by a RWMutex.
+// FetchPubKey, CanSign, the crypt ops (SignRaw, EncryptSym, DecryptSym,
+// OpenFromPub), and ExportSymmetricKey.  All methods are protected by a RWMutex.
 type enclave struct {
 	mu       sync.RWMutex
 	store    TomeStore

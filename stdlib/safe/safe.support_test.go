@@ -18,21 +18,21 @@ func CryptoKitTest(kitToTest CryptoKitID, t *testing.T) {
 		if err != nil {
 			gTesting.Fatal(err)
 		}
-		testKit(kit, 32)
+		testKit(kit)
 	}
 }
 
-func testKit(kit *Kit, keyLen int) {
+func testKit(kit *Kit) {
 	msgLen := 0
 
 	for i := int64(1); i < 37; i++ {
-		testKitWithSizes(kit, keyLen, msgLen)
+		testKitWithSizes(kit, msgLen)
 		step, _ := crypto_rand.Int(crypto_rand.Reader, big.NewInt(7+37*i))
 		msgLen += int(step.Int64())
 	}
 }
 
-func testKitWithSizes(kit *Kit, keyLen, msgLen int) {
+func testKitWithSizes(kit *Kit, msgLen int) {
 	msg := make([]byte, msgLen)
 	badMsg := make([]byte, msgLen)
 

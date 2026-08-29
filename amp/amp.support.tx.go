@@ -14,7 +14,7 @@ import (
 )
 
 // TxDataStore is a message packet sent to / from a client.
-// It leads with a fixed-size header (TxPreamble_Size).
+// It leads with a fixed-size header (TxPreambleSize).
 type TxDataStore []byte
 
 // TxPreamble is the fixed-size header that leads every TxMsg.
@@ -84,7 +84,7 @@ func (tx *TxEnvelope) IsPublic() bool {
 	return tx.Epoch_0 == 0 && tx.Epoch_1 == 0
 }
 
-// PlanetEpochUID returns the planet epoch UID recorded in this envelope.
+// PlanetEpochID returns the planet epoch UID recorded in this envelope.
 // For channel-encrypted TxMsgs, this is the planet epoch active at seal time.
 // For planet-encrypted TxMsgs (or unset), returns zero.
 func (tx *TxEnvelope) PlanetEpochID() tag.UID {
