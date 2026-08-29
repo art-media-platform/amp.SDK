@@ -207,6 +207,10 @@ func (tagsValue *Tags) UnmarshalJSON(data []byte) error {
 	}
 	// Otherwise a ContentType → Text document map (or empty).  Head/SubTag placement is immaterial to
 	// ByContentType, so emit all as SubTags in sorted ContentType order for a deterministic value.
+	// NOTE: consumers that admit only a specific Head shape (e.g. app.forums sanitizedPostBody,
+	// which requires a text/html Head) hold the OPPOSITE assumption — the verb path reconciles by
+	// rebuilding the document before commit, so a JSON-decoded Tags never reaches such a rule
+	// directly.
 	doc := map[string]string{}
 	if err := json.Unmarshal(data, &doc); err != nil {
 		return err

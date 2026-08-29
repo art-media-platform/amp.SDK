@@ -758,6 +758,8 @@ func (id UID) IsWildcard() bool {
 }
 
 // IsSet returns true if this UID is non-nil and ≤ MaxID (reserved sentinels excluded).
+// `!IsSet()` is the SDK's validation idiom: a required value is checked by
+// negating IsSet, never by an ad-hoc nil / zero compare.
 func (id UID) IsSet() bool {
 	return (id[0] != 0 || id[1] != 0) && (id[0] < UID_0_Max || id[1] <= UID_1_Max)
 }

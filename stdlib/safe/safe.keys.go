@@ -52,6 +52,7 @@ type SymKey struct {
 }
 
 // IsSet reports whether the key carries usable material.
+// `!IsSet()` is the SDK's validation idiom (see tag.UID.IsSet).
 func (sk SymKey) IsSet() bool {
 	return len(sk.Bytes) > 0
 }

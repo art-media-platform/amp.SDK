@@ -85,7 +85,7 @@ func SigningParts(domain SigningDomain, parts ...[]byte) ([][]byte, error) {
 }
 
 // SigningDigest binds domain into a fixed 32-byte digest over parts under
-// hashKit (0 = default Blake2s_256):
+// hashKit (0 = the default content hash kit):
 // H( SigningDomainTag(domain) || u32BE(len(part)) || part ... ).
 // Every part is individually u32-BE length-framed (SigningParts), so no
 // concatenation of different part-splits can collide; callers need no framing

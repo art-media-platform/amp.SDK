@@ -19,7 +19,7 @@ type AttestationKey struct {
 }
 
 // ItemID returns the convergent CRDT ItemID for this key.  Backed by
-// safe.HashKit (Blake2s_256 by default) truncated to 16 bytes.
+// safe.HashKit (the default content hash kit when unset) truncated to 16 bytes.
 //
 // The derivation is canonical byte-for-byte: Type | Subject | CitedTxID | CitedOpIndex,
 // each field encoded in big-endian fixed-width form.  Any peer with the same inputs

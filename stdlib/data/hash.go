@@ -11,30 +11,6 @@ func HashBuf(data []byte) uint64 {
 	return uint64(memhash(ss.str, 0, uintptr(ss.len)))
 }
 
-// HashStr hashes str using the Go runtime's map hash (hardware-accelerated where available).
-//
-// Carries the same cross-process instability WARNING as HashBuf.
-func HashStr(str string) uint64 {
-	ss := (*stringStruct)(unsafe.Pointer(&str))
-	return uint64(memhash(ss.str, 0, uintptr(ss.len)))
-}
-
-// APHash64 computes the Arash Partow hash of buf — a seedless 64-bit hash that IS stable across runs.
-// https://www.partow.net/programming/hashfunctions/#AvailableHashFunctions
-//
-// Deprecated: use HashBuf for in-process hashing.
-func APHash64(buf []byte) uint64 {
-	var hash uint64 = 0xaaaaaaaaaaaaaaaa
-	for i, b := range buf {
-		if (i & 1) == 0 {
-			hash ^= ((hash << 7) ^ uint64(b) ^ (hash >> 3))
-		} else {
-			hash ^= (^((hash << 11) ^ uint64(b) ^ (hash >> 5)) + 1)
-		}
-	}
-	return hash
-}
-
 type stringStruct struct {
 	str unsafe.Pointer
 	len int

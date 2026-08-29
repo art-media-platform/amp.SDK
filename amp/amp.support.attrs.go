@@ -23,6 +23,8 @@ const (
 	// DefaultQuarantineRetention is the default TTL for journal entries quarantined
 	// for failed MemberProof or bad signature (7 days).  Long enough for Strike
 	// attestations to propagate and be audited against the rejected bytes.
+	// One of TWO quarantine TTL doors: the O4 §4.24 restore-ceremony CLI carries
+	// its own default (720h) — the doors are independent and may diverge.
 	DefaultQuarantineRetention int64 = 7 * 24 * 60 * 60
 
 	// DefaultMaxFutureSkew is the default intake guard for future-stamped TxMsgs
@@ -317,8 +319,8 @@ func (req *Login) SetSigningKey(kitID safe.CryptoKitID, pubKey []byte) {
 }
 
 // EffectiveHashKit returns the HashKitID in force for this epoch — the per-epoch
-// content/digest hash policy.  An absent field is Blake2s_256 (the zero value), so
-// nil terms resolve there too.  HashKit is the authoritative home: the hash axis is
+// content/digest hash policy.  An absent field resolves to the default content
+// hash kit (the zero value), so nil terms resolve there too.  HashKit is the authoritative home: the hash axis is
 // orthogonal to the crypto suite (content addressing applies to blobs that carry
 // no suite), so it is selected and carried independently, and it may rotate from
 // epoch to epoch just like CryptoKitID.

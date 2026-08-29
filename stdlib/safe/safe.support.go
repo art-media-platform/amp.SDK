@@ -119,7 +119,7 @@ type HashSpec struct {
 }
 
 // NewHashKit returns a live HashKit (a fresh hasher) for the requested kit.
-// The zero value resolves to the default content hash (Blake2s_256).
+// The zero value resolves to the default content hash kit.
 func NewHashKit(hashKitID HashKitID) (HashKit, error) {
 	var kit HashKit
 
