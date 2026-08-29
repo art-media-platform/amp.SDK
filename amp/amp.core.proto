@@ -190,10 +190,10 @@ enum TxField {
 enum ValueHeaderFlags {
     None = 0;
 
-    FromID   = 0x01; // author or other originator
-    TxID     = 0x02; // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
-    UID_C    = 0x04; // ParentEdit — the claimed base edit; author-writable on RetainEdits > 1 attrs (AOM SD-edit-resolution.md §6.1)
-    UID_D    = 0x08; // reserved
+    FromID     = 0x01; // author or other originator
+    TxID       = 0x02; // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
+    ParentEdit = 0x04; // the claimed base edit; author-writable on RetainEdits > 1 attrs (AOM SD-edit-resolution.md §6.1)
+    UID_D      = 0x08; // reserved for a future fourth inline UID (value-header slot D)
 }
 
 
@@ -951,7 +951,7 @@ message MemberEpoch {
     // the correct ID.
     Tag                 Epoch = 2;
 
-    // Role-tagged wrapped keys, encrypted to the recipient via EncryptToPeer.
+    // Role-tagged wrapped keys, encrypted to the recipient via safe.SealFor.
     // Empty for Revoked/Suspended records.
     repeated WrappedKey WrappedKeys = 30;
 
@@ -1062,7 +1062,10 @@ message ChannelEpoch {
     ContentPolicy       ContentPolicy = 7; // how content cells may be written (orthogonal to the grants axis)
 
     string              Label     = 10; // debugging
-    string              LegacyURI = 11;
+
+    // The source URI an external import carried (e.g. a gen2
+    // "<org-prefix>/<channel-id>" import path); empty for native channels.
+    string              ImportURI = 11;
 
     // Per-member permissions for this channel (or ACC).
     AccessGrants        MemberGrants  = 20;
@@ -1622,7 +1625,7 @@ message CodexManifest {
 message CodexHeader {
 
     // The planet this Codex was exported from.  May be a synthetic tag for
-    // external-source imports (e.g. "amp-gen2/prod.plan.tools").
+    // external-source imports (e.g. "amp-gen2/{your-node}").
     Tag                 SourcePlanet = 1;
 
     // The epoch active on SourcePlanet at export time.  Informational.

@@ -199,7 +199,7 @@ const (
 	KeyRole_ContentKey    KeyRole = 0 // planet content key / channel read key — drives decryption
 	KeyRole_WriteSeed     KeyRole = 1 // channel write seed — drives MemberProof (ReadWrite+ only)
 	KeyRole_ReservedRole2 KeyRole = 2 // reserved for future role (e.g. audit / observation key)
-	KeyRole_ReservedRole3 KeyRole = 3 // reserved
+	KeyRole_ReservedRole3 KeyRole = 3 // reserved for future role (e.g. admin / moderation key)
 )
 
 // Enum value maps for KeyRole.

@@ -100,7 +100,7 @@ enum KeyRole {
     ContentKey      = 0;    // planet content key / channel read key — drives decryption
     WriteSeed       = 1;    // channel write seed — drives MemberProof (ReadWrite+ only)
     ReservedRole2   = 2;    // reserved for future role (e.g. audit / observation key)
-    ReservedRole3   = 3;    // reserved
+    ReservedRole3   = 3;    // reserved for future role (e.g. admin / moderation key)
 }
 
 

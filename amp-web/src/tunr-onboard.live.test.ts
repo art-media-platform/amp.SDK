@@ -3,7 +3,7 @@
  * against a live node, as the "Tunr" app: wallet (SIWE) login -> acceptInvite ->
  * hello-world create/query.  Gated on DOGFOOD=1; inert in the normal unit run.
  *
- *   DOGFOOD=1 VAULT_URL=https://prod.plan.tools \
+ *   DOGFOOD=1 VAULT_URL=https://{your-node} \
  *     TUNR_INVITE_FILE=/tmp/tunr.invite TUNR_PASS=… \
  *     npx vitest run src/tunr-onboard.live.test.ts
  */
@@ -16,7 +16,7 @@ import { bytesToHex } from '@noble/hashes/utils';
 import { AmpWebClient } from './web-client.js';
 
 const env = (globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env ?? {};
-const VAULT = env.VAULT_URL || 'https://prod.plan.tools';
+const VAULT = env.VAULT_URL || 'https://{your-node}';
 const INVITE = env.TUNR_INVITE_FILE ? readFileSync(env.TUNR_INVITE_FILE, 'utf8') : (env.TUNR_INVITE || '');
 const PASS = env.TUNR_PASS || '';
 const run = env.DOGFOOD ? describe : describe.skip;

@@ -5,7 +5,7 @@
     "MaxRedemptions": 5,
     "Access": "ReadWrite",
     "ExpiresAt": 1785000000,
-    "VaultAddrs": ["prod.plan.tools:5192"]
+    "VaultAddrs": ["{your-node}:5192"]
   },
   "InviteIssueRequest.singleUse": {
     "Planet": "06e-fvw28sb400-248j248j24-8j2",
@@ -14,10 +14,10 @@
   "InviteIssueResponse": {
     "PlanetID": "06e-fvw28sb400-248j248j24-8j2",
     "InviteID": "06e-fvw28sbf00-7fxvrfxvrf-xvr",
-    "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
+    "InviteText": "https://{your-node}/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
   },
   "InviteAcceptRequest": {
-    "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6",
+    "InviteText": "https://{your-node}/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6",
     "Passphrase": "correct-horse-battery"
   },
   "InviteAcceptResponse": {
@@ -31,7 +31,7 @@
   },
   "InviteRevokeRequest.byText": {
     "Planet": "06e-fvw28sb400-248j248j24-8j2",
-    "InviteText": "https://prod.plan.tools/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
+    "InviteText": "https://{your-node}/invite#0sjr4krejutkyy482mz3zu784z32k4uchjtnv9rwt1sbu6xj5sg6"
   },
   "InviteListResponse": {
     "Policies": [

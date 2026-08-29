@@ -24,11 +24,11 @@ describe('invites', () => {
 
   it('acceptInvite POSTs InviteText + Passphrase', async () => {
     const seen = stubFetch({ PlanetID: 'planetUID32', MemberID: 'memberUID32' }, 201);
-    const amp = new AmpWebClient({ vaultUrl: 'https://prod.plan.tools', planetTag: 'p' });
+    const amp = new AmpWebClient({ vaultUrl: 'https://{your-node}', planetTag: 'p' });
     const out = await amp.acceptInvite({ inviteText: 'https://x/invite#abc', passphrase: 'hunter2' });
 
     expect(out).toEqual({ PlanetID: 'planetUID32', MemberID: 'memberUID32' });
-    expect(seen[0].url).toBe('https://prod.plan.tools/api/v1/invite/accept');
+    expect(seen[0].url).toBe('https://{your-node}/api/v1/invite/accept');
     expect(JSON.parse(seen[0].init.body as string)).toEqual({
       InviteText: 'https://x/invite#abc',
       Passphrase: 'hunter2',
@@ -37,13 +37,13 @@ describe('invites', () => {
 
   it('issueInvite maps a multi-use policy request and returns the invite ID', async () => {
     const seen = stubFetch({ PlanetID: 'p32', InviteID: 'inv32', InviteText: 'https://x/invite#body' }, 201);
-    const amp = new AmpWebClient({ vaultUrl: 'https://prod.plan.tools', planetTag: 'p' });
+    const amp = new AmpWebClient({ vaultUrl: 'https://{your-node}', planetTag: 'p' });
     const out = await amp.issueInvite({
       planet: 'p32', passphrase: 'pw', maxRedemptions: 5, access: 'ReadWrite',
     });
 
     expect(out.InviteID).toBe('inv32');
-    expect(seen[0].url).toBe('https://prod.plan.tools/api/v1/invite/issue');
+    expect(seen[0].url).toBe('https://{your-node}/api/v1/invite/issue');
     expect(JSON.parse(seen[0].init.body as string)).toEqual({
       Planet: 'p32', Passphrase: 'pw', MaxRedemptions: 5, Access: 'ReadWrite', ExpiresAt: 0, VaultAddrs: [],
     });
@@ -51,10 +51,10 @@ describe('invites', () => {
 
   it('revokeInvite maps the rotate flag', async () => {
     const seen = stubFetch({ Policies: [] });
-    const amp = new AmpWebClient({ vaultUrl: 'https://prod.plan.tools', planetTag: 'p' });
+    const amp = new AmpWebClient({ vaultUrl: 'https://{your-node}', planetTag: 'p' });
     await amp.revokeInvite({ planet: 'p32', inviteId: 'inv32', rotate: true });
 
-    expect(seen[0].url).toBe('https://prod.plan.tools/api/v1/invite/revoke');
+    expect(seen[0].url).toBe('https://{your-node}/api/v1/invite/revoke');
     expect(JSON.parse(seen[0].init.body as string)).toEqual({
       Planet: 'p32', InviteID: 'inv32', InviteText: '', Rotate: true,
     });
@@ -62,11 +62,11 @@ describe('invites', () => {
 
   it('listInvites GETs by planet and parses policies', async () => {
     const seen = stubFetch({ Policies: [{ InviteID: 'inv32', MaxRedemptions: 2, Status: 'InviteActive' }] });
-    const amp = new AmpWebClient({ vaultUrl: 'https://prod.plan.tools', planetTag: 'p' });
+    const amp = new AmpWebClient({ vaultUrl: 'https://{your-node}', planetTag: 'p' });
     const out = await amp.listInvites('p32');
 
     expect(out.Policies[0].InviteID).toBe('inv32');
-    expect(seen[0].url).toBe('https://prod.plan.tools/api/v1/invite/list?planet=p32');
+    expect(seen[0].url).toBe('https://{your-node}/api/v1/invite/list?planet=p32');
     expect(seen[0].init.method).toBe('GET');
   });
 });

@@ -243,7 +243,7 @@ func (tx *TxMsg) Upsert(nodeID, attrID, itemID tag.UID, val proto.Message) error
 
 // UpsertFrom is Upsert with an explicit lineage base: baseEdit is the EditID of
 // the edit the caller actually loaded, carried as the ParentEdit inline UID in
-// the op value header (ValueHeaderFlags_UID_C — AOM SD-edit-resolution.md §6.1).
+// the op value header (ValueHeaderFlags_ParentEdit — AOM SD-edit-resolution.md §6.1).
 // The commit door admits ParentEdit exactly on attrs registered RetainEdits > 1.
 // A nil baseEdit is a deliberate unparented (wildcard) write — plain Upsert.
 func (tx *TxMsg) UpsertFrom(nodeID, attrID, itemID, baseEdit tag.UID, val proto.Message) error {
@@ -280,7 +280,7 @@ func (tx *TxMsg) MarshalOp(op *TxOp, val proto.Message) error {
 // marshalOp is the one authoritative op value framing site: the value header
 // (flags byte + inline UIDs in ascending flag-bit order) followed by the
 // marshaled value.  A set baseEdit frames the ParentEdit inline UID
-// (ValueHeaderFlags_UID_C — AOM SD-edit-resolution.md §6.1).
+// (ValueHeaderFlags_ParentEdit — AOM SD-edit-resolution.md §6.1).
 func (tx *TxMsg) marshalOp(op *TxOp, baseEdit tag.UID, val proto.Message) error {
 
 	// EditID == TxID on every write (AOM SD-edit-resolution.md §6.1); in-memory /
@@ -294,7 +294,7 @@ func (tx *TxMsg) marshalOp(op *TxOp, baseEdit tag.UID, val proto.Message) error 
 	// VALUE HEADER
 	headerFlags := ValueHeaderFlags_FromID
 	if baseEdit.IsSet() {
-		headerFlags |= ValueHeaderFlags_UID_C // ParentEdit (§6.1)
+		headerFlags |= ValueHeaderFlags_ParentEdit // ParentEdit (§6.1)
 	}
 	ds = append(ds, byte(headerFlags))
 	ds = binary.BigEndian.AppendUint64(ds, tx.FromID_0)

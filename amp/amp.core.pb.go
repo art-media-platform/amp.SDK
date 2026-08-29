@@ -301,11 +301,11 @@ func (TxField) EnumDescriptor() ([]byte, []int) {
 type ValueHeaderFlags int32
 
 const (
-	ValueHeaderFlags_None   ValueHeaderFlags = 0
-	ValueHeaderFlags_FromID ValueHeaderFlags = 1 // author or other originator
-	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
-	ValueHeaderFlags_UID_C  ValueHeaderFlags = 4 // ParentEdit — the claimed base edit; author-writable on RetainEdits > 1 attrs (AOM SD-edit-resolution.md §6.1)
-	ValueHeaderFlags_UID_D  ValueHeaderFlags = 8 // reserved
+	ValueHeaderFlags_None       ValueHeaderFlags = 0
+	ValueHeaderFlags_FromID     ValueHeaderFlags = 1 // author or other originator
+	ValueHeaderFlags_TxID       ValueHeaderFlags = 2 // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
+	ValueHeaderFlags_ParentEdit ValueHeaderFlags = 4 // the claimed base edit; author-writable on RetainEdits > 1 attrs (AOM SD-edit-resolution.md §6.1)
+	ValueHeaderFlags_UID_D      ValueHeaderFlags = 8 // reserved for a future fourth inline UID (value-header slot D)
 )
 
 // Enum value maps for ValueHeaderFlags.
@@ -314,15 +314,15 @@ var (
 		0: "None",
 		1: "FromID",
 		2: "TxID",
-		4: "UID_C",
+		4: "ParentEdit",
 		8: "UID_D",
 	}
 	ValueHeaderFlags_value = map[string]int32{
-		"None":   0,
-		"FromID": 1,
-		"TxID":   2,
-		"UID_C":  4,
-		"UID_D":  8,
+		"None":       0,
+		"FromID":     1,
+		"TxID":       2,
+		"ParentEdit": 4,
+		"UID_D":      8,
 	}
 )
 
@@ -3696,7 +3696,7 @@ type MemberEpoch struct {
 	// PlanetEpoch.EpochTag / ChannelEpoch.Epoch so recipients store keys under
 	// the correct ID.
 	Epoch *Tag `protobuf:"bytes,2,opt,name=Epoch,proto3" json:"Epoch,omitempty"`
-	// Role-tagged wrapped keys, encrypted to the recipient via EncryptToPeer.
+	// Role-tagged wrapped keys, encrypted to the recipient via safe.SealFor.
 	// Empty for Revoked/Suspended records.
 	WrappedKeys []*WrappedKey `protobuf:"bytes,30,rep,name=WrappedKeys,proto3" json:"WrappedKeys,omitempty"`
 	// Lifecycle state as of this MemberEpoch.  Meaningful at planet scope;
@@ -3974,7 +3974,9 @@ type ChannelEpoch struct {
 	ChType        *Tag                   `protobuf:"bytes,6,opt,name=ChType,proto3" json:"ChType,omitempty"`                                       // channel type name and/or ID
 	ContentPolicy ContentPolicy          `protobuf:"varint,7,opt,name=ContentPolicy,proto3,enum=amp.ContentPolicy" json:"ContentPolicy,omitempty"` // how content cells may be written (orthogonal to the grants axis)
 	Label         string                 `protobuf:"bytes,10,opt,name=Label,proto3" json:"Label,omitempty"`                                        // debugging
-	LegacyURI     string                 `protobuf:"bytes,11,opt,name=LegacyURI,proto3" json:"LegacyURI,omitempty"`
+	// The source URI an external import carried (e.g. a gen2
+	// "<org-prefix>/<channel-id>" import path); empty for native channels.
+	ImportURI string `protobuf:"bytes,11,opt,name=ImportURI,proto3" json:"ImportURI,omitempty"`
 	// Per-member permissions for this channel (or ACC).
 	MemberGrants *AccessGrants `protobuf:"bytes,20,opt,name=MemberGrants,proto3" json:"MemberGrants,omitempty"`
 	// Default permissions for members not listed in MemberGrants.
@@ -4055,9 +4057,9 @@ func (x *ChannelEpoch) GetLabel() string {
 	return ""
 }
 
-func (x *ChannelEpoch) GetLegacyURI() string {
+func (x *ChannelEpoch) GetImportURI() string {
 	if x != nil {
-		return x.LegacyURI
+		return x.ImportURI
 	}
 	return ""
 }
@@ -5638,7 +5640,7 @@ func (x *CodexManifest) GetAttributeKinds() []*Tag {
 type CodexHeader struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The planet this Codex was exported from.  May be a synthetic tag for
-	// external-source imports (e.g. "amp-gen2/prod.plan.tools").
+	// external-source imports (e.g. "amp-gen2/{your-node}").
 	SourcePlanet *Tag `protobuf:"bytes,1,opt,name=SourcePlanet,proto3" json:"SourcePlanet,omitempty"`
 	// The epoch active on SourcePlanet at export time.  Informational.
 	SourceEpoch *Tag `protobuf:"bytes,2,opt,name=SourceEpoch,proto3" json:"SourceEpoch,omitempty"`
@@ -7701,7 +7703,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\rContentPolicy\x18\a \x01(\x0e2\x12.amp.ContentPolicyR\rContentPolicy\x12\x14\n" +
 	"\x05Label\x18\n" +
 	" \x01(\tR\x05Label\x12\x1c\n" +
-	"\tLegacyURI\x18\v \x01(\tR\tLegacyURI\x125\n" +
+	"\tImportURI\x18\v \x01(\tR\tImportURI\x125\n" +
 	"\fMemberGrants\x18\x14 \x01(\v2\x11.amp.AccessGrantsR\fMemberGrants\x127\n" +
 	"\rDefaultGrants\x18\x15 \x01(\v2\x11.amp.AccessGrantsR\rDefaultGrants\x12\"\n" +
 	"\x05Cites\x18\x16 \x03(\v2\f.amp.AddressR\x05Cites\"\xcf\x02\n" +
@@ -8073,13 +8075,14 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\bAttrID_1\x10\x03\x12\f\n" +
 	"\bNodeID_0\x10\x04\x12\f\n" +
 	"\bNodeID_1\x10\x05\x12\r\n" +
-	"\tMaxFields\x10\x10*H\n" +
+	"\tMaxFields\x10\x10*M\n" +
 	"\x10ValueHeaderFlags\x12\b\n" +
 	"\x04None\x10\x00\x12\n" +
 	"\n" +
 	"\x06FromID\x10\x01\x12\b\n" +
-	"\x04TxID\x10\x02\x12\t\n" +
-	"\x05UID_C\x10\x04\x12\t\n" +
+	"\x04TxID\x10\x02\x12\x0e\n" +
+	"\n" +
+	"ParentEdit\x10\x04\x12\t\n" +
 	"\x05UID_D\x10\b*[\n" +
 	"\tPinStatus\x12\f\n" +
 	"\bInactive\x10\x00\x12\v\n" +
