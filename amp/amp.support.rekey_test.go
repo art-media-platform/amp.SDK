@@ -133,9 +133,15 @@ func TestReKeyDigest_BindsFrame(t *testing.T) {
 		name   string
 		mutate func(me *amp.MemberEpoch)
 	}{
-		{"prior key", func(me *amp.MemberEpoch) { me.ReKeyPrior = signingKeyRef([]byte("a-different-prior-key-32-bytes.32")[:32]) }},
-		{"new signing key", func(me *amp.MemberEpoch) { me.SigningKey = signingKeyRef([]byte("a-different-signing-key-32-byte32")[:32]) }},
-		{"new encrypt key", func(me *amp.MemberEpoch) { me.EncryptKey = signingKeyRef([]byte("a-different-encrypt-key-32-byte32")[:32]) }},
+		{"prior key", func(me *amp.MemberEpoch) {
+			me.ReKeyPrior = signingKeyRef([]byte("a-different-prior-key-32-bytes.32")[:32])
+		}},
+		{"new signing key", func(me *amp.MemberEpoch) {
+			me.SigningKey = signingKeyRef([]byte("a-different-signing-key-32-byte32")[:32])
+		}},
+		{"new encrypt key", func(me *amp.MemberEpoch) {
+			me.EncryptKey = signingKeyRef([]byte("a-different-encrypt-key-32-byte32")[:32])
+		}},
 	} {
 		mutant := reKeyFixture(t, planetID, memberID, nil)
 		swap.mutate(mutant)
