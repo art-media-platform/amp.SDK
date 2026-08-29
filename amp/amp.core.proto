@@ -192,7 +192,7 @@ enum ValueHeaderFlags {
 
     FromID   = 0x01; // author or other originator
     TxID     = 0x02; // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
-    UID_C    = 0x04; // reserved
+    UID_C    = 0x04; // ParentEdit — the claimed base edit; author-writable on RetainEdits > 1 attrs (AOM SD-edit-resolution.md §6.1)
     UID_D    = 0x08; // reserved
 }
 

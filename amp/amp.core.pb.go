@@ -304,7 +304,7 @@ const (
 	ValueHeaderFlags_None   ValueHeaderFlags = 0
 	ValueHeaderFlags_FromID ValueHeaderFlags = 1 // author or other originator
 	ValueHeaderFlags_TxID   ValueHeaderFlags = 2 // authoring tx (op EditID); materialize-stamped, read on serve (AOM SD-edit-resolution.md §6.1)
-	ValueHeaderFlags_UID_C  ValueHeaderFlags = 4 // reserved
+	ValueHeaderFlags_UID_C  ValueHeaderFlags = 4 // ParentEdit — the claimed base edit; author-writable on RetainEdits > 1 attrs (AOM SD-edit-resolution.md §6.1)
 	ValueHeaderFlags_UID_D  ValueHeaderFlags = 8 // reserved
 )
 
