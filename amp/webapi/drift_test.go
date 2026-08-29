@@ -81,6 +81,7 @@ var shapeCtors = map[string]func() any{
 	"BrandSetResponse":      func() any { return &webapi.BrandSetResponse{} },
 	"ForumsReserveRequest":  func() any { return &webapi.ForumsReserveRequest{} },
 	"ForumsReserveResponse": func() any { return &webapi.ForumsReserveResponse{} },
+	"SessionRevokeRequest":  func() any { return &webapi.SessionRevokeRequest{} },
 }
 
 func TestWireFixturesRoundTrip(t *testing.T) {

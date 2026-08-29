@@ -25,6 +25,12 @@
       "Request": "EmailCredential",
       "Response": "EmailIssueResponse",
       "NodeAdminModule": true
+    },
+    {
+      "Verb": "revokeMemberSessions",
+      "Endpoint": "/api/v1/admin/session/revoke",
+      "Request": "SessionRevokeRequest",
+      "Response": "SessionRevokeResponse"
     }
   ]
 }

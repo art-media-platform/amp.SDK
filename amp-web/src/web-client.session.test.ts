@@ -34,7 +34,7 @@ class FakeWebSocket {
 }
 
 /** Per-test wire log + tunable /session behavior. */
-let calls: { path: string; auth: string | null }[] = [];
+let calls: { path: string; auth: string | null; method: string }[] = [];
 let sessionStatus = 200;      // GET /session responds with this
 let expiresAt = 0;            // ExpiresAt stamped on login + session responses
 
@@ -43,7 +43,7 @@ function stubFetch(): void {
     const url = String(input);
     const path = url.replace(/^.*\/api\/v1/, '');
     const headers = (init?.headers ?? {}) as Record<string, string>;
-    calls.push({ path, auth: headers['Authorization'] ?? null });
+    calls.push({ path, auth: headers['Authorization'] ?? null, method: init?.method ?? 'GET' });
 
     if (path === '/login') {
       return new Response(
@@ -78,6 +78,12 @@ function stubFetch(): void {
     }
     if (path === '/logout') {
       return new Response(null, { status: 204 });
+    }
+    if (path === '/session/revoke') {
+      return new Response(
+        JSON.stringify({ MemberID: MEMBER, Dropped: 2 }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
     }
     if (path.startsWith('/channels/expired')) {
       return new Response(
@@ -279,5 +285,24 @@ describe('session wire methods', () => {
     sessionStatus = 401;
     const anon = newAdapter(new MemorySessionStore());
     await expect(anon.fetchSession()).rejects.toBeInstanceOf(AmpError);
+  });
+});
+
+describe('member self-revoke (sign out everywhere)', () => {
+  it('sessionRevoke POSTs with the Bearer, returns the counts, and drops the local session', async () => {
+    const store = new MemorySessionStore();
+    const amp = newAdapter(store);
+    await amp.login({ Scheme: 'memberToken', MemberToken: 'whatever' });
+
+    const out = await amp.sessionRevoke();
+    expect(out).toEqual({ MemberID: MEMBER, Dropped: 2 });
+
+    const revokes = calls.filter(c => c.path === '/session/revoke');
+    expect(revokes).toHaveLength(1);
+    expect(revokes[0].method).toBe('POST');
+    expect(revokes[0].auth).toBe(`Bearer ${TOKEN}`);
+    // The revoke includes the calling session — memory and store both drop.
+    expect(amp.getSession()).toBeNull();
+    expect(await store.load(VAULT)).toBeNull();
   });
 });

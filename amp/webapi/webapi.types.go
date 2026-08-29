@@ -103,10 +103,21 @@ type SessionResponse struct {
 // and a fresh login is required afterward.  Dropped counts the live sessions
 // dropped in-process; outstanding tokens elsewhere die at next validation.
 // The operator sibling (POST /api/v1/admin/session/revoke) shares this
-// response; its request shape stays Go-side per the operator-tier rule below.
+// response; its request is SessionRevokeRequest (operator tier — no browser
+// binding, per the rule below).
 type SessionRevokeResponse struct {
 	MemberID tag.UID `json:"MemberID"`
 	Dropped  int     `json:"Dropped"`
+}
+
+// SessionRevokeRequest is the body of the operator sibling POST
+// /api/v1/admin/session/revoke: exactly one of Address (an Eth wallet
+// address; the member UID derives server-side) or MemberID (base32 UID, any
+// identity scheme) names the subject.  Operator tier — no browser binding
+// (testdata/operator-go-only.json).
+type SessionRevokeRequest struct {
+	Address  string `json:"Address,omitempty"`
+	MemberID string `json:"MemberID,omitempty"`
 }
 
 // Email credential request/response shapes:

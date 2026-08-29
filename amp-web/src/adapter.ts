@@ -25,6 +25,7 @@ import type {
   RedeemEmailOpts,
   ResolveResponse,
   SearchMatch,
+  SessionRevokeResult,
   SubscriptionEvent,
   TagResolution,
   TxOp,
@@ -47,6 +48,13 @@ export interface AmpAdapter {
 
   login(credentials: LoginCredentials): Promise<AmpMember>;
   logout(): Promise<void>;
+
+  /**
+   * Member self-revoke ("sign out everywhere") — POST /api/v1/session/revoke.
+   * FULL revoke including the calling session; the local session drops on
+   * success and a fresh login is required afterward.
+   */
+  sessionRevoke(): Promise<SessionRevokeResult>;
 
   /** The locally-held member (sync, no I/O) — null on a fresh load until restoreSession(). */
   getSession(): AmpMember | null;

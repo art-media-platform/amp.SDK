@@ -27,6 +27,7 @@ You connect to an `ampd` node an operator runs — you do not run one
    cp .env.example .env.local
    # VITE_AMP_VAULT_URL=<the operated node, e.g. https://{your-node}>
    # VITE_AMP_PLANET_TAG=<the board planet tag or UID, handed to you>
+   # VITE_AMP_PUBLIC_SHARE_PLANET_TAG=<the public share planet tag, handed out with the node URL — REQUIRED>
    ```
 
 3. Install + run:
@@ -56,7 +57,9 @@ Only if you build `ampd` yourself — not part of a web-SDK integration
    At boot it logs `forums custodian ready: board planet <UID> (public)`.
 
 2. Point `.env.local` at it: `VITE_AMP_VAULT_URL=http://localhost:5193`,
-   `VITE_AMP_PLANET_TAG=<the board planet UID from the log>`.
+   `VITE_AMP_PLANET_TAG=<the board planet UID from the log>`, and
+   `VITE_AMP_PUBLIC_SHARE_PLANET_TAG=<the same board planet UID — the board
+   is already public>`.
 
 ## What's Here
 

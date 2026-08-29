@@ -46,6 +46,7 @@ import type {
   RedeemEmailOpts,
   ResolveResponse,
   SearchMatch,
+  SessionRevokeResult,
   SubscriptionEvent,
   TagResolution,
   TrustState,
@@ -427,6 +428,20 @@ export class AmpWebClient implements AmpAdapter {
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => {});
     }
+  }
+
+  /**
+   * Member self-revoke — POST /api/v1/session/revoke ("sign out everywhere").
+   * The caller's own Bearer names the subject (no request body) and the revoke
+   * is FULL: every outstanding session for the member is invalidated,
+   * INCLUDING the one making this call — the response is the last act the
+   * presenting Bearer performs.  The local session is dropped on success; a
+   * fresh login is required afterward.
+   */
+  async sessionRevoke(): Promise<SessionRevokeResult> {
+    const out = await this.apiFetch<SessionRevokeResult>('/session/revoke', { method: 'POST' });
+    await this.dropSession();
+    return out;
   }
 
   /**

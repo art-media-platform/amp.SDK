@@ -63,7 +63,7 @@ export function useForumsApi() {
   const markRead = useCallback((topicID: string, lastReadEditID: string) => {
     if (!member) return Promise.resolve([]);
     // The topic rides the Channel (NodeID), like post/view; the server keys the
-    // read-state by the caller and stores it on the member's own node.
+    // read-state by the caller and stores it on the member's home planet.
     const ops: TxOp[] = [
       { Kind: 'upsert', Channel: topicID, Attr: ATTR_READSTATE, Value: { LastReadEdit: lastReadEditID } },
     ];

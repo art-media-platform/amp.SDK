@@ -49,6 +49,7 @@ export type {
   RedeemEmailOpts,
   ResolveResponse,
   SearchMatch,
+  SessionRevokeResult,
   SubscriptionEvent,
   TagResolution,
   TrustState,

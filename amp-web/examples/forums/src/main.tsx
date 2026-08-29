@@ -10,6 +10,16 @@ const client = new AmpWebClient({
   planetTag: import.meta.env.VITE_AMP_PLANET_TAG ?? '',
 });
 
+// Anonymous public-share reads ride a second client aimed at the share planet
+// (SKILL §11 "Anonymous public-share read") — constructed without a session;
+// the share planet is open-read.  VITE_AMP_PUBLIC_SHARE_PLANET_TAG is REQUIRED
+// (handed out with the node URL; for a local ampd the public board planet UID
+// serves).
+export const shareClient = new AmpWebClient({
+  vaultUrl: import.meta.env.VITE_AMP_VAULT_URL ?? 'http://localhost:5193',
+  planetTag: import.meta.env.VITE_AMP_PUBLIC_SHARE_PLANET_TAG,
+});
+
 async function boot() {
   // Embedded in the Unity host: exchange the injected memberToken for a session — no second
   // login screen (AD-app-forums.md §6.5).  A pure browser has no window.__amp and logs in normally.

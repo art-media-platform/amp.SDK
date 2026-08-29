@@ -54,5 +54,11 @@
   },
   "ForumsReserveResponse": {
     "MemberID": "06e-fvw28sb200-1248j248j2-48j"
+  },
+  "SessionRevokeRequest.address": {
+    "Address": "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
+  },
+  "SessionRevokeRequest.memberID": {
+    "MemberID": "06e-fvw28sb200-1248j248j2-48j"
   }
 }

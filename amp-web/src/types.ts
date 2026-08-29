@@ -81,6 +81,18 @@ export interface AmpSession {
   ExpiresAt: number;     // unix seconds
 }
 
+/**
+ * Body of POST /api/v1/session/revoke (webapi.SessionRevokeResponse) — the
+ * member-scoped "sign out everywhere".  The revoke is FULL, including the
+ * calling session: this response is the last act the presenting Bearer
+ * performs, and a fresh login is required afterward.
+ */
+export interface SessionRevokeResult {
+  MemberID: string;
+  /** Live sessions dropped in-process; outstanding tokens elsewhere die at next validation. */
+  Dropped: number;
+}
+
 export interface AmpAuth {
   member: AmpMember | null;
   isAuthenticated: boolean;
