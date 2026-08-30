@@ -168,7 +168,7 @@ what it could NOT check rather than passing silently.
 
 ## SDK Access Tiers
 
-This is the **Free — Evaluation** kit: the client surface, plus a node you may
+This is the **Public — Evaluation** kit: the client surface, plus a node you may
 run for development and evaluation. Higher SDK access tiers add the operator
 and embedding surfaces — production `ampd` operation, `libampd`, and the
 whitelabel authoring slice — under commercial license. The kit name never
