@@ -764,6 +764,7 @@ func (id UID) IsSet() bool {
 	return (id[0] != 0 || id[1] != 0) && (id[0] < UID_0_Max || id[1] <= UID_1_Max)
 }
 
+// IsNil is not the complement of IsSet — sentinel-band UIDs are neither.
 func (id UID) IsNil() bool {
 	return id[0] == 0 && id[1] == 0
 }
