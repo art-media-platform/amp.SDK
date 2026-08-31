@@ -25,11 +25,11 @@ func AddStack(err *error) {
 }
 
 var (
-	Err403             = errors.New("403 forbidden")
-	Err404             = errors.New("not found")
-	ErrConnection      = errors.New("connection failed")
-	ErrClosed          = errors.New("closed")
-	ErrUnsupported     = errors.New("unsupported")
+	Err403             = Code_InsufficientPermissions.Error("403 forbidden")
+	Err404             = Code_ItemNotFound.Error("not found")
+	ErrConnection      = Code_NotConnected.Error("connection failed")
+	ErrClosed          = Code_RequestClosed.Error("closed")
+	ErrUnsupported     = Code_Unimplemented.Error("unsupported")
 	ErrUnimplemented   = Code_Unimplemented.Error("not implemented")
 	ErrInternal        = Code_AssertFailed.Error("internal error")
 	ErrNotConnected    = Code_NotConnected.Error("not connected")

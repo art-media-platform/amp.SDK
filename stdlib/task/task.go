@@ -2,12 +2,12 @@ package task
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/alog"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -36,7 +36,7 @@ type ctx struct {
 
 // Errors
 var (
-	ErrNotRunning = errors.New("not running")
+	ErrNotRunning = status.Code_ShuttingDown.Error("not running")
 )
 
 func (c *ctx) Close() error {

@@ -4,20 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 )
 
 // ErrLoginRejected is returned by ResolveLoginToken when the login endpoint rejects
 // the supplied credentials (HTTP 401/403): the username/password is wrong or the
 // account lacks access.  Callers match it with errors.Is to report an auth failure
 // distinctly from a transport or decode error.
-var ErrLoginRejected = errors.New("std: login rejected (bad credentials or no access)")
+var ErrLoginRejected = status.Code_LoginFailed.Error("std: login rejected (bad credentials or no access)")
 
 // loginClient bounds the credential->token exchange so a hung auth endpoint cannot
 // wedge the caller.
