@@ -1021,17 +1021,55 @@ enum Access {
     Invite     = 1;    // Can see the channel exists and invite others
     Private    = 3;    // Can see metadata but not content
     ReadOnly   = 4;    // Can read content
+    Custodian  = 5;    // Watchdog class: can read content; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
     ReadWrite  = 6;    // Can read and write
     Moderator  = 8;    // Can approve, withdraw, and hide content and file authoritative Strikes — but not manage grants or keys
     Admin      = 10;   // Full control: create sub-channels, manage access
 }
 
 
+// WatchdogCapability names one verb a watchdog-class grant entitles.  The
+// capability record on the AccessGrant is the entitlement an enforcement rule
+// checks; the Access rung is ordering only and never implies a capability
+// (SD-channel-governance §9.1).
+enum WatchdogCapability {
+    WatchdogUnspecified = 0;
+
+    ReadTelemetry   = 1;   // read the granted telemetry subtrees — never member content (SD-channel-governance §9.6)
+    Forward         = 2;   // forward traffic on the granted subtrees
+    DropJunk        = 3;   // drop junk traffic on the granted subtrees
+    FileAttestation = 4;   // file Attestations on the planet ledger (SD-channel-governance §9.5)
+}
+
+
+// AttrScope is one WHERE row of a watchdog-class grant: a whitelist entry over
+// the channel's two axes, each named by a canonic tag word-chain
+// (SD-channel-governance §9.2).  AttrSpace is a PREFIX: every registered attr
+// whose canonic name equals or word-extends it is in scope, so leaves minted
+// later under the prefix need no grant edit.  An attr an enforcement site
+// cannot resolve to a registered canonic name is out of scope — the whitelist
+// fails closed.
+message AttrScope {
+    string              NodeSpace = 1; // word-chain that folds to the granted channel node's UID
+    string              AttrSpace = 2; // word-chain prefix over registered attr canonic names
+}
+
+
 // AccessGrant maps a member (or default, if MemberTag is nil) to an Access
-// level.
+// level.  A watchdog-class grant additionally carries the member's capability
+// record and data-plane scope whitelist; a grant carrying either is custodial —
+// its member writes the data plane only inside Scopes (SD-channel-governance §9.1–§9.2).
 message AccessGrant {
     Tag                 MemberTag = 1; // Member identity (nil = default grant)
     Access              Access    = 2;
+
+    // Capability record: the verbs this grant entitles — checked by
+    // enforcement rules, never inferred from Access (SD-channel-governance §9.1).
+    repeated WatchdogCapability Capabilities = 3;
+
+    // Data-plane write whitelist: an op must fall inside one row
+    // (SD-channel-governance §9.2).
+    repeated AttrScope  Scopes = 4;
 }
 
 
