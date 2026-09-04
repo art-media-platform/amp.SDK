@@ -342,6 +342,21 @@ POST   /api/v1/upload
                the server today; association happens via your follow-up item
                write (below), never via these fields
        Response: amp.Tag (UID + URI + ContentTypeRaw + I/Units=Bytes)
+       Per-request cap 256 MB — beyond it, the chunk door:
+
+POST   /api/v1/upload/chunk
+       Content-Type: multipart/form-data — one chunk per request, ≤256 MB each,
+       no cap on the assembled upload
+       Fields: uploadID (client-chosen, ≤128 bytes; namespaced per session),
+               index (0-based, strictly sequential — one chunk in flight; an
+               out-of-order or duplicate index is refused 409 and the upload
+               stays at its expected index), file (the chunk bytes),
+               complete=1 on the final chunk (its file-part filename names the
+               blob; ContentType inferred from the extension), planetTag
+               (read on the final chunk)
+       Response: 200 { uploadID, index, received } per chunk (received =
+                 cumulative bytes); 201 amp.Tag on complete — the same shape
+                 /upload returns.  An upload idle for an hour is swept.
 
 POST   /api/v1/media/resolve
        Body: { PlanetTag?, Blob: amp.Tag }
@@ -367,6 +382,8 @@ interface BlobRef {
 **Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}` URL.  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
 After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
+
+**The SDK picks the door.** `upload(file, channel, opts)` sends a file that fits in one chunk as a single `/upload` POST and streams a larger one through `/upload/chunk` — sequential chunks of `UploadOpts.chunkSize` (default `DefaultUploadChunkBytes`, 32 MiB) under one fresh `uploadID`, the final chunk sealing the assembly. `chunked: true | false` forces either door. Both return the same `BlobRef`; `onProgress` ticks once per chunk ack with the server-acknowledged percent, then 100 on the sealing response. A refused chunk throws the typed `AmpError` (409 `Conflict`, 404 `NotFound`, 401 drops the session) and the client sends nothing further — v1 has no resume: retry the whole `upload()`.
 
 The `URI` in the upload response is a live stream URL, **host-instance-scoped** (the publisher is in-memory, §above): usable immediately, but re-resolve via `/media/resolve` on later reads or from another host rather than persisting it.
 
@@ -759,9 +776,9 @@ await upsert('projects', 'media', blobRef.UID, {
 });
 ```
 
-`progress` is a completion signal (0 while in flight, 100 on success), not a
-streamed byte percentage — the upload rides `fetch`, which exposes no upload
-progress events. Gate spinners on `uploading`.
+`progress` ticks once per chunk ack on the chunked path (server-acknowledged
+percent, §4.4) and steps 0 → 100 on a single-POST upload — `fetch` exposes
+no byte-level upload events. Gate spinners on `uploading`.
 
 ### 5.5 `useAmpMedia()`
 

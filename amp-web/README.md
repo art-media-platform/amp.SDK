@@ -126,7 +126,7 @@ Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.a
 | `useAmpClient()` | The adapter for imperative calls — login challenges, `resolveTag`, ad-hoc `query` |
 | `useAmpQuery<T>(channel, attr, opts?)` | Read items + live WebSocket subscription (live once logged in) |
 | `useAmpMutation()` | `tx` (batched), `invoke` (verb-RPC), `create`, `upsert`, `remove`, `withdraw` |
-| `useAmpUpload()` | Blob upload; `progress` signals completion (0 → 100), not streamed percent |
+| `useAmpUpload()` | Blob upload; files beyond one chunk stream through the chunk door, `progress` ticking per chunk ack (0 → 100 in one step for a single POST) |
 | `useAmpMedia(blobUID, planetTag?)` | Resolve a blob to a streamable URL |
 | `useAmpCrypto()` | Sealed-box BYOK — `seal` / `open` against the session EncryptKey |
 

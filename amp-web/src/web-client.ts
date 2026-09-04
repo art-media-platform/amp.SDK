@@ -115,6 +115,36 @@ interface WireItem {
   _Withdrawn?: WireWithdrawNote;
 }
 
+/**
+ * Chunk size (bytes) for the chunked upload path: a file larger than one chunk
+ * rides POST /api/v1/upload/chunk in sequential chunks of this size
+ * (UploadOpts.chunkSize overrides; UploadOpts.chunked forces either path).
+ * Sized well inside the server's 256 MB per-request cap; the assembled upload
+ * has no cap.
+ */
+export const DefaultUploadChunkBytes = 32 * 1024 * 1024;
+
+/** A non-final chunk's ack (app.www chunkAck): received = cumulative appended bytes. */
+interface WireChunkAck {
+  uploadID: string;
+  index: number;
+  received: number;
+}
+
+/**
+ * A fresh client-chosen uploadID (≤128 bytes; the server namespaces it per
+ * session).  randomUUID is secure-context only, so a plain-http origin falls
+ * back to a time+random handle — uniqueness within one session is all the
+ * contract needs.
+ */
+function newUploadID(): string {
+  const rng = globalThis.crypto;
+  if (rng && typeof rng.randomUUID === 'function') {
+    return rng.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 export class AmpWebClient implements AmpAdapter {
   private vaultUrl: string;
   private planetTag: string;
@@ -677,29 +707,93 @@ export class AmpWebClient implements AmpAdapter {
   // ── Media ─────────────────────────────────────────────────────────
 
   async upload(file: File, channel: string, opts?: UploadOpts): Promise<BlobRef> {
+    const chunkSize = opts?.chunkSize && opts.chunkSize > 0 ? opts.chunkSize : DefaultUploadChunkBytes;
+    const chunked = opts?.chunked ?? file.size > chunkSize;
+    if (chunked) {
+      return this.uploadChunked(file, channel, chunkSize, opts);
+    }
     const form = new FormData();
     form.append('file', file);
+    this.appendUploadFields(form, channel, opts);
+    const resp = await this.postForm('/upload', form);
+    opts?.onProgress?.(100);
+    return resp.json();
+  }
+
+  /**
+   * The chunked path (POST /api/v1/upload/chunk, SKILL §4.4): the file
+   * streams in strictly sequential chunks under one client-chosen uploadID —
+   * one request in flight, each chunk sent after the previous ack — and the
+   * final chunk (complete=1, file part named after the file so the server
+   * infers ContentType) seals the assembly into the blob pipeline, answering
+   * the same Tag /upload returns.  Progress ticks once per ack from the
+   * server's cumulative received count.  A refused chunk (409 out-of-order,
+   * 404 unknown upload, 401) throws; the server sweeps the abandoned upload
+   * after its idle TTL.  v1: no resume, no parallel chunks.
+   */
+  private async uploadChunked(
+    file: File, channel: string, chunkSize: number, opts?: UploadOpts,
+  ): Promise<BlobRef> {
+    const uploadID = newUploadID();
+    const chunkCount = Math.max(1, Math.ceil(file.size / chunkSize));
+    const chunkForm = (index: number): FormData => {
+      const form = new FormData();
+      form.append('uploadID', uploadID);
+      form.append('index', String(index));
+      const start = index * chunkSize;
+      form.append('file', file.slice(start, Math.min(start + chunkSize, file.size)), file.name);
+      return form;
+    };
+
+    for (let index = 0; index < chunkCount - 1; index++) {
+      const resp = await this.postForm('/upload/chunk', chunkForm(index));
+      const ack = (await resp.json()) as WireChunkAck;
+      if (ack.uploadID !== uploadID || ack.index !== index) {
+        throw new AmpError(resp.status, AmpErrorCode.Conflict,
+          `chunk ${index} of upload ${uploadID}: ack names chunk ${ack.index} of ${ack.uploadID}`);
+      }
+      opts?.onProgress?.(Math.floor(ack.received * 100 / file.size));
+    }
+
+    const form = chunkForm(chunkCount - 1);
+    form.append('complete', '1');
+    this.appendUploadFields(form, channel, opts);
+    const resp = await this.postForm('/upload/chunk', form);
+    opts?.onProgress?.(100);
+    return resp.json();
+  }
+
+  /**
+   * The /upload form vocabulary beside the file part: planetTag (read by the
+   * server) plus the reserved channel/attr/metadata fields (SKILL §4.4).  On
+   * the chunked path these ride the sealing request only.
+   */
+  private appendUploadFields(form: FormData, channel: string, opts?: UploadOpts): void {
     form.append('channel', channel);
     if (opts?.attr) form.append('attr', opts.attr);
     const planetTag = this.planetTagFor(opts?.planetTag);
     if (planetTag) form.append('planetTag', planetTag);
     if (opts?.metadata) form.append('metadata', JSON.stringify(opts.metadata));
+  }
 
+  /**
+   * POST a multipart form (no Content-Type header — the runtime sets the
+   * boundary).  Non-2xx throws the typed AmpError; a 401 drops the local
+   * session, the apiFetch policy.
+   */
+  private async postForm(path: string, form: FormData): Promise<Response> {
     const hdrs: Record<string, string> = {};
     if (this.sessionToken) {
       hdrs['Authorization'] = `Bearer ${this.sessionToken}`;
     }
-    // Don't set Content-Type — the browser sets the multipart boundary.
-
-    const resp = await fetch(this.apiUrl('/upload'), { method: 'POST', headers: hdrs, body: form });
+    const resp = await fetch(this.apiUrl(path), { method: 'POST', headers: hdrs, body: form });
     if (!resp.ok) {
       if (resp.status === 401 && this.sessionToken) {
-        void this.dropSession();   // expired session — same policy as apiFetch
+        void this.dropSession();
       }
       throw await ampErrorFromResponse(resp);
     }
-    opts?.onProgress?.(100);
-    return resp.json();
+    return resp;
   }
 
   async resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef> {

@@ -66,7 +66,7 @@ export type {
 
 // Adapter interface + implementation
 export type { AmpAdapter } from './adapter.js';
-export { AmpWebClient } from './web-client.js';
+export { AmpWebClient, DefaultUploadChunkBytes } from './web-client.js';
 export type { AmpWebClientOpts } from './web-client.js';
 
 // Operator tier: deliberately NOT exported here.  AmpAdminClient (admin

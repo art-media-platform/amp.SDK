@@ -168,7 +168,7 @@ export interface InviteRevokeOpts {
  */
 export type AccessLevel =
   | 'NotAllowed' | 'Invite' | 'Private'
-  | 'ReadOnly' | 'ReadWrite' | 'Moderator' | 'Admin';
+  | 'ReadOnly' | 'Custodian' | 'ReadWrite' | 'Moderator' | 'Admin';
 
 /** One invite policy with its rank-adjudicated redemption ledger. */
 export interface InvitePolicyEntry {
@@ -468,7 +468,9 @@ export interface UploadOpts {
   attr?: string;                              // attr to associate (optional)
   planetTag?: string;                         // target planet (optional)
   metadata?: Record<string, unknown>;
-  onProgress?: (pct: number) => void;
+  onProgress?: (pct: number) => void;         // one tick per chunk ack (chunked path); 100 on completion
+  chunked?: boolean;                          // force the chunked path (true) or single POST (false); default = size > chunkSize
+  chunkSize?: number;                         // bytes per chunk (default DefaultUploadChunkBytes)
 }
 
 export interface AmpUploadResult {

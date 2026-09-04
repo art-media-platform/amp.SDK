@@ -458,7 +458,7 @@ describe('OPERATOR_GO_ONLY manifest — no browser binding', () => {
 // runtime toEqual ties it to the shared fixture the Go side verifies.
 const ACCESS_LEVELS = [
   'NotAllowed', 'Invite', 'Private',
-  'ReadOnly', 'ReadWrite', 'Moderator', 'Admin',
+  'ReadOnly', 'Custodian', 'ReadWrite', 'Moderator', 'Admin',
 ] as const satisfies readonly AccessLevel[];
 
 const WITHDRAW_REASONS = [

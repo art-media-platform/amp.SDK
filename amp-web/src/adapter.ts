@@ -141,6 +141,7 @@ export interface AmpAdapter {
 
   // ── Media ─────────────────────────────────────────────────────────
 
+  /** Store a blob; a file larger than one chunk rides the sequential chunk door (UploadOpts.chunked / chunkSize).  Progress ticks per chunk ack. */
   upload(file: File, channel: string, opts?: UploadOpts): Promise<BlobRef>;
 
   /** Caller-carries-the-Tag resolve: BlobRef → BlobRef with URI (stream URL) set.
