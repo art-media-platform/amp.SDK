@@ -14,19 +14,21 @@ enum Code {
 
     Unnamed                     = -23001;   // no specific code applies
     AssertFailed                = -23002;
-    Unimplemented               = -23004;
+    Unimplemented               = -23004;   // no implementation in this build
     Timeout                     = -23005;
     ShuttingDown                = -23006;
     NotConnected                = -23007;
     AuthFailed                  = -23008;
     LoginFailed                 = -23009;
-    Expired                     = -23010;
-    NotReady                    = -23011;
+    Expired                     = -23010;   // past its lifetime
+    NotReady                    = -23011;   // retry later
     Cancelled                   = -23012;
     ItemNotFound                = -23013;
     ParseFailed                 = -23014;
+    Closed                      = -23015;   // handle or service closed; calls refused
+    Gone                        = -23016;   // removed at its source; retry cannot succeed
+    Unsupported                 = -23017;   // target lacks the requested capability
 
-    ContextNotReady             = -23020;   // task.Context not serving
     RequestClosed               = -23021;
     BadRequest                  = -23022;
     BadTag                      = -23023;   // malformed tag expression
@@ -37,18 +39,16 @@ enum Code {
     MalformedTx                 = -23032;   // TxMsg failed validation
 
     DataFailure                 = -23041;   // stored data unreadable
-    PinFailed                   = -23043;   // pin request not served
     ProviderErr                 = -23045;   // upstream provider failed
 
     InsufficientPermissions     = -23051;
 
-    AlreadyRegistered           = -23100;
     DecryptFailed               = -23102;
     VerifySignatureFailed       = -23103;
     BadKeyFormat                = -23104;
     KeyGenerationFailed         = -23105;
-    SigningFailed               = -23109;
     KeyringNotFound             = -23106;
+    SigningFailed               = -23109;
 }
 
 // Severity expresses the severity of a status message for logging and alerting

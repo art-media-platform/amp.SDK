@@ -33,7 +33,7 @@ var RandReader io.Reader = rand.Reader
 // from "the key is absent" or an AEAD refusal — a logout racing a decrypt must
 // read as no-custody (retryable), never as forgery (final).  Any keystore a
 // Guard source backs must honor the same contract.
-var ErrStoreClosed = status.Code_NotReady.Error("safe: key store is closed")
+var ErrStoreClosed = status.Code_Closed.Error("safe: key store is closed")
 
 // Guard protects and recovers the DEK used to encrypt a KeyTome payload.
 //
@@ -293,7 +293,7 @@ func SealFor(peerKit CryptoKitID, peerPubKey, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 	if kit.Encrypt == nil || kit.Encrypt.Seal == nil {
-		return nil, status.Code_Unimplemented.Errorf("Kit %s does not support asymmetric encryption", peerKit.String())
+		return nil, status.Code_Unsupported.Errorf("Kit %s does not support asymmetric encryption", peerKit.String())
 	}
 	return kit.Encrypt.Seal(RandReader, msg, peerPubKey)
 }
@@ -312,7 +312,7 @@ func VerifySignature(
 		return err
 	}
 	if kit.Signing == nil || kit.Signing.Verify == nil {
-		return status.Code_Unimplemented.Errorf("Kit %s does not support signature verification", cryptoKitID.String())
+		return status.Code_Unsupported.Errorf("Kit %s does not support signature verification", cryptoKitID.String())
 	}
 	return kit.Signing.Verify(sig, digest, signerPubKey)
 }

@@ -196,15 +196,15 @@ func generateKeyForSpec(kit *Kit, rng io.Reader, requestedSize int, kp *KeyPair)
 		return nil
 	case KeyType_SigningKey:
 		if kit.Signing == nil || kit.Signing.Generate == nil {
-			return status.Code_Unimplemented.Errorf("Kit %s does not generate SigningKeys", kit.ID.String())
+			return status.Code_Unsupported.Errorf("Kit %s does not generate SigningKeys", kit.ID.String())
 		}
 		return kit.Signing.Generate(rng, kp)
 	case KeyType_AsymmetricKey:
 		if kit.Encrypt == nil || kit.Encrypt.Generate == nil {
-			return status.Code_Unimplemented.Errorf("Kit %s does not generate AsymmetricKeys", kit.ID.String())
+			return status.Code_Unsupported.Errorf("Kit %s does not generate AsymmetricKeys", kit.ID.String())
 		}
 		return kit.Encrypt.Generate(rng, kp)
 	default:
-		return status.Code_Unimplemented.Errorf("unsupported KeyType: %v", kp.Pub.KeyType)
+		return status.Code_Unsupported.Errorf("unsupported KeyType: %v", kp.Pub.KeyType)
 	}
 }

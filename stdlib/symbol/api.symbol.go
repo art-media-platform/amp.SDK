@@ -66,7 +66,7 @@ const IDSz = 4
 // risk of an auto-issued ID contending with it.
 const DefaultIssuerMin = 600
 
-var ErrIssuerNotOpen = status.Code_NotReady.Error("issuer not open")
+var ErrIssuerNotOpen = status.Code_Closed.Error("issuer not open")
 
 // ReadID reads a big endian encoded uint32 ID from the given byte slice
 func ReadID(in []byte) (uint32, []byte) {

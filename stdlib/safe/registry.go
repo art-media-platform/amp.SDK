@@ -34,7 +34,7 @@ func newRegistry[K comparable, V any](label string) Registry[K, V] {
 // the same pointer is a no-op; a different *V under an in-use key is an error.
 func (reg *Registry[K, V]) Register(key K, val *V) error {
 	if existing := reg.byID[key]; existing != nil && existing != val {
-		return status.Code_AlreadyRegistered.Errorf("%s %v is already registered", reg.label, key)
+		return status.Code_AlreadyExists.Errorf("%s %v is already registered", reg.label, key)
 	}
 	reg.byID[key] = val
 	return nil

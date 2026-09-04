@@ -31,18 +31,20 @@ const (
 	Code_Nil                     Code = 0      // success — no status to report
 	Code_Unnamed                 Code = -23001 // no specific code applies
 	Code_AssertFailed            Code = -23002
-	Code_Unimplemented           Code = -23004
+	Code_Unimplemented           Code = -23004 // no implementation in this build
 	Code_Timeout                 Code = -23005
 	Code_ShuttingDown            Code = -23006
 	Code_NotConnected            Code = -23007
 	Code_AuthFailed              Code = -23008
 	Code_LoginFailed             Code = -23009
-	Code_Expired                 Code = -23010
-	Code_NotReady                Code = -23011
+	Code_Expired                 Code = -23010 // past its lifetime
+	Code_NotReady                Code = -23011 // retry later
 	Code_Cancelled               Code = -23012
 	Code_ItemNotFound            Code = -23013
 	Code_ParseFailed             Code = -23014
-	Code_ContextNotReady         Code = -23020 // task.Context not serving
+	Code_Closed                  Code = -23015 // handle or service closed; calls refused
+	Code_Gone                    Code = -23016 // removed at its source; retry cannot succeed
+	Code_Unsupported             Code = -23017 // target lacks the requested capability
 	Code_RequestClosed           Code = -23021
 	Code_BadRequest              Code = -23022
 	Code_BadTag                  Code = -23023 // malformed tag expression
@@ -52,16 +54,14 @@ const (
 	Code_StorageFailure          Code = -23030
 	Code_MalformedTx             Code = -23032 // TxMsg failed validation
 	Code_DataFailure             Code = -23041 // stored data unreadable
-	Code_PinFailed               Code = -23043 // pin request not served
 	Code_ProviderErr             Code = -23045 // upstream provider failed
 	Code_InsufficientPermissions Code = -23051
-	Code_AlreadyRegistered       Code = -23100
 	Code_DecryptFailed           Code = -23102
 	Code_VerifySignatureFailed   Code = -23103
 	Code_BadKeyFormat            Code = -23104
 	Code_KeyGenerationFailed     Code = -23105
-	Code_SigningFailed           Code = -23109
 	Code_KeyringNotFound         Code = -23106
+	Code_SigningFailed           Code = -23109
 )
 
 // Enum value maps for Code.
@@ -81,7 +81,9 @@ var (
 		-23012: "Cancelled",
 		-23013: "ItemNotFound",
 		-23014: "ParseFailed",
-		-23020: "ContextNotReady",
+		-23015: "Closed",
+		-23016: "Gone",
+		-23017: "Unsupported",
 		-23021: "RequestClosed",
 		-23022: "BadRequest",
 		-23023: "BadTag",
@@ -91,16 +93,14 @@ var (
 		-23030: "StorageFailure",
 		-23032: "MalformedTx",
 		-23041: "DataFailure",
-		-23043: "PinFailed",
 		-23045: "ProviderErr",
 		-23051: "InsufficientPermissions",
-		-23100: "AlreadyRegistered",
 		-23102: "DecryptFailed",
 		-23103: "VerifySignatureFailed",
 		-23104: "BadKeyFormat",
 		-23105: "KeyGenerationFailed",
-		-23109: "SigningFailed",
 		-23106: "KeyringNotFound",
+		-23109: "SigningFailed",
 	}
 	Code_value = map[string]int32{
 		"Nil":                     0,
@@ -117,7 +117,9 @@ var (
 		"Cancelled":               -23012,
 		"ItemNotFound":            -23013,
 		"ParseFailed":             -23014,
-		"ContextNotReady":         -23020,
+		"Closed":                  -23015,
+		"Gone":                    -23016,
+		"Unsupported":             -23017,
 		"RequestClosed":           -23021,
 		"BadRequest":              -23022,
 		"BadTag":                  -23023,
@@ -127,16 +129,14 @@ var (
 		"StorageFailure":          -23030,
 		"MalformedTx":             -23032,
 		"DataFailure":             -23041,
-		"PinFailed":               -23043,
 		"ProviderErr":             -23045,
 		"InsufficientPermissions": -23051,
-		"AlreadyRegistered":       -23100,
 		"DecryptFailed":           -23102,
 		"VerifySignatureFailed":   -23103,
 		"BadKeyFormat":            -23104,
 		"KeyGenerationFailed":     -23105,
-		"SigningFailed":           -23109,
 		"KeyringNotFound":         -23106,
+		"SigningFailed":           -23109,
 	}
 )
 
@@ -317,7 +317,7 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\x05Level\x18\x03 \x01(\x05R\x05Level\x12\x18\n" +
 	"\aMessage\x18\x04 \x01(\tR\aMessage\x12\x19\n" +
 	"\bTimeID_0\x18\b \x01(\x06R\aTimeID0\x12\x19\n" +
-	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\x8b\a\n" +
+	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\xf7\x06\n" +
 	"\x04Code\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x14\n" +
 	"\aUnnamed\x10\xa7\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
@@ -333,8 +333,10 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\bNotReady\x10\x9d\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x16\n" +
 	"\tCancelled\x10\x9c\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fItemNotFound\x10\x9b\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
-	"\vParseFailed\x10\x9a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
-	"\x0fContextNotReady\x10\x94\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
+	"\vParseFailed\x10\x9a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x13\n" +
+	"\x06Closed\x10\x99\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x11\n" +
+	"\x04Gone\x10\x98\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
+	"\vUnsupported\x10\x97\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rRequestClosed\x10\x93\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x17\n" +
 	"\n" +
 	"BadRequest\x10\x92\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x13\n" +
@@ -344,17 +346,15 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\fCommitFailed\x10\x8c\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1b\n" +
 	"\x0eStorageFailure\x10\x8a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
 	"\vMalformedTx\x10\x88\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
-	"\vDataFailure\x10\xff\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x16\n" +
-	"\tPinFailed\x10\xfd\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
+	"\vDataFailure\x10\xff\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
 	"\vProviderErr\x10\xfb\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12$\n" +
-	"\x17InsufficientPermissions\x10\xf5\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1e\n" +
-	"\x11AlreadyRegistered\x10\xc4\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
+	"\x17InsufficientPermissions\x10\xf5\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rDecryptFailed\x10\xc2\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\"\n" +
 	"\x15VerifySignatureFailed\x10\xc1\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
 	"\fBadKeyFormat\x10\xc0\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12 \n" +
-	"\x13KeyGenerationFailed\x10\xbf\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
-	"\rSigningFailed\x10\xbb\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
-	"\x0fKeyringNotFound\x10\xbe\xcb\xfe\xff\xff\xff\xff\xff\xff\x01*7\n" +
+	"\x13KeyGenerationFailed\x10\xbf\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1c\n" +
+	"\x0fKeyringNotFound\x10\xbe\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
+	"\rSigningFailed\x10\xbb\xcb\xfe\xff\xff\xff\xff\xff\xff\x01*7\n" +
 	"\bSeverity\x12\t\n" +
 	"\x05Debug\x10\x00\x12\b\n" +
 	"\x04Info\x10\x01\x12\v\n" +

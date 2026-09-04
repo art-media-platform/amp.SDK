@@ -55,7 +55,7 @@ type ringIndex struct {
 var _ Enclave = (*enclave)(nil)
 
 // errEnclaveClosed is returned by every Enclave method once Close() has sealed the session.
-var errEnclaveClosed = status.Code_NotReady.Error("safe: enclave is closed")
+var errEnclaveClosed = status.Code_Closed.Error("safe: enclave is closed")
 
 // OpenEnclave starts a new cryptographic session.
 //
@@ -291,7 +291,7 @@ func (enc *enclave) SignRaw(ref *KeyRef, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 	if kit.Signing == nil || kit.Signing.Sign == nil {
-		return nil, status.Code_Unimplemented.Errorf("Kit %s does not support signing", kit.ID.String())
+		return nil, status.Code_Unsupported.Errorf("Kit %s does not support signing", kit.ID.String())
 	}
 	// A public-only adopted key (PrvKey nil — a TOFU-declared peer key) must
 	// refuse here: signing with an empty private half yields a garbage
@@ -361,7 +361,7 @@ func (enc *enclave) OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error) {
 		return nil, err
 	}
 	if kit.Encrypt == nil || kit.Encrypt.Open == nil {
-		return nil, status.Code_Unimplemented.Errorf("Kit %s does not support asymmetric decryption", kit.ID.String())
+		return nil, status.Code_Unsupported.Errorf("Kit %s does not support asymmetric decryption", kit.ID.String())
 	}
 	return kit.Encrypt.Open(msg, rec.PrvKey)
 }

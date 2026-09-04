@@ -36,7 +36,7 @@ type ctx struct {
 
 // Errors
 var (
-	ErrNotRunning = status.Code_ShuttingDown.Error("not running")
+	ErrNotRunning = status.Code_Closed.Error("not running")
 )
 
 func (c *ctx) Close() error {
