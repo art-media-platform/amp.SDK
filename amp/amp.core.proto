@@ -1028,9 +1028,10 @@ enum Access {
 }
 
 
-// WatchdogCapability names one verb a watchdog-class grant entitles.  The
-// capability record on the AccessGrant is the entitlement an enforcement rule
-// checks; the Access rung is ordering only and never implies a capability
+// WatchdogCapability names one verb of a watchdog-class grant.  A grant whose
+// capability record is non-empty is custodial: its member writes the data
+// plane only inside the grant's Scopes.  No rule gates a verb on its
+// capability; the Access rung is ordering only and never implies a capability
 // (SD-channel-governance §9.1).
 enum WatchdogCapability {
     WatchdogUnspecified = 0;
@@ -1063,8 +1064,9 @@ message AccessGrant {
     Tag                 MemberTag = 1; // Member identity (nil = default grant)
     Access              Access    = 2;
 
-    // Capability record: the verbs this grant entitles — checked by
-    // enforcement rules, never inferred from Access (SD-channel-governance §9.1).
+    // Capability record: the verbs this grant names (SD-channel-governance
+    // §9.1).  Read for presence only: a non-empty record makes the grant
+    // custodial; no rule reads an individual verb.
     repeated WatchdogCapability Capabilities = 3;
 
     // Data-plane write whitelist: an op must fall inside one row
