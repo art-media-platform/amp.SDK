@@ -35,6 +35,12 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 1. Put `bin/amp` on your `PATH`. On macOS, open the disk image first and
    copy `bin/` wherever you keep tools — the image is a container, not an
    installer, so where the binaries live is your choice.
+
+   A binary copied out of the mounted image keeps the transit quarantine
+   attribute, and a non-interactive shell (cron, a service unit, `ssh`) has
+   no prompt to clear it — the process dies on first use with no message.
+   Clear it once after copying: `sudo xattr -d com.apple.quarantine /usr/local/bin/amp`
+   (and `ampd`).
 2. Get an invite URL and its passphrase from your operator (out-of-band).
 3. Redeem it — the full procedure, verification, and recovery steps are
    `AOM/O4-standard-procedures.md` §4.6:
