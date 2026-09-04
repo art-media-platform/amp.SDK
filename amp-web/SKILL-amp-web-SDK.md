@@ -356,7 +356,10 @@ POST   /api/v1/upload/chunk
                (read on the final chunk)
        Response: 200 { uploadID, index, received } per chunk (received =
                  cumulative bytes); 201 amp.Tag on complete — the same shape
-                 /upload returns.  An upload idle for an hour is swept.
+                 /upload returns.  An upload idle for an hour is swept at
+                 the next chunk request the node serves (any upload's,
+                 paced to one scan per five minutes); a spill orphaned by
+                 a node restart is reaped at boot.
 
 POST   /api/v1/media/resolve
        Body: { PlanetTag?, Blob: amp.Tag }
