@@ -16,12 +16,12 @@ var Crypto = struct {
 	Secp256k1: tag.Name{ID: tag.UID{0x1906FAF4F88AB854, 0x6328B92D89014254}, Text: "amp.crypto.secp256k1"}, // 0t0-vxg9y4br1b-66b5t5q4h2-hkn
 }
 
-// ─── Phrase — the canonical safe.Phrase vocabulary (AOM SD-canonization-spec.md §1.5): ───
+// ─── Phrase — the canonical safe.Phrase vocabulary (SD-canonization-spec §1.5): ───
 // a phrase written down in one AMP app must restore in any other, so every
 // consumer (Go, C#, web) parses this ONE whitespace-separated string at
 // runtime.  Properties:
 //   - exactly 256 unique words (8 bits/word → byte-aligned entropy)
-//   - short (4–7 characters), common, casual-English familiar
+//   - short (4–7 characters), common, familiar casual English
 //   - no two list words are homophones of each other
 //   - unique on the first FOUR characters (three-char prefixes are NOT
 //     unique — abbreviation entry needs at least four typed characters)

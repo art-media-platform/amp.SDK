@@ -26,7 +26,7 @@ const (
 	// Content-model epoch — the SDK proto semantics under which artifact payloads
 	// are encoded (the Tag/Tags content model).  A Codex stamps this in its header;
 	// an importer refuses a Codex whose epoch differs rather than silently
-	// mis-decoding persisted bytes (AOM DD-chronicle-and-codex.md §5.5).  Bump on
+	// mis-decoding persisted bytes (DD-chronicle-and-codex §5.5).  Bump on
 	// each wire-incompatible content-model change.
 	ContentModelEpoch = uint32(1)
 	// Default IANA media type a Tag carries when its ContentTypeRaw field is empty.
@@ -50,6 +50,6 @@ const (
 	//    12:14  SignatureLength (uint16 BE; 0 = unsigned)
 	//    14:16  Reserved
 	TxPreambleSignature = "AMP1"
-	// Fixed-size header that leads every TxMsg; the layout is above.
+	// TxPreamble byte length (layout above).
 	TxPreambleSize = int32(16)
 )

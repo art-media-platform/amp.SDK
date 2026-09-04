@@ -20,7 +20,7 @@ const Tx {
     //    14:16  Reserved
     const string PreambleSignature = "AMP1";
 
-	// Fixed-size header that leads every TxMsg; the layout is above.
+	// TxPreamble byte length (layout above).
 	const int32  PreambleSize = 16;
 }
 
@@ -45,7 +45,7 @@ const int32 DefaultServicePort = 5192;
 // Content-model epoch — the SDK proto semantics under which artifact payloads
 // are encoded (the Tag/Tags content model).  A Codex stamps this in its header;
 // an importer refuses a Codex whose epoch differs rather than silently
-// mis-decoding persisted bytes (AOM DD-chronicle-and-codex.md §5.5).  Bump on
+// mis-decoding persisted bytes (DD-chronicle-and-codex §5.5).  Bump on
 // each wire-incompatible content-model change.
 const uint32 ContentModelEpoch = 1;
 
