@@ -299,8 +299,8 @@ var Attr = struct {
 	LawMemberKind_Successor: tag.Name{ID: tag.UID{0x627C11221E4584F9, 0xCD00ACCD3211B4F9}, Text: "amp.law.MemberKind.Successor"}, // 32g-h8k47k5hmw-wu05dtnt13-e7t
 	LawMemberKind_Memorial:  tag.Name{ID: tag.UID{0xBA335B3927C0252B, 0xB791D002F55B477F}, Text: "amp.law.MemberKind.Memorial"},  // 5u6-eemk9y04np-vg4fh0cupq-jvz
 	LawMemberKind_Process:   tag.Name{ID: tag.UID{0x98ECE8E691BE5BD5, 0x7E0A29F6F4393466}, Text: "amp.law.MemberKind.Process"},   // 4sx-mnfe4eycgb-rw2j9yvu3k-e36
-	// Attestation modalities (SD-modal-attestation).
-	// Attestation.Modality is a Tag resolving to one of these UIDs.
+	// Attestation modalities.  Attestation.Modality is a Tag resolving
+	// to one of these UIDs.
 	// Communities + apps may register additional modalities.
 	// Zero UID = unspecified.
 	LawAttestationModality: tag.Name{ID: tag.UID{0x9F5377F513757A9F, 0x74B304390F47261B}, Text: "amp.law.AttestationModality"}, // 4zb-evzb4vpgbg-r9ds4747nf-9hv
@@ -327,8 +327,7 @@ var Attr = struct {
 	// ─── Planet ledger — durable record of observations and citations. ───
 	// Attestations (strikes, endorsements, witness records, audits, amnesties)
 	// live here as convergent TxOps; access-control acts cite them via
-	// AttestationRef, making every governance decision auditable
-	// (SD-security-sync §6).
+	// AttestationRef, making every governance decision auditable.
 	LedgerAttr: tag.Name{ID: tag.UID{0x82BC4E1F6FB05241, 0x03CA388E1C44C848}, Text: "amp.ledger"}, // 42r-j71yvxhb90-h7kjsjsf49-k28
 
 	LedgerAttestation: tag.Name{ID: tag.UID{0x3C774A8A36241368, 0x2074703AFA0EF846}, Text: "amp.ledger.Attestation"}, // 1wf-x58nej42en-20x3h7cx0x-y26

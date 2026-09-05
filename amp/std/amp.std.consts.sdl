@@ -174,8 +174,8 @@ tags Attr {
             LawMemberKind_Process   "Process"
         }
 
-        // Attestation modalities (SD-modal-attestation).
-        // Attestation.Modality is a Tag resolving to one of these UIDs.
+        // Attestation modalities.  Attestation.Modality is a Tag resolving
+        // to one of these UIDs.
         // Communities + apps may register additional modalities.
         // Zero UID = unspecified.
         LawAttestationModality "AttestationModality" {
@@ -205,8 +205,7 @@ tags Attr {
     // Planet ledger — durable record of observations and citations.
     // Attestations (strikes, endorsements, witness records, audits, amnesties)
     // live here as convergent TxOps; access-control acts cite them via
-    // AttestationRef, making every governance decision auditable
-    // (SD-security-sync §6).
+    // AttestationRef, making every governance decision auditable.
     LedgerAttr "amp.ledger" {
         LedgerAttestation "Attestation"
     }
