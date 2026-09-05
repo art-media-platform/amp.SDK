@@ -165,11 +165,14 @@ against an operated node.
 suite, including the wire-contract drift guard against the golden fixtures
 shipped in `webapi/testdata/` (repo: `amp/webapi/testdata/`) — no server
 needed. `webapi/webapi.types.go` is the wire contract those fixtures pin.
+The same run enforces the bundle's AOM-reference gate
+(`src/aom-allowlist.test.ts`): shipped `src/` may cite only the AOM docs
+listed in `aom-allowlist.txt` — the one list `pack.sh` reads to stage `AOM/`.
 
 > **Bundle view vs repo view.** `webapi/` and `AOM/` exist only in the
-> distributed bundle — `pack.sh` stages them from `amp.SDK/amp/webapi` and the
-> AOM allowlist. In an `amp.SDK` checkout, `amp-web/` has neither; the tests
-> probe both locations, so `npm test` passes from either view.
+> distributed bundle — `pack.sh` stages them from `amp.SDK/amp/webapi` and
+> `aom-allowlist.txt`. In an `amp.SDK` checkout, `amp-web/` has neither; the
+> tests probe both locations, so `npm test` passes from either view.
 
 ## Full API reference
 
@@ -221,6 +224,11 @@ Rules the pack enforces on partner-visible text:
   (`amp-kit aom-subset`): every `## N.M` heading in the source chapter carries
   a `[PUBLIC]` or `[OPERATOR]` marker or the pack fails, and a coordinate naming
   a withheld section is rewritten to the greppable token `§N.M (operator)`.
+- Shipped `src/` (generated files included) cites only docs in
+  `aom-allowlist.txt`; the pack and `npm test` both refuse any other AOM
+  coordinate. Fix the citation at its source — the `.sdl` / `.proto` comment
+  for `src/generated/`, the `.ts` otherwise — then regenerate; the list is
+  never widened to admit an internal doc.
 
 ## Versioning & Stability
 

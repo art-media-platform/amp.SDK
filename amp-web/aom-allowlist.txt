@@ -1,0 +1,20 @@
+# amp-web bundle AOM allowlist — the ONE list of AOM docs the partner bundle
+# ships and that shipped src/ may cite.  Read by pack.sh (stages AOM/, gates
+# src/) and by src/aom-allowlist.test.ts (the same gate under `npm test`).
+#
+#   <doc>.md  <mode>      whole  = the doc ships as-is
+#                         public = only its [PUBLIC] sections ship (amp-kit aom-subset)
+#
+# Never widen this list to admit an internal doc: fix the citation at its
+# source (.sdl / .proto for src/generated/, the .ts for the client) and regen.
+DD-architecture-overview.md        whole
+DD-name-service.md                 whole
+SD-content-substrate.md            whole
+SD-edit-resolution.md              whole
+SD-withdrawal-consent.md           whole
+SD-substrate-agnostic-members.md   whole
+SD-canonization-spec.md            whole
+SD-invite-governance.md            whole
+AD-app-www.md                      whole
+AD-app-forums.md                   whole
+O4-standard-procedures.md          public

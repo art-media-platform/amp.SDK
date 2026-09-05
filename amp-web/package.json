@@ -21,6 +21,7 @@
   "files": [
     "dist",
     "src",
+    "aom-allowlist.txt",
     "webapi",
     "AOM",
     "docs",

@@ -89,26 +89,31 @@ rm -rf "$STAGE/examples/forums/node_modules" \
 #     a listed doc that is missing FAILS the build — never warn-and-skip.  A
 #     public/CI build without amp.planet opts out explicitly with AMP_WEB_NO_AOM=1.
 #     AMP_WEB_AOM_SRC points the read at a sibling worktree's AOM.
-#     AOM_DOCS ship whole; AOM_PUBLIC_SUBSET are operator chapters that ship only
-#     their `[PUBLIC]`-marked sections (`amp-kit aom-subset`; O4 §4 front matter).
+#     The list lives in aom-allowlist.txt — ONE site, read here and by
+#     src/aom-allowlist.test.ts (the 3d gate under `npm test`).  Mode `whole`
+#     ships the doc as-is; `public` ships only its `[PUBLIC]`-marked sections
+#     (`amp-kit aom-subset`; O4 §4 front matter).
 AOM_SRC="${AMP_WEB_AOM_SRC:-$SDK/../amp.planet/AOM}"
 AMP_PLANET="${AMP_PLANET_SRC:-$SDK/../amp.planet}"
 amp_kit() { ( cd "$AMP_PLANET" && go run ./cmd/amp-kit "$@" ); }
-AOM_DOCS=(
-  DD-architecture-overview.md
-  DD-name-service.md
-  SD-content-substrate.md
-  SD-edit-resolution.md
-  SD-withdrawal-consent.md
-  SD-substrate-agnostic-members.md
-  SD-canonization-spec.md
-  SD-invite-governance.md
-  AD-app-www.md
-  AD-app-forums.md
-)
-AOM_PUBLIC_SUBSET=(
-  O4-standard-procedures.md
-)
+AOM_ALLOWLIST="$HERE/aom-allowlist.txt"
+# Strict grammar: `<doc>.md <whole|public>` per entry, `#` comments, blank
+# lines.  A line the grammar rejects fails the pack — a silently dropped entry
+# would ship without its doc.
+if ! awk '/^[[:space:]]*(#|$)/ { next }
+          NF != 2 || $1 !~ /\.md$/ || ($2 != "whole" && $2 != "public") {
+            printf "ERROR: aom-allowlist.txt:%d: malformed entry: %s\n", NR, $0 > "/dev/stderr"; bad = 1 }
+          END { exit bad }' "$AOM_ALLOWLIST"; then
+  exit 1
+fi
+aom_listed() { awk -v mode="$1" '/^[[:space:]]*(#|$)/ { next } $2 == mode { print $1 }' "$AOM_ALLOWLIST"; }
+AOM_DOCS=( $(aom_listed whole) )
+AOM_PUBLIC_SUBSET=( $(aom_listed public) )
+if [ "${#AOM_DOCS[@]}" -eq 0 ]; then
+  echo "ERROR: aom-allowlist.txt lists no whole-doc entries — a partner bundle ships the AOM refs." >&2
+  exit 1
+fi
+cp "$AOM_ALLOWLIST" "$STAGE/"
 if [ -n "${AMP_WEB_NO_AOM:-}" ]; then
   echo "!!! AMP_WEB_NO_AOM set — bundling without AOM design refs"
 elif [ ! -d "$AOM_SRC" ]; then
@@ -145,10 +150,12 @@ amp_kit delink "$STAGE" "$AOM_SRC"
 #     where the same reference in a .md is rewritten to `(internal)` or fails
 #     the pack.  This is a hard gate, not a rewrite: a citation is fixed at its
 #     source — the .ts for the hand-written client, the .sdl / .proto in
-#     amp.SDK for src/generated/ — never edited at pack time.
+#     amp.SDK for src/generated/ — never edited at pack time.  The same gate
+#     runs under `npm test` (src/aom-allowlist.test.ts, which asserts its
+#     regex equals AOM_REF_RE below), so the pre-cut slate catches a cite
+#     before the tag (O4 §4.20 leg 5); this pass gates the STAGED tree.
 AOM_REF_RE='\b(DD|SD|AD|QO|ZO|O[0-9]|Q[0-9]?)-[a-z0-9]+(-[a-z0-9]+)*(\.md)?'
-AOM_ALLOWED="$(printf '%s\n' "${AOM_DOCS[@]}" "${AOM_PUBLIC_SUBSET[@]}" \
-               | sed 's/\.md$//' | sort -u)"
+AOM_ALLOWED="$({ aom_listed whole; aom_listed public; } | sed 's/\.md$//' | sort -u)"
 AOM_OFFENDERS="$(grep -rhoE "$AOM_REF_RE" "$STAGE/src" \
                  | sed 's/\.md$//' | sort -u | grep -vxF "$AOM_ALLOWED" || true)"
 if [ -n "$AOM_OFFENDERS" ]; then
