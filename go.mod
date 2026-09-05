@@ -4,8 +4,8 @@ go 1.26.3
 
 require (
 	github.com/pkg/errors v0.9.1
-	golang.org/x/crypto v0.54.0
-	google.golang.org/protobuf v1.36.11
+	golang.org/x/crypto v0.56.0
+	google.golang.org/protobuf v1.36.12
 )
 
 require golang.org/x/sys v0.47.0 // indirect
