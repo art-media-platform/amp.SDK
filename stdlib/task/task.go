@@ -24,7 +24,8 @@ type ctx struct {
 	mu        sync.Mutex
 	state     int32         // Running | Closing | Closed
 	subs      []Context     // live child Contexts
-	active    int           // outstanding work: live children + a reservation held across setup/OnRun; 0 means idle
+	active    int           // outstanding work: live children (Detach children excluded) + a reservation held across setup/OnRun; 0 means idle
+	abandoned int           // Detach children still live when this Context finalized; set once by reportAbandoned
 	changed   chan struct{} // lazily created; closed by signalChange to broadcast a state change, then cleared
 	idleDelay time.Duration // CloseWhenIdle delay; <= 0 disables idle-close
 	idleFloor time.Time     // PreventIdleClose floor; idle-close may not fire before this instant
@@ -225,6 +226,9 @@ func printContextTree(ctx Context, out *strings.Builder, depth int, prefix []run
 	out.WriteString(info.TaskID.AsLabel())
 	out.WriteString(string(prefix))
 	out.WriteString(ctx.Log().GetLogLabel())
+	if info.detached {
+		out.WriteString(" [detached]")
+	}
 	out.WriteByte('\n')
 
 	// Set up prefix for children
@@ -286,7 +290,9 @@ func (c *ctx) StartChild(task Task) (Context, error) {
 			return nil, ErrNotRunning
 		}
 		c.subs = append(c.subs, child)
-		c.active++
+		if !task.detached {
+			c.active++
+		}
 		c.signalChange()
 		c.mu.Unlock()
 	}
@@ -348,18 +354,22 @@ func (c *ctx) runMonitor(parent *ctx) {
 		parent.task.OnChildClosing(c)
 	}
 
-	// Wait for the c's own work (its children and OnRun) to finish.
+	// Wait for the c's own work (its owned children and OnRun) to finish, then
+	// report any Detach child that outlives it.
 	c.waitIdle()
+	c.reportAbandoned()
 
-	// Detach from the parent. If this was the parent's last c, the parent
-	// may now idle-close.
-	var parentIdleClose time.Duration
+	// Leave the parent. If this was the parent's last owned child, the parent
+	// may now idle-close; a Detach child never held a reservation to give back.
+	parentIdleClose := time.Duration(0)
 	if parent != nil {
 		parent.mu.Lock()
 		parent.removeChildLocked(c)
-		parent.active--
-		if parent.active == 0 {
-			parentIdleClose = parent.task.Info.IdleClose
+		if !c.task.detached {
+			parent.active--
+			if parent.active == 0 {
+				parentIdleClose = parent.task.Info.IdleClose
+			}
 		}
 		parent.signalChange()
 		parent.mu.Unlock()
@@ -377,6 +387,45 @@ func (c *ctx) runMonitor(parent *ctx) {
 	if parentIdleClose > 0 {
 		parent.CloseWhenIdle(parentIdleClose)
 	}
+}
+
+// reportAbandoned runs once per Context, after c has drained its owned work:
+// every child still in c.subs is a Detach child, and one whose body has not
+// returned (or whose own children are outstanding) is abandoned — it runs on
+// past c's Done(). Count them and log one line (AOM ZO-design-conventions.md
+// §1.2).
+func (c *ctx) reportAbandoned() {
+	c.mu.Lock()
+	subs := append([]Context(nil), c.subs...)
+	c.mu.Unlock()
+	if len(subs) == 0 {
+		return
+	}
+
+	labels := make([]string, 0, len(subs))
+	for _, sub := range subs {
+		child := sub.(*ctx)
+		child.mu.Lock()
+		live := child.task.detached && child.active > 0
+		child.mu.Unlock()
+		if live {
+			labels = append(labels, child.log.GetLogLabel())
+		}
+	}
+	if len(labels) == 0 {
+		return
+	}
+
+	c.mu.Lock()
+	c.abandoned = len(labels)
+	c.mu.Unlock()
+	c.log.Warnf("abandoned %d detached child(ren) still live: %s", len(labels), strings.Join(labels, ", "))
+}
+
+func (c *ctx) AbandonedChildren() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.abandoned
 }
 
 // removeChildLocked removes child from c.subs. The caller must hold c.mu.

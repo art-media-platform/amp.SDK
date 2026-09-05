@@ -61,6 +61,38 @@ func NewChild(parent Context, label string) (Context, error) {
 	return parent.StartChild(Task{Info: Info{Label: label}})
 }
 
+// Detach starts fn as a child of parent that is registered in the tree but
+// does not hold parent's drain reservation. Like Go, fn runs in its own
+// goroutine and the child idle-closes when fn returns; like every child, it is
+// visible to PrintContextTree (marked "[detached]") and its Closing() fires
+// with parent's. Unlike Go, parent's Done() does not wait for it and it does
+// not keep an idle-closing parent alive. If parent finalizes while the child
+// is still live (fn has not returned, or it has children outstanding), parent
+// logs one warning naming it and counts it — see Context.AbandonedChildren.
+//
+// The one legal use is work that may park in the substrate — a source read
+// with no deadline, a write toward a peer that stopped draining — and must not
+// wedge its owner's shutdown (AOM ZO-design-conventions.md §1.2). Owned work
+// uses Go; the parent drains it. State the reason at the call site. fn should
+// still leave on ctx.Closing() wherever it can — Detach bounds the damage of
+// the one path that cannot, it does not excuse the others.
+//
+// A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent
+// is no longer running.
+func Detach(parent Context, label string, fn func(ctx Context)) (Context, error) {
+	if parent == nil {
+		parent = Context((*ctx)(nil))
+	}
+	return parent.StartChild(Task{
+		Info: Info{
+			Label:     label,
+			IdleClose: time.Nanosecond,
+			detached:  true,
+		},
+		OnRun: fn,
+	})
+}
+
 // Info is the descriptor a Context is started with: its identity, its log
 // label, and optional caller-supplied metadata. It is set once at StartChild
 // and exposed read-only via Context.Info(); the framework reads Label (logging)
@@ -76,6 +108,8 @@ type Info struct {
 	//
 	// This does not take effect unless OnRun is given or a child is started.
 	IdleClose time.Duration
+
+	detached bool // set only by Detach: registered under the parent without holding its drain reservation
 }
 
 // Task is a parameter block used to start a new Context and contains hooks for
@@ -152,6 +186,10 @@ type Context interface {
 	Closing() <-chan struct{}
 
 	// Signals when Close() has fully executed, no children remain, and OnClosed()
-	// has been completed.
+	// has been completed.  A Detach child still live is not waited for.
 	Done() <-chan struct{}
+
+	// Reports how many Detach children were still live when this Context
+	// finalized: 0 until Done() fires, and 0 afterward when none was abandoned.
+	AbandonedChildren() int
 }
