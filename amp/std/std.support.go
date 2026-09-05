@@ -15,8 +15,11 @@ import (
 )
 
 // PushMetaOp sends a meta-op tx to the receiver for the client's session agent.
+// Session control is not planet data: the tx carries no planet stamp
+// (amp.PlanetTarget_None), so a receiving client splits planet merges off by
+// envelope planet alone.
 func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
-	tx := sess.NewTx()
+	tx := sess.NewTx(amp.TxScope{Target: amp.PlanetTarget_None})
 	tx.SetContextID(contextID)
 	tx.Status = status
 

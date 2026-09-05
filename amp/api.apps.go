@@ -126,19 +126,38 @@ type TxOp struct {
 	DataLen uint64      // byte length of associated serialized data
 }
 
+// PlanetTarget selects how NewTx resolves TxEnvelope.Planet (AOM
+// SD-security-sync.md §7.6).  Go-internal, never a wire field.
+type PlanetTarget int32
+
+const (
+	// PlanetTarget_Resolved stamps TxScope.Planet when set, else the caller's
+	// home planet — planet data always lands on exactly one planet.
+	PlanetTarget_Resolved PlanetTarget = 0
+
+	// PlanetTarget_None leaves the envelope planet unset: session control
+	// (std.PushMetaOp, the seal challenge) is not planet data.  A receiving
+	// client separates a planet merge from a session push by the stamp alone.
+	PlanetTarget_None PlanetTarget = 1
+)
+
 // TxScope is the optional NewTx parameter fixing a tx's target planet — the
 // planet lever, set once at creation.  The zero value (and a bare NewTx())
-// targets the caller's home planet; set Planet to commit to an explicit planet.
-// MemberSigned optionally couples the signer to the resolved planet's adopted
-// member (the common durable-write pairing); privacy (TxMsg.Epoch) stays an
-// independent lever set separately.  See AOM SD-security-sync.md §7.6.
+// targets the caller's home planet; set Planet to commit to an explicit planet;
+// Target = PlanetTarget_None stamps no planet.  MemberSigned optionally
+// couples the signer to the resolved planet's adopted member (the common
+// durable-write pairing); privacy (TxMsg.Epoch) stays an independent lever
+// set separately.  See AOM SD-security-sync.md §7.6.
 type TxScope struct {
-	Planet tag.UID // unset → the caller's home planet; set → that explicit planet
+	Target PlanetTarget // PlanetTarget_Resolved (default) or PlanetTarget_None
+	Planet tag.UID      // Resolved: unset → the caller's home planet; set → that explicit planet
 
 	// MemberSigned authors the tx as the session's adopted member identity on
 	// the target planet (Session.PlanetMember) instead of the session UID —
 	// the pairing nearly every durable app write uses.  Custodial and other
-	// exceptional signers still call TxMsg.SetFromID explicitly.
+	// exceptional signers still call TxMsg.SetFromID explicitly.  Meaningless
+	// under PlanetTarget_None (no planet resolves a member): the session UID
+	// stays the author.
 	MemberSigned bool
 }
 
