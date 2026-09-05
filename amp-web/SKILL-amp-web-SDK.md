@@ -786,12 +786,15 @@ no byte-level upload events. Gate spinners on `uploading`.
 ### 5.5 `useAmpMedia()`
 
 ```tsx
-const { url, loading, contentType, byteSize } = useAmpMedia(blobUID, planetTag?);
+const { url, loading, contentType, byteSize } = useAmpMedia(blobRef, planetTag?);
 // url is /www/{UID}.{ext}; pass to <img>, <video>, <audio>, or download <a>
 ```
 
-Resolves via `POST /api/v1/media/resolve` (`client.resolveMedia(blob,
-planetTag?)`); when resolve fails it falls back to the direct `/www/{UID}.{ext}`
+Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
+POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —
+accepted — streams as `text/plain` under `/www/{UID}.plain`.  Resolves via
+`POST /api/v1/media/resolve` (`client.resolveMedia(blob, planetTag?)`); when
+resolve fails it falls back to the direct `/www/{UID}.{ext}`
 URL — `error` stays null, and a truly missing blob surfaces on the media
 element, not the hook.
 
