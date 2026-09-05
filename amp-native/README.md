@@ -32,11 +32,14 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 
 ## Quick Start
 
-1. Put `bin/amp` on your `PATH`. On macOS, open the disk image first and
-   copy `bin/` wherever you keep tools — the image is a container, not an
-   installer, so where the binaries live is your choice.
+1. Put `amp` on your `PATH`. On macOS, install the package
+   (`amp-native-SDK-{tier}-v0.NNN.N-darwin-{arch}.pkg`, beside the disk
+   image): it places `amp` and `ampd` in `/usr/local/bin` with no quarantine
+   attribute, and a later package replaces them in place.
 
-   A binary copied out of the mounted image keeps the transit quarantine
+   Manual alternative: open the disk image and copy `bin/` wherever you keep
+   tools — the image is a browse-and-copy container, not an installer. A
+   binary copied out of the mounted image keeps the transit quarantine
    attribute, and a non-interactive shell (cron, a service unit, `ssh`) has
    no prompt to clear it — the process dies on first use with no message.
    Clear it once after copying: `sudo xattr -d com.apple.quarantine /usr/local/bin/amp`
