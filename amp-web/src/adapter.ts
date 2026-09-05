@@ -148,8 +148,9 @@ export interface AmpAdapter {
    *  Pass planetTag to resolve a blob on another planet (e.g. an anonymous public share). */
   resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef>;
 
-  /** Direct /www/{UID} URL for an already-published blob (pure string build, no I/O). */
-  mediaUrl(blobUID: string): string;
+  /** Direct /www/{UID}.{ext} URL for an already-published blob (pure string build, no I/O);
+   *  the path is the one /media/resolve answers for the same Tag, so pass the cabinet's BlobRef. */
+  mediaUrl(blob: BlobRef): string;
 
   // ── Federation invites ────────────────────────────────────────────
   // Member-session tier (planet-admin Bearer for issue/revoke/list) — NOT the

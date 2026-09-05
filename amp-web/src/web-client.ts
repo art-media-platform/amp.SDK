@@ -3,7 +3,7 @@
  *
  * REST:      {vaultUrl}/api/v1/...           (amp.SDK/amp/webapi)
  * WebSocket: {vaultUrl}/ws                   (flat SubscribeFrame fan-out)
- * Media:     {vaultUrl}/www/{UID}
+ * Media:     {vaultUrl}/www/{UID}.{ext}
  * Auth:      Authorization: Bearer {sessionToken}
  *
  * Wire JSON keys are PascalCase and UIDs are base32 strings — the SDK passes
@@ -143,6 +143,28 @@ function newUploadID(): string {
     return rng.randomUUID();
   }
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+/** Tag.ContentType() as the server resolves it: lower-cased; empty ⇒ text/plain. */
+const DefaultContentType = 'text/plain';
+
+/**
+ * The asset ID the host's publisher registers a blob under (app.www
+ * PublishAsset): the blob UID, plus "." + the MIME subtype of the Tag's
+ * ContentType() when the ID carries no extension of its own.  /www/{id}
+ * serves ONLY this path — a bare UID is a dead URL.
+ */
+function publishedAssetID(blob: BlobRef): string {
+  let assetID = blob.UID;
+  if (assetID.includes('.')) {
+    return assetID;
+  }
+  const contentType = (blob.ContentTypeRaw || DefaultContentType).toLowerCase();
+  const extPos = contentType.lastIndexOf('/');
+  if (extPos > 0) {
+    assetID += '.' + contentType.slice(extPos + 1);
+  }
+  return assetID;
 }
 
 export class AmpWebClient implements AmpAdapter {
@@ -803,8 +825,8 @@ export class AmpWebClient implements AmpAdapter {
     });
   }
 
-  mediaUrl(blobUID: string): string {
-    return `${this.vaultUrl}/www/${encodeURIComponent(blobUID)}`;
+  mediaUrl(blob: BlobRef): string {
+    return `${this.vaultUrl}/www/${encodeURIComponent(publishedAssetID(blob))}`;
   }
 
   // ── Invites ───────────────────────────────────────────────────────

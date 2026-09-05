@@ -136,7 +136,7 @@ The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
 **Error convention:** `useAmpQuery` surfaces failures via `error` state; action
 hooks (`useAmpMutation` / `useAmpUpload`) set `error` **and** throw, so you can
 `try/catch` an awaited call. `useAmpMedia` is the exception: a failed resolve
-falls back to the direct `/www/{UID}` stream URL and its `error` stays null —
+falls back to the direct `/www/{UID}.{ext}` stream URL and its `error` stays null —
 a truly missing blob surfaces on the media element, not the hook.
 
 ## Canonic Names → tag.UIDs

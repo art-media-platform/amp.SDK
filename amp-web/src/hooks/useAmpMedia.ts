@@ -4,8 +4,8 @@ import type { AmpMediaResult } from '../types.js';
 
 /**
  * useAmpMedia resolves a blob UID to a streamable URL via the caller-carries-the-
- * Tag path (POST /api/v1/media/resolve), falling back to the direct /www/{UID}
- * URL if resolve is unavailable.  Pass the result `url` to <img>/<video>/<audio>.
+ * Tag path (POST /api/v1/media/resolve), falling back to the direct
+ * /www/{UID}.{ext} URL if resolve is unavailable.  Pass the result `url` to <img>/<video>/<audio>.
  */
 export function useAmpMedia(blobUID: string, planetTag?: string): AmpMediaResult {
   const { adapter } = useAmpContext();
@@ -29,7 +29,7 @@ export function useAmpMedia(blobUID: string, planetTag?: string): AmpMediaResult
     adapter.resolveMedia({ UID: blobUID }, planetTag)
       .then((blob) => {
         if (cancelled) return;
-        setUrl(blob.URI ?? adapter.mediaUrl(blobUID));
+        setUrl(blob.URI ?? adapter.mediaUrl(blob));
         setContentType(blob.ContentTypeRaw ?? null);
         setByteSize(blob.I ?? null);
         setLoading(false);
@@ -37,7 +37,7 @@ export function useAmpMedia(blobUID: string, planetTag?: string): AmpMediaResult
       .catch(() => {
         // Resolve unavailable — fall back to the direct stream URL.
         if (cancelled) return;
-        setUrl(adapter.mediaUrl(blobUID));
+        setUrl(adapter.mediaUrl({ UID: blobUID }));
         setLoading(false);
       });
 

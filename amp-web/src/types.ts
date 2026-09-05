@@ -458,7 +458,7 @@ export interface AmpMutationResult {
  */
 export interface BlobRef {
   UID: string;             // blob tag.UID, base32
-  URI?: string;            // /www/{UID} stream URL — set by upload + resolve
+  URI?: string;            // /www/{UID}.{ext} stream URL — set by upload + resolve
   ContentTypeRaw?: string;
   I?: number;              // plaintext byte length (when Units = Bytes)
   Units?: number;

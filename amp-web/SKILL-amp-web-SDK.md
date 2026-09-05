@@ -365,7 +365,7 @@ POST   /api/v1/media/resolve
        Body: { PlanetTag?, Blob: amp.Tag }
        Response: amp.Tag (with URI filled by the host's asset publisher)
 
-GET    /www/{UID}
+GET    /www/{UID}.{ext}
        Response: media stream with Range support, conditional GET, long-cache headers
 ```
 
@@ -374,7 +374,7 @@ GET    /www/{UID}
 // address+meta carrier).  PascalCase keys, base32 UID — one identifier set:
 interface BlobRef {
   UID: string;             // blob content hash (leading 16 bytes), base32
-  URI?: string;            // server-populated stream URL (/www/{UID})
+  URI?: string;            // server-populated stream URL (/www/{UID}.{ext})
   ContentTypeRaw?: string; // MIME type (empty ⇒ text/plain); the wire key is
                            // ContentTypeRaw — amp.Tag's raw content-type field
   I?: number;              // plaintext byte length (when Units = Bytes)
@@ -382,7 +382,7 @@ interface BlobRef {
 }
 ```
 
-**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}` URL.  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
+**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}.{ext}` URL (`{ext}` = the Tag's MIME subtype).  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
 After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
 
@@ -787,11 +787,11 @@ no byte-level upload events. Gate spinners on `uploading`.
 
 ```tsx
 const { url, loading, contentType, byteSize } = useAmpMedia(blobUID, planetTag?);
-// url is /www/{UID}; pass to <img>, <video>, <audio>, or download <a>
+// url is /www/{UID}.{ext}; pass to <img>, <video>, <audio>, or download <a>
 ```
 
 Resolves via `POST /api/v1/media/resolve` (`client.resolveMedia(blob,
-planetTag?)`); when resolve fails it falls back to the direct `/www/{UID}`
+planetTag?)`); when resolve fails it falls back to the direct `/www/{UID}.{ext}`
 URL — `error` stays null, and a truly missing blob surfaces on the media
 element, not the hook.
 
@@ -960,7 +960,7 @@ Where the third-party API supports it (OpenRouter scoped tokens, Stripe Connect 
 `PlanetEpoch.MaxTxMsgSize` defaults to 4 MB. Large monolithic JSON values (a multi-megabyte project snapshot blob) replicate the entire payload on every save and burn quota fast. Two corrections:
 
 - **Split by entity bucket.** Prefer `projects/labels/{itemID}`, `projects/articles/{itemID}`, etc., over a single `projects/snapshot/{itemID}` blob. The CRDT-merge surface narrows to the changed entities; cross-device subscribe fires per change.
-- **Move binaries to BlobRef.** Anything larger than ~64 KB belongs on the BlobRef path (§4.3), not inline JSON. The item references `blobRef.UID` and the blob streams via `/www/{UID}`.
+- **Move binaries to BlobRef.** Anything larger than ~64 KB belongs on the BlobRef path (§4.3), not inline JSON. The item references `blobRef.UID` and the blob streams via `/www/{UID}.{ext}`.
 
 ### 6.4 Public reads & sharing
 
