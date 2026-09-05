@@ -1369,8 +1369,15 @@ async function handleFile(file) {
   const blobRef = await upload(file, 'projects', { attr: 'media' });
   await upsert('projects', 'media', blobRef.UID, { blobRef, filename: file.name });
   // upload's blobRef.URI is host-instance-scoped (§4.4) — fine for an immediate
-  // preview, but for later reads re-resolve via useAmpMedia(blobRef.UID)
-  // (or client.resolveMedia(blobRef)) instead of persisting the URI.
+  // preview; the item persists the BlobRef itself, never its URI.
+}
+
+// Later reads re-resolve from the persisted BlobRef, passed WHOLE (§5.5): its
+// ContentTypeRaw decides the served MIME type + extension.  Never pass
+// `item.blobRef.UID` — a bare UID resolves as text/plain (`/www/{UID}.plain`).
+function MediaItem({ item }) {
+  const { url } = useAmpMedia(item.blobRef);          // or client.resolveMedia(item.blobRef)
+  return url ? <img src={url} alt={item.filename} /> : null;
 }
 ```
 
