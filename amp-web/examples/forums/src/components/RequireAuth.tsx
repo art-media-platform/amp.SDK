@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAmpAuth } from '@art-media-platform/web';
+import { useAmpAuth } from '@art-media-platform/web/react';
 
 /** Gates a write route: anonymous visitors are redirected to /login. */
 export function RequireAuth({ children }: { children: ReactNode }) {

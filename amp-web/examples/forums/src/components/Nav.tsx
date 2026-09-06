@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useAmpAuth } from '@art-media-platform/web';
+import { useAmpAuth } from '@art-media-platform/web/react';
 
 export function Nav() {
   const { member, isAuthenticated, logout } = useAmpAuth();

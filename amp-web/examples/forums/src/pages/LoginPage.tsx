@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAmpAuth, useAmpClient } from '@art-media-platform/web';
+import { useAmpAuth, useAmpClient } from '@art-media-platform/web/react';
 
 // Minimal shape of an injected EIP-1193 wallet (e.g. MetaMask). Not an SDK type.
 interface EthProvider {

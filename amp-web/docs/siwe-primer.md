@@ -39,7 +39,7 @@ paste and own — `src/useWalletLogin.ts`:
 
 ```tsx
 import { useCallback, useEffect, useState } from 'react';
-import { useAmpAuth, useAmpClient } from '@art-media-platform/web';
+import { useAmpAuth, useAmpClient } from '@art-media-platform/web/react';
 
 // EIP-1193 provider surface + EIP-6963 announcement (untyped in the DOM libs).
 interface Eip1193Provider {

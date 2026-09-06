@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAmpQuery, useAmpAuth } from '@art-media-platform/web';
+import { useAmpQuery, useAmpAuth } from '@art-media-platform/web/react';
 import { ATTR_POST, PostStatus, authorUID } from '../forums-attrs';
 import type { Post } from '../forums-attrs';
 import { useForumsApi } from '../hooks/useForumsApi';

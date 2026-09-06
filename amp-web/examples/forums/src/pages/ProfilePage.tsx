@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAmpQuery, useAmpAuth } from '@art-media-platform/web';
+import { useAmpQuery, useAmpAuth } from '@art-media-platform/web/react';
 import { PROFILES, ATTR_PROFILE, tagText } from '../forums-attrs';
 import type { Profile } from '../forums-attrs';
 import { useForumsApi } from '../hooks/useForumsApi';

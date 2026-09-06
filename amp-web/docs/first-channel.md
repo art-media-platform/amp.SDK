@@ -38,7 +38,8 @@ Replace `src/main.tsx`:
 ```tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { AmpProvider, AmpWebClient } from '@art-media-platform/web';
+import { AmpWebClient } from '@art-media-platform/web';
+import { AmpProvider } from '@art-media-platform/web/react';
 import App from './App';
 
 const client = new AmpWebClient({
@@ -66,7 +67,7 @@ import {
   useAmpClient,
   useAmpMutation,
   useAmpQuery,
-} from '@art-media-platform/web';
+} from '@art-media-platform/web/react';
 
 // Minimal EIP-1193 wallet glue (the SDK ships no wallet code — this is
 // your app's; docs/siwe-primer.md covers multi-wallet discovery).

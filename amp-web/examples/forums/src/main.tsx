@@ -1,7 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { AmpProvider, AmpWebClient } from '@art-media-platform/web';
+import { AmpWebClient } from '@art-media-platform/web';
+import { AmpProvider } from '@art-media-platform/web/react';
 import { App } from './App';
 import './styles/forums.css';
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useAmpQuery, useAmpAuth } from '@art-media-platform/web';
+import { useAmpQuery, useAmpAuth } from '@art-media-platform/web/react';
 import { BOARD, ATTR_TOPIC } from '../forums-attrs';
 import type { Topic } from '../forums-attrs';
 

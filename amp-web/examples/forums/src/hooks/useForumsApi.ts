@@ -6,7 +6,7 @@
  */
 
 import { useCallback } from 'react';
-import { useAmpMutation, useAmpAuth } from '@art-media-platform/web';
+import { useAmpMutation, useAmpAuth } from '@art-media-platform/web/react';
 import type { TxOp } from '@art-media-platform/web';
 import {
   BOARD, PROFILES,

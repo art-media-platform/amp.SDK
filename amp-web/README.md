@@ -54,7 +54,8 @@ networking is native `fetch` + `WebSocket`.
 ## Quick Start
 
 ```tsx
-import { AmpProvider, AmpWebClient, useAmpAuth, useAmpClient, useAmpQuery, useAmpMutation } from '@art-media-platform/web';
+import { AmpWebClient } from '@art-media-platform/web';
+import { AmpProvider, useAmpAuth, useAmpClient, useAmpQuery, useAmpMutation } from '@art-media-platform/web/react';
 
 // 1. Point the client at the operated amp node + your planet (you don't run the node).
 const client = new AmpWebClient({

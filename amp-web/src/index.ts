@@ -1,10 +1,10 @@
 /**
  * @art-media-platform/web — TypeScript SDK for art.media.platform web apps.
  *
- * Wrap your app with <AmpProvider client={new AmpWebClient({...})}> and use
- * the hooks.  The adapter speaks the `ampd` `app.www` wire contract
- * (amp.SDK/amp/webapi); all reads, writes, uploads, and subscriptions go
- * through it.
+ * Construct an AmpWebClient (the adapter — it speaks the `ampd` `app.www`
+ * wire contract, amp.SDK/amp/webapi; all reads, writes, uploads, and
+ * subscriptions go through it).  React apps wrap the tree with <AmpProvider>
+ * and use the hooks from '@art-media-platform/web/react'.
  */
 
 // Forge-generated vocabulary — the same tag/const single source the Go and C#
@@ -77,19 +77,10 @@ export type { AmpWebClientOpts } from './web-client.js';
 // Typed errors
 export { AmpError, AmpErrorCode } from './errors.js';
 
-// Provider
-export { AmpProvider, useAmpClient } from './provider.js';
-export type { AmpProviderProps } from './provider.js';
-
-// Hooks
-export { useAmpAuth } from './hooks/useAmpAuth.js';
-export { useAmpQuery } from './hooks/useAmpQuery.js';
-export { useAmpMutation } from './hooks/useAmpMutation.js';
-export { useAmpUpload } from './hooks/useAmpUpload.js';
-export { useAmpMedia } from './hooks/useAmpMedia.js';
-export { useAmpCrypto } from './hooks/useAmpCrypto.js';
-export { useAmpResolve } from './hooks/useAmpResolve.js';
-export { useAmpBrand } from './hooks/useAmpBrand.js';
+// React surface — <AmpProvider> and the hooks — lives on the
+// '@art-media-platform/web/react' subpath (src/react.ts).  This root entry
+// stays dependency-free: nothing reachable from it imports React
+// (barrel.test.ts guards the import graph).
 
 // Sealed-box BYOK — seal/open via the session-bound client (client.seal / .open)
 // or the useAmpCrypto() hook.  base64 helpers ride sealed bytes through JSON.

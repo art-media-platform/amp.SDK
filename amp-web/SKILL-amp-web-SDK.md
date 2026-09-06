@@ -126,14 +126,15 @@ npm install ./amp-web-SDK
 { "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
 ```
 
-Publishing to npm as `@art-media-platform/web` lands at v400 — until then, install the versioned bundle locally (above). Keep the bundle **inside** the project: npm links a path dependency as a symlink, and from an outside directory the bundle's `@noble/*` runtime deps don't resolve through the link. `react` (>= 18) is a peer dependency the package entry imports even in headless Node use — npm >= 7 installs it automatically; yarn / pnpm users add it explicitly. Symptoms + fixes: [`docs/install-troubleshooting.md`](docs/install-troubleshooting.md).
+Publishing to npm as `@art-media-platform/web` lands at v400 — until then, install the versioned bundle locally (above). Keep the bundle **inside** the project: npm links a path dependency as a symlink, and from an outside directory the bundle's `@noble/*` runtime deps don't resolve through the link. The bundle ships **no `node_modules`**: `npm install ./amp-web-SDK` fetches the three `@noble/*` runtime deps from the registry at install time (network required once). Two entries: the root `@art-media-platform/web` is **dependency-free** (`AmpWebClient`, the codecs, `parseUID`, `std`/`safe` — imports without React, from a bundler or a Node harness alike); React apps import `<AmpProvider>` and the hooks from `@art-media-platform/web/react`, where `react` (>= 18) is the peer dependency — npm >= 7 installs it automatically; yarn / pnpm users add it explicitly. Symptoms + fixes: [`docs/install-troubleshooting.md`](docs/install-troubleshooting.md).
 
 ### Provider Configuration
 
 `vaultUrl` is the HTTPS address of an `ampd` node an **operator runs for you** — you never run, build, or host one (§0).  Your operator supplies it (`https://{your-node}`).
 
 ```tsx
-import { AmpProvider, AmpWebClient } from '@art-media-platform/web';
+import { AmpWebClient } from '@art-media-platform/web';
+import { AmpProvider } from '@art-media-platform/web/react';
 
 const client = new AmpWebClient({
   vaultUrl: import.meta.env.VITE_AMP_VAULT_URL,    // operated node — e.g. https://{your-node}
@@ -631,9 +632,9 @@ publishes a name, §4.6 redeems an invite from the CLI side.
 
 ---
 
-## 5. `@art-media-platform/web` — React API Reference
+## 5. `@art-media-platform/web/react` — React API Reference
 
-Thin wrappers over §4. Hooks share a single `AmpWebClient` via `<AmpProvider>`.
+Thin wrappers over §4, on the `./react` subpath (`import { AmpProvider, useAmpAuth, … } from '@art-media-platform/web/react'`). Hooks share a single `AmpWebClient` via `<AmpProvider>`; the root entry stays React-free.
 
 ### 5.1 `useAmpAuth()`
 
@@ -897,7 +898,8 @@ string (a raw `Uint8Array` does not survive `JSON.stringify`).  Use the
 `bytesToBase64` / `base64ToBytes` helpers on the way in and out.
 
 ```tsx
-import { useAmpMutation, useAmpCrypto, bytesToBase64 } from '@art-media-platform/web';
+import { bytesToBase64 } from '@art-media-platform/web';
+import { useAmpMutation, useAmpCrypto } from '@art-media-platform/web/react';
 
 function ApiKeysForm() {
   const { upsert } = useAmpMutation();
@@ -914,7 +916,8 @@ function ApiKeysForm() {
 ```
 
 ```tsx
-import { useAmpCrypto, base64ToBytes } from '@art-media-platform/web';
+import { base64ToBytes } from '@art-media-platform/web';
+import { useAmpCrypto } from '@art-media-platform/web/react';
 
 async function useCesiumIonToken() {
   const { open } = useAmpCrypto();
