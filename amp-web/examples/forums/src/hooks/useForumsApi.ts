@@ -34,11 +34,13 @@ export function useForumsApi() {
     return invoke(VERB.post, ops);
   }, [invoke]);
 
-  const moderate = useCallback((topicID: string, postID: string, status: number, bodyHTML?: string) => {
+  // baseEdit = the post's displayed _EditID: the edit's base (SKILL §5.3) — omitted authors wildcard.
+  const moderate = useCallback((topicID: string, postID: string, status: number, bodyHTML?: string, baseEdit?: string) => {
     const ops: TxOp[] = [
       {
         Kind: 'upsert', Channel: topicID, Attr: ATTR_POST, ItemID: postID,
         Value: { Status: status, ...(bodyHTML !== undefined ? { Body: postBody(bodyHTML) } : {}) },
+        ...(baseEdit ? { BaseEdit: baseEdit } : {}),
       },
     ];
     return invoke(VERB.moderate, ops);

@@ -39,7 +39,8 @@ export function ThreadPage() {
     await refetch();
   }
   async function onRemove(postID: string) {
-    await moderate(topicID, postID, PostStatus.Removed);
+    const displayed = posts.find(post => post._ItemID === postID);
+    await moderate(topicID, postID, PostStatus.Removed, undefined, displayed?._EditID);
     await refetch();
   }
 

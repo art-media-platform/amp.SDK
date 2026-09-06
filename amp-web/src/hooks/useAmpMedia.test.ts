@@ -9,7 +9,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { BlobRef } from '../types.js';
-import { mediaTagFor, resolveMediaURL } from './useAmpMedia.js';
+import { mediaTagFor, refreshMediaURL, resolveMediaURL } from './useAmpMedia.js';
 
 const UID = '06e-fvw28sb600-36dtm6dtm6-dtm';
 const CABINET: BlobRef = { UID, ContentTypeRaw: 'video/mp4', I: 10, Units: 2 };
@@ -56,5 +56,45 @@ describe('useAmpMedia resolve round', () => {
     expect(adapter.posted).toEqual([{ UID }]);
     expect(res.url).toBe(`/www/${UID}.plain`);
     expect(res.contentType).toBeNull();
+  });
+});
+
+/**
+ * The 404 path: a stand-in server whose published asset idles out — its URL
+ * answers 404 until the blob is resolved again (app.www www.webService.go
+ * PublishAsset: the same asset ID re-published serves at the same URL).
+ */
+function idlingServer() {
+  const adapter = fakeAdapter();
+  const published = new Set<string>();
+  return {
+    adapter,
+    resolves: adapter.posted,
+    async resolveMedia(blob: BlobRef): Promise<BlobRef> {
+      const out = await adapter.resolveMedia(blob);
+      published.add(out.URI!);
+      return out;
+    },
+    mediaUrl: adapter.mediaUrl,
+    /** The server's idle expiry fires: the asset is unpublished. */
+    idleOut(): void { published.clear(); },
+    /** What a <video> range request sees at the URL. */
+    serve(url: string): number { return published.has(url) ? 200 : 404; },
+  };
+}
+
+describe('useAmpMedia 404 path (idle expiry)', () => {
+  it('after the server idles the asset out, refresh re-resolves and the SAME url serves again', async () => {
+    const server = idlingServer();
+    const first = await resolveMediaURL(server, CABINET);
+    expect(server.serve(first.url)).toBe(200);
+
+    server.idleOut();
+    expect(server.serve(first.url)).toBe(404); // the paused player's next range request
+
+    const again = await refreshMediaURL(server, CABINET);
+    expect(server.resolves).toHaveLength(2);
+    expect(again.url).toBe(first.url);
+    expect(server.serve(again.url)).toBe(200);
   });
 });

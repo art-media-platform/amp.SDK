@@ -343,11 +343,13 @@ POST   /api/v1/upload
                the server today; association happens via your follow-up item
                write (below), never via these fields
        Response: amp.Tag (UID + URI + ContentTypeRaw + I/Units=Bytes)
-       Per-request cap 256 MB — beyond it, the chunk door:
+       Per-request body cap (node default 256 MiB), ADVERTISED on every
+       upload-door response as X-Amp-Upload-Max-Bytes; a body past it is
+       refused 413 PayloadTooLarge — beyond it, the chunk door:
 
 POST   /api/v1/upload/chunk
-       Content-Type: multipart/form-data — one chunk per request, ≤256 MB each,
-       no cap on the assembled upload
+       Content-Type: multipart/form-data — one chunk per request, each inside
+       the advertised cap; no cap on the assembled upload
        Fields: uploadID (client-chosen, ≤128 bytes; namespaced per session),
                index (0-based, strictly sequential — one chunk in flight; an
                out-of-order or duplicate index is refused 409 and the upload
@@ -357,10 +359,9 @@ POST   /api/v1/upload/chunk
                (read on the final chunk)
        Response: 200 { uploadID, index, received } per chunk (received =
                  cumulative bytes); 201 amp.Tag on complete — the same shape
-                 /upload returns.  An upload idle for an hour is swept at
-                 the next chunk request the node serves (any upload's,
-                 paced to one scan per five minutes); a spill orphaned by
-                 a node restart is reaped at boot.
+                 /upload returns.  An upload idle for an hour is swept by
+                 the node's upload sweeper (every five minutes, traffic or
+                 not); a spill orphaned by a node restart is reaped at boot.
 
 POST   /api/v1/media/resolve
        Body: { PlanetTag?, Blob: amp.Tag }
@@ -387,7 +388,7 @@ interface BlobRef {
 
 After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
 
-**The SDK picks the door.** `upload(file, channel, opts)` sends a file that fits in one chunk as a single `/upload` POST and streams a larger one through `/upload/chunk` — sequential chunks of `UploadOpts.chunkSize` (default `DefaultUploadChunkBytes`, 32 MiB) under one fresh `uploadID`, the final chunk sealing the assembly. `chunked: true | false` forces either door. Both return the same `BlobRef`; `onProgress` ticks once per chunk ack with the server-acknowledged percent, then 100 on the sealing response. A refused chunk throws the typed `AmpError` (409 `Conflict`, 404 `NotFound`, 401 drops the session) and the client sends nothing further — v1 has no resume: retry the whole `upload()`.
+**The SDK picks the door.** `upload(file, channel, opts)` sends a file that fits in one chunk as a single `/upload` POST and streams a larger one through `/upload/chunk` — sequential chunks of `UploadOpts.chunkSize` (default `DefaultUploadChunkBytes`, 32 MiB) under one fresh `uploadID`, the final chunk sealing the assembly. `chunked: true | false` forces either door. Both return the same `BlobRef`; `onProgress` ticks once per chunk ack with the server-acknowledged percent, then 100 on the sealing response. **The server sizes the chunks.** The client never mirrors the node's per-request cap: it reads `X-Amp-Upload-Max-Bytes` from every upload-door response (refusals included) and clamps its chunk size to cap − `UploadChunkHeadroomBytes` (the multipart envelope's share). A chunk past a cap the client has not yet seen is refused 413 — the refusal touched no server state — and the same index is re-sent under the cap, the rest of the file re-chunked; a single `/upload` past the cap falls to the chunk door the same way (unless `chunked: false` pinned it). Any other refused chunk throws the typed `AmpError` (409 `Conflict`, 404 `NotFound`, 401 drops the session) and the client sends nothing further — v1 has no resume: retry the whole `upload()`.
 
 The `URI` in the upload response is a live stream URL, **host-instance-scoped** (the publisher is in-memory, §above): usable immediately, but re-resolve via `/media/resolve` on later reads or from another host rather than persisting it.
 
@@ -759,6 +760,8 @@ await withdraw('shares', 'link', itemID, {
 
 `invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write custodially (§4.3).
 
+**Edit verbs carry their base.** On an op that edits an existing item (e.g. `amp://~/forums/moderate`), set `BaseEdit` to the `_EditID` your UI DISPLAYED (`AmpItemMeta._EditID` from the read that rendered it). The SDK emits it into the op value as `BaseEdit_0`/`BaseEdit_1` — exact uint64 halves — which the app consumes as the edit's base, so a concurrent edit is resolved against what you saw rather than against whatever the app last loaded (omitting it authors wildcard: the app's own loaded edit). On the embedded-host divert (below) the host's own key signs and its Commander bases on its loaded edit; `BaseEdit` rides the HTTP path only.
+
 **Embedded-host divert.** When the SPA runs inside the Unity host and the host advertises a native handler for the verb (`window.__amp.bridgeVerbs`), `invoke` diverts the op to the host so the member's OWN key signs the write. The host bridge carries **exactly one op per diverted invoke** — a multi-op `invoke` on a diverted verb throws a typed `AmpError` (`BadRequest`); issue one `invoke()` per op there. In a plain browser (no `window.__amp`) multi-op invokes ride the custodial HTTP path unchanged.
 
 `upsert` accepts any client-supplied `tag.UID` for the item. For singleton items, derive a stable UID from a well-known name — generate it at build time with `forge` or resolve it once via `client.resolveTag('settings:theme-preference')` (§5.8) — or reuse the member's own UID directly. The `scheme:identifier` form matches CAIP-10 / DID conventions.
@@ -787,9 +790,12 @@ no byte-level upload events. Gate spinners on `uploading`.
 ### 5.5 `useAmpMedia()`
 
 ```tsx
-const { url, loading, contentType, byteSize } = useAmpMedia(blobRef, planetTag?);
+const { url, loading, contentType, byteSize, refresh, generation } = useAmpMedia(blobRef, planetTag?);
 // url is /www/{UID}.{ext}; pass to <img>, <video>, <audio>, or download <a>
+<video key={generation} src={url ?? undefined} onError={() => void refresh()} controls />
 ```
+
+The published URL is **idle-scoped**: the node unpublishes an asset that has served no request for its idle expiry (default 5 minutes), and the URL answers 404 until the blob is resolved again. A player that buffered, paused, and seeks later sees that 404 on the media element — bind `refresh` to `onError`: one resolve round re-publishes the SAME URL, `generation` increments, and keying the element on it reloads the source (or call `load()` yourself). `refresh` is idempotent — an error that was not the idle expiry re-resolves harmlessly and the element reports it again.
 
 Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
 POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —

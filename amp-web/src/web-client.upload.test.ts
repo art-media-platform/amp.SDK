@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AmpError, AmpErrorCode } from './errors.js';
 import { MemoryKeyStorage } from './crypto/keystore.js';
 import { MemorySessionStore } from './session-store.js';
-import { AmpWebClient, DefaultUploadChunkBytes } from './web-client.js';
+import { AmpWebClient, DefaultUploadChunkBytes, UploadChunkHeadroomBytes, UploadMaxBytesHeader } from './web-client.js';
 
 const VAULT = 'http://127.0.0.1:5193';
 const TAG = {
@@ -41,11 +41,13 @@ let failIndex = -1;
 let failStatus = 500;
 /** Fault injection: acks name the wrong index. */
 let misackIndex = false;
+/** The server's per-request body cap (advertised on every upload-door response; the envelope counts as the client's headroom). */
+let serverCap = 256 * 1024 * 1024;
 
 function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', [UploadMaxBytesHeader]: String(serverCap) },
   });
 }
 
@@ -71,6 +73,11 @@ function stubFetch(): void {
 
     if (path === '/login') {
       return json(200, { SessionToken: 'tok', ExpiresAt: 0, Member: { ID: 'm', PlanetID: 'p' } });
+    }
+    if (path === '/upload' || path === '/upload/chunk') {
+      if (fileBytes.length + UploadChunkHeadroomBytes > serverCap) {
+        return json(413, { Code: 'PayloadTooLarge', Message: `request exceeds the per-request upload cap of ${serverCap} bytes` });
+      }
     }
     if (path === '/upload') {
       return json(201, TAG);
@@ -124,6 +131,7 @@ beforeEach(() => {
   failIndex = -1;
   failStatus = 500;
   misackIndex = false;
+  serverCap = 256 * 1024 * 1024;
   stubFetch();
 });
 
@@ -282,5 +290,49 @@ describe('error paths', () => {
     expect((err as AmpError).status).toBe(401);
     expect(amp.getSession()).toBeNull();
     expect(authEvents).toEqual([null]);
+  });
+});
+
+describe('the advertised per-request cap', () => {
+  it('a chunk past the cap is refused 413 and re-sent under the cap; the rest re-chunks', async () => {
+    serverCap = UploadChunkHeadroomBytes + 4;
+    const out = await client().upload(TEN, 'projects', { chunkSize: 8 });
+    expect(calls.map(c => [c.fields['index'], c.fileBytes])).toEqual([
+      ['0', 'abcdefgh'], // refused 413 — the cap is learned from the refusal
+      ['0', 'abcd'],     // same index, under the cap
+      ['1', 'efgh'],
+      ['2', 'ij'],
+    ]);
+    expect(calls[3].fields['complete']).toBe('1');
+    expect(out.I).toBe(10);
+    expect(open.size).toBe(0);
+  });
+
+  it('a client that has seen the cap starts the next upload clamped', async () => {
+    serverCap = UploadChunkHeadroomBytes + 4;
+    const amp = client();
+    await amp.upload(TEN, 'projects', { chunkSize: 8 });
+    calls = [];
+    await amp.upload(TEN, 'projects', { chunkSize: 8 });
+    expect(calls.map(c => c.fileBytes)).toEqual(['abcd', 'efgh', 'ij']);
+  });
+
+  it('a single-POST upload past the cap falls to the chunk door under it', async () => {
+    serverCap = UploadChunkHeadroomBytes + 4;
+    const out = await client().upload(TEN, 'projects');
+    expect(calls.map(c => c.path)).toEqual(['/upload', '/upload/chunk', '/upload/chunk', '/upload/chunk']);
+    expect(calls.slice(1).map(c => c.fileBytes)).toEqual(['abcd', 'efgh', 'ij']);
+    expect(out.I).toBe(10);
+  });
+
+  it('chunked: false past the cap surfaces the 413 (the caller pinned single-POST)', async () => {
+    serverCap = UploadChunkHeadroomBytes + 4;
+    await expect(client().upload(TEN, 'projects', { chunked: false })).rejects.toMatchObject({ status: 413 });
+    expect(calls.map(c => c.path)).toEqual(['/upload']);
+  });
+
+  it('within the cap nothing changes: the default chunk size rides as before', async () => {
+    await client().upload(TEN, 'projects', { chunkSize: 4 });
+    expect(calls.map(c => c.fileBytes)).toEqual(['abcd', 'efgh', 'ij']);
   });
 });

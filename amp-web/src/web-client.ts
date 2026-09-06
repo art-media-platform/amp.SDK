@@ -14,6 +14,7 @@
 import type { AmpAdapter } from './adapter.js';
 import { createAmpCrypto } from './crypto/index.js';
 import { AmpError, AmpErrorCode, ampErrorFromResponse } from './errors.js';
+import { parseUID } from './uid.js';
 import { EmbedBridge } from './embed-bridge.js';
 import {
   type EncryptKeyStorage,
@@ -119,10 +120,55 @@ interface WireItem {
  * Chunk size (bytes) for the chunked upload path: a file larger than one chunk
  * rides POST /api/v1/upload/chunk in sequential chunks of this size
  * (UploadOpts.chunkSize overrides; UploadOpts.chunked forces either path).
- * Sized well inside the server's 256 MB per-request cap; the assembled upload
- * has no cap.
+ * The server's per-request cap is not mirrored here: it ADVERTISES it on
+ * every upload-door response (UploadMaxBytesHeader) and the client clamps to
+ * it — a chunk past the cap is refused 413 and re-chunked under the cap.
  */
 export const DefaultUploadChunkBytes = 32 * 1024 * 1024;
+
+/** The response header on /upload and /upload/chunk carrying the server's per-request body cap (bytes). */
+export const UploadMaxBytesHeader = 'X-Amp-Upload-Max-Bytes';
+
+/**
+ * Bytes the multipart envelope + form fields may occupy inside the server's
+ * per-request cap: a chunk is sized to cap − headroom so the whole body fits.
+ */
+export const UploadChunkHeadroomBytes = 64 * 1024;
+
+/**
+ * JSON for the wire with exact 64-bit integers: a bigint value is emitted as
+ * a bare integer literal (uint64 halves such as BaseEdit_0/_1 exceed 2^53, so
+ * a JS number would lose digits; the Go side decodes them as fixed64).
+ */
+export function encodeWireJSON(body: unknown): string {
+  // A per-call nonce keeps a user string from ever matching the marker;
+  // JSON.stringify escapes the NUL to the six-character "\\u0000", which the
+  // un-quoting pattern matches.
+  const nonce = Math.random().toString(36).slice(2);
+  const text = JSON.stringify(body, (_key, value) =>
+    typeof value === 'bigint' ? `\u0000u64:${nonce}:${value.toString()}` : value,
+  );
+  return text.replace(new RegExp(`"\\\\u0000u64:${nonce}:(\\d+)"`, 'g'), '$1');
+}
+
+/**
+ * The op batch as the wire carries it: withdraw notes to their wire shape,
+ * and the edit-verb rail — TxOp.BaseEdit (a base32 EditID) folded into the
+ * value as BaseEdit_0/_1, the two uint64 halves the receiving app consumes
+ * (forums.Post fields 7/8; SD-edit-resolution §6.6).
+ */
+function toWireOps(ops: TxOp[]): Record<string, unknown>[] {
+  return ops.map(op => {
+    const { BaseEdit, ...wire } = op;
+    const out: Record<string, unknown> = { ...wire };
+    if (op.Withdraw) out.Withdraw = withdrawNoteToWire(op.Withdraw);
+    if (BaseEdit) {
+      const [hi, lo] = parseUID(BaseEdit);
+      out.Value = { ...(op.Value ?? {}), BaseEdit_0: hi, BaseEdit_1: lo };
+    }
+    return out;
+  });
+}
 
 /** A non-final chunk's ack (app.www chunkAck): received = cumulative appended bytes. */
 interface WireChunkAck {
@@ -558,12 +604,9 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   async tx(ops: TxOp[], planetTag?: string): Promise<TxResult[]> {
-    const wireOps = ops.map(op =>
-      op.Withdraw ? { ...op, Withdraw: withdrawNoteToWire(op.Withdraw) } : op,
-    );
     const out = await this.apiFetch<{ TxID: string; Results: TxResult[] }>('/tx', {
       method: 'POST',
-      body: JSON.stringify({ Ops: wireOps, PlanetTag: this.planetTagFor(planetTag) }),
+      body: encodeWireJSON({ Ops: toWireOps(ops), PlanetTag: this.planetTagFor(planetTag) }),
     });
     return out.Results ?? [];
   }
@@ -582,15 +625,14 @@ export class AmpWebClient implements AmpAdapter {
           `embedded divert of ${verbURL} expects exactly one op, got ${ops.length} — issue one invoke() per op when the host routes this verb`,
         );
       }
+      // The host signs with the member's own key and its Commander bases the
+      // edit on its own loaded revision; BaseEdit rides the HTTP path only.
       const op = ops[0];
       return this.embed.invoke(verbURL, op.Value, this.planetTagFor(planetTag) ?? '', op.Channel);
     }
-    const wireOps = ops.map(op =>
-      op.Withdraw ? { ...op, Withdraw: withdrawNoteToWire(op.Withdraw) } : op,
-    );
     const out = await this.apiFetch<{ TxID: string; Results: TxResult[] }>('/tx', {
       method: 'POST',
-      body: JSON.stringify({ Ops: wireOps, PlanetTag: this.planetTagFor(planetTag), InvokeURL: verbURL }),
+      body: encodeWireJSON({ Ops: toWireOps(ops), PlanetTag: this.planetTagFor(planetTag), InvokeURL: verbURL }),
     });
     return out.Results ?? [];
   }
@@ -729,7 +771,7 @@ export class AmpWebClient implements AmpAdapter {
   // ── Media ─────────────────────────────────────────────────────────
 
   async upload(file: File, channel: string, opts?: UploadOpts): Promise<BlobRef> {
-    const chunkSize = opts?.chunkSize && opts.chunkSize > 0 ? opts.chunkSize : DefaultUploadChunkBytes;
+    const chunkSize = this.chunkBytesUnderCap(opts?.chunkSize && opts.chunkSize > 0 ? opts.chunkSize : DefaultUploadChunkBytes);
     const chunked = opts?.chunked ?? file.size > chunkSize;
     if (chunked) {
       return this.uploadChunked(file, channel, chunkSize, opts);
@@ -737,9 +779,33 @@ export class AmpWebClient implements AmpAdapter {
     const form = new FormData();
     form.append('file', file);
     this.appendUploadFields(form, channel, opts);
-    const resp = await this.postForm('/upload', form);
+    let resp: Response;
+    try {
+      resp = await this.postForm('/upload', form);
+    } catch (err) {
+      // Past the server's per-request cap (now learned): the same file rides
+      // the chunk door under it, unless the caller pinned single-POST.
+      if (err instanceof AmpError && err.status === 413 && opts?.chunked !== false && this.uploadMaxBytes !== null) {
+        return this.uploadChunked(file, channel, this.chunkBytesUnderCap(chunkSize), opts);
+      }
+      throw err;
+    }
     opts?.onProgress?.(100);
     return resp.json();
+  }
+
+  /** Per-request body cap advertised by the server (UploadMaxBytesHeader); null until an upload-door response is seen. */
+  private uploadMaxBytes: number | null = null;
+
+  private noteUploadCap(resp: Response): void {
+    const advertised = Number(resp.headers.get(UploadMaxBytesHeader));
+    if (Number.isFinite(advertised) && advertised > 0) this.uploadMaxBytes = advertised;
+  }
+
+  /** chunkSize clamped so chunk + multipart envelope fit the learned cap. */
+  private chunkBytesUnderCap(chunkSize: number): number {
+    if (this.uploadMaxBytes === null) return chunkSize;
+    return Math.max(1, Math.min(chunkSize, this.uploadMaxBytes - UploadChunkHeadroomBytes));
   }
 
   /**
@@ -749,40 +815,55 @@ export class AmpWebClient implements AmpAdapter {
    * final chunk (complete=1, file part named after the file so the server
    * infers ContentType) seals the assembly into the blob pipeline, answering
    * the same Tag /upload returns.  Progress ticks once per ack from the
-   * server's cumulative received count.  A refused chunk (409 out-of-order,
-   * 404 unknown upload, 401) throws; the server sweeps the abandoned upload
-   * after its idle TTL.  v1: no resume, no parallel chunks.
+   * server's cumulative received count.  A chunk past the server's
+   * per-request cap is refused 413 with the cap advertised: the same index is
+   * re-sent under it (the refusal touched no server state) and the rest of
+   * the file re-chunks at the clamped size.  Any other refused chunk (409
+   * out-of-order, 404 unknown upload, 401) throws; the server sweeps the
+   * abandoned upload after its idle TTL.  v1: no resume, no parallel chunks.
    */
   private async uploadChunked(
     file: File, channel: string, chunkSize: number, opts?: UploadOpts,
   ): Promise<BlobRef> {
     const uploadID = newUploadID();
-    const chunkCount = Math.max(1, Math.ceil(file.size / chunkSize));
-    const chunkForm = (index: number): FormData => {
+    let offset = 0;
+    let index = 0;
+    for (;;) {
+      const end = Math.min(offset + chunkSize, file.size);
+      const last = end >= file.size;
       const form = new FormData();
       form.append('uploadID', uploadID);
       form.append('index', String(index));
-      const start = index * chunkSize;
-      form.append('file', file.slice(start, Math.min(start + chunkSize, file.size)), file.name);
-      return form;
-    };
+      form.append('file', file.slice(offset, end), file.name);
+      if (last) {
+        form.append('complete', '1');
+        this.appendUploadFields(form, channel, opts);
+      }
 
-    for (let index = 0; index < chunkCount - 1; index++) {
-      const resp = await this.postForm('/upload/chunk', chunkForm(index));
+      let resp: Response;
+      try {
+        resp = await this.postForm('/upload/chunk', form);
+      } catch (err) {
+        const clamped = this.chunkBytesUnderCap(chunkSize);
+        if (err instanceof AmpError && err.status === 413 && clamped < chunkSize) {
+          chunkSize = clamped;
+          continue; // same index, under the advertised cap
+        }
+        throw err;
+      }
+      if (last) {
+        opts?.onProgress?.(100);
+        return resp.json();
+      }
       const ack = (await resp.json()) as WireChunkAck;
       if (ack.uploadID !== uploadID || ack.index !== index) {
         throw new AmpError(resp.status, AmpErrorCode.Conflict,
           `chunk ${index} of upload ${uploadID}: ack names chunk ${ack.index} of ${ack.uploadID}`);
       }
       opts?.onProgress?.(Math.floor(ack.received * 100 / file.size));
+      offset = end;
+      index++;
     }
-
-    const form = chunkForm(chunkCount - 1);
-    form.append('complete', '1');
-    this.appendUploadFields(form, channel, opts);
-    const resp = await this.postForm('/upload/chunk', form);
-    opts?.onProgress?.(100);
-    return resp.json();
   }
 
   /**
@@ -809,6 +890,7 @@ export class AmpWebClient implements AmpAdapter {
       hdrs['Authorization'] = `Bearer ${this.sessionToken}`;
     }
     const resp = await fetch(this.apiUrl(path), { method: 'POST', headers: hdrs, body: form });
+    this.noteUploadCap(resp); // the cap rides refusals too
     if (!resp.ok) {
       if (resp.status === 401 && this.sessionToken) {
         void this.dropSession();

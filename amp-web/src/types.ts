@@ -420,6 +420,14 @@ export interface TxOp {
   ItemID?: string;
   Value?: Record<string, unknown>;
   Withdraw?: WithdrawNote;     // withdraw ops only
+  /**
+   * Edit-verb payload rail: the `_EditID` (base32) of the item revision the
+   * client DISPLAYED when it authored this edit.  Emitted into the op value as
+   * `BaseEdit_0`/`BaseEdit_1` (exact uint64 halves — forums.Post fields 7/8),
+   * which the receiving app consumes as the edit's base; omitted = the app's
+   * own loaded edit (wildcard).  Never stored; an SDK-side field, not wire.
+   */
+  BaseEdit?: string;
 }
 
 export interface TxResult {
@@ -486,6 +494,15 @@ export interface AmpMediaResult {
   contentType: string | null;
   byteSize: number | null;
   error: Error | null;
+  /**
+   * Re-resolve the blob: the server re-publishes it under the SAME URL.
+   * Bind to the media element's onError — a paused or seeking player whose
+   * next range request outlived the server's idle expiry sees 404 there, and
+   * a refresh makes the URL serve again.  `generation` increments per
+   * refresh; key the element on it (or call load()) so it reloads.
+   */
+  refresh: () => Promise<void>;
+  generation: number;
 }
 
 // ── Subscription events ─────────────────────────────────────────────

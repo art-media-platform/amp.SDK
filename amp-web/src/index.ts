@@ -66,8 +66,12 @@ export type {
 
 // Adapter interface + implementation
 export type { AmpAdapter } from './adapter.js';
-export { AmpWebClient, DefaultUploadChunkBytes } from './web-client.js';
+export { AmpWebClient, DefaultUploadChunkBytes, UploadMaxBytesHeader, encodeWireJSON } from './web-client.js';
 export type { AmpWebClientOpts } from './web-client.js';
+
+// tag.UID base32 text → [hi, lo] pair (the generated consts' UID shape).
+export { parseUID } from './uid.js';
+export type { UID } from './generated/amp.std.consts.js';
 
 // Operator tier: deliberately NOT exported here.  AmpAdminClient (admin
 // credential issue and future operator verbs) is server-side tooling only —
