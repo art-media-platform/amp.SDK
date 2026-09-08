@@ -367,8 +367,11 @@ POST   /api/v1/media/resolve
        Body: { PlanetTag?, Blob: amp.Tag }
        Response: amp.Tag (with URI filled by the host's asset publisher)
 
-GET    /www/{UID}.{ext}
-       Response: media stream with Range support, conditional GET, long-cache headers
+GET    /www/{UID}.{ext}?t=<media token>
+       Response: media stream with Range support, conditional GET, cache headers.
+       The token (a member resolve's URI carries it) is the only credential the
+       media plane checks — no Bearer, no cookie; a public-planet resolve answers
+       a bare /www/{UID}.{ext}.  Without a valid token a gated asset answers 404.
 ```
 
 ```typescript
@@ -376,7 +379,7 @@ GET    /www/{UID}.{ext}
 // address+meta carrier).  PascalCase keys, base32 UID — one identifier set:
 interface BlobRef {
   UID: string;             // blob content hash (leading 16 bytes), base32
-  URI?: string;            // server-populated stream URL (/www/{UID}.{ext})
+  URI?: string;            // server-populated stream URL (/www/{UID}.{ext}?t=…) — opaque, carry verbatim
   ContentTypeRaw?: string; // MIME type (empty ⇒ text/plain); the wire key is
                            // ContentTypeRaw — amp.Tag's raw content-type field
   I?: number;              // plaintext byte length (when Units = Bytes)
@@ -384,7 +387,7 @@ interface BlobRef {
 }
 ```
 
-**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}.{ext}` URL (`{ext}` = the Tag's MIME subtype).  The publisher is in-memory and idempotent — repeated resolves dedupe, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
+**Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}.{ext}?t=<media token>` URL (`{ext}` = the Tag's MIME subtype; the token binds the URL to the blob, your session and its generation for the token lifetime — one hour by default — and is the credential `/www/` checks).  The publisher is in-memory — repeated resolves inside a token lifetime answer the same URL, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
 After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
 
@@ -790,20 +793,19 @@ no byte-level upload events. Gate spinners on `uploading`.
 ### 5.5 `useAmpMedia()`
 
 ```tsx
-const { url, loading, contentType, byteSize, refresh, generation } = useAmpMedia(blobRef, planetTag?);
-// url is /www/{UID}.{ext}; pass to <img>, <video>, <audio>, or download <a>
+const { url, loading, contentType, byteSize, error, refresh, generation } = useAmpMedia(blobRef, planetTag?);
+// url is the server's /www/{UID}.{ext}?t=<media token>; pass to <img>, <video>, <audio>, or download <a>
 <video key={generation} src={url ?? undefined} onError={() => void refresh()} controls />
 ```
 
-The published URL is **idle-scoped**: the node unpublishes an asset that has served no request for its idle expiry (default 5 minutes), and the URL answers 404 until the blob is resolved again. A player that buffered, paused, and seeks later sees that 404 on the media element — bind `refresh` to `onError`: one resolve round re-publishes the SAME URL, `generation` increments, and keying the element on it reloads the source (or call `load()` yourself). `refresh` is idempotent — an error that was not the idle expiry re-resolves harmlessly and the element reports it again.
+The URL is **the credential**: a member resolve answers `/www/{UID}.{ext}?t=<media token>`, a token bound to that blob, your session and its generation, valid for the token lifetime (default one hour; the same URL is answered for re-resolves inside that window, so the browser cache holds) — `/www/` carries no Bearer and no cookie, and a gated asset answers 404 to any GET without a valid token. Treat the URL as a short-lived secret: never log it, never persist it (persist the `BlobRef`), never put it where a `Referer` can carry it to a third party. A URL also stops serving when the node unpublishes an idle asset (no request for 5 minutes) or an operator revokes the member's sessions. A player that buffered, paused, and seeks later sees that 404 on the media element — bind `refresh` to `onError`: one resolve round answers a URL that serves (fresh token past the lifetime), `generation` increments, and keying the element on it reloads the source (or call `load()` yourself). `refresh` is idempotent — an error that was not an expiry re-resolves harmlessly and the element reports it again.
 
 Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
 POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —
 accepted — streams as `text/plain` under `/www/{UID}.plain`.  Resolves via
-`POST /api/v1/media/resolve` (`client.resolveMedia(blob, planetTag?)`); when
-resolve fails it falls back to the direct `/www/{UID}.{ext}`
-URL — `error` stays null, and a truly missing blob surfaces on the media
-element, not the hook.
+`POST /api/v1/media/resolve` (`client.resolveMedia(blob, planetTag?)`); there
+is no client-built URL — when resolve fails `url` is null and `error` carries
+the failure (a revoked session fails here, as 401).
 
 ### 5.6 Sealed-box helpers (§6.2)
 
@@ -1377,8 +1379,9 @@ async function handleFile(file) {
   setPreview(URL.createObjectURL(file));   // instant local preview
   const blobRef = await upload(file, 'projects', { attr: 'media' });
   await upsert('projects', 'media', blobRef.UID, { blobRef, filename: file.name });
-  // upload's blobRef.URI is host-instance-scoped (§4.4) — fine for an immediate
-  // preview; the item persists the BlobRef itself, never its URI.
+  // upload's blobRef.URI is host-instance- and session-scoped (§4.4: it carries
+  // your media token) — fine for an immediate preview; the item persists the
+  // BlobRef itself, never its URI.
 }
 
 // Later reads re-resolve from the persisted BlobRef, passed WHOLE (§5.5): its

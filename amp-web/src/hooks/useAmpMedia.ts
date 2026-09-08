@@ -14,56 +14,67 @@ export function mediaTagFor(blob: string | BlobRef): BlobRef {
 
 /** What useAmpMedia settles to once resolve answers or fails. */
 export interface MediaResolution {
-  url: string;
+  url: string | null;
   contentType: string | null;
   byteSize: number | null;
+  error: Error | null;
 }
 
 /**
  * One resolve round: POST the Tag (caller-carries-the-Tag — the server
- * publishes under the Tag's ContentType, api.www.go AssetForBlob), answer the
- * stream URL; when resolve is unavailable, the direct /www/{UID}.{ext} URL
- * built from the same Tag.  Metadata comes from the answer, else the Tag.
+ * publishes under the Tag's ContentType, api.www.go AssetForBlob) and carry
+ * the answered URI verbatim — a member resolve's URI holds the media token
+ * (/www/{UID}.{ext}?t=…), the only credential the media plane accepts, so
+ * there is no URL to build client-side: a failed resolve is a null url plus
+ * the error.  Metadata comes from the answer, else the Tag.
  */
 export async function resolveMediaURL(
-  adapter: Pick<AmpAdapter, 'resolveMedia' | 'mediaUrl'>, tag: BlobRef, planetTag?: string,
+  adapter: Pick<AmpAdapter, 'resolveMedia'>, tag: BlobRef, planetTag?: string,
 ): Promise<MediaResolution> {
   try {
     const blob = await adapter.resolveMedia(tag, planetTag);
+    if (!blob.URI) {
+      throw new Error('media resolve answered no URI');
+    }
     return {
-      url: blob.URI ?? adapter.mediaUrl(blob),
+      url: blob.URI,
       contentType: blob.ContentTypeRaw ?? tag.ContentTypeRaw ?? null,
       byteSize: blob.I ?? tag.I ?? null,
+      error: null,
     };
-  } catch {
+  } catch (err) {
     return {
-      url: adapter.mediaUrl(tag),
+      url: null,
       contentType: tag.ContentTypeRaw ?? null,
       byteSize: tag.I ?? null,
+      error: err instanceof Error ? err : new Error(String(err)),
     };
   }
 }
 
 /**
- * The 404 path: a published asset idles out server-side (no request for
- * DefaultAssetIdleExpire — a paused or seeking player), and its URL answers
- * 404 until the blob is resolved again.  One resolve round re-publishes it
- * under the same URL; the caller then reloads the element.
+ * The 404 path: the URL stops serving when the asset idles out server-side
+ * (no request for DefaultAssetIdleExpire — a paused player), when its media
+ * token passes its lifetime, or when the member's sessions are revoked.  One
+ * resolve round answers a URL that serves again — the same URL inside the
+ * token lifetime's bucket, a fresh token past it; the caller then reloads
+ * the element.  A revoked session fails the resolve itself (401 → the
+ * client drops its session) and surfaces as the error.
  */
 export async function refreshMediaURL(
-  adapter: Pick<AmpAdapter, 'resolveMedia' | 'mediaUrl'>, tag: BlobRef, planetTag?: string,
+  adapter: Pick<AmpAdapter, 'resolveMedia'>, tag: BlobRef, planetTag?: string,
 ): Promise<MediaResolution> {
   return resolveMediaURL(adapter, tag, planetTag);
 }
 
 /**
  * useAmpMedia resolves a blob to a streamable URL via the caller-carries-the-
- * Tag path (POST /api/v1/media/resolve), falling back to the direct
- * /www/{UID}.{ext} URL if resolve is unavailable.  Pass the cabinet's BlobRef
- * (its ContentTypeRaw decides the served MIME type + extension); a bare UID
- * is accepted, degraded to text/plain.  Pass the result `url` to
- * <img>/<video>/<audio>, and bind `refresh` to the element's onError — after
- * the server's idle expiry the URL 404s until a refresh re-resolves it.
+ * Tag path (POST /api/v1/media/resolve); the URL is the server's, token
+ * included.  Pass the cabinet's BlobRef (its ContentTypeRaw decides the
+ * served MIME type + extension); a bare UID is accepted, degraded to
+ * text/plain.  Pass the result `url` to <img>/<video>/<audio>, and bind
+ * `refresh` to the element's onError — past the server's idle expiry or the
+ * token lifetime the URL 404s until a refresh re-resolves it.
  */
 export function useAmpMedia(blob: string | BlobRef, planetTag?: string): AmpMediaResult {
   const { adapter } = useAmpContext();
@@ -100,6 +111,7 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string): AmpMedi
       setUrl(res.url);
       setContentType(res.contentType);
       setByteSize(res.byteSize);
+      setError(res.error);
       setLoading(false);
     });
 
@@ -116,6 +128,7 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string): AmpMedi
     setUrl(res.url);
     setContentType(res.contentType);
     setByteSize(res.byteSize);
+    setError(res.error);
     setGeneration(prev => prev + 1);
   }, [adapter, uid, contentTypeRaw, byteLen, units, planetTag]);
 

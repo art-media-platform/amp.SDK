@@ -466,7 +466,7 @@ export interface AmpMutationResult {
  */
 export interface BlobRef {
   UID: string;             // blob tag.UID, base32
-  URI?: string;            // /www/{UID}.{ext} stream URL — set by upload + resolve
+  URI?: string;            // stream URL set by upload + resolve: /www/{UID}.{ext}?t=<media token> (opaque; carry verbatim)
   ContentTypeRaw?: string;
   I?: number;              // plaintext byte length (when Units = Bytes)
   Units?: number;
@@ -495,11 +495,12 @@ export interface AmpMediaResult {
   byteSize: number | null;
   error: Error | null;
   /**
-   * Re-resolve the blob: the server re-publishes it under the SAME URL.
-   * Bind to the media element's onError — a paused or seeking player whose
-   * next range request outlived the server's idle expiry sees 404 there, and
-   * a refresh makes the URL serve again.  `generation` increments per
-   * refresh; key the element on it (or call load()) so it reloads.
+   * Re-resolve the blob: a fresh media token (and a fresh URL once the
+   * token lifetime's bucket has passed).  Bind to the media element's
+   * onError — a player whose next range request outlived the server's idle
+   * expiry, the token lifetime, or a session revocation sees 404 there, and
+   * a refresh serves again.  `generation` increments per refresh; key the
+   * element on it (or call load()) so it reloads.
    */
   refresh: () => Promise<void>;
   generation: number;

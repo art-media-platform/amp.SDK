@@ -96,6 +96,17 @@ URLs as secrets: require `https://` / `wss://` (never plaintext), never log them
 don't load third-party resources in a card you wouldn't hand the token to. A
 shorter-lived, capability-scoped card token is the intended direction.
 
+A third surface carries a **scoped** token, not the Bearer:
+
+- **`{vaultUrl}/www/{UID}.{ext}?t=<mediaToken>`** — the URI a member's
+  `/media/resolve` (and upload) answers. The media token authorizes ONE blob for
+  ONE session, expires with the media-token lifetime (one hour by default) and
+  dies with the member's session generation (`admin/session/revoke`); it grants
+  nothing on `/api/v1/*` or `/ws`. It still lands in access logs, browser history
+  and `Referer` headers, so the same hygiene applies: never log or persist it
+  (persist the `BlobRef`; re-resolve), and keep media elements off pages that
+  leak `Referer` to third parties.
+
 ---
 
 ## Session persistence — the Bearer at rest

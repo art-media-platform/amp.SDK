@@ -145,12 +145,10 @@ export interface AmpAdapter {
   upload(file: File, channel: string, opts?: UploadOpts): Promise<BlobRef>;
 
   /** Caller-carries-the-Tag resolve: BlobRef → BlobRef with URI (stream URL) set.
+   *  The URI is opaque — a member resolve answers /www/{UID}.{ext}?t=<media token>,
+   *  the credential the media plane checks; carry it verbatim, never rebuild it.
    *  Pass planetTag to resolve a blob on another planet (e.g. an anonymous public share). */
   resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef>;
-
-  /** Direct /www/{UID}.{ext} URL for an already-published blob (pure string build, no I/O);
-   *  the path is the one /media/resolve answers for the same Tag, so pass the cabinet's BlobRef. */
-  mediaUrl(blob: BlobRef): string;
 
   // ── Federation invites ────────────────────────────────────────────
   // Member-session tier (planet-admin Bearer for issue/revoke/list) — NOT the
