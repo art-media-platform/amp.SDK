@@ -16,6 +16,7 @@ type PublishOpts struct {
 	Expiry    time.Duration // If <= 0, the publisher chooses the expiration period
 	HostAddr  string        // Domain or IP address used in the generated URL; if empty -> "localhost"
 	OnExpired func()        // Called when the asset expires
+	Gate      any           // Publisher-defined admission scope: the URL admits only a request the publisher verifies against it (a media token); nil = the URL serves any GET
 }
 
 // Publisher publishes an Asset to a URL.
