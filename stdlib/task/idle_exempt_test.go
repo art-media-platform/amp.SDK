@@ -89,19 +89,22 @@ func TestIdleExempt_OwnedChildStillHoldsIdle(t *testing.T) {
 // context.Context-taking wait.
 func TestClosingContext_DoneIsClosing(t *testing.T) {
 	bodyDone := make(chan struct{})
-	var bound context.Context
+	boundCh := make(chan context.Context, 1)
 	child, err := task.Start(task.Task{
 		Info: task.Info{Label: "body"},
 		OnRun: func(ctx task.Context) {
-			bound = task.ClosingContext(ctx)
+			boundCh <- task.ClosingContext(ctx)
 			<-bodyDone // the body has not returned: ctx.Done() cannot fire
 		},
 	})
 	if err != nil {
 		t.Fatalf("Start: %v", err)
 	}
-	for bound == nil {
-		time.Sleep(time.Millisecond)
+	var bound context.Context
+	select {
+	case bound = <-boundCh:
+	case <-time.After(2 * time.Second):
+		t.Fatalf("body did not hand over its ClosingContext")
 	}
 	if bound.Err() != nil {
 		t.Fatalf("Err() before close = %v, want nil", bound.Err())
