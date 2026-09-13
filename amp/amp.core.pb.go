@@ -1047,11 +1047,15 @@ func (WithdrawReason) EnumDescriptor() ([]byte, []int) {
 // InviteStatus is an invite policy's lifecycle state.  Revoked is terminal —
 // the ACC invite rule rejects an un-revoke; reissue instead, so the redemption
 // ledger's legal reading stays monotonic.
+// InviteStatus is a policy's lifecycle state.  Revoked is terminal; Paused
+// refuses every admission under the policy until its issuer re-activates it —
+// containment for a suspected leak that keeps the instrument (SD-invite-governance §3).
 type InviteStatus int32
 
 const (
 	InviteStatus_InviteActive  InviteStatus = 0
 	InviteStatus_InviteRevoked InviteStatus = 1
+	InviteStatus_InvitePaused  InviteStatus = 2
 )
 
 // Enum value maps for InviteStatus.
@@ -1059,10 +1063,12 @@ var (
 	InviteStatus_name = map[int32]string{
 		0: "InviteActive",
 		1: "InviteRevoked",
+		2: "InvitePaused",
 	}
 	InviteStatus_value = map[string]int32{
 		"InviteActive":  0,
 		"InviteRevoked": 1,
+		"InvitePaused":  2,
 	}
 )
 
@@ -1099,6 +1105,7 @@ type BlobPullKind int32
 const (
 	BlobPullKind_Chunks BlobPullKind = 0 // a span of stored-byte chunks on the meta's index space
 	BlobPullKind_Meta   BlobPullKind = 1 // the blob's BlobMeta companion object
+	BlobPullKind_Have   BlobPullKind = 2 // a holding probe: does the peer hold the blob — answered on the data plane, no bytes (SD-security-sync §13.8)
 )
 
 // Enum value maps for BlobPullKind.
@@ -1106,10 +1113,12 @@ var (
 	BlobPullKind_name = map[int32]string{
 		0: "Chunks",
 		1: "Meta",
+		2: "Have",
 	}
 	BlobPullKind_value = map[string]int32{
 		"Chunks": 0,
 		"Meta":   1,
+		"Have":   2,
 	}
 )
 
@@ -1315,6 +1324,7 @@ const (
 	RefusalClass_ConflictingBytes   RefusalClass = 1 // the TxTimeID already names different verified bytes on the refuser
 	RefusalClass_Oversized          RefusalClass = 2 // exceeds the refuser's MaxTxMsgSize (Detail = that limit, bytes)
 	RefusalClass_FutureSkew         RefusalClass = 3 // stamped past the refuser's MaxFutureSkew (Detail = that window, seconds)
+	RefusalClass_ProtocolViolation  RefusalClass = 4 // the bytes themselves break the protocol — a sealed tx with no MemberProof, a MetaOp-flagged authored op; final, never journaled (SD-security-sync §11.1)
 )
 
 // Enum value maps for RefusalClass.
@@ -1324,12 +1334,14 @@ var (
 		1: "ConflictingBytes",
 		2: "Oversized",
 		3: "FutureSkew",
+		4: "ProtocolViolation",
 	}
 	RefusalClass_value = map[string]int32{
 		"RefusalUnspecified": 0,
 		"ConflictingBytes":   1,
 		"Oversized":          2,
 		"FutureSkew":         3,
+		"ProtocolViolation":  4,
 	}
 )
 
@@ -4895,8 +4907,14 @@ type PlanetInvitePolicy struct {
 	RedeemKey *safe.KeyRef `protobuf:"bytes,6,opt,name=RedeemKey,proto3" json:"RedeemKey,omitempty"`
 	// Single-use only: the pre-minted member this invite admits.  Zero for
 	// multi-use (each redeemer self-mints).
-	MemberID_0    uint64 `protobuf:"fixed64,10,opt,name=MemberID_0,json=MemberID0,proto3" json:"MemberID_0,omitempty"`
-	MemberID_1    uint64 `protobuf:"fixed64,11,opt,name=MemberID_1,json=MemberID1,proto3" json:"MemberID_1,omitempty"`
+	MemberID_0 uint64 `protobuf:"fixed64,10,opt,name=MemberID_0,json=MemberID0,proto3" json:"MemberID_0,omitempty"`
+	MemberID_1 uint64 `protobuf:"fixed64,11,opt,name=MemberID_1,json=MemberID1,proto3" json:"MemberID_1,omitempty"`
+	// Web-rail home planets the node may auto-provision under this invite's
+	// anchor.  0 = unset → the node's DefaultMaxWebHomesPerAnchor; a value
+	// above that default is clamped to it — the policy may only LOWER the
+	// operator's cap, never raise it.  At the cap the provisioning gate
+	// refuses with status.Code_CapReached.
+	MaxWebHomes   uint32 `protobuf:"varint,12,opt,name=MaxWebHomes,proto3" json:"MaxWebHomes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4990,6 +5008,13 @@ func (x *PlanetInvitePolicy) GetMemberID_0() uint64 {
 func (x *PlanetInvitePolicy) GetMemberID_1() uint64 {
 	if x != nil {
 		return x.MemberID_1
+	}
+	return 0
+}
+
+func (x *PlanetInvitePolicy) GetMaxWebHomes() uint32 {
+	if x != nil {
+		return x.MaxWebHomes
 	}
 	return 0
 }
@@ -7920,7 +7945,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"MemberID_0\x18\x16 \x01(\x06R\tMemberID0\x12\x1d\n" +
 	"\n" +
-	"MemberID_1\x18\x17 \x01(\x06R\tMemberID1\"\xe0\x02\n" +
+	"MemberID_1\x18\x17 \x01(\x06R\tMemberID1\"\x82\x03\n" +
 	"\x12PlanetInvitePolicy\x12\x1d\n" +
 	"\n" +
 	"InviteID_0\x18\b \x01(\x06R\tInviteID0\x12\x1d\n" +
@@ -7935,7 +7960,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"MemberID_0\x18\n" +
 	" \x01(\x06R\tMemberID0\x12\x1d\n" +
 	"\n" +
-	"MemberID_1\x18\v \x01(\x06R\tMemberID1\"\xe9\x02\n" +
+	"MemberID_1\x18\v \x01(\x06R\tMemberID1\x12 \n" +
+	"\vMaxWebHomes\x18\f \x01(\rR\vMaxWebHomes\"\xe9\x02\n" +
 	"\x16PlanetInviteRedemption\x12\x1d\n" +
 	"\n" +
 	"InviteID_0\x18\a \x01(\x06R\tInviteID0\x12\x1d\n" +
@@ -8308,14 +8334,16 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tForgotten\x10\x05\x12\f\n" +
 	"\bDeparted\x10\x06\x12\x10\n" +
 	"\fInviteRecall\x10\a\x12\r\n" +
-	"\tRetracted\x10\b*3\n" +
+	"\tRetracted\x10\b*E\n" +
 	"\fInviteStatus\x12\x10\n" +
 	"\fInviteActive\x10\x00\x12\x11\n" +
-	"\rInviteRevoked\x10\x01*$\n" +
+	"\rInviteRevoked\x10\x01\x12\x10\n" +
+	"\fInvitePaused\x10\x02*.\n" +
 	"\fBlobPullKind\x12\n" +
 	"\n" +
 	"\x06Chunks\x10\x00\x12\b\n" +
-	"\x04Meta\x10\x01*T\n" +
+	"\x04Meta\x10\x01\x12\b\n" +
+	"\x04Have\x10\x02*T\n" +
 	"\n" +
 	"PlatformID\x12\r\n" +
 	"\tUniversal\x10\x00\x12\t\n" +
@@ -8332,13 +8360,14 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\vArchiveMode\x12\v\n" +
 	"\aArchive\x10\x00\x12\n" +
 	"\n" +
-	"\x06Suffix\x10\a*[\n" +
+	"\x06Suffix\x10\a*r\n" +
 	"\fRefusalClass\x12\x16\n" +
 	"\x12RefusalUnspecified\x10\x00\x12\x14\n" +
 	"\x10ConflictingBytes\x10\x01\x12\r\n" +
 	"\tOversized\x10\x02\x12\x0e\n" +
 	"\n" +
-	"FutureSkew\x10\x03B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
+	"FutureSkew\x10\x03\x12\x15\n" +
+	"\x11ProtocolViolation\x10\x04B@Z)github.com/art-media-platform/amp.SDK/amp\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_amp_core_proto_rawDescOnce sync.Once

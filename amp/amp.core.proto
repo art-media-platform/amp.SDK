@@ -1394,9 +1394,13 @@ message PlanetInviteOp {
 // InviteStatus is an invite policy's lifecycle state.  Revoked is terminal —
 // the ACC invite rule rejects an un-revoke; reissue instead, so the redemption
 // ledger's legal reading stays monotonic.
+// InviteStatus is a policy's lifecycle state.  Revoked is terminal; Paused
+// refuses every admission under the policy until its issuer re-activates it —
+// containment for a suspected leak that keeps the instrument (SD-invite-governance §3).
 enum InviteStatus {
     InviteActive  = 0;
     InviteRevoked = 1;
+    InvitePaused  = 2;
 }
 
 
@@ -1435,6 +1439,13 @@ message PlanetInvitePolicy {
     // multi-use (each redeemer self-mints).
     fixed64             MemberID_0 = 10;
     fixed64             MemberID_1 = 11;
+
+    // Web-rail home planets the node may auto-provision under this invite's
+    // anchor.  0 = unset → the node's DefaultMaxWebHomesPerAnchor; a value
+    // above that default is clamped to it — the policy may only LOWER the
+    // operator's cap, never raise it.  At the cap the provisioning gate
+    // refuses with status.Code_CapReached.
+    uint32              MaxWebHomes = 12;
 }
 
 
@@ -1578,6 +1589,7 @@ message BlobPullRequest {
 enum BlobPullKind {
     Chunks = 0;  // a span of stored-byte chunks on the meta's index space
     Meta   = 1;  // the blob's BlobMeta companion object
+    Have   = 2;  // a holding probe: does the peer hold the blob — answered on the data plane, no bytes (SD-security-sync §13.8)
 }
 
 
@@ -2112,6 +2124,7 @@ enum RefusalClass {
     ConflictingBytes   = 1; // the TxTimeID already names different verified bytes on the refuser
     Oversized          = 2; // exceeds the refuser's MaxTxMsgSize (Detail = that limit, bytes)
     FutureSkew         = 3; // stamped past the refuser's MaxFutureSkew (Detail = that window, seconds)
+    ProtocolViolation  = 4; // the bytes themselves break the protocol — a sealed tx with no MemberProof, a MetaOp-flagged authored op; final, never journaled (SD-security-sync §11.1)
 }
 
 
