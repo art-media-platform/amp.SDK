@@ -24,7 +24,8 @@ type ctx struct {
 	mu        sync.Mutex
 	state     int32         // Running | Closing | Closed
 	subs      []Context     // live child Contexts
-	active    int           // outstanding work: live children (Detach children excluded) + a reservation held across setup/OnRun; 0 means idle
+	active    int           // outstanding work: live children (Detach children excluded) + a reservation held across setup/OnRun; the drain waits on 0
+	exempt    int           // live IdleExempt children — counted in active (drained) but not toward idle: idle means active == exempt
 	abandoned int           // Detach children still live when this Context finalized; set once by reportAbandoned
 	changed   chan struct{} // lazily created; closed by signalChange to broadcast a state change, then cleared
 	idleDelay time.Duration // CloseWhenIdle delay; <= 0 disables idle-close
@@ -138,7 +139,7 @@ func (c *ctx) idleCloseLoop() {
 			c.mu.Unlock()
 			return
 		}
-		active := c.active
+		active := c.active - c.exempt
 		delay := c.idleDelay
 		floor := c.idleFloor
 		wake := c.changeChan()
@@ -164,7 +165,7 @@ func (c *ctx) idleCloseLoop() {
 		select {
 		case <-timer.C:
 			c.mu.Lock()
-			ready := c.active == 0 && c.idleDelay > 0 &&
+			ready := c.active == c.exempt && c.idleDelay > 0 &&
 				(c.idleFloor.IsZero() || !time.Now().Before(c.idleFloor))
 			if ready {
 				c.idleLoop = false
@@ -229,6 +230,9 @@ func printContextTree(ctx Context, out *strings.Builder, depth int, prefix []run
 	if info.detached {
 		out.WriteString(" [detached]")
 	}
+	if info.IdleExempt {
+		out.WriteString(" [idle-exempt]")
+	}
 	out.WriteByte('\n')
 
 	// Set up prefix for children
@@ -292,6 +296,9 @@ func (c *ctx) StartChild(task Task) (Context, error) {
 		c.subs = append(c.subs, child)
 		if !task.detached {
 			c.active++
+			if task.IdleExempt {
+				c.exempt++
+			}
 		}
 		c.signalChange()
 		c.mu.Unlock()
@@ -367,7 +374,10 @@ func (c *ctx) runMonitor(parent *ctx) {
 		parent.removeChildLocked(c)
 		if !c.task.detached {
 			parent.active--
-			if parent.active == 0 {
+			if c.task.IdleExempt {
+				parent.exempt--
+			}
+			if parent.active == parent.exempt {
 				parentIdleClose = parent.task.Info.IdleClose
 			}
 		}

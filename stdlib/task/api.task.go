@@ -61,6 +61,22 @@ func NewChild(parent Context, label string) (Context, error) {
 	return parent.StartChild(Task{Info: Info{Label: label}})
 }
 
+// ClosingContext adapts ctx to a context.Context whose Done() is ctx.Closing().
+// A task.Context's own Done() fires only after its work body has returned, so
+// a body that hands its Context to a wait (a TxCommit.Context, a loader's
+// select) would wait on itself; a Detach body that feeds a
+// context.Context-taking wait passes this adapter instead (ZO §1.2).  Err()
+// reports context.Canceled once closing has begun, as the Context's own does.
+func ClosingContext(ctx Context) context.Context {
+	return closingContext{ctx}
+}
+
+type closingContext struct {
+	Context
+}
+
+func (adapter closingContext) Done() <-chan struct{} { return adapter.Context.Closing() }
+
 // Detach starts fn as a child of parent that is registered in the tree but
 // does not hold parent's drain reservation. Like Go, fn runs in its own
 // goroutine and the child idle-closes when fn returns; like every child, it is
@@ -108,6 +124,13 @@ type Info struct {
 	//
 	// This does not take effect unless OnRun is given or a child is started.
 	IdleClose time.Duration
+
+	// IdleExempt: the child lives with its parent — closed with it and drained
+	// before the parent finalizes, like any owned child — but does not count
+	// toward the parent's idle-close.  For a relay or watcher whose presence
+	// must never keep an idle parent alive (a Detach child holds neither the
+	// drain nor the idle count; an IdleExempt child holds the drain only).
+	IdleExempt bool
 
 	detached bool // set only by Detach: registered under the parent without holding its drain reservation
 }
