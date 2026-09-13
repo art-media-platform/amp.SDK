@@ -468,7 +468,7 @@ func TestEpochKeys_SiblingStoresUnionOnPersist(t *testing.T) {
 	defer storeB.Close(ctx)
 
 	container := tag.NewID()
-	epochA, epochB, epochC := tag.NewID(), tag.NewID(), tag.NewID()
+	epochA, epochB, epochC := tag.NowID(), tag.NowID(), tag.NowID() // time-based: C is the newest
 	bytesA, bytesB, bytesC := randomKeyBytes(t), randomKeyBytes(t), randomKeyBytes(t)
 
 	// A installs after B loaded; B's later install persists B's map — which
