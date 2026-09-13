@@ -110,6 +110,15 @@ export const Attr = {
     ChannelTypeBrand                  : { id: [0xB65147BCC3C55E4Cn, 0x9BE811A46788AFF8n], text: "channel.type.Brand" },                 // 5qb-53vthy5ct6-9ru0jnjmsj-czs
     ChannelTypeNameService            : { id: [0x7F92C1A4067E91BFn, 0x9ED36CF793A42DBFn], text: "channel.type.NameService" },           // 3zk-c0u81myk6z-txnvdyy9u8-cez
     ChannelTypeTerminal               : { id: [0xA2A7D0965CBFE1C2n, 0x203CD7FD9136CB7Bn], text: "channel.type.Terminal" },              // 52n-z89dr5zw71-20g6rzq8me-kvv
+    // Render surface a channel is staged on — a value the staging host
+    // selects and a presenter resolves by (chType, surface); never a
+    // C# enum (surface vocabulary in client code breaks the whitelabel
+    // contract).  A third rendering = one presenter + one crate entry +
+    // one name here.
+    Surface                           : { id: [0x0F4D513216E79F19n, 0xB3B95C0F600BC9E4n], text: "channel.surface" },                    // 0g9-p8m45r7mwd-v7fbw1xh0r-kg4
+
+    SurfacePane                       : { id: [0x2CC06EEA00D01DB6n, 0x829B6E286C9005B8n], text: "channel.surface.Pane" },               // 1ds-1rfn06h3qv-856vf51q90-1es
+    SurfaceVolume                     : { id: [0xF85D3F7208AFC5B3n, 0x39D453801476E4A3n], text: "channel.surface.Volume" },             // 7sc-nzr425gsqt-mmp2mh0b7e-t53
 
     // ─── Brand — substrate-native planet identity (DD-name-service §2). ───
     // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the

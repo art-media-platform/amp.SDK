@@ -88,6 +88,9 @@ var Attr = struct {
 	ChannelTypeBrand                   tag.Name
 	ChannelTypeNameService             tag.Name
 	ChannelTypeTerminal                tag.Name
+	Surface                            tag.Name
+	SurfacePane                        tag.Name
+	SurfaceVolume                      tag.Name
 	Brand                              tag.Name
 	NameService                        tag.Name
 	NameServiceRecord                  tag.Name
@@ -244,6 +247,15 @@ var Attr = struct {
 	ChannelTypeBrand:        tag.Name{ID: tag.UID{0xB65147BCC3C55E4C, 0x9BE811A46788AFF8}, Text: "channel.type.Brand"},        // 5qb-53vthy5ct6-9ru0jnjmsj-czs
 	ChannelTypeNameService:  tag.Name{ID: tag.UID{0x7F92C1A4067E91BF, 0x9ED36CF793A42DBF}, Text: "channel.type.NameService"},  // 3zk-c0u81myk6z-txnvdyy9u8-cez
 	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.Terminal"},     // 52n-z89dr5zw71-20g6rzq8me-kvv
+	// Render surface a channel is staged on — a value the staging host
+	// selects and a presenter resolves by (chType, surface); never a
+	// C# enum (surface vocabulary in client code breaks the whitelabel
+	// contract).  A third rendering = one presenter + one crate entry +
+	// one name here.
+	Surface: tag.Name{ID: tag.UID{0x0F4D513216E79F19, 0xB3B95C0F600BC9E4}, Text: "channel.surface"}, // 0g9-p8m45r7mwd-v7fbw1xh0r-kg4
+
+	SurfacePane:   tag.Name{ID: tag.UID{0x2CC06EEA00D01DB6, 0x829B6E286C9005B8}, Text: "channel.surface.Pane"},   // 1ds-1rfn06h3qv-856vf51q90-1es
+	SurfaceVolume: tag.Name{ID: tag.UID{0xF85D3F7208AFC5B3, 0x39D453801476E4A3}, Text: "channel.surface.Volume"}, // 7sc-nzr425gsqt-mmp2mh0b7e-t53
 
 	// ─── Brand — substrate-native planet identity (DD-name-service §2). ───
 	// Single item per planet at (HeadNodeID, amp.Brand, its own UID); the

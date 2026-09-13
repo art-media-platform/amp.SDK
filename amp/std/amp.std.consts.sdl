@@ -117,6 +117,15 @@ tags Attr {
             ChannelTypeNameService  "NameService"
             ChannelTypeTerminal     "Terminal"
         }
+        // Render surface a channel is staged on — a value the staging host
+        // selects and a presenter resolves by (chType, surface); never a
+        // C# enum (surface vocabulary in client code breaks the whitelabel
+        // contract).  A third rendering = one presenter + one crate entry +
+        // one name here.
+        Surface "surface" : vocab {
+            SurfacePane   "Pane"    // 2D: a Dock pane
+            SurfaceVolume "Volume"  // 3D: a Mantle volume
+        }
     }
 
     // Brand — substrate-native planet identity (DD-name-service §2).
