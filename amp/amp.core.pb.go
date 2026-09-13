@@ -733,40 +733,43 @@ func (MemberStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // Access levels ordered by privilege (higher = more access).
+// Access levels ordered by privilege (higher = more access).  Values are spaced
+// ×100 so a future rung fits between any two neighbors; grants compare by order
+// (amp.HasAccess), never by value.
 type Access int32
 
 const (
 	Access_NotAllowed Access = 0
-	Access_Invite     Access = 1  // Can see the channel exists and invite others
-	Access_Private    Access = 3  // Can see metadata but not content
-	Access_ReadOnly   Access = 4  // Can read content
-	Access_Custodian  Access = 5  // Watchdog class: can read content; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
-	Access_ReadWrite  Access = 6  // Can read and write
-	Access_Moderator  Access = 8  // Can approve, withdraw, and hide content and file authoritative Strikes — but not manage grants or keys
-	Access_Admin      Access = 10 // Full control: create sub-channels, manage access
+	Access_Invite     Access = 100  // Can see the channel exists and invite others
+	Access_Private    Access = 300  // Can see metadata but not content
+	Access_ReadOnly   Access = 400  // Can read content
+	Access_Custodian  Access = 500  // Watchdog class: can read content; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
+	Access_ReadWrite  Access = 600  // Can read and write
+	Access_Moderator  Access = 800  // Can approve, withdraw, and hide content and file authoritative Strikes — but not manage grants or keys
+	Access_Admin      Access = 1000 // Full control: create sub-channels, manage access
 )
 
 // Enum value maps for Access.
 var (
 	Access_name = map[int32]string{
-		0:  "NotAllowed",
-		1:  "Invite",
-		3:  "Private",
-		4:  "ReadOnly",
-		5:  "Custodian",
-		6:  "ReadWrite",
-		8:  "Moderator",
-		10: "Admin",
+		0:    "NotAllowed",
+		100:  "Invite",
+		300:  "Private",
+		400:  "ReadOnly",
+		500:  "Custodian",
+		600:  "ReadWrite",
+		800:  "Moderator",
+		1000: "Admin",
 	}
 	Access_value = map[string]int32{
 		"NotAllowed": 0,
-		"Invite":     1,
-		"Private":    3,
-		"ReadOnly":   4,
-		"Custodian":  5,
-		"ReadWrite":  6,
-		"Moderator":  8,
-		"Admin":      10,
+		"Invite":     100,
+		"Private":    300,
+		"ReadOnly":   400,
+		"Custodian":  500,
+		"ReadWrite":  600,
+		"Moderator":  800,
+		"Admin":      1000,
 	}
 )
 
@@ -8294,19 +8297,19 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Active\x10\x00\x12\r\n" +
 	"\tSuspended\x10\x01\x12\v\n" +
-	"\aRevoked\x10\x02*w\n" +
+	"\aRevoked\x10\x02*}\n" +
 	"\x06Access\x12\x0e\n" +
 	"\n" +
 	"NotAllowed\x10\x00\x12\n" +
 	"\n" +
-	"\x06Invite\x10\x01\x12\v\n" +
-	"\aPrivate\x10\x03\x12\f\n" +
-	"\bReadOnly\x10\x04\x12\r\n" +
-	"\tCustodian\x10\x05\x12\r\n" +
-	"\tReadWrite\x10\x06\x12\r\n" +
-	"\tModerator\x10\b\x12\t\n" +
-	"\x05Admin\x10\n" +
-	"*p\n" +
+	"\x06Invite\x10d\x12\f\n" +
+	"\aPrivate\x10\xac\x02\x12\r\n" +
+	"\bReadOnly\x10\x90\x03\x12\x0e\n" +
+	"\tCustodian\x10\xf4\x03\x12\x0e\n" +
+	"\tReadWrite\x10\xd8\x04\x12\x0e\n" +
+	"\tModerator\x10\xa0\x06\x12\n" +
+	"\n" +
+	"\x05Admin\x10\xe8\a*p\n" +
 	"\x12WatchdogCapability\x12\x17\n" +
 	"\x13WatchdogUnspecified\x10\x00\x12\x11\n" +
 	"\rReadTelemetry\x10\x01\x12\v\n" +

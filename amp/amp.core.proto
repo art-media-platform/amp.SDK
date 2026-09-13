@@ -1016,15 +1016,18 @@ message MemberEpoch {
 
 
 // Access levels ordered by privilege (higher = more access).
+// Access levels ordered by privilege (higher = more access).  Values are spaced
+// ×100 so a future rung fits between any two neighbors; grants compare by order
+// (amp.HasAccess), never by value.
 enum Access {
     NotAllowed = 0;
-    Invite     = 1;    // Can see the channel exists and invite others
-    Private    = 3;    // Can see metadata but not content
-    ReadOnly   = 4;    // Can read content
-    Custodian  = 5;    // Watchdog class: can read content; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
-    ReadWrite  = 6;    // Can read and write
-    Moderator  = 8;    // Can approve, withdraw, and hide content and file authoritative Strikes — but not manage grants or keys
-    Admin      = 10;   // Full control: create sub-channels, manage access
+    Invite     = 100;  // Can see the channel exists and invite others
+    Private    = 300;  // Can see metadata but not content
+    ReadOnly   = 400;  // Can read content
+    Custodian  = 500;  // Watchdog class: can read content; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
+    ReadWrite  = 600;  // Can read and write
+    Moderator  = 800;  // Can approve, withdraw, and hide content and file authoritative Strikes — but not manage grants or keys
+    Admin      = 1000; // Full control: create sub-channels, manage access
 }
 
 

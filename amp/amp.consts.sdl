@@ -47,7 +47,7 @@ const int32 DefaultServicePort = 5192;
 // an importer refuses a Codex whose epoch differs rather than silently
 // mis-decoding persisted bytes (DD-chronicle-and-codex §5.5).  Bump on
 // each wire-incompatible content-model change.
-const uint32 ContentModelEpoch = 1;
+const uint32 ContentModelEpoch = 2;
 
 // Default IANA media type a Tag carries when its ContentTypeRaw field is empty.
 // Tag.ContentType() resolves the empty field to this; TagText strips an
