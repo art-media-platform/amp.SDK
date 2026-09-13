@@ -761,6 +761,11 @@ message EpochTerms {
     // Seconds after rotation during which old-epoch TxMsgs are still accepted
     // (offline / mesh authors).  If 0, DefaultMaxGracePeriod applies (90 days).
     int64               MaxGracePeriod = 32;
+
+    // Self-declared license class: a Tag resolving to a LawLicenseClass_*
+    // const (amp.std.consts.sdl), quorum-signed with the epoch so a change is
+    // a rotation.  Unset resolves to LawLicenseClass_Community.
+    Tag                 LicenseClass = 33;
 }
 
 

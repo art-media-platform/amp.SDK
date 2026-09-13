@@ -11,236 +11,250 @@ export interface TagName {
 
 export const Attr = {
     // ─── App registry root — app module names nest under it. ────────
-    App                               : { id: [0x9FC2012FD63F847An, 0x51AA55A31D90CD25n], text: "app" },  // 4zs-80kzpjzhjx-53bkpndft1-m95
+    App                                : { id: [0x9FC2012FD63F847An, 0x51AA55A31D90CD25n], text: "app" },  // 4zs-80kzpjzhjx-53bkpndft1-m95
 
     // ─── Session management ─────────────────────────────────────────
-    SessionAttr                       : { id: [0x5948CA6969CBDF2Fn, 0x01C92A44FA60AB24n], text: "session" },                         // 2t9-356kufcvwr-h3k9b8mx61-bt4
+    SessionAttr                        : { id: [0x5948CA6969CBDF2Fn, 0x01C92A44FA60AB24n], text: "session" },                         // 2t9-356kufcvwr-h3k9b8mx61-bt4
 
-    Login                             : { id: [0x761CD041F19A871En, 0x588D714F3B7C0369n], text: "session.Login" },                   // 3q3-m843wduhwg-5j3cj9wxrs-0v9
-    LoginChallenge                    : { id: [0x4CDE92F1C346D9A6n, 0x3DBC5E21F58B7690n], text: "session.LoginChallenge" },          // 2dv-u9g3hu6v6m-3vg2y47usq-xnh
-    LoginResponse                     : { id: [0xD5D931DCBF32B11Bn, 0x845B0B9940F8F258n], text: "session.LoginResponse" },           // 6pv-4sxtgtkq4e-s8qscm50gj-wks
-    LoginCheckpoint                   : { id: [0xD1FD78AD2D86A001n, 0x89D5922FF13EB7CEn], text: "session.LoginCheckpoint" },         // 6jz-pwbucd6n00-smpdk5zsmx-eyf
-    TxSealChallenge                   : { id: [0xF2A1AE33AC1B3803n, 0xFB2C5214CE23F9CCn], text: "session.tx.seal.LoginChallenge" },  // 7kn-6r37c0v701-zqc2k2m727-yfd
-    TxSealResponse                    : { id: [0x981B0B30B1025607n, 0x2311EFEAF48865A6n], text: "session.tx.seal.CoSignature" },     // 4s3-d5m1d82bs3-k64ggxcu8h-te6
-    MemberToken                       : { id: [0x94BD26B80E00B5E7n, 0xD81E9C5A91C2BB12n], text: "session.member.token.Tag" },        // 4nr-nmch3h0qrm-xh7nwcb8w5-fsk
-    SessionStatus                     : { id: [0x7FB381BC8DB19B28n, 0xE3EC642BF561552Bn], text: "session.Status" },                  // 3zq-f0vt3ejmdn-f7v345guq2-p9c
-    Launch                            : { id: [0x5E5631E663B817F3n, 0xC16D35F3AAEE7AF8n], text: "session.launch" },                  // 2yb-ssydsxs2zt-w2v9pyfpfw-yrs
+    Login                              : { id: [0x761CD041F19A871En, 0x588D714F3B7C0369n], text: "session.Login" },                   // 3q3-m843wduhwg-5j3cj9wxrs-0v9
+    LoginChallenge                     : { id: [0x4CDE92F1C346D9A6n, 0x3DBC5E21F58B7690n], text: "session.LoginChallenge" },          // 2dv-u9g3hu6v6m-3vg2y47usq-xnh
+    LoginResponse                      : { id: [0xD5D931DCBF32B11Bn, 0x845B0B9940F8F258n], text: "session.LoginResponse" },           // 6pv-4sxtgtkq4e-s8qscm50gj-wks
+    LoginCheckpoint                    : { id: [0xD1FD78AD2D86A001n, 0x89D5922FF13EB7CEn], text: "session.LoginCheckpoint" },         // 6jz-pwbucd6n00-smpdk5zsmx-eyf
+    TxSealChallenge                    : { id: [0xF2A1AE33AC1B3803n, 0xFB2C5214CE23F9CCn], text: "session.tx.seal.LoginChallenge" },  // 7kn-6r37c0v701-zqc2k2m727-yfd
+    TxSealResponse                     : { id: [0x981B0B30B1025607n, 0x2311EFEAF48865A6n], text: "session.tx.seal.CoSignature" },     // 4s3-d5m1d82bs3-k64ggxcu8h-te6
+    MemberToken                        : { id: [0x94BD26B80E00B5E7n, 0xD81E9C5A91C2BB12n], text: "session.member.token.Tag" },        // 4nr-nmch3h0qrm-xh7nwcb8w5-fsk
+    SessionStatus                      : { id: [0x7FB381BC8DB19B28n, 0xE3EC642BF561552Bn], text: "session.Status" },                  // 3zq-f0vt3ejmdn-f7v345guq2-p9c
+    Launch                             : { id: [0x5E5631E663B817F3n, 0xC16D35F3AAEE7AF8n], text: "session.launch" },                  // 2yb-ssydsxs2zt-w2v9pyfpfw-yrs
 
-    LaunchWeb                         : { id: [0x3802421A2E14913Cn, 0x65C142851DD9C039n], text: "session.launch.www.Tag" },          // 1s0-911nchnk4y-6chb2hnfxm-h1t
-    LaunchOAuth                       : { id: [0x7BA5AAE91974706Bn, 0x8FC930B7716137D5n], text: "session.launch.oauth.Tag" },        // 3vn-qpfk6cnf1p-szk9hqxsq2-eyp
-    AppState                          : { id: [0x6CEB3696AB78B359n, 0x08CF79D767A904E8n], text: "session.app.state.Tag" },           // 3dx-dv9ebvsqed-hjmvtuxmuk-178
+    LaunchWeb                          : { id: [0x3802421A2E14913Cn, 0x65C142851DD9C039n], text: "session.launch.www.Tag" },          // 1s0-911nchnk4y-6chb2hnfxm-h1t
+    LaunchOAuth                        : { id: [0x7BA5AAE91974706Bn, 0x8FC930B7716137D5n], text: "session.launch.oauth.Tag" },        // 3vn-qpfk6cnf1p-szk9hqxsq2-eyp
+    AppState                           : { id: [0x6CEB3696AB78B359n, 0x08CF79D767A904E8n], text: "session.app.state.Tag" },           // 3dx-dv9ebvsqed-hjmvtuxmuk-178
 
     // ─── Item attributes ────────────────────────────────────────────
-    ItemAttr                          : { id: [0xE8D8BECA5B3BBEB3n, 0x1308458DB27C3504n], text: "item" },                        // 78v-2zdnqtvrut-j6225jqt7s-e84
+    ItemAttr                           : { id: [0xE8D8BECA5B3BBEB3n, 0x1308458DB27C3504n], text: "item" },                        // 78v-2zdnqtvrut-j6225jqt7s-e84
 
-    ChildLink                         : { id: [0x1D7FCD10B1143140n, 0xB45F595E9B29E11En], text: "item.child.link.UID" },         // 0xg-z6j1d8n650-c8rutcuekm-s8y
-    ItemLabels                        : { id: [0x89DC7C30D083C0B7n, 0xCCB62B4FAAB34B4Dn], text: "item.Labels" },                 // 49v-jy31n43s2v-wtejc9ypc6-kue
-    ItemTextTag                       : { id: [0xE961CE2BB0D11C6Fn, 0x77C2DB21D0B1B894n], text: "item.text" },                   // 79d-772rd6j3jr-rghqv478c3-f4n
+    ChildLink                          : { id: [0x1D7FCD10B1143140n, 0xB45F595E9B29E11En], text: "item.child.link.UID" },         // 0xg-z6j1d8n650-c8rutcuekm-s8y
+    ItemLabels                         : { id: [0x89DC7C30D083C0B7n, 0xCCB62B4FAAB34B4Dn], text: "item.Labels" },                 // 49v-jy31n43s2v-wtejc9ypc6-kue
+    ItemTextTag                        : { id: [0xE961CE2BB0D11C6Fn, 0x77C2DB21D0B1B894n], text: "item.text" },                   // 79d-772rd6j3jr-rghqv478c3-f4n
 
-    ItemLabel                         : { id: [0xF02E86C443B0CC5En, 0xBD0EB67840F71680n], text: "item.text.label.Tag" },         // 7h5-u3d8hxhtjg-cu3pqg10gf-5n0
-    ItemCaption                       : { id: [0x05D0FD10FDF9905En, 0x704796E74A32F7B6n], text: "item.text.caption.Tag" },       // 05u-3yj1zgtk1g-70jwqwx535-xxq
-    ItemCollection                    : { id: [0x0A3AA899D5279D78n, 0xA3678ECDB5E2E4CCn], text: "item.text.collection.Tag" },    // 0b7-bn9mp97mpw-b6twftquy5-t6d
-    ItemSynopsis                      : { id: [0xA2F11E66566E2EE1n, 0x631CF283FA7B3173n], text: "item.text.synopsis.Tag" },      // 52y-4g6dpmf5vh-q677khgx7q-dcm
-    ItemFileInfo                      : { id: [0x37F1C92B7B61AFDEn, 0x319025BC546E254Fn], text: "item.FileInfo" },               // 1ry-74kqyv1pzg-33415rjb6w-9bg
-    ItemBehaviors                     : { id: [0x9B7A8FB1F44DCCD9n, 0xFD513A52A6D1C0A6n], text: "item.behaviors.Tags" },         // 4vg-b7v3x2etmd-zun9ubbme3-h56
-    ItemGlyphs                        : { id: [0x2193FA68B12BFE25n, 0x55BF4085B9819FADn], text: "item.glyphs.Tags" },            // 11k-gx6jd9czsk-pcgu0hqws3-7xe
-    ItemLinks                         : { id: [0x551458A1B9F8478Dn, 0xD97A4BC2495B2AE3n], text: "item.links.Tags" },             // 2p2-jdb3fgs8y6-xkykcs94pq-br3
-    ItemCameraState                   : { id: [0x18E764034A5B20FDn, 0x53FEC933E18782D4n], text: "item.CameraState" },            // 0sw-xk06kkv43y-p7zq96ghsg-0qn
-    ItemCameraOptions                 : { id: [0xEF9DCA7B29C45C47n, 0xBB03A56AA33F6432n], text: "item.CameraOptions" },          // 7gm-r57qbf4cj3-vq0x5ebjmy-t1k
-    ItemAtmosphere                    : { id: [0x8718C93E8B1E2B4Cn, 0xB09A9629ED2B9B9Bn], text: "item.AtmosphereSpec" },         // 473-34mx2sy5e6-c16nq57qkr-6wv
-    TileAttr                          : { id: [0xBF3216B40F0EE8E3n, 0x9E0C1A4B0E2789C8n], text: "item.tile" },                   // 5z6-8cc83sfx3j-tw30u9d72g-2f8
+    ItemLabel                          : { id: [0xF02E86C443B0CC5En, 0xBD0EB67840F71680n], text: "item.text.label.Tag" },         // 7h5-u3d8hxhtjg-cu3pqg10gf-5n0
+    ItemCaption                        : { id: [0x05D0FD10FDF9905En, 0x704796E74A32F7B6n], text: "item.text.caption.Tag" },       // 05u-3yj1zgtk1g-70jwqwx535-xxq
+    ItemCollection                     : { id: [0x0A3AA899D5279D78n, 0xA3678ECDB5E2E4CCn], text: "item.text.collection.Tag" },    // 0b7-bn9mp97mpw-b6twftquy5-t6d
+    ItemSynopsis                       : { id: [0xA2F11E66566E2EE1n, 0x631CF283FA7B3173n], text: "item.text.synopsis.Tag" },      // 52y-4g6dpmf5vh-q677khgx7q-dcm
+    ItemFileInfo                       : { id: [0x37F1C92B7B61AFDEn, 0x319025BC546E254Fn], text: "item.FileInfo" },               // 1ry-74kqyv1pzg-33415rjb6w-9bg
+    ItemBehaviors                      : { id: [0x9B7A8FB1F44DCCD9n, 0xFD513A52A6D1C0A6n], text: "item.behaviors.Tags" },         // 4vg-b7v3x2etmd-zun9ubbme3-h56
+    ItemGlyphs                         : { id: [0x2193FA68B12BFE25n, 0x55BF4085B9819FADn], text: "item.glyphs.Tags" },            // 11k-gx6jd9czsk-pcgu0hqws3-7xe
+    ItemLinks                          : { id: [0x551458A1B9F8478Dn, 0xD97A4BC2495B2AE3n], text: "item.links.Tags" },             // 2p2-jdb3fgs8y6-xkykcs94pq-br3
+    ItemCameraState                    : { id: [0x18E764034A5B20FDn, 0x53FEC933E18782D4n], text: "item.CameraState" },            // 0sw-xk06kkv43y-p7zq96ghsg-0qn
+    ItemCameraOptions                  : { id: [0xEF9DCA7B29C45C47n, 0xBB03A56AA33F6432n], text: "item.CameraOptions" },          // 7gm-r57qbf4cj3-vq0x5ebjmy-t1k
+    ItemAtmosphere                     : { id: [0x8718C93E8B1E2B4Cn, 0xB09A9629ED2B9B9Bn], text: "item.AtmosphereSpec" },         // 473-34mx2sy5e6-c16nq57qkr-6wv
+    TileAttr                           : { id: [0xBF3216B40F0EE8E3n, 0x9E0C1A4B0E2789C8n], text: "item.tile" },                   // 5z6-8cc83sfx3j-tw30u9d72g-2f8
     // Consumers read ONE current value per item; edit history is not
     // retained on these attrs (SD-edit-resolution).  The S2R/S2T
     // leaves name units only and store no values.
-    ItemSeries                        : { id: [0x647B2CF1DF98191An, 0xFF84E8A015C7C0BBn], text: "item.series" },                 // 34g-dqg3rws34e-gz178n0bwg-h5v
+    ItemSeries                         : { id: [0x647B2CF1DF98191An, 0xFF84E8A015C7C0BBn], text: "item.series" },                 // 34g-dqg3rws34e-gz178n0bwg-h5v
 
-    SeriesTRS                         : { id: [0x6BECC785388E3D9En, 0x25958F2CECD0021An], text: "item.series.TRS" },             // 3cx-m3sbf4f7qg-2c5dg5mqe0-0hu
-    SeriesLabels                      : { id: [0x64DF54E7607F2F0En, 0xE02A46D568115245n], text: "item.series.Labels" },          // 34v-xbffs3z5w7-f0bk6upn12-nk5
-    SeriesAssetTag                    : { id: [0x38365DC6227700FBn, 0x39ACAA81B253C797n], text: "item.series.asset.Tag" },       // 1s6-tfwd8mr03x-mmc5bh6t57-jwr
-    SeriesHeadLink                    : { id: [0x1F851D40FE1D382Bn, 0x5521D97B38F0236Cn], text: "item.series.link.Tag" },        // 0zh-nfn1zhx70p-pb8ftgdwg0-8vd
-    SeriesLinkTree                    : { id: [0x5B51B3B938C3C87Fn, 0xB429C4C1470DD710n], text: "item.series.link.tree.Tags" },  // 2vb-6tvkf63t1z-v8bf4s53hv-psh
-    SeriesS2R                         : { id: [0x0C89F9B0717A62A5n, 0x79AA41CD3FA29CDDn], text: "item.series.S2.radius.mm" },    // 0dj-7wv0wcudbk-rmbk1tnzu5-76x
-    SeriesS2T                         : { id: [0x749CA29A38DAA5BFn, 0x7139081806CBF2C5n], text: "item.series.S2.UTC64" },        // 3nm-kj9nf6unqz-r2f88303dr-wq5
-    MediaLink                         : { id: [0x4DED4FC2D91C296An, 0x44D348001E677047n], text: "item.media.link.Tag" },         // 2ex-p7w5q8w55p-49nu800g6f-w27
-    MediaRelease                      : { id: [0x04F90C9DAC8B3A0Cn, 0x33799CAE0C2BCE31n], text: "item.media.release.Tag" },      // 04z-469vc4c786-36ydwps62r-mjj
-    MediaInfo                         : { id: [0x9C7620B0D5488458n, 0xDD6F3D4B07305E88n], text: "item.MediaInfo" },              // 4wf-shc1pb8hjd-euvtx9d3m0-rn8
-    MediaSources                      : { id: [0xB77D26475E473898n, 0xD8400E88158F067Bn], text: "item.media.sources.Tags" },     // 5rg-nm4frk772d-ehh0fj0bsy-1mv
-    MediaTags                         : { id: [0x22B7BB8BB0A9928En, 0x8A91770781138CE0n], text: "item.MediaTags" },              // 12q-yxsrd59kb7-8p4cr0y0j7-370
-    MediaEntry                        : { id: [0x9089C4BFDC465D21n, 0x890BC36C92D99049n], text: "item.MediaEntry" },             // 4hj-72czr26cnh-sk2y3ek9em-429
-    MediaRank                         : { id: [0x0995E622E38F0C6Dn, 0x060B93D94E8D8849n], text: "item.MediaRank" },              // 09k-rm25swg1jq-hd2wmv578v-229
-    MediaPlacement                    : { id: [0xB19F8503B3672658n, 0xF4B30D7A52E84663n], text: "item.media.placement.TRS" },    // 5jm-y2h7dv74td-g9dseg99fh-jm3
+    SeriesTRS                          : { id: [0x6BECC785388E3D9En, 0x25958F2CECD0021An], text: "item.series.TRS" },             // 3cx-m3sbf4f7qg-2c5dg5mqe0-0hu
+    SeriesLabels                       : { id: [0x64DF54E7607F2F0En, 0xE02A46D568115245n], text: "item.series.Labels" },          // 34v-xbffs3z5w7-f0bk6upn12-nk5
+    SeriesAssetTag                     : { id: [0x38365DC6227700FBn, 0x39ACAA81B253C797n], text: "item.series.asset.Tag" },       // 1s6-tfwd8mr03x-mmc5bh6t57-jwr
+    SeriesHeadLink                     : { id: [0x1F851D40FE1D382Bn, 0x5521D97B38F0236Cn], text: "item.series.link.Tag" },        // 0zh-nfn1zhx70p-pb8ftgdwg0-8vd
+    SeriesLinkTree                     : { id: [0x5B51B3B938C3C87Fn, 0xB429C4C1470DD710n], text: "item.series.link.tree.Tags" },  // 2vb-6tvkf63t1z-v8bf4s53hv-psh
+    SeriesS2R                          : { id: [0x0C89F9B0717A62A5n, 0x79AA41CD3FA29CDDn], text: "item.series.S2.radius.mm" },    // 0dj-7wv0wcudbk-rmbk1tnzu5-76x
+    SeriesS2T                          : { id: [0x749CA29A38DAA5BFn, 0x7139081806CBF2C5n], text: "item.series.S2.UTC64" },        // 3nm-kj9nf6unqz-r2f88303dr-wq5
+    MediaLink                          : { id: [0x4DED4FC2D91C296An, 0x44D348001E677047n], text: "item.media.link.Tag" },         // 2ex-p7w5q8w55p-49nu800g6f-w27
+    MediaRelease                       : { id: [0x04F90C9DAC8B3A0Cn, 0x33799CAE0C2BCE31n], text: "item.media.release.Tag" },      // 04z-469vc4c786-36ydwps62r-mjj
+    MediaInfo                          : { id: [0x9C7620B0D5488458n, 0xDD6F3D4B07305E88n], text: "item.MediaInfo" },              // 4wf-shc1pb8hjd-euvtx9d3m0-rn8
+    MediaSources                       : { id: [0xB77D26475E473898n, 0xD8400E88158F067Bn], text: "item.media.sources.Tags" },     // 5rg-nm4frk772d-ehh0fj0bsy-1mv
+    MediaTags                          : { id: [0x22B7BB8BB0A9928En, 0x8A91770781138CE0n], text: "item.MediaTags" },              // 12q-yxsrd59kb7-8p4cr0y0j7-370
+    MediaEntry                         : { id: [0x9089C4BFDC465D21n, 0x890BC36C92D99049n], text: "item.MediaEntry" },             // 4hj-72czr26cnh-sk2y3ek9em-429
+    MediaRank                          : { id: [0x0995E622E38F0C6Dn, 0x060B93D94E8D8849n], text: "item.MediaRank" },              // 09k-rm25swg1jq-hd2wmv578v-229
+    MediaPlacement                     : { id: [0xB19F8503B3672658n, 0xF4B30D7A52E84663n], text: "item.media.placement.TRS" },    // 5jm-y2h7dv74td-g9dseg99fh-jm3
 
     // ─── Channel metadata and catalog ───────────────────────────────
-    ChannelAttr                       : { id: [0x3C0BCCB260A85864n, 0xC4DF8E1CD985DD60n], text: "channel" },                            // 1w1-g6c4s58c1k-d9rwf3mdsc-rc0
+    ChannelAttr                        : { id: [0x3C0BCCB260A85864n, 0xC4DF8E1CD985DD60n], text: "channel" },                            // 1w1-g6c4s58c1k-d9rwf3mdsc-rc0
 
-    ChannelCatalog                    : { id: [0x2677628531BECA52n, 0x034FC22E4BB05B8Cn], text: "channel.catalog.ChannelEpoch" },       // 16f-xj8bdeyt99-06my25t5v0-qwd
-    ChannelEpochs                     : { id: [0x46671B0AF50329A0n, 0x6C63540862D1B521n], text: "channel.ChannelEpoch" },               // 26d-wehpx8356h-6ssun11je3-e91
-    ChannelPropertySeries             : { id: [0x35C4FC8DB15756BEn, 0x94B84BDA369A0177n], text: "channel.property.series.JsonValue" },  // 1ps-my8vdbrbuz-99f2cv8v9n-0cr
+    ChannelCatalog                     : { id: [0x2677628531BECA52n, 0x034FC22E4BB05B8Cn], text: "channel.catalog.ChannelEpoch" },       // 16f-xj8bdeyt99-06my25t5v0-qwd
+    ChannelEpochs                      : { id: [0x46671B0AF50329A0n, 0x6C63540862D1B521n], text: "channel.ChannelEpoch" },               // 26d-wehpx8356h-6ssun11je3-e91
+    ChannelPropertySeries              : { id: [0x35C4FC8DB15756BEn, 0x94B84BDA369A0177n], text: "channel.property.series.JsonValue" },  // 1ps-my8vdbrbuz-99f2cv8v9n-0cr
     // Channel-property ITEM keys — ItemIDs within the property series,
     // scoped by (NodeID, AttrID) at runtime; never AttrIDs themselves.
-    ChannelProperty                   : { id: [0xF1F847BE12B003CCn, 0xBB2C4346207C50DAn], text: "channel.property" },                   // 7jz-13vw4ph0g6-cqc238sh7s-n6u
+    ChannelProperty                    : { id: [0xF1F847BE12B003CCn, 0xBB2C4346207C50DAn], text: "channel.property" },                   // 7jz-13vw4ph0g6-cqc238sh7s-n6u
 
-    ChannelPropertyLabel              : { id: [0xAF4AA413D0ED026Cn, 0xE04F4B2A77D76B02n], text: "channel.property.label" },             // 5g9-bk17n7e09q-f0muc59vxf-us2
-    ChannelPropertyDescription        : { id: [0x267F564E36A001F0n, 0xDDA05C2E868CF0E1n], text: "channel.property.description" },       // 16g-xc4wep007s-ev82w5u38t-w71
-    ChannelPropertyGlyph              : { id: [0xD0E035657968E8A3n, 0xA92F31B7179E06DBn], text: "channel.property.glyph" },             // 6hw-0uqbyc8x2j-ukctjqwctw-1qv
-    ChannelPropertySkybox             : { id: [0x3DE032C924E7EC82n, 0x5FFF404B037126D4n], text: "channel.property.skybox" },            // 1xw-0tdk977xk1-5zzu09d1r2-9qn
-    ChannelPropertyGrid               : { id: [0x94EFC317CF34165Fn, 0xCAB7BCDADD7C784Dn], text: "channel.property.grid" },              // 4nx-z1jgmtn2tg-wpexwvcfrs-y2e
-    ChannelPropertyCameraControls     : { id: [0x6FCB7C32C026A452n, 0xC4D5A0B4BB4DD5D7n], text: "channel.property.camera.controls" },   // 3gt-ey35h16nj9-d9pe0qkxnv-pfr
+    ChannelPropertyLabel               : { id: [0xAF4AA413D0ED026Cn, 0xE04F4B2A77D76B02n], text: "channel.property.label" },             // 5g9-bk17n7e09q-f0muc59vxf-us2
+    ChannelPropertyDescription         : { id: [0x267F564E36A001F0n, 0xDDA05C2E868CF0E1n], text: "channel.property.description" },       // 16g-xc4wep007s-ev82w5u38t-w71
+    ChannelPropertyGlyph               : { id: [0xD0E035657968E8A3n, 0xA92F31B7179E06DBn], text: "channel.property.glyph" },             // 6hw-0uqbyc8x2j-ukctjqwctw-1qv
+    ChannelPropertySkybox              : { id: [0x3DE032C924E7EC82n, 0x5FFF404B037126D4n], text: "channel.property.skybox" },            // 1xw-0tdk977xk1-5zzu09d1r2-9qn
+    ChannelPropertyGrid                : { id: [0x94EFC317CF34165Fn, 0xCAB7BCDADD7C784Dn], text: "channel.property.grid" },              // 4nx-z1jgmtn2tg-wpexwvcfrs-y2e
+    ChannelPropertyCameraControls      : { id: [0x6FCB7C32C026A452n, 0xC4D5A0B4BB4DD5D7n], text: "channel.property.camera.controls" },   // 3gt-ey35h16nj9-d9pe0qkxnv-pfr
     // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
     // as VALUES (a Tag field resolves to one), never as AttrIDs —
     // exempt from the generated attr registration.
-    ChannelType                       : { id: [0xE16EE14B4532E786n, 0x8166AD32465165B0n], text: "channel.type" },                       // 71e-vhnqj9kwy3-82tpe69352-teh
+    ChannelType                        : { id: [0xE16EE14B4532E786n, 0x8166AD32465165B0n], text: "channel.type" },                       // 71e-vhnqj9kwy3-82tpe69352-teh
 
-    ChannelTypeSpreadsheet            : { id: [0x1C0062A36805F2FBn, 0xC37F9A8B51C0A909n], text: "channel.type.Spreadsheet" },           // 0w0-1jb6u05ycx-w6zwuje8w1-b89
-    ChannelTypeMessages               : { id: [0x0B6D6A2421321CA6n, 0xFBA2073C02B917A6n], text: "channel.type.Messages" },              // 0ce-pp2889k3km-gr8h77h1ck-5x6
-    ChannelTypeTimeline               : { id: [0xCAA590A1B24C80D3n, 0xF0D695C6FDB81BC9n], text: "channel.type.Timeline" },              // 6bn-q8b3dkdh39-z1pnpsvyvh-6y9
-    ChannelTypeNotes                  : { id: [0x7F066E7E15634C8En, 0x2B42527E940C4785n], text: "channel.type.Notes" },                 // 3z0-tr7w5c39k7-2qhkkgub0s-jw5
-    ChannelTypeMap                    : { id: [0x461600979AF3D842n, 0x5A0DB0A3BDCC6D2Cn], text: "channel.type.Map" },                   // 262-s09g6rmv11-5n3ehnfyws-v9d
-    ChannelTypeGlobe                  : { id: [0x5AE48F27C6756F95n, 0xD710170F8601E1CAn], text: "channel.type.Globe" },                 // 2uw-k7kgjmpeyb-xf40r1y303-sfb
-    ChannelTypeManifold               : { id: [0x4CBB7B8671F99205n, 0xF3E8260DB0811029n], text: "channel.type.Manifold" },              // 2dr-exsdwgtk82-z7u161qs82-419
-    ChannelTypeSpace                  : { id: [0x7A73CEC90BFC9F74n, 0x5A5DE66730642BD4n], text: "channel.type.Space" },                 // 3uf-g7dk2zwmxu-5nrg6dws68-byn
-    ChannelTypeLinks                  : { id: [0x0F753C0ED5870184n, 0x1FC3120334FEC794n], text: "channel.type.Links" },                 // 0gf-ny0xpd7062-1zhsk0dugx-jwn
-    ChannelTypeRegistry               : { id: [0xB9BF3D6330F504B7n, 0xE0B97F3A75A18971n], text: "channel.type.Registry" },              // 5tr-wyq6d7p0kv-y1fcz79uu3-2cj
-    ChannelTypeSystem                 : { id: [0xBAAE45A1E50DB5D6n, 0xA110D0DF2A2A8A6Bn], text: "channel.type.System" },                // 5up-t2u3t8eqrc-b246hvwp2p-2mc
-    ChannelTypeWeb                    : { id: [0x0E85824C4CAE1CCDn, 0x03B61877597F1503n], text: "channel.type.Web" },                   // 0fh-q14sm5f3m6-h7ehsfxdry-583
-    ChannelTypeCrateManager           : { id: [0x9E74B4232D25A550n, 0x3FAB0CD74C29B100n], text: "channel.type.CrateManager" },          // 4yf-ku26c95np8-3zbsdux62m-d80
-    ChannelTypePlaylist               : { id: [0x13359329BB89DC00n, 0x0A5737DF5CC11363n], text: "channel.type.Playlist" },              // 0m6-q9kmfw9vh0-0nptrvxfd2-4v3
-    ChannelTypePicker                 : { id: [0xD2EBF18403D0BFF7n, 0x94A830AA64236EE9n], text: "channel.type.Picker" },                // 6kx-gss80yhrzv-t9b1hp9k26-vr9
-    ChannelTypePlanetPicker           : { id: [0x235A1464B1A9B829n, 0xA3F82B96FE207780n], text: "channel.type.PlanetPicker" },          // 13c-8b69de9r0n-u7y1ckvz20-xw0
-    ChannelTypeBrand                  : { id: [0xB65147BCC3C55E4Cn, 0x9BE811A46788AFF8n], text: "channel.type.Brand" },                 // 5qb-53vthy5ct6-9ru0jnjmsj-czs
-    ChannelTypeNameService            : { id: [0x7F92C1A4067E91BFn, 0x9ED36CF793A42DBFn], text: "channel.type.NameService" },           // 3zk-c0u81myk6z-txnvdyy9u8-cez
-    ChannelTypeTerminal               : { id: [0xA2A7D0965CBFE1C2n, 0x203CD7FD9136CB7Bn], text: "channel.type.Terminal" },              // 52n-z89dr5zw71-20g6rzq8me-kvv
+    ChannelTypeSpreadsheet             : { id: [0x1C0062A36805F2FBn, 0xC37F9A8B51C0A909n], text: "channel.type.Spreadsheet" },           // 0w0-1jb6u05ycx-w6zwuje8w1-b89
+    ChannelTypeMessages                : { id: [0x0B6D6A2421321CA6n, 0xFBA2073C02B917A6n], text: "channel.type.Messages" },              // 0ce-pp2889k3km-gr8h77h1ck-5x6
+    ChannelTypeTimeline                : { id: [0xCAA590A1B24C80D3n, 0xF0D695C6FDB81BC9n], text: "channel.type.Timeline" },              // 6bn-q8b3dkdh39-z1pnpsvyvh-6y9
+    ChannelTypeNotes                   : { id: [0x7F066E7E15634C8En, 0x2B42527E940C4785n], text: "channel.type.Notes" },                 // 3z0-tr7w5c39k7-2qhkkgub0s-jw5
+    ChannelTypeMap                     : { id: [0x461600979AF3D842n, 0x5A0DB0A3BDCC6D2Cn], text: "channel.type.Map" },                   // 262-s09g6rmv11-5n3ehnfyws-v9d
+    ChannelTypeGlobe                   : { id: [0x5AE48F27C6756F95n, 0xD710170F8601E1CAn], text: "channel.type.Globe" },                 // 2uw-k7kgjmpeyb-xf40r1y303-sfb
+    ChannelTypeManifold                : { id: [0x4CBB7B8671F99205n, 0xF3E8260DB0811029n], text: "channel.type.Manifold" },              // 2dr-exsdwgtk82-z7u161qs82-419
+    ChannelTypeSpace                   : { id: [0x7A73CEC90BFC9F74n, 0x5A5DE66730642BD4n], text: "channel.type.Space" },                 // 3uf-g7dk2zwmxu-5nrg6dws68-byn
+    ChannelTypeLinks                   : { id: [0x0F753C0ED5870184n, 0x1FC3120334FEC794n], text: "channel.type.Links" },                 // 0gf-ny0xpd7062-1zhsk0dugx-jwn
+    ChannelTypeRegistry                : { id: [0xB9BF3D6330F504B7n, 0xE0B97F3A75A18971n], text: "channel.type.Registry" },              // 5tr-wyq6d7p0kv-y1fcz79uu3-2cj
+    ChannelTypeSystem                  : { id: [0xBAAE45A1E50DB5D6n, 0xA110D0DF2A2A8A6Bn], text: "channel.type.System" },                // 5up-t2u3t8eqrc-b246hvwp2p-2mc
+    ChannelTypeWeb                     : { id: [0x0E85824C4CAE1CCDn, 0x03B61877597F1503n], text: "channel.type.Web" },                   // 0fh-q14sm5f3m6-h7ehsfxdry-583
+    ChannelTypeCrateManager            : { id: [0x9E74B4232D25A550n, 0x3FAB0CD74C29B100n], text: "channel.type.CrateManager" },          // 4yf-ku26c95np8-3zbsdux62m-d80
+    ChannelTypePlaylist                : { id: [0x13359329BB89DC00n, 0x0A5737DF5CC11363n], text: "channel.type.Playlist" },              // 0m6-q9kmfw9vh0-0nptrvxfd2-4v3
+    ChannelTypePicker                  : { id: [0xD2EBF18403D0BFF7n, 0x94A830AA64236EE9n], text: "channel.type.Picker" },                // 6kx-gss80yhrzv-t9b1hp9k26-vr9
+    ChannelTypePlanetPicker            : { id: [0x235A1464B1A9B829n, 0xA3F82B96FE207780n], text: "channel.type.PlanetPicker" },          // 13c-8b69de9r0n-u7y1ckvz20-xw0
+    ChannelTypeBrand                   : { id: [0xB65147BCC3C55E4Cn, 0x9BE811A46788AFF8n], text: "channel.type.Brand" },                 // 5qb-53vthy5ct6-9ru0jnjmsj-czs
+    ChannelTypeNameService             : { id: [0x7F92C1A4067E91BFn, 0x9ED36CF793A42DBFn], text: "channel.type.NameService" },           // 3zk-c0u81myk6z-txnvdyy9u8-cez
+    ChannelTypeTerminal                : { id: [0xA2A7D0965CBFE1C2n, 0x203CD7FD9136CB7Bn], text: "channel.type.Terminal" },              // 52n-z89dr5zw71-20g6rzq8me-kvv
     // Render surface a channel is staged on — a value the staging host
     // selects and a presenter resolves by (chType, surface); never a
     // C# enum (surface vocabulary in client code breaks the whitelabel
     // contract).  A third rendering = one presenter + one crate entry +
     // one name here.
-    Surface                           : { id: [0x0F4D513216E79F19n, 0xB3B95C0F600BC9E4n], text: "channel.surface" },                    // 0g9-p8m45r7mwd-v7fbw1xh0r-kg4
+    Surface                            : { id: [0x0F4D513216E79F19n, 0xB3B95C0F600BC9E4n], text: "channel.surface" },                    // 0g9-p8m45r7mwd-v7fbw1xh0r-kg4
 
-    SurfacePane                       : { id: [0x2CC06EEA00D01DB6n, 0x829B6E286C9005B8n], text: "channel.surface.Pane" },               // 1ds-1rfn06h3qv-856vf51q90-1es
-    SurfaceVolume                     : { id: [0xF85D3F7208AFC5B3n, 0x39D453801476E4A3n], text: "channel.surface.Volume" },             // 7sc-nzr425gsqt-mmp2mh0b7e-t53
+    SurfacePane                        : { id: [0x2CC06EEA00D01DB6n, 0x829B6E286C9005B8n], text: "channel.surface.Pane" },               // 1ds-1rfn06h3qv-856vf51q90-1es
+    SurfaceVolume                      : { id: [0xF85D3F7208AFC5B3n, 0x39D453801476E4A3n], text: "channel.surface.Volume" },             // 7sc-nzr425gsqt-mmp2mh0b7e-t53
 
     // ─── Brand — substrate-native planet identity (DD-name-service §2). ───
     // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the
     // genesis TxOp at EditID=0 binds identity-tier fields to the planet's
     // cryptographic root.
-    Brand                             : { id: [0xB70889689791764Bn, 0xB554FC786AE221AEn], text: "amp.Brand" },  // 5r1-24qj5wjft5-vbp7wg1pf4-8ef
+    Brand                              : { id: [0xB70889689791764Bn, 0xB554FC786AE221AEn], text: "amp.Brand" },  // 5r1-24qj5wjft5-vbp7wg1pf4-8ef
 
     // ─── NameService — substrate-native naming primitive (DD-name-service §3). ───
     // A channel any planet may host; records map FQDN → tag.UID with
     // bootstrap metadata.  Federations propagate their channel to members via
     // normal CRDT sync.  Generalized beyond planet naming — any UID-bearing
     // entity is namable.
-    NameService                       : { id: [0xB363152A99B543E3n, 0x44B6A07DD731D29Dn], text: "amp.name.service" },                    // 5md-dbkp6ep8gj-n9ep0grcm3-nnx
+    NameService                        : { id: [0xB363152A99B543E3n, 0x44B6A07DD731D29Dn], text: "amp.name.service" },                    // 5md-dbkp6ep8gj-n9ep0grcm3-nnx
 
-    NameServiceRecord                 : { id: [0x6E05972FB0B532A2n, 0xB69FF72616AB00CCn], text: "amp.name.service.NameServiceRecord" },  // 3f0-qckzd5p6bj-ce7zr4scbq-06d
+    NameServiceRecord                  : { id: [0x6E05972FB0B532A2n, 0xB69FF72616AB00CCn], text: "amp.name.service.NameServiceRecord" },  // 3f0-qckzd5p6bj-ce7zr4scbq-06d
 
     // ─── Invite governance — policy + redemption ledger for governed multi-use ───
     // invites (app.invite).  Policies live at (PlanetInvites,
     // PlanetInvitePolicy, inviteID); each invite's ledger at (inviteID,
     // PlanetInviteRedemption, RedeemedAt NowID).
-    PlanetInvites                     : { id: [0x5402ED235E2EB7C4n, 0xB00FB2AE73715FDAn], text: "amp.planet.invites" },                         // 2n0-cqk6rjfqz2-c03xkpttr2-ryu
+    PlanetInvites                      : { id: [0x5402ED235E2EB7C4n, 0xB00FB2AE73715FDAn], text: "amp.planet.invites" },                         // 2n0-cqk6rjfqz2-c03xkpttr2-ryu
 
-    PlanetInvitePolicy                : { id: [0x35006E57AE1732A7n, 0xD6B3A48D909DCD7Bn], text: "amp.planet.invites.PlanetInvitePolicy" },      // 1p0-1r5gchr6bm-xedx4jq89v-mcv
-    PlanetInviteRedemption            : { id: [0x8F5FB55B7D431CACn, 0x9764F863FE96B27Cn], text: "amp.planet.invites.PlanetInviteRedemption" },  // 4gc-yupqzb33kq-9ft7sdgz9e-dmw
+    PlanetInvitePolicy                 : { id: [0x35006E57AE1732A7n, 0xD6B3A48D909DCD7Bn], text: "amp.planet.invites.PlanetInvitePolicy" },      // 1p0-1r5gchr6bm-xedx4jq89v-mcv
+    PlanetInviteRedemption             : { id: [0x8F5FB55B7D431CACn, 0x9764F863FE96B27Cn], text: "amp.planet.invites.PlanetInviteRedemption" },  // 4gc-yupqzb33kq-9ft7sdgz9e-dmw
 
     // ─── Federation directory — peer / parent federation pointers ───
     // (DD-name-service §4.4).  NS-record-style cross-federation forwarding
     // without DNS dependency.
-    FederationDirectory               : { id: [0x789DCD00BF6F38E2n, 0x57A509477C47DA43n], text: "amp.FederationDirectory" },  // 3sm-r6h1gvg73j-5g9898xy4g-qk3
+    FederationDirectory                : { id: [0x789DCD00BF6F38E2n, 0x57A509477C47DA43n], text: "amp.FederationDirectory" },  // 3sm-r6h1gvg73j-5g9898xy4g-qk3
 
     // ─── Planet governance channel — grants, revises, and revokes the ───
     // permissions other channels inherit.  Sibling of amp.ledger and
     // amp.arbitrate.
-    LawAttr                           : { id: [0xB8D21569231305B8n, 0xF74881C639EB11E5n], text: "amp.law" },                                  // 5su-8bqk8sm0qw-gfk41sswyq-4g5
+    LawAttr                            : { id: [0xB8D21569231305B8n, 0xF74881C639EB11E5n], text: "amp.law" },                                   // 5su-8bqk8sm0qw-gfk41sswyq-4g5
 
-    LawPlanetEpoch                    : { id: [0x62F9D4DD32683CE3n, 0x1D28B3308B06594Fn], text: "amp.law.PlanetEpoch" },                      // 32z-7beudm87mj-jub5m625hd-qbg
-    LawMemberEpoch                    : { id: [0xD4D5E6BE48B6D994n, 0x19B1DB5E98597C29n], text: "amp.law.MemberEpoch" },                      // 6nu-rmcwk5qv6b-1mdfvcud5k-z19
-    LawChannelEpoch                   : { id: [0xC49076CDFEB23BBFn, 0xAD7271CB90287F97n], text: "amp.law.ChannelEpoch" },                     // 64k-1vdvzpk7fz-uuwmjtf82h-zwr
-    LawEpochLink                      : { id: [0xC320666D94AB0CFAn, 0xD04D554E454713BFn], text: "amp.law.EpochLink" },                        // 634-1m6v55c1mx-e0mbp9t2nf-4xz
-    LawPlanetOrigin                   : { id: [0x6C8CDF082B47A29En, 0xCC572ADCF4282E79n], text: "amp.law.PlanetOrigin" },                     // 3dj-mghhbu7nbg-dsptbvmu2h-cmt
-    LawEquivalence                    : { id: [0x99F3808D1F407BE6n, 0x2E656BA55F1738FEn], text: "amp.law.Equivalence" },                      // 4ty-f08u7u0ggm-2wtccnpgjf-f7y
-    LawWithdraw                       : { id: [0x850B8DAE8EC87EF2n, 0x228AC81879D663EDn], text: "amp.law.Withdraw" },                         // 451-f6ux3q8gvt-252q831wxd-sze
+    LawPlanetEpoch                     : { id: [0x62F9D4DD32683CE3n, 0x1D28B3308B06594Fn], text: "amp.law.PlanetEpoch" },                       // 32z-7beudm87mj-jub5m625hd-qbg
+    LawMemberEpoch                     : { id: [0xD4D5E6BE48B6D994n, 0x19B1DB5E98597C29n], text: "amp.law.MemberEpoch" },                       // 6nu-rmcwk5qv6b-1mdfvcud5k-z19
+    LawChannelEpoch                    : { id: [0xC49076CDFEB23BBFn, 0xAD7271CB90287F97n], text: "amp.law.ChannelEpoch" },                      // 64k-1vdvzpk7fz-uuwmjtf82h-zwr
+    LawEpochLink                       : { id: [0xC320666D94AB0CFAn, 0xD04D554E454713BFn], text: "amp.law.EpochLink" },                         // 634-1m6v55c1mx-e0mbp9t2nf-4xz
+    LawPlanetOrigin                    : { id: [0x6C8CDF082B47A29En, 0xCC572ADCF4282E79n], text: "amp.law.PlanetOrigin" },                      // 3dj-mghhbu7nbg-dsptbvmu2h-cmt
+    LawEquivalence                     : { id: [0x99F3808D1F407BE6n, 0x2E656BA55F1738FEn], text: "amp.law.Equivalence" },                       // 4ty-f08u7u0ggm-2wtccnpgjf-f7y
+    LawWithdraw                        : { id: [0x850B8DAE8EC87EF2n, 0x228AC81879D663EDn], text: "amp.law.Withdraw" },                          // 451-f6ux3q8gvt-252q831wxd-sze
     // Substrate-agnostic Member Kind (SD-substrate-agnostic-members).
     // MemberEpoch.Kind is a Tag resolving to one of these UIDs.
     // Communities + apps may register additional Kinds in their own
     // consts.sdl.  Zero UID = unspecified.
-    LawMemberKind                     : { id: [0x102047CBC77F0A3En, 0x5C2BBD3DA4EA137Cn], text: "amp.law.MemberKind" },                       // 0h4-13wrjvz18z-5sbxx7qkfn-4vw
+    LawMemberKind                      : { id: [0x102047CBC77F0A3En, 0x5C2BBD3DA4EA137Cn], text: "amp.law.MemberKind" },                        // 0h4-13wrjvz18z-5sbxx7qkfn-4vw
 
-    LawMemberKind_Person              : { id: [0x9066A58EE8084472n, 0x7ECCB4DC966DA647n], text: "amp.law.MemberKind.Person" },                // 4hd-uksxu088jt-7xm5nvkc6v-9k7
-    LawMemberKind_Group               : { id: [0xEF2C5586176DEED8n, 0x5B05F595BBE5600Dn], text: "amp.law.MemberKind.Group" },                 // 7g5-jbsd5vexvd-5q1gpkqxyb-s0e
-    LawMemberKind_Agent               : { id: [0x749E0C48FD2107B3n, 0x929ECFA81FC32124n], text: "amp.law.MemberKind.Agent" },                 // 3nm-s64jz910yt-t57qgp0gw6-894
-    LawMemberKind_Instance            : { id: [0xB7889D1CF912DC06n, 0xFDF984BBDFA0D5BBn], text: "amp.law.MemberKind.Instance" },              // 5rj-2fjty8kvh3-gvyd4rggu1-pev
-    LawMemberKind_Successor           : { id: [0x627C11221E4584F9n, 0xCD00ACCD3211B4F9n], text: "amp.law.MemberKind.Successor" },             // 32g-h8k47k5hmw-wu05dtnt13-e7t
-    LawMemberKind_Memorial            : { id: [0xBA335B3927C0252Bn, 0xB791D002F55B477Fn], text: "amp.law.MemberKind.Memorial" },              // 5u6-eemk9y04np-vg4fh0cupq-jvz
-    LawMemberKind_Process             : { id: [0x98ECE8E691BE5BD5n, 0x7E0A29F6F4393466n], text: "amp.law.MemberKind.Process" },               // 4sx-mnfe4eycgb-rw2j9yvu3k-e36
+    LawMemberKind_Person               : { id: [0x9066A58EE8084472n, 0x7ECCB4DC966DA647n], text: "amp.law.MemberKind.Person" },                 // 4hd-uksxu088jt-7xm5nvkc6v-9k7
+    LawMemberKind_Group                : { id: [0xEF2C5586176DEED8n, 0x5B05F595BBE5600Dn], text: "amp.law.MemberKind.Group" },                  // 7g5-jbsd5vexvd-5q1gpkqxyb-s0e
+    LawMemberKind_Agent                : { id: [0x749E0C48FD2107B3n, 0x929ECFA81FC32124n], text: "amp.law.MemberKind.Agent" },                  // 3nm-s64jz910yt-t57qgp0gw6-894
+    LawMemberKind_Instance             : { id: [0xB7889D1CF912DC06n, 0xFDF984BBDFA0D5BBn], text: "amp.law.MemberKind.Instance" },               // 5rj-2fjty8kvh3-gvyd4rggu1-pev
+    LawMemberKind_Successor            : { id: [0x627C11221E4584F9n, 0xCD00ACCD3211B4F9n], text: "amp.law.MemberKind.Successor" },              // 32g-h8k47k5hmw-wu05dtnt13-e7t
+    LawMemberKind_Memorial             : { id: [0xBA335B3927C0252Bn, 0xB791D002F55B477Fn], text: "amp.law.MemberKind.Memorial" },               // 5u6-eemk9y04np-vg4fh0cupq-jvz
+    LawMemberKind_Process              : { id: [0x98ECE8E691BE5BD5n, 0x7E0A29F6F4393466n], text: "amp.law.MemberKind.Process" },                // 4sx-mnfe4eycgb-rw2j9yvu3k-e36
     // Attestation modalities.  Attestation.Modality is a Tag resolving
     // to one of these UIDs.
     // Communities + apps may register additional modalities.
     // Zero UID = unspecified.
-    LawAttestationModality            : { id: [0x9F5377F513757A9Fn, 0x74B304390F47261Bn], text: "amp.law.AttestationModality" },              // 4zb-evzb4vpgbg-r9ds4747nf-9hv
+    LawAttestationModality             : { id: [0x9F5377F513757A9Fn, 0x74B304390F47261Bn], text: "amp.law.AttestationModality" },               // 4zb-evzb4vpgbg-r9ds4747nf-9hv
 
-    LawAttestationModality_Asserted   : { id: [0x75C91DBFE351CFA4n, 0xBDF0BBC9911BA504n], text: "amp.law.AttestationModality.Asserted" },     // 3pt-4fvzsujtyk-cvw5vt68jr-984
-    LawAttestationModality_Witnessed  : { id: [0xEDF2976BE9E0FC72n, 0xA1AA047BE5D91C2Fn], text: "amp.law.AttestationModality.Witnessed" },    // 7ey-bcqrug0zjt-b3bh4ggkxk-71g
-    LawAttestationModality_Reported   : { id: [0x01ABA5357F784D15n, 0x96F49237F6805E56n], text: "amp.law.AttestationModality.Reported" },     // 01p-fkmbzvs9nb-tex4k6zv80-rkq
-    LawAttestationModality_Inferred   : { id: [0x586F8C9352B3899Cn, 0x8F41E2BF1D0BB521n], text: "amp.law.AttestationModality.Inferred" },     // 2se-y696npmj6f-8yhg2rwfhr-e91
-    LawAttestationModality_Speculated : { id: [0xB39330159C4E87E1n, 0xF842FF134BF859C2n], text: "amp.law.AttestationModality.Speculated" },   // 5mk-ds1c72fhzh-zhhrz2e5zh-qf2
-    LawAttestationModality_Dreamed    : { id: [0xAC2C17267CD4DF9Bn, 0x94DD976E325E51B4n], text: "amp.law.AttestationModality.Dreamed" },      // 5d5-hckdz6nvye-t9rdrest5w-nen
-    LawAttestationModality_Liturgical : { id: [0x801C1A7DF12F7128n, 0xFA0D77ADD9E695ABn], text: "amp.law.AttestationModality.Liturgical" },   // 403-he7vw9gf4n-gn3crprdye-5ec
-    LawAttestationModality_Conditional: { id: [0x84466F1352512715n, 0x29E493F726901576n], text: "amp.law.AttestationModality.Conditional" },  // 448-trj6nkj4wb-kmt4mywm90-5cq
-    LawAttestationModality_Contested  : { id: [0x0502182AD6D3BDB4n, 0xC9F14651631969E3n], text: "amp.law.AttestationModality.Contested" },    // 050-8d2ppqmrqu-dmwb6b5jjk-ug3
-    LawAttestationModality_Retracted  : { id: [0xCA955565A08728E6n, 0x4FCC6CCB72D595CBn], text: "amp.law.AttestationModality.Retracted" },    // 6bk-pbqc84753m-4zm3dtetec-5fc
+    LawAttestationModality_Asserted    : { id: [0x75C91DBFE351CFA4n, 0xBDF0BBC9911BA504n], text: "amp.law.AttestationModality.Asserted" },      // 3pt-4fvzsujtyk-cvw5vt68jr-984
+    LawAttestationModality_Witnessed   : { id: [0xEDF2976BE9E0FC72n, 0xA1AA047BE5D91C2Fn], text: "amp.law.AttestationModality.Witnessed" },     // 7ey-bcqrug0zjt-b3bh4ggkxk-71g
+    LawAttestationModality_Reported    : { id: [0x01ABA5357F784D15n, 0x96F49237F6805E56n], text: "amp.law.AttestationModality.Reported" },      // 01p-fkmbzvs9nb-tex4k6zv80-rkq
+    LawAttestationModality_Inferred    : { id: [0x586F8C9352B3899Cn, 0x8F41E2BF1D0BB521n], text: "amp.law.AttestationModality.Inferred" },      // 2se-y696npmj6f-8yhg2rwfhr-e91
+    LawAttestationModality_Speculated  : { id: [0xB39330159C4E87E1n, 0xF842FF134BF859C2n], text: "amp.law.AttestationModality.Speculated" },    // 5mk-ds1c72fhzh-zhhrz2e5zh-qf2
+    LawAttestationModality_Dreamed     : { id: [0xAC2C17267CD4DF9Bn, 0x94DD976E325E51B4n], text: "amp.law.AttestationModality.Dreamed" },       // 5d5-hckdz6nvye-t9rdrest5w-nen
+    LawAttestationModality_Liturgical  : { id: [0x801C1A7DF12F7128n, 0xFA0D77ADD9E695ABn], text: "amp.law.AttestationModality.Liturgical" },    // 403-he7vw9gf4n-gn3crprdye-5ec
+    LawAttestationModality_Conditional : { id: [0x84466F1352512715n, 0x29E493F726901576n], text: "amp.law.AttestationModality.Conditional" },   // 448-trj6nkj4wb-kmt4mywm90-5cq
+    LawAttestationModality_Contested   : { id: [0x0502182AD6D3BDB4n, 0xC9F14651631969E3n], text: "amp.law.AttestationModality.Contested" },     // 050-8d2ppqmrqu-dmwb6b5jjk-ug3
+    LawAttestationModality_Retracted   : { id: [0xCA955565A08728E6n, 0x4FCC6CCB72D595CBn], text: "amp.law.AttestationModality.Retracted" },     // 6bk-pbqc84753m-4zm3dtetec-5fc
     // Equivalence strengths.  Equivalence.Strength is a Tag resolving to
     // one of these UIDs.  Zero UID = unspecified.
-    LawEquivalenceStrength            : { id: [0x17501E56DC9B1A5Dn, 0x19F49F4EF6B49F84n], text: "amp.law.EquivalenceStrength" },              // 0rb-0g5er4v39f-jmx4z9vvc9-7w4
+    LawEquivalenceStrength             : { id: [0x17501E56DC9B1A5Dn, 0x19F49F4EF6B49F84n], text: "amp.law.EquivalenceStrength" },               // 0rb-0g5er4v39f-jmx4z9vvc9-7w4
 
-    LawEquivalenceStrength_Identity   : { id: [0x7A180A04688254AFn, 0xEDCDADDC2F98FC54n], text: "amp.law.EquivalenceStrength.Identity" },     // 3u3-0508u42bkr-yvmeevhrtj-z2n
-    LawEquivalenceStrength_Translation: { id: [0x8D295A1372FA2C5Dn, 0x10798077BE8E1B1An], text: "amp.law.EquivalenceStrength.Translation" },  // 4e5-5e16wru5jf-j0yd0fyz8w-6su
-    LawEquivalenceStrength_Approximate: { id: [0x90E61D55697A0D3Cn, 0xA6613FC42F78EF78n], text: "amp.law.EquivalenceStrength.Approximate" },  // 4hw-sfpbucu1ny-bds9zshrrj-vvs
-    LawEquivalenceStrength_Analogous  : { id: [0x112A5CA73BB8C091n, 0x8A80533CC1EC7186n], text: "amp.law.EquivalenceStrength.Analogous" },    // 0j5-9fbffxss28-sp02m7m0ys-wd6
+    LawEquivalenceStrength_Identity    : { id: [0x7A180A04688254AFn, 0xEDCDADDC2F98FC54n], text: "amp.law.EquivalenceStrength.Identity" },      // 3u3-0508u42bkr-yvmeevhrtj-z2n
+    LawEquivalenceStrength_Translation : { id: [0x8D295A1372FA2C5Dn, 0x10798077BE8E1B1An], text: "amp.law.EquivalenceStrength.Translation" },   // 4e5-5e16wru5jf-j0yd0fyz8w-6su
+    LawEquivalenceStrength_Approximate : { id: [0x90E61D55697A0D3Cn, 0xA6613FC42F78EF78n], text: "amp.law.EquivalenceStrength.Approximate" },   // 4hw-sfpbucu1ny-bds9zshrrj-vvs
+    LawEquivalenceStrength_Analogous   : { id: [0x112A5CA73BB8C091n, 0x8A80533CC1EC7186n], text: "amp.law.EquivalenceStrength.Analogous" },     // 0j5-9fbffxss28-sp02m7m0ys-wd6
+    // License classes.  EpochTerms.LicenseClass is a Tag resolving to
+    // one of these UIDs; the class is a self-declaration the federation's
+    // Endorsement cites, never an on-node check.  Zero UID = Community.
+    LawLicenseClass                    : { id: [0x58651294CF91227En, 0x78C6FDB2A546B6E0n], text: "amp.law.LicenseClass" },                      // 2sd-n999mwj49z-7jjrxqbkne-er0
+
+    LawLicenseClass_Community          : { id: [0x8DF6EAA3AAD4F21An, 0xD740EE73E86F315En], text: "amp.law.LicenseClass.Community" },            // 4ey-vpb7bqny8e-efh7ffgn6y-dby
+    LawLicenseClass_Supporter          : { id: [0x03AEE52C2239A185n, 0x3172E2F186E3FDB4n], text: "amp.law.LicenseClass.Supporter" },            // 03p-vkks8jtn62-m2wr2y63f7-zen
+    LawLicenseClass_BusinessSolo       : { id: [0x4CA0E505EF3DF969n, 0x506CFA93BDAA5DDBn], text: "amp.law.LicenseClass.BusinessSolo" },         // 2dn-3khcvtxz5n-p0v7ukfyun-rfv
+    LawLicenseClass_BusinessTeam       : { id: [0xBB24C1CC105AB41Fn, 0x1783E50CCC7F07B4n], text: "amp.law.LicenseClass.BusinessTeam" },         // 5v4-m0ws42uqhg-jg0z51m67y-1xn
+    LawLicenseClass_BusinessCompany    : { id: [0x4EB82A3E976F8C00n, 0x0644C22555D43A5En], text: "amp.law.LicenseClass.BusinessCompany" },      // 2fr-0p3x5vgjh0-0dj624pbx8-fky
+    LawLicenseClass_BusinessEnterprise : { id: [0x3BFFBB5E88FD61D6n, 0x3CA4C30C17B7F0DBn], text: "amp.law.LicenseClass.BusinessEnterprise" },   // 1vz-yxpx27xd7c-3t9631hcvg-w6v
+    LawLicenseClass_WhitelabelSkin     : { id: [0x87230E4407876BD1n, 0x1E5117A36E233849n], text: "amp.law.LicenseClass.WhitelabelSkin" },       // 474-d7481w7eg8-jwn8rner26-f29
+    LawLicenseClass_WhitelabelBrand    : { id: [0xB84F592BD48ED0FEn, 0x53B2936057BA7E82n], text: "amp.law.LicenseClass.WhitelabelBrand" },      // 5s9-xdkrp4fu3z-57dnmd1cvn-zn2
+    LawLicenseClass_WhitelabelSovereign: { id: [0x41D58C1169BF9A7Bn, 0x9CE09DE52B4E394An], text: "amp.law.LicenseClass.WhitelabelSovereign" },  // 21u-q612uezm9x-tts4xwnpnw-fbb
 
     // ─── Planet ledger — durable record of observations and citations. ───
     // Attestations (strikes, endorsements, witness records, audits, amnesties)
     // live here as convergent TxOps; access-control acts cite them via
     // AttestationRef, making every governance decision auditable.
-    LedgerAttr                        : { id: [0x82BC4E1F6FB05241n, 0x03CA388E1C44C848n], text: "amp.ledger" },              // 42r-j71yvxhb90-h7kjsjsf49-k28
+    LedgerAttr                         : { id: [0x82BC4E1F6FB05241n, 0x03CA388E1C44C848n], text: "amp.ledger" },              // 42r-j71yvxhb90-h7kjsjsf49-k28
 
-    LedgerAttestation                 : { id: [0x3C774A8A36241368n, 0x2074703AFA0EF846n], text: "amp.ledger.Attestation" },  // 1wf-x58nej42en-20x3h7cx0x-y26
+    LedgerAttestation                  : { id: [0x3C774A8A36241368n, 0x2074703AFA0EF846n], text: "amp.ledger.Attestation" },  // 1wf-x58nej42en-20x3h7cx0x-y26
 
     // ─── Planet arbitration channel — dispute proceedings, appeals, and formal ───
     // rulings.  Peer to amp.law (which legislates) and amp.ledger (which
     // records the evidence).
-    ArbitrateAttr                     : { id: [0xDF2729755E06E633n, 0xFCEAF9377C838C59n], text: "amp.arbitrate" },  // 6z4-wnrbrh6wst-zturt6xy87-32t
+    ArbitrateAttr                      : { id: [0xDF2729755E06E633n, 0xFCEAF9377C838C59n], text: "amp.arbitrate" },  // 6z4-wnrbrh6wst-zturt6xy87-32t
 
     // ─── Member lifecycle ───────────────────────────────────────────
-    MemberAttr                        : { id: [0x4CCC7C4A23169DBFn, 0x2EC0059288020E9Fn], text: "amp.member" },                 // 2dt-jy4n8sqmqz-kxh05kb404-3nz
+    MemberAttr                         : { id: [0x4CCC7C4A23169DBFn, 0x2EC0059288020E9Fn], text: "amp.member" },                 // 2dt-jy4n8sqmqz-kxh05kb404-3nz
 
-    PlanetInvite                      : { id: [0x6FEE6335FCDBCE81n, 0x4BA0971C012DEF93n], text: "amp.member.PlanetInvite" },    // 3gx-tjmcz6vtu0-nr84r3h0kv-vwm
-    PlanetInviteOp                    : { id: [0x282E9002D3DEC1D9n, 0x4E7FE61F5118FF87n], text: "amp.member.PlanetInviteOp" },  // 185-u805nyys7d-nwzz63x8jj-zw7
+    PlanetInvite                       : { id: [0x6FEE6335FCDBCE81n, 0x4BA0971C012DEF93n], text: "amp.member.PlanetInvite" },    // 3gx-tjmcz6vtu0-nr84r3h0kv-vwm
+    PlanetInviteOp                     : { id: [0x282E9002D3DEC1D9n, 0x4E7FE61F5118FF87n], text: "amp.member.PlanetInviteOp" },  // 185-u805nyys7d-nwzz63x8jj-zw7
 
     // ─── Home planet attributes ─────────────────────────────────────
-    HomeAttr                          : { id: [0x45A5C59F62D1113Fn, 0x73AEED98C41EFBFAn], text: "amp.home" },                                   // 25n-r2tysqj24z-r7crem321x-yzu
+    HomeAttr                           : { id: [0x45A5C59F62D1113Fn, 0x73AEED98C41EFBFAn], text: "amp.home" },                                   // 25n-r2tysqj24z-r7crem321x-yzu
 
-    PlanetBinding                     : { id: [0xD1107652908E11D6n, 0x1B2B3BC082553787n], text: "amp.home.planet.binding.Tag" },                // 6j2-1v5544f27c-1qbtvs215b-ew7
-    PlanetStorageOpts                 : { id: [0x69BFD182C13A9A31n, 0xF66973A8296693D5n], text: "amp.home.planet.storage.PlanetStorageOpts" },  // 39r-z8s5h9um8s-zducmp0nqe-4yp
+    PlanetBinding                      : { id: [0xD1107652908E11D6n, 0x1B2B3BC082553787n], text: "amp.home.planet.binding.Tag" },                // 6j2-1v5544f27c-1qbtvs215b-ew7
+    PlanetStorageOpts                  : { id: [0x69BFD182C13A9A31n, 0xF66973A8296693D5n], text: "amp.home.planet.storage.PlanetStorageOpts" },  // 39r-z8s5h9um8s-zducmp0nqe-4yp
     // Client vars groups: device-class on the member's device node,
     // member-class on the home planet head node (one item each).
-    HomeDeviceVars                    : { id: [0x29E7E7423E9B1D1Cn, 0xEB211EAF5656108En], text: "amp.home.device.DeviceVars" },                 // 19w-zmn4gnv3nf-fq88ypxc5d-44f
-    HomeMemberVars                    : { id: [0x120E61F6DBFEBC72n, 0xE54F53E16D8E5732n], text: "amp.home.member.MemberVars" },                 // 0k1-thzeqzyrjt-fbmumw5qsw-ptk
+    HomeDeviceVars                     : { id: [0x29E7E7423E9B1D1Cn, 0xEB211EAF5656108En], text: "amp.home.device.DeviceVars" },                 // 19w-zmn4gnv3nf-fq88ypxc5d-44f
+    HomeMemberVars                     : { id: [0x120E61F6DBFEBC72n, 0xE54F53E16D8E5732n], text: "amp.home.member.MemberVars" },                 // 0k1-thzeqzyrjt-fbmumw5qsw-ptk
 
     // ─── Blob storage ───────────────────────────────────────────────
-    BlobAttr                          : { id: [0x43839888952F19F9n, 0xB576A64453AD2634n], text: "amp.blob" },               // 23h-fd8j59g37w-vbxp68j9uu-9jn
+    BlobAttr                           : { id: [0x43839888952F19F9n, 0xB576A64453AD2634n], text: "amp.blob" },               // 23h-fd8j59g37w-vbxp68j9uu-9jn
 
-    BlobRef                           : { id: [0xF390C57CD7C15B45n, 0x13F1CF7F07D7A047n], text: "amp.blob.BlobRef" },       // 7mk-32rtpy1ce2-j7wfggw3xg-827
-    NodeBlobs                         : { id: [0xAD0BA6086B8A5202n, 0xB15FFA7352307DEFn], text: "amp.blob.node.BlobRef" },  // 5e1-fm0huwbb81-c2rzufe930-zgg
+    BlobRef                            : { id: [0xF390C57CD7C15B45n, 0x13F1CF7F07D7A047n], text: "amp.blob.BlobRef" },       // 7mk-32rtpy1ce2-j7wfggw3xg-827
+    NodeBlobs                          : { id: [0xAD0BA6086B8A5202n, 0xB15FFA7352307DEFn], text: "amp.blob.node.BlobRef" },  // 5e1-fm0huwbb81-c2rzufe930-zgg
 
     // ─── Tile-server registry — list of available raster / terrain / vector ───
     // tile backends.  Each entry is a TileServer proto stored as one item
     // under TileServer; consumers (TileService, manifold compositor) filter
     // by Kind / Projection / region tags to assemble a layer stack.
-    TileServerAttr                    : { id: [0xD5FC9ECEE1CD0384n, 0xDD46B5FC1E37D2F4n], text: "tile.server" },             // 6pz-kgdxsfe0f2-eujppzhg3g-nrn
+    TileServerAttr                     : { id: [0xD5FC9ECEE1CD0384n, 0xDD46B5FC1E37D2F4n], text: "tile.server" },             // 6pz-kgdxsfe0f2-eujppzhg3g-nrn
 
-    TileServer                        : { id: [0xE33FC73D7E59EC57n, 0x935C14FC5D1E29A2n], text: "tile.server.TileServer" },  // 737-z3muzktxjc-t6r0nzjfjw-be2
+    TileServer                         : { id: [0xE33FC73D7E59EC57n, 0x935C14FC5D1E29A2n], text: "tile.server.TileServer" },  // 737-z3muzktxjc-t6r0nzjfjw-be2
 } satisfies Record<string, TagName>;
 
 export const ContentGlyphURI:  string = "asset:glyph/";

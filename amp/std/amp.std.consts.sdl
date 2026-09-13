@@ -209,6 +209,21 @@ tags Attr {
             LawEquivalenceStrength_Analogous   "Analogous"
         }
 
+        // License classes.  EpochTerms.LicenseClass is a Tag resolving to
+        // one of these UIDs; the class is a self-declaration the federation's
+        // Endorsement cites, never an on-node check.  Zero UID = Community.
+        LawLicenseClass "LicenseClass" {
+            LawLicenseClass_Community           "Community"
+            LawLicenseClass_Supporter           "Supporter"
+            LawLicenseClass_BusinessSolo        "BusinessSolo"
+            LawLicenseClass_BusinessTeam        "BusinessTeam"
+            LawLicenseClass_BusinessCompany     "BusinessCompany"
+            LawLicenseClass_BusinessEnterprise  "BusinessEnterprise"
+            LawLicenseClass_WhitelabelSkin      "WhitelabelSkin"
+            LawLicenseClass_WhitelabelBrand     "WhitelabelBrand"
+            LawLicenseClass_WhitelabelSovereign "WhitelabelSovereign"
+        }
+
     }
 
     // Planet ledger — durable record of observations and citations.
