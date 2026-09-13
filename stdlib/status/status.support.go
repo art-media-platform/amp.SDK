@@ -80,6 +80,16 @@ func GetCode(err error) Code {
 	return Code_Unnamed
 }
 
+// CodeOf is the code a re-labeled cause carries: the cause's own code when it
+// is status-coded, else fallback — so re-labeling with context never demotes a
+// coded refusal to Unnamed (GetCode does not unwrap).
+func CodeOf(cause error, fallback Code) Code {
+	if code := GetCode(cause); code != Code_Unnamed {
+		return code
+	}
+	return fallback
+}
+
 // IsError reports whether err is a *Status carrying one of the given Codes.
 // If err == nil, this returns false.
 func IsError(err error, errCodes ...Code) bool {
