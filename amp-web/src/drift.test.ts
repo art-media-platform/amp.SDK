@@ -467,7 +467,7 @@ const WITHDRAW_REASONS = [
 ] as const satisfies readonly WithdrawReason[];
 
 const INVITE_STATUSES = [
-  'InviteActive', 'InviteRevoked',
+  'InviteActive', 'InviteRevoked', 'InvitePaused',
 ] as const satisfies readonly InvitePolicyEntry['Status'][];
 
 const TRUST_STATES = [

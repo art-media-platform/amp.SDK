@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
@@ -468,7 +469,11 @@ func TestEpochKeys_SiblingStoresUnionOnPersist(t *testing.T) {
 	defer storeB.Close(ctx)
 
 	container := tag.NewID()
-	epochA, epochB, epochC := tag.NowID(), tag.NowID(), tag.NowID() // time-based: C is the newest
+	// Three distinct epochs in ascending order: C is the newest (NowID's low
+	// word carries entropy, so three calls inside one tick are unordered).
+	epochs := []tag.UID{tag.NowID(), tag.NowID(), tag.NowID()}
+	sort.Slice(epochs, func(i, j int) bool { return epochs[i].CompareTo(epochs[j]) < 0 })
+	epochA, epochB, epochC := epochs[0], epochs[1], epochs[2]
 	bytesA, bytesB, bytesC := randomKeyBytes(t), randomKeyBytes(t), randomKeyBytes(t)
 
 	// A installs after B loaded; B's later install persists B's map — which

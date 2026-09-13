@@ -175,7 +175,7 @@ export interface InvitePolicyEntry {
   InviteID: string;
   MaxRedemptions: number;
   GrantedAccess?: string;
-  Status: 'InviteActive' | 'InviteRevoked';
+  Status: 'InviteActive' | 'InviteRevoked' | 'InvitePaused';
   ExpiresAt?: number;
   Redemptions?: InviteRedemptionEntry[];
 }
