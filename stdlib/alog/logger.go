@@ -609,6 +609,7 @@ func AwaitInterrupt() (first <-chan struct{}, repeated <-chan struct{}) {
 	// and kills the process.
 	signal.Notify(sigInbox, syscall.SIGINT, syscall.SIGTERM)
 
+	//amp:detached — the process-level interrupt wait; alog sits below stdlib/task, so no tree exists here to own it
 	go func() {
 		reportSignal(<-sigInbox, "stopping")
 		close(onFirst)

@@ -55,7 +55,9 @@ func (p *ctx) Close(err error) {
 }
 
 // WrapContext returns a new closer.Context that signals Done() once when either: the input context signals, or Close() is called.
-// If input == nil, the returned context only closes once Close() is called.
+// If input == nil, the returned context only closes once Close() is called — and no goroutine
+// exists; with an input, one watcher goroutine lives until the input's Done() or Close(),
+// whichever comes first.  The caller's Close() is its bound: every wrap is closed by its owner.
 func WrapContext(input context.Context) Context {
 	p := &ctx{
 		closed: make(chan struct{}),
@@ -64,6 +66,7 @@ func WrapContext(input context.Context) Context {
 		if deadline, ok := input.Deadline(); ok {
 			p.deadline = deadline
 		}
+		//amp:detached — a context.Context has no tree; the caller's Close() or the input's Done() ends the watcher
 		go func() {
 			select {
 			case <-input.Done():
