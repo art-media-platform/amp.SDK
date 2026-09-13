@@ -219,9 +219,6 @@ tags Attr {
             LawLicenseClass_BusinessTeam        "BusinessTeam"
             LawLicenseClass_BusinessCompany     "BusinessCompany"
             LawLicenseClass_BusinessEnterprise  "BusinessEnterprise"
-            LawLicenseClass_WhitelabelSkin      "WhitelabelSkin"
-            LawLicenseClass_WhitelabelBrand     "WhitelabelBrand"
-            LawLicenseClass_WhitelabelSovereign "WhitelabelSovereign"
         }
 
     }
