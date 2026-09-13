@@ -233,7 +233,7 @@ POST /api/v1/admin/credentials/email/issue   (operator Bearer; admin-gated signu
 `recoverEmail` emails a single-use recovery code and always resolves on the
 uniform 202 — the emailed code is the only existence side-channel.
 `redeemEmail` consumes it, swaps the password, and installs the minted session
-(it doubles as a login; no follow-up `login()`).  `claimAccount` is the legacy
+(it doubles as a login; no follow-up `login()`).  `claimAccount` is the
 account-claim flow (AD-app-forums §8.4): an email-bound activation token admits
 a member with **no prior credential**, sets the first password, binds
 email↔MemberID, and installs the session; a replayed link on an
@@ -652,7 +652,7 @@ await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: nonce });
 
 await recoverEmail(email);                                    // uniform 202; the code arrives by email
 await redeemEmail({ token, newPassword });                    // consumes the code, signs in
-await claimAccount({ email, token, newPassword });            // legacy activation link → first password, signs in
+await claimAccount({ email, token, newPassword });            // activation link → first password, signs in
 ```
 
 `redeemEmail` and `claimAccount` mint a session exactly like `login` — the
