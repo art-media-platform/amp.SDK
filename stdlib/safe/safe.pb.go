@@ -1055,7 +1055,6 @@ type EpochKeyTome struct {
 	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"` // Incremented on each mutation
 	Keys          []*EpochKeyEntry       `protobuf:"bytes,2,rep,name=Keys,proto3" json:"Keys,omitempty"`          // All epoch keys (sorted by ContainerID, then EpochID)
 	Current       []*EpochElection       `protobuf:"bytes,3,rep,name=Current,proto3" json:"Current,omitempty"`    // Current-epoch election per container
-	Shredded      []*EpochElection       `protobuf:"bytes,4,rep,name=Shredded,proto3" json:"Shredded,omitempty"`  // Epochs destroyed by ShredKeys — tombstones a sibling session's persist honors (never re-adds)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1107,13 +1106,6 @@ func (x *EpochKeyTome) GetKeys() []*EpochKeyEntry {
 func (x *EpochKeyTome) GetCurrent() []*EpochElection {
 	if x != nil {
 		return x.Current
-	}
-	return nil
-}
-
-func (x *EpochKeyTome) GetShredded() []*EpochElection {
-	if x != nil {
-		return x.Shredded
 	}
 	return nil
 }
@@ -1388,12 +1380,11 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
 	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
 	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
-	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\"\xb3\x01\n" +
+	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\"\x82\x01\n" +
 	"\fEpochKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
 	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\x12-\n" +
-	"\aCurrent\x18\x03 \x03(\v2\x13.safe.EpochElectionR\aCurrent\x12/\n" +
-	"\bShredded\x18\x04 \x03(\v2\x13.safe.EpochElectionR\bShredded\"\xb5\x01\n" +
+	"\aCurrent\x18\x03 \x03(\v2\x13.safe.EpochElectionR\aCurrent\"\xb5\x01\n" +
 	"\x0fEncryptedSymKey\x12#\n" +
 	"\rCryptoKitID_0\x18\x01 \x01(\x06R\fCryptoKitID0\x12#\n" +
 	"\rCryptoKitID_1\x18\x02 \x01(\x06R\fCryptoKitID1\x12\x1b\n" +
@@ -1475,13 +1466,12 @@ var file_stdlib_safe_safe_proto_depIdxs = []int32{
 	10, // 5: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
 	11, // 6: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
 	12, // 7: safe.EpochKeyTome.Current:type_name -> safe.EpochElection
-	12, // 8: safe.EpochKeyTome.Shredded:type_name -> safe.EpochElection
-	3,  // 9: safe.SealedValue.Role:type_name -> safe.KeyRole
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	3,  // 8: safe.SealedValue.Role:type_name -> safe.KeyRole
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }

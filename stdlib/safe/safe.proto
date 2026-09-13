@@ -198,7 +198,6 @@ message EpochKeyTome {
     int64                   Revision    = 1;    // Incremented on each mutation
     repeated EpochKeyEntry  Keys        = 2;    // All epoch keys (sorted by ContainerID, then EpochID)
     repeated EpochElection  Current     = 3;    // Current-epoch election per container
-    repeated EpochElection  Shredded    = 4;    // Epochs destroyed by ShredKeys — tombstones a sibling session's persist honors (never re-adds)
 }
 
 
