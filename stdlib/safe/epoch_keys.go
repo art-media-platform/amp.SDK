@@ -19,9 +19,16 @@ import (
 // identity Enclave.  Mutations are durable at return: PutKey, SetCurrentEpoch, and
 // ShredKeys persist the re-sealed tome before reporting success, so an unclean kill
 // never loses an installed key or regresses a current-epoch election (a founded
-// planet's only ContentKey copy must not ride on a clean Close).  For
-// extreme scale (millions of historical keys), a future implementation can add LRU
-// eviction and lazy disk loading — the interface is unchanged.
+// planet's only ContentKey copy must not ride on a clean Close).
+//
+// Several live stores may share one tome (two sessions of the same member).
+// Every persist is a load-before-persist union: keys and elections the tome
+// gained since this store loaded are merged in (and adopted into memory), and
+// shred tombstones — this store's and the tome's — are honored on both sides,
+// so no session's persist drops a sibling's install or resurrects a shredded
+// key.  For extreme scale (millions of historical keys), a future
+// implementation can add LRU eviction and lazy disk loading — the interface is
+// unchanged.
 type epochKeyStore struct {
 	mu      sync.RWMutex
 	store   TomeStore
@@ -35,6 +42,10 @@ type epochKeyStore struct {
 
 	// Tracks which epochID is current for each containerID.
 	current map[tag.UID]tag.UID
+
+	// Epochs shredded (here or by a sibling store) — never re-added from a
+	// stale tome or a stale sibling; persisted as EpochKeyTome.Shredded.
+	shredded map[tag.UID]tag.UID // epochID → containerID
 }
 
 var _ EpochKeyStore = (*epochKeyStore)(nil)
@@ -49,23 +60,35 @@ func OpenEpochKeyStore(
 ) (EpochKeyStore, error) {
 
 	eks := &epochKeyStore{
-		store:   store,
-		guard:   guard,
-		aad:     append([]byte(nil), aad...),
-		keys:    make(map[tag.UID]*EpochKeyEntry),
-		current: make(map[tag.UID]tag.UID),
+		store:    store,
+		guard:    guard,
+		aad:      append([]byte(nil), aad...),
+		keys:     make(map[tag.UID]*EpochKeyEntry),
+		current:  make(map[tag.UID]tag.UID),
+		shredded: make(map[tag.UID]tag.UID),
 	}
 
-	sealed, err := store.Load(ctx)
+	tome, err := eks.loadTome(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if tome != nil {
+		eks.mergeTome(tome)
+	}
+	return eks, nil
+}
+
+// loadTome reads and opens the persisted tome; nil when the store holds none.
+func (eks *epochKeyStore) loadTome(ctx context.Context) (*EpochKeyTome, error) {
+	sealed, err := eks.store.Load(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("safe: failed to load epoch key store: %w", err)
 	}
-
 	if sealed == nil {
-		return eks, nil
+		return nil, nil
 	}
 
-	dek, err := guard.UnwrapDEK(ctx, sealed.WrappedDEK, eks.aad)
+	dek, err := eks.guard.UnwrapDEK(ctx, sealed.WrappedDEK, eks.aad)
 	if err != nil {
 		return nil, fmt.Errorf("safe: failed to unwrap epoch key DEK: %w", err)
 	}
@@ -77,39 +100,96 @@ func OpenEpochKeyStore(
 	}
 	defer Zero(tomeBytes)
 
-	var tome EpochKeyTome
-	if err := proto.Unmarshal(tomeBytes, &tome); err != nil {
+	tome := &EpochKeyTome{}
+	if err := proto.Unmarshal(tomeBytes, tome); err != nil {
 		return nil, fmt.Errorf("safe: failed to unmarshal epoch key store: %w", err)
 	}
+	return tome, nil
+}
 
-	// Index all keys and identify current epochs (newest per container).
+// mergeTome unions a persisted tome into memory — the one site for Open and
+// for the load-before-persist union.  Tombstones first (from both sides), then
+// keys the tome holds that memory lacks (per role), then elections for
+// containers memory had not elected before this merge.  Memory wins where
+// both hold a value: this store's installs and elections are its own acts,
+// and a container whose election this store dropped (a shredded current) is
+// never silently re-elected from the tome.  Caller holds eks.mu (or is Open,
+// before the store is shared).
+func (eks *epochKeyStore) mergeTome(tome *EpochKeyTome) {
+	preElected := make(map[tag.UID]struct{}, len(eks.current))
+	for containerID := range eks.current {
+		preElected[containerID] = struct{}{}
+	}
+
+	for _, stone := range tome.Shredded {
+		epochID := stone.EpochID()
+		eks.shredded[epochID] = stone.ContainerID()
+		if entry, held := eks.keys[epochID]; held {
+			for _, rk := range entry.RoleKeys {
+				Zero(rk.Key)
+			}
+			delete(eks.keys, epochID)
+		}
+	}
+
 	for _, entry := range tome.Keys {
 		epochID := entry.EpochID()
+		if _, gone := eks.shredded[epochID]; gone {
+			continue
+		}
 		containerID := entry.ContainerID()
+		if held, ok := eks.keys[epochID]; ok {
+			for _, rk := range entry.RoleKeys {
+				if held.roleKey(rk.Role) == nil {
+					held.RoleKeys = append(held.RoleKeys, rk)
+				}
+			}
+			continue
+		}
 		eks.keys[epochID] = entry
 
-		// Track newest epoch per container (EpochID is time-based, so larger = newer)
+		// An adopted key follows PutKey's rule: newest epoch per container is
+		// the fallback election (EpochID is time-based, so larger = newer).
 		if cur, ok := eks.current[containerID]; !ok {
 			eks.current[containerID] = epochID
-		} else {
-			if epochID[0] > cur[0] || (epochID[0] == cur[0] && epochID[1] > cur[1]) {
-				eks.current[containerID] = epochID
-			}
+		} else if epochID[0] > cur[0] || (epochID[0] == cur[0] && epochID[1] > cur[1]) {
+			eks.current[containerID] = epochID
 		}
 	}
 
 	// A persisted election overrides the newest-per-container fallback —
 	// SetCurrentEpoch is durable at return, so an explicit election (possibly
-	// of an older epoch) survives reopen.  An election at an epoch no longer
-	// held is skipped (fail-closed: the fallback stands).
+	// of an older epoch) survives reopen.  Only for containers this store had
+	// not elected before the merge; an election at an epoch no longer held is
+	// skipped (fail-closed: the fallback stands).
 	for _, elected := range tome.Current {
+		containerID := elected.ContainerID()
+		if _, own := preElected[containerID]; own {
+			continue
+		}
 		epochID := elected.EpochID()
 		if _, held := eks.keys[epochID]; held {
-			eks.current[elected.ContainerID()] = epochID
+			eks.current[containerID] = epochID
 		}
 	}
 
-	return eks, nil
+	// A current pointer at a shredded epoch dangles — drop it (fail-closed:
+	// no silent re-election; PutKey or SetCurrentEpoch names a successor).
+	for containerID, epochID := range eks.current {
+		if _, held := eks.keys[epochID]; !held {
+			delete(eks.current, containerID)
+		}
+	}
+}
+
+// roleKey returns the entry's material for role, or nil.
+func (entry *EpochKeyEntry) roleKey(role KeyRole) *RoleKey {
+	for _, rk := range entry.RoleKeys {
+		if rk.Role == role {
+			return rk
+		}
+	}
+	return nil
 }
 
 func (eks *epochKeyStore) PutKey(ctx context.Context, containerID tag.UID, key SymKey) error {
@@ -123,6 +203,9 @@ func (eks *epochKeyStore) PutKey(ctx context.Context, containerID tag.UID, key S
 		return fmt.Errorf("safe: PutKey requires a non-zero EpochID")
 	}
 
+	if containerID, gone := eks.shredded[key.EpochID]; gone {
+		return status.Code_Gone.Errorf("epoch key %s was shredded (container %s); a cut epoch is never re-installed", key.EpochID.Base32(), containerID.Base32())
+	}
 	keyCopy := append([]byte(nil), key.Bytes...)
 
 	// Merge into the existing epoch entry if present; otherwise create one.
@@ -271,6 +354,7 @@ func (eks *epochKeyStore) ShredKeys(ctx context.Context, epochIDs []tag.UID) err
 		for _, rk := range entry.RoleKeys {
 			Zero(rk.Key)
 		}
+		eks.shredded[epochID] = entry.ContainerID()
 		delete(eks.keys, epochID)
 		shredded = true
 	}
@@ -314,20 +398,38 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 	return nil
 }
 
-// persistLocked seals the in-memory map into an EpochKeyTome and saves it via
-// the Guard/TomeStore pair — the one persist site (PutKey, SetCurrentEpoch,
-// ShredKeys, Close).  Caller holds eks.mu.
+// persistLocked unions the persisted tome into memory (a sibling store may
+// have written since this store loaded), then seals the in-memory map into an
+// EpochKeyTome and saves it via the Guard/TomeStore pair — the one persist
+// site (PutKey, SetCurrentEpoch, ShredKeys, Close).  Caller holds eks.mu.
 func (eks *epochKeyStore) persistLocked(ctx context.Context) error {
+	onDisk, err := eks.loadTome(ctx)
+	if err != nil {
+		return err
+	}
+	if onDisk != nil {
+		eks.mergeTome(onDisk)
+	}
+
 	tome := &EpochKeyTome{
 		Revision: 1,
 		Keys:     make([]*EpochKeyEntry, 0, len(eks.keys)),
 		Current:  make([]*EpochElection, 0, len(eks.current)),
+		Shredded: make([]*EpochElection, 0, len(eks.shredded)),
 	}
 	for _, entry := range eks.keys {
 		tome.Keys = append(tome.Keys, entry)
 	}
 	for containerID, epochID := range eks.current {
 		tome.Current = append(tome.Current, &EpochElection{
+			ContainerID_0: containerID[0],
+			ContainerID_1: containerID[1],
+			EpochID_0:     epochID[0],
+			EpochID_1:     epochID[1],
+		})
+	}
+	for epochID, containerID := range eks.shredded {
+		tome.Shredded = append(tome.Shredded, &EpochElection{
 			ContainerID_0: containerID[0],
 			ContainerID_1: containerID[1],
 			EpochID_0:     epochID[0],
@@ -382,5 +484,6 @@ func (eks *epochKeyStore) zeroKeys() {
 	}
 	eks.keys = nil
 	eks.current = nil
+	eks.shredded = nil
 	Zero(eks.aad)
 }

@@ -445,3 +445,92 @@ func TestEpochKeys_ClosedStoreSentinel(t *testing.T) {
 		t.Fatalf("ShredKeys on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
 }
+
+// TestEpochKeys_SiblingStoresUnionOnPersist pins the shared-tome contract: two
+// live stores over ONE tome (two sessions of the same member) each persist
+// their whole map, and neither drops the other's install nor resurrects the
+// other's shred — asserted from a fresh open of the tome, the state the next
+// login reads.
+func TestEpochKeys_SiblingStoresUnionOnPersist(t *testing.T) {
+	ctx := context.Background()
+	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("sibling-union"))
+	defer guard.Close()
+	open := func() safe.EpochKeyStore {
+		eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("sibling-union"))
+		if err != nil {
+			t.Fatalf("OpenEpochKeyStore: %v", err)
+		}
+		return eks
+	}
+	storeA, storeB := open(), open() // both loaded an EMPTY tome
+	defer storeA.Close(ctx)
+	defer storeB.Close(ctx)
+
+	container := tag.NewID()
+	epochA, epochB, epochC := tag.NewID(), tag.NewID(), tag.NewID()
+	bytesA, bytesB, bytesC := randomKeyBytes(t), randomKeyBytes(t), randomKeyBytes(t)
+
+	// A installs after B loaded; B's later install persists B's map — which
+	// never held A's key unless the persist unions the tome.
+	putEpochKey(t, storeA, container, epochA, safe.KeyRole_ContentKey, bytesA)
+	putEpochKey(t, storeB, container, epochB, safe.KeyRole_ContentKey, bytesB)
+
+	fresh := open()
+	for _, want := range []struct {
+		epoch tag.UID
+		key   []byte
+	}{{epochA, bytesA}, {epochB, bytesB}} {
+		got, err := fresh.GetKey(container, want.epoch, safe.KeyRole_ContentKey)
+		if err != nil {
+			t.Fatalf("epoch %s dropped from the tome by a sibling's whole-map persist: %v", want.epoch.AsLabel(), err)
+		}
+		if !bytes.Equal(got.Bytes, want.key) {
+			t.Fatalf("epoch %s bytes changed across the union", want.epoch.AsLabel())
+		}
+		got.Zero()
+	}
+	fresh.Close(ctx)
+
+	// B adopted A's key at its persist: visible in B's own session.
+	if _, err := storeB.GetKey(container, epochA, safe.KeyRole_ContentKey); err != nil {
+		t.Fatalf("B did not adopt A's install at its persist: %v", err)
+	}
+
+	// A shreds epochA; B (holding epochA in memory) installs epochC — B's
+	// persist must honor A's tombstone, never re-add epochA.
+	if err := storeA.ShredKeys(ctx, []tag.UID{epochA}); err != nil {
+		t.Fatalf("ShredKeys: %v", err)
+	}
+	putEpochKey(t, storeB, container, epochC, safe.KeyRole_ContentKey, bytesC)
+	if _, err := storeB.GetKey(container, epochA, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+		t.Fatalf("B still holds the epoch A shredded: %v", err)
+	}
+	if err := storeB.PutKey(ctx, container, safe.SymKey{
+		CryptoKitID: safe.Crypto.Poly25519.ID,
+		EpochID:     epochA,
+		Role:        safe.KeyRole_ContentKey,
+		Bytes:       bytesA,
+	}); !status.IsError(err, status.Code_Gone) {
+		t.Fatalf("re-install of a shredded epoch = %v; want Code_Gone", err)
+	}
+
+	fresh = open()
+	defer fresh.Close(ctx)
+	if _, err := fresh.GetKey(container, epochA, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+		t.Fatalf("shredded epoch resurrected by a stale sibling's persist: %v", err)
+	}
+	for _, epoch := range []tag.UID{epochB, epochC} {
+		if _, err := fresh.GetKey(container, epoch, safe.KeyRole_ContentKey); err != nil {
+			t.Fatalf("epoch %s missing after the union: %v", epoch.AsLabel(), err)
+		}
+	}
+	current, err := fresh.GetCurrentKey(container, safe.KeyRole_ContentKey)
+	if err != nil {
+		t.Fatalf("current after the union: %v", err)
+	}
+	if current.EpochID != epochC {
+		t.Fatalf("current = %s, want the newest install %s", current.EpochID.AsLabel(), epochC.AsLabel())
+	}
+	current.Zero()
+}
