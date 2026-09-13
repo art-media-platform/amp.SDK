@@ -11,6 +11,7 @@ syntax = "proto3";
 package amp;
 
 import "stdlib/safe/safe.proto";
+import "stdlib/status/status.proto";
 
 // Tells protoc that a .proto file importing amp.proto what package import to
 // use within Go.
@@ -1140,6 +1141,33 @@ enum AttestationType {
     Witness            = 3;  // witnessed an event (for dispute resolution)
     Audit              = 4;  // decision record — what a choice was based on
     Amnesty            = 5;  // reverses a prior attestation (admin action)
+}
+
+
+// NodeLogEntry is one row of a node's log channel (std.Attr.NodeLog): the
+// node's own operational telemetry as substrate data — planet-public rows a
+// host-owned courier authors onto its home planet, read by pinning that planet
+// (SD-planet-storage §4.2.1).  Status carries the line (Code · Severity ·
+// Level · Message · TimeID); Body carries the measured quantity (I / Units)
+// or a structured payload; Source names the authoring node.  NodeMessage has
+// the identical layout — one shape for every logging and messaging app.
+message NodeLogEntry {
+    status.Status       Status     = 1;
+    Tag                 Body       = 2;
+    string              Source     = 3;
+    repeated Tag        Recipients = 4;   // empty: a log line addresses no one
+}
+
+
+// NodeMessage is one row of a node's message channel (std.Attr.NodeMessages):
+// a node→operator message over the substrate itself, no side channel.  The
+// NodeLogEntry layout, addressed — Recipients are member UIDs (the epoch quorum
+// of every planet the node fronts, for the low-disk courier).
+message NodeMessage {
+    status.Status       Status     = 1;
+    Tag                 Body       = 2;
+    string              Source     = 3;
+    repeated Tag        Recipients = 4;
 }
 
 
