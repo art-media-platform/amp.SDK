@@ -34,43 +34,33 @@ const (
 	AssetKind_Texture         AssetKind = 1
 	AssetKind_Sprite          AssetKind = 2
 	AssetKind_Material        AssetKind = 3
-	AssetKind_Scene           AssetKind = 4
 	AssetKind_Skybox          AssetKind = 5
-	// Deprecated: Marked as deprecated in amp/crates/amp.crates.proto.
-	AssetKind_Surface     AssetKind = 6  // superseded by AssetEntry.IsSurface; retained for legacy parsing only
-	AssetKind_VisualLayer AssetKind = 7  // self-contained visual effect layer (mirrors runtime VisualLayer)
-	AssetKind_VisualScope AssetKind = 8  // self-contained visual effect scope (mirrors runtime VisualScope)
-	AssetKind_Model       AssetKind = 9  // placeable prefab / mesh (the common case)
-	AssetKind_Audio       AssetKind = 10 // amp.av sound asset
+	AssetKind_VisualLayer     AssetKind = 7 // self-contained visual effect layer (mirrors runtime VisualLayer)
+	AssetKind_VisualScope     AssetKind = 8 // self-contained visual effect scope (mirrors runtime VisualScope)
+	AssetKind_Model           AssetKind = 9 // placeable prefab / mesh (the common case)
 )
 
 // Enum value maps for AssetKind.
 var (
 	AssetKind_name = map[int32]string{
-		0:  "UnspecifiedKind",
-		1:  "Texture",
-		2:  "Sprite",
-		3:  "Material",
-		4:  "Scene",
-		5:  "Skybox",
-		6:  "Surface",
-		7:  "VisualLayer",
-		8:  "VisualScope",
-		9:  "Model",
-		10: "Audio",
+		0: "UnspecifiedKind",
+		1: "Texture",
+		2: "Sprite",
+		3: "Material",
+		5: "Skybox",
+		7: "VisualLayer",
+		8: "VisualScope",
+		9: "Model",
 	}
 	AssetKind_value = map[string]int32{
 		"UnspecifiedKind": 0,
 		"Texture":         1,
 		"Sprite":          2,
 		"Material":        3,
-		"Scene":           4,
 		"Skybox":          5,
-		"Surface":         6,
 		"VisualLayer":     7,
 		"VisualScope":     8,
 		"Model":           9,
-		"Audio":           10,
 	}
 )
 
@@ -915,21 +905,19 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x05RevID\x18\x01 \x01(\x03R\x05RevID\x12 \n" +
 	"\vDownloadURL\x18\x03 \x01(\tR\vDownloadURL\x12)\n" +
 	"\x06Crates\x18\n" +
-	" \x03(\v2\x11.crates.CrateInfoR\x06Crates*\xa7\x01\n" +
+	" \x03(\v2\x11.crates.CrateInfoR\x06Crates*\x92\x01\n" +
 	"\tAssetKind\x12\x13\n" +
 	"\x0fUnspecifiedKind\x10\x00\x12\v\n" +
 	"\aTexture\x10\x01\x12\n" +
 	"\n" +
 	"\x06Sprite\x10\x02\x12\f\n" +
-	"\bMaterial\x10\x03\x12\t\n" +
-	"\x05Scene\x10\x04\x12\n" +
+	"\bMaterial\x10\x03\x12\n" +
 	"\n" +
 	"\x06Skybox\x10\x05\x12\x0f\n" +
-	"\aSurface\x10\x06\x1a\x02\b\x01\x12\x0f\n" +
 	"\vVisualLayer\x10\a\x12\x0f\n" +
 	"\vVisualScope\x10\b\x12\t\n" +
-	"\x05Model\x10\t\x12\t\n" +
-	"\x05Audio\x10\n" +
+	"\x05Model\x10\t\"\x04\b\x04\x10\x04\"\x04\b\x06\x10\x06\"\x04\b\n" +
+	"\x10\n" +
 	"*7\n" +
 	"\vCrateSchema\x12\x13\n" +
 	"\x0fUndefinedSchema\x10\x00\x12\b\n" +

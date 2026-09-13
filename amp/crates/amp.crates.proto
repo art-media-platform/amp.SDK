@@ -12,17 +12,16 @@ option go_package = "github.com/art-media-platform/amp.SDK/amp/crates";
 // Orthogonal properties (placeable, private, auto-scale, etc.) live as explicit
 // bool fields on AssetEntry.
 enum AssetKind {
+    reserved 4, 6, 10;
+
     UnspecifiedKind     = 0;
     Texture             = 1;
     Sprite              = 2;
     Material            = 3;
-    Scene               = 4;
     Skybox              = 5;
-    Surface             = 6 [deprecated = true];    // superseded by AssetEntry.IsSurface; retained for legacy parsing only
     VisualLayer         = 7;    // self-contained visual effect layer (mirrors runtime VisualLayer)
     VisualScope         = 8;    // self-contained visual effect scope (mirrors runtime VisualScope)
     Model               = 9;    // placeable prefab / mesh (the common case)
-    Audio               = 10;   // amp.av sound asset
 }
 
 
