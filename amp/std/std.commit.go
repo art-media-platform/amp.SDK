@@ -112,8 +112,26 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 // Commit submits tx and blocks until the commit completes.  The target planet is fixed at
 // tx creation (NewTx via TxScope; default = the caller's home planet) — Commit does not alter
 // it.  Planet routing, signer (tx.SetFromID), and privacy (tx.Epoch) are independent levers;
-// see AOM SD-security-sync.md §7.6.
+// see AOM SD-security-sync.md §7.6.  Bounded by CommitTimeout and the app's close only;
+// CommitWith takes a caller's bound.
 func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
+	return CommitWith(appCtx, tx, CommitOpts{})
+}
+
+// CommitOpts bounds a commit beyond the app's own lifetime.
+type CommitOpts struct {
+	// Bound abandons the commit when its Done() fires: the op is cancelled
+	// before it starts (SubmitTx honors the TxCommit.Context) and the wait
+	// returns Bound.Err().  A duty body passes its probe bound
+	// (task.ClosingContext) so a parked commit unwinds with the probe, not at
+	// app close.  nil = the app context only.
+	Bound context.Context
+	// Timeout caps the wait for completion; 0 = CommitTimeout.
+	Timeout time.Duration
+}
+
+// CommitWith is Commit under the caller's bound (CommitOpts).
+func CommitWith(appCtx amp.AppContext, tx *amp.TxMsg, opts CommitOpts) error {
 	tx.Request = &amp.PinRequest{
 		Mode: amp.PinMode_Commit,
 		URL:  AmpCabinetsURL,
@@ -124,20 +142,31 @@ func Commit(appCtx amp.AppContext, tx *amp.TxMsg) error {
 		onCommit: make(chan error, 1), // buffered: a completion racing the timeout must never block its sender
 	}
 
-	ctx := closer.WrapContext(appCtx)
+	timeout := opts.Timeout
+	if timeout <= 0 {
+		timeout = CommitTimeout
+	}
+	bound := opts.Bound
+	if bound == nil {
+		bound = appCtx
+	}
+	ctx := closer.WrapContext(bound)
 	err := appCtx.Session().SubmitTx(amp.TxCommit{
 		Tx:      tx,
 		Origin:  req,
 		Context: ctx,
 	})
 	if err != nil {
+		ctx.Close(err)
 		return err
 	}
 
 	select {
 	case err = <-req.onCommit:
-	case <-time.After(CommitTimeout):
-		err = status.Code_Timeout.Errorf("commit did not complete within %v — is the target planet attached to this session? (AOM O5 §5.11)", CommitTimeout)
+	case <-time.After(timeout):
+		err = status.Code_Timeout.Errorf("commit did not complete within %v — is the target planet attached to this session? (AOM O5 §5.11)", timeout)
+	case <-bound.Done():
+		err = bound.Err()
 	case <-appCtx.Closing():
 		err = appCtx.Err()
 	}

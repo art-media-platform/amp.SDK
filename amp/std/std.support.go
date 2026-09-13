@@ -1,6 +1,7 @@
 package std
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -17,8 +18,11 @@ import (
 // PushMetaOp sends a meta-op tx to the receiver for the client's session agent.
 // Session control is not planet data: the tx carries no planet stamp
 // (amp.PlanetTarget_None), so a receiving client splits planet merges off by
-// envelope planet alone.
-func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess amp.Session, contextID tag.UID, status amp.PinStatus) error {
+// envelope planet alone.  guard bounds the push (dst.PushTx): the caller's
+// concern — a request's submitter context, so a departed consumer cancels the
+// push while a live one still receives it; sess itself when the push has no
+// narrower owner.
+func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess amp.Session, guard context.Context, contextID tag.UID, status amp.PinStatus) error {
 	tx := sess.NewTx(amp.TxScope{Target: amp.PlanetTarget_None})
 	tx.SetContextID(contextID)
 	tx.Status = status
@@ -34,7 +38,7 @@ func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess am
 		}
 	}
 
-	return dst.PushTx(tx, sess)
+	return dst.PushTx(tx, guard)
 }
 
 // LedgerNodeID is the well-known channel UID of the planet ledger — where
@@ -49,7 +53,7 @@ var LedgerNodeID = Attr.LedgerAttr.ID
 var ArbitrateNodeID = Attr.ArbitrateAttr.ID
 
 func PushSessionOp(sess amp.Session, attrID tag.UID, value proto.Message) error {
-	return PushMetaOp(attrID, value, sess, sess, SessionContextID, amp.PinStatus_Synced)
+	return PushMetaOp(attrID, value, sess, sess, sess, SessionContextID, amp.PinStatus_Synced)
 }
 
 func ParseParamAsPath(req *amp.Request, paramKey string) (dirpath string, finfo os.FileInfo, err error) {

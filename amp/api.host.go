@@ -135,7 +135,10 @@ type TxReceiver interface {
 type Requester interface {
 	TxReceiver
 
-	// Notifies this Requester of events during a Pin's life cycle.
+	// Notifies this Requester of events during a Pin's life cycle.  MUST NOT
+	// BLOCK: the host delivers from its session inbox goroutine, so an
+	// implementation hands the event off — a buffered send with a default
+	// arm, a sync.Once close — and drops what its listener no longer awaits.
 	RecvEvent(evt PinEvent)
 }
 
