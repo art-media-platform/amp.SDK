@@ -133,6 +133,7 @@ enum ValueKind {
     True   = 2;
     Number = 3;
     String = 4;
+    Array  = 5;
 }
 
 // JsonValue is a general-purpose JSON value container.
@@ -349,8 +350,8 @@ message Segment {
 
 // Arg is an any-purpose key/value pair.
 message Arg {
-    string Key   = 1;
-    string Value = 2;
+    string    Key   = 1;
+    JsonValue Value = 2;
 }
 
 // ColormapFlags selects which color channels a visual layer drives.

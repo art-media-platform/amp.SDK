@@ -149,6 +149,7 @@ const (
 	ValueKind_True   ValueKind = 2
 	ValueKind_Number ValueKind = 3
 	ValueKind_String ValueKind = 4
+	ValueKind_Array  ValueKind = 5
 )
 
 // Enum value maps for ValueKind.
@@ -159,6 +160,7 @@ var (
 		2: "True",
 		3: "Number",
 		4: "String",
+		5: "Array",
 	}
 	ValueKind_value = map[string]int32{
 		"Null":   0,
@@ -166,6 +168,7 @@ var (
 		"True":   2,
 		"Number": 3,
 		"String": 4,
+		"Array":  5,
 	}
 )
 
@@ -2578,7 +2581,7 @@ func (x *Segment) GetBlob() *amp.BlobRef {
 type Arg struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Key           string                 `protobuf:"bytes,1,opt,name=Key,proto3" json:"Key,omitempty"`
-	Value         string                 `protobuf:"bytes,2,opt,name=Value,proto3" json:"Value,omitempty"`
+	Value         *JsonValue             `protobuf:"bytes,2,opt,name=Value,proto3" json:"Value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2620,11 +2623,11 @@ func (x *Arg) GetKey() string {
 	return ""
 }
 
-func (x *Arg) GetValue() string {
+func (x *Arg) GetValue() *JsonValue {
 	if x != nil {
 		return x.Value
 	}
-	return ""
+	return nil
 }
 
 // VisPreset is one named visual-layer preset: its presentation labels, the
@@ -3802,10 +3805,10 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	".amp.UnitsR\x05Units\x12 \n" +
 	"\vContentType\x18\x05 \x01(\tR\vContentType\x12\x16\n" +
 	"\x06Inline\x18\x06 \x01(\fR\x06Inline\x12 \n" +
-	"\x04Blob\x18\a \x01(\v2\f.amp.BlobRefR\x04Blob\"-\n" +
+	"\x04Blob\x18\a \x01(\v2\f.amp.BlobRefR\x04Blob\"=\n" +
 	"\x03Arg\x12\x10\n" +
-	"\x03Key\x18\x01 \x01(\tR\x03Key\x12\x14\n" +
-	"\x05Value\x18\x02 \x01(\tR\x05Value\"\x8e\x03\n" +
+	"\x03Key\x18\x01 \x01(\tR\x03Key\x12$\n" +
+	"\x05Value\x18\x02 \x01(\v2\x0e.std.JsonValueR\x05Value\"\x8e\x03\n" +
 	"\tVisPreset\x12\x1e\n" +
 	"\x05Title\x18\x01 \x01(\v2\b.amp.TagR\x05Title\x12(\n" +
 	"\n" +
@@ -3924,7 +3927,7 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
 	"\x06Driver\x10\a\x12\t\n" +
 	"\x05Chase\x10\b\x12\b\n" +
-	"\x04Free\x10\t*B\n" +
+	"\x04Free\x10\t*M\n" +
 	"\tValueKind\x12\b\n" +
 	"\x04Null\x10\x00\x12\t\n" +
 	"\x05False\x10\x01\x12\b\n" +
@@ -3932,7 +3935,8 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
 	"\x06Number\x10\x03\x12\n" +
 	"\n" +
-	"\x06String\x10\x04*/\n" +
+	"\x06String\x10\x04\x12\t\n" +
+	"\x05Array\x10\x05*/\n" +
 	"\vPointFormat\x12\x06\n" +
 	"\x02S2\x10\x00\x12\x06\n" +
 	"\x02H3\x10\x01\x12\a\n" +
@@ -4097,29 +4101,30 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	45, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
 	46, // 25: std.Segment.Units:type_name -> amp.Units
 	47, // 26: std.Segment.Blob:type_name -> amp.BlobRef
-	44, // 27: std.VisPreset.Title:type_name -> amp.Tag
-	44, // 28: std.VisPreset.Collection:type_name -> amp.Tag
-	44, // 29: std.VisPreset.Credits:type_name -> amp.Tag
-	5,  // 30: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
-	6,  // 31: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
-	7,  // 32: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	33, // 33: std.VisPreset.Args:type_name -> std.Arg
-	8,  // 34: std.TileBand.YEase:type_name -> std.TileEase
-	35, // 35: std.TileMeshSpec.Bands:type_name -> std.TileBand
-	36, // 36: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
-	34, // 37: std.SkinSpec.Layers:type_name -> std.VisPreset
-	38, // 38: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
-	9,  // 39: std.TileServer.Kind:type_name -> std.TileServerKind
-	10, // 40: std.TileServer.Projection:type_name -> std.TileProjection
-	11, // 41: std.TileServer.Scheme:type_name -> std.TileServerScheme
-	12, // 42: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
-	13, // 43: std.MemberVars.ReticleStyle:type_name -> std.ReticleStyleID
-	14, // 44: std.LoginForm.Encoding:type_name -> std.BodyEncoding
-	45, // [45:45] is the sub-list for method output_type
-	45, // [45:45] is the sub-list for method input_type
-	45, // [45:45] is the sub-list for extension type_name
-	45, // [45:45] is the sub-list for extension extendee
-	0,  // [0:45] is the sub-list for field type_name
+	21, // 27: std.Arg.Value:type_name -> std.JsonValue
+	44, // 28: std.VisPreset.Title:type_name -> amp.Tag
+	44, // 29: std.VisPreset.Collection:type_name -> amp.Tag
+	44, // 30: std.VisPreset.Credits:type_name -> amp.Tag
+	5,  // 31: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
+	6,  // 32: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
+	7,  // 33: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
+	33, // 34: std.VisPreset.Args:type_name -> std.Arg
+	8,  // 35: std.TileBand.YEase:type_name -> std.TileEase
+	35, // 36: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	36, // 37: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	34, // 38: std.SkinSpec.Layers:type_name -> std.VisPreset
+	38, // 39: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	9,  // 40: std.TileServer.Kind:type_name -> std.TileServerKind
+	10, // 41: std.TileServer.Projection:type_name -> std.TileProjection
+	11, // 42: std.TileServer.Scheme:type_name -> std.TileServerScheme
+	12, // 43: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
+	13, // 44: std.MemberVars.ReticleStyle:type_name -> std.ReticleStyleID
+	14, // 45: std.LoginForm.Encoding:type_name -> std.BodyEncoding
+	46, // [46:46] is the sub-list for method output_type
+	46, // [46:46] is the sub-list for method input_type
+	46, // [46:46] is the sub-list for extension type_name
+	46, // [46:46] is the sub-list for extension extendee
+	0,  // [0:46] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
