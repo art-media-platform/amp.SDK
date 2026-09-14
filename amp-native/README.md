@@ -180,8 +180,8 @@ what it could NOT check rather than passing silently.
 This is the **Public — Evaluation** kit: the client surface, plus a node you may
 run for development and evaluation. Higher SDK access tiers add the operator
 and embedding surfaces — production `ampd` operation, `libampd`, and the
-whitelabel authoring slice — under commercial license. The kit name never
+brand-mint authoring slice — under commercial license. The kit name never
 changes across tiers; contents and license do. Ask your AMP contact about
-Creator and Whitelabel/OEM licensing.
+Creator and Brand Mint licensing.
 
 Contact: licensing@art.media.platform
