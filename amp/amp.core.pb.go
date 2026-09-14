@@ -4434,6 +4434,10 @@ type Attestation struct {
 	// When observed (unix seconds).  Used for windowed aggregation
 	// (e.g. "strikes in the last 30 days").
 	ObservedAt int64 `protobuf:"varint,10,opt,name=ObservedAt,proto3" json:"ObservedAt,omitempty"`
+	// Expiry of this attestation (unix seconds, ObservedAt's clock).  0 = unset:
+	// resolved at the point of use to the licensing planet's charter ceiling
+	// (AOM ED-license-model.md §7.2, §7.4).
+	ValidThrough int64 `protobuf:"varint,11,opt,name=ValidThrough,proto3" json:"ValidThrough,omitempty"`
 	// Optional free-text rationale.  Not cryptographic; for human review.
 	Rationale string `protobuf:"bytes,15,opt,name=Rationale,proto3" json:"Rationale,omitempty"`
 	// Modality of the claim, addressed by Tag.  The Tag's UID resolves to a
@@ -4521,6 +4525,13 @@ func (x *Attestation) GetObserverID() *Tag {
 func (x *Attestation) GetObservedAt() int64 {
 	if x != nil {
 		return x.ObservedAt
+	}
+	return 0
+}
+
+func (x *Attestation) GetValidThrough() int64 {
+	if x != nil {
+		return x.ValidThrough
 	}
 	return 0
 }
@@ -8056,7 +8067,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Source\x18\x03 \x01(\tR\x06Source\x12(\n" +
 	"\n" +
 	"Recipients\x18\x04 \x03(\v2\b.amp.TagR\n" +
-	"Recipients\"\xcf\x02\n" +
+	"Recipients\"\xf3\x02\n" +
 	"\vAttestation\x12\"\n" +
 	"\aSubject\x18\x01 \x01(\v2\b.amp.TagR\aSubject\x12(\n" +
 	"\x04Type\x18\x02 \x01(\x0e2\x14.amp.AttestationTypeR\x04Type\x12\x1f\n" +
@@ -8071,7 +8082,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"ObservedAt\x18\n" +
 	" \x01(\x03R\n" +
-	"ObservedAt\x12\x1c\n" +
+	"ObservedAt\x12\"\n" +
+	"\fValidThrough\x18\v \x01(\x03R\fValidThrough\x12\x1c\n" +
 	"\tRationale\x18\x0f \x01(\tR\tRationale\x12$\n" +
 	"\bModality\x18\x10 \x01(\v2\b.amp.TagR\bModality\"\xcf\x01\n" +
 	"\vEquivalence\x12*\n" +

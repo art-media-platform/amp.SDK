@@ -1212,6 +1212,11 @@ message Attestation {
     // (e.g. "strikes in the last 30 days").
     int64               ObservedAt = 10;
 
+    // Expiry of this attestation (unix seconds, ObservedAt's clock).  0 = unset:
+    // resolved at the point of use to the licensing planet's charter ceiling
+    // (AOM ED-license-model.md §7.2, §7.4).
+    int64               ValidThrough = 11;
+
     // Optional free-text rationale.  Not cryptographic; for human review.
     string              Rationale = 15;
 
