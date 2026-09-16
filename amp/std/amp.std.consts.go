@@ -131,7 +131,7 @@ var Attr = struct {
 	LawEquivalenceStrength_Approximate tag.Name
 	LawEquivalenceStrength_Analogous   tag.Name
 	LawLicenseClass                    tag.Name
-	LawLicenseClass_Community          tag.Name
+	LawLicenseClass_NonCommercial      tag.Name
 	LawLicenseClass_Supporter          tag.Name
 	LawLicenseClass_BusinessSolo       tag.Name
 	LawLicenseClass_BusinessTeam       tag.Name
@@ -344,10 +344,10 @@ var Attr = struct {
 	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x112A5CA73BB8C091, 0x8A80533CC1EC7186}, Text: "amp.law.EquivalenceStrength.Analogous"},   // 0j5-9fbffxss28-sp02m7m0ys-wd6
 	// License classes.  EpochTerms.LicenseClass is a Tag resolving to
 	// one of these UIDs; the class is a self-declaration the federation's
-	// Endorsement cites, never an on-node check.  Zero UID = Community.
+	// Endorsement cites, never an on-node check.  Zero UID = NonCommercial.
 	LawLicenseClass: tag.Name{ID: tag.UID{0x58651294CF91227E, 0x78C6FDB2A546B6E0}, Text: "amp.law.LicenseClass"}, // 2sd-n999mwj49z-7jjrxqbkne-er0
 
-	LawLicenseClass_Community:          tag.Name{ID: tag.UID{0x8DF6EAA3AAD4F21A, 0xD740EE73E86F315E}, Text: "amp.law.LicenseClass.Community"},          // 4ey-vpb7bqny8e-efh7ffgn6y-dby
+	LawLicenseClass_NonCommercial:      tag.Name{ID: tag.UID{0x995B898869205C03, 0x1DCC5E78AE9964F6}, Text: "amp.law.LicenseClass.NonCommercial"},      // 4tc-f4shu90ch1-jvm2yg2r9k-t7q
 	LawLicenseClass_Supporter:          tag.Name{ID: tag.UID{0x03AEE52C2239A185, 0x3172E2F186E3FDB4}, Text: "amp.law.LicenseClass.Supporter"},          // 03p-vkks8jtn62-m2wr2y63f7-zen
 	LawLicenseClass_BusinessSolo:       tag.Name{ID: tag.UID{0x4CA0E505EF3DF969, 0x506CFA93BDAA5DDB}, Text: "amp.law.LicenseClass.BusinessSolo"},       // 2dn-3khcvtxz5n-p0v7ukfyun-rfv
 	LawLicenseClass_BusinessTeam:       tag.Name{ID: tag.UID{0xBB24C1CC105AB41F, 0x1783E50CCC7F07B4}, Text: "amp.law.LicenseClass.BusinessTeam"},       // 5v4-m0ws42uqhg-jg0z51m67y-1xn

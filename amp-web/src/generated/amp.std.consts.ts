@@ -200,10 +200,10 @@ export const Attr = {
     LawEquivalenceStrength_Analogous  : { id: [0x112A5CA73BB8C091n, 0x8A80533CC1EC7186n], text: "amp.law.EquivalenceStrength.Analogous" },    // 0j5-9fbffxss28-sp02m7m0ys-wd6
     // License classes.  EpochTerms.LicenseClass is a Tag resolving to
     // one of these UIDs; the class is a self-declaration the federation's
-    // Endorsement cites, never an on-node check.  Zero UID = Community.
+    // Endorsement cites, never an on-node check.  Zero UID = NonCommercial.
     LawLicenseClass                   : { id: [0x58651294CF91227En, 0x78C6FDB2A546B6E0n], text: "amp.law.LicenseClass" },                     // 2sd-n999mwj49z-7jjrxqbkne-er0
 
-    LawLicenseClass_Community         : { id: [0x8DF6EAA3AAD4F21An, 0xD740EE73E86F315En], text: "amp.law.LicenseClass.Community" },           // 4ey-vpb7bqny8e-efh7ffgn6y-dby
+    LawLicenseClass_NonCommercial     : { id: [0x995B898869205C03n, 0x1DCC5E78AE9964F6n], text: "amp.law.LicenseClass.NonCommercial" },       // 4tc-f4shu90ch1-jvm2yg2r9k-t7q
     LawLicenseClass_Supporter         : { id: [0x03AEE52C2239A185n, 0x3172E2F186E3FDB4n], text: "amp.law.LicenseClass.Supporter" },           // 03p-vkks8jtn62-m2wr2y63f7-zen
     LawLicenseClass_BusinessSolo      : { id: [0x4CA0E505EF3DF969n, 0x506CFA93BDAA5DDBn], text: "amp.law.LicenseClass.BusinessSolo" },        // 2dn-3khcvtxz5n-p0v7ukfyun-rfv
     LawLicenseClass_BusinessTeam      : { id: [0xBB24C1CC105AB41Fn, 0x1783E50CCC7F07B4n], text: "amp.law.LicenseClass.BusinessTeam" },        // 5v4-m0ws42uqhg-jg0z51m67y-1xn

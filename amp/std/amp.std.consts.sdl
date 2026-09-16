@@ -211,9 +211,9 @@ tags Attr {
 
         // License classes.  EpochTerms.LicenseClass is a Tag resolving to
         // one of these UIDs; the class is a self-declaration the federation's
-        // Endorsement cites, never an on-node check.  Zero UID = Community.
+        // Endorsement cites, never an on-node check.  Zero UID = NonCommercial.
         LawLicenseClass "LicenseClass" {
-            LawLicenseClass_Community           "Community"
+            LawLicenseClass_NonCommercial       "NonCommercial"
             LawLicenseClass_Supporter           "Supporter"
             LawLicenseClass_BusinessSolo        "BusinessSolo"
             LawLicenseClass_BusinessTeam        "BusinessTeam"

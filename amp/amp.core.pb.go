@@ -3157,7 +3157,7 @@ type EpochTerms struct {
 	MaxGracePeriod int64 `protobuf:"varint,32,opt,name=MaxGracePeriod,proto3" json:"MaxGracePeriod,omitempty"`
 	// Self-declared license class: a Tag resolving to a LawLicenseClass_*
 	// const (amp.std.consts.sdl), quorum-signed with the epoch so a change is
-	// a rotation.  Unset resolves to LawLicenseClass_Community.
+	// a rotation.  Unset resolves to LawLicenseClass_NonCommercial.
 	LicenseClass  *Tag `protobuf:"bytes,33,opt,name=LicenseClass,proto3" json:"LicenseClass,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

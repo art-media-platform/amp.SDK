@@ -764,7 +764,7 @@ message EpochTerms {
 
     // Self-declared license class: a Tag resolving to a LawLicenseClass_*
     // const (amp.std.consts.sdl), quorum-signed with the epoch so a change is
-    // a rotation.  Unset resolves to LawLicenseClass_Community.
+    // a rotation.  Unset resolves to LawLicenseClass_NonCommercial.
     Tag                 LicenseClass = 33;
 }
 
