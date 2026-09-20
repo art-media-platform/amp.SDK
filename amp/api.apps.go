@@ -171,4 +171,9 @@ type AttrDef struct {
 	// node-local DefaultRetainEditsCap (host-side).  Meaningless for Tape
 	// (must be 0).
 	RetainEdits int32
+
+	// Sealed: the cell is a safe.SealedValue box (SealedContentType) whose
+	// plaintext is Prototype — opened only through epoch custody (ZO §4.8
+	// `: sealed`; AOM SD-private-channels.md §6).  Folded only.
+	Sealed bool
 }

@@ -639,8 +639,9 @@ message LoginForm {
 
 
 // Credentials is a user + secret pair a node holds for a provider (a premium
-// stream login, a relay account).  It rides only sealed: the payload of a
-// law.secret.<provider>.credentials.SealedValue attr on a confidential planet
+// stream login, a relay account; an API key is Secret alone).  It rides only
+// sealed: the plaintext of the node.Credentials : sealed cell for that
+// provider (ItemID = the provider name) on a confidential planet
 // (amp.SealValueBox; the box's ContentType is amp.ProtoContentType of this
 // message), never a plaintext attr.
 message Credentials {

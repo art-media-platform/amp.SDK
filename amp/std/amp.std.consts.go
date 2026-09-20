@@ -152,6 +152,8 @@ var Attr = struct {
 	BlobAttr                           tag.Name
 	BlobRef                            tag.Name
 	NodeBlobs                          tag.Name
+	NodeAttr                           tag.Name
+	NodeCredentials                    tag.Name
 	TileServerAttr                     tag.Name
 	TileServer                         tag.Name
 }{
@@ -391,6 +393,14 @@ var Attr = struct {
 	BlobRef:   tag.Name{ID: tag.UID{0xF390C57CD7C15B45, 0x13F1CF7F07D7A047}, Text: "amp.blob.BlobRef"},      // 7mk-32rtpy1ce2-j7wfggw3xg-827
 	NodeBlobs: tag.Name{ID: tag.UID{0xAD0BA6086B8A5202, 0xB15FFA7352307DEF}, Text: "amp.blob.node.BlobRef"}, // 5e1-fm0huwbb81-c2rzufe930-zgg
 
+	// ─── The node's own operational records.  Credentials: one sealed cell per ───
+	// provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
+	// the node operator's confidential planet — a safe.SealedValue box whose
+	// plaintext is Credentials, opened only by keyholders (O4 §4.15 step 5).
+	NodeAttr: tag.Name{ID: tag.UID{0x93F76E7915DC92BF, 0x6DD22A7FFF8A1FA8}, Text: "node"}, // 4my-xr7k5fwkbz-qvnjbgzzsn-7x8
+
+	NodeCredentials: tag.Name{ID: tag.UID{0x38E9C390B7C5C376, 0x0906744822BD89F5}, Text: "node.Credentials"}, // 1sx-71t1ey5sev-0k1mn90jcv-2gp
+
 	// ─── Tile-server registry — list of available raster / terrain / vector ───
 	// tile backends.  Each entry is a TileServer proto stored as one item
 	// under TileServer; consumers (TileService, manifold compositor) filter
@@ -549,7 +559,8 @@ const (
 
 // Every attr above whose trailing name word is a message type registers
 // here at init (ZO §4.8); a `: tape` flag in the SDL declares EditFlow_Tape,
-// unmarked attrs fold.
+// unmarked attrs fold; a `: sealed` flag registers the attr as a
+// safe.SealedValue cell whose plaintext is the declared message.
 func init() {
 	RegisterAttrDeclared(Attr.Login, &amp.Login{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.LoginChallenge, &amp.LoginChallenge{}, amp.EditFlow_Fold)
@@ -612,5 +623,6 @@ func init() {
 	RegisterAttrDeclared(Attr.HomeMemberVars, &MemberVars{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.BlobRef, &amp.BlobRef{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.NodeBlobs, &amp.BlobRef{}, amp.EditFlow_Fold)
+	RegisterAttrDeclaredSealed(Attr.NodeCredentials, &Credentials{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.TileServer, &TileServer{}, amp.EditFlow_Fold)
 }

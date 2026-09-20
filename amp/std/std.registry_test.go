@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -101,10 +102,10 @@ func TestRegistryConcurrentReadWrite(t *testing.T) {
 // forge registration emitted is live in the process registry, count-exact
 // and §4.8-conformant, with golden UIDs asserted as BYTES.
 func TestGeneratedAttrRegistration(t *testing.T) {
-	// amp.std.consts.sdl declares 62 registrable attrs (trailing message-type
+	// amp.std.consts.sdl declares 63 registrable attrs (trailing message-type
 	// word, ZO §4.8); std.terminal.go registers 2 more at use-site.  A count
 	// drift means a registration was added or lost — both are conscious edits.
-	const generatedAttrs = 62
+	const generatedAttrs = 63
 	const useSiteAttrs = 2
 
 	count := 0
@@ -154,16 +155,19 @@ func TestGeneratedAttrRegistration(t *testing.T) {
 	}
 
 	// Golden fixtures — identity is BYTES (fold parity between forge codegen
-	// and the runtime tag fold).
+	// and the runtime tag fold).  node.Credentials is the `: sealed` row: it
+	// folds, registers Sealed, and its cell type is the SealedValue box.
 	golden := []struct {
-		attr tag.Name
-		uid  tag.UID
-		flow amp.EditFlow
+		attr   tag.Name
+		uid    tag.UID
+		flow   amp.EditFlow
+		sealed bool
 	}{
-		{Attr.AppState, tag.UID{0x6CEB3696AB78B359, 0x08CF79D767A904E8}, amp.EditFlow_Fold},
-		{Attr.SeriesTRS, tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, amp.EditFlow_Fold},
-		{Attr.SeriesSkin, tag.UID{0x8E878C8F846ABC37, 0xCABC2A7CD0B82C8B}, amp.EditFlow_Fold},
-		{Attr.SessionStatus, tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, amp.EditFlow_Fold},
+		{Attr.AppState, tag.UID{0x6CEB3696AB78B359, 0x08CF79D767A904E8}, amp.EditFlow_Fold, false},
+		{Attr.SeriesTRS, tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, amp.EditFlow_Fold, false},
+		{Attr.SeriesSkin, tag.UID{0x8E878C8F846ABC37, 0xCABC2A7CD0B82C8B}, amp.EditFlow_Fold, false},
+		{Attr.SessionStatus, tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, amp.EditFlow_Fold, false},
+		{Attr.NodeCredentials, tag.UID{0x38E9C390B7C5C376, 0x0906744822BD89F5}, amp.EditFlow_Fold, true},
 	}
 	for _, g := range golden {
 		if g.attr.ID != g.uid {
@@ -174,11 +178,45 @@ func TestGeneratedAttrRegistration(t *testing.T) {
 			t.Errorf("attr %q: not registered", g.attr.Text)
 			continue
 		}
-		if def.EditFlow != g.flow {
-			t.Errorf("attr %q: EditFlow %v != %v", g.attr.Text, def.EditFlow, g.flow)
+		if def.EditFlow != g.flow || def.Sealed != g.sealed {
+			t.Errorf("attr %q: (EditFlow %v, Sealed %v) != (%v, %v)", g.attr.Text, def.EditFlow, def.Sealed, g.flow, g.sealed)
 		}
-		if _, err := Registry().NewValue(g.uid); err != nil {
+		value, err := Registry().NewValue(g.uid)
+		if err != nil {
 			t.Errorf("attr %q: NewValue: %v", g.attr.Text, err)
+			continue
 		}
+		_, isBox := value.(*safe.SealedValue)
+		if isBox != g.sealed {
+			t.Errorf("attr %q: NewValue yields %T, sealed=%v", g.attr.Text, value, g.sealed)
+		}
+	}
+}
+
+// A Sealed declaration is part of the write-once storage policy, and a Tape
+// attr cannot be Sealed (its cells are the journal, never one box).
+func TestRegistrySealedPolicy(t *testing.T) {
+	reg := NewRegistry().(*registry)
+	def := amp.AttrDef{
+		Name:      tag.Name{}.With("test.registry.sealed.Tag"),
+		Prototype: &amp.Tag{},
+		Sealed:    true,
+	}
+	if err := reg.RegisterAttr(def); err != nil {
+		t.Fatalf("RegisterAttr: %v", err)
+	}
+	unsealed := def
+	unsealed.Sealed = false
+	if err := reg.RegisterAttr(unsealed); err == nil {
+		t.Fatal("re-registering a sealed attr unsealed must be refused")
+	}
+	tape := amp.AttrDef{
+		Name:      tag.Name{}.With("test.registry.sealed.tape.Tag"),
+		Prototype: &amp.Tag{},
+		EditFlow:  amp.EditFlow_Tape,
+		Sealed:    true,
+	}
+	if err := reg.RegisterAttr(tape); err == nil {
+		t.Fatal("a sealed Tape attr must be refused")
 	}
 }

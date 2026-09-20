@@ -9,6 +9,7 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
+	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/proto"
@@ -54,26 +55,40 @@ func RegisterAttrTape(attr tag.Name, prototype proto.Message, subTags string) ta
 // prototype's reflected type name; a mismatch panics at init, making the
 // declared name / stored type contract a compiled invariant.
 func RegisterAttrDeclared(attr tag.Name, prototype proto.Message, editFlow amp.EditFlow) {
-	typeOf := reflect.TypeOf(prototype)
+	registerDeclared(amp.AttrDef{
+		Name:      attr,
+		Prototype: prototype,
+		EditFlow:  editFlow,
+	})
+}
+
+// RegisterAttrDeclaredSealed is RegisterAttrDeclared for a `: sealed` leaf:
+// the cell is a safe.SealedValue box whose plaintext is prototype — the tail
+// names the plaintext, NewValue yields the box (ZO §4.8 declared flags).
+func RegisterAttrDeclaredSealed(attr tag.Name, prototype proto.Message, editFlow amp.EditFlow) {
+	registerDeclared(amp.AttrDef{
+		Name:      attr,
+		Prototype: prototype,
+		EditFlow:  editFlow,
+		Sealed:    true,
+	})
+}
+
+func registerDeclared(def amp.AttrDef) {
+	typeOf := reflect.TypeOf(def.Prototype)
 	if typeOf.Kind() == reflect.Pointer {
 		typeOf = typeOf.Elem()
 	}
-	tail := attr.Text
+	tail := def.Name.Text
 	if lastDot := strings.LastIndexByte(tail, '.'); lastDot >= 0 {
 		tail = tail[lastDot+1:]
 	}
 	if tail != typeOf.Name() {
 		panic(status.Code_BadTag.Errorf(
 			"RegisterAttrDeclared: %q: trailing word %q != prototype type %q (ZO §4.8)",
-			attr.Text, tail, typeOf.Name()))
+			def.Name.Text, tail, typeOf.Name()))
 	}
-
-	err := gRegistry.RegisterAttr(amp.AttrDef{
-		Name:      attr,
-		Prototype: prototype,
-		EditFlow:  editFlow,
-	})
-	if err != nil {
+	if err := gRegistry.RegisterAttr(def); err != nil {
 		panic(err)
 	}
 }
@@ -146,6 +161,9 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	if def.EditFlow == amp.EditFlow_Tape && def.RetainEdits != 0 {
 		return status.Code_BadRequest.Errorf("RegisterAttr: %q: RetainEdits is meaningless on a Tape attr", def.Name.Canonic())
 	}
+	if def.EditFlow == amp.EditFlow_Tape && def.Sealed {
+		return status.Code_BadRequest.Errorf("RegisterAttr: %q: a Tape attr cannot be Sealed", def.Name.Canonic())
+	}
 
 	reg.writeMu.Lock()
 	defer reg.writeMu.Unlock()
@@ -156,7 +174,7 @@ func (reg *registry) RegisterAttr(def amp.AttrDef) error {
 	// publishes nothing.
 	snap := reg.snap.Load()
 	if prev, exists := snap.attrDefs[attrID]; exists {
-		if prev.EditFlow != def.EditFlow || prev.RetainEdits != def.RetainEdits {
+		if prev.EditFlow != def.EditFlow || prev.RetainEdits != def.RetainEdits || prev.Sealed != def.Sealed {
 			return status.Code_BadRequest.Errorf("RegisterAttr: %q: storage policy already registered differently", def.Name.Canonic())
 		}
 		return nil
@@ -231,7 +249,9 @@ func (reg *registry) FindModule(moduleID tag.UID, moduleAlias string) *amp.AppMo
 	return mod
 }
 
-// NewValue makes an instance of the value type for the given attr "spec" tag.UID.
+// NewValue makes an instance of the value type for the given attr "spec"
+// tag.UID — the type a cell of that attr unmarshals as: the prototype, or
+// for a Sealed attr the safe.SealedValue box (the prototype is its plaintext).
 func (reg *registry) NewValue(attrID tag.UID) (proto.Message, error) {
 
 	// An attrID is often an unnamed scalar attr, so its def resolves directly —
@@ -240,6 +260,9 @@ func (reg *registry) NewValue(attrID tag.UID) (proto.Message, error) {
 	def, exists := reg.snap.Load().attrDefs[attrID]
 	if !exists {
 		return nil, status.Code_ItemNotFound.Errorf("attr %q not found", attrID.String())
+	}
+	if def.Sealed {
+		return &safe.SealedValue{}, nil
 	}
 	return data.NewLike(def.Prototype), nil
 }

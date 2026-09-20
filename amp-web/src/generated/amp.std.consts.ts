@@ -246,6 +246,14 @@ export const Attr = {
     BlobRef                           : { id: [0xF390C57CD7C15B45n, 0x13F1CF7F07D7A047n], text: "amp.blob.BlobRef" },       // 7mk-32rtpy1ce2-j7wfggw3xg-827
     NodeBlobs                         : { id: [0xAD0BA6086B8A5202n, 0xB15FFA7352307DEFn], text: "amp.blob.node.BlobRef" },  // 5e1-fm0huwbb81-c2rzufe930-zgg
 
+    // ─── The node's own operational records.  Credentials: one sealed cell per ───
+    // provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
+    // the node operator's confidential planet — a safe.SealedValue box whose
+    // plaintext is Credentials, opened only by keyholders (O4 §4.15 step 5).
+    NodeAttr                          : { id: [0x93F76E7915DC92BFn, 0x6DD22A7FFF8A1FA8n], text: "node" },              // 4my-xr7k5fwkbz-qvnjbgzzsn-7x8
+
+    NodeCredentials                   : { id: [0x38E9C390B7C5C376n, 0x0906744822BD89F5n], text: "node.Credentials" },  // 1sx-71t1ey5sev-0k1mn90jcv-2gp
+
     // ─── Tile-server registry — list of available raster / terrain / vector ───
     // tile backends.  Each entry is a TileServer proto stored as one item
     // under TileServer; consumers (TileService, manifold compositor) filter
