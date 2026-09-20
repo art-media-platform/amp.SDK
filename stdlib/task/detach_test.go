@@ -45,11 +45,23 @@ func TestDetach_ParkedChildDoesNotBlockParent(t *testing.T) {
 	// Signalled with the parent ...
 	closing.AwaitOrFail(t, 2*time.Second, "detached child's Closing() did not fire at parent close")
 
+	// ... and the render marks its state.
+	tree.Reset()
+	task.PrintContextTree(root, &tree, 0)
+	if !strings.Contains(tree.String(), "parked [detached] [closing]") {
+		t.Errorf("tree render lacks the closing marker on the signalled child:\n%s", tree.String())
+	}
+
 	// ... yet the parent finalizes without it.
 	select {
 	case <-root.Done():
 	case <-time.After(2 * time.Second):
 		t.Fatal("root.Done() blocked on a parked detached child")
+	}
+	tree.Reset()
+	task.PrintContextTree(root, &tree, 0)
+	if !strings.Contains(tree.String(), "root [closed]") {
+		t.Errorf("tree render lacks the closed marker on the finalized root:\n%s", tree.String())
 	}
 	if got := root.AbandonedChildren(); got != 1 {
 		t.Fatalf("AbandonedChildren = %d, want 1", got)

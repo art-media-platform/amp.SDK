@@ -233,6 +233,19 @@ func printContextTree(ctx Context, out *strings.Builder, depth int, prefix []run
 	if info.IdleExempt {
 		out.WriteString(" [idle-exempt]")
 	}
+	// State is read through the Context's own channels: Closing() fires at Close(),
+	// Done() once the drain completes; a running task is the common case and stays
+	// unmarked.
+	select {
+	case <-ctx.Done():
+		out.WriteString(" [closed]")
+	default:
+		select {
+		case <-ctx.Closing():
+			out.WriteString(" [closing]")
+		default:
+		}
+	}
 	out.WriteByte('\n')
 
 	// Set up prefix for children
