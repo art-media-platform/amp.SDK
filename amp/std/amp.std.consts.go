@@ -47,6 +47,7 @@ var Attr = struct {
 	SeriesAssetTag                     tag.Name
 	SeriesHeadLink                     tag.Name
 	SeriesLinkTree                     tag.Name
+	SeriesSkin                         tag.Name
 	SeriesS2R                          tag.Name
 	SeriesS2T                          tag.Name
 	MediaLink                          tag.Name
@@ -203,6 +204,7 @@ var Attr = struct {
 	SeriesAssetTag: tag.Name{ID: tag.UID{0x38365DC6227700FB, 0x39ACAA81B253C797}, Text: "item.series.asset.Tag"},      // 1s6-tfwd8mr03x-mmc5bh6t57-jwr
 	SeriesHeadLink: tag.Name{ID: tag.UID{0x1F851D40FE1D382B, 0x5521D97B38F0236C}, Text: "item.series.link.Tag"},       // 0zh-nfn1zhx70p-pb8ftgdwg0-8vd
 	SeriesLinkTree: tag.Name{ID: tag.UID{0x5B51B3B938C3C87F, 0xB429C4C1470DD710}, Text: "item.series.link.tree.Tags"}, // 2vb-6tvkf63t1z-v8bf4s53hv-psh
+	SeriesSkin:     tag.Name{ID: tag.UID{0x8E878C8F846ABC37, 0xCABC2A7CD0B82C8B}, Text: "item.series.SkinSpec"},       // 4fh-y68z13brhv-wpg1bgm8ch-c4c
 	SeriesS2R:      tag.Name{ID: tag.UID{0x0C89F9B0717A62A5, 0x79AA41CD3FA29CDD}, Text: "item.series.S2.radius.mm"},   // 0dj-7wv0wcudbk-rmbk1tnzu5-76x
 	SeriesS2T:      tag.Name{ID: tag.UID{0x749CA29A38DAA5BF, 0x7139081806CBF2C5}, Text: "item.series.S2.UTC64"},       // 3nm-kj9nf6unqz-r2f88303dr-wq5
 	MediaLink:      tag.Name{ID: tag.UID{0x4DED4FC2D91C296A, 0x44D348001E677047}, Text: "item.media.link.Tag"},        // 2ex-p7w5q8w55p-49nu800g6f-w27
@@ -577,6 +579,7 @@ func init() {
 	RegisterAttrDeclared(Attr.SeriesAssetTag, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.SeriesHeadLink, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.SeriesLinkTree, &amp.Tags{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.SeriesSkin, &SkinSpec{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.MediaLink, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.MediaRelease, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.MediaInfo, &MediaInfo{}, amp.EditFlow_Fold)

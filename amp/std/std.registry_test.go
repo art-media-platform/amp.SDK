@@ -101,10 +101,10 @@ func TestRegistryConcurrentReadWrite(t *testing.T) {
 // forge registration emitted is live in the process registry, count-exact
 // and §4.8-conformant, with golden UIDs asserted as BYTES.
 func TestGeneratedAttrRegistration(t *testing.T) {
-	// amp.std.consts.sdl declares 61 registrable attrs (trailing message-type
+	// amp.std.consts.sdl declares 62 registrable attrs (trailing message-type
 	// word, ZO §4.8); std.terminal.go registers 2 more at use-site.  A count
 	// drift means a registration was added or lost — both are conscious edits.
-	const generatedAttrs = 61
+	const generatedAttrs = 62
 	const useSiteAttrs = 2
 
 	count := 0
@@ -139,6 +139,7 @@ func TestGeneratedAttrRegistration(t *testing.T) {
 		{Attr.SeriesAssetTag, amp.EditFlow_Fold},
 		{Attr.SeriesHeadLink, amp.EditFlow_Fold},
 		{Attr.SeriesLinkTree, amp.EditFlow_Fold},
+		{Attr.SeriesSkin, amp.EditFlow_Fold},
 		{Attr.ChannelPropertySeries, amp.EditFlow_Fold},
 	}
 	for _, f := range flagged {
@@ -161,6 +162,7 @@ func TestGeneratedAttrRegistration(t *testing.T) {
 	}{
 		{Attr.AppState, tag.UID{0x6CEB3696AB78B359, 0x08CF79D767A904E8}, amp.EditFlow_Fold},
 		{Attr.SeriesTRS, tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, amp.EditFlow_Fold},
+		{Attr.SeriesSkin, tag.UID{0x8E878C8F846ABC37, 0xCABC2A7CD0B82C8B}, amp.EditFlow_Fold},
 		{Attr.SessionStatus, tag.UID{0x7FB381BC8DB19B28, 0xE3EC642BF561552B}, amp.EditFlow_Fold},
 	}
 	for _, g := range golden {

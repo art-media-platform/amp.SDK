@@ -59,6 +59,7 @@ export const Attr = {
     SeriesAssetTag                    : { id: [0x38365DC6227700FBn, 0x39ACAA81B253C797n], text: "item.series.asset.Tag" },       // 1s6-tfwd8mr03x-mmc5bh6t57-jwr
     SeriesHeadLink                    : { id: [0x1F851D40FE1D382Bn, 0x5521D97B38F0236Cn], text: "item.series.link.Tag" },        // 0zh-nfn1zhx70p-pb8ftgdwg0-8vd
     SeriesLinkTree                    : { id: [0x5B51B3B938C3C87Fn, 0xB429C4C1470DD710n], text: "item.series.link.tree.Tags" },  // 2vb-6tvkf63t1z-v8bf4s53hv-psh
+    SeriesSkin                        : { id: [0x8E878C8F846ABC37n, 0xCABC2A7CD0B82C8Bn], text: "item.series.SkinSpec" },        // 4fh-y68z13brhv-wpg1bgm8ch-c4c
     SeriesS2R                         : { id: [0x0C89F9B0717A62A5n, 0x79AA41CD3FA29CDDn], text: "item.series.S2.radius.mm" },    // 0dj-7wv0wcudbk-rmbk1tnzu5-76x
     SeriesS2T                         : { id: [0x749CA29A38DAA5BFn, 0x7139081806CBF2C5n], text: "item.series.S2.UTC64" },        // 3nm-kj9nf6unqz-r2f88303dr-wq5
     MediaLink                         : { id: [0x4DED4FC2D91C296An, 0x44D348001E677047n], text: "item.media.link.Tag" },         // 2ex-p7w5q8w55p-49nu800g6f-w27

@@ -63,6 +63,7 @@ tags Attr {
             SeriesAssetTag "asset.Tag"
             SeriesHeadLink "link.Tag"
             SeriesLinkTree "link.tree.Tags"
+            SeriesSkin     "SkinSpec"       // the item's look: mesh ⊥ layers ⊥ args in one cell (MD-manifold-architecture §12.5)
             SeriesS2R      "S2.radius.mm"
             SeriesS2T      "S2.UTC64"
         }
