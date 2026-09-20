@@ -5,7 +5,10 @@ import (
 	"crypto/rand"
 	"testing"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/amp/std"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
@@ -104,5 +107,42 @@ func TestSealedValueBoxRejects(t *testing.T) {
 	}
 	if _, err := amp.SealValueBox(rand.Reader, epochKey, containerID, addr, "", plain); err == nil {
 		t.Fatal("empty content type sealed")
+	}
+}
+
+// A proto payload rides the box under its message name as ContentType, so the
+// opener knows what to unmarshal (std.Credentials is the first such payload).
+func TestSealedValueBoxProtoPayload(t *testing.T) {
+	epochKey := testSymKey(t, tag.UID{0x0100, 0x42})
+	addr := testSealAddr(4, 5, 6)
+	creds := &std.Credentials{
+		User:   "listener@example.com",
+		Secret: "fixture-secret",
+	}
+	plain, err := proto.Marshal(creds)
+	if err != nil {
+		t.Fatal(err)
+	}
+	contentType := amp.ProtoContentType(creds)
+	if contentType != "std.Credentials" {
+		t.Fatalf("ProtoContentType = %q", contentType)
+	}
+	box, err := amp.SealValueBox(rand.Reader, epochKey, tag.UID{0x0700, 0x99}, addr, contentType, plain)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if box.ContentType != contentType || bytes.Contains(box.Ciphertext, []byte(creds.Secret)) {
+		t.Fatal("box leaks the payload or drops its content type")
+	}
+	opened, err := amp.OpenValueBox(epochKey, addr, box)
+	if err != nil {
+		t.Fatal(err)
+	}
+	back := &std.Credentials{}
+	if err := proto.Unmarshal(opened, back); err != nil {
+		t.Fatal(err)
+	}
+	if back.User != creds.User || back.Secret != creds.Secret {
+		t.Fatalf("round trip: %v", back)
 	}
 }

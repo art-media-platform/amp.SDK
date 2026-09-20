@@ -637,3 +637,13 @@ message LoginForm {
     string              TokenField   = 8;  // response field holding the minted token (e.g. "token")
 }
 
+
+// Credentials is a user + secret pair a node holds for a provider (a premium
+// stream login, a relay account).  It rides only sealed: the payload of a
+// law.secret.<provider>.credentials.SealedValue attr on a confidential planet
+// (amp.SealValueBox; the box's ContentType is amp.ProtoContentType of this
+// message), never a plaintext attr.
+message Credentials {
+    string User   = 1;
+    string Secret = 2;
+}

@@ -3,6 +3,8 @@ package amp
 import (
 	"io"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
@@ -20,6 +22,13 @@ import (
 // SealedContentType is the amp.Tag content type carrying a marshaled
 // safe.SealedValue.
 const SealedContentType = "application/vnd.amp.sealed"
+
+// ProtoContentType is the SealedValue ContentType of a proto-marshaled
+// payload — the message's full name (e.g. "std.Credentials"), which tells the
+// opener what to unmarshal the plaintext as.
+func ProtoContentType(msg proto.Message) string {
+	return string(proto.MessageName(msg))
+}
 
 // sealedValuePurpose is the domain-separation label a sealed-attr subkey
 // derives under — distinct from the "epoch-link" and tx content domains.

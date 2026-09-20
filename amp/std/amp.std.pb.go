@@ -3633,6 +3633,63 @@ func (x *LoginForm) GetTokenField() string {
 	return ""
 }
 
+// Credentials is a user + secret pair a node holds for a provider (a premium
+// stream login, a relay account).  It rides only sealed: the payload of a
+// law.secret.<provider>.credentials.SealedValue attr on a confidential planet
+// (amp.SealValueBox; the box's ContentType is amp.ProtoContentType of this
+// message), never a plaintext attr.
+type Credentials struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          string                 `protobuf:"bytes,1,opt,name=User,proto3" json:"User,omitempty"`
+	Secret        string                 `protobuf:"bytes,2,opt,name=Secret,proto3" json:"Secret,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Credentials) Reset() {
+	*x = Credentials{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Credentials) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Credentials) ProtoMessage() {}
+
+func (x *Credentials) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Credentials.ProtoReflect.Descriptor instead.
+func (*Credentials) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *Credentials) GetUser() string {
+	if x != nil {
+		return x.User
+	}
+	return ""
+}
+
+func (x *Credentials) GetSecret() string {
+	if x != nil {
+		return x.Secret
+	}
+	return ""
+}
+
 var File_amp_std_amp_std_proto protoreflect.FileDescriptor
 
 const file_amp_std_amp_std_proto_rawDesc = "" +
@@ -3910,7 +3967,10 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\fTokenPostURL\x18\x06 \x01(\tR\fTokenPostURL\x12\x1e\n" +
 	"\n" +
 	"TokenField\x18\b \x01(\tR\n" +
-	"TokenField**\n" +
+	"TokenField\"9\n" +
+	"\vCredentials\x12\x12\n" +
+	"\x04User\x18\x01 \x01(\tR\x04User\x12\x16\n" +
+	"\x06Secret\x18\x02 \x01(\tR\x06Secret**\n" +
 	"\tTRS_Flags\x12\x0e\n" +
 	"\n" +
 	"FixedScale\x10\x00\x12\r\n" +
@@ -4022,7 +4082,7 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 }
 
 var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 16)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),           // 0: std.TRS_Flags
 	(CameraModeID)(0),        // 1: std.CameraModeID
@@ -4068,10 +4128,11 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(*DeviceVars)(nil),       // 41: std.DeviceVars
 	(*MemberVars)(nil),       // 42: std.MemberVars
 	(*LoginForm)(nil),        // 43: std.LoginForm
-	(*amp.Tag)(nil),          // 44: amp.Tag
-	(*amp.Tags)(nil),         // 45: amp.Tags
-	(amp.Units)(0),           // 46: amp.Units
-	(*amp.BlobRef)(nil),      // 47: amp.BlobRef
+	(*Credentials)(nil),      // 44: std.Credentials
+	(*amp.Tag)(nil),          // 45: amp.Tag
+	(*amp.Tags)(nil),         // 46: amp.Tags
+	(amp.Units)(0),           // 47: amp.Units
+	(*amp.BlobRef)(nil),      // 48: amp.BlobRef
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
@@ -4079,32 +4140,32 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	1,  // 2: std.CameraState.ModeID:type_name -> std.CameraModeID
 	2,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
 	21, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	44, // 5: std.Report.Title:type_name -> amp.Tag
-	44, // 6: std.Report.Caption:type_name -> amp.Tag
-	44, // 7: std.Report.Errors:type_name -> amp.Tag
-	44, // 8: std.Report.Warnings:type_name -> amp.Tag
-	44, // 9: std.Report.Messages:type_name -> amp.Tag
-	44, // 10: std.Report.Debug:type_name -> amp.Tag
-	44, // 11: std.ModuleRef.Module:type_name -> amp.Tag
+	45, // 5: std.Report.Title:type_name -> amp.Tag
+	45, // 6: std.Report.Caption:type_name -> amp.Tag
+	45, // 7: std.Report.Errors:type_name -> amp.Tag
+	45, // 8: std.Report.Warnings:type_name -> amp.Tag
+	45, // 9: std.Report.Messages:type_name -> amp.Tag
+	45, // 10: std.Report.Debug:type_name -> amp.Tag
+	45, // 11: std.ModuleRef.Module:type_name -> amp.Tag
 	23, // 12: std.ModuleRef.Labels:type_name -> std.Labels
-	45, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
+	46, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
 	3,  // 14: std.Rect.Format:type_name -> std.PointFormat
 	15, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	3,  // 16: std.GeoPath.Format:type_name -> std.PointFormat
 	4,  // 17: std.MediaInfo.Flags:type_name -> std.MediaFlags
-	44, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
+	45, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
 	29, // 19: std.MediaTags.Extra:type_name -> std.MediaTag
-	46, // 20: std.MediaTag.Units:type_name -> amp.Units
-	44, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
+	47, // 20: std.MediaTag.Units:type_name -> amp.Units
+	45, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
 	23, // 22: std.MediaEntry.Labels:type_name -> std.Labels
 	27, // 23: std.MediaEntry.Info:type_name -> std.MediaInfo
-	45, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
-	46, // 25: std.Segment.Units:type_name -> amp.Units
-	47, // 26: std.Segment.Blob:type_name -> amp.BlobRef
+	46, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
+	47, // 25: std.Segment.Units:type_name -> amp.Units
+	48, // 26: std.Segment.Blob:type_name -> amp.BlobRef
 	21, // 27: std.Arg.Value:type_name -> std.JsonValue
-	44, // 28: std.VisPreset.Title:type_name -> amp.Tag
-	44, // 29: std.VisPreset.Collection:type_name -> amp.Tag
-	44, // 30: std.VisPreset.Credits:type_name -> amp.Tag
+	45, // 28: std.VisPreset.Title:type_name -> amp.Tag
+	45, // 29: std.VisPreset.Collection:type_name -> amp.Tag
+	45, // 30: std.VisPreset.Credits:type_name -> amp.Tag
 	5,  // 31: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
 	6,  // 32: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
 	7,  // 33: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
@@ -4138,7 +4199,7 @@ func file_amp_std_amp_std_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
 			NumEnums:      16,
-			NumMessages:   28,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
