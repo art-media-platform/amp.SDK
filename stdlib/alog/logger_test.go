@@ -113,7 +113,7 @@ func TestJournaldShape(t *testing.T) {
 
 func TestLevelDigitSaturates(t *testing.T) {
 	// The API takes an int32 while the column holds one digit; past 9 it must saturate
-	// rather than widen the field and break every alignment below it.
+	// rather than widen the rank code and break its line anchor.
 	for _, probe := range []struct {
 		level int32
 		want  byte
