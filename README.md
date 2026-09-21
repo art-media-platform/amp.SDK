@@ -194,7 +194,7 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 4. Registering your module into an `ampd` build is the partner path (partners/internal: clone `amp.planet`; `make build` produces `ampd` and `libampd`, the embeddable C library)
 5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
 
-> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Manifold, commerce — are indexed in `amp.planet/AOM/0-amp-operations-manual.md` (internal).
+> **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Mantle, commerce — are indexed in `amp.planet/AOM/0-amp-operations-manual.md` (internal).
 
 ---
 

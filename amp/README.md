@@ -243,7 +243,7 @@ example that stays inside this line is `amp.planet/amp/apps/app.hello/app.hello.
 - [`../stdlib/tag/`](../stdlib/tag/README.md) — UID derivation, `Address`, the addressing algebra
 - [`../stdlib/task/`](../stdlib/task/api.task.go) — the goroutine lifecycle model every Pin lives in
 - [`../amp-web/`](../amp-web/) — `@art-media-platform/web`, the TypeScript/React consumer; full contract in [`SKILL-amp-web-SDK.md`](../amp-web/SKILL-amp-web-SDK.md)
-- `amp.planet/AOM/0-amp-operations-manual.md` (internal) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Manifold, commerce
+- `amp.planet/AOM/0-amp-operations-manual.md` (internal) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Mantle, commerce
 
 ---
 

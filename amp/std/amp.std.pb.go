@@ -3172,7 +3172,7 @@ func (x *AtmosphereEffect) GetEnabled() bool {
 	return false
 }
 
-// AtmosphereSpec composes a manifold's atmosphere from tagged effect entries.
+// AtmosphereSpec composes a mantle's atmosphere from tagged effect entries.
 // Each category (Sky / Sun / Night / Fog) is independently overridable; a
 // planet author can ship a partial set and inherit the rest.  Multiple entries
 // with the same Label are reserved for future stacking (e.g., two compatible

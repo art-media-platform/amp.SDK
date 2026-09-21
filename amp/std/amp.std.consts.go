@@ -75,8 +75,7 @@ var Attr = struct {
 	ChannelTypeTimeline                tag.Name
 	ChannelTypeNotes                   tag.Name
 	ChannelTypeMap                     tag.Name
-	ChannelTypeGlobe                   tag.Name
-	ChannelTypeManifold                tag.Name
+	ChannelTypeMantle                  tag.Name
 	ChannelTypeSpace                   tag.Name
 	ChannelTypeLinks                   tag.Name
 	ChannelTypeRegistry                tag.Name
@@ -244,8 +243,7 @@ var Attr = struct {
 	ChannelTypeTimeline:     tag.Name{ID: tag.UID{0xCAA590A1B24C80D3, 0xF0D695C6FDB81BC9}, Text: "channel.type.Timeline"},     // 6bn-q8b3dkdh39-z1pnpsvyvh-6y9
 	ChannelTypeNotes:        tag.Name{ID: tag.UID{0x7F066E7E15634C8E, 0x2B42527E940C4785}, Text: "channel.type.Notes"},        // 3z0-tr7w5c39k7-2qhkkgub0s-jw5
 	ChannelTypeMap:          tag.Name{ID: tag.UID{0x461600979AF3D842, 0x5A0DB0A3BDCC6D2C}, Text: "channel.type.Map"},          // 262-s09g6rmv11-5n3ehnfyws-v9d
-	ChannelTypeGlobe:        tag.Name{ID: tag.UID{0x5AE48F27C6756F95, 0xD710170F8601E1CA}, Text: "channel.type.Globe"},        // 2uw-k7kgjmpeyb-xf40r1y303-sfb
-	ChannelTypeManifold:     tag.Name{ID: tag.UID{0x4CBB7B8671F99205, 0xF3E8260DB0811029}, Text: "channel.type.Manifold"},     // 2dr-exsdwgtk82-z7u161qs82-419
+	ChannelTypeMantle:       tag.Name{ID: tag.UID{0x54DE9671EE68CF70, 0x88D9FC56A851E613}, Text: "channel.type.Mantle"},       // 2nv-uc73vm8txs-8jqgwbun53-thm
 	ChannelTypeSpace:        tag.Name{ID: tag.UID{0x7A73CEC90BFC9F74, 0x5A5DE66730642BD4}, Text: "channel.type.Space"},        // 3uf-g7dk2zwmxu-5nrg6dws68-byn
 	ChannelTypeLinks:        tag.Name{ID: tag.UID{0x0F753C0ED5870184, 0x1FC3120334FEC794}, Text: "channel.type.Links"},        // 0gf-ny0xpd7062-1zhsk0dugx-jwn
 	ChannelTypeRegistry:     tag.Name{ID: tag.UID{0xB9BF3D6330F504B7, 0xE0B97F3A75A18971}, Text: "channel.type.Registry"},     // 5tr-wyq6d7p0kv-y1fcz79uu3-2cj
@@ -403,7 +401,7 @@ var Attr = struct {
 
 	// ─── Tile-server registry — list of available raster / terrain / vector ───
 	// tile backends.  Each entry is a TileServer proto stored as one item
-	// under TileServer; consumers (TileService, manifold compositor) filter
+	// under TileServer; consumers (TileService, mantle compositor) filter
 	// by Kind / Projection / region tags to assemble a layer stack.
 	TileServerAttr: tag.Name{ID: tag.UID{0xD5FC9ECEE1CD0384, 0xDD46B5FC1E37D2F4}, Text: "tile.server"}, // 6pz-kgdxsfe0f2-eujppzhg3g-nrn
 
@@ -453,15 +451,12 @@ const (
 	GlyphNewLocation   = "asset:glyph/new-location"
 )
 
-// ─── Manifold (3D globe / sphere channel) — modding override points.  Each URI ───
-// resolves through the crate / asset system; a mod registers an override at
-// the same key.  TileLayers ship as prefab GameObjects (TileLayer
-// MonoBehaviour); loaders Instantiate one as a child of GlobeInstance to
-// enable the layer.
+// ─── Mantle (the double-precision world a Globe renders) — modding override ───
+// points.  Each URI resolves through the crate / asset system; a mod
+// registers an override at the same key.
 const (
-	ManifoldDefaultTileMaterial = "asset:manifold/tile.material.default"
-	ManifoldDefaultVolumePrefab = "asset:manifold/volume.prefab.default"
-	ManifoldDebugGridTileLayer  = "asset:manifold/tile.layer.debug-grid"
+	MantleDefaultTileMaterial = "asset:mantle/tile.material.default"
+	MantleDefaultVolumePrefab = "asset:mantle/volume.prefab.default"
 )
 
 // ─── Atmosphere — stock URIs for the four-category (sky / sun / night / fog) ───
@@ -507,7 +502,7 @@ const (
 // ─── Actor — in-world actor skins resolve through the crate / asset ───
 // system; a mod registers an override at the same key to ship a custom
 // actor without touching code.  An unresolved URI falls back to a
-// primitive so a ManifoldActor is always visible.
+// primitive so a MantleActor is always visible.
 const (
 	ActorDefaultSkin             = "asset:actor/skin.default"
 	ActorDefaultBodyHeightMeters = float32(1.6) // composed-body height (m)
