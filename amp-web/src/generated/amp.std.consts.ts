@@ -307,8 +307,16 @@ export const Glyph = {
 // points.  Each URI resolves through the crate / asset system; a mod
 // registers an override at the same key.
 export const Mantle = {
-    DefaultTileMaterial: "asset:mantle/tile.material.default",
-    DefaultVolumePrefab: "asset:mantle/volume.prefab.default",
+    DefaultTileMaterial:   "asset:mantle/tile.material.default",
+    DefaultVolumePrefab:   "asset:mantle/volume.prefab.default",
+    // Node sizing (UD-cmdr-yoke §4).  A tap authors a node whose on-screen
+    // diameter is the fingertip target, persisted as TRS.Sx in meters at the
+    // tapped depth; Sx = 0 resolves to DefaultNodeSizeMeters at the reader.
+    // MinNodeScreenMM is a render-time visibility floor and never reaches
+    // the wire.
+    DefaultNodeSizeMM:     7,  // fingertip target: authored on-screen diameter at the tap
+    DefaultNodeSizeMeters: 1,  // a placement carrying Sx = 0
+    MinNodeScreenMM:       1.5,  // drawn size never falls below this on screen
 } as const;
 
 // ─── Atmosphere — stock URIs for the four-category (sky / sun / night / fog) ───

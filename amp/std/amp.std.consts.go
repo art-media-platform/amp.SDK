@@ -457,6 +457,14 @@ const (
 const (
 	MantleDefaultTileMaterial = "asset:mantle/tile.material.default"
 	MantleDefaultVolumePrefab = "asset:mantle/volume.prefab.default"
+	// Node sizing (UD-cmdr-yoke §4).  A tap authors a node whose on-screen
+	// diameter is the fingertip target, persisted as TRS.Sx in meters at the
+	// tapped depth; Sx = 0 resolves to DefaultNodeSizeMeters at the reader.
+	// MinNodeScreenMM is a render-time visibility floor and never reaches
+	// the wire.
+	MantleDefaultNodeSizeMM     = float32(7)   // fingertip target: authored on-screen diameter at the tap
+	MantleDefaultNodeSizeMeters = float32(1)   // a placement carrying Sx = 0
+	MantleMinNodeScreenMM       = float32(1.5) // drawn size never falls below this on screen
 )
 
 // ─── Atmosphere — stock URIs for the four-category (sky / sun / night / fog) ───
