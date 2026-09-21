@@ -1105,7 +1105,8 @@ This keeps the card pattern viable on phones, XR headsets, and embedded surfaces
    {vaultUrl}/cards/{card-type}?token=<sessionToken>&planet=<planetTag>&...
 2. app.www serves the HTML.  The card's <head> declares its title, intents,
    sized hints, and focus model via <meta name="amp:card:*"> tags.
-3. The Pane reads the manifest, configures the WebView, and exposes window.amp.
+3. The Pane reads the manifest and configures the WebView; /amp/bridge.js, the
+   card's first script, installs window.amp and attaches to the Pane's transport hook.
 4. The card calls amp.read / amp.write / amp.subscribe / amp.upload to bind
    to amp state.  Live updates from cross-device edits land via amp.subscribe.
 5. The card handles forms via amp.submit; back-nav via amp.back.  The Pane
@@ -1132,6 +1133,7 @@ The Pane introspects these on load. Manifests survive AI generation because they
 interface AmpBridge {
   // ── Identity ──
   member: { ID: string; DisplayName: string; PlanetID: string; Kind?: string } | null;
+  onReady(cb: (amp: AmpBridge) => void): void;  // the host attached; member is set
 
   // ── Data ──
   read(channel: string, attr: string, itemID: string): Promise<any>;
@@ -1177,23 +1179,15 @@ pagination window; `filter` is a **host-side presentational convenience** (an
 equality hint the host may apply to the rows it fetched), never a server
 predicate — scope by address per §5.2, don't lean on it.
 
-`AmpBridge` and its helper types (`ListOpts`, `TxReceipt`, `FormPayload`, `SubmitResult`) ship in the SDK — `import type { AmpBridge } from '@art-media-platform/web'` for card-author autocomplete, and importing the package augments `window.amp` on the global `Window`. The host (Unity WebView, browser shim, or test harness) injects the implementation. A standalone-browser fallback logs every call to console for debugging:
+`AmpBridge` and its helper types (`ListOpts`, `TxReceipt`, `FormPayload`, `SubmitResult`) ship in the SDK — `import type { AmpBridge } from '@art-media-platform/web'` for card-author autocomplete, and importing the package augments `window.amp` on the global `Window`.
 
-```javascript
-const amp = window.amp || {
-  read: (...a) => (console.log('amp.read', a), null),
-  write: (...a) => console.log('amp.write', a),
-  subscribe: () => () => {},
-  navigate: (url) => console.log('amp.navigate', url),
-  // ...
-};
-```
+A card's first script is `/amp/bridge.js`, served by `app.www`: it installs `window.amp`, attaches to the host's transport hook (`window.__amp`) when one is present, and logs every call to the console when none is — the same file runs in a Unity Pane and in a plain browser, so a card carries no fallback shim. The host installs its hook after the page's own scripts ran, so `amp.member` is `null` until then; `amp.onReady(cb)` is the card's cue (it fires at once when already attached). No client injects the IDL.
 
 #### Server route — `/cards/{cell}[/asset]`
 
 `app.www` serves card bundles at `/cards/{cell}` (anonymous; no Bearer required). Each cell is a flat directory containing `index.html` and any sibling assets. The canonical cells ship embedded in the `ampd` binary; an operator drop at `{homePath}/cards/{cell}/` shadows the embedded copy for whitelabel customization without a rebuild.
 
-Cell names match `[A-Za-z0-9_-]+` and the filesystem is the registry (no allowlist). `/cards/{cell}` and `/cards/{cell}/` both resolve to `index.html`. Path traversal returns 404. Non-GET/HEAD verbs return 405.
+Cell names match `[A-Za-z0-9_-]+` and the filesystem is the registry (no allowlist). `/cards/{cell}` redirects (301) to `/cards/{cell}/`, which serves `index.html` so sibling assets resolve under the cell. Path traversal returns 404. Non-GET/HEAD verbs return 405. `/amp/bridge.js` is served beside the cards route (`application/javascript`, `Cache-Control: no-store`) and is `'self'` under the card CSP.
 
 Every response carries a strict CSP that locks the cell to its own origin:
 
@@ -1244,6 +1238,7 @@ cards/settings/
     </select>
   </div>
   <button id="save" class="btn" type="button">Save</button>
+  <script src="/amp/bridge.js"></script>
   <script src="card.js"></script>
 </body>
 </html>
@@ -1272,7 +1267,7 @@ async function save() {
   if (result.ok) amp.back();
 }
 document.getElementById('save').addEventListener('click', save);
-load();
+amp.onReady(load);   // amp.member is set once the host attaches
 ```
 
 Inline `<style>` blocks are permitted (the served CSP allows `'unsafe-inline'` for styles); a sibling `card.css` is preferred for anything more than a handful of rules.
@@ -1281,14 +1276,14 @@ Inline `<style>` blocks are permitted (the served CSP allows `'unsafe-inline'` f
 
 1. **One card per item.** A card is the detail view of one item, not a list-renderer. Lists render natively in the host. (See §8.1.)
 2. **Sibling-file bundle.** `index.html` + `card.js` + `card.css` in one directory. No bundler. AI agents emit the whole directory at once.
-3. **External script.** Use `<script src="card.js">` — the served CSP forbids inline `<script>`. Inline event handlers (`onclick="…"`) are forbidden for the same reason; bind via `addEventListener`.
+3. **External scripts, the bridge first.** `<script src="/amp/bridge.js">` then `<script src="card.js">` — the served CSP forbids inline `<script>`. Inline event handlers (`onclick="…"`) are forbidden for the same reason; bind via `addEventListener`.
 4. **Viewport 320x640.** Phone portrait, half-screen. Scales inside any Pane size.
 5. **Touch-first.** 44px minimum tap targets. No hover-dependent UI.
 6. **CSS variables for theme.** All colors via `--amp-*`; the Pane injects the planet theme.
 7. **Always use `window.amp`** for data; never `fetch` directly.
 8. **Manifest in `<head>`** so the Pane can introspect title and intents.
 9. **`amp.submit(...)`** for forms; `amp.write(...)` for direct CRDT writes; both work, `submit` carries an `intent` the Pane can act on.
-10. **Standalone debug.** The fallback `amp` shim logs everything to console for browser-only testing.
+10. **Standalone debug.** Without a host, the served bridge logs every call to the console for browser-only testing.
 
 ---
 
