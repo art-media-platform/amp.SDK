@@ -312,10 +312,11 @@ type HostSession interface {
 	// metadata only (never plaintext), so it needs no epoch key.
 	PlanetHighWater(planetID tag.UID) (highWater tag.UID, count int)
 
-	// Returns this node's operator-configured home-vault endpoint(s), seeded into
-	// home-planet governance (EpochTerms.VaultConfig.VaultAddrs) at genesis so a
-	// peerless acceptor can dial onto the planet.  Empty when no vault is
-	// configured.
+	// Returns the vault endpoint(s) this node serves and advertises (the operator's
+	// -vault.home-addr): seeded into every planet it founds
+	// (EpochTerms.VaultConfig.VaultAddrs) and minted into invites for a planet whose
+	// terms carry none, so a peerless acceptor can dial onto the planet.  Empty when
+	// unset, and on a dial-only (embedded) host, which serves no vault listener.
 	VaultHomeAddrs() []string
 
 	// GenesisEpoch reads planetID's genesis PlanetEpoch — the immutable
