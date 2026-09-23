@@ -515,12 +515,15 @@ func (req *Request) ParseParam(paramKey string, dst any) error {
 	return nil
 }
 
+// Revise applies a PinRequest revision — the opening request, or a follow-up
+// tx on the open request (a follow-up revises this request; it never opens a
+// child).  Current becomes the revision wholesale; InvokeURL/Params and
+// Selector are re-derived only from the fields the revision carries.
 func (req *Request) Revise(pinReq *PinRequest) error {
 	if pinReq == nil {
 		return nil
 	}
 
-	// Merge incoming PinRequest
 	current := &req.Current
 	proto.Reset(current)
 	proto.Merge(current, pinReq)

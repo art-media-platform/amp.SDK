@@ -546,8 +546,8 @@ type PinEvent struct {
 // flexibility.
 type Request struct {
 	Requester              // origin of this request
-	Current   PinRequest   // merge-accumulated wire state (proto.Merge of every PinRequest revision)
-	Selector  ItemSelector // normalized working copy of Current.Selector, rebuilt by Revise
+	Current   PinRequest   // the latest PinRequest revision (Revise replaces it wholesale)
+	Selector  ItemSelector // normalized copy of the latest Selector a revision carried (a revision without one keeps it)
 	Tx        *TxMsg       // tx to process for this request
 	ID        tag.UID      // universally unique ID for this request (inherited from tx invoking this request)
 	InvokeURL *url.URL     // derived from PinRequest.URL in Request.Revise()
