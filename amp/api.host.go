@@ -547,7 +547,7 @@ type PinEvent struct {
 type Request struct {
 	Requester              // origin of this request
 	Current   PinRequest   // the latest PinRequest revision (Revise replaces it wholesale)
-	Selector  ItemSelector // normalized copy of the latest Selector a revision carried (a revision without one keeps it)
+	Selector  ItemSelector // the working selector: the latest revision's Selector (normalized) plus any spans the app adds from the URL (ParseAsAddressURL); see Revise
 	Tx        *TxMsg       // tx to process for this request
 	ID        tag.UID      // universally unique ID for this request (inherited from tx invoking this request)
 	InvokeURL *url.URL     // derived from PinRequest.URL in Request.Revise()

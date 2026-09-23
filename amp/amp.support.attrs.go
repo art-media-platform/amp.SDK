@@ -517,8 +517,11 @@ func (req *Request) ParseParam(paramKey string, dst any) error {
 
 // Revise applies a PinRequest revision — the opening request, or a follow-up
 // tx on the open request (a follow-up revises this request; it never opens a
-// child).  Current becomes the revision wholesale; InvokeURL/Params and
-// Selector are re-derived only from the fields the revision carries.
+// child).  Current becomes the revision wholesale; InvokeURL/Params are
+// re-derived only when the revision carries a URL, and Selector is replaced
+// only when it carries a Selector — dropping any spans an app added from the
+// URL (ParseAsAddressURL).  Not atomic: when the URL or the Selector fails to
+// parse, Current has already been replaced.
 func (req *Request) Revise(pinReq *PinRequest) error {
 	if pinReq == nil {
 		return nil
