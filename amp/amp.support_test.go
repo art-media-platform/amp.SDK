@@ -170,3 +170,56 @@ func (r *bufReader) Read(p []byte) (n int, err error) {
 	r.pos += n
 	return n, nil
 }
+
+// TestRequestReviseAtomic: a revision applies only after every field parses —
+// a URL or a Selector that fails to parse leaves Current, InvokeURL, Params
+// and Selector as they were.
+func TestRequestReviseAtomic(t *testing.T) {
+	req := &Request{}
+	nodeID := tag.NewID()
+	opening := &PinRequest{
+		Mode: PinMode_MaintainSync,
+		URL:  "amp://" + nodeID.Base32() + "/node/" + nodeID.Base32() + "?item=1",
+	}
+	if err := req.Revise(opening); err != nil {
+		t.Fatalf("opening revise: %v", err)
+	}
+	if err := req.ParseAsAddressURL(); err != nil {
+		t.Fatalf("ParseAsAddressURL: %v", err)
+	}
+	spans := len(req.Selector.Spans)
+	if spans == 0 {
+		t.Fatal("the opening URL added no span")
+	}
+
+	if err := req.Revise(&PinRequest{Mode: PinMode_Commit, URL: ":no-scheme"}); err == nil {
+		t.Fatal("a URL with no scheme revised the request")
+	}
+	if req.Current.Mode != PinMode_MaintainSync || req.Current.URL != opening.URL {
+		t.Errorf("Current changed under a failed revision: %v %q", req.Current.Mode, req.Current.URL)
+	}
+	if req.InvokeURL == nil || req.InvokeURL.String() != opening.URL || req.Params.Get("item") != "1" {
+		t.Errorf("InvokeURL/Params changed under a failed revision: %v %v", req.InvokeURL, req.Params)
+	}
+
+	badSel := &ItemSelector{}
+	badSel.AddSpan(nodeID, tag.UID{}, tag.UID{}, tag.MaxID()) // no AttrID: Normalize refuses it
+	if err := req.Revise(&PinRequest{Mode: PinMode_Snapshot, Selector: badSel}); err == nil {
+		t.Fatal("a span with no AttrID revised the request")
+	}
+	if req.Current.Mode != PinMode_MaintainSync {
+		t.Errorf("Current changed under a failed Selector revision: %v", req.Current.Mode)
+	}
+	if len(req.Selector.Spans) != spans {
+		t.Errorf("Selector changed under a failed revision: %d spans, want %d", len(req.Selector.Spans), spans)
+	}
+
+	sel := &ItemSelector{}
+	sel.Select(tag.ElementID{NodeID: nodeID, AttrID: nodeID})
+	if err := req.Revise(&PinRequest{Mode: PinMode_Snapshot, Selector: sel}); err != nil {
+		t.Fatalf("selector revise: %v", err)
+	}
+	if req.Current.Mode != PinMode_Snapshot || len(req.Selector.Spans) != 1 {
+		t.Errorf("a Selector revision did not apply: %v, %d spans", req.Current.Mode, len(req.Selector.Spans))
+	}
+}

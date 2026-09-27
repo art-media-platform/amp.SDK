@@ -520,36 +520,38 @@ func (req *Request) ParseParam(paramKey string, dst any) error {
 // child).  Current becomes the revision wholesale; InvokeURL/Params are
 // re-derived only when the revision carries a URL, and Selector is replaced
 // only when it carries a Selector — dropping any spans an app added from the
-// URL (ParseAsAddressURL).  Not atomic: when the URL or the Selector fails to
-// parse, Current has already been replaced.
+// URL (ParseAsAddressURL).  Atomic: every field parses first (URL, query,
+// Selector), and a parse failure leaves the request untouched.
 func (req *Request) Revise(pinReq *PinRequest) error {
 	if pinReq == nil {
 		return nil
 	}
 
-	current := &req.Current
-	proto.Reset(current)
-	proto.Merge(current, pinReq)
-
-	if current.URL != "" {
+	invokeURL, params := req.InvokeURL, req.Params
+	if pinReq.URL != "" {
 		var err error
-		if req.InvokeURL, err = url.Parse(current.URL); err != nil {
-			err = status.Code_BadRequest.Errorf("error parsing URL: %v", err)
-			return err
+		if invokeURL, err = url.Parse(pinReq.URL); err != nil {
+			return status.Code_BadRequest.Errorf("error parsing URL: %v", err)
 		}
-		if req.Params, err = url.ParseQuery(req.InvokeURL.RawQuery); err != nil {
-			err = status.Code_BadRequest.Errorf("error parsing URL query: %v", err)
+		if params, err = url.ParseQuery(invokeURL.RawQuery); err != nil {
+			return status.Code_BadRequest.Errorf("error parsing URL query: %v", err)
+		}
+	}
+
+	var selector *ItemSelector
+	if pinReq.Selector != nil {
+		selector = proto.Clone(pinReq.Selector).(*ItemSelector)
+		if err := selector.Normalize(true); err != nil {
 			return err
 		}
 	}
 
-	if pinReq.Selector != nil {
-		err := pinReq.Selector.Normalize(true)
-		if err != nil {
-			return err
-		}
+	proto.Reset(&req.Current)
+	proto.Merge(&req.Current, pinReq)
+	req.InvokeURL, req.Params = invokeURL, params
+	if selector != nil {
 		proto.Reset(&req.Selector)
-		proto.Merge(&req.Selector, pinReq.Selector)
+		proto.Merge(&req.Selector, selector)
 	}
 	return nil
 }

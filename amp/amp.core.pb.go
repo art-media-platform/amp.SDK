@@ -1913,9 +1913,12 @@ func (x *TxEnvelope) GetPlanetEpoch_1() uint64 {
 // TxEnvelope fields.
 type TxHeader struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Refers to a tag ID (usually a TxID) for subsequent requests and
-	// responses.  Used to reference a tx thread to a request.  If nil or equal
-	// to TxID, then this tx is context-free and TxID is implied context ID.
+	// Routes this tx to a request.  Nil: a new request, whose context the
+	// host assigns as this TxID and answers on.  Set: a follow-up on the open
+	// request keyed by that ID — a commit or a revision into it, never a
+	// child (AOM MD-unity-client.md §3.1).  Equal to this TxID it names no
+	// open request and is refused (ErrContextNotFound); a refused follow-up
+	// is answered on its own TxID.
 	ContextID_0 uint64 `protobuf:"fixed64,1,opt,name=ContextID_0,json=ContextID0,proto3" json:"ContextID_0,omitempty"`
 	ContextID_1 uint64 `protobuf:"fixed64,2,opt,name=ContextID_1,json=ContextID1,proto3" json:"ContextID_1,omitempty"`
 	// Author identity — carried in the encrypted payload so passive observers
