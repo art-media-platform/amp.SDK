@@ -1,11 +1,12 @@
 /**
- * window.amp — the WebRect card bridge (SKILL §8).
+ * window.amp — the WebRect card bridge (SKILL §8; AD-app-www.md §6.5).
  *
  * A card is a self-contained HTML document rendered inside a Unity WebRect Pane
- * (3D / XR) or a 2D browser drawer.  The host (Unity WebView, browser shim, or
- * test harness) injects `window.amp` implementing this interface; a card codes
- * against the bridge instead of importing the SDK client.  These are the
- * card-author types — the host supplies the implementation — so a card gets
+ * (3D / XR) or a 2D browser drawer.  The node serves the implementation as the
+ * card's first script (`/amp/bridge.js`); it installs `window.amp` at once and
+ * attaches to the host's transport hook when one arrives.  A card codes against
+ * the bridge instead of importing the SDK client.  These are the card-author
+ * types — the served script supplies the implementation — so a card gets
  * autocomplete and type-checking for `window.amp.*`.
  */
 
@@ -54,7 +55,8 @@ export interface BridgeMember {
  */
 export interface AmpBridge {
   // ── Identity ──
-  member: BridgeMember | null;
+  member: BridgeMember | null;                     // null until the host attaches
+  onReady(cb: (amp: AmpBridge) => void): void;     // the host attached; member is set (fires at once when already attached)
 
   // ── Data ──
   read(channel: string, attr: string, itemID: string): Promise<unknown>;
