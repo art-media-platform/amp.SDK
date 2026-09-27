@@ -6,7 +6,8 @@ import type { AmpMediaResult, BlobRef } from '../types.js';
 /**
  * The Tag the hook carries to /media/resolve: the cabinet's BlobRef as given.
  * A bare UID becomes a UID-only Tag — degraded: the server resolves an absent
- * ContentTypeRaw to text/plain and publishes + serves the blob under it.
+ * ContentTypeRaw to text/plain, outside the inline media families, so the
+ * blob serves as an application/octet-stream download.
  */
 export function mediaTagFor(blob: string | BlobRef): BlobRef {
   return typeof blob === 'string' ? { UID: blob } : blob;
@@ -71,8 +72,8 @@ export async function refreshMediaURL(
  * useAmpMedia resolves a blob to a streamable URL via the caller-carries-the-
  * Tag path (POST /api/v1/media/resolve); the URL is the server's, token
  * included.  Pass the cabinet's BlobRef (its ContentTypeRaw decides the
- * served MIME type + extension); a bare UID is accepted, degraded to
- * text/plain.  Pass the result `url` to <img>/<video>/<audio>, and bind
+ * served MIME type + extension); a bare UID is accepted, degraded to an
+ * octet-stream download.  Pass the result `url` to <img>/<video>/<audio>, and bind
  * `refresh` to the element's onError — past the server's idle expiry or the
  * token lifetime the URL 404s until a refresh re-resolves it.
  */

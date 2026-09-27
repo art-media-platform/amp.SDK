@@ -128,7 +128,7 @@ Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.a
 | `useAmpQuery<T>(channel, attr, opts?)` | Read items + live WebSocket subscription (live once logged in) |
 | `useAmpMutation()` | `tx` (batched), `invoke` (verb-RPC), `create`, `upsert`, `remove`, `withdraw` |
 | `useAmpUpload()` | Blob upload; files beyond one chunk stream through the chunk door, `progress` ticking per chunk ack (0 → 100 in one step for a single POST) |
-| `useAmpMedia(blobRef, planetTag?)` | Resolve a cabinet BlobRef to a streamable URL (a bare UID is accepted, served as text/plain) |
+| `useAmpMedia(blobRef, planetTag?)` | Resolve a cabinet BlobRef to a streamable URL (a bare UID is accepted but serves as an `application/octet-stream` download) |
 | `useAmpCrypto()` | Sealed-box BYOK — `seal` / `open` against the session EncryptKey |
 
 The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
@@ -136,9 +136,11 @@ The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
 
 **Error convention:** `useAmpQuery` surfaces failures via `error` state; action
 hooks (`useAmpMutation` / `useAmpUpload`) set `error` **and** throw, so you can
-`try/catch` an awaited call. `useAmpMedia` is the exception: a failed resolve
-falls back to the direct `/www/{UID}.{ext}` stream URL and its `error` stays null —
-a truly missing blob surfaces on the media element, not the hook.
+`try/catch` an awaited call. `useAmpMedia` is the exception: it never throws — a
+failed resolve settles to a null `url` with `error` set. There is no client-built
+fallback URL: a member's media token lives only in the URL the resolve answers.
+Bind `refresh` to the media element's `onError`; past the idle expiry or the token
+lifetime the URL 404s until a refresh re-resolves it.
 
 ## Canonic Names → tag.UIDs
 
