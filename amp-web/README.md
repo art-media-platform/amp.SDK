@@ -136,11 +136,11 @@ The canonical write is `tx(ops)` — one TxMsg, N atomic ops, one signature.
 
 **Error convention:** `useAmpQuery` surfaces failures via `error` state; action
 hooks (`useAmpMutation` / `useAmpUpload`) set `error` **and** throw, so you can
-`try/catch` an awaited call. `useAmpMedia` is the exception: it never throws — a
-failed resolve settles to a null `url` with `error` set. There is no client-built
-fallback URL: a member's media token lives only in the URL the resolve answers.
-Bind `refresh` to the media element's `onError`; past the idle expiry or the token
-lifetime the URL 404s until a refresh re-resolves it.
+`try/catch` an awaited call. `useAmpMedia` reports like `useAmpQuery`: it never
+throws, and a failed resolve settles to a null `url` with `error` set. There is no
+client-built fallback URL: a member's media token lives only in the URL the resolve
+answers. Bind `refresh` to the media element's `onError`; past the idle expiry or
+the token lifetime the URL 404s until a refresh re-resolves it.
 
 ## Canonic Names → tag.UIDs
 

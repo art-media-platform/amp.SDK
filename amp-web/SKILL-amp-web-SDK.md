@@ -802,7 +802,8 @@ The URL is **the credential**: a member resolve answers `/www/{UID}.{ext}?t=<med
 
 Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
 POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —
-accepted — streams as `text/plain` under `/www/{UID}.plain`.  Resolves via
+accepted — publishes under `/www/{UID}.plain` and serves as an
+`application/octet-stream` download.  Resolves via
 `POST /api/v1/media/resolve` (`client.resolveMedia(blob, planetTag?)`); there
 is no client-built URL — when resolve fails `url` is null and `error` carries
 the failure (a revoked session fails here, as 401).
@@ -1381,7 +1382,7 @@ async function handleFile(file) {
 
 // Later reads re-resolve from the persisted BlobRef, passed WHOLE (§5.5): its
 // ContentTypeRaw decides the served MIME type + extension.  Never pass
-// `item.blobRef.UID` — a bare UID resolves as text/plain (`/www/{UID}.plain`).
+// `item.blobRef.UID` — a bare UID resolves as text/plain (`/www/{UID}.plain`) and serves as a download.
 function MediaItem({ item }) {
   const { url } = useAmpMedia(item.blobRef);          // or client.resolveMedia(item.blobRef)
   return url ? <img src={url} alt={item.filename} /> : null;
