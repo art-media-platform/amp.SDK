@@ -291,7 +291,7 @@ const Session {
 const Amp {
     string Scheme       = "amp://";           // amp URL scheme prefix
     string HomeAlias    = "~";                // the session's home (login) planet
-    string HereAlias    = ".";                // the invoking channel's planet (a planet-relative link); the client resolves it, the wire refuses it
+    string HereAlias    = ".";                // the invoking channel's planet (a planet-relative link); the client resolves it; node/cabinet pins refuse it by name, app.blob generically
     string CabinetsPath = "/cabinets";        // app.cabinets module path
     string CabinetsURL  = "amp://~/cabinets"; // = Scheme + HomeAlias + CabinetsPath
 }

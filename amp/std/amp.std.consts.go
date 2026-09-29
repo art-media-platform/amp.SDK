@@ -429,7 +429,7 @@ var (
 const (
 	AmpScheme       = "amp://"           // amp URL scheme prefix
 	AmpHomeAlias    = "~"                // the session's home (login) planet
-	AmpHereAlias    = "."                // the invoking channel's planet (a planet-relative link); the client resolves it, the wire refuses it
+	AmpHereAlias    = "."                // the invoking channel's planet (a planet-relative link); the client resolves it; node/cabinet pins refuse it by name, app.blob generically
 	AmpCabinetsPath = "/cabinets"        // app.cabinets module path
 	AmpCabinetsURL  = "amp://~/cabinets" // = Scheme + HomeAlias + CabinetsPath
 )
