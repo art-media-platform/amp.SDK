@@ -42,7 +42,8 @@ const Lib {
 	// payload = u64 fields (level<<4 | severity) + UTF-8 text
 	const int32  KindLogLine = 2;
 	// payload = u64 counters, fixed order: frames, bytes, batches, poolHits,
-	// poolMisses, logLines, logDropped, tooSmall; a reader takes what it knows
+	// poolMisses, logLines, logDropped, tooSmall, oversized; a reader takes
+	// what it knows
 	const int32  KindRailNote = 3;
 }
 

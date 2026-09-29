@@ -70,6 +70,7 @@ const (
 	// payload = u64 fields (level<<4 | severity) + UTF-8 text
 	LibKindLogLine = int32(2)
 	// payload = u64 counters, fixed order: frames, bytes, batches, poolHits,
-	// poolMisses, logLines, logDropped, tooSmall; a reader takes what it knows
+	// poolMisses, logLines, logDropped, tooSmall, oversized; a reader takes
+	// what it knows
 	LibKindRailNote = int32(3)
 )
