@@ -371,14 +371,14 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 		return nil, status.ErrMalformedTx
 	}
 
-	tx := TxNew()
 	headLen := preamble.TxHeadLen()
 	dataLen := preamble.TxDataLen()
-	// The lengths are bounded before anything is sized from them: a head
-	// shorter than its preamble or a frame over the ceiling is refused here.
+	// The lengths are bounded before anything is sized or built from them: a
+	// head shorter than its preamble or a frame over the ceiling is refused here.
 	if headLen < int(TxPreambleSize) || headLen > int(TxMaxFrameSize) || dataLen > int(TxMaxFrameSize)-headLen {
 		return nil, status.ErrMalformedTx
 	}
+	tx := TxNew()
 
 	// tx.DataStore is the temp store for the head (TxEnvelope, TxHeader, ops)
 	// before it holds the data: one allocation, sized exactly.
@@ -407,7 +407,10 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 	return tx, nil
 }
 
-// CeilingSize returns the ceiling byte size of this TxMsg as a serialized buffer.
+// CeilingSize estimates this TxMsg's serialized size from its Go struct sizes.
+// It is an estimate, not a bound: a string field (TxHeader.Request.URL)
+// counts as its 16-byte header while the wire carries the whole string.  Its
+// callers size a first allocation or a soft batching threshold from it.
 func (tx *TxMsg) CeilingSize() int64 {
 	const (
 		txBaseSize = int(TxPreambleSize) +
@@ -581,10 +584,11 @@ func readOps(tx *TxMsg, src []byte) error {
 		if skip, n = binary.Uvarint(src[p:]); n <= 0 {
 			return status.ErrMalformedTx
 		}
-		p += n + int(skip)
-		if p > len(src) {
+		p += n
+		if skip > uint64(len(src)-p) {
 			return status.ErrMalformedTx
 		}
+		p += int(skip)
 
 		var hasFields uint64
 		if hasFields, n = binary.Uvarint(src[p:]); n <= 0 {
@@ -772,6 +776,7 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 
 	buf = buf[:TxPreambleSize]
 	copy(buf[:4], TxPreambleSignature)
+	clear(buf[12:TxPreambleSize]) // SignatureLength is written below; reserved 14-15 stay zero in a reused buffer
 	buf = append(buf, envBuf...)
 	buf = append(buf, wirePayload...)
 	if isPublic {
@@ -1054,10 +1059,12 @@ func readPb(src []byte, pos *int, pb proto.Message) error {
 	}
 	p += n
 
-	end := p + int(byteLen)
-	if end > len(src) {
+	// Bounded as uint64 before the int conversion: a crafted length near
+	// 2^63 would wrap negative and slice backwards.
+	if byteLen > uint64(len(src)-p) {
 		return status.ErrMalformedTx
 	}
+	end := p + int(byteLen)
 
 	if err := proto.Unmarshal(src[p:end], pb); err != nil {
 		return status.ErrMalformedTx
