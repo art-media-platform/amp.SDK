@@ -81,7 +81,7 @@ tags Attr {
     // Channel metadata and catalog
     ChannelAttr "channel" {
         ChannelCatalog        "catalog.ChannelEpoch"
-        ChannelEpochs         "ChannelEpoch"
+        ChannelEpochs         "ChannelEpoch"  // the content type declaration a node carries (a codex may carry it); never authority — the law record is LawChannelEpoch
         ChannelPropertySeries "property.series.JsonValue"
 
         // Channel-property ITEM keys — ItemIDs within the property series,
@@ -291,6 +291,7 @@ const Session {
 const Amp {
     string Scheme       = "amp://";           // amp URL scheme prefix
     string HomeAlias    = "~";                // the session's home (login) planet
+    string HereAlias    = ".";                // the invoking channel's planet (a planet-relative link); the client resolves it, the wire refuses it
     string CabinetsPath = "/cabinets";        // app.cabinets module path
     string CabinetsURL  = "amp://~/cabinets"; // = Scheme + HomeAlias + CabinetsPath
 }

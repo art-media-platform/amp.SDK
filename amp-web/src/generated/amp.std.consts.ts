@@ -281,6 +281,7 @@ export const Session = {
 export const Amp = {
     Scheme:       "amp://",  // amp URL scheme prefix
     HomeAlias:    "~",  // the session's home (login) planet
+    HereAlias:    ".",  // the invoking channel's planet (a planet-relative link); the client resolves it, the wire refuses it
     CabinetsPath: "/cabinets",  // app.cabinets module path
     CabinetsURL:  "amp://~/cabinets",  // = Scheme + HomeAlias + CabinetsPath
 } as const;
