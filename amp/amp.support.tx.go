@@ -374,12 +374,18 @@ func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
 	tx := TxNew()
 	headLen := preamble.TxHeadLen()
 	dataLen := preamble.TxDataLen()
+	// The lengths are bounded before anything is sized from them: a head
+	// shorter than its preamble or a frame over the ceiling is refused here.
+	if headLen < int(TxPreambleSize) || headLen > int(TxMaxFrameSize) || dataLen > int(TxMaxFrameSize)-headLen {
+		return nil, status.ErrMalformedTx
+	}
 
-	// Use tx.DataStore as a temp store the tx header for unmarshalling, containing TxEnvelope and TxOps.
+	// tx.DataStore is the temp store for the head (TxEnvelope, TxHeader, ops)
+	// before it holds the data: one allocation, sized exactly.
 	{
-		needSz := max(headLen, dataLen)
+		needSz := max(headLen-int(TxPreambleSize), dataLen)
 		if cap(tx.DataStore) < needSz {
-			tx.DataStore = make([]byte, max(needSz, 2048))
+			tx.DataStore = make([]byte, needSz)
 		}
 
 		buf := tx.DataStore[:headLen-int(TxPreambleSize)]
@@ -441,19 +447,25 @@ func (tx *TxMsg) MarshalToBuffer(dst *[]byte) {
 	*dst = append(*dst, tx.DataStore...)
 }
 
+// MarshalHeadAndOps writes the preamble, envelope, header and ops into *dst
+// (reusing its capacity), writing every preamble byte: bytes 12-15 are
+// zeroed, so a reused buffer's stale bytes never reach the wire.
 func (tx *TxMsg) MarshalHeadAndOps(dst *[]byte) {
 	buf := *dst
-	if cap(buf) < 300 {
-		buf = make([]byte, 2048)
+	if cap(buf) < int(TxPreambleSize) {
+		// The first allocation is sized from CeilingSize, an estimate (a
+		// string field counts as its header): MarshalHead appends past it once
+		// when a tx carries strings, never faults.
+		buf = make([]byte, 0, max(int(tx.CeilingSize()), 256))
 	}
 
-	headAndOps := tx.MarshalHead(buf[:TxPreambleSize])
-
-	head := headAndOps[:TxPreambleSize]
+	head := buf[:TxPreambleSize]
 	copy(head[:4], TxPreambleSignature)
+	clear(head[12:TxPreambleSize]) // SignatureLength (unsigned) + reserved
+	headAndOps := tx.MarshalHead(head)
 
-	binary.BigEndian.PutUint32(head[4:8], uint32(len(headAndOps)))
-	binary.BigEndian.PutUint32(head[8:12], uint32(len(tx.DataStore)))
+	binary.BigEndian.PutUint32(headAndOps[4:8], uint32(len(headAndOps)))
+	binary.BigEndian.PutUint32(headAndOps[8:12], uint32(len(tx.DataStore)))
 
 	*dst = headAndOps
 }

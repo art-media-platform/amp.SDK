@@ -55,17 +55,18 @@ const (
 	Code_Paused       Code = -23005 // the instrument is paused by its owner (an InvitePaused policy); retry after it resumes
 	Code_CapReached   Code = -23006 // a sizing cap refused this admission (PlanetInvitePolicy.MaxWebHomes); an operator raise or a drop re-opens it
 	// refused — change the request
-	Code_Unimplemented Code = -23020 // no implementation in this build
-	Code_Expired       Code = -23021 // past its lifetime
-	Code_ItemNotFound  Code = -23022
-	Code_ParseFailed   Code = -23023
-	Code_Gone          Code = -23024 // removed at its source; retry cannot succeed
-	Code_Unsupported   Code = -23025 // the endpoint answers but lacks the requested capability
-	Code_BadRequest    Code = -23026
-	Code_BadTag        Code = -23027 // malformed tag expression
-	Code_BadValue      Code = -23028
-	Code_AlreadyExists Code = -23029
-	Code_MalformedTx   Code = -23030 // TxMsg failed validation
+	Code_Unimplemented  Code = -23020 // no implementation in this build
+	Code_Expired        Code = -23021 // past its lifetime
+	Code_ItemNotFound   Code = -23022
+	Code_ParseFailed    Code = -23023
+	Code_Gone           Code = -23024 // removed at its source; retry cannot succeed
+	Code_Unsupported    Code = -23025 // the endpoint answers but lacks the requested capability
+	Code_BadRequest     Code = -23026
+	Code_BadTag         Code = -23027 // malformed tag expression
+	Code_BadValue       Code = -23028
+	Code_AlreadyExists  Code = -23029
+	Code_MalformedTx    Code = -23030 // TxMsg failed validation
+	Code_BufferTooSmall Code = -23031 // the caller's buffer cannot hold the next result; the needed size rides the call's length out-param (two-phase)
 	// admission — authenticate, or ask for standing
 	Code_AuthFailed              Code = -23040
 	Code_LoginFailed             Code = -23041
@@ -111,6 +112,7 @@ var (
 		-23028: "BadValue",
 		-23029: "AlreadyExists",
 		-23030: "MalformedTx",
+		-23031: "BufferTooSmall",
 		-23040: "AuthFailed",
 		-23041: "LoginFailed",
 		-23042: "InsufficientPermissions",
@@ -149,6 +151,7 @@ var (
 		"BadValue":                -23028,
 		"AlreadyExists":           -23029,
 		"MalformedTx":             -23030,
+		"BufferTooSmall":          -23031,
 		"AuthFailed":              -23040,
 		"LoginFailed":             -23041,
 		"InsufficientPermissions": -23042,
@@ -347,7 +350,7 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\x05Level\x18\x03 \x01(\x05R\x05Level\x12\x18\n" +
 	"\aMessage\x18\x04 \x01(\tR\aMessage\x12\x19\n" +
 	"\bTimeID_0\x18\b \x01(\x06R\aTimeID0\x12\x19\n" +
-	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\xa5\a\n" +
+	"\bTimeID_1\x18\t \x01(\x06R\aTimeID1*\xc2\a\n" +
 	"\x04Code\x12\a\n" +
 	"\x03Nil\x10\x00\x12\x14\n" +
 	"\aTimeout\x10\xa7\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x19\n" +
@@ -368,7 +371,8 @@ const file_stdlib_status_status_proto_rawDesc = "" +
 	"\x06BadTag\x10\x8d\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x15\n" +
 	"\bBadValue\x10\x8c\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1a\n" +
 	"\rAlreadyExists\x10\x8b\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
-	"\vMalformedTx\x10\x8a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x17\n" +
+	"\vMalformedTx\x10\x8a\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x1b\n" +
+	"\x0eBufferTooSmall\x10\x89\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x17\n" +
 	"\n" +
 	"AuthFailed\x10\x80\xcc\xfe\xff\xff\xff\xff\xff\xff\x01\x12\x18\n" +
 	"\vLoginFailed\x10\xff\xcb\xfe\xff\xff\xff\xff\xff\xff\x01\x12$\n" +

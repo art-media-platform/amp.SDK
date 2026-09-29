@@ -22,6 +22,28 @@ const Tx {
 
 	// TxPreamble byte length (layout above).
 	const int32  PreambleSize = 16;
+
+	// Ceiling on one wire frame (head + data), 32 MiB: ≫ the 1 MB
+	// DefaultMaxTxMsgSize, ≪ the 256 MB codex-archive scale.  Every frame
+	// reader bounds the preamble's lengths by it before allocating.
+	const int32  MaxFrameSize = 33554432;
+}
+
+
+// The embedded-host (libampd) boundary — records on the client-owned rails.
+// A record is a fixed 8-byte big-endian header —
+// u32 payloadLen | u8 kind | u8 flags (0) | u16 reserved (0) — then payload.
+const Lib {
+	// The libampd ABI version API_ABIVersion returns; a client refuses a mismatch.
+	const int32  ABIVersion = 2;
+	const int32  RecordHeaderSize = 8;
+	// payload = one TxMsg wire frame (Tx.PreambleSize preamble + head/ops + data)
+	const int32  KindTxFrame = 1;
+	// payload = u64 fields (level<<4 | severity) + UTF-8 text
+	const int32  KindLogLine = 2;
+	// payload = u64 counters, fixed order: frames, bytes, batches, poolHits,
+	// poolMisses, logLines, logDropped, tooSmall; a reader takes what it knows
+	const int32  KindRailNote = 3;
 }
 
 

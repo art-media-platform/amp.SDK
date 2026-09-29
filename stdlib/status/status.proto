@@ -50,6 +50,7 @@ enum Code {
     BadValue                    = -23028;
     AlreadyExists               = -23029;
     MalformedTx                 = -23030;   // TxMsg failed validation
+    BufferTooSmall              = -23031;   // the caller's buffer cannot hold the next result; the needed size rides the call's length out-param (two-phase)
 
     // admission — authenticate, or ask for standing
     AuthFailed                  = -23040;
