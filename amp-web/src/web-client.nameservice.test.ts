@@ -152,6 +152,6 @@ describe('federationPeers() — GET /api/v1/federation/peers, Bearer-gated', () 
 
   it('normalizes an absent Peers to an empty array', async () => {
     respond = () => jsonResponse({});
-    expect(await client().federationPeers('06e-fvw28sb400-248j248j24-8j2')).toEqual([]);
+    expect(await client().federationPeers('06efv-w28sb-400248-j248j-248j2')).toEqual([]);
   });
 });

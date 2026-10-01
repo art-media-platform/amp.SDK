@@ -34,28 +34,28 @@
     "SessionToken": "5oQyDsW3vG7kThJ9mXaZcE1rB8uNfLpV",
     "ExpiresAt": 1783000000,
     "Member": {
-      "ID": "06e-fvw28sb200-1248j248j2-48j",
+      "ID": "06efv-w28sb-200124-8j248-j248j",
       "DisplayName": "Alice",
       "Email": "alice@example.com",
-      "PlanetID": "06e-fvw28sb400-248j248j24-8j2",
+      "PlanetID": "06efv-w28sb-400248-j248j-248j2",
       "Kind": "Person",
       "Address": "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
     }
   },
   "AmpMember.minimal": {
-    "ID": "06e-fvw28sb200-1248j248j2-48j",
-    "PlanetID": "06e-fvw28sb400-248j248j24-8j2"
+    "ID": "06efv-w28sb-200124-8j248-j248j",
+    "PlanetID": "06efv-w28sb-400248-j248j-248j2"
   },
   "SessionResponse": {
     "Member": {
-      "ID": "06e-fvw28sb200-1248j248j2-48j",
+      "ID": "06efv-w28sb-200124-8j248-j248j",
       "DisplayName": "Alice",
-      "PlanetID": "06e-fvw28sb400-248j248j24-8j2"
+      "PlanetID": "06efv-w28sb-400248-j248j-248j2"
     },
     "ExpiresAt": 1783000000
   },
   "SessionRevokeResponse": {
-    "MemberID": "06e-fvw28sb200-1248j248j2-48j",
+    "MemberID": "06efv-w28sb-200124-8j248-j248j",
     "Dropped": 2
   },
   "EmailCredential.issue": {
@@ -76,7 +76,7 @@
     "NewPassword": "first-secret-7"
   },
   "EmailIssueResponse": {
-    "MemberID": "06e-fvw28sb200-1248j248j2-48j",
+    "MemberID": "06efv-w28sb-200124-8j248-j248j",
     "Email": "bob@example.com"
   },
   "ErrorResponse": {

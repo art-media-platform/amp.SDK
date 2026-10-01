@@ -21,9 +21,9 @@ const VAULT = 'http://127.0.0.1:5193';
 // The head-node Brand anchor (verified against stdlib/tag UID.Base32():
 // amp.HeadNodeID{0,0x37} and std.Attr.Brand {0xB70889689791764B,0xB554FC786AE221AE}).
 const BRAND_ITEM_PATH =
-  '/api/v1/channels/000-0000000000-0000000000-01r/attrs/amp.Brand/items/5r1-24qj5wjft5-vbp7wg1pf4-8ef';
+  '/api/v1/channels/00000-00000-000000-00000-0001r/attrs/amp.Brand/items/5r124-qj5wj-ft5vbp-7wg1p-f48ef';
 
-const FED_ALPHA = '607-2p143cp5n0-kvyrrnsq4f-39h';
+const FED_ALPHA = '6072p-143cp-5n0kvy-rrnsq-4f39h';
 
 const realFetch = globalThis.fetch;
 
@@ -49,7 +49,7 @@ function stubFetch(): void {
       }
       return json({
         FQDN: (brandValue.Identity?.AppDomain ?? ''),
-        PlanetID: '4e4-weyzwpm83r-ugwdd985vr-mj7',
+        PlanetID: '4e4we-yzwpm-83rugw-dd985-vrmj7',
         AnsweredBy: FED_ALPHA,
         TrustState: resolveTrust,
         PinPrecedence: false,
@@ -61,9 +61,9 @@ function stubFetch(): void {
       return json({ Code: 'NotFound', Message: 'item not found' }, brandStatus);
     }
     return json({
-      _ItemID: '5r1-24qj5wjft5-vbp7wg1pf4-8ef',
-      _EditID: '0er-0000000000-0000000000-000',
-      _FromID: '0uf-45v0x7vmx2-3s8w8mgcgc-dhz',
+      _ItemID: '5r124-qj5wj-ft5vbp-7wg1p-f48ef',
+      _EditID: '0er00-00000-000000-00000-00000',
+      _FromID: '0uf45-v0x7v-mx23s8-w8mgc-gcdhz',
       _UpdatedAt: '2026-08-15T00:00:00Z',
       Value: brandValue,
     }, 200);

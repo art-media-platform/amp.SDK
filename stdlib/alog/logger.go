@@ -2,7 +2,7 @@
 // tag-scoped logger.  Each log line is a two-char rank code, a timestamp, a
 // bracketed source token, then the message, space-separated:
 //
-//	I0 2026-05-24 15:04:05.123 [0…123 app.www] some message
+//	I0 2026-05-24 15:04:05.123 [2c9vq app.www] some message
 //
 // The rank code is severity then verbosity level: E0 error, W0 warn, I0/I1/I2… for
 // Info(n).  Lower is higher rank, and the digit reads uniformly as suppressibility —

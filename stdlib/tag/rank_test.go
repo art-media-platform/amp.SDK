@@ -58,8 +58,7 @@ func TestRankBetweenInterior(t *testing.T) {
 }
 
 func TestRankBetweenNonDeterministic(t *testing.T) {
-	// Two draws into the same wide gap must differ (w.h.p. ~2^-90) — the
-	// no-interleave property Midpoint lacks.
+	// Two draws into the same wide gap must differ (w.h.p. ~2^-90) — the no-interleave property Midpoint lacks.
 	lo, hi := tag.UID{}, tag.RankCeil
 	first, _ := tag.RankBetween(lo, hi)
 	for range 4 {
@@ -72,8 +71,8 @@ func TestRankBetweenNonDeterministic(t *testing.T) {
 }
 
 func TestRanksAcrossMonotone(t *testing.T) {
-	// 2^26 = the tightest adjacent-NowID gap measured in AD-playlists §3;
-	// the partition table there: 100/1000/10000 slots all fit.
+	// 2^26 = the tightest adjacent-NowID gap measured in AD-playlists §3; the partition table there: 100/1000/10000 slots
+	// all fit.
 	lo := tag.UID{0, 1 << 30}
 	hi := lo.Add(tag.UID{0, 1 << 26})
 	for _, count := range []int{1, 100, 1000, 10000} {

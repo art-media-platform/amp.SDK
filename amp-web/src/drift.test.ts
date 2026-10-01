@@ -579,19 +579,18 @@ describe('generated std consts carry the Go-side UIDs', () => {
   });
 });
 
-// uidBase32 renders a UID in canonic base32 — 26 lowercase geohash digits
-// grouped 3-10-10-3 with '-' separators (dashes after digits 3, 13, 23),
-// the stdlib/tag `UID.Base32()` port (test-local: the SDK itself never
-// renders UIDs; the server does).
+// uidBase32 renders a UID in canonic base32 — 26 lowercase geohash digits grouped 5-5-6-5-5 by '-' — the stdlib/tag
+// `UID.Base32()` port (test-local: the SDK itself never renders UIDs; the server does).
 const BASE32_ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz';
+const BASE32_DASH_SLOTS = new Set([5, 11, 18, 24]); // the '-' render slots of 5-5-6-5-5
 
 function uidBase32(uid: UID): string {
   let hi = uid[0];
   let lo = uid[1];
-  const out = new Array<string>(29);
+  const out = new Array<string>(30);
   let isZero = true;
-  for (let i = 28; i >= 0; i--) {
-    if (i % 11 === 3) { // '-' at render slots 3, 14, 25: groups 3-10-10-3
+  for (let i = 29; i >= 0; i--) {
+    if (BASE32_DASH_SLOTS.has(i)) {
       out[i] = '-';
       continue;
     }

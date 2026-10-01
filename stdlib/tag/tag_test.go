@@ -40,8 +40,7 @@ func TestTag(t *testing.T) {
 	if ampTags.Text != "amp.app" {
 		t.Fatalf("With() Text failed: got %q", ampTags.Text)
 	}
-	// Invariant: for an all-lowercase name (Text already canonic) a tag's UID
-	// is the atomic hash of its Text (order significant — no commutative fold).
+	// Invariant: for an all-lowercase name (Text already canonic), a tag's UID is the atomic hash of its text.
 	if ampTags.ID != tag.UID_HashLiteral([]byte(ampTags.Text)) {
 		t.Fatalf("ID != HashLiteral(Text): %v", ampTags.ID)
 	}
@@ -53,7 +52,7 @@ func TestTag(t *testing.T) {
 		t.Fatalf("chained ID != HashLiteral(Text): %v", name.ID)
 	}
 	base32 := name.ID.Base32()
-	if base32 != "5ee-z7jtvnt1d4-2251gsu28m-qy9" {
+	if base32 != "5eez7-jtvnt-1d4225-1gsu2-8mqy9" {
 		t.Fatalf("tag.UID.Base32() failed: got %v", base32)
 	}
 	parsed, err := tag.Parse(base32)
@@ -69,13 +68,11 @@ func TestTag(t *testing.T) {
 	{
 		Genesis := "בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ"
 		holyExpr := tag.HashName(Genesis)
-		if holyExpr.ID.Base32() != "3ev-fmjwnbj2wg-7qb93xk3zy-r2b" {
+		if holyExpr.ID.Base32() != "3evfm-jwnbj-2wg7qb-93xk3-zyr2b" {
 			t.Fatalf("tag.HashName() failed: got %v", holyExpr.ID.Base32())
 		}
 
-		// Order is significant: reordered literals yield a DISTINCT UID (the
-		// commutative fold is removed).  Only an identity permutation — a
-		// shuffle that happens to reproduce the canonic order — preserves it.
+		// Reordered literals yield a DISTINCT UID; only a shuffle that reproduces the canonic order keeps it.
 		parts := strings.Split(holyExpr.Text, ".")
 		for range 3773 {
 			rand.Shuffle(len(parts), func(i, j int) {
@@ -103,10 +100,10 @@ func TestTag(t *testing.T) {
 	}
 
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
-	if tid.AsLabel() != "7…rrh" {
+	if tid.AsLabel() != "ctrrh" {
 		t.Errorf("tag.UID.AsLabel() failed: got %q", tid.AsLabel())
 	}
-	if tid.Base32() != "7rf-xvrfxvrfxv-j4e2qg2ect-rrh" {
+	if tid.Base32() != "7rfxv-rfxvr-fxvj4e-2qg2e-ctrrh" {
 		t.Errorf("tag.UID.Base32() failed: got %v", tid.Base32())
 	}
 	if b16 := tid.Base16(); b16 != "0xF777777777777777123456789ABCDEF0" {
@@ -115,19 +112,17 @@ func TestTag(t *testing.T) {
 }
 
 func TestBase32Grouping(t *testing.T) {
-	// Geometry golden (3-10-10-3) — shared verbatim with the C# mirror test so
-	// the two formatters cannot drift.
+	// Geometry golden (5-5-6-5-5), shared verbatim with the C# mirror test so the two formatters cannot drift.
 	tid := tag.UID{0xF777777777777777, 0x123456789abcdef0}
 	grouped := tid.Base32()
-	if grouped != "7rf-xvrfxvrfxv-j4e2qg2ect-rrh" {
+	if grouped != "7rfxv-rfxvr-fxvj4e-2qg2e-ctrrh" {
 		t.Fatalf("tag.UID.Base32() failed: got %q", grouped)
 	}
 	if len(grouped) != tag.UID_Base32GroupedLength {
 		t.Fatalf("Base32() length: got %d, want %d", len(grouped), tag.UID_Base32GroupedLength)
 	}
 
-	// Lossless: both the grouped and the solid form parse to the same UID
-	// (decoders strip '-' and whitespace).
+	// Lossless: both the grouped and the solid form parse to the same UID (decoders strip '-' and whitespace).
 	parsed, err := tag.Parse(grouped)
 	if err != nil || parsed.ID != tid {
 		t.Fatalf("Parse(grouped) failed: got %v, err=%v", parsed, err)
@@ -143,7 +138,7 @@ func TestBase32Grouping(t *testing.T) {
 }
 
 func TestNameOrderAndIdentity(t *testing.T) {
-	// Plain multi-word names are order-significant (no commutative fold).
+	// A multi-word name's UID depends on word order.
 	if tag.HashName("spaces.plan.tools").ID == tag.HashName("tools.plan.spaces").ID {
 		t.Fatal("plain-name UID must depend on word order")
 	}
@@ -156,10 +151,9 @@ func TestNameOrderAndIdentity(t *testing.T) {
 		t.Fatal("single-literal name must equal HashLiteral(word)")
 	}
 
-	// scheme:identifier names keep the name part and the identifier part
-	// SEPARATE — hash(name) combined with hash(:identifier).  This must never
-	// collapse into one atomic hash of the whole canonic string, or persisted
-	// wallet / DID identities orphan.
+	// scheme:identifier names keep the name part and the identifier part SEPARATE — hash(name) combined with
+	// hash(:identifier).  This must never collapse into one atomic hash of the whole canonic string, or persisted wallet /
+	// DID identities orphan.
 	for _, expr := range []string{
 		"eth:0xabcdef1234567890abcdef1234567890abcdef12",
 		"did:key:z6MkExample",
@@ -257,10 +251,9 @@ func TestIDOps(t *testing.T) {
 
 }
 
-// BenchmarkNowID guards the mint hot path: NowID must stay crypto-free (the
-// per-process entropy is seeded once at init and advanced arithmetically, not
-// read from crypto/rand per call).  A regression that added crypto to NowID
-// would show up here as a large ns/op jump.
+// BenchmarkNowID guards the mint hot path: NowID must stay crypto-free (the per-process entropy is seeded once at init
+// and advanced arithmetically, not read from crypto/rand per call).  A regression that added crypto to NowID would show
+// up here as a large ns/op jump.
 func BenchmarkNowID(b *testing.B) {
 	for b.Loop() {
 		tag.NowID()

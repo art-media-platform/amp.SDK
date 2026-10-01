@@ -65,9 +65,9 @@ import type {
 // head node's base32 UID (canonic constant, not a hashed name); the item ID is
 // the amp.Brand attr's own UID — both pinned as goldens in
 // web-client.brand.test.ts against the generated consts.
-const HEAD_NODE_CHANNEL = '000-0000000000-0000000000-01r';
+const HEAD_NODE_CHANNEL = '00000-00000-000000-00000-0001r';
 const BRAND_ATTR = 'amp.Brand';
-const BRAND_ITEM_ID = '5r1-24qj5wjft5-vbp7wg1pf4-8ef';
+const BRAND_ITEM_ID = '5r124-qj5wj-ft5vbp-7wg1p-f48ef';
 
 export interface AmpWebClientOpts {
   vaultUrl: string;       // operated node URL — e.g. https://{your-node}

@@ -11,13 +11,13 @@ import { parseUID } from './uid.js';
 
 describe('parseUID', () => {
   it('decodes the std App attr golden (amp.std.consts.sdl)', () => {
-    expect(parseUID('4zs-80kzpjzhjx-53bkpndft1-m95')).toEqual(Attr.App.id);
+    expect(parseUID('4zs80-kzpjz-hjx53b-kpndf-t1m95')).toEqual(Attr.App.id);
     expect(Attr.App.id).toEqual([0x9FC2012FD63F847An, 0x51AA55A31D90CD25n]);
   });
 
   it('decodes an app.www golden (app.www.consts.sdl Www) with dashes stripped, either case', () => {
     const want = [0xF0D008C9E58CF55Bn, 0x07C0C4E35DFC53C4n];
-    expect(parseUID('7hu-04dmtddype-hgh64wefzs-ny4')).toEqual(want);
+    expect(parseUID('7hu04-dmtdd-ypehgh-64wef-zsny4')).toEqual(want);
     expect(parseUID('7HU04DMTDDYPEHGH64WEFZSNY4')).toEqual(want);
     expect(parseUID(' 7hu 04dmtddype hgh64wefzs ny4 ')).toEqual(want);
   });

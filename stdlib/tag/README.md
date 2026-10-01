@@ -13,8 +13,8 @@ import "github.com/art-media-platform/amp.SDK/stdlib/tag"
 name, _ := tag.Parse("Hello World!")
 fmt.Println(name.Text)          // Hello.World   (case-preserved, for display)
 fmt.Println(name.Canonic())     // hello.world   (folded form behind ID)
-fmt.Println(name.ID.Base32())   // 5zr-hzgyzm22dj-e3p48sjj0m-3wn
-fmt.Println(name.ID.AsLabel())  // 5…3wn  (log label)
+fmt.Println(name.ID.Base32())   // 5zrhz-gyzm2-2dje3p-48sjj-0m3wn
+fmt.Println(name.ID.AsLabel())  // 0m3wn  (log label)
 
 // Mint a unique time-based UID with entropy.
 id := tag.NowID()
@@ -29,7 +29,7 @@ using art.media.platform;
 Name name = Name.Parse("Hello World!");
 Debug.Log(name.Text);              // Hello.World   (case-preserved, for display)
 Debug.Log(name.Canonic());         // hello.world   (folded form behind ID)
-Debug.Log(name.ID.AsAsciiBase32);  // 5zr-hzgyzm22dj-e3p48sjj0m-3wn
+Debug.Log(name.ID.AsAsciiBase32);  // 5zrhz-gyzm2-2dje3p-48sjj-0m3wn
 
 // Mint a fresh time-based UID with entropy.
 UID id = UID.Now();
@@ -56,11 +56,11 @@ The hash is deterministic, cross-language, and small enough to compare with `==`
 
 | Form | Example | Notes |
 |---|---|---|
-| **Grouped** — `id.Base32()` | `7rf-xvrfxvrfxv-j4e2qg2ect-rrh` | The canonic human form: 26 digits grouped `3-10-10-3`. Safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. |
+| **Grouped** — `id.Base32()` | `7rfxv-rfxvr-fxvj4e-2qg2e-ctrrh` | The canonic human form: 26 digits grouped `5-5-6-5-5`, a serial-number cadence. Safe to read aloud, transcribe by hand, paste into a URL, or fit in a QR code. |
 | **Solid** | `7rfxvrfxvrfxvj4e2qg2ectrrh` | The same 26 digits, no separators. Grouping carries no identity weight — decoding strips `-` and whitespace, so this parses to the same UID. |
-| **Log label** — `id.AsLabel()` | `7…rrh` | For compact log lines: the first digit and the last three, joined by the single ellipsis glyph `…`. (`N..NNN` is typing shorthand only, never emitted.) |
+| **Log label** — `id.AsLabel()` | `ctrrh` | For compact log lines: the last 5 digits, which are the grouped render's last group verbatim. |
 
-In the log label the **tail** is the grouped render's last group verbatim — the entropy end, 32³ distinguishing states — while the **head digit** is the guaranteed-tall `0`–`7` anchor that signals timestamp-vs-item kind: distinctive enough to tell IDs apart at a glance, short enough to fit anywhere.
+The groups follow the UID's fields: for a time-based UID (`NowID()`), groups 1–2 are the whole seconds, group 3 the sub-second, and groups 4–5 the entropy, so two IDs minted in the same second share their first two groups. The label is the entropy end, 32⁵ distinguishing states: enough to tell apart the IDs visible at once in a log.
 
 The alphabet is 32 **lowercase** characters omitting easily confused letters (such as `i`, `l`) — the same alphabet used by [Geohash](https://en.wikipedia.org/wiki/Geohash), borrowed purely for its readability properties (no geographic meaning here). Lowercase matches the canonic fold, so a UID embedded in a tag expression reads the same before and after folding, and decoding is case-insensitive: an upper-cased copy still parses to the same UID.
 
@@ -151,12 +151,11 @@ The identifier (URL part) is hashed exact-as-is *by design*. Pre-lowercase it so
 Tag UIDs can be cited as literals inside other tag expressions, allowing a tag's identity to incorporate references to other tags:
 
 ```
-"We can cite 12v-wsdh3zb4w0-zy5rhvm9zz-ghp and 4vk-b1mhn9j4yt-yzpq7hrzt5-tbt as
- literals, demonstrating a convenient way to cryptographically chain and validate
- tags, allowing us to validate ancestry."
+"We can cite 12vwsdh3zb4w0zy5rhvm9zzghp and 4vkb1mhn9j4ytyzpq7hrzt5tbt as literals, demonstrating a convenient way to
+ cryptographically chain and validate tags, allowing us to validate ancestry."
 ```
 
-The cited UIDs become part of the new tag's content hash — a lightweight, cryptographically verifiable provenance chain. Geospatial tiles ([S2 cell IDs](https://s2geometry.io/)) can be cited the same way to bind tags to locations.
+The cited UIDs become part of the new tag's content hash — a lightweight, cryptographically verifiable provenance chain. Cite the **solid** form: the separator fold splits a grouped render at each `-` into separate words, so a grouped citation's hash would depend on the grouping. Geospatial tiles ([S2 cell IDs](https://s2geometry.io/)) can be cited the same way to bind tags to locations.
 
 ## JSON Support
 

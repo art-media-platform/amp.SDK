@@ -6,17 +6,16 @@ import (
 	"sync"
 )
 
-// Locus constants — mirrored from amp/std to avoid import cycle (tag ← std ← amp ← tag).
-// Source of truth: amp.std.consts.sdl; drift is guarded by amp/std
-// TestLocusConstsMirrorStd.
+// Locus constants — mirrored from amp/std to avoid import cycle (tag ← std ← amp ← tag).  Source of truth:
+// amp.std.consts.sdl; drift is guarded by amp/std TestLocusConstsMirrorStd.
 const (
 	locusMask     = uint64(0x3F) // low 6-bit extraction mask
 	locusSpan     = 64           // total cells per locus (1 << 6)
 	locusHexCells = 37           // 3 hex rings: 1+6+12+18
 )
 
-// LocusBase zeros the low 6 bits of UID[1], yielding the locus base AttrID.
-// A locus base + cell index spans 64 contiguous UIDs without additional hashing.
+// LocusBase zeros the low 6 bits of UID[1], yielding the locus base AttrID.  A locus base + cell index spans 64
+// contiguous UIDs without additional hashing.
 func (id UID) LocusBase() UID {
 	return UID{id[0], id[1] &^ locusMask}
 }
@@ -43,8 +42,8 @@ func (id UID) LocusMatch(uid UID) bool {
 // HexOffset holds an axial (q, r) coordinate for one hex cell.
 type HexOffset struct{ Q, R int8 }
 
-// LocusHexSpiral maps cell ordinals 0..36 to axial hex coordinates.
-// Center = 0, ring 1 = 1-6 (CCW from +Q), ring 2 = 7-18, ring 3 = 19-36.
+// LocusHexSpiral maps cell ordinals 0..36 to axial hex coordinates.  Center = 0, ring 1 = 1-6 (CCW from +Q), ring 2 =
+// 7-18, ring 3 = 19-36.
 var LocusHexSpiral = [locusHexCells]HexOffset{
 	{0, 0}, // center
 	// ring 1
@@ -91,8 +90,8 @@ func locusLinearPos(cell int, spacing float64) (px, pz, angle float64) {
 	return float64(cell) * spacing, 0, 0
 }
 
-// locusTorusPos maps cell 0..63 onto an 8×8 grid.  Consumers interpret (px, pz)
-// as offsets along the two periodic axes and wrap with modulo 8*spacing.
+// locusTorusPos maps cell 0..63 onto an 8×8 grid.  Consumers interpret (px, pz) as offsets along the two periodic axes
+// and wrap with modulo 8*spacing.
 func locusTorusPos(cell int, spacing float64) (px, pz, angle float64) {
 	if cell < 0 || cell >= locusSpan {
 		return 0, 0, 0
@@ -111,8 +110,8 @@ func locusRadialPos(cell int, spacing float64) (px, pz, angle float64) {
 	return radius * math.Cos(theta), radius * math.Sin(theta), theta
 }
 
-// cellToRing returns the ring number (1-based) and index within that ring for a hex cell ordinal > 0.
-// Ring 1: cells 1-6, ring 2: cells 7-18, ring 3: cells 19-36.
+// cellToRing returns the ring number (1-based) and index within that ring for a hex cell ordinal > 0.  Ring 1: cells
+// 1-6, ring 2: cells 7-18, ring 3: cells 19-36.
 func cellToRing(cell int) (ring, indexInRing int) {
 	ring = 1
 	start := 1
@@ -130,8 +129,8 @@ func cellToRing(cell int) (ring, indexInRing int) {
 // LocusKit — pluggable spatial placement conventions
 // ════════════════════════════════════════════════════════
 
-// LocusKitID identifies a pluggable spatial convention for arranging locus cells.
-// Mirrors the pattern of CryptoKitID / HashKitID in the safe package.
+// LocusKitID identifies a pluggable spatial convention for arranging locus cells.  Mirrors the pattern of CryptoKitID /
+// HashKitID in the safe package.
 type LocusKitID int32
 
 const (
@@ -145,8 +144,8 @@ const (
 	//   LocusKit_Cube  = 6   // 3D voxel grid
 )
 
-// LocusKit describes a pluggable spatial placement convention: a fixed cell capacity
-// and a layout function that maps cell ordinals to world-space coordinates.
+// LocusKit describes a pluggable spatial placement convention: a fixed cell capacity and a layout function that maps
+// cell ordinals to world-space coordinates.
 type LocusKit struct {
 	ID       LocusKitID
 	MaxCells int         // maximum cell count (must be ≤ 64 — bounded by low-6-bit addressing)
@@ -158,8 +157,8 @@ var gLocusRegistry struct {
 	Lookup map[LocusKitID]*LocusKit
 }
 
-// RegisterLocusKit registers the given LocusKit so it can be retrieved via GetLocusKit.
-// Safe to call from init().  Registering the same kit pointer twice is a no-op.
+// RegisterLocusKit registers the given LocusKit so it can be retrieved via GetLocusKit.  Safe to call from init().
+// Registering the same kit pointer twice is a no-op.
 func RegisterLocusKit(kit *LocusKit) error {
 	var err error
 	gLocusRegistry.Lock()
@@ -176,8 +175,7 @@ func RegisterLocusKit(kit *LocusKit) error {
 	return err
 }
 
-// GetLocusKit fetches a registered LocusKit by its ID.
-// Returns an error if the kit has not been registered.
+// GetLocusKit fetches a registered LocusKit by its ID.  Returns an error if the kit has not been registered.
 func GetLocusKit(id LocusKitID) (*LocusKit, error) {
 	gLocusRegistry.RLock()
 	kit := gLocusRegistry.Lookup[id]

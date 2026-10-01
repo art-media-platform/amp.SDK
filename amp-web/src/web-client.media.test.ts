@@ -15,8 +15,8 @@ import { MemorySessionStore, type StoredSession } from './session-store.js';
 import { AmpWebClient } from './web-client.js';
 
 const VAULT = 'http://127.0.0.1:5193';
-const UID = '06e-fvw28sb600-36dtm6dtm6-dtm';
-const TOKEN = 'GE3TEMBQGAYDAMBQ.6yx-aaaaaaaaaa-bbbbbbbbbb-ccc.06e-fvw28sb600-36dtm6dtm6-dtm.GA.MFRGGZDFMZTWQ2LK';
+const UID = '06efv-w28sb-60036d-tm6dt-m6dtm';
+const TOKEN = 'GE3TEMBQGAYDAMBQ.6yx-aaaaaaaaaa-bbbbbbbbbb-ccc.06efv-w28sb-60036d-tm6dt-m6dtm.GA.MFRGGZDFMZTWQ2LK';
 const realFetch = globalThis.fetch;
 
 interface ResolveCall { path: string; auth: string | null; body: unknown }

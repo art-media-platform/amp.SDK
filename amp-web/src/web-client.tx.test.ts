@@ -41,7 +41,7 @@ function client(): AmpWebClient {
   });
 }
 
-const BASE = '4zs-80kzpjzhjx-53bkpndft1-m95'; // == Attr.App.id, a golden the Go side renders identically
+const BASE = '4zs80-kzpjz-hjx53b-kpndf-t1m95'; // == Attr.App.id, a golden the Go side renders identically
 const [HI, LO] = Attr.App.id;
 
 describe('encodeWireJSON', () => {

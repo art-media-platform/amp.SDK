@@ -16,7 +16,7 @@ import { AmpWebClient, DefaultUploadChunkBytes, UploadChunkHeadroomBytes, Upload
 
 const VAULT = 'http://127.0.0.1:5193';
 const TAG = {
-  UID: '06e-fvw28sb600-36dtm6dtm6-dtm',
+  UID: '06efv-w28sb-60036d-tm6dt-m6dtm',
   URI: '/www/06efvw28sb60036dtm6dtm6dtm',
   ContentTypeRaw: 'video/mp4',
   I: 10,

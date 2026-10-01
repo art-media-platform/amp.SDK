@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import type { BlobRef } from '../types.js';
 import { mediaTagFor, refreshMediaURL, resolveMediaURL } from './useAmpMedia.js';
 
-const UID = '06e-fvw28sb600-36dtm6dtm6-dtm';
+const UID = '06efv-w28sb-60036d-tm6dt-m6dtm';
 const CABINET: BlobRef = { UID, ContentTypeRaw: 'video/mp4', I: 10, Units: 2 };
 
 /**
