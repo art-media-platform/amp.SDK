@@ -45,10 +45,15 @@ const (
 	// TxPreamble layout (big endian):
 	//
 	//    00:04  PreambleSignature ("AMP1")
-	//    04:08  PreambleSize + serialized(TxHeader) + serialized([]TxOp)
-	//    08:12  len(TxMsg.DataStore)
+	//    04:08  head length: PreambleSize + serialized(TxEnvelope) + body,
+	//           body = serialized(TxHeader) + serialized([]TxOp), or when
+	//           encrypted, ciphertext(TxHeader, ops, DataStore)
+	//    08:12  len(TxMsg.DataStore); 0 when encrypted
 	//    12:14  SignatureLength (uint16 BE; 0 = unsigned)
 	//    14:16  Reserved
+	//
+	// Frame = head | data | signature, sized by 04:08, 08:12, and 12:14 (AOM
+	// SD-security-sync.md §3.1).
 	TxPreambleSignature = "AMP1"
 	// TxPreamble byte length (layout above).
 	TxPreambleSize = int32(16)

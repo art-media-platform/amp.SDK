@@ -4415,8 +4415,8 @@ func (x *NodeMessage) GetRecipients() []*Tag {
 // CRDT-merge into a single record rather than N duplicates.
 //
 // Attestations INFORM decisions; they do not execute them.  Admin acts (issued
-// via MemberEpoch or ChannelEpoch) cite attestations via CitedAttestations,
-// making the basis of every governance decision publicly auditable.
+// via MemberEpoch or ChannelEpoch) cite attestations via Cites, making the
+// basis of every governance decision publicly auditable.
 type Attestation struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// What or whom the attestation is about (member UID, channel UID, etc).

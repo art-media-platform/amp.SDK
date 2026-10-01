@@ -195,9 +195,10 @@ var Attr = struct {
 	ItemCameraOptions: tag.Name{ID: tag.UID{0xEF9DCA7B29C45C47, 0xBB03A56AA33F6432}, Text: "item.CameraOptions"},       // 7gmr5-7qbf4-cj3vq0-x5ebj-myt1k
 	ItemAtmosphere:    tag.Name{ID: tag.UID{0x8718C93E8B1E2B4C, 0xB09A9629ED2B9B9B}, Text: "item.AtmosphereSpec"},      // 47334-mx2sy-5e6c16-nq57q-kr6wv
 	TileAttr:          tag.Name{ID: tag.UID{0xBF3216B40F0EE8E3, 0x9E0C1A4B0E2789C8}, Text: "item.tile"},                // 5z68c-c83sf-x3jtw3-0u9d7-2g2f8
-	// Consumers read ONE current value per item; edit history is not
-	// retained on these attrs (AOM SD-edit-resolution.md).  The S2R/S2T
-	// leaves name units only and store no values.
+	// Consumers read ONE current value per item: these attrs fold at the
+	// default RetainEdits (1); edit history stays in the journal (AOM
+	// SD-edit-resolution.md §6.3).  The S2R/S2T leaves name units only and
+	// store no values.
 	ItemSeries: tag.Name{ID: tag.UID{0x647B2CF1DF98191A, 0xFF84E8A015C7C0BB}, Text: "item.series"}, // 34gdq-g3rws-34egz1-78n0b-wgh5v
 
 	SeriesTRS:      tag.Name{ID: tag.UID{0x6BECC785388E3D9E, 0x25958F2CECD0021A}, Text: "item.series.TRS"},            // 3cxm3-sbf4f-7qg2c5-dg5mq-e00hu
@@ -501,9 +502,10 @@ const (
 	AtmosphereDefaultMieStrength    = float32(0.5)    // HG glow amplitude on the outer shell sunset
 )
 
-// ─── Bundled crate URIs — platform-wide crates every amp client imports at boot. ───
-// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live
-// in Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is
+// ─── Bundled crate URIs.  BaseAssets/VisAssets are platform-fixed: the Unity ───
+// client imports both at boot (CrateDepot.ImportBundledCrates).  Brand-specific
+// bundled crates, e.g. HelloWorld in the factory brand, are listed in
+// Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is
 // asset:PublisherID/CrateID (the amp.core.proto CrateRef.CrateURI form); the
 // build pipeline stages matching .crate files under
 // StreamingAssets/Bundled/CrateDepot.
