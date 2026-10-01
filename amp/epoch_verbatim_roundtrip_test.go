@@ -7,6 +7,7 @@ import (
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -340,5 +341,84 @@ func TestEpochTerms_IsGenesis_ZeroUIDPrevious(t *testing.T) {
 	terms.PreviousEpoch = &amp.Tag{UID_0: 100, UID_1: 200}
 	if terms.IsGenesis() {
 		t.Error("terms naming a predecessor must not read as genesis")
+	}
+}
+
+// TestPlanetEpoch_VerifyGenesis_Refusals pins each genesis check on its own:
+// from one valid genesis, every variant carries exactly one defect and must be
+// refused AuthFailed.
+func TestPlanetEpoch_VerifyGenesis_Refusals(t *testing.T) {
+	uid := func(hi, lo uint64) *amp.Tag {
+		return &amp.Tag{UID_0: hi, UID_1: lo}
+	}
+	planetID := uid(0xC0, 0x01).UID()
+	charter := func() *amp.PlanetCharter {
+		return &amp.PlanetCharter{
+			CharterSchema: 1,
+			PlanetID:      uid(0xC0, 0x01),
+			GenesisEpoch:  uid(100, 200),
+			Founders:      []*amp.Tag{uid(0xF1, 0)},
+		}
+	}
+	terms := func() *amp.EpochTerms {
+		return &amp.EpochTerms{
+			TermsSchema: 1,
+			EpochTag:    uid(100, 200),
+		}
+	}
+	assemble := func(charter *amp.PlanetCharter,
+		terms *amp.EpochTerms) *amp.PlanetEpoch {
+		t.Helper()
+		env, err := amp.AssembleEpoch(charter, terms,
+			safe.HashKitID_Blake2s_256)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return env
+	}
+	genesis := assemble(charter(), terms())
+	if err := genesis.VerifyGenesis(planetID); err != nil {
+		t.Fatalf("the valid genesis is refused: %v", err)
+	}
+
+	otherPlanet := charter()
+	otherPlanet.PlanetID = uid(0xC0, 0x02)
+	otherGenesis := charter()
+	otherGenesis.GenesisEpoch = uid(100, 999)
+	atHeight := terms()
+	atHeight.EpochHeight = 1
+	withPrevious := terms()
+	withPrevious.PreviousEpoch = uid(99, 99)
+	rival := charter()
+	rival.Declaration = &amp.Tags{Head: &amp.Tag{Text: "As rewritten"}}
+	hashOverOther := &amp.PlanetEpoch{
+		Charter:  genesis.Charter,
+		Terms:    assemble(rival, terms()).Terms,
+		EpochTag: uid(100, 200),
+	}
+	retagged := proto.Clone(genesis).(*amp.PlanetEpoch)
+	retagged.EpochTag = uid(100, 999)
+
+	for _, variant := range []struct {
+		name     string
+		epoch    *amp.PlanetEpoch
+		planetID tag.UID
+	}{
+		{"Charter names another planet", assemble(otherPlanet, terms()),
+			planetID},
+		{"no planet to bind", genesis, tag.UID{}},
+		{"Charter names another genesis epoch",
+			assemble(otherGenesis, terms()), planetID},
+		{"height 1", assemble(charter(), atHeight), planetID},
+		{"names a predecessor", assemble(charter(), withPrevious),
+			planetID},
+		{"CharterHash over other bytes", hashOverOther, planetID},
+		{"envelope EpochTag mismatch", retagged, planetID},
+	} {
+		err := variant.epoch.VerifyGenesis(variant.planetID)
+		if code := status.GetCode(err); code != status.Code_AuthFailed {
+			t.Errorf("%s: want AuthFailed, got %v (%v)",
+				variant.name, code, err)
+		}
 	}
 }

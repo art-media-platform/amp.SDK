@@ -274,6 +274,38 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 	return nil
 }
 
+// VerifyGenesis is the one structural check of a founding epoch: its
+// EpochTag and CharterHash (VerifyCharterContinuity with no predecessor),
+// Terms naming no predecessor at height 0, and a Charter naming planetID and
+// this epoch as its genesis (SD-channel-governance §3.3).  The founder
+// signatures are the caller's to check (acc.VerifyGenesisBrand).
+func (pe *PlanetEpoch) VerifyGenesis(planetID tag.UID) error {
+	if err := pe.VerifyCharterContinuity(nil); err != nil {
+		return err
+	}
+	terms, err := pe.ParsedTerms()
+	if err != nil {
+		return err
+	}
+	if !terms.IsGenesis() || terms.EpochHeight != 0 {
+		return status.Code_AuthFailed.Error(
+			"amp: not a founding epoch (names a predecessor or height > 0)")
+	}
+	charter, err := pe.ParsedCharter()
+	if err != nil {
+		return err
+	}
+	if planetID.IsNil() || charter.GetPlanetID().UID() != planetID {
+		return status.Code_AuthFailed.Error(
+			"amp: genesis Charter names another planet")
+	}
+	if charter.GetGenesisEpoch().UID() != terms.GetEpochTag().UID() {
+		return status.Code_AuthFailed.Error(
+			"amp: genesis Charter names another epoch as its genesis")
+	}
+	return nil
+}
+
 // hashBytes runs data through the given HashKit and returns the digest.
 func hashBytes(kitID safe.HashKitID, data []byte) ([]byte, error) {
 	kit, err := safe.NewHashKit(kitID)
