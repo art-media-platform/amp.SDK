@@ -10,24 +10,22 @@ export interface TagName {
 }
 
 export const Crypto = {
-    Poly25519: { id: [0x629134B84734DA6Fn, 0xCC870AD1BB12E1E6n], text: "amp.crypto.poly25519" },  // 32k-4uchjtnv9r-wt1sbu6xj5-sg6
-    P256     : { id: [0x188DC92BB63ACCBDn, 0xE22053F8FFA3A09Fn], text: "amp.crypto.p256" },  // 0sj-r4krejutky-y482mz3zu7-84z
-    Secp256k1: { id: [0x1906FAF4F88AB854n, 0x6328B92D89014254n], text: "amp.crypto.secp256k1" },  // 0t0-vxg9y4br1b-66b5t5q4h2-hkn
+    Poly25519: { id: [0x629134B84734DA6Fn, 0xCC870AD1BB12E1E6n], text: "amp.crypto.poly25519" },  // 32k4u-chjtn-v9rwt1-sbu6x-j5sg6
+    P256     : { id: [0x188DC92BB63ACCBDn, 0xE22053F8FFA3A09Fn], text: "amp.crypto.p256" },  // 0sjr4-kreju-tkyy48-2mz3z-u784z
+    Secp256k1: { id: [0x1906FAF4F88AB854n, 0x6328B92D89014254n], text: "amp.crypto.secp256k1" },  // 0t0vx-g9y4b-r1b66b-5t5q4-h2hkn
 } satisfies Record<string, TagName>;
 
-// ─── Phrase — the canonical safe.Phrase vocabulary (SD-canonization-spec §1.5): ───
-// a phrase written down in one AMP app must restore in any other, so every
-// consumer (Go, C#, web) parses this ONE whitespace-separated string at
-// runtime.  Properties:
+// ─── Phrase — the canonical safe.Phrase vocabulary (AOM SD-canonization-spec.md §1.5). ───
+// A phrase written down in one AMP app must restore in any other, so every consumer (Go, C#, web) parses this ONE
+// whitespace-separated string at runtime.  Properties:
 //   - exactly 256 unique words (8 bits/word → byte-aligned entropy)
 //   - short (4–7 characters), common, familiar casual English
 //   - no two list words are homophones of each other
-//   - unique on the first FOUR characters (three-char prefixes are NOT
-//     unique — abbreviation entry needs at least four typed characters)
+//   - unique on the first FOUR characters (three-char prefixes are NOT unique — abbreviation entry needs at least four
+//     typed characters)
 //   - alphabetized for reviewability
-// Any change to this list is a breaking change — existing phrases become
-// unparseable; the golden fixtures in stdlib/safe and amp-web trip on any
-// byte motion here.
+// Any change to this list is a breaking change — existing phrases become unparseable; the golden fixtures in
+// stdlib/safe and amp-web trip on any byte motion here.
 export const Phrase = {
     Words: "\nable acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist\natlas atom auto avid awake axis baby bacon badge baker balm band bark barn base bath\nbeach beam bear bench berry bike bill bird black blade blaze bliss block blood blue blur\nboard boat bolt bone book boot born bottle brain brass brave bread brick bridge brook brown\nbrush buddy budget build bulb bunny cabin cable cake calm camel candy canyon cargo carrot castle\ncave center chair cherry chest chime chip church circle cliff clock cloud coast cobra comet copper\ncoral cosmic cotton couch cradle crane crate crown crystal cube daisy dance dart dawn deep desk\ndiamond disco doll dome donut dove dozen drift drum dune dusk eagle earth echo edge ember\nemerald energy evil falcon feast feather felt ferry field flag flame fleece flower flute focus forge\nframe frost fuel galaxy gate giant glacier globe glow golden grape gravel green grove guard harbor\nharvest hatch hawk heart helmet hero hickory honey hood horizon horn island ivory jade jelly kelp\nkitten ladder lantern laser lemon linen lotus lunar magnet maple marble meadow melon mint moss needle\nnickel north ocean olive opal orchid otter oyster paper parade peach pebble petal piano pine pixel\nplanet poem puzzle quiet quiz radio raven ribbon river robot rodeo rope rose rust saber safari\nsalt satin scout shadow silver smoke snow solar sonic spark spire spruce star steel stone storm\nsugar summit swan taxi tiger torch tulip ultra urban valley velvet violet wagon wolf yellow zebra\n",
 } as const;

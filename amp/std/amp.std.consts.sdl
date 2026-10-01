@@ -1,10 +1,8 @@
 // amp.std.consts.sdl — single source of truth for tag name & scalar constants
 //
-// Compiled by `forge consts` into .go and .cs files.
-// DO NOT hand-edit generated output files.
-// Convention: a 0 serialized/config field resolves to the matching Default*
-// const at the point of use (never in a field initializer); durations are
-// int64 milliseconds (`Ms` ident suffix).
+// Compiled by `forge consts` into .go, .cs and .ts files.  DO NOT hand-edit generated output files.
+// Convention: a 0 serialized/config field resolves to the matching Default* const at the point of use (never in a field
+// initializer); durations are int64 milliseconds (`Ms` ident suffix).
 // amp:gen=csharp
 //
 
@@ -29,18 +27,18 @@ tags Attr {
         TxSealResponse  "tx.seal.CoSignature"
         MemberToken     "member.token.Tag"
         SessionStatus   "Status"
-        Launch "launch" {
+        Launch          "launch" {
             LaunchWeb   "www.Tag"
             LaunchOAuth "oauth.Tag"
         }
-        AppState "app.state.Tag"
+        AppState        "app.state.Tag"
     }
 
     // Item attributes
     ItemAttr "item" {
-        ChildLink  "child.link.UID"
-        ItemLabels "Labels"
-        ItemTextTag "text" {
+        ChildLink         "child.link.UID"
+        ItemLabels        "Labels"
+        ItemTextTag       "text" {
             ItemLabel      "label.Tag"
             ItemCaption    "caption.Tag"
             ItemCollection "collection.Tag"
@@ -54,38 +52,39 @@ tags Attr {
         ItemCameraOptions "CameraOptions"
         ItemAtmosphere    "AtmosphereSpec" // 4-category atmosphere composition (sky/sun/night/fog)
         TileAttr          "tile"
-        // Consumers read ONE current value per item; edit history is not
-        // retained on these attrs (SD-edit-resolution).  The S2R/S2T
-        // leaves name units only and store no values.
+        // Consumers read ONE current value per item; edit history is not retained on these attrs
+        // (AOM SD-edit-resolution.md).  The S2R/S2T leaves name units only and store no values.
         ItemSeries "series" {
             SeriesTRS      "TRS"
             SeriesLabels   "Labels"
             SeriesAssetTag "asset.Tag"
             SeriesHeadLink "link.Tag"
             SeriesLinkTree "link.tree.Tags"
-            SeriesSkin     "SkinSpec"       // the item's look: mesh ⊥ layers ⊥ args in one cell (MD-mantle-architecture §12.5)
+            // The item's look: mesh ⊥ layers ⊥ args in one cell (AOM MD-mantle-architecture.md §12.5).
+            SeriesSkin     "SkinSpec"
             SeriesS2R      "S2.radius.mm"
             SeriesS2T      "S2.UTC64"
         }
 
-        MediaLink      "media.link.Tag"       // disposable cache of ONE resolved URL; authority = media.sources.Tags
+        MediaLink      "media.link.Tag"      // disposable cache of ONE resolved URL; authority = media.sources.Tags
         MediaRelease   "media.release.Tag"
         MediaInfo      "MediaInfo"
-        MediaSources   "media.sources.Tags"   // ways to get the bytes: blob UID / URL / provider scheme (AD-playlists §5)
-        MediaTags      "MediaTags"            // track node — metadata intrinsic to the media itself
-        MediaEntry     "MediaEntry"           // playlist node, keyed by entryID — one row
-        MediaRank      "MediaRank"            // playlist node, keyed by entryID — 16-byte reorder cell
-        MediaPlacement "media.placement.TRS"  // optional free-placement cell, keyed by entryID (AD-playlists §7)
+        MediaSources   "media.sources.Tags"  // byte sources: blob UID / URL / provider scheme (AOM AD-playlists.md §5)
+        MediaTags      "MediaTags"           // track node — metadata intrinsic to the media itself
+        MediaEntry     "MediaEntry"          // playlist node, keyed by entryID — one row
+        MediaRank      "MediaRank"           // playlist node, keyed by entryID — 16-byte reorder cell
+        MediaPlacement "media.placement.TRS" // optional free-placement cell, keyed by entryID (AOM AD-playlists.md §7)
     }
 
     // Channel metadata and catalog
     ChannelAttr "channel" {
         ChannelCatalog        "catalog.ChannelEpoch"
-        ChannelEpochs         "ChannelEpoch"  // the content type declaration a node carries (a codex may carry it); never authority — the law record is LawChannelEpoch
+        // The content type declaration a node carries (a codex may carry it); never authority — the law record is
+        // LawChannelEpoch.
+        ChannelEpochs         "ChannelEpoch"
         ChannelPropertySeries "property.series.JsonValue"
-
-        // Channel-property ITEM keys — ItemIDs within the property series,
-        // scoped by (NodeID, AttrID) at runtime; never AttrIDs themselves.
+        // Channel-property ITEM keys — ItemIDs within the property series, scoped by (NodeID, AttrID) at runtime; never
+        // AttrIDs themselves.
         ChannelProperty "property" {
             ChannelPropertyLabel          "label"
             ChannelPropertyDescription    "description"
@@ -94,9 +93,8 @@ tags Attr {
             ChannelPropertyGrid           "grid"
             ChannelPropertyCameraControls "camera.controls"
         }
-        // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
-        // as VALUES (a Tag field resolves to one), never as AttrIDs —
-        // exempt from the generated attr registration.
+        // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used as VALUES (a Tag field resolves to one),
+        // never as AttrIDs — exempt from the generated attr registration.
         ChannelType "type" : vocab {
             ChannelTypeSpreadsheet  "Spreadsheet"
             ChannelTypeMessages     "Messages"
@@ -117,49 +115,41 @@ tags Attr {
             ChannelTypeNameService  "NameService"
             ChannelTypeTerminal     "Terminal"
         }
-        // Render surface a channel is staged on — a value the staging host
-        // selects and a presenter resolves by (chType, surface); never a
-        // C# enum (surface vocabulary in client code breaks the whitelabel
-        // contract).  A third rendering = one presenter + one crate entry +
-        // one name here.
+        // Render surface a channel is staged on — a value the staging host selects and a presenter resolves by
+        // (chType, surface); never a C# enum (surface vocabulary in client code breaks the whitelabel contract).
+        // A third rendering = one presenter + one crate entry + one name here.
         Surface "surface" : vocab {
-            SurfacePane   "Pane"    // 2D: a Dock pane
-            SurfaceVolume "Volume"  // 3D: a Mantle volume
+            SurfacePane   "Pane"   // 2D: a Dock pane
+            SurfaceVolume "Volume" // 3D: a Mantle volume
         }
     }
 
-    // Brand — substrate-native planet identity (DD-name-service §2).
-    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the
-    // genesis TxOp at EditID=0 binds identity-tier fields to the planet's
-    // cryptographic root.
+    // Brand — substrate-native planet identity (AOM DD-name-service.md §2).
+    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the genesis TxOp at EditID=0 binds identity-tier
+    // fields to the planet's cryptographic root.
     Brand "amp.Brand"
 
-    // NameService — substrate-native naming primitive (DD-name-service §3).
-    // A channel any planet may host; records map FQDN → tag.UID with
-    // bootstrap metadata.  Federations propagate their channel to members via
-    // normal CRDT sync.  Generalized beyond planet naming — any UID-bearing
-    // entity is namable.
+    // NameService — substrate-native naming primitive (AOM DD-name-service.md §3).
+    // A channel any planet may host; records map FQDN → tag.UID with bootstrap metadata.  Federations propagate their
+    // channel to members via normal CRDT sync.  Any UID-bearing entity is namable, not only planets.
     NameService "amp.name.service" {
         NameServiceRecord "NameServiceRecord"
     }
 
-    // Invite governance — policy + redemption ledger for governed multi-use
-    // invites (app.invite).  Policies live at (PlanetInvites,
-    // PlanetInvitePolicy, inviteID); each invite's ledger at (inviteID,
-    // PlanetInviteRedemption, RedeemedAt NowID).
+    // Invite governance — policy + redemption ledger for governed multi-use invites (app.invite).
+    // Policies live at (PlanetInvites, PlanetInvitePolicy, inviteID); each invite's ledger at (inviteID,
+    // PlanetInviteRedemption, RedeemedAt NowID).  See AOM SD-invite-governance.md §3–§4.
     PlanetInvites "amp.planet.invites" {
         PlanetInvitePolicy     "PlanetInvitePolicy"
         PlanetInviteRedemption "PlanetInviteRedemption"
     }
 
-    // Federation directory — peer / parent federation pointers
-    // (DD-name-service §4.4).  NS-record-style cross-federation forwarding
-    // without DNS dependency.
+    // Federation directory — peer / parent federation pointers (AOM DD-name-service.md §4.4).
+    // NS-record-style cross-federation forwarding without DNS dependency.
     FederationDirectory "amp.FederationDirectory"
 
-    // Planet governance channel — grants, revises, and revokes the
-    // permissions other channels inherit.  Sibling of amp.ledger and
-    // amp.arbitrate.
+    // Planet governance channel — grants, revises, and revokes the permissions other channels inherit.
+    // Sibling of amp.ledger and amp.arbitrate.
     LawAttr "amp.law" {
         LawPlanetEpoch  "PlanetEpoch"
         LawMemberEpoch  "MemberEpoch"
@@ -169,10 +159,9 @@ tags Attr {
         LawEquivalence  "Equivalence"
         LawWithdraw     "Withdraw"
 
-        // Substrate-agnostic Member Kind (SD-substrate-agnostic-members).
-        // MemberEpoch.Kind is a Tag resolving to one of these UIDs.
-        // Communities + apps may register additional Kinds in their own
-        // consts.sdl.  Zero UID = unspecified.
+        // Substrate-agnostic Member Kind (AOM SD-substrate-agnostic-members.md).  MemberEpoch.Kind is a Tag resolving
+        // to one of these UIDs.  Communities + apps may register additional Kinds in their own consts.sdl.  Zero UID =
+        // unspecified.
         LawMemberKind "MemberKind" {
             LawMemberKind_Person    "Person"
             LawMemberKind_Group     "Group"
@@ -183,10 +172,8 @@ tags Attr {
             LawMemberKind_Process   "Process"
         }
 
-        // Attestation modalities.  Attestation.Modality is a Tag resolving
-        // to one of these UIDs.
-        // Communities + apps may register additional modalities.
-        // Zero UID = unspecified.
+        // Attestation modalities (AOM SD-modal-attestation.md).  Attestation.Modality is a Tag resolving to one of
+        // these UIDs.  Communities + apps may register additional modalities.  Zero UID = unspecified.
         LawAttestationModality "AttestationModality" {
             LawAttestationModality_Asserted    "Asserted"
             LawAttestationModality_Witnessed   "Witnessed"
@@ -200,8 +187,8 @@ tags Attr {
             LawAttestationModality_Retracted   "Retracted"
         }
 
-        // Equivalence strengths.  Equivalence.Strength is a Tag resolving to
-        // one of these UIDs.  Zero UID = unspecified.
+        // Equivalence strengths (AOM SD-address-equivalence.md).  Equivalence.Strength is a Tag resolving to one of
+        // these UIDs.  Zero UID = unspecified.
         LawEquivalenceStrength "EquivalenceStrength" {
             LawEquivalenceStrength_Identity    "Identity"
             LawEquivalenceStrength_Translation "Translation"
@@ -209,31 +196,29 @@ tags Attr {
             LawEquivalenceStrength_Analogous   "Analogous"
         }
 
-        // License classes.  EpochTerms.LicenseClass is a Tag resolving to
-        // one of these UIDs; the class is a self-declaration the federation's
-        // Endorsement cites, never an on-node check.  Zero UID = NonCommercial.
+        // License classes (AOM ED-license-model.md §3.1).  EpochTerms.LicenseClass is a Tag resolving to one of these
+        // UIDs; the class is a self-declaration the federation's Endorsement cites, never an on-node check.  Zero UID =
+        // NonCommercial.
         LawLicenseClass "LicenseClass" {
-            LawLicenseClass_NonCommercial       "NonCommercial"
-            LawLicenseClass_Supporter           "Supporter"
-            LawLicenseClass_BusinessSolo        "BusinessSolo"
-            LawLicenseClass_BusinessTeam        "BusinessTeam"
-            LawLicenseClass_BusinessCompany     "BusinessCompany"
-            LawLicenseClass_BusinessEnterprise  "BusinessEnterprise"
+            LawLicenseClass_NonCommercial      "NonCommercial"
+            LawLicenseClass_Supporter          "Supporter"
+            LawLicenseClass_BusinessSolo       "BusinessSolo"
+            LawLicenseClass_BusinessTeam       "BusinessTeam"
+            LawLicenseClass_BusinessCompany    "BusinessCompany"
+            LawLicenseClass_BusinessEnterprise "BusinessEnterprise"
         }
 
     }
 
     // Planet ledger — durable record of observations and citations.
-    // Attestations (strikes, endorsements, witness records, audits, amnesties)
-    // live here as convergent TxOps; access-control acts cite them via
-    // AttestationRef, making every governance decision auditable.
+    // Attestations (strikes, endorsements, witness records, audits, amnesties) live here as convergent TxOps;
+    // MemberEpoch.Cites and ChannelEpoch.Cites cite them by Address, making every governance decision auditable.
     LedgerAttr "amp.ledger" {
         LedgerAttestation "Attestation"
     }
 
-    // Planet arbitration channel — dispute proceedings, appeals, and formal
-    // rulings.  Peer to amp.law (which legislates) and amp.ledger (which
-    // records the evidence).
+    // Planet arbitration channel — dispute proceedings, appeals, and formal rulings.
+    // Peer to amp.law (which legislates) and amp.ledger (which records the evidence).
     ArbitrateAttr "amp.arbitrate" {
     }
 
@@ -248,8 +233,8 @@ tags Attr {
         PlanetBinding     "planet.binding.Tag"
         PlanetStorageOpts "planet.storage.PlanetStorageOpts"
 
-        // Client vars groups: device-class on the member's device node,
-        // member-class on the home planet head node (one item each).
+        // Client vars groups: device-class on the member's device node, member-class on the home planet head node (one
+        // item each).
         HomeDeviceVars "device.DeviceVars"
         HomeMemberVars "member.MemberVars"
     }
@@ -260,18 +245,17 @@ tags Attr {
         NodeBlobs "node.BlobRef"
     }
 
-    // The node's own operational records.  Credentials: one sealed cell per
-    // provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
-    // the node operator's confidential planet — a safe.SealedValue box whose
-    // plaintext is Credentials, opened only by keyholders (O4 §4.15 step 5).
+    // The node's own operational records.
+    // Credentials: one sealed cell per provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on the node
+    // operator's confidential planet — a safe.SealedValue box whose plaintext is Credentials, opened only by keyholders
+    // (O4 §4.15 step 5).
     NodeAttr "node" {
         NodeCredentials "Credentials" : sealed
     }
 
-    // Tile-server registry — list of available raster / terrain / vector
-    // tile backends.  Each entry is a TileServer proto stored as one item
-    // under TileServer; consumers (TileService, mantle compositor) filter
-    // by Kind / Projection / region tags to assemble a layer stack.
+    // Tile-server registry — list of available raster / terrain / vector tile backends.
+    // Each entry is a TileServer proto stored as one item under TileServer; consumers (TileService, mantle compositor)
+    // filter by Kind / Projection / region tags to assemble a layer stack.
     TileServerAttr "tile.server" {
         TileServer "TileServer"
     }
@@ -279,26 +263,26 @@ tags Attr {
 }
 
 // Session-scope well-known IDs.
-// ContextID is attached to TxMsgs that carry session-level meta-ops
-// (login, logout, status) so the receiving session can match request/response.
+// ContextID is attached to TxMsgs that carry session-level meta-ops (login, logout, status) so the receiving session
+// can match request/response.
 const Session {
     uid ContextID = {0x0, 0x777};
 }
 
-// Amp URL parts (matches UriScheme.AppNative).  CabinetsURL is the
-// app.cabinets direct-commit endpoint every logged-in member's home planet
-// serves.
+// Amp URL parts (matches UriScheme.AppNative).
+// CabinetsURL is the app.cabinets direct-commit endpoint every logged-in member's home planet serves.
 const Amp {
     string Scheme       = "amp://";           // amp URL scheme prefix
     string HomeAlias    = "~";                // the session's home (login) planet
-    string HereAlias    = ".";                // the invoking channel's planet (a planet-relative link); the client resolves it; node/cabinet pins refuse it by name, app.blob generically
+    // The invoking channel's planet (a planet-relative link); the client resolves it; node/cabinet pins refuse it by
+    // name, app.blob generically.
+    string HereAlias    = ".";
     string CabinetsPath = "/cabinets";        // app.cabinets module path
     string CabinetsURL  = "amp://~/cabinets"; // = Scheme + HomeAlias + CabinetsPath
 }
 
 const Asset {
-    // Canonic URI scheme prefix for amp asset references (matches
-    // UriScheme.Asset).
+    // Canonic URI scheme prefix for amp asset references (matches UriScheme.Asset).
     string Scheme = "asset:";
 }
 
@@ -320,84 +304,74 @@ const Glyph {
     string NewLocation   = "asset:glyph/new-location";
 }
 
-// Mantle (the double-precision world a Globe renders) — modding override
-// points.  Each URI resolves through the crate / asset system; a mod
-// registers an override at the same key.
+// Mantle (the double-precision world a Globe renders) — modding override points.
+// Each URI resolves through the crate / asset system; a mod registers an override at the same key.
 const Mantle {
     string DefaultTileMaterial = "asset:mantle/tile.material.default";
     string DefaultVolumePrefab = "asset:mantle/volume.prefab.default";
 
-    // Node sizing (UD-cmdr-yoke §4).  A tap authors a node whose on-screen
-    // diameter is the fingertip target, persisted as TRS.Sx in meters at the
-    // tapped depth; Sx = 0 resolves to DefaultNodeSizeMeters at the reader.
-    // MinNodeScreenMM is a render-time visibility floor and never reaches
-    // the wire.
-    float DefaultNodeSizeMM     = 7;    // fingertip target: authored on-screen diameter at the tap
-    float DefaultNodeSizeMeters = 1;    // a placement carrying Sx = 0
-    float MinNodeScreenMM       = 1.5;  // drawn size never falls below this on screen
+    // Node sizing (AOM UD-cmdr-yoke.md §4): a tap authors a node persisted as TRS.Sx in meters at the tapped depth.
+    float DefaultNodeSizeMM     = 7;   // fingertip target: the authored on-screen diameter at the tap
+    float DefaultNodeSizeMeters = 1;   // the size a reader resolves for a placement carrying Sx = 0
+    float MinNodeScreenMM       = 1.5; // render-time floor on drawn size; never reaches the wire
 }
 
-// Atmosphere — stock URIs for the four-category (sky / sun / night / fog)
-// atmosphere composition.  An empty URI on an AtmosphereSpec field disables
-// that category.
+// Atmosphere — stock URIs for the four-category (sky / sun / night / fog) atmosphere composition.
+// AtmosphereEffect.Enabled is the per-category off-switch (std.AtmosphereSpec).
 const Atmosphere {
-    // Category labels — AtmosphereEffect.Label values that identify which of
-    // the four functional axes an entry contributes to.  Mods may register
-    // additional labels in their own consts.sdl, but the renderer only
-    // honors the four canonical categories.
+    // Category labels — AtmosphereEffect.Label values that identify which of the four functional axes an entry
+    // contributes to.  Mods may register additional labels in their own consts.sdl, but the renderer only honors the
+    // four canonical categories.
     string LabelSky   = "Sky";
     string LabelSun   = "Sun";
     string LabelNight = "Night";
     string LabelFog   = "Fog";
 
-    // Category defaults — used when an AtmosphereEffect has Enabled = true
-    // and an empty URI.
-    string SkyEarth      = "asset:atmosphere/sky/earth";        // blue zenith → soft white horizon + limb sheen
-    string SkyMars       = "asset:atmosphere/sky/mars";         // dusty pink zenith, ochre horizon
-    string SkyNoir       = "asset:atmosphere/sky/noir";         // monochrome cool blue
-    string SunStandard   = "asset:atmosphere/sun/standard";     // sunset / terminator / HG forward scatter
-    string NightStandard = "asset:atmosphere/night/standard";   // night-side dim + cool tint
-    string FogExponential = "asset:atmosphere/fog/exponential"; // exponential aerial perspective; hides distant tile edges, on by default
+    // Category defaults — used when an AtmosphereEffect has Enabled = true and an empty URI.
+    string SkyEarth       = "asset:atmosphere/sky/earth";       // blue zenith → soft white horizon + limb sheen
+    string SkyMars        = "asset:atmosphere/sky/mars";        // dusty pink zenith, ochre horizon
+    string SkyNoir        = "asset:atmosphere/sky/noir";        // monochrome cool blue
+    string SunStandard    = "asset:atmosphere/sun/standard";    // sunset / terminator / HG forward scatter
+    string NightStandard  = "asset:atmosphere/night/standard";  // night-side dim + cool tint
+    string FogExponential = "asset:atmosphere/fog/exponential"; // exponential aerial perspective; on by default
 
     // Inspector defaults.
-    float  DefaultNightDimmer     = 0.30;   // night-side brightness floor: keeps 30% (70% dim)
-    float  DefaultFogScaleMeters  = 100000; // e-folding distance; ~63% opacity at this distance, asymptotes
-    float  DefaultFogSunWarmth    = 2.0;    // sun-aligned warm sharpness on the fog mix (pow exponent)
-    float  DefaultMieG            = 0.76;   // HG asymmetry; typical Mie aerosol forward peak
-    float  DefaultMieStrength     = 0.5;    // HG glow amplitude on the outer shell sunset
+    float DefaultNightDimmer    = 0.30;   // night-side brightness floor: keeps 30% (70% dim)
+    float DefaultFogScaleMeters = 100000; // e-folding distance; ~63% opacity at this distance, asymptotes
+    float DefaultFogSunWarmth   = 2.0;    // sun-aligned warm sharpness on the fog mix (pow exponent)
+    float DefaultMieG           = 0.76;   // HG asymmetry; typical Mie aerosol forward peak
+    float DefaultMieStrength    = 0.5;    // HG glow amplitude on the outer shell sunset
 }
 
 // Bundled crate URIs — platform-wide crates every amp client imports at boot.
-// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live
-// in Brand.BundledCrates (DD-name-service §2).  Each URI is
-// asset:PublisherID/CrateID per the wire scheme declared in
-// amp.core.proto:Asset; the build pipeline stages matching .crate files under
-// StreamingAssets/Bundled/CrateDepot.
+// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live in Brand.BundledCrates
+// (AOM DD-name-service.md §2).  Each URI is asset:PublisherID/CrateID (the amp.core.proto CrateRef.CrateURI form); the
+// build pipeline stages matching .crate files under StreamingAssets/Bundled/CrateDepot.
 const Crates {
-    string BaseAssets    = "asset:crates.planet.tools/amp.3D.base.assets";
-    string HelloWorld    = "asset:crates.planet.tools/amp.3D.hello.world";
-    string VisAssets     = "asset:soundspectrum.com/amp.3D.vis.assets";
+    string BaseAssets = "asset:crates.planet.tools/amp.3D.base.assets";
+    string HelloWorld = "asset:crates.planet.tools/amp.3D.hello.world";
+    string VisAssets  = "asset:soundspectrum.com/amp.3D.vis.assets";
 }
 
-// Actor — in-world actor skins resolve through the crate / asset
-// system; a mod registers an override at the same key to ship a custom
-// actor without touching code.  An unresolved URI falls back to a
-// primitive so a MantleActor is always visible.
+// Actor — in-world actor skins resolve through the crate / asset system.
+// A mod registers an override at the same key to ship a custom actor without touching code.  An unresolved URI falls
+// back to a primitive so a MantleActor is always visible.
 const Actor {
     string DefaultSkin             = "asset:actor/skin.default";
-    float  DefaultBodyHeightMeters = 1.6;   // composed-body height (m)
-    int32  DefaultBodySides        = 6;     // composed-body facets
-    double DefaultEyeHeightMeters  = 1.7;   // eye reference height (m)
-    float  DefaultOrbitDegPerSec   = 8;     // signature orbit rate (deg/s)
+    float  DefaultBodyHeightMeters = 1.6; // composed-body height (m)
+    int32  DefaultBodySides        = 6;   // composed-body facets
+    double DefaultEyeHeightMeters  = 1.7; // eye reference height (m)
+    float  DefaultOrbitDegPerSec   = 8;   // signature orbit rate (deg/s)
 }
 
-// Theme — the unified chrome skin contract.  asset:theme/<slot> is the chrome
-// analog of asset:glyph/ (ContentGlyphURI); ThemeMap resolves it from the bound
-// atlas.  A theme = ONE atlas crate (DefaultAtlas) whose named sub-sprites
-// match the slots; a mod ships its own atlas crate and points selection there.
+// Theme — the unified chrome skin contract.
+// asset:theme/<slot> is the chrome analog of asset:glyph/ (ContentGlyphURI); ThemeMap resolves it from the bound atlas.
+// A theme = ONE atlas crate (DefaultAtlas) whose named sub-sprites match the slots; a mod ships its own atlas crate and
+// points selection there.
 const Theme {
-    string SlotPrefix   = "asset:theme/";                                               // ThemeMap owns this namespace
-    string DefaultAtlas = "asset:crates.planet.tools/amp.3D.base.assets/theme.default"; // factory atlas (in Crates.BaseAssets)
+    string SlotPrefix   = "asset:theme/"; // ThemeMap owns this namespace
+    // Factory atlas (in Crates.BaseAssets).
+    string DefaultAtlas = "asset:crates.planet.tools/amp.3D.base.assets/theme.default";
 }
 
 // DeviceVars / MemberVars defaults.
@@ -409,13 +383,15 @@ const HomeVars {
 
 // amp.Terminal emulator / grid + shuttle transport defaults.
 const Terminal {
-    string ContentType = "application/x-amp-terminal"; // session MediaLink label — routes the channel to the terminal shuttle runtime
+    // The ContentType of a terminal session's MediaLink Tag; routes the channel to the terminal shuttle runtime
+    // (AOM AD-app-terminal.md §6).
+    string ContentType = "application/x-amp-terminal";
 
-    int32 DefaultCols           = 80;      // PTY grid columns
-    int32 DefaultRows           = 24;      // PTY grid rows
-    int32 DefaultScrollbackRows = 1000;    // emulator scrollback rows
-    int64 DefaultKeyframeMs     = 10000;   // keyframe cadence — the DVR replay bound
-    int64 DefaultJogMs          = 16000;   // transport jog step
+    int32 DefaultCols                = 80;      // PTY grid columns
+    int32 DefaultRows                = 24;      // PTY grid rows
+    int32 DefaultScrollbackRows      = 1000;    // emulator scrollback rows
+    int64 DefaultKeyframeMs          = 10000;   // keyframe cadence — the DVR replay bound
+    int64 DefaultJogMs               = 16000;   // transport jog step
     int64 DefaultReplayResidentBytes = 8388608; // replay-window residency budget (Buffered cap)
 }
 
