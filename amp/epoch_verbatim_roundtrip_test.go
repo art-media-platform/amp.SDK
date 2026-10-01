@@ -6,6 +6,7 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -173,4 +174,138 @@ func TestVerifyCharterContinuity_HashKitStable(t *testing.T) {
 		t.Fatal("VerifyCharterContinuity accepted a HashKit change across the epoch chain")
 	}
 	t.Log("epoch chain pins HashKit: carry-forward verifies, change rejected")
+}
+
+// TestVerifyCharterContinuity_Refusals pins each continuity check on its own:
+// from one valid genesis and rotation, every variant below carries exactly one
+// defect and must be refused AuthFailed.  The Sealed-predecessor and HashKit
+// refusals are TestEpochVerbatim_Roundtrip step 7 and
+// TestVerifyCharterContinuity_HashKitStable.
+func TestVerifyCharterContinuity_Refusals(t *testing.T) {
+	uid := func(hi, lo uint64) *amp.Tag {
+		return &amp.Tag{UID_0: hi, UID_1: lo}
+	}
+	hashKit := safe.HashKitID_Blake2s_256
+	assemble := func(charter *amp.PlanetCharter,
+		terms *amp.EpochTerms) *amp.PlanetEpoch {
+		t.Helper()
+		env, err := amp.AssembleEpoch(charter, terms, hashKit)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return env
+	}
+	charter := &amp.PlanetCharter{
+		CharterSchema: 1,
+		PlanetID:      uid(0xC0, 0x01),
+		GenesisEpoch:  uid(100, 200),
+		Declaration:   &amp.Tags{Head: &amp.Tag{Text: "As founded"}},
+		Founders:      []*amp.Tag{uid(0xF1, 0)},
+	}
+	rival := proto.Clone(charter).(*amp.PlanetCharter)
+	rival.Declaration = &amp.Tags{Head: &amp.Tag{Text: "As rewritten"}}
+
+	genesisTerms := func() *amp.EpochTerms {
+		return &amp.EpochTerms{
+			TermsSchema: 1,
+			EpochTag:    uid(100, 200),
+		}
+	}
+	rotTerms := func() *amp.EpochTerms {
+		return &amp.EpochTerms{
+			TermsSchema:   1,
+			EpochTag:      uid(101, 201),
+			PreviousEpoch: uid(100, 200),
+			EpochHeight:   1,
+		}
+	}
+	genesis := assemble(charter, genesisTerms())
+	rotation := assemble(charter, rotTerms())
+	if err := rotation.VerifyCharterContinuity(genesis); err != nil {
+		t.Fatalf("the valid rotation is refused: %v", err)
+	}
+
+	// (a) Terms.CharterHash commits to other bytes than the carried Charter:
+	// the rival's Terms ride with the founded Charter.
+	hashOverOther := &amp.PlanetEpoch{
+		Charter: genesis.Charter,
+		Terms:   assemble(rival, rotTerms()).Terms,
+	}
+	genesisHashOverOther := &amp.PlanetEpoch{
+		Charter: genesis.Charter,
+		Terms:   assemble(rival, genesisTerms()).Terms,
+	}
+	wrongPrevious := rotTerms()
+	wrongPrevious.PreviousEpoch = uid(100, 999)
+	skipHeight := rotTerms()
+	skipHeight.EpochHeight = 2
+	sameHeight := rotTerms()
+	sameHeight.EpochHeight = 0
+
+	for _, variant := range []struct {
+		name  string
+		epoch *amp.PlanetEpoch
+		prev  *amp.PlanetEpoch
+	}{
+		{
+			name:  "(a) CharterHash over other bytes",
+			epoch: hashOverOther,
+			prev:  genesis,
+		},
+		{
+			name:  "(a) CharterHash over other bytes, genesis",
+			epoch: genesisHashOverOther,
+			prev:  nil,
+		},
+		{
+			name:  "(b) rival self-consistent Charter",
+			epoch: assemble(rival, rotTerms()),
+			prev:  genesis,
+		},
+		{
+			name:  "(c) PreviousEpoch names another epoch",
+			epoch: assemble(charter, wrongPrevious),
+			prev:  genesis,
+		},
+		{
+			name:  "(d) EpochHeight = predecessor + 2",
+			epoch: assemble(charter, skipHeight),
+			prev:  genesis,
+		},
+		{
+			name:  "(d) EpochHeight = predecessor",
+			epoch: assemble(charter, sameHeight),
+			prev:  genesis,
+		},
+	} {
+		err := variant.epoch.VerifyCharterContinuity(variant.prev)
+		if code := status.GetCode(err); code != status.Code_AuthFailed {
+			t.Errorf("%s: want AuthFailed, got %v (%v)",
+				variant.name, code, err)
+		}
+	}
+}
+
+// TestEpochTerms_IsGenesis_ZeroUIDPrevious pins IsGenesis at the wire edge: a
+// PreviousEpoch that is present but carries the zero UID (`1a 00`, an empty
+// Tag) names no predecessor, so the terms read as genesis.
+func TestEpochTerms_IsGenesis_ZeroUIDPrevious(t *testing.T) {
+	terms := &amp.EpochTerms{}
+	wire := []byte{0x08, 0x01, 0x1a, 0x00} // TermsSchema 1, PreviousEpoch {}
+	if err := proto.Unmarshal(wire, terms); err != nil {
+		t.Fatal(err)
+	}
+	if terms.PreviousEpoch == nil {
+		t.Fatal("decoded terms dropped the empty PreviousEpoch")
+	}
+	if !terms.IsGenesis() {
+		t.Error("a zero-UID PreviousEpoch must read as genesis")
+	}
+	if !(*amp.EpochTerms)(nil).IsGenesis() {
+		t.Error("nil terms must read as genesis")
+	}
+	terms.PreviousEpoch = &amp.Tag{UID_0: 100, UID_1: 200}
+	if terms.IsGenesis() {
+		t.Error("terms naming a predecessor must not read as genesis")
+	}
 }

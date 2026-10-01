@@ -99,12 +99,12 @@ func TestPlanetEpoch_Verify_RejectsEmptySig(t *testing.T) {
 	}
 }
 
-// TestPlanetEpoch_MixedSuiteQuorum demonstrates that a single genesis epoch
-// can be co-signed by founders on different CryptoKits.
-// One Poly25519 founder + one P-256 founder both sign the same FRAME; each
-// signature is verified against its signer's native kit.
-//
-// This is the proof that PlanetEpoch.VerifyCoSignature is per-signer by design.
+// TestPlanetEpoch_MixedSuiteQuorum shows founders on different CryptoKits
+// co-signing one epoch: a Poly25519 and a P-256 founder sign the same
+// CoSignatureDigest, each signature verifies under its signer's own kit, and a
+// cross-kit swap fails.  It counts no quorum: threshold counting is
+// amp.VerifyCoSignatureQuorum (TestVerifyCoSignatureQuorum), which the genesis
+// and rotation verifiers run.
 //
 // The three-kit version (adding secp256k1 / wallet interop) lives in amp.planet
 // where the secp256k1 kit is registered — see amp/apps/app.evmwallet.
@@ -137,8 +137,7 @@ func TestPlanetEpoch_MixedSuiteQuorum(t *testing.T) {
 		Signature: p256Sig,
 	}
 
-	// Each CoSignature is verified against its signer's own kit.  This is the
-	// flow a vault controller runs when validating a multi-founder genesis.
+	// Each CoSignature is verified against its signer's own kit.
 	if err := epoch.VerifyCoSignature(polyCoSig, polyPub, safe.Crypto.Poly25519.ID); err != nil {
 		t.Fatalf("Poly25519 cosignature must verify: %v", err)
 	}
