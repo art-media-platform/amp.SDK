@@ -113,11 +113,12 @@ func TestEpochVerbatim_Roundtrip(t *testing.T) {
 	t.Log("verbatim epoch: assemble/sign/verify/tamper/continuity/terminal-seal all OK")
 }
 
-// TestVerifyCharterContinuity_HashKitStable pins the Phase-2 invariant: a planet's
-// HashKit is stable across its epoch chain.  A rotation that carries the prior epoch's
-// hash forward (what RotateEpoch does: AssembleEpoch with prevTerms.EffectiveHashKit())
-// verifies; one that changes the hash — e.g. the prior hardcoded Blake2s on a SHA3
-// genesis — is rejected, since a deliberate hash migration is a deferred capability.
+// TestVerifyCharterContinuity_HashKitStable pins the invariant that a planet's
+// HashKit is stable across its epoch chain (AOM SD-security-sync.md §5.3.2).  A
+// rotation that carries the prior epoch's hash forward (what RotateEpoch does:
+// AssembleEpoch with prevTerms.EffectiveHashKit()) verifies; one that changes
+// the hash — e.g. a reset to the default Blake2s on a SHA3 genesis — is
+// rejected, since a deliberate hash migration is a deferred capability.
 func TestVerifyCharterContinuity_HashKitStable(t *testing.T) {
 	uid := func(hi, lo uint64) *amp.Tag { return &amp.Tag{UID_0: hi, UID_1: lo} }
 
@@ -163,7 +164,7 @@ func TestVerifyCharterContinuity_HashKitStable(t *testing.T) {
 		t.Fatalf("hash-stable rotation rejected: %v", err)
 	}
 
-	// Change the hash (SHA3 → Blake2s — the old hardcoded behavior): must be rejected.
+	// Change the hash (SHA3 → Blake2s, the default): must be rejected.
 	changed, err := amp.AssembleEpoch(charter, rotTerms(), safe.HashKitID_Blake2s_256)
 	if err != nil {
 		t.Fatalf("AssembleEpoch(changed): %v", err)

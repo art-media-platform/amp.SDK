@@ -83,11 +83,11 @@ func TestPhrase_ChecksumRejectsWordSwap(t *testing.T) {
 	}
 }
 
-// TestPhrase_SwapRejectionRate asserts the widened checksum's rejection rate
-// (280 D-phrase-checksum-width): 2000 random single-word swaps must ALL be
-// rejected.  At the 4-byte width a false accept is 2⁻³² (expected failures
-// here ≈ 5·10⁻⁷); at the old 1-byte width ~8 of 2000 swaps passed
-// (P(≥1) ≈ 99.96%), so this test fails against any regression to it.
+// TestPhrase_SwapRejectionRate asserts the checksum's rejection rate: 2000
+// random single-word swaps must ALL be rejected.  At the 4-byte width a false
+// accept is 2⁻³² (expected failures here ≈ 5·10⁻⁷); at a 1-byte width ~8 of
+// 2000 swaps would pass (P(≥1) ≈ 99.96%), so a 1-byte checksum fails this
+// test.
 func TestPhrase_SwapRejectionRate(t *testing.T) {
 	entropy := make([]byte, 16)
 	for trial := 0; trial < 2000; trial++ {
@@ -282,10 +282,10 @@ func TestPhrase_WordlistInvariants(t *testing.T) {
 }
 
 // TestPhrase_WordlistPrefixUnique4 mechanically enforces the wordlist
-// properties safe.consts.sdl claims (280 D-wordlist-prefix-claims): every
-// word is unique on its first FOUR characters (abbreviation entry needs at
-// least four typed characters — three-char prefixes are NOT unique),
-// 4–7 characters long, and the list is alphabetized.
+// properties safe.consts.sdl claims: every word is unique on its first FOUR
+// characters (abbreviation entry needs at least four typed characters —
+// three-char prefixes are NOT unique), 4–7 characters long, and the list is
+// alphabetized.
 func TestPhrase_WordlistPrefixUnique4(t *testing.T) {
 	prefixes := make(map[string]string, safe.PhraseWordCount)
 	prev := ""

@@ -21,8 +21,8 @@ import (
 //
 // CoSignatures sign the FRAME below; verifiers hash the STORED Charter/Terms
 // bytes exactly as received and never re-marshal a PlanetCharter / EpochTerms.
-// This removes any dependence on cross-language protobuf-marshal stability — the
-// one multi-century footgun of the old proto-deterministic CanonicalBytes.
+// This removes any dependence on cross-language protobuf-marshal stability,
+// which protobuf does not guarantee.
 //
 //     FRAME = u64BE(len Charter) || Charter || u64BE(len Terms) || Terms
 //

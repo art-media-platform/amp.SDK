@@ -56,16 +56,16 @@ func PhraseWordIndex(word string) int {
 // Each word carries 8 bits (PhraseWordCount=256), so the checksum adds
 // PhraseChecksumSize words.
 //
-// Width math: at 1 byte a
-// single mistyped/swapped word passed the checksum at 2⁻⁸ (measured 1/247.8
-// over 200k trials) and silently derived a WRONG keypair — for founder-phrase
-// custody that is a lost identity, not a login retry.  4 bytes puts a false
-// accept at 2⁻³² (~1 in 4.3 billion) for +3 spoken words.  BIP-39 tolerates
-// 4–8 checksum BITS because wallet UX re-verifies the derived account; AMP
-// has no phrase surface yet, so the checksum is the only guard.  Doctrine for
-// whoever ships the first phrase surface: it MUST echo the derived identity
-// (fingerprint confirm) back to the operator before use — the checksum bounds
-// typos, the echo catches everything else.
+// Width math: at 1 byte a single mistyped/swapped word passes the checksum at
+// 2⁻⁸ (measured 1/247.8 over 200k trials) and silently derives a WRONG
+// keypair — for founder-phrase custody that is a lost identity, not a login
+// retry.  4 bytes puts a false accept at 2⁻³² (~1 in 4.3 billion) for +3
+// spoken words.  BIP-39 tolerates 4–8 checksum BITS because wallet UX
+// re-verifies the derived account; AMP has no phrase surface yet, so the
+// checksum is the only guard.  Doctrine for whoever ships the first phrase
+// surface: it MUST echo the derived identity (fingerprint confirm) back to
+// the operator before use — the checksum bounds typos, the echo catches
+// everything else.
 const PhraseChecksumSize = 4
 
 // Phrase is an ordered list of canonical wordlist words that encodes a byte

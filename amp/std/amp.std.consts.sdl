@@ -53,9 +53,10 @@ tags Attr {
         ItemCameraOptions "CameraOptions"
         ItemAtmosphere    "AtmosphereSpec" // 4-category atmosphere composition (sky/sun/night/fog)
         TileAttr          "tile"
-        // Consumers read ONE current value per item; edit history is not
-        // retained on these attrs (AOM SD-edit-resolution.md).  The S2R/S2T
-        // leaves name units only and store no values.
+        // Consumers read ONE current value per item: these attrs fold at the
+        // default RetainEdits (1); edit history stays in the journal (AOM
+        // SD-edit-resolution.md §6.3).  The S2R/S2T leaves name units only and
+        // store no values.
         ItemSeries "series" {
             SeriesTRS      "TRS"
             SeriesLabels   "Labels"
@@ -370,9 +371,10 @@ const Atmosphere {
     float DefaultMieStrength    = 0.5;    // HG glow amplitude on the outer shell sunset
 }
 
-// Bundled crate URIs — platform-wide crates every amp client imports at boot.
-// BaseAssets/VisAssets are platform-fixed; brand-specific bundled crates live
-// in Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is
+// Bundled crate URIs.  BaseAssets/VisAssets are platform-fixed: the Unity
+// client imports both at boot (CrateDepot.ImportBundledCrates).  Brand-specific
+// bundled crates, e.g. HelloWorld in the factory brand, are listed in
+// Brand.BundledCrates (AOM DD-name-service.md §2).  Each URI is
 // asset:PublisherID/CrateID (the amp.core.proto CrateRef.CrateURI form); the
 // build pipeline stages matching .crate files under
 // StreamingAssets/Bundled/CrateDepot.
