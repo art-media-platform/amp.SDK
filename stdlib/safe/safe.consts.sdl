@@ -1,11 +1,13 @@
 // safe.consts.sdl — crypto-kit identity UIDs + the canonical phrase wordlist.
 //
-// A CryptoKit is named in an open namespace (a sovereign may roll its own suite), so its identity is a name-derived
-// tag.UID baked at forge time — never hashed in an SDK at runtime.  The UID rides the wire and, for trust, is pinned in
-// signed EpochTerms; an unregistered/untrusted kit fails closed at safe.CryptoKit(id).
+// A CryptoKit is named in an open namespace (a sovereign may roll its own
+// suite), so its identity is a name-derived tag.UID baked at forge time — never
+// hashed in an SDK at runtime.  The UID rides the wire and, for trust, is
+// pinned in signed EpochTerms; an unregistered/untrusted kit fails closed at
+// safe.CryptoKit(id).
 //
-// Compiled by `forge consts` into .go, .cs and .ts.  Use Crypto.X.ID for the bare UID.
-// amp:gen=csharp
+// Compiled by `forge consts` into .go, .cs and .ts.  Use Crypto.X.ID for the
+// bare UID.  amp:gen=csharp
 
 option go_package = "github.com/art-media-platform/amp.SDK/stdlib/safe";
 option csharp_namespace = "art.media.platform.safe";
@@ -17,17 +19,19 @@ tags Crypto {
     Secp256k1 "amp.crypto.secp256k1" // secp256k1 (EVM-wallet interop)
 }
 
-// Phrase — the canonical safe.Phrase vocabulary (AOM SD-canonization-spec.md §1.5).
-// A phrase written down in one AMP app must restore in any other, so every consumer (Go, C#, web) parses this ONE
-// whitespace-separated string at runtime.  Properties:
+// Phrase — the canonical safe.Phrase vocabulary (AOM SD-canonization-spec.md
+// §1.5).  A phrase written down in one AMP app must restore in any other, so
+// every consumer (Go, C#, web) parses this ONE whitespace-separated string at
+// runtime.  Properties:
 //   - exactly 256 unique words (8 bits/word → byte-aligned entropy)
 //   - short (4–7 characters), common, familiar casual English
 //   - no two list words are homophones of each other
-//   - unique on the first FOUR characters (three-char prefixes are NOT unique — abbreviation entry needs at least four
-//     typed characters)
+//   - unique on the first FOUR characters (three-char prefixes are NOT
+//     unique — abbreviation entry needs at least four typed characters)
 //   - alphabetized for reviewability
-// Any change to this list is a breaking change — existing phrases become unparseable; the golden fixtures in
-// stdlib/safe and amp-web trip on any byte motion here.
+// Any change to this list is a breaking change — existing phrases become
+// unparseable; the golden fixtures in stdlib/safe and amp-web trip on any
+// byte motion here.
 const Phrase {
     string Words = "
 able acid acre agent album alert alien alloy amber anchor angel ankle apple arena armor artist

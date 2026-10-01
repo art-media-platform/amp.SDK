@@ -7,27 +7,32 @@ package amp
 import "github.com/art-media-platform/amp.SDK/stdlib/tag"
 
 var (
-	// The bootstrapping ("head") node — well-known channel UID hosting planet governance records (PlanetEpoch, MemberEpoch,
-	// ChannelEpoch) and session meta-ops (Login, PlanetInviteOp).  Deterministic across all planets.
+	// The bootstrapping ("head") node — well-known channel UID hosting planet
+	// governance records (PlanetEpoch, MemberEpoch, ChannelEpoch) and session
+	// meta-ops (Login, PlanetInviteOp).  Deterministic across all planets.
 	HeadNodeID = tag.UID{0x0, 0x37}
 )
 
 const (
-	// Connection-type prefix — the first 4 bytes a peer writes on a new amp.Host TCP connection so the host demultiplexes
-	// traffic types on one port without rewinding the stream.  A client login connection continues with a TxMsg stream
-	// (whose own preamble is Tx.PreambleSignature); a vault peer continues with sync framing.  New traffic types add a new
-	// prefix here.
+	// Connection-type prefix — the first 4 bytes a peer writes on a new amp.Host
+	// TCP connection so the host demultiplexes traffic types on one port without
+	// rewinding the stream.  A client login connection continues with a TxMsg
+	// stream (whose own preamble is Tx.PreambleSignature); a vault peer continues
+	// with sync framing.  New traffic types add a new prefix here.
 	ClientLoginMagic = "AMPL" // client login / session connection
 	VaultAccessMagic = "AMPV" // node-to-node vault sync peer connection
 	// Default TCP port used to expose amp.Host service.
 	DefaultServicePort = int32(5192)
-	// Content-model epoch — the SDK proto semantics under which artifact payloads are encoded (the Tag/Tags content model).
-	// A Codex stamps this in its header; an importer refuses a Codex whose epoch differs rather than silently mis-decoding
-	// persisted bytes (AOM DD-chronicle-and-codex.md §5.5).  Bump on each wire-incompatible content-model change.
+	// Content-model epoch — the SDK proto semantics under which artifact payloads
+	// are encoded (the Tag/Tags content model).  A Codex stamps this in its header;
+	// an importer refuses a Codex whose epoch differs rather than silently
+	// mis-decoding persisted bytes (AOM DD-chronicle-and-codex.md §5.5).  Bump on
+	// each wire-incompatible content-model change.
 	ContentModelEpoch = uint32(2)
-	// Default IANA media type a Tag carries when its ContentTypeRaw field is empty.  Tag.ContentType() resolves the empty
-	// field to this; TagText strips an explicit text/plain so a plain-text leaf costs 0 wire bytes.  Lower-case (media
-	// types are case-insensitive) for portable comparison.
+	// Default IANA media type a Tag carries when its ContentTypeRaw field is empty.
+	// Tag.ContentType() resolves the empty field to this; TagText strips an
+	// explicit text/plain so a plain-text leaf costs 0 wire bytes.  Lower-case
+	// (media types are case-insensitive) for portable comparison.
 	DefaultContentType = "text/plain"
 	// בְּרֵאשִׁ֖ית בָּרָ֣א אֱלֹהִ֑ים אֵ֥ת הַשָּׁמַ֖יִם וְאֵ֥ת הָאָֽרֶץ
 	// oh Lord, please bless this project, those who fight for it, and those who lay their life on Your altar...
@@ -47,23 +52,28 @@ const (
 	TxPreambleSignature = "AMP1"
 	// TxPreamble byte length (layout above).
 	TxPreambleSize = int32(16)
-	// Ceiling on one wire frame (head + data), 32 MiB: ≫ the 1 MB DefaultMaxTxMsgSize, ≪ the 256 MB codex-archive
-	// scale.  Every frame reader bounds the preamble's lengths by it before allocating (AOM MD-unity-client.md §3.6).
+	// Ceiling on one wire frame (head + data), 32 MiB: ≫ the 1 MB
+	// DefaultMaxTxMsgSize, ≪ the 256 MB codex-archive scale.  Every frame
+	// reader bounds the preamble's lengths by it before allocating (AOM
+	// MD-unity-client.md §3.6).
 	TxMaxFrameSize = int32(33554432)
 )
 
-// ─── The embedded-host (libampd) boundary — records on the client-owned rails. ───
-// A record is a fixed 8-byte big-endian header — u32 payloadLen | u8 kind | u8 flags (0) | u16 reserved (0) — then
-// payload (AOM MD-unity-client.md §3.6).
+// ─── The embedded-host (libampd) boundary — records on the client-owned rails.  A ───
+// record is a fixed 8-byte big-endian header — u32 payloadLen | u8 kind | u8
+// flags (0) | u16 reserved (0) — then payload (AOM MD-unity-client.md §3.6).
 const (
-	// The libampd ABI version API_ABIVersion returns; a client refuses a mismatch.
+	// The libampd ABI version API_ABIVersion returns; a client refuses a
+	// mismatch.
 	LibABIVersion       = int32(2)
 	LibRecordHeaderSize = int32(8)
-	// payload = one TxMsg wire frame (Tx.PreambleSize preamble + head/ops + data)
+	// payload = one TxMsg wire frame (Tx.PreambleSize preamble + head/ops +
+	// data)
 	LibKindTxFrame = int32(1)
 	// payload = u64 fields (level<<4 | severity) + UTF-8 text
 	LibKindLogLine = int32(2)
-	// payload = u64 counters, fixed order: frames, bytes, batches, poolHits, poolMisses, logLines, logDropped,
-	// tooSmall, oversized; a reader takes what it knows
+	// payload = u64 counters, fixed order: frames, bytes, batches, poolHits,
+	// poolMisses, logLines, logDropped, tooSmall, oversized; a reader takes
+	// what it knows
 	LibKindRailNote = int32(3)
 )

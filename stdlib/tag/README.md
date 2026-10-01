@@ -151,8 +151,9 @@ The identifier (URL part) is hashed exact-as-is *by design*. Pre-lowercase it so
 Tag UIDs can be cited as literals inside other tag expressions, allowing a tag's identity to incorporate references to other tags:
 
 ```
-"We can cite 12vwsdh3zb4w0zy5rhvm9zzghp and 4vkb1mhn9j4ytyzpq7hrzt5tbt as literals, demonstrating a convenient way to
- cryptographically chain and validate tags, allowing us to validate ancestry."
+"We can cite 12vwsdh3zb4w0zy5rhvm9zzghp and 4vkb1mhn9j4ytyzpq7hrzt5tbt as
+ literals, demonstrating a convenient way to cryptographically chain and
+ validate tags, allowing us to validate ancestry."
 ```
 
 The cited UIDs become part of the new tag's content hash — a lightweight, cryptographically verifiable provenance chain. Cite the **solid** form: the separator fold splits a grouped render at each `-` into separate words, so a grouped citation's hash would depend on the grouping. Geospatial tiles ([S2 cell IDs](https://s2geometry.io/)) can be cited the same way to bind tags to locations.
