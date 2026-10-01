@@ -185,7 +185,7 @@ func AssembleEpoch(charter *PlanetCharter, terms *EpochTerms, hashKit safe.HashK
 	return &PlanetEpoch{
 		Charter:  charterBytes,
 		Terms:    termsBytes,
-		EpochTag: terms.EpochTag, // advisory denormalized copy (Terms is authoritative)
+		EpochTag: terms.EpochTag, // unsigned copy; Terms is authoritative
 	}, nil
 }
 
@@ -206,11 +206,34 @@ func EpochFromTerms(terms *EpochTerms) *PlanetEpoch {
 	}
 }
 
-// VerifyCharterContinuity confirms this envelope's carried Charter matches the
-// hash its Terms commits to, and (when prev is supplied) that the chain is sound:
-// identical Charter bytes, Terms.PreviousEpoch == prev's EpochTag, height + 1,
-// and that prev was not Terminal-sealed (no epoch may chain off a Terminal one).
+// VerifyEpochTag refuses an envelope whose Terms name no epoch, or whose
+// unsigned EpochTag copy differs from the signed Terms.EpochTag; an absent
+// copy is a mismatch (SD-canonization-spec.md §2.2.1).
+func (pe *PlanetEpoch) VerifyEpochTag() error {
+	terms, err := pe.ParsedTerms()
+	if err != nil {
+		return err
+	}
+	termsTag := terms.GetEpochTag().UID()
+	if termsTag.IsNil() {
+		return status.Code_AuthFailed.Error("amp: Terms.EpochTag is not set")
+	}
+	if pe.GetEpochTag().UID() != termsTag {
+		return status.Code_AuthFailed.Error(
+			"amp: envelope EpochTag does not match Terms.EpochTag")
+	}
+	return nil
+}
+
+// VerifyCharterContinuity confirms this envelope's EpochTag copy matches its
+// Terms (VerifyEpochTag), its carried Charter matches the hash its Terms
+// commits to, and (when prev is supplied) that the chain is sound: identical
+// Charter bytes, Terms.PreviousEpoch == prev's EpochTag, height + 1, and that
+// prev was not Terminal-sealed (no epoch may chain off a Terminal one).
 func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
+	if err := pe.VerifyEpochTag(); err != nil {
+		return err
+	}
 	terms, err := pe.ParsedTerms()
 	if err != nil {
 		return err

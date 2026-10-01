@@ -363,7 +363,9 @@ func fixtureBytes(t *testing.T, hexText string) []byte {
 }
 
 // epochFromFrame splits a FRAME at its u64BE length prefixes, independently
-// of amp.EpochFrame, into an envelope carrying the two verbatim layers.
+// of amp.EpochFrame, into an envelope carrying the two verbatim layers.  The
+// FRAME omits the envelope's EpochTag copy; it is restored from the Terms, as
+// AssembleEpoch sets it.
 func epochFromFrame(t *testing.T, frame []byte) *amp.PlanetEpoch {
 	t.Helper()
 	rest := frame
@@ -383,10 +385,16 @@ func epochFromFrame(t *testing.T, frame []byte) *amp.PlanetEpoch {
 	if len(rest) != 0 {
 		t.Fatalf("FRAME carries %d trailing bytes", len(rest))
 	}
-	return &amp.PlanetEpoch{
+	env := &amp.PlanetEpoch{
 		Charter: layers[0],
 		Terms:   layers[1],
 	}
+	terms, err := env.ParsedTerms()
+	if err != nil {
+		t.Fatalf("FRAME Terms do not parse: %v", err)
+	}
+	env.EpochTag = terms.EpochTag
+	return env
 }
 
 // assertFrame fails unless env's FRAME equals the fixture byte for byte.

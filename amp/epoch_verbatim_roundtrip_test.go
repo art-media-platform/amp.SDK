@@ -228,12 +228,14 @@ func TestVerifyCharterContinuity_Refusals(t *testing.T) {
 	// (a) Terms.CharterHash commits to other bytes than the carried Charter:
 	// the rival's Terms ride with the founded Charter.
 	hashOverOther := &amp.PlanetEpoch{
-		Charter: genesis.Charter,
-		Terms:   assemble(rival, rotTerms()).Terms,
+		Charter:  genesis.Charter,
+		Terms:    assemble(rival, rotTerms()).Terms,
+		EpochTag: uid(101, 201),
 	}
 	genesisHashOverOther := &amp.PlanetEpoch{
-		Charter: genesis.Charter,
-		Terms:   assemble(rival, genesisTerms()).Terms,
+		Charter:  genesis.Charter,
+		Terms:    assemble(rival, genesisTerms()).Terms,
+		EpochTag: uid(100, 200),
 	}
 	wrongPrevious := rotTerms()
 	wrongPrevious.PreviousEpoch = uid(100, 999)
@@ -241,6 +243,17 @@ func TestVerifyCharterContinuity_Refusals(t *testing.T) {
 	skipHeight.EpochHeight = 2
 	sameHeight := rotTerms()
 	sameHeight.EpochHeight = 0
+
+	// (e) The envelope's unsigned EpochTag copy disagrees with the signed
+	// Terms, or the Terms name no epoch.
+	withEnvelopeTag := func(epoch *amp.PlanetEpoch,
+		envelopeTag *amp.Tag) *amp.PlanetEpoch {
+		clone := proto.Clone(epoch).(*amp.PlanetEpoch)
+		clone.EpochTag = envelopeTag
+		return clone
+	}
+	untagged := rotTerms()
+	untagged.EpochTag = nil
 
 	for _, variant := range []struct {
 		name  string
@@ -275,6 +288,26 @@ func TestVerifyCharterContinuity_Refusals(t *testing.T) {
 		{
 			name:  "(d) EpochHeight = predecessor",
 			epoch: assemble(charter, sameHeight),
+			prev:  genesis,
+		},
+		{
+			name:  "(e) envelope EpochTag names another epoch",
+			epoch: withEnvelopeTag(rotation, uid(101, 999)),
+			prev:  genesis,
+		},
+		{
+			name:  "(e) envelope EpochTag names another epoch, genesis",
+			epoch: withEnvelopeTag(genesis, uid(100, 999)),
+			prev:  nil,
+		},
+		{
+			name:  "(e) envelope EpochTag absent",
+			epoch: withEnvelopeTag(rotation, nil),
+			prev:  genesis,
+		},
+		{
+			name:  "(e) Terms name no epoch",
+			epoch: assemble(charter, untagged),
 			prev:  genesis,
 		},
 	} {
