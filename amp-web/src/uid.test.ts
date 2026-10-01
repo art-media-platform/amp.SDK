@@ -23,8 +23,8 @@ describe('parseUID', () => {
   });
 
   it('refuses a non-alphabet digit, an over-long text and an empty text', () => {
-    expect(() => parseUID('4zs-80kzpjzhjx-53bkpndft1-m9a')).toThrow(/malformed/);
-    expect(() => parseUID('4zs-80kzpjzhjx-53bkpndft1-m955')).toThrow(/malformed/);
+    expect(() => parseUID('4zs80-kzpjz-hjx53b-kpndf-t1m9a')).toThrow(/malformed/);
+    expect(() => parseUID('4zs80-kzpjz-hjx53b-kpndf-t1m955')).toThrow(/malformed/);
     expect(() => parseUID('---')).toThrow(/malformed/);
   });
 });

@@ -16,7 +16,7 @@ import { AmpWebClient } from './web-client.js';
 
 const VAULT = 'http://127.0.0.1:5193';
 const UID = '06efv-w28sb-60036d-tm6dt-m6dtm';
-const TOKEN = 'GE3TEMBQGAYDAMBQ.6yx-aaaaaaaaaa-bbbbbbbbbb-ccc.06efv-w28sb-60036d-tm6dt-m6dtm.GA.MFRGGZDFMZTWQ2LK';
+const TOKEN = 'GE3TEMBQGAYDAMBQ.6yxaa-aaaaa-abbbbb-bbbbb-bcccc.06efv-w28sb-60036d-tm6dt-m6dtm.GA.MFRGGZDFMZTWQ2LK';
 const realFetch = globalThis.fetch;
 
 interface ResolveCall { path: string; auth: string | null; body: unknown }
