@@ -319,12 +319,13 @@ type HostSession interface {
 	// unset, and on a dial-only (embedded) host, which serves no vault listener.
 	VaultHomeAddrs() []string
 
-	// GenesisEpoch reads planetID's genesis PlanetEpoch — the immutable
-	// PlanetCharter (privacy mode, founder set, genesis quorum) frozen at
-	// genesis — from the journal, the authoritative founder source: the
-	// session's planet registry holds only a lightweight Terms-stub epoch for
-	// restored or invite-joined planets.  Fails when the node does not hold
-	// the planet.
+	// GenesisEpoch returns planetID's verified genesis PlanetEpoch — the
+	// immutable PlanetCharter (privacy mode, founder set, genesis quorum)
+	// frozen at genesis — as the ACC engine's founder scan accepts it (founder
+	// signatures, quorum, EpochTag; SD-channel-governance §2), never the first
+	// genesis-shaped journal entry.  The session's planet registry holds only a
+	// lightweight Terms-stub epoch for restored or invite-joined planets.
+	// Fails when the node holds no verified genesis for the planet.
 	GenesisEpoch(planetID tag.UID) (*PlanetEpoch, error)
 
 	// KeyAdmission returns the login boundary's member-signing-key custody
@@ -384,9 +385,9 @@ type ACCEngine interface {
 	// (parent-chain resolved, fail-closed at any missing ancestor).
 	ResolveAccess(planetID, nodeID, memberID tag.UID) Access
 
-	// IsFounder reports whether memberID is a founder of planetID —
-	// PlanetCharter.Founders, verified from the immutable genesis envelope (the
-	// root of governance authority).
+	// IsFounder reports whether memberID is a founder of planetID — a
+	// PlanetCharter founder whose CoSignature on the genesis verified (the root
+	// of governance authority).
 	IsFounder(planetID, memberID tag.UID) bool
 
 	// IsMember reports whether memberID holds an admitted MemberEpoch on planetID.
