@@ -716,6 +716,8 @@ type CryptoProvider interface {
 
 	// VerifyMemberProof checks that a MemberProof is valid for the given TxID and epoch.
 	// Returns nil if the TxMsg is planet-public (no epoch).
+	// A checked HMAC mismatch returns status.ErrVerifyFailed. Missing custody,
+	// ownership ambiguity and store errors do not establish a proof mismatch.
 	VerifyMemberProof(proof, txID []byte, env *TxEnvelope) error
 }
 

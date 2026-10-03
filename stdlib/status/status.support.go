@@ -46,7 +46,7 @@ var (
 	ErrCancelled       = Code_Cancelled.Error("operation cancelled")
 
 	// ErrEpochKeyNotFound means the epoch key needed for decryption or MemberProof
-	// verification is not yet available in the Enclave.  Callers should retain the
+	// verification is not yet available in scoped custody. Callers should retain the
 	// TxMsg and retry when the key arrives (e.g. via a MemberEpoch distribution).
 	ErrEpochKeyNotFound = Code_KeyringNotFound.Error("epoch key not found")
 )
