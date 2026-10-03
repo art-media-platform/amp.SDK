@@ -25,7 +25,7 @@ func randomKeyBytes(t *testing.T) []byte {
 
 func putEpochKey(t *testing.T, eks safe.EpochKeyStore, containerID, epochID tag.UID, role safe.KeyRole, keyBytes []byte) {
 	t.Helper()
-	err := eks.PutKey(context.Background(), containerID, safe.SymKey{
+	err := eks.PutKey(context.Background(), safe.Scope(containerID), safe.SymKey{
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 		EpochID:     epochID,
 		Role:        role,
@@ -63,18 +63,18 @@ func TestEpochKeys_ShredDurableAtReturn(t *testing.T) {
 	putEpochKey(t, eks, containerID, cutEpoch, safe.KeyRole_WriteSeed, cutWriteSeed)
 	putEpochKey(t, eks, containerID, liveEpoch, safe.KeyRole_ContentKey, liveContent)
 
-	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err != nil {
+	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{cutEpoch}); err != nil {
 		t.Fatalf("ShredKeys: %v", err)
 	}
 
 	// Live session: every role of the cut epoch is gone, reading as key-absent
 	// (KeyringNotFound), never as a store-lifecycle error.
 	for _, role := range []safe.KeyRole{safe.KeyRole_ContentKey, safe.KeyRole_WriteSeed} {
-		if _, err := eks.GetKey(containerID, cutEpoch, role); !status.IsError(err, status.Code_KeyringNotFound) {
+		if _, err := eks.GetKey(safe.Scope(containerID), cutEpoch, role); !status.IsError(err, status.Code_KeyringNotFound) {
 			t.Fatalf("shredded epoch role=%v: got %v, want Code_KeyringNotFound", role, err)
 		}
 	}
-	liveKey, err := eks.GetKey(containerID, liveEpoch, safe.KeyRole_ContentKey)
+	liveKey, err := eks.GetKey(safe.Scope(containerID), liveEpoch, safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("live epoch after shred: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestEpochKeys_ShredDurableAtReturn(t *testing.T) {
 	liveKey.Zero()
 
 	// Idempotent: a second shred of the same set is a no-op success.
-	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err != nil {
+	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{cutEpoch}); err != nil {
 		t.Fatalf("ShredKeys re-run: %v", err)
 	}
 
@@ -96,10 +96,10 @@ func TestEpochKeys_ShredDurableAtReturn(t *testing.T) {
 	}
 	defer reopened.Close(ctx)
 
-	if _, err := reopened.GetKey(containerID, cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+	if _, err := reopened.GetKey(safe.Scope(containerID), cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
 		t.Fatalf("shredded key resurrected across reopen: %v", err)
 	}
-	survivor, err := reopened.GetKey(containerID, liveEpoch, safe.KeyRole_ContentKey)
+	survivor, err := reopened.GetKey(safe.Scope(containerID), liveEpoch, safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("live epoch after reopen: %v", err)
 	}
@@ -148,7 +148,7 @@ func TestEpochKeys_PutDurableAtReturn(t *testing.T) {
 		{safe.KeyRole_ContentKey, contentKey},
 		{safe.KeyRole_WriteSeed, writeSeed},
 	} {
-		got, err := reopened.GetKey(containerID, epochID, probe.role)
+		got, err := reopened.GetKey(safe.Scope(containerID), epochID, probe.role)
 		if err != nil {
 			t.Fatalf("role=%v lost across a no-Close reopen — PutKey is not durable at return: %v", probe.role, err)
 		}
@@ -157,7 +157,7 @@ func TestEpochKeys_PutDurableAtReturn(t *testing.T) {
 		}
 		got.Zero()
 	}
-	current, err := reopened.GetCurrentKey(containerID, safe.KeyRole_ContentKey)
+	current, err := reopened.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("current epoch not re-derived after no-Close reopen: %v", err)
 	}
@@ -195,7 +195,7 @@ func TestEpochKeys_SetCurrentDurableAtReturn(t *testing.T) {
 	putEpochKey(t, eks, containerID, newerEpoch, safe.KeyRole_ContentKey, randomKeyBytes(t))
 
 	// Precondition: PutKey auto-elected the newer epoch.
-	current, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey)
+	current, err := eks.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("GetCurrentKey precondition: %v", err)
 	}
@@ -204,7 +204,7 @@ func TestEpochKeys_SetCurrentDurableAtReturn(t *testing.T) {
 	}
 	current.Zero()
 
-	if err := eks.SetCurrentEpoch(ctx, containerID, olderEpoch); err != nil {
+	if err := eks.SetCurrentEpoch(ctx, safe.Scope(containerID), olderEpoch); err != nil {
 		t.Fatalf("SetCurrentEpoch(older): %v", err)
 	}
 
@@ -216,7 +216,7 @@ func TestEpochKeys_SetCurrentDurableAtReturn(t *testing.T) {
 	}
 	defer reopened.Close(ctx)
 
-	elected, err := reopened.GetCurrentKey(containerID, safe.KeyRole_ContentKey)
+	elected, err := reopened.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("GetCurrentKey after reopen: %v", err)
 	}
@@ -239,6 +239,10 @@ func TestEpochKeys_SetCurrentDurableAtReturn(t *testing.T) {
 type faultTomeStore struct {
 	inner     safe.TomeStore
 	failSaves int
+}
+
+func (fs *faultTomeStore) TomeStoreIdentity() string {
+	return fs.inner.(safe.TomeStoreIdentity).TomeStoreIdentity()
 }
 
 func (fs *faultTomeStore) Load(ctx context.Context) (*safe.SealedTome, error) {
@@ -286,23 +290,23 @@ func TestEpochKeys_ShredFailedSaveRetryReachesDisk(t *testing.T) {
 		t.Fatalf("reopen: %v", err)
 	}
 	store.failSaves = 1
-	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err == nil {
+	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{cutEpoch}); err == nil {
 		t.Fatal("ShredKeys with a failing Save must error — durable-at-return means the failure surfaces")
 	}
 
 	// The retry finds nothing left in memory but the removal is still unsaved:
 	// it must persist (and succeed) before returning nil.
-	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err != nil {
+	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{cutEpoch}); err != nil {
 		t.Fatalf("ShredKeys retry after failed Save: %v", err)
 	}
 	reopened, err := safe.OpenEpochKeyStore(ctx, inner, guard, []byte("shred-fault"))
 	if err != nil {
 		t.Fatalf("reopen after retry: %v", err)
 	}
-	if _, err := reopened.GetKey(containerID, cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+	if _, err := reopened.GetKey(safe.Scope(containerID), cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
 		t.Fatalf("shredded key survived on disk after the retry reported success: %v", err)
 	}
-	survivor, err := reopened.GetKey(containerID, liveEpoch, safe.KeyRole_ContentKey)
+	survivor, err := reopened.GetKey(safe.Scope(containerID), liveEpoch, safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("live key after retry: %v", err)
 	}
@@ -344,7 +348,7 @@ func TestEpochKeys_ShredFailedSaveCloseReachesDisk(t *testing.T) {
 		t.Fatalf("reopen: %v", err)
 	}
 	store.failSaves = 1
-	if err := eks.ShredKeys(ctx, []tag.UID{cutEpoch}); err == nil {
+	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{cutEpoch}); err == nil {
 		t.Fatal("ShredKeys with a failing Save must error")
 	}
 	if err := eks.Close(ctx); err != nil {
@@ -355,7 +359,7 @@ func TestEpochKeys_ShredFailedSaveCloseReachesDisk(t *testing.T) {
 		t.Fatalf("reopen after Close: %v", err)
 	}
 	defer reopened.Close(ctx)
-	if _, err := reopened.GetKey(containerID, cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+	if _, err := reopened.GetKey(safe.Scope(containerID), cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
 		t.Fatalf("shredded key survived a Close after the failed shred persist: %v", err)
 	}
 }
@@ -383,7 +387,7 @@ func TestEpochKeys_ShredCurrentEpochFailsClosed(t *testing.T) {
 	putEpochKey(t, eks, containerID, epochB, safe.KeyRole_ContentKey, randomKeyBytes(t))
 
 	// Learn which epoch the store elected current, then shred exactly it.
-	elected, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey)
+	elected, err := eks.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("GetCurrentKey precondition: %v", err)
 	}
@@ -394,16 +398,16 @@ func TestEpochKeys_ShredCurrentEpochFailsClosed(t *testing.T) {
 		successor = epochB
 	}
 
-	if err := eks.ShredKeys(ctx, []tag.UID{currentEpoch}); err != nil {
+	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{currentEpoch}); err != nil {
 		t.Fatalf("ShredKeys(current): %v", err)
 	}
-	if _, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+	if _, err := eks.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
 		t.Fatalf("current pointer at a shredded epoch must fail closed, got %v", err)
 	}
-	if err := eks.SetCurrentEpoch(ctx, containerID, successor); err != nil {
+	if err := eks.SetCurrentEpoch(ctx, safe.Scope(containerID), successor); err != nil {
 		t.Fatalf("SetCurrentEpoch(successor): %v", err)
 	}
-	if _, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey); err != nil {
+	if _, err := eks.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey); err != nil {
 		t.Fatalf("named successor must serve as current: %v", err)
 	}
 }
@@ -430,19 +434,19 @@ func TestEpochKeys_ClosedStoreSentinel(t *testing.T) {
 		t.Fatalf("Close: %v", err)
 	}
 
-	if _, err := eks.GetKey(containerID, epochID, safe.KeyRole_ContentKey); !errors.Is(err, safe.ErrStoreClosed) {
+	if _, err := eks.GetKey(safe.Scope(containerID), epochID, safe.KeyRole_ContentKey); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("GetKey on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
-	if _, err := eks.GetCurrentKey(containerID, safe.KeyRole_ContentKey); !errors.Is(err, safe.ErrStoreClosed) {
+	if _, err := eks.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("GetCurrentKey on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
-	if err := eks.PutKey(ctx, containerID, safe.SymKey{EpochID: epochID, Bytes: randomKeyBytes(t)}); !errors.Is(err, safe.ErrStoreClosed) {
+	if err := eks.PutKey(ctx, safe.Scope(containerID), safe.SymKey{EpochID: epochID, Bytes: randomKeyBytes(t)}); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("PutKey on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
-	if err := eks.SetCurrentEpoch(ctx, containerID, epochID); !errors.Is(err, safe.ErrStoreClosed) {
+	if err := eks.SetCurrentEpoch(ctx, safe.Scope(containerID), epochID); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("SetCurrentEpoch on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
-	if err := eks.ShredKeys(ctx, []tag.UID{epochID}); !errors.Is(err, safe.ErrStoreClosed) {
+	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{epochID}); !errors.Is(err, safe.ErrStoreClosed) {
 		t.Fatalf("ShredKeys on closed store: got %v, want safe.ErrStoreClosed", err)
 	}
 }
@@ -487,7 +491,7 @@ func TestEpochKeys_SiblingStoresUnionOnPersist(t *testing.T) {
 		epoch tag.UID
 		key   []byte
 	}{{epochA, bytesA}, {epochB, bytesB}} {
-		got, err := fresh.GetKey(container, want.epoch, safe.KeyRole_ContentKey)
+		got, err := fresh.GetKey(safe.Scope(container), want.epoch, safe.KeyRole_ContentKey)
 		if err != nil {
 			t.Fatalf("epoch %s dropped from the tome by a sibling's whole-map persist: %v", want.epoch.AsLabel(), err)
 		}
@@ -499,29 +503,29 @@ func TestEpochKeys_SiblingStoresUnionOnPersist(t *testing.T) {
 	fresh.Close(ctx)
 
 	// B adopted A's key at its persist: visible in B's own session.
-	if _, err := storeB.GetKey(container, epochA, safe.KeyRole_ContentKey); err != nil {
+	if _, err := storeB.GetKey(safe.Scope(container), epochA, safe.KeyRole_ContentKey); err != nil {
 		t.Fatalf("B did not adopt A's install at its persist: %v", err)
 	}
 
 	// A shreds epochA, then installs epochC: A's own persist unions the tome
 	// (which still holds epochA from B) without re-adopting what A shredded.
-	if err := storeA.ShredKeys(ctx, []tag.UID{epochA}); err != nil {
+	if err := storeA.ShredKeys(ctx, safe.Scope(container), []tag.UID{epochA}); err != nil {
 		t.Fatalf("ShredKeys: %v", err)
 	}
 	putEpochKey(t, storeA, container, epochC, safe.KeyRole_ContentKey, bytesC)
-	if _, err := storeA.GetKey(container, epochA, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+	if _, err := storeA.GetKey(safe.Scope(container), epochA, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
 		t.Fatalf("A re-adopted the epoch it shredded from the tome: %v", err)
 	}
 	fresh = open()
-	if _, err := fresh.GetKey(container, epochA, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+	if _, err := fresh.GetKey(safe.Scope(container), epochA, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
 		t.Fatalf("A's shred undone by A's own later persist: %v", err)
 	}
 	for _, epoch := range []tag.UID{epochB, epochC} {
-		if _, err := fresh.GetKey(container, epoch, safe.KeyRole_ContentKey); err != nil {
+		if _, err := fresh.GetKey(safe.Scope(container), epoch, safe.KeyRole_ContentKey); err != nil {
 			t.Fatalf("epoch %s missing after the union: %v", epoch.AsLabel(), err)
 		}
 	}
-	current, err := fresh.GetCurrentKey(container, safe.KeyRole_ContentKey)
+	current, err := fresh.GetCurrentKey(safe.Scope(container), safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("current after the union: %v", err)
 	}
@@ -536,7 +540,7 @@ func TestEpochKeys_SiblingStoresUnionOnPersist(t *testing.T) {
 	putEpochKey(t, storeA, container, epochA, safe.KeyRole_ContentKey, bytesA)
 	fresh = open()
 	defer fresh.Close(ctx)
-	if _, err := fresh.GetKey(container, epochA, safe.KeyRole_ContentKey); err != nil {
+	if _, err := fresh.GetKey(safe.Scope(container), epochA, safe.KeyRole_ContentKey); err != nil {
 		t.Fatalf("re-installed epoch missing after the persist: %v", err)
 	}
 }

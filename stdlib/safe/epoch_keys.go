@@ -2,7 +2,9 @@ package safe
 
 import (
 	"context"
+	"crypto/subtle"
 	"fmt"
+	"reflect"
 	"sync"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
@@ -10,461 +12,641 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// epochKeyStore implements EpochKeyStore with in-memory maps and encrypted-at-rest persistence.
-//
-// Each epoch gets one EpochKeyEntry carrying up to 4 role-tagged materials (see KeyRole).
-// Map is keyed by EpochID; role lookup is a short linear scan within the entry.
-//
-// All epoch keys are loaded on Open via the same Guard/TomeStore mechanism used by the
-// identity Enclave.  Mutations are durable at return: PutKey, SetCurrentEpoch, and
-// ShredKeys persist the re-sealed tome before reporting success, so an unclean kill
-// never loses an installed key or regresses a current-epoch election (a founded
-// planet's only ContentKey copy must not ride on a clean Close).
-//
-// Several live stores may share one tome (two sessions of the same member).
-// Every persist is a load-before-persist union: keys and elections the tome
-// gained since this store loaded are merged in (and adopted into memory), and
-// an epoch this store shredded is never re-adopted from the tome — so no
-// session's persist drops a sibling's install, and a store's own shred holds
-// across its own later persists.  (A sibling that still holds a shredded key
-// in memory re-adds it at its next persist; closing that window needs a
-// persisted, timestamped tombstone.)  For extreme scale (millions of
-// historical keys), a future implementation can add LRU eviction and lazy
-// disk loading — the interface is unchanged.
+// TomeStoreIdentity is optional for stores whose separately constructed handles
+// share storage. Wrappers should forward the identity of their underlying store.
+// Without it, coordination covers handles using the same comparable TomeStore.
+type TomeStoreIdentity interface {
+	TomeStoreIdentity() string
+}
+
+type epochTomeLock struct {
+	mu       sync.Mutex
+	refs     int
+	revision uint64
+}
+
+var epochTomeLocks = struct {
+	sync.Mutex
+	byID map[any]*epochTomeLock
+}{byID: make(map[any]*epochTomeLock)}
+
+func acquireEpochTome(store TomeStore) (any, *epochTomeLock, error) {
+	identity := any(store)
+	if named, ok := store.(TomeStoreIdentity); ok {
+		identity = named.TomeStoreIdentity()
+		if identity == "" {
+			return nil, nil, fmt.Errorf("safe: empty tome identity")
+		}
+	} else if store == nil || !reflect.TypeOf(store).Comparable() {
+		return nil, nil, fmt.Errorf("safe: tome requires a stable comparable identity")
+	}
+	epochTomeLocks.Lock()
+	defer epochTomeLocks.Unlock()
+	shared := epochTomeLocks.byID[identity]
+	if shared == nil {
+		shared = &epochTomeLock{}
+		epochTomeLocks.byID[identity] = shared
+	}
+	shared.refs++
+	return identity, shared, nil
+}
+
+func releaseEpochTome(identity any) {
+	epochTomeLocks.Lock()
+	defer epochTomeLocks.Unlock()
+	shared := epochTomeLocks.byID[identity]
+	shared.refs--
+	if shared.refs == 0 {
+		delete(epochTomeLocks.byID, identity)
+	}
+}
+
+type epochAddress struct {
+	scope KeyScope
+	epoch tag.UID
+}
+
+type ownershipAddress struct {
+	planet tag.UID
+	epoch  tag.UID
+}
+
+type epochOwnership struct {
+	channel  tag.UID
+	planet   bool
+	conflict bool
+}
+
+type epochState struct {
+	keys    map[epochAddress]*EpochKeyEntry
+	current map[KeyScope]tag.UID
+	owners  map[ownershipAddress]epochOwnership
+}
+
+func newEpochState() *epochState {
+	return &epochState{
+		keys:    make(map[epochAddress]*EpochKeyEntry),
+		current: make(map[KeyScope]tag.UID),
+		owners:  make(map[ownershipAddress]epochOwnership),
+	}
+}
+
+// epochKeyStore serializes refresh/mutation/save across live handles of a tome.
+// Disk is authoritative at each mutation; stale sibling memory never replaces a
+// newer role. Ownership entries survive shredding. Reads refresh after sibling
+// writes, so newly ambiguous channel ownership cannot remain silently usable.
+// This is process-local coordination, not cross-process locking or revocation.
 type epochKeyStore struct {
-	mu      sync.RWMutex
-	store   TomeStore
-	guard   Guard
-	aad     []byte
-	closed  bool
-	changed bool
-
-	// All epoch entries indexed by epochID for O(1) lookup.
-	keys map[tag.UID]*EpochKeyEntry
-
-	// Tracks which epochID is current for each containerID.
-	current map[tag.UID]tag.UID
-
-	// Epochs this store shredded — never re-adopted from the tome by the
-	// persist union; a later PutKey of the epoch is a deliberate re-install
-	// and lifts the mark.  Session-local.
-	shredded map[tag.UID]struct{}
+	mu       sync.Mutex
+	store    TomeStore
+	guard    Guard
+	aad      []byte
+	closed   bool
+	changed  bool
+	identity any
+	shared   *epochTomeLock
+	revision uint64
+	state    *epochState
+	shredded map[epochAddress]struct{}
 }
 
 var _ EpochKeyStore = (*epochKeyStore)(nil)
 
-// OpenEpochKeyStore starts a new epoch key session.
-// If the TomeStore has no existing data, an empty store is created.
-func OpenEpochKeyStore(
-	ctx context.Context,
-	store TomeStore,
-	guard Guard,
-	aad []byte,
-) (EpochKeyStore, error) {
-
+func OpenEpochKeyStore(ctx context.Context, store TomeStore, guard Guard, aad []byte) (EpochKeyStore, error) {
+	identity, shared, err := acquireEpochTome(store)
+	if err != nil {
+		return nil, err
+	}
 	eks := &epochKeyStore{
 		store:    store,
 		guard:    guard,
 		aad:      append([]byte(nil), aad...),
-		keys:     make(map[tag.UID]*EpochKeyEntry),
-		current:  make(map[tag.UID]tag.UID),
-		shredded: make(map[tag.UID]struct{}),
+		identity: identity,
+		shared:   shared,
+		shredded: make(map[epochAddress]struct{}),
 	}
-
-	tome, err := eks.loadTome(ctx)
+	shared.mu.Lock()
+	eks.state, err = eks.loadState(ctx)
+	eks.revision = shared.revision
+	shared.mu.Unlock()
 	if err != nil {
+		Zero(eks.aad)
+		releaseEpochTome(identity)
 		return nil, err
-	}
-	if tome != nil {
-		eks.mergeTome(tome)
 	}
 	return eks, nil
 }
 
-// loadTome reads and opens the persisted tome; nil when the store holds none.
-func (eks *epochKeyStore) loadTome(ctx context.Context) (*EpochKeyTome, error) {
+func validateKeyScope(scope KeyScope) error {
+	if scope.PlanetID.IsNil() {
+		return status.Code_BadRequest.Error("safe: key scope requires an owning planet")
+	}
+	switch scope.Kind {
+	case EpochKeyScope_ScopePlanet:
+		if scope.ChannelID.IsSet() {
+			return status.Code_BadRequest.Error("safe: planet scope cannot name a channel")
+		}
+	case EpochKeyScope_ScopeChannel:
+		if scope.ChannelID.IsNil() {
+			return status.Code_BadRequest.Error("safe: channel scope requires a channel")
+		}
+	default:
+		return status.Code_BadRequest.Error("safe: invalid key scope kind")
+	}
+	return nil
+}
+
+func storedScope(kind EpochKeyScope, planetID, containerID tag.UID) (KeyScope, error) {
+	scope := Scope(planetID)
+	switch kind {
+	case EpochKeyScope_ScopePlanet:
+		if containerID != planetID {
+			return KeyScope{}, fmt.Errorf("safe: invalid planet key ownership")
+		}
+	case EpochKeyScope_ScopeChannel:
+		if containerID.IsNil() {
+			return KeyScope{}, fmt.Errorf("safe: missing channel key owner")
+		}
+		scope = ChannelScope(planetID, containerID)
+	default:
+		return KeyScope{}, fmt.Errorf("safe: unspecified epoch key ownership")
+	}
+	return scope, validateKeyScope(scope)
+}
+
+func (scope KeyScope) stored() (EpochKeyScope, tag.UID) {
+	if scope.Kind == EpochKeyScope_ScopeChannel {
+		return scope.Kind, scope.ChannelID
+	}
+	return scope.Kind, scope.PlanetID
+}
+
+func (eks *epochKeyStore) loadState(ctx context.Context) (*epochState, error) {
+	return eks.loadStateExcept(ctx, nil)
+}
+
+func (eks *epochKeyStore) loadStateExcept(ctx context.Context, preserve *epochAddress) (*epochState, error) {
+	state := newEpochState()
 	sealed, err := eks.store.Load(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("safe: failed to load epoch key store: %w", err)
+		return nil, fmt.Errorf("safe: load epoch tome: %w", err)
 	}
 	if sealed == nil {
-		return nil, nil
+		return state, nil
 	}
-
 	dek, err := eks.guard.UnwrapDEK(ctx, sealed.WrappedDEK, eks.aad)
 	if err != nil {
-		return nil, fmt.Errorf("safe: failed to unwrap epoch key DEK: %w", err)
+		return nil, err
 	}
 	defer Zero(dek)
-
-	tomeBytes, err := OpenAEAD(dek, sealed.TomeNonce, sealed.Cipherblob, eks.aad)
+	plain, err := OpenAEAD(dek, sealed.TomeNonce, sealed.Cipherblob, eks.aad)
 	if err != nil {
-		return nil, fmt.Errorf("safe: failed to decrypt epoch key store: %w", err)
+		return nil, err
 	}
-	defer Zero(tomeBytes)
-
+	defer Zero(plain)
 	tome := &EpochKeyTome{}
-	if err := proto.Unmarshal(tomeBytes, tome); err != nil {
-		return nil, fmt.Errorf("safe: failed to unmarshal epoch key store: %w", err)
+	if err := proto.Unmarshal(plain, tome); err != nil {
+		return nil, err
 	}
-	return tome, nil
-}
-
-// mergeTome unions a persisted tome into memory — the one site for Open and
-// for the load-before-persist union: keys the tome holds that memory lacks
-// (per role; an epoch this store shredded is skipped), then elections for
-// containers memory had not elected before this merge.  Memory wins where
-// both hold a value: this store's installs and elections are its own acts,
-// and a container whose election this store dropped (a shredded current) is
-// never silently re-elected from the tome.  Caller holds eks.mu (or is Open,
-// before the store is shared).
-func (eks *epochKeyStore) mergeTome(tome *EpochKeyTome) {
-	preElected := make(map[tag.UID]struct{}, len(eks.current))
-	for containerID := range eks.current {
-		preElected[containerID] = struct{}{}
-	}
-
-	for _, entry := range tome.Keys {
-		epochID := entry.EpochID()
-		if _, gone := eks.shredded[epochID]; gone {
-			continue
-		}
-		containerID := entry.ContainerID()
-		if held, ok := eks.keys[epochID]; ok {
-			for _, rk := range entry.RoleKeys {
-				if held.roleKey(rk.Role) == nil {
-					held.RoleKeys = append(held.RoleKeys, rk)
-				}
+	valid := false
+	defer func() {
+		if !valid {
+			for _, entry := range tome.Keys {
+				zeroEntry(entry)
 			}
-			continue
 		}
-		eks.keys[epochID] = entry
-
-		// An adopted key follows PutKey's rule: newest epoch per container is
-		// the fallback election (EpochID is time-based, so larger = newer).
-		if cur, ok := eks.current[containerID]; !ok {
-			eks.current[containerID] = epochID
-		} else if epochID[0] > cur[0] || (epochID[0] == cur[0] && epochID[1] > cur[1]) {
-			eks.current[containerID] = epochID
+	}()
+	for _, entry := range tome.Keys {
+		if entry == nil || entry.EpochID().IsNil() {
+			return nil, fmt.Errorf("safe: invalid epoch ownership entry")
+		}
+		scope, err := storedScope(entry.Scope, tag.UID{entry.PlanetID_0, entry.PlanetID_1}, entry.ContainerID())
+		if err != nil {
+			return nil, err
+		}
+		address := epochAddress{scope: scope, epoch: entry.EpochID()}
+		if _, duplicate := state.keys[address]; duplicate {
+			return nil, fmt.Errorf("safe: duplicate scoped epoch entry")
+		}
+		if len(entry.RoleKeys) > 0 && entry.CryptoKitID().IsNil() {
+			return nil, fmt.Errorf("safe: epoch material has no crypto kit")
+		}
+		roles := make(map[KeyRole]struct{})
+		for _, roleKey := range entry.RoleKeys {
+			if roleKey == nil || len(roleKey.Key) == 0 || roleKey.Role < KeyRole_ContentKey || roleKey.Role > KeyRole_ReservedRole3 {
+				return nil, fmt.Errorf("safe: invalid epoch role material")
+			}
+			if _, duplicate := roles[roleKey.Role]; duplicate {
+				return nil, fmt.Errorf("safe: duplicate epoch role")
+			}
+			roles[roleKey.Role] = struct{}{}
+		}
+		state.keys[address] = entry
+		if len(entry.RoleKeys) > 0 && entry.EpochID().CompareTo(state.current[scope]) > 0 {
+			state.current[scope] = entry.EpochID()
 		}
 	}
-
-	// A persisted election overrides the newest-per-container fallback —
-	// SetCurrentEpoch is durable at return, so an explicit election (possibly
-	// of an older epoch) survives reopen.  Only for containers this store had
-	// not elected before the merge; an election at an epoch no longer held is
-	// skipped (fail-closed: the fallback stands).
-	for _, elected := range tome.Current {
-		containerID := elected.ContainerID()
-		if _, own := preElected[containerID]; own {
+	electedScopes := make(map[KeyScope]struct{})
+	for _, election := range tome.Current {
+		if election == nil {
+			return nil, fmt.Errorf("safe: invalid epoch election")
+		}
+		scope, err := storedScope(election.Scope, tag.UID{election.PlanetID_0, election.PlanetID_1}, election.ContainerID())
+		if err != nil {
+			return nil, err
+		}
+		if _, duplicate := electedScopes[scope]; duplicate {
+			return nil, fmt.Errorf("safe: duplicate scoped epoch election")
+		}
+		electedScopes[scope] = struct{}{}
+		epochID := election.EpochID()
+		if epochID.IsSet() {
+			entry := state.keys[epochAddress{scope: scope, epoch: epochID}]
+			if entry == nil || len(entry.RoleKeys) == 0 {
+				return nil, fmt.Errorf("safe: election names no scoped key material")
+			}
+		}
+		state.current[scope] = epochID
+	}
+	for address := range eks.shredded {
+		if preserve != nil && address == *preserve {
 			continue
 		}
-		epochID := elected.EpochID()
-		if _, held := eks.keys[epochID]; held {
-			eks.current[containerID] = epochID
-		}
+		state.shred(address)
 	}
+	state.rebuildOwners()
+	valid = true
+	return state, nil
+}
 
-	// A current pointer at a shredded epoch dangles — drop it (fail-closed:
-	// no silent re-election; PutKey or SetCurrentEpoch names a successor).
-	for containerID, epochID := range eks.current {
-		if _, held := eks.keys[epochID]; !held {
-			delete(eks.current, containerID)
+func (state *epochState) rebuildOwners() {
+	state.owners = make(map[ownershipAddress]epochOwnership)
+	for address := range state.keys {
+		ownerID := ownershipAddress{planet: address.scope.PlanetID, epoch: address.epoch}
+		owner := state.owners[ownerID]
+		if address.scope.Kind == EpochKeyScope_ScopePlanet {
+			owner.planet = true
+		} else if owner.channel.IsNil() {
+			owner.channel = address.scope.ChannelID
+		} else if owner.channel != address.scope.ChannelID {
+			owner.conflict = true
+		}
+		state.owners[ownerID] = owner
+	}
+}
+
+func zeroEntry(entry *EpochKeyEntry) {
+	if entry != nil {
+		for _, roleKey := range entry.RoleKeys {
+			if roleKey != nil {
+				Zero(roleKey.Key)
+			}
 		}
 	}
 }
 
-// roleKey returns the entry's material for role, or nil.
+func (state *epochState) zero() {
+	if state != nil {
+		for _, entry := range state.keys {
+			zeroEntry(entry)
+		}
+	}
+}
+
 func (entry *EpochKeyEntry) roleKey(role KeyRole) *RoleKey {
-	for _, rk := range entry.RoleKeys {
-		if rk.Role == role {
-			return rk
+	if entry != nil {
+		for _, roleKey := range entry.RoleKeys {
+			if roleKey.Role == role {
+				return roleKey
+			}
 		}
 	}
 	return nil
 }
 
-func (eks *epochKeyStore) PutKey(ctx context.Context, containerID tag.UID, key SymKey) error {
+func (eks *epochKeyStore) publish(state *epochState) {
+	eks.state.zero()
+	eks.state = state
+	eks.revision = eks.shared.revision
+}
+
+func (eks *epochKeyStore) refreshLocked(ctx context.Context) error {
+	if eks.revision == eks.shared.revision {
+		return nil
+	}
+	state, err := eks.loadState(ctx)
+	if err != nil {
+		return err
+	}
+	eks.publish(state)
+	return nil
+}
+
+func (eks *epochKeyStore) PutKey(ctx context.Context, scope KeyScope, key SymKey) error {
+	_, err := eks.putKey(ctx, scope, key, false)
+	return err
+}
+
+func (eks *epochKeyStore) InstallKey(ctx context.Context, scope KeyScope, key SymKey) (bool, error) {
+	return eks.putKey(ctx, scope, key, true)
+}
+
+func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey, compare bool) (bool, error) {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
-
 	if eks.closed {
-		return ErrStoreClosed
+		return false, ErrStoreClosed
 	}
-	if !key.EpochID.IsSet() {
-		return fmt.Errorf("safe: PutKey requires a non-zero EpochID")
+	if err := validateKeyScope(scope); err != nil {
+		return false, err
 	}
-
-	keyCopy := append([]byte(nil), key.Bytes...)
-	delete(eks.shredded, key.EpochID) // a deliberate re-install lifts the shred mark
-
-	// Merge into the existing epoch entry if present; otherwise create one.
-	entry, ok := eks.keys[key.EpochID]
-	if !ok {
+	if key.EpochID.IsNil() || len(key.Bytes) == 0 || key.CryptoKitID.IsNil() || key.Role < KeyRole_ContentKey || key.Role > KeyRole_ReservedRole3 {
+		return false, status.Code_BadRequest.Error("safe: epoch key requires epoch, kit, material and a supported role")
+	}
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	address := epochAddress{scope: scope, epoch: key.EpochID}
+	state, err := eks.loadStateExcept(ctx, &address)
+	if err != nil {
+		return false, err
+	}
+	defer func() {
+		if state != nil {
+			state.zero()
+		}
+	}()
+	entry := state.keys[address]
+	held := entry.roleKey(key.Role)
+	installed := held == nil
+	if compare && held != nil && (entry.CryptoKitID() != key.CryptoKitID || subtle.ConstantTimeCompare(held.Key, key.Bytes) != 1) {
+		return false, status.Code_AuthFailed.Error("safe: scoped epoch key conflicts with held material")
+	}
+	if entry == nil {
+		kind, container := scope.stored()
 		entry = &EpochKeyEntry{
-			ContainerID_0: containerID[0],
-			ContainerID_1: containerID[1],
+			Scope:         kind,
+			PlanetID_0:    scope.PlanetID[0],
+			PlanetID_1:    scope.PlanetID[1],
+			ContainerID_0: container[0],
+			ContainerID_1: container[1],
 			EpochID_0:     key.EpochID[0],
 			EpochID_1:     key.EpochID[1],
 			CryptoKitID_0: key.CryptoKitID[0],
 			CryptoKitID_1: key.CryptoKitID[1],
 		}
-		eks.keys[key.EpochID] = entry
+		state.keys[address] = entry
+	} else if len(entry.RoleKeys) > 0 && entry.CryptoKitID() != key.CryptoKitID {
+		return false, status.Code_AuthFailed.Error("safe: scoped epoch crypto kit conflicts")
 	}
-
-	// Upsert the role within this epoch's RoleKeys.
-	placed := false
-	for i, rk := range entry.RoleKeys {
-		if rk.Role == key.Role {
-			Zero(entry.RoleKeys[i].Key)
-			entry.RoleKeys[i].Key = keyCopy
-			placed = true
-			break
-		}
-	}
-	if !placed {
-		entry.RoleKeys = append(entry.RoleKeys, &RoleKey{
-			Role: key.Role,
-			Key:  keyCopy,
-		})
-	}
-
-	// Auto-set as current if no current epoch exists or if this is newer
-	if cur, ok := eks.current[containerID]; !ok {
-		eks.current[containerID] = key.EpochID
+	entry.SetCryptoKitID(key.CryptoKitID)
+	if held != nil {
+		Zero(held.Key)
+		held.Key = append([]byte(nil), key.Bytes...)
 	} else {
-		if key.EpochID[0] > cur[0] || (key.EpochID[0] == cur[0] && key.EpochID[1] > cur[1]) {
-			eks.current[containerID] = key.EpochID
+		entry.RoleKeys = append(entry.RoleKeys, &RoleKey{Role: key.Role, Key: append([]byte(nil), key.Bytes...)})
+	}
+	if !compare || installed {
+		if current := state.current[scope]; current.IsNil() || key.EpochID.CompareTo(current) > 0 {
+			state.current[scope] = key.EpochID
 		}
 	}
-
-	// Dirty BEFORE the persist attempt (the ShredKeys discipline): a failed
-	// Save returns the error with the install tracked as unsaved, so both a
-	// caller retry and a later Close carry it to disk.
-	eks.changed = true
-	return eks.persistLocked(ctx)
+	state.rebuildOwners()
+	if err := eks.saveState(ctx, state); err != nil {
+		return false, err
+	}
+	eks.shredded = make(map[epochAddress]struct{})
+	eks.changed = false
+	eks.publish(state)
+	state = nil
+	return installed, nil
 }
 
-func (eks *epochKeyStore) GetKey(containerID, epochID tag.UID, role KeyRole) (SymKey, error) {
-	eks.mu.RLock()
-	defer eks.mu.RUnlock()
-
+func (eks *epochKeyStore) GetKey(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error) {
+	eks.mu.Lock()
+	defer eks.mu.Unlock()
 	if eks.closed {
 		return SymKey{}, ErrStoreClosed
 	}
-
-	entry, ok := eks.keys[epochID]
-	if !ok {
-		return SymKey{}, status.Code_KeyringNotFound.Errorf("epoch key not found: %s", epochID.Base32())
+	if err := validateKeyScope(scope); err != nil {
+		return SymKey{}, err
 	}
-	for _, rk := range entry.RoleKeys {
-		if rk.Role == role {
-			return SymKey{
-				CryptoKitID: entry.CryptoKitID(),
-				EpochID:     epochID,
-				Role:        rk.Role,
-				Bytes:       append([]byte(nil), rk.Key...),
-			}, nil
-		}
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	if err := eks.refreshLocked(context.Background()); err != nil {
+		return SymKey{}, err
 	}
-	return SymKey{}, status.Code_KeyringNotFound.Errorf("epoch key role not found: %s role=%s", epochID.Base32(), role)
+	return eks.state.get(scope, epochID, role)
 }
 
-func (eks *epochKeyStore) GetCurrentKey(containerID tag.UID, role KeyRole) (SymKey, error) {
-	eks.mu.RLock()
-	defer eks.mu.RUnlock()
+func (state *epochState) get(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error) {
+	entry := state.keys[epochAddress{scope: scope, epoch: epochID}]
+	if roleKey := entry.roleKey(role); roleKey != nil {
+		return SymKey{
+			CryptoKitID: entry.CryptoKitID(),
+			EpochID:     epochID,
+			Role:        role,
+			Bytes:       append([]byte(nil), roleKey.Key...),
+		}, nil
+	}
+	return SymKey{}, status.Code_KeyringNotFound.Error("safe: scoped epoch key not found")
+}
 
+func (eks *epochKeyStore) GetCurrentKey(scope KeyScope, role KeyRole) (SymKey, error) {
+	eks.mu.Lock()
+	defer eks.mu.Unlock()
 	if eks.closed {
 		return SymKey{}, ErrStoreClosed
 	}
-
-	epochID, ok := eks.current[containerID]
-	if !ok {
-		return SymKey{}, status.Code_KeyringNotFound.Errorf("no current epoch for container %s", containerID.Base32())
+	if err := validateKeyScope(scope); err != nil {
+		return SymKey{}, err
 	}
-
-	entry, ok := eks.keys[epochID]
-	if !ok {
-		return SymKey{}, status.Code_KeyringNotFound.Errorf("current epoch key missing: %s", epochID.Base32())
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	if err := eks.refreshLocked(context.Background()); err != nil {
+		return SymKey{}, err
 	}
-	for _, rk := range entry.RoleKeys {
-		if rk.Role == role {
-			return SymKey{
-				CryptoKitID: entry.CryptoKitID(),
-				EpochID:     epochID,
-				Role:        rk.Role,
-				Bytes:       append([]byte(nil), rk.Key...),
-			}, nil
-		}
-	}
-	return SymKey{}, status.Code_KeyringNotFound.Errorf("current epoch key role missing: %s role=%s", epochID.Base32(), role)
+	return eks.state.get(scope, eks.state.current[scope], role)
 }
 
-// SetCurrentEpoch implements EpochKeyStore: the election persists before
-// return — it may name an OLDER epoch, which the newest-per-container reopen
-// fallback would otherwise regress after a crash.
-func (eks *epochKeyStore) SetCurrentEpoch(ctx context.Context, containerID, epochID tag.UID) error {
+func (eks *epochKeyStore) ResolveChannelScope(planetID, epochID tag.UID) (KeyScope, error) {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
+	if eks.closed {
+		return KeyScope{}, ErrStoreClosed
+	}
+	if err := validateKeyScope(Scope(planetID)); err != nil {
+		return KeyScope{}, err
+	}
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	if err := eks.refreshLocked(context.Background()); err != nil {
+		return KeyScope{}, err
+	}
+	owner := eks.state.owners[ownershipAddress{planet: planetID, epoch: epochID}]
+	if owner.planet || owner.conflict {
+		return KeyScope{}, status.Code_AuthFailed.Error("safe: ambiguous channel epoch ownership")
+	}
+	if owner.channel.IsNil() {
+		return KeyScope{}, status.Code_KeyringNotFound.Error("safe: channel epoch ownership not found")
+	}
+	return ChannelScope(planetID, owner.channel), nil
+}
 
+func (eks *epochKeyStore) SetCurrentEpoch(ctx context.Context, scope KeyScope, epochID tag.UID) error {
+	eks.mu.Lock()
+	defer eks.mu.Unlock()
 	if eks.closed {
 		return ErrStoreClosed
 	}
-
-	if _, ok := eks.keys[epochID]; !ok {
-		return status.Code_KeyringNotFound.Errorf("cannot set current: epoch key %s not found", epochID.Base32())
+	if err := validateKeyScope(scope); err != nil {
+		return err
 	}
-
-	eks.current[containerID] = epochID
-
-	// Dirty BEFORE the persist attempt (the PutKey/ShredKeys discipline): a
-	// failed Save returns the error with the election tracked as unsaved, so
-	// both a caller retry and a later Close carry it to disk.
-	eks.changed = true
-	return eks.persistLocked(ctx)
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	state, err := eks.loadState(ctx)
+	if err != nil {
+		return err
+	}
+	entry := state.keys[epochAddress{scope: scope, epoch: epochID}]
+	if entry == nil || len(entry.RoleKeys) == 0 {
+		state.zero()
+		return status.Code_KeyringNotFound.Error("safe: cannot elect absent scoped epoch")
+	}
+	state.current[scope] = epochID
+	if err := eks.saveState(ctx, state); err != nil {
+		state.zero()
+		return err
+	}
+	eks.changed = false
+	eks.shredded = make(map[epochAddress]struct{})
+	eks.publish(state)
+	return nil
 }
 
-// ShredKeys implements EpochKeyStore: the removal persists before return —
-// the durability half of an operator HistoryCut (cut keys are losable by
-// ruling, so destruction, not recovery, is the obligation here).
-func (eks *epochKeyStore) ShredKeys(ctx context.Context, epochIDs []tag.UID) error {
+func (state *epochState) shred(address epochAddress) {
+	if entry := state.keys[address]; entry != nil {
+		zeroEntry(entry)
+		entry.RoleKeys = nil
+	}
+	if state.current[address.scope] == address.epoch {
+		state.current[address.scope] = tag.UID{}
+	}
+}
+
+func (eks *epochKeyStore) ShredKeys(ctx context.Context, scope KeyScope, epochIDs []tag.UID) error {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
-
 	if eks.closed {
 		return ErrStoreClosed
 	}
-
-	shredded := false
+	if err := validateKeyScope(scope); err != nil {
+		return err
+	}
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	state, err := eks.loadState(ctx)
+	if err != nil {
+		return err
+	}
 	for _, epochID := range epochIDs {
-		entry, ok := eks.keys[epochID]
-		if !ok {
-			continue
-		}
-		for _, rk := range entry.RoleKeys {
-			Zero(rk.Key)
-		}
-		eks.shredded[epochID] = struct{}{}
-		delete(eks.keys, epochID)
-		shredded = true
-	}
-	if shredded {
-		// Dirty BEFORE the persist attempt: a failed Save must leave the
-		// removal tracked as unsaved, so both a retry and a later Close
-		// reach disk — otherwise the shred could un-shred on reopen.
-		eks.changed = true
-	}
-	if !eks.changed {
-		return nil // nothing shredded AND memory == disk: the persisted tome already lacks them
-	}
-
-	// A current pointer at a shredded epoch dangles — drop it (fail-closed:
-	// no silent re-election; PutKey or SetCurrentEpoch names a successor).
-	for containerID, epochID := range eks.current {
-		if _, held := eks.keys[epochID]; !held {
-			delete(eks.current, containerID)
+		address := epochAddress{scope: scope, epoch: epochID}
+		if state.keys[address] != nil {
+			eks.shredded[address] = struct{}{}
+			state.shred(address)
 		}
 	}
-
-	return eks.persistLocked(ctx)
+	eks.changed = true
+	err = eks.saveState(ctx, state)
+	eks.publish(state)
+	if err == nil {
+		eks.changed = false
+		eks.shredded = make(map[epochAddress]struct{})
+	}
+	return err
 }
 
 func (eks *epochKeyStore) Close(ctx context.Context) error {
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
-
 	if eks.closed {
 		return nil
 	}
-
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
 	if eks.changed {
-		if err := eks.persistLocked(ctx); err != nil {
+		state, err := eks.loadState(ctx)
+		if err != nil {
+			return err
+		}
+		err = eks.saveState(ctx, state)
+		state.zero()
+		if err != nil {
 			return err
 		}
 	}
-
-	eks.zeroKeys()
+	eks.state.zero()
+	eks.state = nil
+	eks.shredded = nil
+	Zero(eks.aad)
 	eks.closed = true
+	releaseEpochTome(eks.identity)
 	return nil
 }
 
-// persistLocked unions the persisted tome into memory (a sibling store may
-// have written since this store loaded), then seals the in-memory map into an
-// EpochKeyTome and saves it via the Guard/TomeStore pair — the one persist
-// site (PutKey, SetCurrentEpoch, ShredKeys, Close).  Caller holds eks.mu.
-func (eks *epochKeyStore) persistLocked(ctx context.Context) error {
-	onDisk, err := eks.loadTome(ctx)
-	if err != nil {
+// saveState is called under both the session and shared tome locks. Even an
+// error changes the revision: a backend can publish before returning an error.
+func (eks *epochKeyStore) saveState(ctx context.Context, state *epochState) error {
+	defer func() { eks.shared.revision++ }()
+	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if onDisk != nil {
-		eks.mergeTome(onDisk)
-	}
-
 	tome := &EpochKeyTome{
-		Revision: 1,
-		Keys:     make([]*EpochKeyEntry, 0, len(eks.keys)),
-		Current:  make([]*EpochElection, 0, len(eks.current)),
+		Revision: 2,
+		Keys:     make([]*EpochKeyEntry, 0, len(state.keys)),
+		Current:  make([]*EpochElection, 0, len(state.current)),
 	}
-	for _, entry := range eks.keys {
+	for _, entry := range state.keys {
 		tome.Keys = append(tome.Keys, entry)
 	}
-	for containerID, epochID := range eks.current {
+	for scope, epochID := range state.current {
+		kind, container := scope.stored()
 		tome.Current = append(tome.Current, &EpochElection{
-			ContainerID_0: containerID[0],
-			ContainerID_1: containerID[1],
+			Scope:         kind,
+			PlanetID_0:    scope.PlanetID[0],
+			PlanetID_1:    scope.PlanetID[1],
+			ContainerID_0: container[0],
+			ContainerID_1: container[1],
 			EpochID_0:     epochID[0],
 			EpochID_1:     epochID[1],
 		})
 	}
-
-	tomeBytes, err := proto.Marshal(tome)
+	plain, err := proto.Marshal(tome)
 	if err != nil {
-		return fmt.Errorf("safe: failed to marshal epoch key store: %w", err)
+		return err
 	}
-	defer Zero(tomeBytes)
-
+	defer Zero(plain)
 	dek, err := GenerateDEK(RandReader)
 	if err != nil {
 		return err
 	}
 	defer Zero(dek)
-
-	tomeNonce, cipherblob, err := SealAEAD(RandReader, dek, tomeBytes, eks.aad)
+	nonce, cipherblob, err := SealAEAD(RandReader, dek, plain, eks.aad)
 	if err != nil {
-		return fmt.Errorf("safe: failed to encrypt epoch key store: %w", err)
+		return err
 	}
-
-	wrappedDEK, err := eks.guard.WrapDEK(ctx, dek, eks.aad)
+	wrapped, err := eks.guard.WrapDEK(ctx, dek, eks.aad)
 	if err != nil {
-		return fmt.Errorf("safe: failed to wrap epoch key DEK: %w", err)
+		return err
 	}
-
-	sealed := &SealedTome{
+	return eks.store.Save(ctx, &SealedTome{
 		Version:    uint32(Const_SealedTomeVersion),
-		WrappedDEK: wrappedDEK,
+		WrappedDEK: wrapped,
 		Purpose:    "epoch-keys",
 		TomeCipher: CipherName,
-		TomeNonce:  tomeNonce,
+		TomeNonce:  nonce,
 		Cipherblob: cipherblob,
-	}
-
-	if err := eks.store.Save(ctx, sealed); err != nil {
-		return fmt.Errorf("safe: failed to save epoch key store: %w", err)
-	}
-
-	eks.changed = false
-	return nil
-}
-
-func (eks *epochKeyStore) zeroKeys() {
-	for _, entry := range eks.keys {
-		for _, rk := range entry.RoleKeys {
-			Zero(rk.Key)
-		}
-	}
-	eks.keys = nil
-	eks.current = nil
-	eks.shredded = nil
-	Zero(eks.aad)
+	})
 }

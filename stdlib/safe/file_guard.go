@@ -143,6 +143,15 @@ func NewLocalTomeStore(pathname string) TomeStore {
 	}
 }
 
+// TomeStoreIdentity coordinates complete epoch-tome mutations across handles.
+func (s *localTomeStore) TomeStoreIdentity() string {
+	absolute, err := filepath.Abs(s.pathname)
+	if err != nil {
+		return ""
+	}
+	return "local-tome:" + filepath.Clean(absolute)
+}
+
 func (s *localTomeStore) Load(_ context.Context) (*SealedTome, error) {
 	buf, err := os.ReadFile(s.pathname)
 	if err != nil {

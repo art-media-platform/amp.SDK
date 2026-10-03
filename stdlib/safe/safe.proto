@@ -165,12 +165,16 @@ message RoleKey {
     bytes               Key  = 2;    // symmetric key material (typically 32 bytes; HKDF input)
 }
 
-// EpochKeyEntry stores the symmetric key materials for one epoch on one
-// container.  Each epoch may carry up to 4 role-tagged materials (see KeyRole)
-// — access-tiered distribution places different roles in different members'
-// hands.  The epoch is the unit of rotation, grant, and eviction, so its roles
-// live together.  EpochID is time-based (from tag.NowID), providing natural
-// temporal ordering.
+// EpochKeyScope discriminates planet and channel ownership, even when their
+// raw container UIDs coincide. Unspecified ownership is not usable.
+enum EpochKeyScope {
+    ScopeUnspecified = 0;
+    ScopePlanet = 1;
+    ScopeChannel = 2;
+}
+
+// EpochKeyEntry retains ownership for one (planet, scope, container, epoch).
+// Empty RoleKeys records a destroyed key without erasing ownership ambiguity.
 message EpochKeyEntry {
     fixed64             ContainerID_0   = 1;    // Planet or channel UID, bytes 0..7
     fixed64             ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
@@ -178,7 +182,10 @@ message EpochKeyEntry {
     fixed64             EpochID_1       = 4;    // Epoch UID, bytes 8..15
     fixed64             CryptoKitID_0   = 5;    // CryptoKit UID (suite for this epoch), bytes 0..7
     fixed64             CryptoKitID_1   = 6;    // CryptoKit UID, bytes 8..15
-    repeated RoleKey    RoleKeys        = 8;    // 1-4 role-tagged materials held for this epoch
+    repeated RoleKey    RoleKeys        = 8;    // empty after shred; ownership remains
+    fixed64             PlanetID_0      = 9;
+    fixed64             PlanetID_1      = 10;
+    EpochKeyScope       Scope           = 11;
 }
 
 // EpochElection records one container's current-epoch election.  Persisted in
@@ -189,14 +196,17 @@ message EpochElection {
     fixed64             ContainerID_0   = 1;    // Planet or channel UID, bytes 0..7
     fixed64             ContainerID_1   = 2;    // Planet or channel UID, bytes 8..15
     fixed64             EpochID_0       = 3;    // Elected current epoch UID, bytes 0..7
-    fixed64             EpochID_1       = 4;    // Elected current epoch UID, bytes 8..15
+    fixed64             EpochID_1       = 4;    // zero pair records no elected current
+    fixed64             PlanetID_0      = 5;
+    fixed64             PlanetID_1      = 6;
+    EpochKeyScope       Scope           = 7;
 }
 
 // EpochKeyTome is the persistence format for all symmetric epoch keys.
 // Sealed at rest using the same Guard/DEK mechanism as the identity KeyTome.
 message EpochKeyTome {
-    int64                   Revision    = 1;    // Incremented on each mutation
-    repeated EpochKeyEntry  Keys        = 2;    // All epoch keys (sorted by ContainerID, then EpochID)
+    int64                   Revision    = 1;    // Persistence format revision
+    repeated EpochKeyEntry  Keys        = 2;    // Scoped keys and retained ownership
     repeated EpochElection  Current     = 3;    // Current-epoch election per container
 }
 

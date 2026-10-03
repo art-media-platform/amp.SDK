@@ -245,6 +245,57 @@ func (KeyRole) EnumDescriptor() ([]byte, []int) {
 	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{3}
 }
 
+// EpochKeyScope discriminates planet and channel ownership, even when their
+// raw container UIDs coincide. Unspecified ownership is not usable.
+type EpochKeyScope int32
+
+const (
+	EpochKeyScope_ScopeUnspecified EpochKeyScope = 0
+	EpochKeyScope_ScopePlanet      EpochKeyScope = 1
+	EpochKeyScope_ScopeChannel     EpochKeyScope = 2
+)
+
+// Enum value maps for EpochKeyScope.
+var (
+	EpochKeyScope_name = map[int32]string{
+		0: "ScopeUnspecified",
+		1: "ScopePlanet",
+		2: "ScopeChannel",
+	}
+	EpochKeyScope_value = map[string]int32{
+		"ScopeUnspecified": 0,
+		"ScopePlanet":      1,
+		"ScopeChannel":     2,
+	}
+)
+
+func (x EpochKeyScope) Enum() *EpochKeyScope {
+	p := new(EpochKeyScope)
+	*p = x
+	return p
+}
+
+func (x EpochKeyScope) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (EpochKeyScope) Descriptor() protoreflect.EnumDescriptor {
+	return file_stdlib_safe_safe_proto_enumTypes[4].Descriptor()
+}
+
+func (EpochKeyScope) Type() protoreflect.EnumType {
+	return &file_stdlib_safe_safe_proto_enumTypes[4]
+}
+
+func (x EpochKeyScope) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use EpochKeyScope.Descriptor instead.
+func (EpochKeyScope) EnumDescriptor() ([]byte, []int) {
+	return file_stdlib_safe_safe_proto_rawDescGZIP(), []int{4}
+}
+
 // GuardInfo describes a Guard's capabilities and identity.
 type GuardInfo struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -878,12 +929,8 @@ func (x *RoleKey) GetKey() []byte {
 	return nil
 }
 
-// EpochKeyEntry stores the symmetric key materials for one epoch on one
-// container.  Each epoch may carry up to 4 role-tagged materials (see KeyRole)
-// — access-tiered distribution places different roles in different members'
-// hands.  The epoch is the unit of rotation, grant, and eviction, so its roles
-// live together.  EpochID is time-based (from tag.NowID), providing natural
-// temporal ordering.
+// EpochKeyEntry retains ownership for one (planet, scope, container, epoch).
+// Empty RoleKeys records a destroyed key without erasing ownership ambiguity.
 type EpochKeyEntry struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ContainerID_0 uint64                 `protobuf:"fixed64,1,opt,name=ContainerID_0,json=ContainerID0,proto3" json:"ContainerID_0,omitempty"` // Planet or channel UID, bytes 0..7
@@ -892,7 +939,10 @@ type EpochKeyEntry struct {
 	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Epoch UID, bytes 8..15
 	CryptoKitID_0 uint64                 `protobuf:"fixed64,5,opt,name=CryptoKitID_0,json=CryptoKitID0,proto3" json:"CryptoKitID_0,omitempty"` // CryptoKit UID (suite for this epoch), bytes 0..7
 	CryptoKitID_1 uint64                 `protobuf:"fixed64,6,opt,name=CryptoKitID_1,json=CryptoKitID1,proto3" json:"CryptoKitID_1,omitempty"` // CryptoKit UID, bytes 8..15
-	RoleKeys      []*RoleKey             `protobuf:"bytes,8,rep,name=RoleKeys,proto3" json:"RoleKeys,omitempty"`                               // 1-4 role-tagged materials held for this epoch
+	RoleKeys      []*RoleKey             `protobuf:"bytes,8,rep,name=RoleKeys,proto3" json:"RoleKeys,omitempty"`                               // empty after shred; ownership remains
+	PlanetID_0    uint64                 `protobuf:"fixed64,9,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1    uint64                 `protobuf:"fixed64,10,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	Scope         EpochKeyScope          `protobuf:"varint,11,opt,name=Scope,proto3,enum=safe.EpochKeyScope" json:"Scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -976,6 +1026,27 @@ func (x *EpochKeyEntry) GetRoleKeys() []*RoleKey {
 	return nil
 }
 
+func (x *EpochKeyEntry) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *EpochKeyEntry) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *EpochKeyEntry) GetScope() EpochKeyScope {
+	if x != nil {
+		return x.Scope
+	}
+	return EpochKeyScope_ScopeUnspecified
+}
+
 // EpochElection records one container's current-epoch election.  Persisted in
 // the tome so an explicit election — which may name an OLDER epoch — survives
 // reopen; a container with no persisted election falls back to
@@ -985,7 +1056,10 @@ type EpochElection struct {
 	ContainerID_0 uint64                 `protobuf:"fixed64,1,opt,name=ContainerID_0,json=ContainerID0,proto3" json:"ContainerID_0,omitempty"` // Planet or channel UID, bytes 0..7
 	ContainerID_1 uint64                 `protobuf:"fixed64,2,opt,name=ContainerID_1,json=ContainerID1,proto3" json:"ContainerID_1,omitempty"` // Planet or channel UID, bytes 8..15
 	EpochID_0     uint64                 `protobuf:"fixed64,3,opt,name=EpochID_0,json=EpochID0,proto3" json:"EpochID_0,omitempty"`             // Elected current epoch UID, bytes 0..7
-	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // Elected current epoch UID, bytes 8..15
+	EpochID_1     uint64                 `protobuf:"fixed64,4,opt,name=EpochID_1,json=EpochID1,proto3" json:"EpochID_1,omitempty"`             // zero pair records no elected current
+	PlanetID_0    uint64                 `protobuf:"fixed64,5,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
+	PlanetID_1    uint64                 `protobuf:"fixed64,6,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
+	Scope         EpochKeyScope          `protobuf:"varint,7,opt,name=Scope,proto3,enum=safe.EpochKeyScope" json:"Scope,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1048,12 +1122,33 @@ func (x *EpochElection) GetEpochID_1() uint64 {
 	return 0
 }
 
+func (x *EpochElection) GetPlanetID_0() uint64 {
+	if x != nil {
+		return x.PlanetID_0
+	}
+	return 0
+}
+
+func (x *EpochElection) GetPlanetID_1() uint64 {
+	if x != nil {
+		return x.PlanetID_1
+	}
+	return 0
+}
+
+func (x *EpochElection) GetScope() EpochKeyScope {
+	if x != nil {
+		return x.Scope
+	}
+	return EpochKeyScope_ScopeUnspecified
+}
+
 // EpochKeyTome is the persistence format for all symmetric epoch keys.
 // Sealed at rest using the same Guard/DEK mechanism as the identity KeyTome.
 type EpochKeyTome struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"` // Incremented on each mutation
-	Keys          []*EpochKeyEntry       `protobuf:"bytes,2,rep,name=Keys,proto3" json:"Keys,omitempty"`          // All epoch keys (sorted by ContainerID, then EpochID)
+	Revision      int64                  `protobuf:"varint,1,opt,name=Revision,proto3" json:"Revision,omitempty"` // Persistence format revision
+	Keys          []*EpochKeyEntry       `protobuf:"bytes,2,rep,name=Keys,proto3" json:"Keys,omitempty"`          // Scoped keys and retained ownership
 	Current       []*EpochElection       `protobuf:"bytes,3,rep,name=Current,proto3" json:"Current,omitempty"`    // Current-epoch election per container
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1367,7 +1462,7 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\x04Keys\x18\x02 \x03(\v2\x13.safe.KeyPairRecordR\x04Keys\">\n" +
 	"\aRoleKey\x12!\n" +
 	"\x04Role\x18\x01 \x01(\x0e2\r.safe.KeyRoleR\x04Role\x12\x10\n" +
-	"\x03Key\x18\x02 \x01(\fR\x03Key\"\x88\x02\n" +
+	"\x03Key\x18\x02 \x01(\fR\x03Key\"\xf1\x02\n" +
 	"\rEpochKeyEntry\x12#\n" +
 	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
 	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
@@ -1375,12 +1470,23 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12#\n" +
 	"\rCryptoKitID_0\x18\x05 \x01(\x06R\fCryptoKitID0\x12#\n" +
 	"\rCryptoKitID_1\x18\x06 \x01(\x06R\fCryptoKitID1\x12)\n" +
-	"\bRoleKeys\x18\b \x03(\v2\r.safe.RoleKeyR\bRoleKeys\"\x93\x01\n" +
+	"\bRoleKeys\x18\b \x03(\v2\r.safe.RoleKeyR\bRoleKeys\x12\x1d\n" +
+	"\n" +
+	"PlanetID_0\x18\t \x01(\x06R\tPlanetID0\x12\x1d\n" +
+	"\n" +
+	"PlanetID_1\x18\n" +
+	" \x01(\x06R\tPlanetID1\x12)\n" +
+	"\x05Scope\x18\v \x01(\x0e2\x13.safe.EpochKeyScopeR\x05Scope\"\xfc\x01\n" +
 	"\rEpochElection\x12#\n" +
 	"\rContainerID_0\x18\x01 \x01(\x06R\fContainerID0\x12#\n" +
 	"\rContainerID_1\x18\x02 \x01(\x06R\fContainerID1\x12\x1b\n" +
 	"\tEpochID_0\x18\x03 \x01(\x06R\bEpochID0\x12\x1b\n" +
-	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\"\x82\x01\n" +
+	"\tEpochID_1\x18\x04 \x01(\x06R\bEpochID1\x12\x1d\n" +
+	"\n" +
+	"PlanetID_0\x18\x05 \x01(\x06R\tPlanetID0\x12\x1d\n" +
+	"\n" +
+	"PlanetID_1\x18\x06 \x01(\x06R\tPlanetID1\x12)\n" +
+	"\x05Scope\x18\a \x01(\x0e2\x13.safe.EpochKeyScopeR\x05Scope\"\x82\x01\n" +
 	"\fEpochKeyTome\x12\x1a\n" +
 	"\bRevision\x18\x01 \x01(\x03R\bRevision\x12'\n" +
 	"\x04Keys\x18\x02 \x03(\v2\x13.safe.EpochKeyEntryR\x04Keys\x12-\n" +
@@ -1423,7 +1529,11 @@ const file_stdlib_safe_safe_proto_rawDesc = "" +
 	"ContentKey\x10\x00\x12\r\n" +
 	"\tWriteSeed\x10\x01\x12\x11\n" +
 	"\rReservedRole2\x10\x02\x12\x11\n" +
-	"\rReservedRole3\x10\x03BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
+	"\rReservedRole3\x10\x03*H\n" +
+	"\rEpochKeyScope\x12\x14\n" +
+	"\x10ScopeUnspecified\x10\x00\x12\x0f\n" +
+	"\vScopePlanet\x10\x01\x12\x10\n" +
+	"\fScopeChannel\x10\x02BMZ1github.com/art-media-platform/amp.SDK/stdlib/safe\xaa\x02\x17art.media.platform.safeb\x06proto3"
 
 var (
 	file_stdlib_safe_safe_proto_rawDescOnce sync.Once
@@ -1437,41 +1547,44 @@ func file_stdlib_safe_safe_proto_rawDescGZIP() []byte {
 	return file_stdlib_safe_safe_proto_rawDescData
 }
 
-var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_stdlib_safe_safe_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
 var file_stdlib_safe_safe_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_stdlib_safe_safe_proto_goTypes = []any{
 	(Const)(0),              // 0: safe.Const
 	(KeyType)(0),            // 1: safe.KeyType
 	(HashKitID)(0),          // 2: safe.HashKitID
 	(KeyRole)(0),            // 3: safe.KeyRole
-	(*GuardInfo)(nil),       // 4: safe.GuardInfo
-	(*WrappedDEK)(nil),      // 5: safe.WrappedDEK
-	(*SealedTome)(nil),      // 6: safe.SealedTome
-	(*KeyRef)(nil),          // 7: safe.KeyRef
-	(*KeyPairRecord)(nil),   // 8: safe.KeyPairRecord
-	(*KeyTome)(nil),         // 9: safe.KeyTome
-	(*RoleKey)(nil),         // 10: safe.RoleKey
-	(*EpochKeyEntry)(nil),   // 11: safe.EpochKeyEntry
-	(*EpochElection)(nil),   // 12: safe.EpochElection
-	(*EpochKeyTome)(nil),    // 13: safe.EpochKeyTome
-	(*EncryptedSymKey)(nil), // 14: safe.EncryptedSymKey
-	(*SealedValue)(nil),     // 15: safe.SealedValue
+	(EpochKeyScope)(0),      // 4: safe.EpochKeyScope
+	(*GuardInfo)(nil),       // 5: safe.GuardInfo
+	(*WrappedDEK)(nil),      // 6: safe.WrappedDEK
+	(*SealedTome)(nil),      // 7: safe.SealedTome
+	(*KeyRef)(nil),          // 8: safe.KeyRef
+	(*KeyPairRecord)(nil),   // 9: safe.KeyPairRecord
+	(*KeyTome)(nil),         // 10: safe.KeyTome
+	(*RoleKey)(nil),         // 11: safe.RoleKey
+	(*EpochKeyEntry)(nil),   // 12: safe.EpochKeyEntry
+	(*EpochElection)(nil),   // 13: safe.EpochElection
+	(*EpochKeyTome)(nil),    // 14: safe.EpochKeyTome
+	(*EncryptedSymKey)(nil), // 15: safe.EncryptedSymKey
+	(*SealedValue)(nil),     // 16: safe.SealedValue
 }
 var file_stdlib_safe_safe_proto_depIdxs = []int32{
-	5,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
+	6,  // 0: safe.SealedTome.WrappedDEK:type_name -> safe.WrappedDEK
 	1,  // 1: safe.KeyRef.Type:type_name -> safe.KeyType
 	1,  // 2: safe.KeyPairRecord.KeyType:type_name -> safe.KeyType
-	8,  // 3: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
+	9,  // 3: safe.KeyTome.Keys:type_name -> safe.KeyPairRecord
 	3,  // 4: safe.RoleKey.Role:type_name -> safe.KeyRole
-	10, // 5: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
-	11, // 6: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
-	12, // 7: safe.EpochKeyTome.Current:type_name -> safe.EpochElection
-	3,  // 8: safe.SealedValue.Role:type_name -> safe.KeyRole
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	11, // 5: safe.EpochKeyEntry.RoleKeys:type_name -> safe.RoleKey
+	4,  // 6: safe.EpochKeyEntry.Scope:type_name -> safe.EpochKeyScope
+	4,  // 7: safe.EpochElection.Scope:type_name -> safe.EpochKeyScope
+	12, // 8: safe.EpochKeyTome.Keys:type_name -> safe.EpochKeyEntry
+	13, // 9: safe.EpochKeyTome.Current:type_name -> safe.EpochElection
+	3,  // 10: safe.SealedValue.Role:type_name -> safe.KeyRole
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_stdlib_safe_safe_proto_init() }
@@ -1484,7 +1597,7 @@ func file_stdlib_safe_safe_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_stdlib_safe_safe_proto_rawDesc), len(file_stdlib_safe_safe_proto_rawDesc)),
-			NumEnums:      4,
+			NumEnums:      5,
 			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,

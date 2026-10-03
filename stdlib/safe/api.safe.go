@@ -141,56 +141,58 @@ type Enclave interface {
 	Close(ctx context.Context) error
 }
 
-// EpochKeyStore manages symmetric epoch keys separately from identity keys.
-//
-// Symmetric epoch keys have fundamentally different access patterns from
-// identity keys:
-//   - High volume: up to millions of keys per user across all planets/channels
-//   - Must be exported for subkey derivation (content_key, proof_key)
-//   - Hot/cold separation: only current epoch keys need to be in memory
-//   - Each epoch may carry up to 4 distinct key materials (one per KeyRole) —
-//     access-tiered channel key distribution puts different roles in different
-//     members' hands
-//   - Put/get keyed by (containerID, epochID, role)
-//
-// All methods are threadsafe.
+// KeyScope identifies a key's owning planet and optional channel. A channel
+// remains distinct from planet scope even when their UIDs are equal.
+type KeyScope struct {
+	Kind      EpochKeyScope
+	PlanetID  tag.UID
+	ChannelID tag.UID
+}
+
+// Scope returns a planet key scope.
+func Scope(planetID tag.UID) KeyScope {
+	return KeyScope{
+		Kind:     EpochKeyScope_ScopePlanet,
+		PlanetID: planetID,
+	}
+}
+
+// ChannelScope returns a channel key scope owned by planetID.
+func ChannelScope(planetID, channelID tag.UID) KeyScope {
+	return KeyScope{
+		Kind:      EpochKeyScope_ScopeChannel,
+		PlanetID:  planetID,
+		ChannelID: channelID,
+	}
+}
+
+// EpochKeyStore holds symmetric keys at (scope, epoch, role). All methods are
+// threadsafe. Writes serialize across live stores sharing one tome identity.
 type EpochKeyStore interface {
+	// PutKey explicitly replaces the addressed role. Publication is staged:
+	// success means persisted; a Save error never publishes a new memory key.
+	PutKey(ctx context.Context, scope KeyScope, key SymKey) error
 
-	// PutKey stores a symmetric epoch key for the given container (planet or
-	// channel).  key.EpochID, key.Role, and key.Bytes must be set; key.CryptoKitID
-	// selects the crypto suite.  The install is durable at method return: the
-	// re-sealed tome persists BEFORE PutKey reports success, so an unclean kill
-	// after return cannot lose the key — a founded confidential planet's
-	// ContentKey must never ride on a clean Close.
-	PutKey(ctx context.Context, containerID tag.UID, key SymKey) error
+	// InstallKey atomically installs an absent role, accepts identical held
+	// material, and refuses conflicting bytes or crypto kit with AuthFailed.
+	// An equal retry persists before success. Caller owns key.Bytes.
+	InstallKey(ctx context.Context, scope KeyScope, key SymKey) (bool, error)
 
-	// GetKey retrieves a symmetric epoch key by its container + epoch UIDs + role.
-	// The returned SymKey owns its Bytes; the caller must call key.Zero() after
-	// use.
-	GetKey(containerID, epochID tag.UID, role KeyRole) (SymKey, error)
+	// GetKey returns an owned copy; the caller must zero its Bytes.
+	GetKey(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error)
+	GetCurrentKey(scope KeyScope, role KeyRole) (SymKey, error)
+	SetCurrentEpoch(ctx context.Context, scope KeyScope, epochID tag.UID) error
 
-	// GetCurrentKey returns the current (most recent) epoch key for a container +
-	// role.  The returned SymKey owns its Bytes; the caller must call key.Zero()
-	// after use.
-	GetCurrentKey(containerID tag.UID, role KeyRole) (SymKey, error)
+	// ResolveChannelScope resolves one channel across ALL ownership claims,
+	// including shredded entries and every role. Missing ownership is
+	// KeyringNotFound; multiple channels or a planet-epoch alias is AuthFailed.
+	ResolveChannelScope(planetID, epochID tag.UID) (KeyScope, error)
 
-	// SetCurrentEpoch marks an epoch as the current one for a container —
-	// including an epoch OLDER than the newest held.  The election is durable at
-	// method return: the re-sealed tome persists BEFORE SetCurrentEpoch reports
-	// success, so a crash after return cannot regress the current pointer to the
-	// newest-per-container fallback on reopen.
-	SetCurrentEpoch(ctx context.Context, containerID, epochID tag.UID) error
-
-	// ShredKeys permanently deletes ALL key material held for the given epochs —
-	// every role, every container.  The removal is durable at method return: the
-	// re-sealed tome persists BEFORE ShredKeys returns, so a crash after return
-	// cannot resurrect a shredded key (a shred that can un-shred is not a shred).
-	// In-memory key bytes are zeroed.  Epochs not held are skipped (idempotent).
-	// A container whose current epoch is shredded has no current epoch until
-	// PutKey or SetCurrentEpoch names a new one.
-	ShredKeys(ctx context.Context, epochIDs []tag.UID) error
-
-	// Close encrypts and persists all keys, then zeros sensitive material.
+	// ShredKeys deletes every role in the exact scope, retaining non-secret
+	// ownership. A shredded current has no implicit successor, including on
+	// reopen. Save failures remain pending for retry/Close. Coordination is
+	// process-local; this is not a cross-process custody invalidation protocol.
+	ShredKeys(ctx context.Context, scope KeyScope, epochIDs []tag.UID) error
 	Close(ctx context.Context) error
 }
 

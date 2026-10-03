@@ -47,15 +47,17 @@ implementation).  A hardware Guard is a host-side concern — see
 per identity.  Symmetric **epoch** keys live in a separate interface,
 [`EpochKeyStore`](api.safe.go), because their access pattern is different:
 millions of keys per member across planets and channels, keyed by
-`(containerID, epochID, role)`, exported for subkey derivation, and hot/cold
+`(owning planet, planet/channel scope, epochID, role)`, exported for subkey derivation, and hot/cold
 separated so only current epochs stay resident.
 
 | | `Enclave` | `EpochKeyStore` |
 |---|---|---|
 | Holds | identity keypairs | symmetric epoch keys |
-| Keyed by | keyring UID + `KeyRef` | `(containerID, epochID, KeyRole)` |
+| Keyed by | keyring UID + `KeyRef` | `(KeyScope, epochID, KeyRole)` |
 | Private material leaves? | never (except `ExportSymmetricKey`) | yes — `GetKey` returns bytes to derive subkeys |
-| Rotation unit | per key | per epoch (`PutKey` / `SetCurrentEpoch` / `ShredKeys`) |
+| Rotation unit | per key | per scoped epoch (`PutKey` / `SetCurrentEpoch` / `ShredKeys`) |
+
+Use `safe.Scope(planetID)` for planet keys and `safe.ChannelScope(planetID, channelID)` for channel keys. `InstallKey` atomically compares and durably installs; `PutKey` remains the verified-receipt upsert. `ShredKeys` requires one scope. Channel resolution considers ownership across all roles and retains non-secret claims after shredding, so deletion cannot erase an ambiguity. Ownership must be explicit on disk; unowned entries refuse rather than being assigned from a globally matching epoch ID. Local handles sharing a tome coordinate mutations within one process.
 
 Both seal to disk through the same Guard/DEK mechanism, and both return
 `ErrStoreClosed` once `Close` has sealed the session — "no custody" reads as
@@ -126,7 +128,7 @@ safe/
 ├── registry.go             # RegisterCryptoKit / RegisterHashKit — init()-only, fail-closed lookup
 ├── crypto.go               # XChaCha20-Poly1305 AEAD + HKDF primitives + X25519
 ├── enclave.go              # Enclave implementation (thread-safe KeyTome session)
-├── epoch_keys.go           # EpochKeyStore — symmetric epoch keys, per (container, epoch, role)
+├── epoch_keys.go           # EpochKeyStore — symmetric epoch keys, per (planet, scope, epoch, role)
 ├── file_guard.go           # fileGuard — passphrase-based Guard + localTomeStore
 ├── phrase.go               # mnemonic phrase ↔ key material
 ├── safe.keys.go            # KeyRef / PubKey / SymKey / KeyPair value types
