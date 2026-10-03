@@ -168,6 +168,7 @@ func ChannelScope(planetID, channelID tag.UID) KeyScope {
 
 // EpochKeyStore holds symmetric keys at (scope, epoch, role). All methods are
 // threadsafe. Writes serialize across live stores sharing one tome identity.
+// Pending destruction refuses writes to that scoped epoch with NotReady.
 type EpochKeyStore interface {
 	// PutKey explicitly replaces the addressed role. Publication is staged:
 	// success means persisted; a Save error never publishes a new memory key.

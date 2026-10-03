@@ -182,10 +182,6 @@ func (scope KeyScope) stored() (EpochKeyScope, tag.UID) {
 }
 
 func (eks *epochKeyStore) loadState(ctx context.Context) (*epochState, error) {
-	return eks.loadStateExcept(ctx, nil)
-}
-
-func (eks *epochKeyStore) loadStateExcept(ctx context.Context, preserve *epochAddress) (*epochState, error) {
 	state := newEpochState()
 	sealed, err := eks.store.Load(ctx)
 	if err != nil {
@@ -269,9 +265,6 @@ func (eks *epochKeyStore) loadStateExcept(ctx context.Context, preserve *epochAd
 		state.current[scope] = epochID
 	}
 	for address := range eks.shredded {
-		if preserve != nil && address == *preserve {
-			continue
-		}
 		state.shred(address)
 	}
 	state.rebuildOwners()
@@ -369,7 +362,10 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 		return false, err
 	}
 	address := epochAddress{scope: scope, epoch: key.EpochID}
-	state, err := eks.loadStateExcept(ctx, &address)
+	if _, pending := eks.shredded[address]; pending {
+		return false, status.Code_NotReady.Error("safe: retry pending epoch destruction before installing a key")
+	}
+	state, err := eks.loadState(ctx)
 	if err != nil {
 		return false, err
 	}

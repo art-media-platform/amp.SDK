@@ -279,7 +279,11 @@ func TestEpochKeys_ShredFailedSaveRetryReachesDisk(t *testing.T) {
 	liveEpoch := tag.NewID()
 	liveContent := randomKeyBytes(t)
 	putEpochKey(t, eks, containerID, cutEpoch, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	putEpochKey(t, eks, containerID, cutEpoch, safe.KeyRole_WriteSeed, randomKeyBytes(t))
 	putEpochKey(t, eks, containerID, liveEpoch, safe.KeyRole_ContentKey, liveContent)
+	if err := eks.SetCurrentEpoch(ctx, safe.Scope(containerID), liveEpoch); err != nil {
+		t.Fatal(err)
+	}
 	if err := eks.Close(ctx); err != nil {
 		t.Fatalf("Close (seed the tome): %v", err)
 	}
@@ -294,6 +298,20 @@ func TestEpochKeys_ShredFailedSaveRetryReachesDisk(t *testing.T) {
 		t.Fatal("ShredKeys with a failing Save must error — durable-at-return means the failure surfaces")
 	}
 
+	blockedKey := safe.SymKey{
+		CryptoKitID: safe.Crypto.Poly25519.ID,
+		EpochID:     cutEpoch,
+		Role:        safe.KeyRole_ContentKey,
+		Bytes:       randomKeyBytes(t),
+	}
+	defer blockedKey.Zero()
+	if err := eks.PutKey(ctx, safe.Scope(containerID), blockedKey); !status.IsError(err, status.Code_NotReady) {
+		t.Errorf("PutKey during pending destruction: %v", err)
+	}
+	if installed, err := eks.InstallKey(ctx, safe.Scope(containerID), blockedKey); installed || !status.IsError(err, status.Code_NotReady) {
+		t.Errorf("InstallKey during pending destruction: installed=%v err=%v", installed, err)
+	}
+
 	// The retry finds nothing left in memory but the removal is still unsaved:
 	// it must persist (and succeed) before returning nil.
 	if err := eks.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{cutEpoch}); err != nil {
@@ -303,14 +321,19 @@ func TestEpochKeys_ShredFailedSaveRetryReachesDisk(t *testing.T) {
 	if err != nil {
 		t.Fatalf("reopen after retry: %v", err)
 	}
-	if _, err := reopened.GetKey(safe.Scope(containerID), cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
-		t.Fatalf("shredded key survived on disk after the retry reported success: %v", err)
+	for _, role := range []safe.KeyRole{safe.KeyRole_ContentKey, safe.KeyRole_WriteSeed} {
+		if _, err := reopened.GetKey(safe.Scope(containerID), cutEpoch, role); !status.IsError(err, status.Code_KeyringNotFound) {
+			t.Fatalf("shredded role %v survived on disk after retry: %v", role, err)
+		}
 	}
-	survivor, err := reopened.GetKey(safe.Scope(containerID), liveEpoch, safe.KeyRole_ContentKey)
+	if _, err := reopened.ResolveChannelScope(containerID, cutEpoch); !status.IsError(err, status.Code_AuthFailed) {
+		t.Fatalf("shred lost the planet ownership claim: %v", err)
+	}
+	survivor, err := reopened.GetCurrentKey(safe.Scope(containerID), safe.KeyRole_ContentKey)
 	if err != nil {
 		t.Fatalf("live key after retry: %v", err)
 	}
-	if !bytes.Equal(survivor.Bytes, liveContent) {
+	if survivor.EpochID != liveEpoch || !bytes.Equal(survivor.Bytes, liveContent) {
 		t.Fatal("live key bytes did not round-trip the retry persist")
 	}
 	survivor.Zero()
