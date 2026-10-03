@@ -68,9 +68,9 @@ const (
 // record is a fixed 8-byte big-endian header — u32 payloadLen | u8 kind | u8
 // flags (0) | u16 reserved (0) — then payload (AOM MD-unity-client.md §3.6).
 const (
-	// The libampd ABI version API_ABIVersion returns; a client refuses a
+	// The libampd ABI version ampd_ABIVersion returns; a client refuses a
 	// mismatch.
-	LibABIVersion       = int32(2)
+	LibABIVersion       = int32(3)
 	LibRecordHeaderSize = int32(8)
 	// payload = one TxMsg wire frame (Tx.PreambleSize preamble + head/ops +
 	// data)
