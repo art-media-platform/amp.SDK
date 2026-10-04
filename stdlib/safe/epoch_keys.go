@@ -224,7 +224,10 @@ func (eks *epochKeyStore) loadState(ctx context.Context) (*epochState, error) {
 		if err != nil {
 			return nil, err
 		}
-		address := epochAddress{scope: scope, epoch: entry.EpochID()}
+		address := epochAddress{
+			scope: scope,
+			epoch: entry.EpochID(),
+		}
 		if _, duplicate := state.keys[address]; duplicate {
 			return nil, fmt.Errorf("safe: duplicate scoped epoch entry")
 		}
@@ -261,7 +264,11 @@ func (eks *epochKeyStore) loadState(ctx context.Context) (*epochState, error) {
 		electedScopes[scope] = struct{}{}
 		epochID := election.EpochID()
 		if epochID.IsSet() {
-			entry := state.keys[epochAddress{scope: scope, epoch: epochID}]
+			address := epochAddress{
+				scope: scope,
+				epoch: epochID,
+			}
+			entry := state.keys[address]
 			if entry == nil || len(entry.RoleKeys) == 0 {
 				return nil, fmt.Errorf("safe: election names no scoped key material")
 			}
@@ -279,7 +286,10 @@ func (eks *epochKeyStore) loadState(ctx context.Context) (*epochState, error) {
 func (state *epochState) rebuildOwners() {
 	state.owners = make(map[ownershipAddress]epochOwnership)
 	for address := range state.keys {
-		ownerID := ownershipAddress{planet: address.scope.PlanetID, epoch: address.epoch}
+		ownerID := ownershipAddress{
+			planet: address.scope.PlanetID,
+			epoch:  address.epoch,
+		}
 		owner := state.owners[ownerID]
 		if address.scope.Kind == EpochKeyScope_ScopePlanet {
 			owner.planet = true
@@ -365,7 +375,10 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 	if err := ctx.Err(); err != nil {
 		return false, err
 	}
-	address := epochAddress{scope: scope, epoch: key.EpochID}
+	address := epochAddress{
+		scope: scope,
+		epoch: key.EpochID,
+	}
 	if _, pending := eks.shared.shredded[address]; pending {
 		return false, status.Code_NotReady.Error("safe: retry pending epoch destruction before installing a key")
 	}
@@ -406,7 +419,10 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 		Zero(held.Key)
 		held.Key = append([]byte(nil), key.Bytes...)
 	} else {
-		entry.RoleKeys = append(entry.RoleKeys, &RoleKey{Role: key.Role, Key: append([]byte(nil), key.Bytes...)})
+		entry.RoleKeys = append(entry.RoleKeys, &RoleKey{
+			Role: key.Role,
+			Key:  append([]byte(nil), key.Bytes...),
+		})
 	}
 	if !compare || installed {
 		if current := state.current[scope]; current.IsNil() || key.EpochID.CompareTo(current) > 0 {
@@ -441,7 +457,11 @@ func (eks *epochKeyStore) GetKey(scope KeyScope, epochID tag.UID, role KeyRole) 
 }
 
 func (state *epochState) get(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error) {
-	entry := state.keys[epochAddress{scope: scope, epoch: epochID}]
+	address := epochAddress{
+		scope: scope,
+		epoch: epochID,
+	}
+	entry := state.keys[address]
 	if roleKey := entry.roleKey(role); roleKey != nil {
 		return SymKey{
 			CryptoKitID: entry.CryptoKitID(),
@@ -484,7 +504,11 @@ func (eks *epochKeyStore) ResolveChannelScope(planetID, epochID tag.UID) (KeySco
 	if err := eks.refreshLocked(context.Background()); err != nil {
 		return KeyScope{}, err
 	}
-	owner := eks.state.owners[ownershipAddress{planet: planetID, epoch: epochID}]
+	ownerID := ownershipAddress{
+		planet: planetID,
+		epoch:  epochID,
+	}
+	owner := eks.state.owners[ownerID]
 	if owner.planet || owner.conflict {
 		return KeyScope{}, status.Code_AuthFailed.Error("safe: ambiguous channel epoch ownership")
 	}
@@ -509,7 +533,11 @@ func (eks *epochKeyStore) SetCurrentEpoch(ctx context.Context, scope KeyScope, e
 	if err != nil {
 		return err
 	}
-	entry := state.keys[epochAddress{scope: scope, epoch: epochID}]
+	address := epochAddress{
+		scope: scope,
+		epoch: epochID,
+	}
+	entry := state.keys[address]
 	if entry == nil || len(entry.RoleKeys) == 0 {
 		state.zero()
 		return status.Code_KeyringNotFound.Error("safe: cannot elect absent scoped epoch")
@@ -550,7 +578,10 @@ func (eks *epochKeyStore) ShredKeys(ctx context.Context, scope KeyScope, epochID
 		return err
 	}
 	for _, epochID := range epochIDs {
-		address := epochAddress{scope: scope, epoch: epochID}
+		address := epochAddress{
+			scope: scope,
+			epoch: epochID,
+		}
 		if state.keys[address] != nil {
 			eks.shared.shredded[address] = struct{}{}
 			state.shred(address)
