@@ -367,6 +367,14 @@ export const Crates = {
     VisAssets:  "asset:soundspectrum.com/amp.3D.vis.assets",
 } as const;
 
+// ─── Bundled — the payload a client build ships under StreamingAssets/{DirName}: ───
+// the bundled crate depot (Crates above) and the factory brand file, the
+// brand a build boots with before any planet brand applies.
+export const Bundled = {
+    DirName:          "Bundled",
+    FactoryBrandFile: "app.brand.factory.json",
+} as const;
+
 // ─── Actor — in-world actor skins resolve through the crate / asset system.  A mod ───
 // registers an override at the same key to ship a custom actor without touching
 // code.  An unresolved URI falls back to a primitive so a MantleActor is always
