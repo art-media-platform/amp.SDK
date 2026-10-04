@@ -1635,6 +1635,108 @@ enum BlobPullKind {
 }
 
 
+// BlobProgress is one observation of a blob's pull and serve state — the value app.blob's
+// ?progress=1 pin pushes under std.Attr.BlobProgress (AD-app-www.md §5.6, §6.10;
+// SD-planet-storage.md §13.6).  Fields 1–15 are the per-tick band (a tick rewrites them);
+// the geometry fields change only with the staging.  Peer connectivity (PeerCount) is
+// distinct from confirmed availability (SourceCount): peers watching the planet may hold
+// nothing of this blob.  State enums read by H4 band — waiting 1–15, held 16–23,
+// terminal 24–31 — so a value a client has no name for still renders by its band
+// (std.BlobStateBandOf).
+message BlobProgress {
+    uint64              Seq             = 1;  // increments on every observed change; a heartbeat repeats the Seq
+    BlobPullState       PullState       = 2;
+    BlobReaderState     ReaderState     = 3;
+    BlobPullReason      Reason          = 4;  // why the pull is held or ended (ReasonUnset while it moves)
+    BlobMetaState       MetaState       = 5;
+    int64               IdleMs          = 6;  // ms since the last verified chunk landed (since the first request when none has)
+    int64               RateBytesPerSec = 7;  // verified stored bytes per second over the recent window (0 = none measured)
+    int64               ReadOffset      = 8;  // plaintext offset the readiness fields are evaluated at (?at=; the newest reader's position by default)
+    int64               ReadyBytes      = 9;  // plaintext bytes servable from ReadOffset without a wait
+    int64               WaitEtaMs       = 10; // estimated wait for the plaintext byte at ReadOffset at the measured rate (0 = ready, or no rate)
+    int32               PeerCount       = 12; // peers connected and watching the planet — connectivity, not availability
+    int32               SourceCount     = 13; // peers that delivered the meta or a verified chunk of THIS blob this session — confirmed availability
+    uint64              HeldChunks      = 14; // chunks verified so far (the HaveBits population)
+    int64               HeldBytes       = 15; // stored bytes verified so far
+    reserved 11;                              // ReadyMs: how long the byte at ReadOffset has been ready — reserved, not yet produced
+    reserved "ReadyMs";
+
+    // Geometry — the staging's shape; HaveBits is the .have bitmap verbatim.
+    int64               StoredLen       = 16; // stored (wire) byte length; 0 until the meta is held
+    int64               PlainLen        = 17; // plaintext byte length (== StoredLen for a public blob)
+    uint32              ChunkSizeLog2   = 18; // meta chunk size exponent (0 = single-chunk blob, no bitmap)
+    uint64              ChunkCount      = 19;
+    bytes               HaveBits        = 20; // one bit per chunk in index order, LSB-first within each byte
+    repeated BlobActiveSpan Active      = 21; // span assignments in flight: non-superseded, non-lost
+}
+
+
+// BlobActiveSpan is one span assignment in flight for a BlobProgress observation.
+message BlobActiveSpan {
+    uint64              ChunkBegin = 1;
+    uint64              ChunkCount = 2;
+    BlobSpanState       State      = 3;
+    int64               AgeMs      = 4;  // ms since the assignment fired
+}
+
+
+// BlobPullState is where a blob's pull stands.  Band-coded: waiting 1–15, held 16–23,
+// terminal 24–31 (std.BlobStateBandOf).
+enum BlobPullState {
+    PullUnset    = 0;
+    Queued       = 1;  // admitted; no request has fired yet
+    AwaitingMeta = 2;  // the meta pull is out; no chunk can verify before it lands
+    Pulling      = 3;  // chunk spans assigned and moving
+    NoSource     = 16; // nothing can move: no peer watches the planet, or every source is busy or missed (Reason says which)
+    Stalled      = 17; // requests are out but no verified byte has landed within the stall window
+    PullFailed   = 24; // the pull ended without the bytes (Reason says why); the player stops as LoadFailed
+    PullComplete = 25; // every chunk verified and published; the admission stays live
+}
+
+
+// BlobReaderState is what the serving readers of a blob are doing.  Band-coded like
+// BlobPullState.
+enum BlobReaderState {
+    ReaderUnset = 0;
+    NoReader    = 1;  // no progressive reader is open on the staging
+    Reading     = 2;  // a reader is open and its position is held
+    Starving    = 16; // a reader is blocked on a chunk not yet verified
+}
+
+
+// BlobPullReason explains a held or terminal BlobPullState.  Band-coded like BlobPullState:
+// a held reason (16–23) may clear; a terminal reason (24–31) ends the pull.
+enum BlobPullReason {
+    ReasonUnset     = 0;
+    NoPeer          = 16; // no connected peer watches the planet
+    SourcesBusy     = 17; // every peer watching the planet is busy with other spans or answered miss this round
+    MetaPending     = 18; // the meta request is out and unanswered
+    OverCap         = 24; // the declared stored length does not fit the Tier-1 cap
+    ContentMismatch = 25; // the assembled bytes do not match BlobTag.UID (a lying encoder); never served
+    NoEpochKey      = 26; // the requester holds no key for the blob's epoch
+    BudgetStop      = 27; // the planet is at its pull budget and nothing evictable could make room
+    PolicyDrop      = 28; // the pull policy refused the arrival (an unsolicited push on a selective planet)
+}
+
+
+// BlobMetaState is where the blob's BlobMeta companion stands (SD-planet-storage.md §13.10).
+// Not band-coded: read by name, never through the H4 bands of the three state enums above.
+enum BlobMetaState {
+    MetaUnset = 0;
+    MetaNone  = 1; // a single-chunk blob commits to no meta
+    MetaWanted = 2; // committed, not yet held
+    MetaHeld  = 3; // verified against the ref's commitment and persisted
+}
+
+
+// BlobSpanState is one in-flight span assignment's phase.  Not band-coded: read by name.
+enum BlobSpanState {
+    SpanUnset     = 0;
+    SpanIssued    = 1; // fired; no answer stream has begun
+    SpanStreaming = 2; // the answer stream is absorbing
+}
+
+
 // PlanetStorageOpts configures per-planet storage priority and budgets.  Stored
 // as a home planet attribute alongside PlanetBinding, keyed by planet UID.
 // Drives cache eviction: lower-priority planets have their decrypted cache

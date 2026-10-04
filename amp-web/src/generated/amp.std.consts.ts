@@ -251,6 +251,7 @@ export const Attr = {
 
     BlobRef                           : { id: [0xF390C57CD7C15B45n, 0x13F1CF7F07D7A047n], text: "amp.blob.BlobRef" },       // 7mk32-rtpy1-ce2j7w-fggw3-xg827
     NodeBlobs                         : { id: [0xAD0BA6086B8A5202n, 0xB15FFA7352307DEFn], text: "amp.blob.node.BlobRef" },  // 5e1fm-0huwb-b81c2r-zufe9-30zgg
+    BlobProgress                      : { id: [0x3B8B4210F065A307n, 0xA3C1A421CADE791Bn], text: "amp.blob.BlobProgress" },  // 1vje1-11w35-nd3u7h-e4475-ewy8v
 
     // ─── The node's own operational records.  Credentials: one sealed cell per ───
     // provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
@@ -293,6 +294,20 @@ export const Amp = {
     HereAlias:    ".",
     CabinetsPath: "/cabinets",  // app.cabinets module path
     CabinetsURL:  "amp://~/cabinets",  // = Scheme + HomeAlias + CabinetsPath
+} as const;
+
+// ─── Blob progress (std.Attr.BlobProgress; AD-app-www §5.6, §6.10): the pin's observation ───
+// cadence, the heartbeat that repeats an unchanged observation, how long a closed
+// reader's wanted position keeps steering the span planner, and the H4 state bands
+// a client reads an undeclared value by.
+export const BlobProgress = {
+    DefaultTickMs:         250n,  // nominal observation cadence; latest-wins at one item
+    DefaultHeartbeatMs:    2000n,  // an unchanged observation repeats at this cadence
+    DefaultWantedLingerMs: 30000n,  // a closed reader's position keeps its planner priority this long
+    BandWaitingMin:        1,  // state values 1–15: waiting (the pull moves or is about to)
+    BandHeldMin:           16,  // state values 16–23: held (blocked on something that may clear)
+    BandTerminalMin:       24,  // state values 24–31: terminal (the pull ended)
+    BandMax:               31,  // a value past this has no band
 } as const;
 
 export const Asset = {

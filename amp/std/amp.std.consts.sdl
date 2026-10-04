@@ -261,8 +261,9 @@ tags Attr {
 
     // Blob storage
     BlobAttr "amp.blob" {
-        BlobRef   "BlobRef"
-        NodeBlobs "node.BlobRef"
+        BlobRef      "BlobRef"
+        NodeBlobs    "node.BlobRef"
+        BlobProgress "BlobProgress" // the ?progress=1 pin's observation, latest-wins at one item (AD-app-www §6.10)
     }
 
     // The node's own operational records.  Credentials: one sealed cell per
@@ -301,6 +302,20 @@ const Amp {
     string HereAlias    = ".";
     string CabinetsPath = "/cabinets";        // app.cabinets module path
     string CabinetsURL  = "amp://~/cabinets"; // = Scheme + HomeAlias + CabinetsPath
+}
+
+// Blob progress (std.Attr.BlobProgress; AD-app-www §5.6, §6.10): the pin's observation
+// cadence, the heartbeat that repeats an unchanged observation, how long a closed
+// reader's wanted position keeps steering the span planner, and the H4 state bands
+// a client reads an undeclared value by.
+const BlobProgress {
+    int64 DefaultTickMs         = 250;   // nominal observation cadence; latest-wins at one item
+    int64 DefaultHeartbeatMs    = 2000;  // an unchanged observation repeats at this cadence
+    int64 DefaultWantedLingerMs = 30000; // a closed reader's position keeps its planner priority this long
+    int32 BandWaitingMin        = 1;     // state values 1–15: waiting (the pull moves or is about to)
+    int32 BandHeldMin           = 16;    // state values 16–23: held (blocked on something that may clear)
+    int32 BandTerminalMin       = 24;    // state values 24–31: terminal (the pull ended)
+    int32 BandMax               = 31;    // a value past this has no band
 }
 
 const Asset {

@@ -105,7 +105,7 @@ func TestGeneratedAttrRegistration(t *testing.T) {
 	// amp.std.consts.sdl declares 63 registrable attrs (trailing message-type
 	// word, ZO §4.8); std.terminal.go registers 2 more at use-site.  A count
 	// drift means a registration was added or lost — both are conscious edits.
-	const generatedAttrs = 63
+	const generatedAttrs = 64
 	const useSiteAttrs = 2
 
 	count := 0

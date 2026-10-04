@@ -151,6 +151,7 @@ var Attr = struct {
 	BlobAttr                           tag.Name
 	BlobRef                            tag.Name
 	NodeBlobs                          tag.Name
+	BlobProgress                       tag.Name
 	NodeAttr                           tag.Name
 	NodeCredentials                    tag.Name
 	TileServerAttr                     tag.Name
@@ -395,8 +396,9 @@ var Attr = struct {
 	// ─── Blob storage ───────────────────────────────────────────────
 	BlobAttr: tag.Name{ID: tag.UID{0x43839888952F19F9, 0xB576A64453AD2634}, Text: "amp.blob"}, // 23hfd-8j59g-37wvbx-p68j9-uu9jn
 
-	BlobRef:   tag.Name{ID: tag.UID{0xF390C57CD7C15B45, 0x13F1CF7F07D7A047}, Text: "amp.blob.BlobRef"},      // 7mk32-rtpy1-ce2j7w-fggw3-xg827
-	NodeBlobs: tag.Name{ID: tag.UID{0xAD0BA6086B8A5202, 0xB15FFA7352307DEF}, Text: "amp.blob.node.BlobRef"}, // 5e1fm-0huwb-b81c2r-zufe9-30zgg
+	BlobRef:      tag.Name{ID: tag.UID{0xF390C57CD7C15B45, 0x13F1CF7F07D7A047}, Text: "amp.blob.BlobRef"},      // 7mk32-rtpy1-ce2j7w-fggw3-xg827
+	NodeBlobs:    tag.Name{ID: tag.UID{0xAD0BA6086B8A5202, 0xB15FFA7352307DEF}, Text: "amp.blob.node.BlobRef"}, // 5e1fm-0huwb-b81c2r-zufe9-30zgg
+	BlobProgress: tag.Name{ID: tag.UID{0x3B8B4210F065A307, 0xA3C1A421CADE791B}, Text: "amp.blob.BlobProgress"}, // 1vje1-11w35-nd3u7h-e4475-ewy8v
 
 	// ─── The node's own operational records.  Credentials: one sealed cell per ───
 	// provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
@@ -441,6 +443,20 @@ const (
 	AmpHereAlias    = "."
 	AmpCabinetsPath = "/cabinets"        // app.cabinets module path
 	AmpCabinetsURL  = "amp://~/cabinets" // = Scheme + HomeAlias + CabinetsPath
+)
+
+// ─── Blob progress (std.Attr.BlobProgress; AD-app-www §5.6, §6.10): the pin's observation ───
+// cadence, the heartbeat that repeats an unchanged observation, how long a closed
+// reader's wanted position keeps steering the span planner, and the H4 state bands
+// a client reads an undeclared value by.
+const (
+	BlobProgressDefaultTickMs         = 250       // nominal observation cadence; latest-wins at one item
+	BlobProgressDefaultHeartbeatMs    = 2000      // an unchanged observation repeats at this cadence
+	BlobProgressDefaultWantedLingerMs = 30000     // a closed reader's position keeps its planner priority this long
+	BlobProgressBandWaitingMin        = int32(1)  // state values 1–15: waiting (the pull moves or is about to)
+	BlobProgressBandHeldMin           = int32(16) // state values 16–23: held (blocked on something that may clear)
+	BlobProgressBandTerminalMin       = int32(24) // state values 24–31: terminal (the pull ended)
+	BlobProgressBandMax               = int32(31) // a value past this has no band
 )
 
 const (
@@ -645,6 +661,7 @@ func init() {
 	RegisterAttrDeclared(Attr.HomeMemberVars, &MemberVars{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.BlobRef, &amp.BlobRef{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.NodeBlobs, &amp.BlobRef{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.BlobProgress, &amp.BlobProgress{}, amp.EditFlow_Fold)
 	RegisterAttrDeclaredSealed(Attr.NodeCredentials, &Credentials{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.TileServer, &TileServer{}, amp.EditFlow_Fold)
 }
