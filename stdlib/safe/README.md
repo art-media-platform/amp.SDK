@@ -11,6 +11,7 @@ Secure key storage and retrieval for the **amp** platform.
 │                                                         │
 │   ImportKey()    — merge a keypair into a keyring       │
 │   GenerateKey()  — generate + register a keypair        │
+│   RemoveKey()    — delete one exact keypair (durable)   │
 │   FetchPubKey()  — resolve a KeyRef to its PubKey       │
 │   CanSign()      — is the PRIVATE half actually held?   │
 │   SignRaw()      — sign a registry-derived digest       │

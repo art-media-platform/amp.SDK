@@ -95,6 +95,15 @@ type Enclave interface {
 	// Durable at return, like ImportKey.
 	GenerateKey(ctx context.Context, keyringID tag.UID, spec KeySpec) (PubKey, error)
 
+	// RemoveKey deletes the one keypair ref names exactly — keyring, Type and
+	// the FULL PubKey; no newest-key or prefix resolution — and persists before
+	// returning (durable like ImportKey); the private half is zeroed.  A ref
+	// without Type or PubKey is BadRequest; a key not held is KeyringNotFound;
+	// a persist failure leaves the key held and returns the error.  For a
+	// caller withdrawing material it minted itself (a join that failed before
+	// its record was written), never a resolver.
+	RemoveKey(ctx context.Context, ref *KeyRef) error
+
 	// FetchPubKey returns the PubKey for ref.
 	// If len(ref.PubKey) == 0, the newest key in the keyring is returned.
 	FetchPubKey(ref *KeyRef) (PubKey, error)

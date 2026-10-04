@@ -221,6 +221,44 @@ func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec Key
 	return PubKey{}, status.Code_KeyGenerationFailed.Error("safe: 3 consecutive pub-key collisions during generate")
 }
 
+// RemoveKey deletes the exact (keyring, Type, PubKey) record and persists; a
+// failed persist re-merges the record so the key stays held.
+func (enc *enclave) RemoveKey(ctx context.Context, ref *KeyRef) error {
+	enc.mu.Lock()
+	defer enc.mu.Unlock()
+
+	if enc.closed {
+		return errEnclaveClosed
+	}
+	if ref == nil || len(ref.PubKey) == 0 || ref.Type == KeyType_Unspecified {
+		return status.Code_BadRequest.Error("RemoveKey: ref must name the key type and the full public key")
+	}
+	ringID := ref.KeyringID()
+	ring := enc.byRing[ringID]
+	if ring == nil {
+		return status.Code_KeyringNotFound.Errorf("keyring %v not found", ringID)
+	}
+	pos := ringIndexTyped(ring, ref.PubKey, ref.Type)
+	if pos < 0 {
+		return status.Code_KeyringNotFound.Errorf("key not found in keyring %v (type: %s)", ringID, ref.Type.String())
+	}
+	rec := ring.records[pos]
+	ring.records = append(ring.records[:pos], ring.records[pos+1:]...)
+	ring.newestByType[rec.KeyType] = ringNewestPubOfType(ring, rec.KeyType)
+	if len(ring.records) == 0 {
+		delete(enc.byRing, ringID)
+	}
+	enc.revision++
+	if err := enc.persistLocked(ctx); err != nil {
+		if mergeErr := enc.mergeRecord(rec); mergeErr != nil {
+			return fmt.Errorf("safe: RemoveKey persist failed (%v) and the record could not be restored: %w", err, mergeErr)
+		}
+		return err
+	}
+	Zero(rec.PrvKey)
+	return nil
+}
+
 // FetchPubKey returns the PubKey for the referenced entry.
 func (enc *enclave) FetchPubKey(ref *KeyRef) (PubKey, error) {
 	enc.mu.RLock()
@@ -653,6 +691,38 @@ func ringLookupTypedPrefix(ring *ringIndex, prefix []byte, kt KeyType) *KeyPairR
 		}
 	}
 	return nil
+}
+
+// ringIndexTyped returns the position of the record with exactly pubKey and kt,
+// or -1.
+func ringIndexTyped(ring *ringIndex, pubKey []byte, kt KeyType) int {
+	pos := sort.Search(len(ring.records), func(i int) bool {
+		return bytes.Compare(ring.records[i].PubKey, pubKey) >= 0
+	})
+	for i := pos; i < len(ring.records) && bytes.Equal(ring.records[i].PubKey, pubKey); i++ {
+		if ring.records[i].KeyType == kt {
+			return i
+		}
+	}
+	return -1
+}
+
+// ringNewestPubOfType scans the ring for the newest (largest TimeID) record of
+// kt — the newestByType pointer after a removal; nil when none remain.
+func ringNewestPubOfType(ring *ringIndex, kt KeyType) []byte {
+	newest := (*KeyPairRecord)(nil)
+	for _, rec := range ring.records {
+		if rec.KeyType != kt {
+			continue
+		}
+		if newest == nil || recordTimeID(rec).CompareTo(recordTimeID(newest)) > 0 {
+			newest = rec
+		}
+	}
+	if newest == nil {
+		return nil
+	}
+	return newest.PubKey
 }
 
 func ringNewestTimeID(ring *ringIndex, kt KeyType) tag.UID {
