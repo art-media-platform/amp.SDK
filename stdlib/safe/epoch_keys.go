@@ -19,10 +19,15 @@ type TomeStoreIdentity interface {
 	TomeStoreIdentity() string
 }
 
+// epochTomeLock is the per-tome coordination point shared by every live
+// handle on one tome identity. Pending destruction is per tome: a shred whose
+// save failed stays in shredded until any handle's save persists it, and every
+// handle's loadState applies it. The set dies with the last handle.
 type epochTomeLock struct {
 	mu       sync.Mutex
 	refs     int
 	revision uint64
+	shredded map[epochAddress]struct{}
 }
 
 var epochTomeLocks = struct {
@@ -44,7 +49,9 @@ func acquireEpochTome(store TomeStore) (any, *epochTomeLock, error) {
 	defer epochTomeLocks.Unlock()
 	shared := epochTomeLocks.byID[identity]
 	if shared == nil {
-		shared = &epochTomeLock{}
+		shared = &epochTomeLock{
+			shredded: make(map[epochAddress]struct{}),
+		}
 		epochTomeLocks.byID[identity] = shared
 	}
 	shared.refs++
@@ -102,12 +109,10 @@ type epochKeyStore struct {
 	guard    Guard
 	aad      []byte
 	closed   bool
-	changed  bool
 	identity any
 	shared   *epochTomeLock
 	revision uint64
 	state    *epochState
-	shredded map[epochAddress]struct{}
 }
 
 var _ EpochKeyStore = (*epochKeyStore)(nil)
@@ -123,7 +128,6 @@ func OpenEpochKeyStore(ctx context.Context, store TomeStore, guard Guard, aad []
 		aad:      append([]byte(nil), aad...),
 		identity: identity,
 		shared:   shared,
-		shredded: make(map[epochAddress]struct{}),
 	}
 	shared.mu.Lock()
 	eks.state, err = eks.loadState(ctx)
@@ -264,7 +268,7 @@ func (eks *epochKeyStore) loadState(ctx context.Context) (*epochState, error) {
 		}
 		state.current[scope] = epochID
 	}
-	for address := range eks.shredded {
+	for address := range eks.shared.shredded {
 		state.shred(address)
 	}
 	state.rebuildOwners()
@@ -362,7 +366,7 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 		return false, err
 	}
 	address := epochAddress{scope: scope, epoch: key.EpochID}
-	if _, pending := eks.shredded[address]; pending {
+	if _, pending := eks.shared.shredded[address]; pending {
 		return false, status.Code_NotReady.Error("safe: retry pending epoch destruction before installing a key")
 	}
 	state, err := eks.loadState(ctx)
@@ -413,8 +417,7 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 	if err := eks.saveState(ctx, state); err != nil {
 		return false, err
 	}
-	eks.shredded = make(map[epochAddress]struct{})
-	eks.changed = false
+	clear(eks.shared.shredded)
 	eks.publish(state)
 	state = nil
 	return installed, nil
@@ -516,8 +519,7 @@ func (eks *epochKeyStore) SetCurrentEpoch(ctx context.Context, scope KeyScope, e
 		state.zero()
 		return err
 	}
-	eks.changed = false
-	eks.shredded = make(map[epochAddress]struct{})
+	clear(eks.shared.shredded)
 	eks.publish(state)
 	return nil
 }
@@ -550,16 +552,14 @@ func (eks *epochKeyStore) ShredKeys(ctx context.Context, scope KeyScope, epochID
 	for _, epochID := range epochIDs {
 		address := epochAddress{scope: scope, epoch: epochID}
 		if state.keys[address] != nil {
-			eks.shredded[address] = struct{}{}
+			eks.shared.shredded[address] = struct{}{}
 			state.shred(address)
 		}
 	}
-	eks.changed = true
 	err = eks.saveState(ctx, state)
 	eks.publish(state)
 	if err == nil {
-		eks.changed = false
-		eks.shredded = make(map[epochAddress]struct{})
+		clear(eks.shared.shredded)
 	}
 	return err
 }
@@ -572,24 +572,32 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 	}
 	eks.shared.mu.Lock()
 	defer eks.shared.mu.Unlock()
-	if eks.changed {
-		state, err := eks.loadState(ctx)
-		if err != nil {
-			return err
-		}
-		err = eks.saveState(ctx, state)
-		state.zero()
-		if err != nil {
-			return err
-		}
-	}
+	err := eks.flushPendingLocked(ctx)
 	eks.state.zero()
 	eks.state = nil
-	eks.shredded = nil
 	Zero(eks.aad)
 	eks.closed = true
 	releaseEpochTome(eks.identity)
-	return nil
+	return err
+}
+
+// flushPendingLocked persists destruction left pending by a failed save. The
+// handle closes either way; the error reports that the tome still holds the
+// material.
+func (eks *epochKeyStore) flushPendingLocked(ctx context.Context) error {
+	if len(eks.shared.shredded) == 0 {
+		return nil
+	}
+	state, err := eks.loadState(ctx)
+	if err != nil {
+		return err
+	}
+	err = eks.saveState(ctx, state)
+	state.zero()
+	if err == nil {
+		clear(eks.shared.shredded)
+	}
+	return err
 }
 
 // saveState is called under both the session and shared tome locks. Even an

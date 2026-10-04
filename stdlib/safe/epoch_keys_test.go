@@ -567,3 +567,84 @@ func TestEpochKeys_SiblingStoresUnionOnPersist(t *testing.T) {
 		t.Fatalf("re-installed epoch missing after the persist: %v", err)
 	}
 }
+
+// TestEpochKeys_PendingShredSharedAcrossHandles pins pending destruction as a
+// property of the TOME, not the handle: after handle A's shred save fails, a
+// sibling handle B on the same tome identity must refuse a write to the
+// destroyed address, and B's own reload-and-save of another address must
+// carry A's destruction to disk instead of re-persisting the material.
+func TestEpochKeys_PendingShredSharedAcrossHandles(t *testing.T) {
+	ctx := context.Background()
+	inner := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	store := &faultTomeStore{inner: inner}
+	guard := safe.NewFileGuard([]byte("pass"), []byte("shred-shared"))
+	defer guard.Close()
+	open := func() safe.EpochKeyStore {
+		eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("shred-shared"))
+		if err != nil {
+			t.Fatalf("OpenEpochKeyStore: %v", err)
+		}
+		return eks
+	}
+	containerID := tag.NewID()
+	cutEpoch := tag.NewID()
+	otherEpoch := tag.NewID()
+	otherBytes := randomKeyBytes(t)
+
+	handleA, handleB := open(), open()
+	putEpochKey(t, handleA, containerID, cutEpoch, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	if _, err := handleB.GetKey(safe.Scope(containerID), cutEpoch, safe.KeyRole_ContentKey); err != nil {
+		t.Fatalf("B does not see A's install: %v", err)
+	}
+
+	store.failSaves = 1
+	if err := handleA.ShredKeys(ctx, safe.Scope(containerID), []tag.UID{cutEpoch}); err == nil {
+		t.Fatal("ShredKeys with a failing Save must error")
+	}
+
+	// The sibling refuses the destroyed address while destruction is pending.
+	blockedKey := safe.SymKey{
+		CryptoKitID: safe.Crypto.Poly25519.ID,
+		EpochID:     cutEpoch,
+		Role:        safe.KeyRole_ContentKey,
+		Bytes:       randomKeyBytes(t),
+	}
+	defer blockedKey.Zero()
+	if err := handleB.PutKey(ctx, safe.Scope(containerID), blockedKey); !status.IsError(err, status.Code_NotReady) {
+		t.Errorf("sibling PutKey during pending destruction: %v", err)
+	}
+
+	// The sibling's unrelated write reloads disk (material still present) and
+	// saves: the pending destruction must ride that save.
+	putEpochKey(t, handleB, containerID, otherEpoch, safe.KeyRole_ContentKey, otherBytes)
+	for name, handle := range map[string]safe.EpochKeyStore{"A": handleA, "B": handleB} {
+		if _, err := handle.GetKey(safe.Scope(containerID), cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+			t.Errorf("handle %s reads the destroyed key after the sibling save: %v", name, err)
+		}
+	}
+	fresh, err := safe.OpenEpochKeyStore(ctx, inner, guard, []byte("shred-shared"))
+	if err != nil {
+		t.Fatalf("fresh open: %v", err)
+	}
+	defer fresh.Close(ctx)
+	if _, err := fresh.GetKey(safe.Scope(containerID), cutEpoch, safe.KeyRole_ContentKey); !status.IsError(err, status.Code_KeyringNotFound) {
+		t.Fatalf("destroyed key re-persisted by the sibling handle's save: %v", err)
+	}
+	if _, err := fresh.ResolveChannelScope(containerID, cutEpoch); !status.IsError(err, status.Code_AuthFailed) {
+		t.Fatalf("destruction lost the planet ownership claim: %v", err)
+	}
+	other, err := fresh.GetKey(safe.Scope(containerID), otherEpoch, safe.KeyRole_ContentKey)
+	if err != nil {
+		t.Fatalf("sibling's install missing after its save: %v", err)
+	}
+	if !bytes.Equal(other.Bytes, otherBytes) {
+		t.Fatal("sibling's install bytes changed")
+	}
+	other.Zero()
+	if err := handleB.Close(ctx); err != nil {
+		t.Fatalf("Close B: %v", err)
+	}
+	if err := handleA.Close(ctx); err != nil {
+		t.Fatalf("Close A: %v", err)
+	}
+}
