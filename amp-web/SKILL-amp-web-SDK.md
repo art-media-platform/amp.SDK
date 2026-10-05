@@ -1439,7 +1439,7 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Attribute (attr)** | A typed data field within a channel; addressed by `tag.UID` (`AOM/SD-content-substrate.md`). |
 | **Item** | A single CRDT record, identified by `tag.UID`. |
 | **Edit** | A versioned update to an item; CRDT-merged (`AOM/SD-edit-resolution.md`). |
-| **Genesis** | The founding ceremony of a planet — the first TxMsg, welding the identity facts (founder signatures, epoch-key root, identity-tier `Brand` fields) that later edits cannot forge (`AOM/DD-name-service.md` §2). |
+| **Genesis** | The founding ceremony of a planet — the first TxMsg, welding the identity facts later edits cannot forge (founder signatures, epoch-key root); an optional founding `Brand` edit rides it, admin-mutable after like every Brand field (`AOM/DD-name-service.md` §2.2). |
 | **Cabinet** | The substrate store a planet's channel items commit into — the destination of a normal `tx`. A verb-RPC (`invoke`) bypasses it; the app then authors the cabinet writes custodially. |
 | **Custodian** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums custodian founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
 | **TxMsg** | A signed, encrypted transaction containing one or more data ops. |
