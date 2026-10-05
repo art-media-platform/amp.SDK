@@ -60,8 +60,8 @@ export const Attr = {
     SeriesAssetTag                    : { id: [0x38365DC6227700FBn, 0x39ACAA81B253C797n], text: "item.series.asset.Tag" },       // 1s6tf-wd8mr-03xmmc-5bh6t-57jwr
     SeriesHeadLink                    : { id: [0x1F851D40FE1D382Bn, 0x5521D97B38F0236Cn], text: "item.series.link.Tag" },        // 0zhnf-n1zhx-70ppb8-ftgdw-g08vd
     SeriesLinkTree                    : { id: [0x5B51B3B938C3C87Fn, 0xB429C4C1470DD710n], text: "item.series.link.tree.Tags" },  // 2vb6t-vkf63-t1zv8b-f4s53-hvpsh
-    // The item's look: mesh ⊥ layers ⊥ args in one cell (AOM
-    // MD-mantle-architecture.md §12.5).
+    // The item's look: mesh ⊥ layers ⊥ args in one cell (amp.std.proto
+    // SkinSpec).
     SeriesSkin                        : { id: [0x8E878C8F846ABC37n, 0xCABC2A7CD0B82C8Bn], text: "item.series.SkinSpec" },        // 4fhy6-8z13b-rhvwpg-1bgm8-chc4c
     SeriesS2R                         : { id: [0x0C89F9B0717A62A5n, 0x79AA41CD3FA29CDDn], text: "item.series.S2.radius.mm" },    // 0dj7w-v0wcu-dbkrmb-k1tnz-u576x
     SeriesS2T                         : { id: [0x749CA29A38DAA5BFn, 0x7139081806CBF2C5n], text: "item.series.S2.UTC64" },        // 3nmkj-9nf6u-nqzr2f-88303-drwq5
@@ -180,7 +180,7 @@ export const Attr = {
     LawMemberKind_Successor           : { id: [0x627C11221E4584F9n, 0xCD00ACCD3211B4F9n], text: "amp.law.MemberKind.Successor" },             // 32gh8-k47k5-hmwwu0-5dtnt-13e7t
     LawMemberKind_Memorial            : { id: [0xBA335B3927C0252Bn, 0xB791D002F55B477Fn], text: "amp.law.MemberKind.Memorial" },              // 5u6ee-mk9y0-4npvg4-fh0cu-pqjvz
     LawMemberKind_Process             : { id: [0x98ECE8E691BE5BD5n, 0x7E0A29F6F4393466n], text: "amp.law.MemberKind.Process" },               // 4sxmn-fe4ey-cgbrw2-j9yvu-3ke36
-    // Attestation modalities (AOM SD-modal-attestation.md).
+    // Attestation modalities (amp.core.proto Attestation).
     // Attestation.Modality is a Tag resolving to one of these UIDs.
     // Communities + apps may register additional modalities.  Zero UID =
     // unspecified.
@@ -196,7 +196,7 @@ export const Attr = {
     LawAttestationModality_Conditional: { id: [0x84466F1352512715n, 0x29E493F726901576n], text: "amp.law.AttestationModality.Conditional" },  // 448tr-j6nkj-4wbkmt-4mywm-905cq
     LawAttestationModality_Contested  : { id: [0x0502182AD6D3BDB4n, 0xC9F14651631969E3n], text: "amp.law.AttestationModality.Contested" },    // 0508d-2ppqm-rqudmw-b6b5j-jkug3
     LawAttestationModality_Retracted  : { id: [0xCA955565A08728E6n, 0x4FCC6CCB72D595CBn], text: "amp.law.AttestationModality.Retracted" },    // 6bkpb-qc847-53m4zm-3dtet-ec5fc
-    // Equivalence strengths (AOM SD-address-equivalence.md).
+    // Equivalence strengths (amp.core.proto Equivalence).
     // Equivalence.Strength is a Tag resolving to one of these UIDs.  Zero
     // UID = unspecified.
     LawEquivalenceStrength            : { id: [0x17501E56DC9B1A5Dn, 0x19F49F4EF6B49F84n], text: "amp.law.EquivalenceStrength" },              // 0rb0g-5er4v-39fjmx-4z9vv-c97w4
@@ -205,7 +205,7 @@ export const Attr = {
     LawEquivalenceStrength_Translation: { id: [0x8D295A1372FA2C5Dn, 0x10798077BE8E1B1An], text: "amp.law.EquivalenceStrength.Translation" },  // 4e55e-16wru-5jfj0y-d0fyz-8w6su
     LawEquivalenceStrength_Approximate: { id: [0x90E61D55697A0D3Cn, 0xA6613FC42F78EF78n], text: "amp.law.EquivalenceStrength.Approximate" },  // 4hwsf-pbucu-1nybds-9zshr-rjvvs
     LawEquivalenceStrength_Analogous  : { id: [0x112A5CA73BB8C091n, 0x8A80533CC1EC7186n], text: "amp.law.EquivalenceStrength.Analogous" },    // 0j59f-bffxs-s28sp0-2m7m0-yswd6
-    // License classes (AOM ED-license-model.md §3.1).
+    // License classes (amp.core.proto EpochTerms).
     // EpochTerms.LicenseClass is a Tag resolving to one of these UIDs; the
     // class is a self-declaration the federation's Endorsement cites, never
     // an on-node check.  Zero UID = NonCommercial.
@@ -422,8 +422,8 @@ export const HomeVars = {
 
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───
 export const Terminal = {
-    // The ContentType of a terminal session's MediaLink Tag; routes the channel
-    // to the terminal shuttle runtime (AOM AD-app-terminal.md §6).
+    // The ContentType of a terminal session's MediaLink Tag; a transport
+    // controller routes the channel to the terminal shuttle runtime on it.
     ContentType:                "application/x-amp-terminal",
     DefaultCols:                80,  // PTY grid columns
     DefaultRows:                24,  // PTY grid rows

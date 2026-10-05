@@ -63,8 +63,8 @@ tags Attr {
             SeriesAssetTag "asset.Tag"
             SeriesHeadLink "link.Tag"
             SeriesLinkTree "link.tree.Tags"
-            // The item's look: mesh ⊥ layers ⊥ args in one cell (AOM
-            // MD-mantle-architecture.md §12.5).
+            // The item's look: mesh ⊥ layers ⊥ args in one cell (amp.std.proto
+            // SkinSpec).
             SeriesSkin     "SkinSpec"
             SeriesS2R      "S2.radius.mm"
             SeriesS2T      "S2.UTC64"
@@ -187,7 +187,7 @@ tags Attr {
             LawMemberKind_Process   "Process"
         }
 
-        // Attestation modalities (AOM SD-modal-attestation.md).
+        // Attestation modalities (amp.core.proto Attestation).
         // Attestation.Modality is a Tag resolving to one of these UIDs.
         // Communities + apps may register additional modalities.  Zero UID =
         // unspecified.
@@ -204,7 +204,7 @@ tags Attr {
             LawAttestationModality_Retracted   "Retracted"
         }
 
-        // Equivalence strengths (AOM SD-address-equivalence.md).
+        // Equivalence strengths (amp.core.proto Equivalence).
         // Equivalence.Strength is a Tag resolving to one of these UIDs.  Zero
         // UID = unspecified.
         LawEquivalenceStrength "EquivalenceStrength" {
@@ -214,7 +214,7 @@ tags Attr {
             LawEquivalenceStrength_Analogous   "Analogous"
         }
 
-        // License classes (AOM ED-license-model.md §3.1).
+        // License classes (amp.core.proto EpochTerms).
         // EpochTerms.LicenseClass is a Tag resolving to one of these UIDs; the
         // class is a self-declaration the federation's Endorsement cites, never
         // an on-node check.  Zero UID = NonCommercial.
@@ -439,8 +439,8 @@ const HomeVars {
 
 // amp.Terminal emulator / grid + shuttle transport defaults.
 const Terminal {
-    // The ContentType of a terminal session's MediaLink Tag; routes the channel
-    // to the terminal shuttle runtime (AOM AD-app-terminal.md §6).
+    // The ContentType of a terminal session's MediaLink Tag; a transport
+    // controller routes the channel to the terminal shuttle runtime on it.
     string ContentType = "application/x-amp-terminal";
 
     int32 DefaultCols                = 80;      // PTY grid columns

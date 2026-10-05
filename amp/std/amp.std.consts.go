@@ -207,8 +207,8 @@ var Attr = struct {
 	SeriesAssetTag: tag.Name{ID: tag.UID{0x38365DC6227700FB, 0x39ACAA81B253C797}, Text: "item.series.asset.Tag"},      // 1s6tf-wd8mr-03xmmc-5bh6t-57jwr
 	SeriesHeadLink: tag.Name{ID: tag.UID{0x1F851D40FE1D382B, 0x5521D97B38F0236C}, Text: "item.series.link.Tag"},       // 0zhnf-n1zhx-70ppb8-ftgdw-g08vd
 	SeriesLinkTree: tag.Name{ID: tag.UID{0x5B51B3B938C3C87F, 0xB429C4C1470DD710}, Text: "item.series.link.tree.Tags"}, // 2vb6t-vkf63-t1zv8b-f4s53-hvpsh
-	// The item's look: mesh ⊥ layers ⊥ args in one cell (AOM
-	// MD-mantle-architecture.md §12.5).
+	// The item's look: mesh ⊥ layers ⊥ args in one cell (amp.std.proto
+	// SkinSpec).
 	SeriesSkin:     tag.Name{ID: tag.UID{0x8E878C8F846ABC37, 0xCABC2A7CD0B82C8B}, Text: "item.series.SkinSpec"},     // 4fhy6-8z13b-rhvwpg-1bgm8-chc4c
 	SeriesS2R:      tag.Name{ID: tag.UID{0x0C89F9B0717A62A5, 0x79AA41CD3FA29CDD}, Text: "item.series.S2.radius.mm"}, // 0dj7w-v0wcu-dbkrmb-k1tnz-u576x
 	SeriesS2T:      tag.Name{ID: tag.UID{0x749CA29A38DAA5BF, 0x7139081806CBF2C5}, Text: "item.series.S2.UTC64"},     // 3nmkj-9nf6u-nqzr2f-88303-drwq5
@@ -327,7 +327,7 @@ var Attr = struct {
 	LawMemberKind_Successor: tag.Name{ID: tag.UID{0x627C11221E4584F9, 0xCD00ACCD3211B4F9}, Text: "amp.law.MemberKind.Successor"}, // 32gh8-k47k5-hmwwu0-5dtnt-13e7t
 	LawMemberKind_Memorial:  tag.Name{ID: tag.UID{0xBA335B3927C0252B, 0xB791D002F55B477F}, Text: "amp.law.MemberKind.Memorial"},  // 5u6ee-mk9y0-4npvg4-fh0cu-pqjvz
 	LawMemberKind_Process:   tag.Name{ID: tag.UID{0x98ECE8E691BE5BD5, 0x7E0A29F6F4393466}, Text: "amp.law.MemberKind.Process"},   // 4sxmn-fe4ey-cgbrw2-j9yvu-3ke36
-	// Attestation modalities (AOM SD-modal-attestation.md).
+	// Attestation modalities (amp.core.proto Attestation).
 	// Attestation.Modality is a Tag resolving to one of these UIDs.
 	// Communities + apps may register additional modalities.  Zero UID =
 	// unspecified.
@@ -343,7 +343,7 @@ var Attr = struct {
 	LawAttestationModality_Conditional: tag.Name{ID: tag.UID{0x84466F1352512715, 0x29E493F726901576}, Text: "amp.law.AttestationModality.Conditional"}, // 448tr-j6nkj-4wbkmt-4mywm-905cq
 	LawAttestationModality_Contested:   tag.Name{ID: tag.UID{0x0502182AD6D3BDB4, 0xC9F14651631969E3}, Text: "amp.law.AttestationModality.Contested"},   // 0508d-2ppqm-rqudmw-b6b5j-jkug3
 	LawAttestationModality_Retracted:   tag.Name{ID: tag.UID{0xCA955565A08728E6, 0x4FCC6CCB72D595CB}, Text: "amp.law.AttestationModality.Retracted"},   // 6bkpb-qc847-53m4zm-3dtet-ec5fc
-	// Equivalence strengths (AOM SD-address-equivalence.md).
+	// Equivalence strengths (amp.core.proto Equivalence).
 	// Equivalence.Strength is a Tag resolving to one of these UIDs.  Zero
 	// UID = unspecified.
 	LawEquivalenceStrength: tag.Name{ID: tag.UID{0x17501E56DC9B1A5D, 0x19F49F4EF6B49F84}, Text: "amp.law.EquivalenceStrength"}, // 0rb0g-5er4v-39fjmx-4z9vv-c97w4
@@ -352,7 +352,7 @@ var Attr = struct {
 	LawEquivalenceStrength_Translation: tag.Name{ID: tag.UID{0x8D295A1372FA2C5D, 0x10798077BE8E1B1A}, Text: "amp.law.EquivalenceStrength.Translation"}, // 4e55e-16wru-5jfj0y-d0fyz-8w6su
 	LawEquivalenceStrength_Approximate: tag.Name{ID: tag.UID{0x90E61D55697A0D3C, 0xA6613FC42F78EF78}, Text: "amp.law.EquivalenceStrength.Approximate"}, // 4hwsf-pbucu-1nybds-9zshr-rjvvs
 	LawEquivalenceStrength_Analogous:   tag.Name{ID: tag.UID{0x112A5CA73BB8C091, 0x8A80533CC1EC7186}, Text: "amp.law.EquivalenceStrength.Analogous"},   // 0j59f-bffxs-s28sp0-2m7m0-yswd6
-	// License classes (AOM ED-license-model.md §3.1).
+	// License classes (amp.core.proto EpochTerms).
 	// EpochTerms.LicenseClass is a Tag resolving to one of these UIDs; the
 	// class is a self-declaration the federation's Endorsement cites, never
 	// an on-node check.  Zero UID = NonCommercial.
@@ -571,8 +571,8 @@ const (
 
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───
 const (
-	// The ContentType of a terminal session's MediaLink Tag; routes the channel
-	// to the terminal shuttle runtime (AOM AD-app-terminal.md §6).
+	// The ContentType of a terminal session's MediaLink Tag; a transport
+	// controller routes the channel to the terminal shuttle runtime on it.
 	TerminalContentType                = "application/x-amp-terminal"
 	TerminalDefaultCols                = int32(80)   // PTY grid columns
 	TerminalDefaultRows                = int32(24)   // PTY grid rows
