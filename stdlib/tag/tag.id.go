@@ -504,8 +504,8 @@ func (id UID) Then(other UID) UID {
 	return id.Subtract(other)
 }
 
-// Add is a commutative 128-bit modular add: UID arithmetic, not the tag
-// canonization path (see [UID.With]).
+// Add is a commutative 128-bit modular add — the combine [UID.With] applies on
+// the canonization path.
 func (id UID) Add(oth UID) (out UID) {
 	carry := uint64(0)
 	out[1], carry = bits.Add64(id[1], oth[1], 0)

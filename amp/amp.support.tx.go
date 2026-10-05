@@ -13,10 +13,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-// TxDataStore is a message packet sent to / from a client.
-// It leads with a fixed-size header (TxPreambleSize).
-type TxDataStore []byte
-
 // TxPreamble is the fixed-size header that leads every TxMsg.
 type TxPreamble [TxPreambleSize]byte
 
