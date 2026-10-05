@@ -1106,8 +1106,11 @@ This keeps the card pattern viable on phones, XR headsets, and embedded surfaces
    {vaultUrl}/cards/{card-type}?token=<sessionToken>&planet=<planetTag>&...
 2. app.www serves the HTML.  The card's <head> declares its title, intents,
    sized hints, and focus model via <meta name="amp:card:*"> tags.
-3. The Pane reads the manifest and configures the WebView; /amp/bridge.js, the
-   card's first script, installs window.amp and attaches to the Pane's transport hook.
+3. On load, a script the Pane injects posts the <meta name="amp:card:*"> tags to
+   the host as one amp.card.manifest message over the host transport (the node's
+   CSP blocks a value-returning script); the Pane configures the WebView from it,
+   on a trusted origin only. /amp/bridge.js, the card's first script, installs
+   window.amp and attaches to the Pane's transport hook.
 4. The card calls amp.read / amp.write / amp.subscribe / amp.upload to bind
    to amp state.  Live updates from cross-device edits land via amp.subscribe.
 5. The card handles forms via amp.submit; back-nav via amp.back.  The Pane
@@ -1126,7 +1129,7 @@ This keeps the card pattern viable on phones, XR headsets, and embedded surfaces
 <meta name="amp:card:back:handles" content="true">       <!-- card consumes back -->
 ```
 
-The Pane introspects these on load. Manifests survive AI generation because they're standard meta tags.
+The manifest reaches the Pane as one `amp.card.manifest` message posted by an injected page-load script (AD-app-www §6.5); each load starts as a plain browser page. Manifests survive AI generation because they're standard meta tags.
 
 ### 8.5 `window.amp` Bridge IDL
 
