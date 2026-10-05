@@ -7250,8 +7250,9 @@ func (x *CrateRef) GetBlobID_1() uint64 {
 //	(PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=*)
 //
 // All fields admin-signable; founders may include a Brand TxOp in the genesis
-// envelope as the first record (EditID=0) or defer to a later admin-signed
-// channel write.  AOM DD-name-service.md §2.
+// envelope as the first edit (its EditID is the genesis TxID, as every write
+// stamps EditID = TxID) or defer to a later admin-signed channel write.  AOM
+// DD-name-service.md §2.
 type Brand struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The planet's identity field set — admin-mutable here; BrandIdentity
@@ -7427,10 +7428,10 @@ type NameServiceRecord struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	FQDN     string                 `protobuf:"bytes,1,opt,name=FQDN,proto3" json:"FQDN,omitempty"`         // "spaces.plan.tools" — exact-match key for Resolve
 	PlanetID *Tag                   `protobuf:"bytes,2,opt,name=PlanetID,proto3" json:"PlanetID,omitempty"` // target planet UID
-	// First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand,
-	// amp.brand.UID, EditID=0).  Consumers may dereference this to read the
-	// founders-signed first Brand record when one was published in the genesis
-	// envelope; absent that, the first admin-signed Brand edit fills this slot.
+	// The target's Brand cell: (target PlanetID, HeadNodeID, amp.brand,
+	// amp.brand.UID), EditID unset — it names the cell, not one edit.  Its
+	// first edit is the founders-signed genesis Brand when genesis carried one
+	// (EditID = the genesis TxID), else the first admin-signed Brand edit.
 	BrandAddr *Address `protobuf:"bytes,3,opt,name=BrandAddr,proto3" json:"BrandAddr,omitempty"`
 	// Full Brand snapshot for offline Search ranking — copy of the latest
 	// Brand at the time the record was registered.  A federation refreshes
@@ -7448,7 +7449,7 @@ type NameServiceRecord struct {
 	FounderFingerprint []byte `protobuf:"bytes,5,opt,name=FounderFingerprint,proto3" json:"FounderFingerprint,omitempty"`
 	// Where the target planet can be pinned for bootstrap.
 	VaultAddrs    []*VaultAddr `protobuf:"bytes,7,rep,name=VaultAddrs,proto3" json:"VaultAddrs,omitempty"`
-	RegisteredAt  *Tag         `protobuf:"bytes,8,opt,name=RegisteredAt,proto3" json:"RegisteredAt,omitempty"` // TxID of registering TxMsg (initial Upsert)
+	RegisteredAt  *Tag         `protobuf:"bytes,8,opt,name=RegisteredAt,proto3" json:"RegisteredAt,omitempty"` // TxID of the carrying TxMsg, rebound per cached edit (AOM DD-name-service.md §15.2)
 	RegisteredBy  *Tag         `protobuf:"bytes,9,opt,name=RegisteredBy,proto3" json:"RegisteredBy,omitempty"` // signing member's MemberID (federation admin)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

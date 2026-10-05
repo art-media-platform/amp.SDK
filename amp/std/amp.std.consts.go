@@ -273,15 +273,16 @@ var Attr = struct {
 	SurfaceVolume: tag.Name{ID: tag.UID{0xF85D3F7208AFC5B3, 0x39D453801476E4A3}, Text: "channel.surface.Volume"}, // 7scnz-r425g-sqtmmp-2mh0b-7et53
 
 	// ─── Brand — substrate-native planet identity (AOM DD-name-service.md §2). ───
-	// Single item per planet at (HeadNodeID, amp.Brand, its own UID); the
-	// genesis TxOp at EditID=0 binds identity-tier fields to the planet's
-	// cryptographic root.
+	// Single item per planet at (HeadNodeID, amp.Brand, its own UID).  An
+	// optional founding edit rides the genesis tx under the founders'
+	// signatures; its EditID is the genesis TxID (every write stamps EditID =
+	// TxID — AOM SD-edit-resolution.md §6.1).
 	Brand: tag.Name{ID: tag.UID{0xB70889689791764B, 0xB554FC786AE221AE}, Text: "amp.Brand"}, // 5r124-qj5wj-ft5vbp-7wg1p-f48ef
 
 	// ─── NameService — substrate-native naming primitive (AOM DD-name-service.md ───
-	// §3).  A channel any planet may host; records map FQDN → tag.UID with
+	// §3).  A channel any planet may host; records map FQDN → planet UID with
 	// bootstrap metadata.  Federations propagate their channel to members via
-	// normal CRDT sync.  Any UID-bearing entity is namable, not only planets.
+	// normal CRDT sync.
 	NameService: tag.Name{ID: tag.UID{0xB363152A99B543E3, 0x44B6A07DD731D29D}, Text: "amp.name.service"}, // 5mddb-kp6ep-8gjn9e-p0grc-m3nnx
 
 	NameServiceRecord: tag.Name{ID: tag.UID{0x6E05972FB0B532A2, 0xB69FF72616AB00CC}, Text: "amp.name.service.NameServiceRecord"}, // 3f0qc-kzd5p-6bjce7-zr4sc-bq06d

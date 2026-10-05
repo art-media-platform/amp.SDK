@@ -2013,8 +2013,9 @@ message CrateRef {
 // federation.  Lives at a single CRDT address per planet
 //   (PlanetID, HeadNodeID, amp.brand, amp.brand.UID, EditID=*)
 // All fields admin-signable; founders may include a Brand TxOp in the genesis
-// envelope as the first record (EditID=0) or defer to a later admin-signed
-// channel write.  AOM DD-name-service.md §2.
+// envelope as the first edit (its EditID is the genesis TxID, as every write
+// stamps EditID = TxID) or defer to a later admin-signed channel write.  AOM
+// DD-name-service.md §2.
 message Brand {
 
     // The planet's identity field set — admin-mutable here; BrandIdentity
@@ -2072,10 +2073,10 @@ message NameServiceRecord {
     string              FQDN          = 1;    // "spaces.plan.tools" — exact-match key for Resolve
     Tag                 PlanetID      = 2;    // target planet UID
 
-    // First Brand TxOp address: (target PlanetID, HeadNodeID, amp.brand,
-    // amp.brand.UID, EditID=0).  Consumers may dereference this to read the
-    // founders-signed first Brand record when one was published in the genesis
-    // envelope; absent that, the first admin-signed Brand edit fills this slot.
+    // The target's Brand cell: (target PlanetID, HeadNodeID, amp.brand,
+    // amp.brand.UID), EditID unset — it names the cell, not one edit.  Its
+    // first edit is the founders-signed genesis Brand when genesis carried one
+    // (EditID = the genesis TxID), else the first admin-signed Brand edit.
     Address             BrandAddr     = 3;
 
     // Full Brand snapshot for offline Search ranking — copy of the latest
@@ -2097,7 +2098,7 @@ message NameServiceRecord {
     // Where the target planet can be pinned for bootstrap.
     repeated VaultAddr  VaultAddrs    = 7;
 
-    Tag                 RegisteredAt  = 8;    // TxID of registering TxMsg (initial Upsert)
+    Tag                 RegisteredAt  = 8;    // TxID of the carrying TxMsg, rebound per cached edit (AOM DD-name-service.md §15.2)
     Tag                 RegisteredBy  = 9;    // signing member's MemberID (federation admin)
 
     // ── Reserved — mechanism deferred, slot locked.  These ship INERT but

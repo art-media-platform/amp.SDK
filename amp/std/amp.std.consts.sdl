@@ -132,15 +132,16 @@ tags Attr {
     }
 
     // Brand — substrate-native planet identity (AOM DD-name-service.md §2).
-    // Single item per planet at (HeadNodeID, amp.Brand, its own UID); the
-    // genesis TxOp at EditID=0 binds identity-tier fields to the planet's
-    // cryptographic root.
+    // Single item per planet at (HeadNodeID, amp.Brand, its own UID).  An
+    // optional founding edit rides the genesis tx under the founders'
+    // signatures; its EditID is the genesis TxID (every write stamps EditID =
+    // TxID — AOM SD-edit-resolution.md §6.1).
     Brand "amp.Brand"
 
     // NameService — substrate-native naming primitive (AOM DD-name-service.md
-    // §3).  A channel any planet may host; records map FQDN → tag.UID with
+    // §3).  A channel any planet may host; records map FQDN → planet UID with
     // bootstrap metadata.  Federations propagate their channel to members via
-    // normal CRDT sync.  Any UID-bearing entity is namable, not only planets.
+    // normal CRDT sync.
     NameService "amp.name.service" {
         NameServiceRecord "NameServiceRecord"
     }
