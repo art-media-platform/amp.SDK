@@ -30,20 +30,18 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 | `LICENSE` | the Beta Evaluation License this kit is delivered under |
 | `VERSION` | the build record for this exact kit (see Version Identity) |
 
+On macOS the kit is an installer package: it places `bin/*` in
+`/usr/local/bin` and everything else in `/usr/local/share/amp-native-SDK/`.
+
 ## Quick Start
 
-1. Put `amp` on your `PATH`. On macOS, install the package
-   (`amp-native-SDK-{tier}-v0.NNN.N-darwin-{arch}.pkg`, beside the disk
-   image): it places `amp` and `ampd` in `/usr/local/bin` with no quarantine
-   attribute, and a later package replaces them in place.
-
-   Manual alternative: open the disk image and copy `bin/` wherever you keep
-   tools — the image is a browse-and-copy container, not an installer. A
-   binary copied out of the mounted image keeps the transit quarantine
-   attribute, and a non-interactive shell (cron, a service unit, `ssh`) has
-   no prompt to clear it — the process dies on first use with no message.
-   Clear it once after copying: `sudo xattr -d com.apple.quarantine /usr/local/bin/amp`
-   (and `ampd`).
+1. Put `amp` on your `PATH`.
+   - **macOS** (13 or later): open
+     `amp-native-SDK-{tier}-v0.NNN.N-darwin-{arch}.pkg`, or run
+     `sudo installer -pkg <file> -target /`. A later package replaces the
+     installed kit in place. Pick `arm64` for Apple silicon, `amd64` for
+     Intel.
+   - **Linux, Windows:** unzip the kit and put its `bin/` on your `PATH`.
 2. Get an invite URL and its passphrase from your operator (out-of-band).
 3. Redeem it — the full procedure, verification, and recovery steps are
    `AOM/O4-standard-procedures.md` §4.6:
@@ -135,17 +133,43 @@ name, the SHA-256 of each shipped binary, and the source commits. The kit
 filename carries the rest:
 
 ```
-amp-native-SDK-{tier}-v0.NNN.N-{platform}.dmg    macOS
+amp-native-SDK-{tier}-v0.NNN.N-{platform}.pkg    macOS
 amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip    Linux, Windows
 ```
 
-macOS ships a disk image because a notarization ticket can only be stapled into
-a container. The ticket then travels with the download, which is what lets the
-kit verify — and run — with no network.
+macOS ships a signed, notarized installer package. Its notarization ticket is
+stapled in, so it verifies with no network, and the files it places carry no
+download quarantine attribute: `amp` and `ampd` run from a launchd service,
+cron or `ssh` with no first-run prompt. Every document in the package also
+ships in the Linux and Windows zips.
 
-Not on a Mac and need to look inside the macOS kit? `7z x <kit>.dmg` unpacks a
-disk image on Linux and Windows. That is extraction only — the notarization
-checks below are macOS-only.
+## Deploying to a Mac Fleet
+
+The macOS package is built for fleet tools (Jamf, Kandji, Intune): a flat
+distribution package signed with a Developer ID Installer certificate,
+notarized and stapled, with a payload and no install scripts. Upload it
+unchanged.
+
+| What a fleet tool asks for | Answer |
+|---|---|
+| install command | `installer -pkg <file> -target /` (system domain only) |
+| receipt identifier | `com.art-media-platform.amp-native-SDK` |
+| version | `0.NNN.N`, rising with every release |
+| detection | `pkgutil --pkg-info com.art-media-platform.amp-native-SDK` exits 0 and reports the version |
+| minimum macOS | 13; the package refuses an older system |
+| architecture | one package per architecture under the same receipt; scope `arm64` to Apple silicon, `amd64` to Intel |
+
+The package installs no `.app`, so a tool that detects installs by app bundle
+ID (Intune's Included apps) has nothing to match: detect it by the receipt
+instead, with a script or extension attribute.
+
+To remove the kit:
+
+```
+sudo rm /usr/local/bin/amp /usr/local/bin/ampd
+sudo rm -r /usr/local/share/amp-native-SDK
+sudo pkgutil --forget com.art-media-platform.amp-native-SDK
+```
 
 ## Checking What You Downloaded
 
@@ -160,12 +184,9 @@ run the script:
 | What it establishes | Where |
 |---|---|
 | every download matches its recorded SHA-256 | everywhere |
-| the disk image is signed, notarized and stapled | macOS |
-| a binary you copied out is signed, and its ticket is readable | macOS |
+| the package is signed, notarized and stapled | macOS |
 
-The macOS checks need no network. The ticket is stapled into the image, so once
-you have opened the image both it and the binaries you copy out of it verify
-offline.
+The macOS check needs no network: the ticket is stapled into the package.
 
 `checksums.txt` carries no detached signature; the digests and the macOS
 notarization are what this kit attests. The script says so on every run rather
