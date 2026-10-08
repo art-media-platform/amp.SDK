@@ -36,11 +36,10 @@ On macOS the kit is an installer package: it places `bin/*` in
 ## Quick Start
 
 1. Put `amp` on your `PATH`.
-   - **macOS** (13 or later): open
-     `amp-maker-kit-{tier}-v0.NNN.N-darwin-{arch}.pkg`, or run
+   - **macOS** (13 or later, Apple silicon or Intel): open
+     `amp-maker-kit-v0.NNN.N-darwin-universal.pkg`, or run
      `sudo installer -pkg <file> -target /`. A later package replaces the
-     installed kit in place. Pick `arm64` for Apple silicon, `amd64` for
-     Intel.
+     installed kit in place.
    - **Linux, Windows:** unzip the kit and put its `bin/` on your `PATH`.
 2. Get an invite URL and its passphrase from your operator (out-of-band).
 3. Redeem it — the full procedure, verification, and recovery steps are
@@ -133,8 +132,8 @@ name, the SHA-256 of each shipped binary, and the source commits. The kit
 filename carries the rest:
 
 ```
-amp-maker-kit-{tier}-v0.NNN.N-{platform}.pkg    macOS
-amp-maker-kit-{tier}-v0.NNN.N-{platform}.zip    Linux, Windows
+amp-maker-kit-v0.NNN.N-darwin-universal.pkg     macOS
+amp-maker-kit-v0.NNN.N-{platform}.zip           Linux, Windows
 ```
 
 macOS ships a signed, notarized installer package. Its notarization ticket is
@@ -157,7 +156,7 @@ unchanged.
 | version | `0.NNN.N`, rising with every release |
 | detection | `pkgutil --pkg-info com.art-media-platform.amp-native-SDK` exits 0 and reports the version |
 | minimum macOS | 13; the package refuses an older system |
-| architecture | one package per architecture under the same receipt; scope `arm64` to Apple silicon, `amd64` to Intel |
+| architecture | one universal package for Apple silicon and Intel |
 
 The package installs no `.app`, so a tool that detects installs by app bundle
 ID (Intune's Included apps) has nothing to match: detect it by the receipt
@@ -198,11 +197,11 @@ what it could NOT check rather than passing silently.
 
 ## SDK Access Tiers
 
-This is the **Public — Evaluation** kit: the client surface, plus a node you may
-run for development and evaluation. Higher SDK access tiers add the operator
-and embedding surfaces — production `ampd` operation, `libampd`, and the
-brand-mint authoring slice — under commercial license. The kit name never
-changes across tiers; contents and license do. Ask your AMP contact about
-Creator and Brand Mint licensing.
+This kit is the same at every SDK access tier. Delivered under the bundled
+Beta Evaluation License, it covers the client surface plus a node you may run
+for development and evaluation. Higher tiers change the license, not the kit:
+production `ampd` operation is a commercial grant over these same binaries,
+and `libampd` and the brand-mint authoring slice arrive as separate packages.
+Ask your AMP contact about Creator and Brand Mint licensing.
 
 Contact: licensing@art.media.platform
