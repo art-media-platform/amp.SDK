@@ -1,4 +1,4 @@
-# amp-native-SDK
+# amp-maker-kit
 
 The native rail of AMP's two partner kits. Its sibling, **amp-web-SDK**, is the
 web rail — a pure JS/TS package that never carries a native binary. This kit
@@ -31,13 +31,13 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 | `VERSION` | the build record for this exact kit (see Version Identity) |
 
 On macOS the kit is an installer package: it places `bin/*` in
-`/usr/local/bin` and everything else in `/usr/local/share/amp-native-SDK/`.
+`/usr/local/bin` and everything else in `/usr/local/share/amp-maker-kit/`.
 
 ## Quick Start
 
 1. Put `amp` on your `PATH`.
    - **macOS** (13 or later): open
-     `amp-native-SDK-{tier}-v0.NNN.N-darwin-{arch}.pkg`, or run
+     `amp-maker-kit-{tier}-v0.NNN.N-darwin-{arch}.pkg`, or run
      `sudo installer -pkg <file> -target /`. A later package replaces the
      installed kit in place. Pick `arm64` for Apple silicon, `amd64` for
      Intel.
@@ -133,8 +133,8 @@ name, the SHA-256 of each shipped binary, and the source commits. The kit
 filename carries the rest:
 
 ```
-amp-native-SDK-{tier}-v0.NNN.N-{platform}.pkg    macOS
-amp-native-SDK-{tier}-v0.NNN.N-{platform}.zip    Linux, Windows
+amp-maker-kit-{tier}-v0.NNN.N-{platform}.pkg    macOS
+amp-maker-kit-{tier}-v0.NNN.N-{platform}.zip    Linux, Windows
 ```
 
 macOS ships a signed, notarized installer package. Its notarization ticket is
@@ -167,7 +167,7 @@ To remove the kit:
 
 ```
 sudo rm /usr/local/bin/amp /usr/local/bin/ampd
-sudo rm -r /usr/local/share/amp-native-SDK
+sudo rm -r /usr/local/share/amp-maker-kit
 sudo pkgutil --forget com.art-media-platform.amp-native-SDK
 ```
 
