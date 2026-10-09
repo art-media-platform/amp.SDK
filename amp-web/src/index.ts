@@ -83,7 +83,7 @@ export { AmpError, AmpErrorCode } from './errors.js';
 
 // React surface — <AmpProvider> and the hooks — lives on the
 // '@art-media-platform/web/react' subpath (src/react.ts).  This root entry
-// stays dependency-free: nothing reachable from it imports React
+// stays React-free: nothing reachable from it imports React
 // (barrel.test.ts guards the import graph).
 
 // Sealed-box BYOK — seal/open via the session-bound client (client.seal / .open)

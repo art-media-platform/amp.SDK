@@ -1,6 +1,6 @@
 /**
  * @art-media-platform/web/react — the React surface: <AmpProvider> and the
- * hooks.  The root entry (`@art-media-platform/web`) is dependency-free so a
+ * hooks.  The root entry (`@art-media-platform/web`) imports no React, so a
  * React-free bundler consumer or a Node harness imports AmpWebClient and the
  * codecs without React; React apps import this subpath alongside it.
  */

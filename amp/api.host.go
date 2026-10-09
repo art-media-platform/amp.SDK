@@ -434,10 +434,9 @@ type ACCEngine interface {
 // Quarantine: entries that fail cryptographic verification (bad MemberProof or
 // bad signature) can be marked quarantined with a TTL.  Quarantined entries are
 // suppressed from ReadSince (and therefore from fanout + sync propagation)
-// while remaining retrievable via ReadQuarantined for audit.  HighWater and
-// RangeHash continue to include quarantined entries so peers converge on the
-// same journal shape.  The underlying store evicts quarantined entries after
-// TTL.
+// while remaining retrievable via ReadQuarantined for audit.  HighWater
+// includes them; RangeHash (the accepted digest) excludes them.  The
+// underlying store evicts quarantined entries after TTL.
 type TxJournal interface {
 	Close() error
 	Append(planetID tag.UID, txTimeID tag.UID, raw []byte) error

@@ -1,6 +1,6 @@
 /**
  * Entry-point drift guard: the root barrel (src/index.ts, the '.' export) is
- * dependency-free — nothing reachable from it imports `react` (or a .tsx
+ * React-free — nothing reachable from it imports `react` (or a .tsx
  * module) — so a React-free bundler consumer or a Node harness imports
  * AmpWebClient and the codecs without React.  The React surface lives on
  * src/react.ts ('./react'), which this test asserts DOES reach react, so the

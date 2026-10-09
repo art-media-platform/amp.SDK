@@ -348,21 +348,20 @@ func (l *logger) emit(sev severity, level int32, depth int, msg string) {
 
 	lineBytes := []byte(sb.String())
 	os.Stderr.Write(lineBytes)
-	if f := openFileLogger(); f != nil {
-		// Strip ANSI codes for file output.  The only codes we insert are
-		// sevTable[*].ansi and ansiReset — a simple strip is sufficient.
-		if useColor && entry.ansi != "" {
-			f.Write(stripANSI(lineBytes))
-		} else {
-			f.Write(lineBytes)
-		}
-	}
-	if gMirror != nil {
-		mirrored := lineBytes
+
+	// The file and the mirror take plain text: color is for the terminal only.
+	file := openFileLogger()
+	if file != nil || gMirror != nil {
+		plain := lineBytes
 		if useColor {
-			mirrored = stripANSI(lineBytes)
+			plain = stripANSI(lineBytes)
 		}
-		gMirror(level, entry.tag, string(mirrored))
+		if file != nil {
+			file.Write(plain)
+		}
+		if gMirror != nil {
+			gMirror(level, entry.tag, string(plain))
+		}
 	}
 	gOutMu.Unlock()
 }
