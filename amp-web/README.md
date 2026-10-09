@@ -43,10 +43,11 @@ Two install traps to know up front (fixes and symptoms in
   runtime deps do not resolve through the link (`Cannot find package
   '@noble/curves'`). If the bundle must live elsewhere, run `npm install`
   once inside `amp-web-SDK/` so it carries its own `node_modules`.
-- **`react` (>= 18) is required even headless.** The package entry imports
-  the React hooks, so Node / SSR consumers need `react` installed too.
-  npm >= 7 installs peer dependencies automatically; with yarn or pnpm add
-  `react` explicitly.
+- **React hooks use a separate entry.** Import `AmpWebClient` and codecs
+  from `@art-media-platform/web`; that entry does not import React.
+  `<AmpProvider>` and hooks come from `@art-media-platform/web/react`
+  and require React >= 18. The package declares a React peer dependency,
+  which your package manager may install even for a headless consumer.
 
 Runtime deps are three pure-JS `@noble/*` packages (the sealed-box crypto);
 networking is native `fetch` + `WebSocket`.

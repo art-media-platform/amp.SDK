@@ -17,15 +17,20 @@ Fix (either):
 - Or give the bundle its own deps once: `cd amp-web-SDK && npm install`.
   A sibling path (`file:../amp-web-SDK`) resolves after that.
 
-## `Cannot find module 'react'` in a Node / Headless Consumer
+## `Cannot find module 'react'` When Using Hooks
 
-The package entry imports the React hooks, so `react` must be present
-even if you never render — npm >= 7 installs peer dependencies
-automatically, but yarn and pnpm do not:
+`@art-media-platform/web/react` exports the provider and hooks and
+requires React >= 18. Install it with your project's package manager
+if the peer dependency is missing:
 
 ```bash
-npm/yarn/pnpm add react   # >= 18
+npm install react
 ```
+
+A headless consumer imports `AmpWebClient` and codecs from
+`@art-media-platform/web`, whose runtime entry does not import React.
+The package still declares the React peer dependency, so installation
+and runtime import requirements are separate.
 
 ## `require() of ES Module … not supported`
 

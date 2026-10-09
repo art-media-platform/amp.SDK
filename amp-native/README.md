@@ -72,8 +72,10 @@ What it is for in this kit:
 
 - the local follower node of `AOM/O4-standard-procedures.md` §4.17 — a real
   peer for the CLI and for a web app under development;
-- serving your own AppModule against a node you control while you build it;
 - running the §4.18 mint-and-connect walk end to end.
+
+It runs AMP's built-in apps only. A Go AppModule of your own is compiled into
+a host build that registers it; this `ampd` cannot load one.
 
 `ampd -h` prints the full flag set. §4.17 gives the working invocation and the
 one trap worth knowing up front: `-port.host` does not move the HTTP port, so
