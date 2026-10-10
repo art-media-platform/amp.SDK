@@ -379,7 +379,8 @@ func (c *ctx) runMonitor(parent *ctx) {
 	c.waitIdle()
 	c.reportAbandoned()
 
-	// Finalize the child before releasing its parent's drain reservation.
+	// Finalize before leaving the parent: an owned child's OnClosed and Done()
+	// precede its parent's (ZO §1.2).
 	c.mu.Lock()
 	c.state = Closed
 	c.mu.Unlock()
@@ -402,7 +403,8 @@ func (c *ctx) runMonitor(parent *ctx) {
 				parentIdleClose = parent.task.Info.IdleClose
 			}
 		}
-		// A waking parent observes both removal and completed child cleanup.
+		// Done() fires with the removal: an observer of it finds the child
+		// gone, and the parent cannot finalize first.
 		close(c.chClosed)
 		parent.signalChange()
 		parent.mu.Unlock()

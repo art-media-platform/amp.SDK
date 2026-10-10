@@ -137,6 +137,11 @@ type Info struct {
 
 // Task is a parameter block used to start a new Context and contains hooks for
 // each stage of the Context's lifecycle.
+//
+// An owned child's OnStart, OnRun and hooks all run inside its parent's
+// drain: the parent's OnClosed and Done() follow them, as do those of each
+// further ancestor up to and including the nearest Detach one.  A hook or
+// body that waits on such an ancestor's Done() never returns (ZO §1.2).
 type Task struct {
 	Info
 
@@ -208,10 +213,9 @@ type Context interface {
 	// OnClosed() runs before Done() fires.
 	Closing() <-chan struct{}
 
-	// Signals when Close() has fully executed, no children remain, and OnClosed()
-	// has been completed.  A Detach child still live is not waited for; every
-	// owned child's Done() fires first, so an OnClosed() that waits on an
-	// ancestor's Done() never returns (ZO §1.2).
+	// Signals when Close() has fully executed, every owned child's Done() has
+	// fired, and OnClosed() has completed.  A Detach child still live is not
+	// waited for.
 	Done() <-chan struct{}
 
 	// Reports how many Detach children were still live when this Context
