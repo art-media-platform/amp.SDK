@@ -2,6 +2,7 @@ package encode
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -143,6 +144,32 @@ func TestStreamingMatchesStringWrappers(t *testing.T) {
 	}
 }
 
+func TestDecoderPreservesReadError(t *testing.T) {
+	cause := errors.New("source read failed")
+	for _, payload := range [][]byte{nil, {7}, {7, 11, 13, 17, 19}} {
+		for _, withData := range []bool{false, true} {
+			if withData && len(payload) == 0 {
+				continue // no data to fail alongside
+			}
+			name := "separate-error"
+			if withData {
+				name = "data-and-error"
+			}
+			t.Run(name+"/"+Base32Encoding.EncodeToString(payload), func(t *testing.T) {
+				src := &failedSource{
+					body:     []byte(Base32Encoding.EncodeToString(payload)),
+					cause:    cause,
+					withData: withData,
+				}
+				decoded, err := io.ReadAll(NewDecoder(src))
+				if !bytes.Equal(decoded, payload) || !errors.Is(err, cause) {
+					t.Fatalf("decoded %x with error %v; want %x, then %v", decoded, err, payload, cause)
+				}
+			})
+		}
+	}
+}
+
 func TestToBase32ZeroCases(t *testing.T) {
 	if got := ToBase32(nil); got != "0" {
 		t.Errorf("nil → %q, want \"0\"", got)
@@ -179,4 +206,30 @@ func group(str string, size int, sep string) string {
 		out.WriteString(str[i:end])
 	}
 	return out.String()
+}
+
+// failedSource yields body, then fails with cause: alongside the last bytes
+// when withData is set, otherwise on the next read; later reads return EOF.
+type failedSource struct {
+	body     []byte
+	cause    error
+	withData bool
+	failed   bool
+}
+
+func (src *failedSource) Read(dst []byte) (int, error) {
+	if len(src.body) > 0 {
+		count := copy(dst, src.body)
+		src.body = src.body[count:]
+		if len(src.body) == 0 && src.withData {
+			src.failed = true
+			return count, src.cause
+		}
+		return count, nil
+	}
+	if !src.failed {
+		src.failed = true
+		return 0, src.cause
+	}
+	return 0, io.EOF
 }

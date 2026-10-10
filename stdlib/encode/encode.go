@@ -41,7 +41,9 @@ func NewEncoder(dst io.Writer) io.WriteCloser {
 // to the character they are mistaken for — i, I, l, L → 1 and o, O → 0 — so a
 // hand-transcribed token still decodes.  Any other out-of-alphabet character is
 // left for the base32 decoder to reject, so a corrupted or wrong-alphabet
-// stream fails cleanly instead of decoding to plausible-but-wrong bytes.
+// stream fails cleanly instead of decoding to plausible-but-wrong bytes.  On a
+// read error from src, the bytes read before it are decoded and delivered,
+// then the error is returned.
 func NewDecoder(src io.Reader) io.Reader {
 	return base32.NewDecoder(Base32Encoding, &sanitizer{src: bufio.NewReader(src), atStart: true})
 }
@@ -79,24 +81,28 @@ func FromBase32(in string) ([]byte, error) {
 type sanitizer struct {
 	src     *bufio.Reader
 	atStart bool
+	failed  error // BOM-peek read error, held until the peeked bytes drain
 }
 
 func (san *sanitizer) Read(dst []byte) (int, error) {
 	if san.atStart {
 		san.atStart = false
-		if mark, _ := san.src.Peek(3); len(mark) == 3 &&
-			mark[0] == 0xEF && mark[1] == 0xBB && mark[2] == 0xBF {
+		mark, err := san.src.Peek(3)
+		if err != nil && err != io.EOF {
+			san.failed = err
+		}
+		if len(mark) == 3 && mark[0] == 0xEF && mark[1] == 0xBB && mark[2] == 0xBF {
 			_, _ = san.src.Discard(3) // drop a leading UTF-8 BOM
 		}
 	}
 	count := 0
 	for count < len(dst) {
+		if san.failed != nil && san.src.Buffered() == 0 {
+			return count, san.failed
+		}
 		next, err := san.src.ReadByte()
 		if err != nil {
-			if count > 0 {
-				return count, nil
-			}
-			return 0, err
+			return count, err
 		}
 		switch {
 		case next == '-' || next == ' ' || next == '\t' ||
