@@ -3,6 +3,7 @@ package tag
 import (
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"math/bits"
 	"regexp"
@@ -683,7 +684,8 @@ func (id UID) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON decodes a quoted Base32 string (or a name expression) into a
 // UID via Parse, so an inbound UID round-trips intact instead of being
-// re-hashed.  null and "" decode to the zero UID.
+// re-hashed.  null and "" decode to the zero UID.  Parse receives the
+// unescaped string, so an escaped and a plain spelling decode alike.
 func (id *UID) UnmarshalJSON(b []byte) error {
 	if len(b) == 0 || string(b) == "null" {
 		*id = UID{}
@@ -692,12 +694,15 @@ func (id *UID) UnmarshalJSON(b []byte) error {
 	if len(b) < 2 || b[0] != '"' || b[len(b)-1] != '"' {
 		return fmt.Errorf("tag.UID: expected quoted string, got %q", b)
 	}
-	s := string(b[1 : len(b)-1])
-	if s == "" {
+	text := ""
+	if err := json.Unmarshal(b, &text); err != nil {
+		return fmt.Errorf("tag.UID: %w", err)
+	}
+	if text == "" {
 		*id = UID{}
 		return nil
 	}
-	*id = ParseUID(s)
+	*id = ParseUID(text)
 	return nil
 }
 
