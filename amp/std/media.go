@@ -251,7 +251,7 @@ func (a *mediaStreamAsset) NewAssetReader() (data.AssetReader, error) {
 // loadLocked scans the attr, orders the segments by capture-time ItemID, and lays
 // them out on a contiguous byte timeline.  Caller holds a.mu.
 func (a *mediaStreamAsset) loadLocked() error {
-	coll := &segCollector{revision: tag.NowID(), attr: a.src.Attr}
+	coll := &segCollector{attr: a.src.Attr}
 	if err := LoadItems(a.appCtx, a.src.Node, a.src.Attr, coll, amp.TxScope{Planet: a.src.Planet}); err != nil {
 		return err
 	}
@@ -282,13 +282,10 @@ type segRaw struct {
 // segCollector gathers a node's Segment items under one attr — their blob,
 // byte length, and ItemID — dropping the inline copy.
 type segCollector struct {
-	revision    tag.UID
 	attr        tag.UID
 	raw         []segRaw
 	contentType string
 }
-
-func (c *segCollector) Revision() tag.UID { return c.revision }
 
 func (c *segCollector) OnNodeUpdate(update amp.NodeUpdate) {
 	if update.Tx == nil {

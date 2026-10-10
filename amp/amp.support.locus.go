@@ -32,7 +32,6 @@ type LocusBinding[V proto.Message] struct {
 	OnCell func(cell int, item AttrItem[V]) // per-cell update callback
 	OnSync func()                           // batch complete callback
 
-	revision tag.UID
 	nodeID   tag.UID
 	msgType  protoreflect.MessageType
 	attached []locusCell[V] // sparse list of occupied cells
@@ -52,9 +51,6 @@ func NewLocusBinding[V proto.Message](base tag.Name) *LocusBinding[V] {
 // ════════════════════════════════════════════════════════
 // Identity
 // ════════════════════════════════════════════════════════
-
-// Revision implements NodeResponder.
-func (loc *LocusBinding[V]) Revision() tag.UID { return loc.revision }
 
 // NodeID returns the bound node ID.
 func (loc *LocusBinding[V]) NodeID() tag.UID { return loc.nodeID }
@@ -128,14 +124,8 @@ func (loc *LocusBinding[V]) DeleteCell(tx *TxMsg, cell int) bool {
 // OnNodeUpdate filters incoming ops for this locus span, updates cached cell state,
 // and fires OnCell for each matching op.
 func (loc *LocusBinding[V]) OnNodeUpdate(update NodeUpdate) {
-	loc.revision = update.Revision
-
-	if loc.nodeID != update.NodeID {
-		if loc.nodeID.IsNil() {
-			loc.nodeID = update.NodeID
-		} else {
-			return
-		}
+	if !acceptUpdateNode(&loc.nodeID, update.NodeID) {
+		return
 	}
 
 	baseID := loc.Base.ID
@@ -211,5 +201,4 @@ func (loc *LocusBinding[V]) detachCell(cell int) {
 // Clear resets all accumulated state.
 func (loc *LocusBinding[V]) Clear() {
 	loc.attached = loc.attached[:0]
-	loc.revision = tag.UID{}
 }

@@ -7,6 +7,8 @@
 package std
 
 import (
+	"slices"
+
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
@@ -61,50 +63,41 @@ type Pin[AppT amp.AppInstance] struct {
 	responders []amp.NodeResponder    // bound responders (binding pattern)
 }
 
-// Bind registers a NodeResponder on this pin.
+// Bind registers a NodeResponder on this pin; binding it again has no effect.
 // When MergeIncoming is called, matching ops are dispatched to this responder.
 // Typically used with amp.FoldBinding[V] instances.
 func (pin *Pin[AppT]) Bind(resp amp.NodeResponder) {
-	pin.responders = append(pin.responders, resp)
+	if !slices.Contains(pin.responders, resp) {
+		pin.responders = append(pin.responders, resp)
+	}
 }
 
-// MergeIncoming processes an incoming TxMsg by dispatching ops to bound
-// responders.  Supports multi-pass iteration: if a responder adds new
-// responders during its callback, additional passes ensure the new responders
-// also process the tx.
+// MergeIncoming processes an incoming TxMsg by offering each node it touches,
+// in order of first appearance, to each bound responder once.  Supports
+// multi-pass iteration: if a responder adds new responders during its
+// callback, additional passes ensure the new responders also process the tx.
 func (pin *Pin[AppT]) MergeIncoming(tx *amp.TxMsg) {
 	revision := tag.NowID()
+	nodeIDs := amp.EnumNodeIDs(tx)
 
-	// Collect unique nodeIDs from the tx ops.
-	nodeIDs := make([]tag.UID, 0, 4)
-	seen := make(map[tag.UID]bool, 4)
-	for _, op := range tx.Ops {
-		if !seen[op.Addr.NodeID] {
-			seen[op.Addr.NodeID] = true
-			nodeIDs = append(nodeIDs, op.Addr.NodeID)
-		}
-	}
-
-	// Multi-pass: responders added during callbacks trigger additional passes.
+	// Bind only appends: responders[:handled] have been offered every node.
+	handled := 0
 	for range 100 {
-		prevCount := len(pin.responders)
-
+		bound := len(pin.responders)
+		if handled == bound {
+			break
+		}
 		for _, nodeID := range nodeIDs {
 			update := amp.NodeUpdate{
 				Tx:       tx,
 				NodeID:   nodeID,
 				Revision: revision,
 			}
-			for _, resp := range pin.responders {
-				if resp.Revision() != revision {
-					resp.OnNodeUpdate(update)
-				}
+			for _, resp := range pin.responders[handled:bound] {
+				resp.OnNodeUpdate(update)
 			}
 		}
-
-		if len(pin.responders) == prevCount {
-			break
-		}
+		handled = bound
 	}
 }
 

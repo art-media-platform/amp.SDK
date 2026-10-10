@@ -121,11 +121,15 @@ func PinAndServe[AppT amp.AppInstance](item Item[AppT], app AppT, req *amp.Reque
 		label += fmt.Sprintf(", Item.(*%v)", reflect.TypeOf(item).Elem().Name())
 	}
 
-	var err error
-	pin.ctx, err = app.StartChild(task.Task{
+	_, err := app.StartChild(task.Task{
 		Info: task.Info{
 			Label:     label,
 			IdleClose: time.Microsecond,
+		},
+		// pin.ctx is set before OnRun starts; PinInto and pushState read it.
+		OnStart: func(pinContext task.Context) error {
+			pin.ctx = pinContext
+			return nil
 		},
 		OnRun: func(pinContext task.Context) {
 			err := pin.App.MakeReady(req)
@@ -189,8 +193,11 @@ func (pin *Pin[AppT]) Context() task.Context {
 }
 
 func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
-	if err := req.ParseAsAddressURL(); err == nil {
+	if err := req.ParseAsAddressURL(); err != nil {
 		return nil, err
+	}
+	if len(req.Selector.Spans) == 0 {
+		return nil, status.Code_BadRequest.Error("missing node selector")
 	}
 
 	targetID := req.Selector.Spans[0].NodeID()

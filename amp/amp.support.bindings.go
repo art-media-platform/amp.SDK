@@ -21,7 +21,6 @@ type NodeUpdate struct {
 
 // NodeResponder receives updates when a node's ops change.
 type NodeResponder interface {
-	Revision() tag.UID
 	OnNodeUpdate(update NodeUpdate)
 }
 
@@ -88,11 +87,10 @@ type FoldBinding[V proto.Message] struct {
 	// LWW ordering.  OnItem behavior: see above.
 	Merger ItemMerger[V]
 
-	revision tag.UID                  // most recently witnessed NodeUpdate
-	nodeID   tag.UID                  // bound node ID
-	msgType  protoreflect.MessageType // proto factory for V (resolved once at construction)
-	edits    map[tag.UID]tag.UID      // ItemID -> EditID (CRDT ordering)
-	items    map[tag.UID]V            // ItemID -> cached value (live items only; deleted items removed)
+	nodeID  tag.UID                  // bound node ID
+	msgType protoreflect.MessageType // proto factory for V (resolved once at construction)
+	edits   map[tag.UID]tag.UID      // ItemID -> EditID (CRDT ordering)
+	items   map[tag.UID]V            // ItemID -> cached value (live items only; deleted items removed)
 }
 
 // NewFoldBinding creates a binding that matches ALL item IDs for the given attr.
@@ -126,9 +124,6 @@ func NewFoldItemBinding[V proto.Message](attrID, itemID tag.Name) *FoldBinding[V
 // ════════════════════════════════════════════════════════
 // Identity
 // ════════════════════════════════════════════════════════
-
-// Revision implements NodeResponder.
-func (b *FoldBinding[V]) Revision() tag.UID { return b.revision }
 
 // NodeID returns the bound node ID (set by Bind or auto-detected from first update).
 func (b *FoldBinding[V]) NodeID() tag.UID { return b.nodeID }
@@ -196,12 +191,11 @@ func (b *FoldBinding[V]) ItemAddress(itemID tag.UID) (addr tag.Address, ok bool)
 	return addr, ok
 }
 
-// Clear resets all accumulated state (edits, cached values, revision).
+// Clear resets all accumulated state (edits, cached values).
 // The binding remains usable — subsequent updates repopulate it.
 func (b *FoldBinding[V]) Clear() {
 	clear(b.edits)
 	clear(b.items)
-	b.revision = tag.UID{}
 }
 
 // ════════════════════════════════════════════════════════
@@ -254,18 +248,20 @@ func (b *FoldBinding[V]) DeleteItem(tx *TxMsg, itemID tag.UID) bool {
 // Incoming: NodeResponder implementation
 // ════════════════════════════════════════════════════════
 
+// acceptUpdateNode auto-binds to the first node a binding sees and rejects
+// updates for other nodes.  FoldBinding and LocusBinding share it.
+func acceptUpdateNode(bound *tag.UID, nodeID tag.UID) bool {
+	if bound.IsNil() {
+		*bound = nodeID
+	}
+	return *bound == nodeID
+}
+
 // OnNodeUpdate filters incoming ops for this attr/item, updates the cached item state,
 // and fires OnItem for each matching op.
 func (b *FoldBinding[V]) OnNodeUpdate(update NodeUpdate) {
-	b.revision = update.Revision
-
-	// Auto-bind to the first node we see; skip updates for other nodes.
-	if b.nodeID != update.NodeID {
-		if b.nodeID.IsNil() {
-			b.nodeID = update.NodeID
-		} else {
-			return
-		}
+	if !acceptUpdateNode(&b.nodeID, update.NodeID) {
+		return
 	}
 
 	tx := update.Tx
