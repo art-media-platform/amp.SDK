@@ -37,6 +37,7 @@
 package alog
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -349,11 +350,12 @@ func (l *logger) emit(sev severity, level int32, depth int, msg string) {
 	lineBytes := []byte(sb.String())
 	os.Stderr.Write(lineBytes)
 
-	// The file and the mirror take plain text: color is for the terminal only.
+	// The file and the mirror take plain text: color is for the terminal only,
+	// and codes a caller wrote into the message strip with it.
 	file := openFileLogger()
 	if file != nil || gMirror != nil {
 		plain := lineBytes
-		if useColor {
+		if bytes.IndexByte(lineBytes, 0x1b) >= 0 {
 			plain = stripANSI(lineBytes)
 		}
 		if file != nil {
@@ -388,12 +390,14 @@ func callerFileLine(skip int) (string, int) {
 	return filepath.Base(file), line
 }
 
+// stripANSI drops each CSI sequence (ESC '[' through a final byte, 0x40–0x7E),
+// so a non-color sequence such as an erase takes no text with it.
 func stripANSI(in []byte) []byte {
 	out := make([]byte, 0, len(in))
 	for i := 0; i < len(in); i++ {
 		if in[i] == 0x1b && i+1 < len(in) && in[i+1] == '[' {
 			j := i + 2
-			for j < len(in) && in[j] != 'm' {
+			for j < len(in) && (in[j] < 0x40 || in[j] > 0x7e) {
 				j++
 			}
 			if j < len(in) {

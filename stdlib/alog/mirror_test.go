@@ -29,13 +29,9 @@ func TestSetMirror(t *testing.T) {
 	log := NewLogger("mirror-test")
 	log.Infof(0, "hello %d", 7)
 	log.Warnf("watch %s", "this")
-	levelWas := gVLevel.Load()
-	gVLevel.Store(1)
-	log.Infof(1, "ranked") // dim rank color on stderr; plain here
-	gVLevel.Store(levelWas)
 
-	if len(got) != 3 {
-		t.Fatalf("mirror saw %d records, want 3", len(got))
+	if len(got) != 2 {
+		t.Fatalf("mirror saw %d records, want 2", len(got))
 	}
 	info, warn := got[0], got[1]
 	if info.sevTag != 'I' || info.level != 0 || !strings.Contains(info.line, "hello 7") {

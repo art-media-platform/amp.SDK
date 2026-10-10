@@ -2,8 +2,10 @@ package alog
 
 import (
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -141,6 +143,65 @@ func TestSyslogPrefixRanks(t *testing.T) {
 	} {
 		if got := syslogPrefix(probe.sev, probe.level); got != probe.want {
 			t.Errorf("syslogPrefix(%v, %d) = %s, want %s", probe.sev, probe.level, got, probe.want)
+		}
+	}
+}
+
+// TestTeePlainText: the file tee and the mirror carry plain text whatever put
+// ESC on the line — the rank color under forced color, or codes the caller
+// wrote into the message with color off — and an erase sequence strips without
+// the text after it.
+func TestTeePlainText(t *testing.T) {
+	logPath := filepath.Join(t.TempDir(), "tee.log")
+	mirrored := []string{}
+	colorWas := gUseColor.Load()
+	levelWas := gVLevel.Load()
+	gOutMu.Lock()
+	gLogFilePath = logPath
+	gLogFile = nil
+	gFileOnce = sync.Once{}
+	gMirror = func(level int32, sevTag byte, line string) { mirrored = append(mirrored, line) }
+	gOutMu.Unlock()
+	t.Cleanup(func() {
+		gOutMu.Lock()
+		if gLogFile != nil {
+			gLogFile.Close()
+		}
+		gLogFilePath = ""
+		gLogFile = nil
+		gFileOnce = sync.Once{}
+		gMirror = nil
+		gOutMu.Unlock()
+		SetColor(colorWas)
+		gVLevel.Store(levelWas)
+	})
+
+	log := NewLogger("tee-test")
+	_ = captureStderr(t, func() {
+		SetColor(true)
+		gVLevel.Store(1)
+		log.Infof(1, "ranked")
+		SetColor(false)
+		log.Infof(0, "stop: \x1b[1m^C\x1b[0m now")
+		log.Infof(0, "progress\x1b[2Kdone with item 7")
+	})
+
+	fileText, err := os.ReadFile(logPath)
+	if err != nil {
+		t.Fatalf("read tee: %v", err)
+	}
+	tees := map[string]string{
+		"file":   string(fileText),
+		"mirror": strings.Join(mirrored, ""),
+	}
+	for name, text := range tees {
+		if strings.Contains(text, "\x1b") {
+			t.Errorf("%s carries ESC: %q", name, text)
+		}
+		for _, want := range []string{"ranked", "stop: ^C now", "progressdone with item 7"} {
+			if !strings.Contains(text, want) {
+				t.Errorf("%s lost %q: %q", name, want, text)
+			}
 		}
 	}
 }
