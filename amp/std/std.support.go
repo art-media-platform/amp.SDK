@@ -28,17 +28,41 @@ func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess am
 	tx.Status = status
 
 	if value != nil {
-		op := amp.TxOp{
-			Flags: amp.TxOpFlags_Upsert | amp.TxOpFlags_MetaOp,
-		}
-		op.Addr.NodeID = amp.HeadNodeID
-		op.Addr.AttrID = attrID
-		if err := tx.MarshalOp(&op, value); err != nil {
+		if err := marshalMetaOp(tx, attrID, tag.UID{}, value); err != nil {
 			return err
 		}
 	}
 
 	return dst.PushTx(tx, guard)
+}
+
+// PushSessionItem sends one item of a session index to the client's session
+// agent: an upsert of value at (HeadNodeID, attrID, itemID), or a delete of
+// that item when value is nil.  SessionIndex decides when an item may push;
+// call it directly only after login is granted.
+func PushSessionItem(sess amp.Session, attrID, itemID tag.UID, value proto.Message) error {
+	tx := sess.NewTx(amp.TxScope{Target: amp.PlanetTarget_None})
+	tx.SetContextID(SessionContextID)
+	tx.Status = amp.PinStatus_Synced
+	if err := marshalMetaOp(tx, attrID, itemID, value); err != nil {
+		return err
+	}
+	return sess.PushTx(tx, sess)
+}
+
+// marshalMetaOp appends one meta op at (HeadNodeID, attrID, itemID): an
+// upsert of value, or a delete when value is nil.
+func marshalMetaOp(tx *amp.TxMsg, attrID, itemID tag.UID, value proto.Message) error {
+	op := amp.TxOp{
+		Flags: amp.TxOpFlags_Upsert | amp.TxOpFlags_MetaOp,
+	}
+	if value == nil {
+		op.Flags = amp.TxOpFlags_Delete | amp.TxOpFlags_MetaOp
+	}
+	op.Addr.NodeID = amp.HeadNodeID
+	op.Addr.AttrID = attrID
+	op.Addr.ItemID = itemID
+	return tx.MarshalOp(&op, value)
 }
 
 // LedgerNodeID is the well-known channel UID of the planet ledger — where

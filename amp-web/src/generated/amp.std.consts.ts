@@ -240,7 +240,14 @@ export const Attr = {
     // ─── Home planet attributes ─────────────────────────────────────
     HomeAttr                          : { id: [0x45A5C59F62D1113Fn, 0x73AEED98C41EFBFAn], text: "amp.home" },                                   // 25nr2-tysqj-24zr7c-rem32-1xyzu
 
+    // The member's planet index, one home-cabinet entry per planet (ItemID
+    // = the planet UID): PlanetBinding a joined planet (epoch tag + label),
+    // FollowBinding a followed one — watched, not a member — written by
+    // the join intake (DD-name-service §5.2) and re-pinned at each login.
+    // The host mirrors both to the client's session channel
+    // (std.SessionIndex).
     PlanetBinding                     : { id: [0xD1107652908E11D6n, 0x1B2B3BC082553787n], text: "amp.home.planet.binding.Tag" },                // 6j21v-5544f-27c1qb-tvs21-5bew7
+    FollowBinding                     : { id: [0x5F8A3072A49F9056n, 0xF3BDF94A863329B6n], text: "amp.home.follow.binding.FederationPeer" },     // 2zj8s-7594z-k1cg7g-gt9b3-36beq
     PlanetStorageOpts                 : { id: [0x69BFD182C13A9A31n, 0xF66973A8296693D5n], text: "amp.home.planet.storage.PlanetStorageOpts" },  // 39rz8-s5h9u-m8szdu-cmp0n-qe4yp
     // Client vars groups: device-class on the member's device node,
     // member-class on the home planet head node (one item each).
