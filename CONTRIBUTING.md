@@ -45,11 +45,12 @@ go test ./...
 
 ## Changes that reach amp.planet
 
-In the workspace, `go.work` builds `amp.planet` against the local `amp.SDK`
-trunk, so a change landed here reaches it on the next build — no tag and no
-`go.mod` bump. A checkout outside the workspace resolves a released tag
-unless it bridges to a sibling `amp.SDK` (`make sdk-dev` there). Land the SDK
-change first, then the amp.planet side.
+The AMP development workspace checks out `amp.SDK` and `amp.planet` side by
+side under one `go.work`, which builds `amp.planet` against the local `amp.SDK`
+trunk: a change landed here reaches it on the next build, with no tag and no
+`go.mod` bump. A checkout outside the workspace resolves a released tag unless
+it bridges to a sibling `amp.SDK` (`make sdk-dev` there). Land the SDK change
+first, then the amp.planet side.
 
 ## The TypeScript client
 
