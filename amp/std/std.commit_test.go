@@ -8,10 +8,12 @@ package std
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/art-media-platform/amp.SDK/amp"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
 // pushBound is the fixture's admissible ceiling for a PushTx that has no
@@ -38,5 +40,50 @@ func TestLoadPushTxNeverParksWithoutReceiver(t *testing.T) {
 		case <-time.After(pushBound):
 			t.Fatalf("push %d parked over %v with no receiver on outErr — pipeline goroutine leak", push, pushBound)
 		}
+	}
+}
+
+// rejectingSession refuses every submit and keeps the context it was handed.
+type rejectingSession struct {
+	amp.Session
+	submitted context.Context
+	cause     error
+}
+
+func (sess *rejectingSession) SubmitTx(commit amp.TxCommit) error {
+	sess.submitted = commit.Context
+	return sess.cause
+}
+
+// rejectingApp lives as long as bound; its session refuses every submit.
+type rejectingApp struct {
+	amp.AppContext
+	bound   context.Context
+	session amp.Session
+}
+
+func (app *rejectingApp) Deadline() (time.Time, bool)        { return app.bound.Deadline() }
+func (app *rejectingApp) Done() <-chan struct{}              { return app.bound.Done() }
+func (app *rejectingApp) Err() error                         { return app.bound.Err() }
+func (app *rejectingApp) Session() amp.Session               { return app.session }
+func (app *rejectingApp) AppEnvironment() amp.AppEnvironment { return amp.AppEnvironment{} }
+func (app *rejectingApp) NewTx(...amp.TxScope) *amp.TxMsg    { return &amp.TxMsg{} }
+
+// A refused submit closes the wrapper BlockingLoad made for it, with the
+// refusal; left open, its watcher goroutine lives until the app closes.
+func TestLoadRefusedSubmitClosesWrapper(t *testing.T) {
+	bound, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cause := errors.New("submit refused")
+	sess := &rejectingSession{
+		cause: cause,
+	}
+	app := &rejectingApp{
+		bound:   bound,
+		session: sess,
+	}
+	loadErr := BlockingLoad(app, tag.UID{1, 2}, &amp.Tags{})
+	if sess.submitted == nil || !errors.Is(sess.submitted.Err(), cause) {
+		t.Fatalf("BlockingLoad returned %v and left its wrapper open or closed without the refusal", loadErr)
 	}
 }

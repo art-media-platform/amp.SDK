@@ -24,12 +24,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) erro
 
 	req := newLocalLoad()
 
-	ctx := closer.WrapContext(appCtx)
-	err := appCtx.Session().SubmitTx(amp.TxCommit{
-		Tx:      tx,
-		Origin:  req,
-		Context: ctx,
-	})
+	ctx, err := submitWrapped(appCtx, appCtx, tx, req)
 	if err != nil {
 		return err
 	}
@@ -109,6 +104,24 @@ func (req *localLoad) PushTx(tx *amp.TxMsg, ctx context.Context) error {
 	return err
 }
 
+// submitWrapped submits tx under a closer.Context wrapping bound, for every
+// loader and committer.  The caller owns a returned wrapper and closes it with
+// its wait's result; a refused submit closes it here, so its watcher ends with
+// the call instead of at bound's close.
+func submitWrapped(appCtx amp.AppContext, bound context.Context, tx *amp.TxMsg, origin amp.TxReceiver) (closer.Context, error) {
+	ctx := closer.WrapContext(bound)
+	err := appCtx.Session().SubmitTx(amp.TxCommit{
+		Tx:      tx,
+		Origin:  origin,
+		Context: ctx,
+	})
+	if err != nil {
+		ctx.Close(err)
+		return nil, err
+	}
+	return ctx, nil
+}
+
 // Commit submits tx and blocks until the commit completes.  The target planet is fixed at
 // tx creation (NewTx via TxScope; default = the caller's home planet) — Commit does not alter
 // it.  Planet routing, signer (tx.SetFromID), and privacy (tx.Epoch) are independent levers;
@@ -150,14 +163,8 @@ func CommitWith(appCtx amp.AppContext, tx *amp.TxMsg, opts CommitOpts) error {
 	if bound == nil {
 		bound = appCtx
 	}
-	ctx := closer.WrapContext(bound)
-	err := appCtx.Session().SubmitTx(amp.TxCommit{
-		Tx:      tx,
-		Origin:  req,
-		Context: ctx,
-	})
+	ctx, err := submitWrapped(appCtx, bound, tx, req)
 	if err != nil {
-		ctx.Close(err)
 		return err
 	}
 
@@ -214,14 +221,8 @@ func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.N
 
 	loader := newLocalLoad()
 
-	ctx := closer.WrapContext(appCtx)
-	err := appCtx.Session().SubmitTx(amp.TxCommit{
-		Tx:      tx,
-		Origin:  loader,
-		Context: ctx,
-	})
+	ctx, err := submitWrapped(appCtx, appCtx, tx, loader)
 	if err != nil {
-		ctx.Close(err)
 		return err
 	}
 
