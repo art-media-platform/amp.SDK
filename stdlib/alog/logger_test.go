@@ -149,14 +149,16 @@ func TestSyslogPrefixRanks(t *testing.T) {
 
 // TestTeePlainText: the file tee and the mirror carry plain text whatever put
 // ESC on the line — the rank color under forced color, or codes the caller
-// wrote into the message with color off — and an erase sequence strips without
-// the text after it.
+// wrote into the message with color off — and neither an erase sequence nor a
+// malformed one takes the text or line break after it.
 func TestTeePlainText(t *testing.T) {
 	logPath := filepath.Join(t.TempDir(), "tee.log")
 	mirrored := []string{}
 	colorWas := gUseColor.Load()
 	levelWas := gVLevel.Load()
 	gOutMu.Lock()
+	pathWas := gLogFilePath
+	mirrorWas := gMirror
 	gLogFilePath = logPath
 	gLogFile = nil
 	gFileOnce = sync.Once{}
@@ -167,10 +169,10 @@ func TestTeePlainText(t *testing.T) {
 		if gLogFile != nil {
 			gLogFile.Close()
 		}
-		gLogFilePath = ""
+		gLogFilePath = pathWas
 		gLogFile = nil
 		gFileOnce = sync.Once{}
-		gMirror = nil
+		gMirror = mirrorWas
 		gOutMu.Unlock()
 		SetColor(colorWas)
 		gVLevel.Store(levelWas)
@@ -184,6 +186,7 @@ func TestTeePlainText(t *testing.T) {
 		SetColor(false)
 		log.Infof(0, "stop: \x1b[1m^C\x1b[0m now")
 		log.Infof(0, "progress\x1b[2Kdone with item 7")
+		log.Infof(0, "cut\x1b[\nnext line")
 	})
 
 	fileText, err := os.ReadFile(logPath)
@@ -198,7 +201,7 @@ func TestTeePlainText(t *testing.T) {
 		if strings.Contains(text, "\x1b") {
 			t.Errorf("%s carries ESC: %q", name, text)
 		}
-		for _, want := range []string{"ranked", "stop: ^C now", "progressdone with item 7"} {
+		for _, want := range []string{"ranked", "stop: ^C now", "progressdone with item 7", "cut[\n", "next line"} {
 			if !strings.Contains(text, want) {
 				t.Errorf("%s lost %q: %q", name, want, text)
 			}

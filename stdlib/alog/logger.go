@@ -390,22 +390,25 @@ func callerFileLine(skip int) (string, int) {
 	return filepath.Base(file), line
 }
 
-// stripANSI drops each CSI sequence (ESC '[' through a final byte, 0x40–0x7E),
-// so a non-color sequence such as an erase takes no text with it.
+// stripANSI drops every ESC: a CSI sequence (ESC '[', bytes 0x20–0x3F, final
+// byte 0x40–0x7E) goes whole and any other ESC alone, so a malformed sequence
+// takes neither the text after it nor the line break.
 func stripANSI(in []byte) []byte {
 	out := make([]byte, 0, len(in))
 	for i := 0; i < len(in); i++ {
-		if in[i] == 0x1b && i+1 < len(in) && in[i+1] == '[' {
+		if in[i] != 0x1b {
+			out = append(out, in[i])
+			continue
+		}
+		if i+1 < len(in) && in[i+1] == '[' {
 			j := i + 2
-			for j < len(in) && (in[j] < 0x40 || in[j] > 0x7e) {
+			for j < len(in) && in[j] >= 0x20 && in[j] <= 0x3f {
 				j++
 			}
-			if j < len(in) {
+			if j < len(in) && in[j] >= 0x40 && in[j] <= 0x7e {
 				i = j
-				continue
 			}
 		}
-		out = append(out, in[i])
 	}
 	return out
 }
