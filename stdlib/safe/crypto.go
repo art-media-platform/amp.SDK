@@ -151,6 +151,10 @@ func OpenAEAD(key, nonce, ciphertext, aad []byte) ([]byte, error) {
 		return nil, err
 	}
 
+	if len(nonce) != aead.NonceSize() {
+		return nil, fmt.Errorf("safe: nonce must be %d bytes, got %d", aead.NonceSize(), len(nonce))
+	}
+
 	plaintext, err := aead.Open(nil, nonce, ciphertext, aad)
 	if err != nil {
 		return nil, fmt.Errorf("safe: AEAD decryption failed (bad key, corrupted data, or tampered AAD)")
