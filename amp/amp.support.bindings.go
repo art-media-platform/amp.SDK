@@ -14,7 +14,6 @@ type OpRange struct {
 // NodeUpdate encapsulates a new TxMsg that updates a node and an optional range.
 type NodeUpdate struct {
 	NodeID   tag.UID
-	Revision tag.UID
 	SubRange OpRange
 	Tx       *TxMsg
 }

@@ -236,9 +236,8 @@ func LoadItems(appCtx amp.AppContext, nodeID tag.UID, attrID tag.UID, resp amp.N
 			done = true
 		case txOut := <-loader.outTx:
 			resp.OnNodeUpdate(amp.NodeUpdate{
-				Tx:       txOut,
-				NodeID:   nodeID,
-				Revision: tag.NowID(),
+				Tx:     txOut,
+				NodeID: nodeID,
 			})
 			done = txOut.Status != amp.PinStatus_Syncing
 		case <-appCtx.Closing():

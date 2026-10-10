@@ -52,7 +52,7 @@ func memberEpochUpdate(t *testing.T, rec memberEpochRecord) NodeUpdate {
 	if rec.ServeTxID.IsSet() {
 		tx.SetTxID(rec.ServeTxID) // ops keep the original EditID stamp; the tx is now synthetic
 	}
-	return NodeUpdate{NodeID: HeadNodeID, Revision: tx.TxID(), Tx: tx}
+	return NodeUpdate{NodeID: HeadNodeID, Tx: tx}
 }
 
 func newMemberEpochBinding() *FoldBinding[*MemberEpoch] {

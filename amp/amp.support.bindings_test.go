@@ -23,7 +23,7 @@ func feedUpsert(binding *amp.FoldBinding[*amp.Tag], node, item, txID tag.UID, te
 	tx := amp.TxNew()
 	tx.SetTxID(txID)
 	_ = tx.Upsert(node, std.Attr.PlanetBinding.ID, item, &amp.Tag{Text: text})
-	binding.OnNodeUpdate(amp.NodeUpdate{NodeID: node, Revision: txID, Tx: tx})
+	binding.OnNodeUpdate(amp.NodeUpdate{NodeID: node, Tx: tx})
 }
 
 func tagText(value *amp.Tag) string {
@@ -105,7 +105,7 @@ func TestFoldBinding_BoundEditIDEqualsTxID(t *testing.T) {
 	if err := binding.UpsertItem(tx, item, &amp.Tag{Text: "x"}); err != nil {
 		t.Fatal(err)
 	}
-	binding.OnNodeUpdate(amp.NodeUpdate{NodeID: node, Revision: txID, Tx: tx})
+	binding.OnNodeUpdate(amp.NodeUpdate{NodeID: node, Tx: tx})
 
 	if gotEdit != txID {
 		t.Fatalf("bound-path EditID = %v, want TxID %v (must mint from TxID, no parent seed)", gotEdit, txID)

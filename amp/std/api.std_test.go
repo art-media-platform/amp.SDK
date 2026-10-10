@@ -142,8 +142,9 @@ func TestPinMergeIncomingCallbackAddsEarlierNode(t *testing.T) {
 	}
 }
 
-// Each responder is offered each node once: one bound twice, and one bound
-// during a callback, which a following pass offers the whole tx.
+// Each responder is offered each node once: one bound before the merge across
+// the extra pass, and one bound during a callback, which that pass offers the
+// whole tx.
 func TestPinMergeIncomingOffersEachNodeOnce(t *testing.T) {
 	nodeA := tag.Name{}.With("test.pin.once-a").ID
 	nodeB := tag.Name{}.With("test.pin.once-b").ID
@@ -157,12 +158,11 @@ func TestPinMergeIncomingOffersEachNodeOnce(t *testing.T) {
 		pin.Bind(late)
 	}
 	pin.Bind(early)
-	pin.Bind(early)
 	pin.Bind(driver)
 	pin.MergeIncoming(newNodesTx(t, attr.ID, nodeA, nodeB))
 	want := []tag.UID{nodeA, nodeB}
 	if !slices.Equal(early.nodes, want) {
-		t.Errorf("twice-bound responder nodes = %v, want %v", early.nodes, want)
+		t.Errorf("pre-bound responder nodes = %v, want %v", early.nodes, want)
 	}
 	if !slices.Equal(late.nodes, want) {
 		t.Errorf("callback-bound responder nodes = %v, want %v", late.nodes, want)

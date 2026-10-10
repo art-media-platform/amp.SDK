@@ -7,8 +7,6 @@
 package std
 
 import (
-	"slices"
-
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
@@ -63,13 +61,12 @@ type Pin[AppT amp.AppInstance] struct {
 	responders []amp.NodeResponder    // bound responders (binding pattern)
 }
 
-// Bind registers a NodeResponder on this pin; binding it again has no effect.
-// When MergeIncoming is called, matching ops are dispatched to this responder.
-// Typically used with amp.FoldBinding[V] instances.
+// Bind registers a NodeResponder on this pin; bind each responder once, since
+// one bound twice is offered each node twice.  When MergeIncoming is called,
+// matching ops are dispatched to this responder.  Typically used with
+// amp.FoldBinding[V] instances.
 func (pin *Pin[AppT]) Bind(resp amp.NodeResponder) {
-	if !slices.Contains(pin.responders, resp) {
-		pin.responders = append(pin.responders, resp)
-	}
+	pin.responders = append(pin.responders, resp)
 }
 
 // MergeIncoming processes an incoming TxMsg by offering each node it touches,
@@ -77,7 +74,6 @@ func (pin *Pin[AppT]) Bind(resp amp.NodeResponder) {
 // multi-pass iteration: if a responder adds new responders during its
 // callback, additional passes ensure the new responders also process the tx.
 func (pin *Pin[AppT]) MergeIncoming(tx *amp.TxMsg) {
-	revision := tag.NowID()
 	nodeIDs := amp.EnumNodeIDs(tx)
 
 	// Bind only appends: responders[:handled] have been offered every node.
@@ -89,9 +85,8 @@ func (pin *Pin[AppT]) MergeIncoming(tx *amp.TxMsg) {
 		}
 		for _, nodeID := range nodeIDs {
 			update := amp.NodeUpdate{
-				Tx:       tx,
-				NodeID:   nodeID,
-				Revision: revision,
+				Tx:     tx,
+				NodeID: nodeID,
 			}
 			for _, resp := range pin.responders[handled:bound] {
 				resp.OnNodeUpdate(update)
