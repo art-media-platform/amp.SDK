@@ -50,7 +50,7 @@ func TestIdleExempt_ChildDoesNotKeepParentAlive(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatal("idle-close parent was held open by an idle-exempt child")
 	}
-	// Drained, not abandoned: the child finalized before (or with) the parent.
+	// Drained, not abandoned: the child finalized before the parent.
 	requireDone(t, relay.Done(), true)
 	if got := parent.AbandonedChildren(); got != 0 {
 		t.Fatalf("AbandonedChildren = %d, want 0 (an idle-exempt child is drained, never abandoned)", got)

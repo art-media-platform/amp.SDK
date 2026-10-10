@@ -379,6 +379,14 @@ func (c *ctx) runMonitor(parent *ctx) {
 	c.waitIdle()
 	c.reportAbandoned()
 
+	// Finalize the child before releasing its parent's drain reservation.
+	c.mu.Lock()
+	c.state = Closed
+	c.mu.Unlock()
+	if c.task.OnClosed != nil {
+		c.task.OnClosed()
+	}
+
 	// Leave the parent. If this was the parent's last owned child, the parent
 	// may now idle-close; a Detach child never held a reservation to give back.
 	parentIdleClose := time.Duration(0)
@@ -394,18 +402,13 @@ func (c *ctx) runMonitor(parent *ctx) {
 				parentIdleClose = parent.task.Info.IdleClose
 			}
 		}
+		// A waking parent observes both removal and completed child cleanup.
+		close(c.chClosed)
 		parent.signalChange()
 		parent.mu.Unlock()
+	} else {
+		close(c.chClosed)
 	}
-
-	// Finalize: nothing remains but the OnClosed hook and releasing Done().
-	c.mu.Lock()
-	c.state = Closed
-	c.mu.Unlock()
-	if c.task.OnClosed != nil {
-		c.task.OnClosed()
-	}
-	close(c.chClosed)
 
 	if parentIdleClose > 0 {
 		parent.CloseWhenIdle(parentIdleClose)

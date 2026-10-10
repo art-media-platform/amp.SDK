@@ -209,7 +209,9 @@ type Context interface {
 	Closing() <-chan struct{}
 
 	// Signals when Close() has fully executed, no children remain, and OnClosed()
-	// has been completed.  A Detach child still live is not waited for.
+	// has been completed.  A Detach child still live is not waited for; every
+	// owned child's Done() fires first, so an OnClosed() that waits on an
+	// ancestor's Done() never returns (ZO §1.2).
 	Done() <-chan struct{}
 
 	// Reports how many Detach children were still live when this Context
