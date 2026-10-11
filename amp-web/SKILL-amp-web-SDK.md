@@ -1445,7 +1445,7 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Genesis** | The founding ceremony of a planet — the first TxMsg, welding the identity facts later edits cannot forge (founder signatures, epoch-key root); an optional founding `Brand` edit rides it, admin-mutable after like every Brand field (`AOM/DD-name-service.md` §2.2). |
 | **Cabinet** | The substrate store a planet's channel items commit into — the destination of a normal `tx`. A verb-RPC (`invoke`) bypasses it; the app then authors the cabinet writes itself. |
 | **Host writer session** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums custodian founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
-| **TxMsg** | A signed, encrypted transaction containing one or more data ops. |
+| **TxMsg** | A signed transaction containing one or more data ops; its payload is encrypted when its writer seals it under an epoch key (member content is not yet sealed). |
 | **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (host-internal `TxCommitFlags_Invoke`, not journaled) which authors the durable write itself; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
 | **ACC** | **Access Control** — the per-channel grant engine deciding which TxOps may enter a planet: who may read, write, or govern each channel. Grants are committed as a `ChannelEpoch` via `POST /api/v1/governance/grant` (§14.4). |

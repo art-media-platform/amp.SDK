@@ -16,13 +16,14 @@ they decrypt.
 
 | A relay vault sees | A relay vault does NOT see (private planet) |
 |---|---|
-| PlanetID, EpochID | message payloads and sealed blobs (encrypted) |
+| PlanetID, EpochID | the payloads of sealed messages and sealed blobs |
+| member content this SDK writes — it is not yet sealed, even on a private planet | |
 | activity timeline (when, how much) | whether a membership proof is valid (checking it takes the epoch key) |
 | which member signed each sealed post — the author signature rides in the clear, and the roster lists every member's public signing key | |
 | planet-public records: the charter, channel names and access grants, invite records, and the member roster (member IDs, statuses, public keys, which invite each member joined with and when) | |
 | the planets each connected node announces — including the home planet of each identity on that node (whose ID is that identity's ID) — and each planet's last-activity time, sent over an unencrypted control channel anyone on the network path can read | |
 
-A seized relay vault yields encrypted content plus the left column — no plaintext.
+A seized relay vault yields encrypted content plus the left column — including, today, the plaintext of member content (not yet sealed).
 A sealed value still leaks its **size** (sealed-box adds a fixed overhead, so
 ciphertext length ≈ plaintext length) and its channel/attr/item address; treat that
 as your metadata surface. Sealing protects content, not who posted when, and not
@@ -37,8 +38,10 @@ author; see Attribution below.
 
 ## Encryption
 
-- **Private planet** — every transaction is encrypted under the planet's current
-  **epoch key**. Whoever holds that key decrypts: members who received it, the
+- **Private planet** — a record sealed under the planet's current **epoch key** is
+  encrypted.  Today that is the records the AMP apps seal themselves; member content
+  written through this SDK is signed but not yet sealed, so every node that syncs
+  the planet can read it (sealing it by default is in progress). Whoever holds that key decrypts: members who received it, the
   nodes holding it (your host, for a web member), a former member, and anyone
   with an invite file and its passphrase. A founder can rotate the epoch from a
   node holding the founder's key; only active members receive the new key. No
@@ -176,7 +179,8 @@ What that storage means:
 
 User-supplied secrets (API keys for Cesium Ion, OpenRouter, Mapbox, …) **must be
 sealed client-side before any `upsert`**. A plaintext secret in a channel item is
-readable by *every member* of the planet who holds the epoch key, and a memory
+readable by *every member* of the planet — and, while member content is not yet
+sealed, by every node that syncs it — and a memory
 scrape of the local key cache exposes it after the fact.
 
 ```ts

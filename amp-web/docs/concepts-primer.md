@@ -53,13 +53,14 @@ Consequences worth internalizing:
 | You write | Substrate meaning |
 |---|---|
 | `query('projects', 'labels')` | read items in cell (node `projects`, attr `labels`) |
-| `create('projects', 'labels', v)` | one-op TxMsg: signed, encrypted, journaled |
+| `create('projects', 'labels', v)` | one-op TxMsg: signed, journaled (not yet sealed — see below) |
 | `tx([...])` | N ops, one atomic TxMsg, one signature |
 | `invoke('amp://~/forums/post', ops)` | hand ops to an app verb; the app authors the write (SKILL §4.3) |
 | `subscribe('projects', 'labels', cb)` | live edits on exactly that cell |
 
-Every write is an **edit** by an authenticated **member**, signed and, on
-a private planet, sealed under the planet's current epoch key; relay
-vaults cannot read it — the node you write through can
+Every write is an **edit** by an authenticated **member**, signed.  On a
+private planet, sealing member content under the planet's epoch key is not
+yet built, so every node that syncs the planet can read it — relay vaults
+included
 (`SECURITY-amp-web-SDK.md`). Your web app is a disposable UI over that
 durable substrate.
