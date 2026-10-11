@@ -2035,6 +2035,13 @@ message Brand {
     // federation's default set.  Members select among federation-published
     // sets; the markup is federation-authored (AOM DD-name-service.md §12.3).
     Tag                 TemplateSet      = 31;
+
+    // DefaultPlanets names the planets a fresh install of this app follows —
+    // read from the app's factory Brand only.  At each login the client hands
+    // them to app.nameservice's defaults verb, which follows every one the
+    // member's home has never bound: a default the member unfollowed or joined
+    // is not followed again (AOM DD-name-service.md §5.1).
+    repeated FederationPeer DefaultPlanets = 32;
 }
 
 

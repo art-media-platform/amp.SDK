@@ -303,6 +303,17 @@ export interface CrateRef {
   BlobID?: string;
 }
 
+/**
+ * One of a factory Brand's DefaultPlanets (amp.FederationPeer JSON; Address
+ * rides base64).  Only an app's factory Brand carries these; a planet's
+ * substrate Brand never does.
+ */
+export interface BrandDefaultPlanet {
+  FederationID?: AmpTag;
+  VaultAddrs?: { Transport?: string; Address?: string }[];
+  Label?: string;
+}
+
 /** A planet's substrate Brand record (amp.Brand; admin-mutable → display-only). */
 export interface Brand {
   Identity?: BrandIdentity;
@@ -313,6 +324,7 @@ export interface Brand {
   Links?: AppLink[];
   BundledCrates?: CrateRef[];
   TemplateSet?: AmpTag;
+  DefaultPlanets?: BrandDefaultPlanet[];
 }
 
 /**

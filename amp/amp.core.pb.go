@@ -7269,9 +7269,15 @@ type Brand struct {
 	// planet that app.www reads template Segments from.  Empty = the
 	// federation's default set.  Members select among federation-published
 	// sets; the markup is federation-authored (AOM DD-name-service.md §12.3).
-	TemplateSet   *Tag `protobuf:"bytes,31,opt,name=TemplateSet,proto3" json:"TemplateSet,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	TemplateSet *Tag `protobuf:"bytes,31,opt,name=TemplateSet,proto3" json:"TemplateSet,omitempty"`
+	// DefaultPlanets names the planets a fresh install of this app follows —
+	// read from the app's factory Brand only.  At each login the client hands
+	// them to app.nameservice's defaults verb, which follows every one the
+	// member's home has never bound: a default the member unfollowed or joined
+	// is not followed again (AOM DD-name-service.md §5.1).
+	DefaultPlanets []*FederationPeer `protobuf:"bytes,32,rep,name=DefaultPlanets,proto3" json:"DefaultPlanets,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Brand) Reset() {
@@ -7356,6 +7362,13 @@ func (x *Brand) GetBundledCrates() []*CrateRef {
 func (x *Brand) GetTemplateSet() *Tag {
 	if x != nil {
 		return x.TemplateSet
+	}
+	return nil
+}
+
+func (x *Brand) GetDefaultPlanets() []*FederationPeer {
+	if x != nil {
+		return x.DefaultPlanets
 	}
 	return nil
 }
@@ -8887,7 +8900,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\bCrateRef\x12\x1a\n" +
 	"\bCrateURI\x18\x01 \x01(\tR\bCrateURI\x12\x19\n" +
 	"\bBlobID_0\x18\x02 \x01(\x06R\aBlobID0\x12\x19\n" +
-	"\bBlobID_1\x18\x03 \x01(\x06R\aBlobID1\"\xd2\x02\n" +
+	"\bBlobID_1\x18\x03 \x01(\x06R\aBlobID1\"\x8f\x03\n" +
 	"\x05Brand\x12.\n" +
 	"\bIdentity\x18\x01 \x01(\v2\x12.amp.BrandIdentityR\bIdentity\x12\x1e\n" +
 	"\n" +
@@ -8900,7 +8913,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x10CrateSnapshotURL\x18\x14 \x01(\tR\x10CrateSnapshotURL\x12\"\n" +
 	"\x05Links\x18\x19 \x03(\v2\f.amp.AppLinkR\x05Links\x123\n" +
 	"\rBundledCrates\x18\x1a \x03(\v2\r.amp.CrateRefR\rBundledCrates\x12*\n" +
-	"\vTemplateSet\x18\x1f \x01(\v2\b.amp.TagR\vTemplateSet\"C\n" +
+	"\vTemplateSet\x18\x1f \x01(\v2\b.amp.TagR\vTemplateSet\x12;\n" +
+	"\x0eDefaultPlanets\x18  \x03(\v2\x13.amp.FederationPeerR\x0eDefaultPlanets\"C\n" +
 	"\tVaultAddr\x12\x1c\n" +
 	"\tTransport\x18\x01 \x01(\tR\tTransport\x12\x18\n" +
 	"\aAddress\x18\x02 \x01(\fR\aAddress\"\xf9\x02\n" +
@@ -9462,31 +9476,32 @@ var file_amp_amp_core_proto_depIdxs = []int32{
 	81,  // 133: amp.Brand.Links:type_name -> amp.AppLink
 	82,  // 134: amp.Brand.BundledCrates:type_name -> amp.CrateRef
 	28,  // 135: amp.Brand.TemplateSet:type_name -> amp.Tag
-	28,  // 136: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
-	30,  // 137: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
-	83,  // 138: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
-	84,  // 139: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
-	28,  // 140: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
-	28,  // 141: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
-	28,  // 142: amp.FederationPeer.FederationID:type_name -> amp.Tag
-	84,  // 143: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
-	86,  // 144: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
-	89,  // 145: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
-	91,  // 146: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
-	92,  // 147: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
-	94,  // 148: amp.SyncMsg.NodeSpanRequest:type_name -> amp.SyncNodeSpanRequest
-	95,  // 149: amp.SyncMsg.NodeSpans:type_name -> amp.SyncNodeSpans
-	93,  // 150: amp.SyncMsg.TxRefused:type_name -> amp.SyncTxRefused
-	90,  // 151: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
-	31,  // 152: amp.SyncPlanetStatus.Held:type_name -> amp.UIDRange
-	26,  // 153: amp.SyncPlanetStatus.ArchiveMode:type_name -> amp.ArchiveMode
-	27,  // 154: amp.SyncTxRefused.Class:type_name -> amp.RefusalClass
-	31,  // 155: amp.SyncNodeSpans.Spans:type_name -> amp.UIDRange
-	156, // [156:156] is the sub-list for method output_type
-	156, // [156:156] is the sub-list for method input_type
-	156, // [156:156] is the sub-list for extension type_name
-	156, // [156:156] is the sub-list for extension extendee
-	0,   // [0:156] is the sub-list for field type_name
+	86,  // 136: amp.Brand.DefaultPlanets:type_name -> amp.FederationPeer
+	28,  // 137: amp.NameServiceRecord.PlanetID:type_name -> amp.Tag
+	30,  // 138: amp.NameServiceRecord.BrandAddr:type_name -> amp.Address
+	83,  // 139: amp.NameServiceRecord.BrandSnapshot:type_name -> amp.Brand
+	84,  // 140: amp.NameServiceRecord.VaultAddrs:type_name -> amp.VaultAddr
+	28,  // 141: amp.NameServiceRecord.RegisteredAt:type_name -> amp.Tag
+	28,  // 142: amp.NameServiceRecord.RegisteredBy:type_name -> amp.Tag
+	28,  // 143: amp.FederationPeer.FederationID:type_name -> amp.Tag
+	84,  // 144: amp.FederationPeer.VaultAddrs:type_name -> amp.VaultAddr
+	86,  // 145: amp.FederationDirectory.Peers:type_name -> amp.FederationPeer
+	89,  // 146: amp.SyncMsg.WatchList:type_name -> amp.SyncWatchList
+	91,  // 147: amp.SyncMsg.RangeOffer:type_name -> amp.SyncRangeOffer
+	92,  // 148: amp.SyncMsg.RangeRequest:type_name -> amp.SyncRangeRequest
+	94,  // 149: amp.SyncMsg.NodeSpanRequest:type_name -> amp.SyncNodeSpanRequest
+	95,  // 150: amp.SyncMsg.NodeSpans:type_name -> amp.SyncNodeSpans
+	93,  // 151: amp.SyncMsg.TxRefused:type_name -> amp.SyncTxRefused
+	90,  // 152: amp.SyncWatchList.Planets:type_name -> amp.SyncPlanetStatus
+	31,  // 153: amp.SyncPlanetStatus.Held:type_name -> amp.UIDRange
+	26,  // 154: amp.SyncPlanetStatus.ArchiveMode:type_name -> amp.ArchiveMode
+	27,  // 155: amp.SyncTxRefused.Class:type_name -> amp.RefusalClass
+	31,  // 156: amp.SyncNodeSpans.Spans:type_name -> amp.UIDRange
+	157, // [157:157] is the sub-list for method output_type
+	157, // [157:157] is the sub-list for method input_type
+	157, // [157:157] is the sub-list for extension type_name
+	157, // [157:157] is the sub-list for extension extendee
+	0,   // [0:157] is the sub-list for field type_name
 }
 
 func init() { file_amp_amp_core_proto_init() }

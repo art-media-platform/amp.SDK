@@ -264,12 +264,12 @@ const SHAPES: Record<string, ShapeSpec> = {
   ForumsReserveResponse: { required: ['MemberID'] },
   // amp.Brand / amp.BrandIdentity (proto-generated; every field omitempty).
   // types.ts mirrors them read-side (client.getBrand over the items rail);
-  // the operator WRITE verbs above stay Go-only.  Targets/Links/BundledCrates
-  // elements are unexercised by fixtures today.
+  // the operator WRITE verbs above stay Go-only.  Targets/Links/BundledCrates/
+  // DefaultPlanets elements are unexercised by fixtures today.
   Brand: {
     required: [],
     optional: ['Identity', 'OrgHomeURL', 'AppHomeURL', 'Targets',
-      'CrateSnapshotURL', 'Links', 'BundledCrates', 'TemplateSet'],
+      'CrateSnapshotURL', 'Links', 'BundledCrates', 'TemplateSet', 'DefaultPlanets'],
     nested: { Identity: 'BrandIdentity', TemplateSet: 'Tag' },
   },
   BrandIdentity: {
