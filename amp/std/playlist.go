@@ -17,6 +17,17 @@ import (
 // points at one (or directly at a blob asset UID or a URI, in which case the
 // entry's own fields are the only metadata).
 
+// PlaylistEpoch is the self-description a playlist channel carries at
+// (node, ChannelEpochs, node): ChannelEpoch{ChType: playlist}, so a type route
+// resolves it to a playlist surface (AOM AD-playlists.md §6).  One value for
+// every producer — a recording channel's stamp, a served pack, a sealed codex.
+func PlaylistEpoch(node tag.UID) *amp.ChannelEpoch {
+	return &amp.ChannelEpoch{
+		Channel: amp.TagFromUID(node),
+		ChType:  amp.TagFromName(Attr.ChannelTypePlaylist),
+	}
+}
+
 // WriteMediaEntry upserts one playlist row at entryID on listNode.
 func WriteMediaEntry(tx *amp.TxMsg, listNode, entryID tag.UID, entry *MediaEntry) error {
 	if entry == nil {

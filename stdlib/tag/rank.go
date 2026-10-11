@@ -47,9 +47,12 @@ func RankBetween(lo, hi UID) (rank UID, ok bool) {
 // (lo, hi).  ok is false when the gap cannot hold count fenced slots
 // (gap < count+1).
 func RanksAcross(lo, hi UID, count int) (ranks []UID, ok bool) {
+	if count <= 0 {
+		return nil, count == 0
+	}
 	stride, ok := rankStride(lo, hi, count)
-	if !ok || count == 0 {
-		return nil, ok
+	if !ok {
+		return nil, false
 	}
 	ranks = make([]UID, count)
 	for i := range ranks {
@@ -67,9 +70,12 @@ func RanksAcross(lo, hi UID, count int) (ranks []UID, ok bool) {
 // sealed single-writer list never has a second writer.  Never mint with it
 // on a live channel.
 func RanksEvenly(lo, hi UID, count int) (ranks []UID, ok bool) {
+	if count <= 0 {
+		return nil, count == 0
+	}
 	stride, ok := rankStride(lo, hi, count)
-	if !ok || count == 0 {
-		return nil, ok
+	if !ok {
+		return nil, false
 	}
 	ranks = make([]UID, count)
 	for i := range ranks {
@@ -79,12 +85,10 @@ func RanksEvenly(lo, hi UID, count int) (ranks []UID, ok bool) {
 }
 
 // rankStride partitions (lo, hi) into count+1 fenced slots and returns the
-// slot width.  ok is false for a negative count, swapped fences, or a gap too
-// small to hold count fenced slots (gap < count+1).
+// slot width.  ok is false for swapped fences or a gap too small to hold count
+// fenced slots (gap < count+1).  count is positive here: zero and negative
+// counts are answered by the callers before the fences are read.
 func rankStride(lo, hi UID, count int) (stride UID, ok bool) {
-	if count < 0 {
-		return UID{}, false
-	}
 	if hi.CompareTo(lo) <= 0 {
 		return UID{}, false
 	}

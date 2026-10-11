@@ -182,6 +182,13 @@ func TestRanksEvenly(t *testing.T) {
 	if ranks, ok := tag.RanksEvenly(fence, fence.Add(tag.UID{0, 8}), 0); !ok || len(ranks) != 0 {
 		t.Error("count 0: want empty, ok=true")
 	}
+	// count 0 is answered before the fences are read, for both minters.
+	if _, ok := tag.RanksEvenly(fence, fence, 0); !ok {
+		t.Error("count 0 on a closed gap: want ok=true")
+	}
+	if _, ok := tag.RanksAcross(fence, fence, 0); !ok {
+		t.Error("RanksAcross count 0 on a closed gap: want ok=true")
+	}
 	if _, ok := tag.RanksEvenly(fence, fence.Add(tag.UID{0, 8}), -1); ok {
 		t.Error("negative count: want ok=false")
 	}
