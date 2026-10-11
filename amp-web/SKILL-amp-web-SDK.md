@@ -2,7 +2,7 @@
 
 > **What this document is:** Instructions for an AI coding agent (Claude Code, Cursor, Replit Agent, etc.) — and a contract for human web developers — to build web applications that persist data through the art.media.platform (amp) vault infrastructure. Drop this file into any web project. Generated code uses the `@art-media-platform/web` library to talk to `app.www`, the unified HTTP service inside `ampd`.
 
-> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is encrypted, signed, and replicated across independent nodes ("vaults"). Vaults relay traffic without reading content. Every host is a full peer — an app on an embedded/local vault works offline (§14.1); **this web client is cloud-only** and needs its operated node reachable (§14.2). Your web app is a disposable UI layer; amp is the durable substrate underneath.
+> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is signed, replicated across independent nodes ("vaults"), and encrypted where an app seals it; member content written through this SDK is not yet sealed (`SECURITY-amp-web-SDK.md`). Every host is a full peer — an app on an embedded/local vault works offline (§14.1); **this web client is cloud-only** and needs its operated node reachable (§14.2). Your web app is a disposable UI layer; amp is the durable substrate underneath.
 
 ---
 
@@ -759,7 +759,7 @@ await withdraw('shares', 'link', itemID, {
 });
 ```
 
-`tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg, sealed under a single encryption context, with one signature and one MemberProof. A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
+`tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg under a single encryption context, with one signature (not yet sealed, `SECURITY-amp-web-SDK.md`). A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
 
 `invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write (§4.3).
 
@@ -1444,17 +1444,17 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Edit** | A versioned update to an item; CRDT-merged (`AOM/SD-edit-resolution.md`). |
 | **Genesis** | The founding ceremony of a planet — the first TxMsg, welding the identity facts later edits cannot forge (founder signatures, epoch-key root); an optional founding `Brand` edit rides it, admin-mutable after like every Brand field (`AOM/DD-name-service.md` §2.2). |
 | **Cabinet** | The substrate store a planet's channel items commit into — the destination of a normal `tx`. A verb-RPC (`invoke`) bypasses it; the app then authors the cabinet writes itself. |
-| **Host writer session** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums custodian founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
+| **Host writer session** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums host service founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
 | **TxMsg** | A signed transaction containing one or more data ops; its payload is encrypted when its writer seals it under an epoch key (member content is not yet sealed). |
 | **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (host-internal `TxCommitFlags_Invoke`, not journaled) which authors the durable write itself; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
 | **ACC** | **Access Control** — the per-channel grant engine deciding which TxOps may enter a planet: who may read, write, or govern each channel. Grants are committed as a `ChannelEpoch` via `POST /api/v1/governance/grant` (§14.4). |
 | **BYOK** | **Bring Your Own Key** — sealing user-supplied secrets client-side (`seal`/`open`, §6.2) under a device-local EncryptKey, so hosts, admins, and other members never see plaintext (`SECURITY-amp-web-SDK.md`). |
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
-| **Vault** | The storage-and-sync half of an `ampd` node. A relay vault (holding no member's keys) cannot read content; your host's vault holds your keys and can. |
+| **Vault** | The storage-and-sync half of an `ampd` node. A relay vault (holding no member's keys) cannot read sealed content (member content is not yet sealed); your host's vault holds your keys and can. |
 | **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards) (`AOM/AD-app-www.md`). |
 | **Member** | An authenticated identity within a planet. Its `Kind` is a `tag.UID` resolving to a `LawMemberKind_*` (Person / Group / Agent / Memorial) — an identity taxonomy, never an entitlement (§6.5, §12; `AOM/SD-substrate-agnostic-members.md`). |
-| **MemberProof** | An HMAC of a derived proof key over TxID; nodes holding the epoch key check it on decrypt — a relay vault cannot. |
+| **MemberProof** | An HMAC of a derived proof key over TxID, carried on every sealed tx; a relay vault requires it but cannot check it, and no node checks it today. |
 | **WebRect** | A Unity 3D Pane that renders a web card. |
 | **Pane** | The surface hosting one card: a Unity WebRect or a 2D browser drawer. Cards target their Pane via `window.amp` (§8). |
 | **Panel** | A Unity-host UI region that arranges and manages Panes. Card authors never address a Panel directly — the Pane is the card's whole world. |

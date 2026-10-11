@@ -4253,7 +4253,7 @@ func (x *MemberEpoch) GetReKeyPrior() *safe.KeyRef {
 	return nil
 }
 
-// AttrScope is one WHERE row of a watchdog-class grant: a whitelist entry over
+// AttrScope is one WHERE row of a watchdog grant: a whitelist entry over
 // the channel's two axes, each named by a canonic tag word-chain
 // (SD-channel-governance §9.2).  AttrSpace is a PREFIX: every registered attr
 // whose canonic name equals or word-extends it is in scope, so leaves minted

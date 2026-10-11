@@ -158,7 +158,7 @@ export interface InviteRevokeOpts {
   planet: string;               // base32 UID of the planet
   inviteId?: string;            // base32 invite ID …
   inviteText?: string;          // … or the invite URL / body
-  rotate?: boolean;             // also rotate the planet epoch (node-custodial founder only)
+  rotate?: boolean;             // also rotate the planet epoch (a founder whose key the node holds)
 }
 
 /**

@@ -865,8 +865,8 @@ func OpenTx(wire []byte, crypto CryptoProvider, signerPubKey []byte, signerCrypt
 // inside the ciphertext, so the signer's public key is unknowable until after decryption —
 // a receiver must decrypt first to discover it.  This entrypoint is for a member's
 // receive-side scan (e.g. blob-ref discovery): the symmetric AEAD already authenticates the
-// payload (a wrong or forged ciphertext fails to open) and the relay's MemberProof gates
-// acceptance upstream.  Full author-signature verification, where required, follows once
+// payload (a wrong or forged ciphertext fails to open); a relay refuses a sealed TxMsg that
+// carries no MemberProof but cannot check one.  Full author-signature verification, where required, follows once
 // FromID resolves to a cached member key.
 func OpenTxSansVerify(wire []byte, crypto CryptoProvider) (*TxMsg, error) {
 	return openTx(wire, crypto, nil, safe.CryptoKitID{}, false)

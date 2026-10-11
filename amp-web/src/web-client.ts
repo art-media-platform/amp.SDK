@@ -592,7 +592,7 @@ export class AmpWebClient implements AmpAdapter {
 
   async invoke(verbURL: string, ops: TxOp[], planetTag?: string): Promise<TxResult[]> {
     // Embedded in the host + the host handles this verb natively → divert so the member's OWN
-    // key signs the write (e.g. a self-signed forums reply); reads + other writes stay custodial.
+    // key signs the write (e.g. a self-signed forums reply); reads + other writes stay node-signed.
     if (this.embed?.routes(verbURL)) {
       if (ops.length !== 1) {
         // Typed like every other client failure so a host-embedded consumer's
@@ -922,7 +922,7 @@ export class AmpWebClient implements AmpAdapter {
 
   // revokeInvite terminally revokes an invite's policy (reissue rather than
   // un-revoke).  Set rotate to also rotate the planet epoch, retiring the
-  // token-held key (node-custodial founder only).  Bearer.
+  // token-held key (a founder whose key the node holds).  Bearer.
   async revokeInvite(opts: InviteRevokeOpts): Promise<void> {
     await this.apiFetch<InviteListResult>('/invite/revoke', {
       method: 'POST',

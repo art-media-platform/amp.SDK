@@ -153,8 +153,8 @@ tab, add a note there, and watch both update.
 
 - `'my-first-channel'` / `'notes'` were canonized server-side to
   `tag.UID`s on first use (SKILL §5.8) — no schema, no migration.
-- `create(...)` sent one signed, encrypted TxMsg; the vault journaled it
-  without being able to read it (`SECURITY-amp-web-SDK.md`).
+- `create(...)` sent one signed TxMsg (not yet sealed); the vault journaled
+  it (`SECURITY-amp-web-SDK.md`).
 - `useAmpQuery` subscribed to exactly that `(channel, attr)` cell
   (`docs/concepts-primer.md`) once logged in; anonymous reads are
   fetch-only.

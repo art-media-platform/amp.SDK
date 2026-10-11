@@ -2,7 +2,7 @@
   <img src="media/art-media-platform.svg" alt="art.media.platform" width="280">
 </p>
 
-**art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Each participant's keys live on their own device, or on a node they sign in through.  Every device can be a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
+**art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated applications, end-to-end encrypted where content is sealed (member content is not yet sealed by default; see Planet).  Each participant's keys live on their own device, or on a node they sign in through.  Every device can be a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
 
 This repository is the **SDK**: a dependency-light Go library defining the wire format, [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) addressing model, key/identity primitives, and `AppModule` interface.  Pair it with amp.planet to produce:
 
@@ -26,7 +26,7 @@ In crisis scenarios — natural disasters, infrastructure collapse, conflict zon
 | Principle | Meaning | Appears as |
 |-----------|---------------|---------------------|
 | **Total Data Portability** | Assured data accessibility, non-deniability, and portability | Append-only signed `TxJournal` + content-addressed blob store — export, verify, and restore from any peer |
-| **Total Data Privacy** | Only holders of a planet's keys can decrypt its sealed records: members who received them, the nodes those keys live on, and anyone else holding one — a former member, or whoever has an invite file and its passphrase (member content is not yet sealed; see the privacy table) | Epoch keys split via HKDF into `content_key` (encryption) and `proof_key` (membership proofs, checked by key holders); relay vaults *cannot* decrypt |
+| **Total Data Privacy** | Only holders of a planet's keys can decrypt its sealed records: members who received them, the nodes those keys live on, and anyone else holding one — a former member, or whoever has an invite file and its passphrase (member content is not yet sealed; see the privacy table) | Epoch keys split via HKDF into `content_key` (encryption) and `proof_key` (membership proofs; a relay checks only that one is present); relay vaults *cannot* decrypt |
 | **Community-Centric Permissions** | Nested hierarchies, local authority, flexible governance | Planet → channel permission model; founders rotate epoch keys (today, from a node holding the founder's key) — no central authority |
 | **Off-Grid First** | Data accessible and updatable without the internet | Transport-agnostic sync over [Reticulum](https://reticulum.network/)/[LoRa](https://en.wikipedia.org/wiki/LoRa), TCP, UDP — even sneakernet; all sync is [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type), so offline edits merge deterministically |
 | **Usability & Accessibility** | Open protocols for any technical skill level | The [amp-web-SDK](amp-web/) (`@art-media-platform/web`) TypeScript SDK with React hooks — web apps, menu cells, and spatial UIs speak one adapter |
@@ -39,7 +39,7 @@ In crisis scenarios — natural disasters, infrastructure collapse, conflict zon
 
 ## Planet
 
-The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices, the nodes they sync through, and any node that follows it (which holds a private planet sealed).
+The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices, the nodes they sync through, and any node that follows it; a follower reads what is not sealed (see the privacy table below).
 
 A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go)) that propagate through whatever transports are available — TCP, UDP, USB stick, or mesh-networking.  Every `TxMsg` is signed by its author and optionally encrypted with the planet's current epoch key.
 
@@ -57,7 +57,7 @@ Channel-private encryption is designed and not yet shipped: once it is, a privat
 
 Identity and key-receipt have opposing rotation needs, so AMP splits them:
 
-- **SigningKey** — author identity.  Held in the device's or node's key store (for web logins the node mints it; a wallet or DID proves the login, not this key — except on a forums board that admits the member, where login also seats the wallet's or DID's own public key as the member's signing key); hardware-bound keys are not yet shipped.  Stable, rarely rotated, signs every TxMsg.
+- **SigningKey** — author identity.  Held in the device's or node's key store (for web logins the node mints it; a wallet or DID proves the login, not this key — except on a forums board that admits the member, where login also sets the wallet's or DID's own public key as the member's signing key); hardware-bound keys are not yet shipped.  Stable, rarely rotated, signs every TxMsg.
 - **EncryptKey** — software-resident, cheap to rotate.  Receives sealed-box wraps of new epoch keys.  A planet rotation wraps the new epoch key to it and leaves it unchanged; only its member's node replaces it.
 
 
@@ -75,7 +75,7 @@ A **vault** is the storage-and-sync half of a node: it holds a planet's signed t
 
 **Offline-first, convergence-second.**  A vault accepts writes with no network at all; they land in the local log and propagate when a peer is next reachable.  Two vaults reconcile by exchanging a [Merkle](https://en.wikipedia.org/wiki/Merkle_tree) range hash over their transaction sets and streaming only the difference — `O(log n)` to find a gap, then a content-addressed transfer to close it.  The hash binds entry *bytes*, not just their IDs, so a corrupted or substituted entry surfaces as a mismatch and re-heals instead of spreading.  CRDT addressing makes the merged result identical on every replica, whatever the arrival order.
 
-**Zero-knowledge by construction.**  A relay vault — one on a node that holds no member's keys — stores and forwards a sealed message without decrypting it; the members' own nodes check its membership proof and signature when they decrypt it.  A seized relay vault yields no sealed content: only encrypted content, member content not yet sealed (see the privacy table above), planet-public records (the charter, channel names and access grants, invite records), membership proofs, each planet's member roster (member IDs, statuses, public keys, and which invite each member joined with and when), and routing metadata — PlanetIDs, EpochIDs, the activity timeline, and the planets each connected node announces, including the home planet of each identity on that node (whose ID is that identity's ID) and each planet's last-activity time, sent over an unencrypted control channel that anyone on the network path can read.  Each sealed post carries its author's signature in the clear and the roster lists every member's public signing key, so whoever holds a vault's copy can tell which member signed each sealed post.  An operator of such a vault, willing or coerced, can hand over that much and never the content inside — the precise sense in which a vault is safe to rent in an adversarial jurisdiction: it protects content, not who posted when.
+**Zero-knowledge by construction.**  A relay vault — one on a node that holds no member's keys — stores and forwards a sealed message without decrypting it; the members' own nodes authenticate it by decrypting it, then check its signature.  A seized relay vault yields no sealed content: only encrypted content, member content not yet sealed (see the privacy table above), planet-public records (the charter, channel names and access grants, invite records), membership proofs, each planet's member roster (member IDs, statuses, public keys, and which invite each member joined with and when), and routing metadata — PlanetIDs, EpochIDs, the activity timeline, and the planets each connected node announces, including the home planet of each identity on that node (whose ID is that identity's ID) and each planet's last-activity time, sent over an unencrypted control channel that anyone on the network path can read.  Each sealed post carries its author's signature in the clear and the roster lists every member's public signing key, so whoever holds a vault's copy can tell which member signed each sealed post.  An operator of such a vault, willing or coerced, can hand over that much and never the content inside — the precise sense in which a vault is safe to rent in an adversarial jurisdiction: it protects content, not who posted when.
 
 **Self-certifying peers.**  Vaults authenticate by key, not by certificate authority: a peer's identity *is* a hash of its signing key, proven by a mutual challenge-response handshake — no CA to trust or breach.  Resource budgets bind to that proven identity, so one peer cannot masquerade as many and the metering holds against a sybil flood without a central allowlist.
 
@@ -133,7 +133,7 @@ The future of computing is spatial.  AR/VR headsets, digital twins, geospatial l
 
 AMP provides the security and communication layer that spatial applications need without corporate lock-in.  It ships as an embeddable C library for [Unity](https://unity.com) and [Unreal](https://unrealengine.com), or as a standalone server binary (`ampd`) for headless operation.
 
-A Unity app with AMP embedded has end-to-end encrypted federated communication, offline-capable CRDT state, authenticated media streaming, and mesh networking — all without a single line of server code or a single dependency on a cloud provider.
+A Unity app with AMP embedded has signed federated communication (sealing member content by default is in progress; see Planet), offline-capable CRDT state, authenticated media streaming, and mesh networking — all without a single line of server code or a single dependency on a cloud provider.
 
 **Platforms:** Windows, macOS, Linux, iOS, Android, XR headsets (Meta Quest, Apple Vision).  The same binary that runs a headless vault on a Raspberry Pi serves a VR collaboration space.
 

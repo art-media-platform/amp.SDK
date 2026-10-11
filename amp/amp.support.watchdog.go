@@ -10,7 +10,7 @@ import (
 // enforcement site consumes: the ACC WatchdogRule, the advisory session
 // check, and a watchdog's own grant self-check (SD-channel-governance §9).
 
-// GrantIsWatchdog reports whether grant carries the watchdog-class capability
+// GrantIsWatchdog reports whether grant carries the watchdog capability
 // record or data-plane scope whitelist.  A grant carrying either fences its
 // member on the data plane; the Access rung is ordering only and is never the
 // test (SD-channel-governance §9.1).

@@ -6,7 +6,7 @@
  * survives the Vuplex→FOSS engine swap) — carrying the SSO memberToken and a routing
  * table of the verbs it handles natively.  The SDK diverts those verbs (today: the
  * member's self-signed forums reply) to the host so the member's OWN key signs the
- * write; reads and every other write stay on the custodial HTTP path.  A pure browser
+ * write; reads and every other write stay on the node-signed HTTP path.  A pure browser
  * has no `window.__amp` and is unaffected.
  */
 

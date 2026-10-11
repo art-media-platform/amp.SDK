@@ -1,6 +1,6 @@
 # `amp/` — Build a Channel
 
-This package is the **channel runtime** of [art.media.platform](../README.md).  If the [root README](../README.md) is the *why* (federated, end-to-end-encrypted, no central server), this is the *how*: the handful of interfaces a third-party software company implements to ship its own channel on top of AMP — and inherit encryption, sync, signing, CRDT merge, offline operation, asset streaming, and federation for free.
+This package is the **channel runtime** of [art.media.platform](../README.md).  If the [root README](../README.md) is the *why* (federated, signed, encrypted where sealed, no central server), this is the *how*: the handful of interfaces a third-party software company implements to ship its own channel on top of AMP — and inherit encryption, sync, signing, CRDT merge, offline operation, asset streaming, and federation for free.
 
 You write one Go type.  You do **not** write a server, a database, a sync protocol, a key-exchange, a websocket layer, or an auth system.  Those tools already ship.
 
@@ -165,7 +165,7 @@ That call is the *entire* integration surface.
 // useAmpQuery<T>(channel, attr, opts) — 'notes' is the channel verb, 'snapshot' the attr name:
 const { data, loading } = useAmpQuery<Note>('notes', 'snapshot', { limit: 50 });
 
-// Write — one signed, sealed TxMsg (channel, attr, itemID, value):
+// Write — one signed TxMsg (channel, attr, itemID, value):
 const { upsert } = useAmpMutation();
 await upsert('notes', 'snapshot', noteID, { title, body });
 ```
@@ -193,11 +193,11 @@ These rails are worth standing on because when you implement a channel these are
 
 | *Feature* | |
 |---------|-|
-| **Sovereign Secrecy** | End-to-end by construction — key exchange, epoch rotation, sealed-box wraps, every TxMsg sealed under the planet/channel epoch key.  Your keys, your crypt; the wire carries ciphertext or it carries nothing |
-| **Authorship + Integrity** | Every write signed by its author; membership proven to relays without revealing identity |
+| **Sovereign Secrecy** | End-to-end by construction — key exchange, epoch rotation, sealed-box wraps, a TxMsg sealed under the planet epoch key when its writer names the epoch (member content is not yet sealed; [root README](../README.md)).  Your keys, your crypt |
+| **Authorship + Integrity** | Every write signed by its author; a sealed TxMsg carries a membership proof (relays check its presence only), and its signature identifies the signer |
 | **CRDT Sync** | Offline edits, automatic conflict-free merge, multi-device convergence |
 | **Transport Independence** | TCP, UDP, USB hand-carry, or [Reticulum](../README.md#reticulum) mesh over LoRa — your channel doesn't know or care |
-| **Vault Infrastructure** | Stores and forwards your channel's traffic and can decrypt none of it as a zero-knowledge relay |
+| **Vault Infrastructure** | Stores and forwards your channel's traffic and cannot decrypt what is sealed |
 | **Assets** | Content-addressed, encrypted file attach — stream a 10 GB capture or a 2 KB thumbnail, deduplicated by content hash, resolved by `asset:` URI (`Session.SeedBlob` / `StoreBlob`) |
 | **Federation + Naming** | Cross-planet resolution through [`Brand`](amp.core.proto) + NameService — no DNS authority, no central registry |
 | **Lifecycle** | Parent-child `task.Context` close semantics; an offline outbox that drains when connectivity returns |

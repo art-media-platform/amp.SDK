@@ -109,7 +109,7 @@ export interface AmpAdapter {
    * Invoke an app verb: route the ops to the named verb URL's handler instead of
    * the cabinet, carrying the session member as the authoring caller.  The app
    * reads the ops as RPC arguments and authors any durable writes itself
-   * (custodially).  Form: "amp://~/{app}/{verb}" (e.g. "amp://~/forums/post").
+   * (with a node-held key).  Form: "amp://~/{app}/{verb}" (e.g. "amp://~/forums/post").
    */
   invoke(verbURL: string, ops: TxOp[], planetTag?: string): Promise<TxResult[]>;
 

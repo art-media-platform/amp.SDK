@@ -11,8 +11,9 @@ primer lives in the [amp.SDK README](https://github.com/art-media-platform/amp.S
 A relay vault — an `ampd` node that holds no member's keys — stores and forwards
 encrypted transactions **without decrypting them**. On a **private** planet it
 cannot check a sealed transaction's membership proof (an HMAC derived from the
-epoch key); the members' own nodes check the proof and the author signature when
-they decrypt.
+epoch key), only that one is present. A member's node authenticates the payload
+by decrypting it, then checks the author signature; no node checks the proof
+itself today.
 
 | A relay vault sees | A relay vault does NOT see (private planet) |
 |---|---|
