@@ -142,9 +142,9 @@ func TestPinMergeIncomingCallbackAddsEarlierNode(t *testing.T) {
 	}
 }
 
-// Each responder is offered each node once: one bound before the merge across
-// the extra pass, and one bound during a callback, which that pass offers the
-// whole tx.
+// Each responder is offered each node once: one bound before the merge is not
+// offered again in the extra pass, and one bound during a callback is offered
+// the whole tx in that pass.
 func TestPinMergeIncomingOffersEachNodeOnce(t *testing.T) {
 	nodeA := tag.Name{}.With("test.pin.once-a").ID
 	nodeB := tag.Name{}.With("test.pin.once-b").ID

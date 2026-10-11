@@ -70,7 +70,7 @@ func (pin *Pin[AppT]) Bind(resp amp.NodeResponder) {
 }
 
 // MergeIncoming processes an incoming TxMsg by offering each node it touches,
-// in order of first appearance, to each bound responder once.  Supports
+// in order of first appearance, to each bound entry once.  Supports
 // multi-pass iteration: if a responder adds new responders during its
 // callback, additional passes ensure the new responders also process the tx.
 func (pin *Pin[AppT]) MergeIncoming(tx *amp.TxMsg) {
