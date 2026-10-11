@@ -45,7 +45,7 @@ amp.Host ──► FindModule(tag) ──► NewAppInstance(ctx) ──► AppIn
 | **Register** | `RegisterWith(reg)` → `RegisterModule(&AppModule{…})` | Tag resolution, invocation routing |
 | **Instantiate** | `NewAppInstance(ctx)` — return your struct | `AppContext`: session, env, `NewTx()`, asset publishing |
 | **Validate** | `MakeReady(req)` — refresh tokens, check access | Verified signer identity, planet membership |
-| **Serve** | `StartPin(req)` — return a `Pin` | Encryption, sync, fanout, CRDT merge, offline queue |
+| **Serve** | `StartPin(req)` — return a `Pin` | Encryption where sealed, sync, fanout, CRDT merge, offline queue |
 | **Tear down** | `OnClosing()` | Whole-subtree close via `task.Context` |
 
 Every long-lived object is a node in a [`task.Context`](../stdlib/task/api.task.go) tree.  Close a parent, every child Pin closes with it — no goroutine leaks, no manual bookkeeping.
@@ -247,4 +247,4 @@ example that stays inside this line is `amp.planet/amp/apps/app.hello/app.hello.
 
 ---
 
-<p align="center"><em>One type to implement.  A federated, encrypted, offline-first channel to ship.</em></p>
+<p align="center"><em>One type to implement.  A federated, signed, offline-first channel to ship.</em></p>

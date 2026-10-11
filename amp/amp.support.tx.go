@@ -707,7 +707,7 @@ type CryptoProvider interface {
 	// Returns nil, nil if the TxMsg is planet-public (Epoch is nil).
 	DecryptPayload(ciphertext []byte, env *TxEnvelope) ([]byte, error)
 
-	// ComputeMemberProof generates HMAC(proof_key, txID) for relay verification.
+	// ComputeMemberProof generates HMAC(proof_key, txID); relays check only its presence.
 	// proof_key = HKDF(epoch_key, "member-proof")
 	// Returns nil, nil if the TxMsg is planet-public (no epoch).
 	ComputeMemberProof(txID []byte, env *TxEnvelope) ([]byte, error)
@@ -723,7 +723,7 @@ type CryptoProvider interface {
 //
 // One TxMsg = one encryption context: TxEnvelope.Epoch selects a single epoch key.
 // All TxOp(s) must belong to the this same encryption domain.
-// If the epoch is set, a MemberProof (HMAC over TxID using a derived proof key) is attached for relay verification.
+// If the epoch is set, a MemberProof (HMAC over TxID using a derived proof key) is attached; relays check only its presence.
 //
 // Wire layout:
 //
@@ -761,7 +761,7 @@ func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 		}
 		wirePayload = encrypted
 
-		// Compute MemberProof for relay verification (HMAC of proof_key over TxID)
+		// Compute the MemberProof (HMAC of proof_key over TxID; relays check its presence)
 		proof, err := crypto.ComputeMemberProof(tx.TxEnvelope.MemberProofInput(), &tx.TxEnvelope)
 		if err != nil {
 			return err

@@ -213,9 +213,9 @@ enum ValueHeaderFlags {
 //   - planet ID  → private planet: ops encrypted under the planet epoch key.
 //   - channel ID → private channel: ops encrypted under that channel's key.
 //
-// FromID (author identity) lives inside the encrypted TxHeader so passive
-// observers and relay vaults cannot correlate sender with traffic.
-// (AOM ZO-design-conventions.md §3.4.)
+// FromID (author identity) rides inside a sealed tx's encrypted TxHeader; the
+// trailing signature is in the clear, so roster keys identify the signer
+// (AOM SD-security-sync.md §3.1; ZO-design-conventions.md §3.4).
 message TxEnvelope {
 
     // Universally unique ID assigned when a tx is created
@@ -234,8 +234,8 @@ message TxEnvelope {
     fixed64             Epoch_0 = 8;
     fixed64             Epoch_1 = 9;
 
-    // Proves sender is a planet/channel member without revealing identity, so
-    // relay vaults can reject spam without decrypting content.
+    // Carried on every sealed tx: an HMAC over TxID keyed from the epoch key.
+    // A relay vault requires it but cannot check it; no node checks it today.
     // (AOM SD-security-sync.md §3.6.)
     bytes               MemberProof = 25;
 
@@ -467,7 +467,7 @@ enum MemberAdmission {
 // forks instead).  Confidential and Public are the endpoints; the reserved 1–6
 // gap leaves room for graduated intermediate modes without disturbing them.
 enum PrivacyMode {
-    Confidential = 0; // members-only: payloads are encrypted; only members author and view
+    Confidential = 0; // members author; a tx sealed under the epoch key is readable only by key holders (member content is not yet sealed)
     Public       = 7; // signature-only: no payload encryption; anyone may syndicate/view, only members author
 }
 

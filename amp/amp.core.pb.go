@@ -636,7 +636,7 @@ func (MemberAdmission) EnumDescriptor() ([]byte, []int) {
 type PrivacyMode int32
 
 const (
-	PrivacyMode_Confidential PrivacyMode = 0 // members-only: payloads are encrypted; only members author and view
+	PrivacyMode_Confidential PrivacyMode = 0 // members author; a tx sealed under the epoch key is readable only by key holders (member content is not yet sealed)
 	PrivacyMode_Public       PrivacyMode = 7 // signature-only: no payload encryption; anyone may syndicate/view, only members author
 )
 
@@ -2076,9 +2076,9 @@ func (x *UIDRange) GetEnd_1() uint64 {
 //   - planet ID  → private planet: ops encrypted under the planet epoch key.
 //   - channel ID → private channel: ops encrypted under that channel's key.
 //
-// FromID (author identity) lives inside the encrypted TxHeader so passive
-// observers and relay vaults cannot correlate sender with traffic.
-// (AOM ZO-design-conventions.md §3.4.)
+// FromID (author identity) rides inside a sealed tx's encrypted TxHeader; the
+// trailing signature is in the clear, so roster keys identify the signer
+// (AOM SD-security-sync.md §3.1; ZO-design-conventions.md §3.4).
 type TxEnvelope struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Universally unique ID assigned when a tx is created
@@ -2094,8 +2094,8 @@ type TxEnvelope struct {
 	// Zero denotes planet-public (unencrypted).
 	Epoch_0 uint64 `protobuf:"fixed64,8,opt,name=Epoch_0,json=Epoch0,proto3" json:"Epoch_0,omitempty"`
 	Epoch_1 uint64 `protobuf:"fixed64,9,opt,name=Epoch_1,json=Epoch1,proto3" json:"Epoch_1,omitempty"`
-	// Proves sender is a planet/channel member without revealing identity, so
-	// relay vaults can reject spam without decrypting content.
+	// Carried on every sealed tx: an HMAC over TxID keyed from the epoch key.
+	// A relay vault requires it but cannot check it; no node checks it today.
 	// (AOM SD-security-sync.md §3.6.)
 	MemberProof []byte `protobuf:"bytes,25,opt,name=MemberProof,proto3" json:"MemberProof,omitempty"`
 	// Planet epoch UID active when this tx was sealed.  For channel-encrypted

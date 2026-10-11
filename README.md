@@ -122,7 +122,7 @@ Reticulum and AMP are architecturally aligned:
   - both are peer-to-peer by construction,
   - both separate identity from location via cryptographic keys,
   - both handle intermittent connectivity gracefully.
-  - both are complementary: AMP encrypts at the application layer while Reticulum encrypts at the transport layer.
+  - both are complementary: AMP seals at the application layer where a writer names the epoch, while Reticulum encrypts at the transport layer.
 
 `vault.Transport` makes AMP fully transport-agnostic.  Reticulum over LoRa gives AMP nodes mesh federation without internet, cell towers, or any centralized infrastructure — disaster response teams, rural classrooms, field teams in denied environments, all running encrypted CRDT channels over radio, offering [3D spatial collaboration](https://plan-systems.org/2025/04/17/25-use-cases-for-a-spatial-os-created-with-plan-3d/).
 

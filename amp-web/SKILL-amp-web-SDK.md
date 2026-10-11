@@ -731,7 +731,7 @@ amp is **address-is-query**: the `(channel, attr)` address *is* the scope, and t
 ```tsx
 const { tx, invoke, create, upsert, remove, withdraw, loading } = useAmpMutation();
 
-// One TxMsg, many ops — atomic, single signature, single MemberProof:
+// One TxMsg, many ops — atomic, single signature:
 const results = await tx([
   { Kind: 'upsert', Channel: 'projects', Attr: 'labels',   ItemID: l1, Value: lv1 },
   { Kind: 'upsert', Channel: 'projects', Attr: 'labels',   ItemID: l2, Value: lv2 },

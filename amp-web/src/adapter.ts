@@ -102,7 +102,7 @@ export interface AmpAdapter {
     opts?: AmpQueryOpts,
   ): Promise<{ data: (T & AmpItemMeta)[]; hasMore: boolean; next?: string }>;
 
-  /** Canonical batched write — one TxMsg, N ops, one signature + MemberProof. */
+  /** Canonical batched write — one TxMsg, N ops, one signature. */
   tx(ops: TxOp[], planetTag?: string): Promise<TxResult[]>;
 
   /**
