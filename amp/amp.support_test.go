@@ -8,6 +8,7 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/stdlib/data"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestTxSerialize(t *testing.T) {
@@ -221,5 +222,49 @@ func TestRequestReviseAtomic(t *testing.T) {
 	}
 	if req.Current.Mode != PinMode_Snapshot || len(req.Selector.Spans) != 1 {
 		t.Errorf("a Selector revision did not apply: %v, %d spans", req.Current.Mode, len(req.Selector.Spans))
+	}
+}
+
+// TestRequestReviseDropsInvalidSpans: Revise normalizes a decoded Selector
+// whatever its serialized Normalized flag says, and a span it rejects never
+// displaces a valid one.
+func TestRequestReviseDropsInvalidSpans(t *testing.T) {
+	validNode := tag.UID{1, 1}
+	attrID := tag.UID{7, 1}
+	itemID := tag.UID{3, 1}
+	sel := &ItemSelector{}
+	sel.AddSpan(validNode, attrID, itemID, itemID)
+	// Rejected (min > max); the reverse sort puts its node ahead of validNode.
+	sel.AddSpan(tag.UID{2, 1}, attrID, tag.UID{9, 1}, itemID)
+	sel.Normalized = true // Revise must not trust the serialized flag
+	wire, err := proto.Marshal(&PinRequest{
+		Mode:     PinMode_Snapshot,
+		Selector: sel,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	received := &PinRequest{}
+	if err := proto.Unmarshal(wire, received); err != nil {
+		t.Fatal(err)
+	}
+
+	req := &Request{}
+	if err := req.Revise(received); err != nil {
+		t.Fatalf("revise: %v", err)
+	}
+	valid := tag.Address{
+		ElementID: tag.ElementID{
+			NodeID: validNode,
+			AttrID: attrID,
+			ItemID: itemID,
+		},
+	}
+	if !req.Admits(valid) {
+		t.Error("Revise lost the valid span")
+	}
+	spans := req.Selector.Spans
+	if len(spans) != 1 || spans[0].NodeID() != validNode {
+		t.Errorf("Selector %s, want only the valid span", req.Selector.AsLabel())
 	}
 }

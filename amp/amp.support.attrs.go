@@ -814,7 +814,7 @@ func (sel *ItemSelector) Normalize(force bool) error {
 	}
 
 	// Reverse sort so that it plays nice with db reverse span (to get newest EditID first per item)
-	sort.Slice(spans, func(i, j int) bool {
+	sort.Slice(spans[:N], func(i, j int) bool {
 		return spans[i].CompareTo(spans[j]) > 0 // REVERSE SORT
 	})
 
