@@ -346,20 +346,22 @@ func (tx *TxMsg) MarshalOpAndData(op *TxOp, opValue []byte) {
 	tx.Normalized = false
 }
 
+// ReadTxMsg reads one frame from stream.  It returns io.EOF only when the
+// stream ends before the frame's first byte, a clean close between frames; a
+// stream that ends anywhere inside a frame returns io.ErrUnexpectedEOF.
 func ReadTxMsg(stream io.Reader) (*TxMsg, error) {
+	// readBytes reads the spans after the preamble: the frame has begun, so an
+	// end of stream there is a cut frame.
 	readBytes := func(dst []byte) error {
-		for L := 0; L < len(dst); {
-			n, err := stream.Read(dst[L:])
-			if err != nil {
-				return err
-			}
-			L += n
+		_, err := io.ReadFull(stream, dst)
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
 		}
-		return nil
+		return err
 	}
 
 	var preamble TxPreamble
-	if err := readBytes(preamble[:]); err != nil {
+	if _, err := io.ReadFull(stream, preamble[:]); err != nil {
 		return nil, err
 	}
 
@@ -733,7 +735,7 @@ type CryptoProvider interface {
 func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 	if crypto == nil {
 		// No crypto — standard marshal (local session traffic)
-		tx.MarshalHeadAndOps(dst)
+		tx.MarshalToBuffer(dst)
 		return nil
 	}
 

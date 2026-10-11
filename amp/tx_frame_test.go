@@ -8,9 +8,12 @@ package amp
 import (
 	"bytes"
 	"encoding/binary"
+	"io"
 	"runtime"
 	"testing"
+	"testing/iotest"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
@@ -101,6 +104,59 @@ func TestReadTxMsg_ExactSizing(t *testing.T) {
 	}
 }
 
+// A complete frame is read when its reader returns io.EOF together with the
+// last bytes (io.Reader allows it), in one read or one byte at a time.
+func TestReadTxMsg_FinalBytesWithEOFAreRead(t *testing.T) {
+	for _, valLen := range []int{0, 89} {
+		wire := []byte(nil)
+		txShape(1, valLen).MarshalToBuffer(&wire)
+		readers := []io.Reader{
+			iotest.DataErrReader(bytes.NewReader(wire)),
+			iotest.DataErrReader(iotest.OneByteReader(bytes.NewReader(wire))),
+		}
+		for i, reader := range readers {
+			if _, err := ReadTxMsg(reader); err != nil {
+				t.Errorf("%d-byte value, reader %d: %v", valLen, i, err)
+			}
+		}
+	}
+}
+
+// A frame cut after its first byte returns io.ErrUnexpectedEOF, at a span
+// boundary or inside a span, also when the reader returns io.EOF together
+// with its last bytes.
+func TestReadTxMsg_CutFrameIsUnexpectedEOF(t *testing.T) {
+	wire := []byte(nil)
+	txShape(1, 89).MarshalToBuffer(&wire)
+	headLen := TxPreamble(wire[:TxPreambleSize]).TxHeadLen()
+	cuts := []int{
+		int(TxPreambleSize) / 2,             // inside the preamble
+		int(TxPreambleSize),                 // preamble | head
+		(int(TxPreambleSize) + headLen) / 2, // inside the head
+		headLen,                             // head | data
+		len(wire) - 1,                       // inside the data
+	}
+	for _, cutAt := range cuts {
+		readers := []io.Reader{
+			bytes.NewReader(wire[:cutAt]),
+			iotest.DataErrReader(bytes.NewReader(wire[:cutAt])),
+		}
+		for i, reader := range readers {
+			if _, err := ReadTxMsg(reader); err != io.ErrUnexpectedEOF {
+				t.Errorf("cut at %d of %d, reader %d: %v", cutAt, len(wire), i, err)
+			}
+		}
+	}
+}
+
+// A stream that ends between frames returns io.EOF itself, so a reader can
+// tell a clean close from a cut frame.
+func TestReadTxMsg_StreamEndBetweenFramesIsEOF(t *testing.T) {
+	if _, err := ReadTxMsg(bytes.NewReader(nil)); err != io.EOF {
+		t.Fatalf("ReadTxMsg on an ended stream = %v, want io.EOF", err)
+	}
+}
+
 // Marshaling into a reused buffer writes all 16 preamble bytes: 12-15 are
 // zero after the marshal whatever the buffer held before.
 func TestMarshalHeadAndOps_WritesEveryPreambleByte(t *testing.T) {
@@ -122,5 +178,17 @@ func TestMarshalHeadAndOps_FirstAllocationFromCeiling(t *testing.T) {
 	t.Logf("frame %d bytes, ceiling %d, cap %d", len(buf), tx.CeilingSize(), cap(buf))
 	if cap(buf) >= 2048 {
 		t.Fatalf("cap = %d for a %d-byte frame (ceiling %d)", cap(buf), len(buf), tx.CeilingSize())
+	}
+}
+
+// An unsigned seal (nil crypto) is a whole frame: the data store its
+// preamble counts follows the head, so OpenTx without crypto reads it.
+func TestSealTx_NilCryptoIsACompleteFrame(t *testing.T) {
+	wire := []byte(nil)
+	if err := SealTx(txShape(1, 89), nil, &wire); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := OpenTx(wire, nil, nil, safe.CryptoKitID{}); err != nil {
+		t.Fatalf("OpenTx of an unsigned seal: %v", err)
 	}
 }
