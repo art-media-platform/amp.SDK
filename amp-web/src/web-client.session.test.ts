@@ -288,13 +288,13 @@ describe('session wire methods', () => {
   });
 });
 
-describe('member self-revoke (sign out everywhere)', () => {
-  it('sessionRevoke POSTs with the Bearer, returns the counts, and drops the local session', async () => {
+describe('sign out everywhere', () => {
+  it('signOutEverywhere POSTs with the Bearer, returns the counts, and drops the local session', async () => {
     const store = new MemorySessionStore();
     const amp = newAdapter(store);
     await amp.login({ Scheme: 'memberToken', MemberToken: 'whatever' });
 
-    const out = await amp.sessionRevoke();
+    const out = await amp.signOutEverywhere();
     expect(out).toEqual({ MemberID: MEMBER, Dropped: 2 });
 
     const revokes = calls.filter(c => c.path === '/session/revoke');

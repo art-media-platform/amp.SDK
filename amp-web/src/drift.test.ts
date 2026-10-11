@@ -75,19 +75,19 @@ const SHAPES: Record<string, ShapeSpec> = {
   },
   LoginResponse: {
     required: ['SessionToken', 'ExpiresAt', 'Member'],
-    nested: { Member: 'AmpMember' },
+    nested: { Member: 'AmpIdentity' },
   },
   // DisplayName is optional on the wire (Go omitempty; types.ts matches).
   // Go is the spec — DisplayName is optional here; types.ts should follow.
-  AmpMember: {
+  AmpIdentity: {
     required: ['ID', 'PlanetID'],
     optional: ['DisplayName', 'Email', 'Kind', 'Address'],
   },
   SessionResponse: {
     required: ['Member', 'ExpiresAt'],
-    nested: { Member: 'AmpMember' },
+    nested: { Member: 'AmpIdentity' },
   },
-  // Member self-revoke — bound as AmpWebClient.sessionRevoke() (types.ts
+  // Sign out everywhere — bound as AmpWebClient.signOutEverywhere() (types.ts
   // SessionRevokeResult): POST /api/v1/session/revoke, own Bearer, no body,
   // full revoke including the calling session.
   SessionRevokeResponse: { required: ['MemberID', 'Dropped'] },
@@ -458,7 +458,7 @@ describe('OPERATOR_GO_ONLY manifest — no browser binding', () => {
 // runtime toEqual ties it to the shared fixture the Go side verifies.
 const ACCESS_LEVELS = [
   'NotAllowed', 'Invite', 'Private',
-  'ReadOnly', 'Custodian', 'ReadWrite', 'Moderator', 'Admin',
+  'ReadOnly', 'Watchdog', 'ReadWrite', 'Moderator', 'Admin',
 ] as const satisfies readonly AccessLevel[];
 
 const WITHDRAW_REASONS = [

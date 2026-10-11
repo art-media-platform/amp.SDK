@@ -27,7 +27,7 @@ function mediaServer(opts: { resolveFails?: boolean } = {}) {
   const published = new Set<string>();
   let generation = 0;
   let bucket = 0;
-  let sessionRevoked = false;
+  let signedOut = false;
   const assetPath = (blob: BlobRef): string => {
     const subtype = (blob.ContentTypeRaw || 'text/plain').toLowerCase().split('/')[1] ?? '';
     return `/www/${blob.UID}${subtype ? '.' + subtype : ''}`;
@@ -38,7 +38,7 @@ function mediaServer(opts: { resolveFails?: boolean } = {}) {
     async resolveMedia(blob: BlobRef): Promise<BlobRef> {
       posted.push(blob);
       if (opts.resolveFails) throw new Error('resolve unavailable');
-      if (sessionRevoked) throw new Error('401 auth required');
+      if (signedOut) throw new Error('401 auth required');
       const path = assetPath(blob);
       published.add(path);
       return { ...blob, URI: `${path}?t=${tokenFor(path)}` };
@@ -48,7 +48,7 @@ function mediaServer(opts: { resolveFails?: boolean } = {}) {
     /** The token lifetime's bucket passes: every outstanding token is expired. */
     expireTokens(): void { bucket++; },
     /** admin/session/revoke: the member's generation bumps and the session is gone. */
-    revokeMember(): void { generation++; sessionRevoked = true; },
+    signOutEverywhere(): void { generation++; signedOut = true; },
     /** What a <video> range request sees at the URL. */
     serve(url: string | null): number {
       if (!url) return 0;
@@ -139,7 +139,7 @@ describe('useAmpMedia 404 path (idle expiry, token expiry, revocation)', () => {
     const first = await resolveMediaURL(server, CABINET);
     expect(server.serve(first.url)).toBe(200);
 
-    server.revokeMember();
+    server.signOutEverywhere();
     expect(server.serve(first.url)).toBe(404); // the generation bump refuses the outstanding token
 
     const again = await refreshMediaURL(server, CABINET);

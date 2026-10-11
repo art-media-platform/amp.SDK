@@ -41,7 +41,7 @@ export interface SubmitResult {
   error?: string;
 }
 
-/** The card's view of its session member (a subset of AmpMember). */
+/** The card's view of its session member (a subset of AmpIdentity). */
 export interface BridgeMember {
   ID: string;
   DisplayName: string;

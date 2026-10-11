@@ -8,7 +8,7 @@
 import type { KeyPair, PubKeyRef } from './crypto/types.js';
 import type {
   AmpItemMeta,
-  AmpMember,
+  AmpIdentity,
   AmpQueryOpts,
   AmpSession,
   BlobRef,
@@ -46,34 +46,34 @@ export interface AmpAdapter {
 
   // ── Auth ──────────────────────────────────────────────────────────
 
-  login(credentials: LoginCredentials): Promise<AmpMember>;
+  login(credentials: LoginCredentials): Promise<AmpIdentity>;
   logout(): Promise<void>;
 
   /**
-   * Member self-revoke ("sign out everywhere") — POST /api/v1/session/revoke.
+   * Sign out everywhere — POST /api/v1/session/revoke.
    * FULL revoke including the calling session; the local session drops on
    * success and a fresh login is required afterward.
    */
-  sessionRevoke(): Promise<SessionRevokeResult>;
+  signOutEverywhere(): Promise<SessionRevokeResult>;
 
   /** The locally-held member (sync, no I/O) — null on a fresh load until restoreSession(). */
-  getSession(): AmpMember | null;
+  getSession(): AmpIdentity | null;
 
   /**
    * Rehydrate a persisted session on a fresh load, re-validated against the
    * host; resolves the member, or null when signed out (AmpProvider calls
    * this on mount so a reload lands authenticated).
    */
-  restoreSession(): Promise<AmpMember | null>;
+  restoreSession(): Promise<AmpIdentity | null>;
 
   /** GET /api/v1/session — host-validated session state.  AmpError(401) when none is bound. */
   fetchSession(): Promise<AmpSession>;
 
   /** GET /api/v1/me — the authenticated member's record.  AmpError(401) when unauthenticated. */
-  me(): Promise<AmpMember>;
+  me(): Promise<AmpIdentity>;
 
   /** Subscribe to auth state changes; returns unsubscribe function. */
-  onAuthChange(callback: (member: AmpMember | null) => void): () => void;
+  onAuthChange(callback: (member: AmpIdentity | null) => void): () => void;
 
   /** Fetch the EIP-4361 (SIWE) challenge for `address` to sign before login(scheme:'wallet'). */
   getWalletChallenge(address: string): Promise<WalletChallenge>;
@@ -89,10 +89,10 @@ export interface AmpAdapter {
   recoverEmail(email: string): Promise<void>;
 
   /** Redeem an emailed recovery code — sets the new password and mints the session (doubles as login). */
-  redeemEmail(opts: RedeemEmailOpts): Promise<AmpMember>;
+  redeemEmail(opts: RedeemEmailOpts): Promise<AmpIdentity>;
 
   /** Claim a legacy account via its emailed activation token (AD-app-forums §8.4) — first password + session. */
-  claimAccount(opts: ClaimAccountOpts): Promise<AmpMember>;
+  claimAccount(opts: ClaimAccountOpts): Promise<AmpIdentity>;
 
   // ── CRUD ──────────────────────────────────────────────────────────
 

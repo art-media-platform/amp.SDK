@@ -391,7 +391,7 @@ var Attr = struct {
 	// The member's planet index, keyed by planet UID (ItemID): PlanetBinding
 	// a joined planet (epoch tag + label) on app.home's home node;
 	// FollowBinding a followed one — watched, not a member — on
-	// app.nameservice's, written by the join intake and relay adoption
+	// app.nameservice's, written by the follow intake and relay adoption
 	// (DD-name-service §5.2) and the app-defaults verb (§5.1), and
 	// re-pinned at each login.  The host mirrors both to the client's
 	// session channel (std.SessionIndex).

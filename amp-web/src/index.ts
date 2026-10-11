@@ -20,7 +20,7 @@ export type {
   AmpBrandResult,
   AmpItemMeta,
   AmpMediaResult,
-  AmpMember,
+  AmpIdentity,
   AmpMutationResult,
   AmpQueryOpts,
   AmpQueryResult,

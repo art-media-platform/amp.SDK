@@ -6,15 +6,15 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-// Custodial (watchdog-class) grant support — the shared judgment every
-// enforcement site consumes: the ACC CustodianRule, the advisory session
+// Watchdog grant support — the shared judgment every
+// enforcement site consumes: the ACC WatchdogRule, the advisory session
 // check, and a watchdog's own grant self-check (SD-channel-governance §9).
 
-// GrantIsCustodial reports whether grant carries the watchdog-class capability
+// GrantIsWatchdog reports whether grant carries the watchdog-class capability
 // record or data-plane scope whitelist.  A grant carrying either fences its
 // member on the data plane; the Access rung is ordering only and is never the
 // test (SD-channel-governance §9.1).
-func GrantIsCustodial(grant *AccessGrant) bool {
+func GrantIsWatchdog(grant *AccessGrant) bool {
 	return grant != nil && (len(grant.Capabilities) > 0 || len(grant.Scopes) > 0)
 }
 

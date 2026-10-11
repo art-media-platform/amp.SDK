@@ -11,7 +11,7 @@
 
 // ── Authentication ──────────────────────────────────────────────────
 
-export interface AmpMember {
+export interface AmpIdentity {
   ID: string;            // member tag.UID, base32
   DisplayName?: string;
   Email?: string;        // present when the auth scheme exposes it
@@ -77,7 +77,7 @@ export interface WalletChallenge {
 
 /** The host-validated session — body of GET /api/v1/session (webapi.SessionResponse). */
 export interface AmpSession {
-  Member: AmpMember;
+  Member: AmpIdentity;
   ExpiresAt: number;     // unix seconds
 }
 
@@ -94,13 +94,13 @@ export interface SessionRevokeResult {
 }
 
 export interface AmpAuth {
-  member: AmpMember | null;
+  member: AmpIdentity | null;
   isAuthenticated: boolean;
   /** True while a login/logout call OR the initial session restore is in flight. */
   loading: boolean;
   /** True only during the initial restoreSession() pass — gate the login screen on this to avoid a signed-out flash on reload. */
   restoring: boolean;
-  login: (credentials: LoginCredentials) => Promise<AmpMember>;
+  login: (credentials: LoginCredentials) => Promise<AmpIdentity>;
   logout: () => Promise<void>;
   /**
    * Request an email recovery code (always resolves whether or not the address
@@ -110,9 +110,9 @@ export interface AmpAuth {
    */
   recoverEmail: (email: string) => Promise<void>;
   /** Redeem an emailed recovery code — sets the new password and signs in. */
-  redeemEmail: (opts: RedeemEmailOpts) => Promise<AmpMember>;
+  redeemEmail: (opts: RedeemEmailOpts) => Promise<AmpIdentity>;
   /** Claim a legacy account via its emailed activation token — sets the first password and signs in. */
-  claimAccount: (opts: ClaimAccountOpts) => Promise<AmpMember>;
+  claimAccount: (opts: ClaimAccountOpts) => Promise<AmpIdentity>;
 }
 
 // ── Invites ─────────────────────────────────────────────────────────
@@ -168,7 +168,7 @@ export interface InviteRevokeOpts {
  */
 export type AccessLevel =
   | 'NotAllowed' | 'Invite' | 'Private'
-  | 'ReadOnly' | 'Custodian' | 'ReadWrite' | 'Moderator' | 'Admin';
+  | 'ReadOnly' | 'Watchdog' | 'ReadWrite' | 'Moderator' | 'Admin';
 
 /** One invite policy with its rank-adjudicated redemption ledger. */
 export interface InvitePolicyEntry {

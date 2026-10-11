@@ -14,13 +14,13 @@
  */
 
 import { SESSIONS_STORE, openAmpDB } from './idb.js';
-import type { AmpMember } from './types.js';
+import type { AmpIdentity } from './types.js';
 
 /** The persisted session record — the LoginResponse triple (wire casing). */
 export interface StoredSession {
   SessionToken: string;
   ExpiresAt: number;      // unix seconds
-  Member: AmpMember;
+  Member: AmpIdentity;
 }
 
 /**

@@ -29,7 +29,7 @@ import {
 } from './session-store.js';
 import type {
   AmpItemMeta,
-  AmpMember,
+  AmpIdentity,
   AmpQueryOpts,
   AmpSession,
   BlobRef,
@@ -103,7 +103,7 @@ export interface AmpWebClientOpts {
 interface WireLoginResponse {
   SessionToken: string;
   ExpiresAt: number;
-  Member: AmpMember;
+  Member: AmpIdentity;
 }
 
 /** The wire Item shape returned by list/read endpoints (webapi.Item). */
@@ -196,16 +196,16 @@ export class AmpWebClient implements AmpAdapter {
   private vaultUrl: string;
   private planetTag: string;
   private sessionToken: string | null = null;
-  private member: AmpMember | null = null;
+  private member: AmpIdentity | null = null;
   private ws: WebSocket | null = null;
   private wsSubscriptions = new Map<string, Set<(event: SubscriptionEvent) => void>>();
-  private authListeners: Set<(member: AmpMember | null) => void> = new Set();
+  private authListeners: Set<(member: AmpIdentity | null) => void> = new Set();
   private wsReconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private wsWasOpen = false;
   private crypto: AmpCrypto = createAmpCrypto();
   private keyStorage: EncryptKeyStorage;
   private sessionStore: SessionStore;
-  private restorePromise: Promise<AmpMember | null> | null = null;
+  private restorePromise: Promise<AmpIdentity | null> | null = null;
   private embed: EmbedBridge | null = null;
 
   constructor(opts: AmpWebClientOpts) {
@@ -309,7 +309,7 @@ export class AmpWebClient implements AmpAdapter {
     return resp.json();
   }
 
-  async login(credentials: LoginCredentials): Promise<AmpMember> {
+  async login(credentials: LoginCredentials): Promise<AmpIdentity> {
     const data = await this.apiFetch<WireLoginResponse>('/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
@@ -323,7 +323,7 @@ export class AmpWebClient implements AmpAdapter {
    * member in memory, persisted session record, device EncryptKey, listeners,
    * WebSocket.
    */
-  private async installSession(data: WireLoginResponse): Promise<AmpMember> {
+  private async installSession(data: WireLoginResponse): Promise<AmpIdentity> {
     this.sessionToken = data.SessionToken;
     this.member = {
       ...data.Member,
@@ -370,7 +370,7 @@ export class AmpWebClient implements AmpAdapter {
    * as a login; no follow-up login() round-trip).  A bad/expired/consumed
    * code is a uniform AmpError 401.
    */
-  async redeemEmail(opts: RedeemEmailOpts): Promise<AmpMember> {
+  async redeemEmail(opts: RedeemEmailOpts): Promise<AmpIdentity> {
     const data = await this.apiFetch<WireLoginResponse>('/login/email/redeem', {
       method: 'POST',
       body: JSON.stringify({ Token: opts.token, NewPassword: opts.newPassword }),
@@ -385,7 +385,7 @@ export class AmpWebClient implements AmpAdapter {
    * installs the minted session.  An already-claimed account is AmpError 409
    * 'Conflict' — route the member to sign-in / recovery instead.
    */
-  async claimAccount(opts: ClaimAccountOpts): Promise<AmpMember> {
+  async claimAccount(opts: ClaimAccountOpts): Promise<AmpIdentity> {
     const data = await this.apiFetch<WireLoginResponse>('/account/claim', {
       method: 'POST',
       body: JSON.stringify({
@@ -406,7 +406,7 @@ export class AmpWebClient implements AmpAdapter {
    * the record in place for the next attempt, so a flaky network never signs
    * the member out.  Concurrent calls share one in-flight validation.
    */
-  restoreSession(): Promise<AmpMember | null> {
+  restoreSession(): Promise<AmpIdentity | null> {
     if (this.member) {
       return Promise.resolve(this.member);
     }
@@ -418,7 +418,7 @@ export class AmpWebClient implements AmpAdapter {
     return this.restorePromise;
   }
 
-  private async restoreSessionNow(): Promise<AmpMember | null> {
+  private async restoreSessionNow(): Promise<AmpIdentity | null> {
     let stored: StoredSession | null = null;
     try {
       stored = await this.sessionStore.load(this.vaultUrl);
@@ -472,8 +472,8 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   /** GET /api/v1/me — the authenticated member's record.  AmpError(401) when unauthenticated. */
-  me(): Promise<AmpMember> {
-    return this.apiFetch<AmpMember>('/me');
+  me(): Promise<AmpIdentity> {
+    return this.apiFetch<AmpIdentity>('/me');
   }
 
   /**
@@ -508,14 +508,14 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   /**
-   * Member self-revoke — POST /api/v1/session/revoke ("sign out everywhere").
+   * Sign out everywhere — POST /api/v1/session/revoke.
    * The caller's own Bearer names the subject (no request body) and the revoke
    * is FULL: every outstanding session for the member is invalidated,
    * INCLUDING the one making this call — the response is the last act the
    * presenting Bearer performs.  The local session is dropped on success; a
    * fresh login is required afterward.
    */
-  async sessionRevoke(): Promise<SessionRevokeResult> {
+  async signOutEverywhere(): Promise<SessionRevokeResult> {
     const out = await this.apiFetch<SessionRevokeResult>('/session/revoke', { method: 'POST' });
     await this.dropSession();
     return out;
@@ -536,7 +536,7 @@ export class AmpWebClient implements AmpAdapter {
     return cleared;
   }
 
-  getSession(): AmpMember | null {
+  getSession(): AmpIdentity | null {
     return this.member;
   }
 
@@ -545,7 +545,7 @@ export class AmpWebClient implements AmpAdapter {
     return this.planetTag;
   }
 
-  onAuthChange(callback: (member: AmpMember | null) => void): () => void {
+  onAuthChange(callback: (member: AmpIdentity | null) => void): () => void {
     this.authListeners.add(callback);
     return () => { this.authListeners.delete(callback); };
   }

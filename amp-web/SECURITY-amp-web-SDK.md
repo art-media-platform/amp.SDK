@@ -70,7 +70,7 @@ member's planet epoch keys. Consequences to design around:
   The host's keys for the member still exist — there is simply no way left to
   prove ownership of them. For a `did:key` member this is permanent: the
   MemberID is the hash of the key URI and can never be re-bound.
-- **The host is a trusted custodian of a web member's content keys.** The
+- **The host holds a web member's content keys** (it is a member node). The
   sealed-box BYOK below is the exception — its private key is device-local and
   never reaches the host — which is exactly why it exists.
 - Client-side sealing (the member's device signs, the node verifies and

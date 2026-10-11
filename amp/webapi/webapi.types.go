@@ -72,16 +72,16 @@ type ChallengeResponse struct {
 //
 // SessionToken stays as string — it's a 32-byte random Bearer, not a UID.
 type LoginResponse struct {
-	SessionToken string    `json:"SessionToken"`
-	ExpiresAt    int64     `json:"ExpiresAt"` // unix seconds
-	Member       AmpMember `json:"Member"`
+	SessionToken string      `json:"SessionToken"`
+	ExpiresAt    int64       `json:"ExpiresAt"` // unix seconds
+	Member       AmpIdentity `json:"Member"`
 }
 
-// AmpMember describes the authenticated identity on the wire.  `Kind` is a
+// AmpIdentity describes the authenticated identity on the wire.  `Kind` is a
 // human-readable label (e.g. "Person") sourced from a `LawMemberKind_*`
 // definition (AOM SD-substrate-agnostic-members.md); apps surface it but do not
 // gate behavior on it.
-type AmpMember struct {
+type AmpIdentity struct {
 	ID          tag.UID `json:"ID"`
 	DisplayName string  `json:"DisplayName,omitempty"`
 	Email       string  `json:"Email,omitempty"`
@@ -92,8 +92,8 @@ type AmpMember struct {
 
 // SessionResponse is the body of GET /api/v1/session.
 type SessionResponse struct {
-	Member    AmpMember `json:"Member"`
-	ExpiresAt int64     `json:"ExpiresAt"`
+	Member    AmpIdentity `json:"Member"`
+	ExpiresAt int64       `json:"ExpiresAt"`
 }
 
 // SessionRevokeResponse is the body of POST /api/v1/session/revoke — the

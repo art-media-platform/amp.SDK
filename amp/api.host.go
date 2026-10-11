@@ -419,11 +419,11 @@ type ACCEngine interface {
 	// by RedeemedAt item ID.  Rank over it is the redemption count.
 	InviteRedemptions(planetID, inviteID tag.UID) map[tag.UID]*PlanetInviteRedemption
 
-	// CustodianGrants returns the custodial (watchdog-class) grants naming
+	// WatchdogGrants returns the watchdog grants naming
 	// memberID anywhere on planetID — grants whose record carries a capability
-	// set or scope whitelist (GrantIsCustodial; SD-channel-governance §9.1).
-	// Empty when the member is not custodial on the planet.
-	CustodianGrants(planetID, memberID tag.UID) []*AccessGrant
+	// set or scope whitelist (GrantIsWatchdog; SD-channel-governance §9.1).
+	// Empty when the member is not a watchdog on the planet.
+	WatchdogGrants(planetID, memberID tag.UID) []*AccessGrant
 }
 
 // TxJournal stores raw TxMsg bytes keyed by (PlanetID, TxTimeID) for efficient

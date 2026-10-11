@@ -18,7 +18,7 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 |---|---|
 | `bin/amp` | the `amp` CLI, built for the platform in the kit filename |
 | `bin/ampd` | the `ampd` node daemon — development and evaluation use only (see Running a Node Locally) |
-| `AOM/O4-standard-procedures.md` | the partner subset of AMP's standard procedures — retrieve/embed/redeem an invite (§4.4–§4.6), publish a name (§4.10), bring up a local follower node (§4.17), the mint-and-connect walk (§4.18) |
+| `AOM/O4-standard-procedures.md` | the partner subset of AMP's standard procedures — retrieve/embed/redeem an invite (§4.4–§4.6), publish a name (§4.10), bring up a local replica node (§4.17), the mint-and-connect walk (§4.18) |
 | `AOM/DD-name-service.md` | the naming and trust design: how planets are named, branded, resolved, and verified |
 | `docs/amp-cli.md` | the `amp` command reference, generated from the binary in this kit |
 | `docs/get-a-backend.md` | how to reach a node: your operator's, or the one in `bin/` |
@@ -70,7 +70,7 @@ endpoint.
 
 What it is for in this kit:
 
-- the local follower node of `AOM/O4-standard-procedures.md` §4.17 — a real
+- the local replica node of `AOM/O4-standard-procedures.md` §4.17 — a real
   peer for the CLI and for a web app under development;
 - running the §4.18 mint-and-connect walk end to end.
 

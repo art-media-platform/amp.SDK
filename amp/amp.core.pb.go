@@ -679,11 +679,13 @@ func (PrivacyMode) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{10}
 }
 
-// MemberStatus is the member's lifecycle state as of this MemberEpoch.
-// Transitions are one-way: Active → Suspended → Revoked.  Suspended is a
-// reversible pause (e.g. key rotation pending).  Revoked is permanent and
-// starts the MaxGracePeriod clock after which the member's signatures are
-// no longer accepted.
+// MemberStatus is the member's lifecycle state as of this MemberEpoch, set
+// only by issuer-authored records (SD-channel-governance.md §3.2).  Suspended
+// is a reversible pause (reinstated by an issuer or a re-key,
+// SD-member-rekey.md §6).  Revoked is not yet terminal: a newer issuer record
+// still moves it.  A non-Active status stops key wraps at the next rotation
+// and starts the MaxGracePeriod clock for planet-public transactions; sealed
+// content is not status-checked (SD-security-sync.md §20.5).
 type MemberStatus int32
 
 const (
@@ -739,10 +741,10 @@ type Access int32
 
 const (
 	Access_NotAllowed Access = 0
-	Access_Invite     Access = 10 // sees the channel exists; may invite
+	Access_Invite     Access = 10 // sees the channel exists; grants no invite issuance (a founder or root Admin issues)
 	Access_Private    Access = 30 // metadata, not content
 	Access_ReadOnly   Access = 40 // reads content
-	Access_Custodian  Access = 50 // watchdog class: reads; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
+	Access_Watchdog   Access = 50 // reads; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
 	Access_ReadWrite  Access = 60
 	Access_Moderator  Access = 80  // approve, withdraw, hide; authoritative Strikes; no grant or key management
 	Access_Admin      Access = 100 // full control: sub-channels, access
@@ -755,7 +757,7 @@ var (
 		10:  "Invite",
 		30:  "Private",
 		40:  "ReadOnly",
-		50:  "Custodian",
+		50:  "Watchdog",
 		60:  "ReadWrite",
 		80:  "Moderator",
 		100: "Admin",
@@ -765,7 +767,7 @@ var (
 		"Invite":     10,
 		"Private":    30,
 		"ReadOnly":   40,
-		"Custodian":  50,
+		"Watchdog":   50,
 		"ReadWrite":  60,
 		"Moderator":  80,
 		"Admin":      100,
@@ -9105,7 +9107,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Active\x10\x00\x12\r\n" +
 	"\tSuspended\x10\x01\x12\v\n" +
-	"\aRevoked\x10\x02*w\n" +
+	"\aRevoked\x10\x02*v\n" +
 	"\x06Access\x12\x0e\n" +
 	"\n" +
 	"NotAllowed\x10\x00\x12\n" +
@@ -9113,8 +9115,8 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x06Invite\x10\n" +
 	"\x12\v\n" +
 	"\aPrivate\x10\x1e\x12\f\n" +
-	"\bReadOnly\x10(\x12\r\n" +
-	"\tCustodian\x102\x12\r\n" +
+	"\bReadOnly\x10(\x12\f\n" +
+	"\bWatchdog\x102\x12\r\n" +
 	"\tReadWrite\x10<\x12\r\n" +
 	"\tModerator\x10P\x12\t\n" +
 	"\x05Admin\x10d*p\n" +

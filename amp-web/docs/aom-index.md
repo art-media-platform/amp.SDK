@@ -27,7 +27,7 @@ required reading.
 | `AOM/SD-invite-governance.md` | "What are invite policies, ceilings, revocation, and the redemption ledger?" (behind `issueInvite` / `acceptInvite` — SKILL §4.7.) |
 | `AOM/SD-canonization-spec.md` | "Why can't I canonize names client-side?" — the byte-level rules behind `resolveTag` / forge (SKILL §5.8). |
 | `AOM/AD-app-forums.md` | "How does a real app structure channels, verbs, and a custodian?" — the design behind `examples/forums/`. |
-| `AOM/O4-standard-procedures.md` | "What are the actual steps?" — redeem an invite, publish a name, run your own follower node, and the end-to-end mint-and-connect walk. |
+| `AOM/O4-standard-procedures.md` | "What are the actual steps?" — redeem an invite, publish a name, run your own replica node, and the end-to-end mint-and-connect walk. |
 
 ## What Is Deliberately Not Shipped
 

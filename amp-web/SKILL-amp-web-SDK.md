@@ -163,7 +163,7 @@ VITE_AMP_PLANET_TAG=my-planet-tag
 VITE_AMP_PUBLIC_SHARE_PLANET_TAG=my-planet-tag-shares
 ```
 
-**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` resolves anonymously only once the deploy operator performs genesis of a public planet and registers it host-side (`amp planet create`, §6.4). Where that registration is stored is operator-side and substrate-native (§10) — not your concern. Without it, anonymous reads against the planet tag fall through to the standard Bearer gate.
+**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` resolves anonymously only once the deploy operator performs genesis of a public planet and registers it host-side (`amp planet found --rest --public`, §6.4). Where that registration is stored is operator-side and substrate-native (§10) — not your concern. Without it, anonymous reads against the planet tag fall through to the standard Bearer gate.
 
 ---
 
@@ -179,18 +179,18 @@ GET  /api/v1/login/challenge?address=<0x…>    (anonymous; ?did=<uri> for the d
 
 POST /api/v1/login
   Body: LoginCredentials
-  Response: { SessionToken: string, ExpiresAt: number, Member: AmpMember }
+  Response: { SessionToken: string, ExpiresAt: number, Member: AmpIdentity }
 
 POST /api/v1/logout
   Header: Authorization: Bearer <token>
 
 GET  /api/v1/session
   Header: Authorization: Bearer <token>
-  Response: { Member: AmpMember, ExpiresAt: number }
+  Response: { Member: AmpIdentity, ExpiresAt: number }
 
 GET  /api/v1/me
   Header: Authorization: Bearer <token>
-  Response: AmpMember
+  Response: AmpIdentity
 ```
 
 The challenge response is the TS `WalletChallenge` shape (`types.ts`); SDK:
@@ -245,7 +245,7 @@ dead-end the user.
 MemberID for the email scheme = `tag.NameFrom("email:lc(addr)").ID` — mirror of the wallet path's `tag.NameFrom("eth:lc(addr)").ID` rule.  Failure modes (unknown email, wrong password) return a single 401 envelope with timing-uniform KDF cost so the response carries no existence oracle.  Bulk email (campaigns, white-label outreach) routes through `app.email`'s queue channel.
 
 ```typescript
-interface AmpMember {
+interface AmpIdentity {
   ID: string;                  // member tag.UID, base32
   DisplayName?: string;        // optional on the wire (Go omitempty)
   Email?: string;
@@ -582,7 +582,7 @@ planned.
 | Act | Web client (Bearer session) | Native `amp` CLI |
 |---|---|---|
 | Home planet | ✅ auto-minted on your first login (§0) — one per member, private | ✅ same |
-| Another planet | ❌ no member wire verb — your operator mints one for you (`POST /api/v1/admin/planet/create`, admin-gated, public only) | ✅ `amp planet genesis "<label>"` (private by default, `--public` for anonymous-readable) |
+| Another planet | ❌ no member wire verb — your operator mints one for you (`POST /api/v1/admin/planet/create`, admin-gated, public only) | ✅ `amp planet found "<label>"` (private by default, `--public` for anonymous-readable) |
 | Brand it, `NamedBy` included | ✅ member-authorized `invoke` — below | ✅ `amp brand set <planet-UID> --namedby <FED-UID>` |
 | Register an FQDN into a federation | ❌ no wire verb — your federation's operator registers it, or take the CLI path | ✅ `amp name register` (`AOM/O4-standard-procedures.md` §4.10) |
 | Resolve a name + judge trust | ✅ `POST /api/v1/resolve` (§4.6) | ✅ |
@@ -631,7 +631,7 @@ org planet — is a genesis act, and genesis is the CLI path below.
 **Taking the CLI path** costs a Go toolchain, a box to run `ampd` on, and
 epoch-key custody; it buys self-serve genesis and name registration (§14.8). The
 procedures ship in this bundle: `AOM/O4-standard-procedures.md` §4.18 is the
-end-to-end mint-and-connect walk, §4.17 stands up your own follower node, §4.10
+end-to-end mint-and-connect walk, §4.17 stands up your own replica node, §4.10
 publishes a name, §4.6 redeems an invite from the CLI side.
 
 ---
@@ -988,7 +988,7 @@ The deploy operator performs share planet genesis once and registers it with the
 ```bash
 # After wallet-login via the web (POST /api/v1/login scheme=wallet),
 # pass the resulting Bearer token to the CLI:
-AMP_TOKEN=<bearer> amp planet create --tag <name>
+AMP_TOKEN=<bearer> amp planet found <name> --rest --public
 # → { "PlanetID": "<base32 UID>", "Tag": "<canonic>", "Public": true }
 ```
 
@@ -1016,7 +1016,7 @@ A whitelabel deploy registers two planet tags in its config: the owner planet an
 
 ### 6.5 Identity & member shape
 
-`AmpMember` carries:
+`AmpIdentity` carries:
 - `ID` — the member's `tag.UID` on this planet.
 - `DisplayName` — auto-generated callsign or user-set.
 - `Email?` — optional, only present when the auth scheme exposes it.
@@ -1463,7 +1463,7 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque (use the base32 string as-is). Carries the element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else (`AOM/SD-withdrawal-consent.md`). |
-| **Share planet** | A planet operating in `PlanetCharter.Privacy = PrivacyMode_Public` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet create --tag <name>` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
+| **Share planet** | A planet operating in `PlanetCharter.Privacy = PrivacyMode_Public` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet found <name> --rest --public` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
 | **Admin endpoint** | The operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no browser client method** (§12); email-credential issue binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
 | **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6; `AOM/DD-name-service.md`. |
@@ -1582,7 +1582,7 @@ When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology)
 
 The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own.
 
-**The step-by-step procedures ship in this bundle** — `AOM/O4-standard-procedures.md`: §4.18 the end-to-end mint-and-connect walk, §4.17 your own follower node, §4.10 name publication + the resolve verdicts, §4.6 invite redemption, §4.4/§4.5 the invite artifact and its out-of-band passphrase. They name roles (`<host>`, `<FED-UID>`, `<planet-UID>`, …), never live values; bind them to your own deployment. Sections that run AMP's own nodes are held back and read `(operator)`. Which of these a web client can do without the CLI is §4.8.
+**The step-by-step procedures ship in this bundle** — `AOM/O4-standard-procedures.md`: §4.18 the end-to-end mint-and-connect walk, §4.17 your own replica node, §4.10 name publication + the resolve verdicts, §4.6 invite redemption, §4.4/§4.5 the invite artifact and its out-of-band passphrase. They name roles (`<host>`, `<FED-UID>`, `<planet-UID>`, …), never live values; bind them to your own deployment. Sections that run AMP's own nodes are held back and read `(operator)`. Which of these a web client can do without the CLI is §4.8.
 
 ---
 

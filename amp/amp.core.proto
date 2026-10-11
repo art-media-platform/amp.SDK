@@ -900,11 +900,13 @@ message EpochLink {
 // Members & Governance
 // ══════════════════════════════════════════════════════════════════════
 
-// MemberStatus is the member's lifecycle state as of this MemberEpoch.
-// Transitions are one-way: Active → Suspended → Revoked.  Suspended is a
-// reversible pause (e.g. key rotation pending).  Revoked is permanent and
-// starts the MaxGracePeriod clock after which the member's signatures are
-// no longer accepted.
+// MemberStatus is the member's lifecycle state as of this MemberEpoch, set
+// only by issuer-authored records (SD-channel-governance.md §3.2).  Suspended
+// is a reversible pause (reinstated by an issuer or a re-key,
+// SD-member-rekey.md §6).  Revoked is not yet terminal: a newer issuer record
+// still moves it.  A non-Active status stops key wraps at the next rotation
+// and starts the MaxGracePeriod clock for planet-public transactions; sealed
+// content is not status-checked (SD-security-sync.md §20.5).
 enum MemberStatus {
     Active    = 0;
     Suspended = 1;
@@ -1028,10 +1030,10 @@ message MemberEpoch {
 // (amp.HasAccess), never by value.
 enum Access {
     NotAllowed = 0;
-    Invite     = 10;  // sees the channel exists; may invite
+    Invite     = 10;  // sees the channel exists; grants no invite issuance (a founder or root Admin issues)
     Private    = 30;  // metadata, not content
     ReadOnly   = 40;  // reads content
-    Custodian  = 50;  // watchdog class: reads; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
+    Watchdog   = 50;  // reads; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
     ReadWrite  = 60;
     Moderator  = 80;  // approve, withdraw, hide; authoritative Strikes; no grant or key management
     Admin      = 100; // full control: sub-channels, access

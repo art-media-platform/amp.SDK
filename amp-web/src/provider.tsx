@@ -6,14 +6,14 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { AmpAdapter } from './adapter.js';
-import type { AmpMember } from './types.js';
+import type { AmpIdentity } from './types.js';
 
 interface AmpContextValue {
   adapter: AmpAdapter;
-  member: AmpMember | null;
+  member: AmpIdentity | null;
   /** True while the initial restoreSession() pass is in flight. */
   restoring: boolean;
-  setMember: (member: AmpMember | null) => void;
+  setMember: (member: AmpIdentity | null) => void;
 }
 
 const AmpContext = createContext<AmpContextValue | null>(null);
@@ -24,7 +24,7 @@ export interface AmpProviderProps {
 }
 
 export function AmpProvider({ client, children }: AmpProviderProps) {
-  const [member, setMember] = useState<AmpMember | null>(() => client.getSession());
+  const [member, setMember] = useState<AmpIdentity | null>(() => client.getSession());
   const [restoring, setRestoring] = useState<boolean>(() => client.getSession() === null);
 
   useEffect(() => {
