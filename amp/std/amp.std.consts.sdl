@@ -97,7 +97,7 @@ tags Attr {
             ChannelPropertyGrid           "grid"
             ChannelPropertyCameraControls "camera.controls"
             // The vis playlist a channel's player walks behind audio (an amp://
-            // URL; empty = std.VJ.DefaultPlaylistURL) — TODO/P1/B-vj-buildout R5.
+            // URL; empty = std.VJ.DefaultPlaylistURL).
             ChannelPropertyVisPlaylist    "vis.playlist"
         }
         // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
@@ -369,10 +369,10 @@ const Mantle {
 }
 
 // VJ — the player's vis background: two slots crossfading down a vis
-// playlist (AOM AD-playlists.md §9).  0 = unset → these defaults.
+// playlist (AOM AD-playlists.md).  0 = unset → these defaults.
 const VJ {
     string DefaultPlaylistURL = "amp://~/mandelship/presets/"; // the house pack, served by app.mandelship
-    float  DefaultDwellSecs   = 5;    // seconds a vis holds before the walk advances (astar: fixed time, R6)
+    float  DefaultDwellSecs   = 5;    // seconds a vis holds before the walk advances (a fixed time, never beat-driven)
     float  DefaultFadeSecs    = 1.5;  // the crossfade between the two slots
 }
 

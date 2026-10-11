@@ -242,7 +242,7 @@ var Attr = struct {
 	ChannelPropertyGrid:           tag.Name{ID: tag.UID{0x94EFC317CF34165F, 0xCAB7BCDADD7C784D}, Text: "channel.property.grid"},            // 4nxz1-jgmtn-2tgwpe-xwvcf-rsy2e
 	ChannelPropertyCameraControls: tag.Name{ID: tag.UID{0x6FCB7C32C026A452, 0xC4D5A0B4BB4DD5D7}, Text: "channel.property.camera.controls"}, // 3gtey-35h16-nj9d9p-e0qkx-nvpfr
 	// The vis playlist a channel's player walks behind audio (an amp://
-	// URL; empty = std.VJ.DefaultPlaylistURL) — TODO/P1/B-vj-buildout R5.
+	// URL; empty = std.VJ.DefaultPlaylistURL).
 	ChannelPropertyVisPlaylist: tag.Name{ID: tag.UID{0xF7E6BA82895C346B, 0x82755CD465CD4DC9}, Text: "channel.property.vis.playlist"}, // 7rwux-852bw-6jps4x-bwujk-wumf9
 	// `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
 	// as VALUES (a Tag field resolves to one), never as AttrIDs —
@@ -505,10 +505,10 @@ const (
 )
 
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
-// playlist (AOM AD-playlists.md §9).  0 = unset → these defaults.
+// playlist (AOM AD-playlists.md).  0 = unset → these defaults.
 const (
 	VJDefaultPlaylistURL = "amp://~/mandelship/presets/" // the house pack, served by app.mandelship
-	VJDefaultDwellSecs   = float32(5)                    // seconds a vis holds before the walk advances (astar: fixed time, R6)
+	VJDefaultDwellSecs   = float32(5)                    // seconds a vis holds before the walk advances (a fixed time, never beat-driven)
 	VJDefaultFadeSecs    = float32(1.5)                  // the crossfade between the two slots
 )
 
