@@ -47,24 +47,53 @@ func RankBetween(lo, hi UID) (rank UID, ok bool) {
 // (lo, hi).  ok is false when the gap cannot hold count fenced slots
 // (gap < count+1).
 func RanksAcross(lo, hi UID, count int) (ranks []UID, ok bool) {
-	if count <= 0 {
-		return nil, count == 0
+	stride, ok := rankStride(lo, hi, count)
+	if !ok || count == 0 {
+		return nil, ok
 	}
-	if hi.CompareTo(lo) <= 0 {
-		return nil, false
-	}
-	gap := hi.Subtract(lo)
-	slots := uint64(count) + 1
-	if gap[0] == 0 && gap[1] < slots {
-		return nil, false
-	}
-	stride := divScalar(gap, slots)
 	ranks = make([]UID, count)
 	for i := range ranks {
 		floor := lo.Add(mulScalar(stride, uint64(i+1)))
 		ranks[i] = floor.Add(randBelow(stride))
 	}
 	return ranks, true
+}
+
+// RanksEvenly is RanksAcross without the random draw: each rank is its slot's
+// floor, so the same (lo, hi, count) always mints the same ranks.  It is for
+// ONE writer producing a sealed artifact that must regenerate byte-identical
+// (a codex seed, an export).  The randomness in RanksAcross exists so that
+// concurrent writers' runs do not interleave (AOM AD-playlists.md §3); a
+// sealed single-writer list never has a second writer.  Never mint with it
+// on a live channel.
+func RanksEvenly(lo, hi UID, count int) (ranks []UID, ok bool) {
+	stride, ok := rankStride(lo, hi, count)
+	if !ok || count == 0 {
+		return nil, ok
+	}
+	ranks = make([]UID, count)
+	for i := range ranks {
+		ranks[i] = lo.Add(mulScalar(stride, uint64(i+1)))
+	}
+	return ranks, true
+}
+
+// rankStride partitions (lo, hi) into count+1 fenced slots and returns the
+// slot width.  ok is false for a negative count, swapped fences, or a gap too
+// small to hold count fenced slots (gap < count+1).
+func rankStride(lo, hi UID, count int) (stride UID, ok bool) {
+	if count < 0 {
+		return UID{}, false
+	}
+	if hi.CompareTo(lo) <= 0 {
+		return UID{}, false
+	}
+	gap := hi.Subtract(lo)
+	slots := uint64(count) + 1
+	if gap[0] == 0 && gap[1] < slots {
+		return UID{}, false
+	}
+	return divScalar(gap, slots), true
 }
 
 // randBelow returns a uniformly random UID in [0, bound) via masked rejection

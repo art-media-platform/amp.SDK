@@ -142,3 +142,47 @@ func TestRankFuzzInterior(t *testing.T) {
 		}
 	}
 }
+
+// RanksEvenly: deterministic, strictly increasing, strictly inside (lo, hi),
+// and the same fence rules as RanksAcross.
+func TestRanksEvenly(t *testing.T) {
+	lo := tag.UID{0, 1 << 30}
+	hi := lo.Add(tag.UID{0, 1 << 26})
+	for _, count := range []int{1, 100, 1000} {
+		first, ok := tag.RanksEvenly(lo, hi, count)
+		if !ok || len(first) != count {
+			t.Fatalf("count %d: ok=%v len=%d", count, ok, len(first))
+		}
+		second, _ := tag.RanksEvenly(lo, hi, count)
+		prev := lo
+		for i, rank := range first {
+			if rank != second[i] {
+				t.Fatalf("count %d: rank[%d] differs between two calls: %v vs %v", count, i, rank, second[i])
+			}
+			if rank.CompareTo(prev) <= 0 {
+				t.Fatalf("count %d: rank[%d] %v <= predecessor %v", count, i, rank, prev)
+			}
+			prev = rank
+		}
+		if prev.CompareTo(hi) >= 0 {
+			t.Fatalf("count %d: last rank %v >= hi %v", count, prev, hi)
+		}
+	}
+
+	fence := tag.UID{0, 100}
+	if ranks, ok := tag.RanksEvenly(fence, fence.Add(tag.UID{0, 8}), 7); !ok || len(ranks) != 7 {
+		t.Errorf("gap 8, count 7: ok=%v len=%d", ok, len(ranks))
+	}
+	if _, ok := tag.RanksEvenly(fence, fence.Add(tag.UID{0, 7}), 7); ok {
+		t.Error("gap 7, count 7: want ok=false")
+	}
+	if _, ok := tag.RanksEvenly(fence.Add(tag.UID{0, 8}), fence, 3); ok {
+		t.Error("swapped fences: want ok=false")
+	}
+	if ranks, ok := tag.RanksEvenly(fence, fence.Add(tag.UID{0, 8}), 0); !ok || len(ranks) != 0 {
+		t.Error("count 0: want empty, ok=true")
+	}
+	if _, ok := tag.RanksEvenly(fence, fence.Add(tag.UID{0, 8}), -1); ok {
+		t.Error("negative count: want ok=false")
+	}
+}
