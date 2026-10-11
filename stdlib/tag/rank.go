@@ -45,59 +45,50 @@ func RankBetween(lo, hi UID) (rank UID, ok bool) {
 // instead of halving one gap repeatedly, which collapses after log2(gap)
 // iterations.  Returned ranks are strictly increasing and strictly inside
 // (lo, hi).  ok is false when the gap cannot hold count fenced slots
-// (gap < count+1).
+// (gap < count+1) or count is negative; count 0 is an empty, ok partition.
 func RanksAcross(lo, hi UID, count int) (ranks []UID, ok bool) {
-	if count <= 0 {
-		return nil, count == 0
-	}
-	stride, ok := rankStride(lo, hi, count)
-	if !ok {
-		return nil, false
-	}
-	ranks = make([]UID, count)
+	ranks, stride, ok := rankFloors(lo, hi, count)
 	for i := range ranks {
-		floor := lo.Add(mulScalar(stride, uint64(i+1)))
-		ranks[i] = floor.Add(randBelow(stride))
+		ranks[i] = ranks[i].Add(randBelow(stride))
 	}
-	return ranks, true
+	return ranks, ok
 }
 
 // RanksEvenly is RanksAcross without the random draw: each rank is its slot's
 // floor, so the same (lo, hi, count) always mints the same ranks.  It is for
-// ONE writer producing a sealed artifact that must regenerate byte-identical
-// (a codex seed, an export).  The randomness in RanksAcross exists so that
-// concurrent writers' runs do not interleave (AOM AD-playlists.md §3); a
-// sealed single-writer list never has a second writer.  Never mint with it
-// on a live channel.
+// ONE writer that produces a whole list at once — a sealed artifact (a codex
+// seed, an export) or a list the writer regenerates whole on every serve.
+// The randomness in RanksAcross exists so that concurrent writers' runs do
+// not interleave (AOM AD-playlists.md §3); never mint with RanksEvenly where
+// a second writer may insert into the same gap.
 func RanksEvenly(lo, hi UID, count int) (ranks []UID, ok bool) {
-	if count <= 0 {
-		return nil, count == 0
-	}
-	stride, ok := rankStride(lo, hi, count)
-	if !ok {
-		return nil, false
-	}
-	ranks = make([]UID, count)
-	for i := range ranks {
-		ranks[i] = lo.Add(mulScalar(stride, uint64(i+1)))
-	}
-	return ranks, true
+	ranks, _, ok = rankFloors(lo, hi, count)
+	return ranks, ok
 }
 
-// rankStride partitions (lo, hi) into count+1 fenced slots and returns the
-// slot width.  ok is false for swapped fences or a gap too small to hold count
-// fenced slots (gap < count+1).  count is positive here: zero and negative
-// counts are answered by the callers before the fences are read.
-func rankStride(lo, hi UID, count int) (stride UID, ok bool) {
+// rankFloors is the one partition site: (lo, hi) split into count+1 fenced
+// slots of width stride, each rank's floor at lo + stride*(i+1).  count <= 0
+// is answered before the fences are read (0 → nil, ok; negative → nil, not
+// ok); swapped fences or a gap too small to hold count fenced slots
+// (gap < count+1) are not ok.
+func rankFloors(lo, hi UID, count int) (floors []UID, stride UID, ok bool) {
+	if count <= 0 {
+		return nil, UID{}, count == 0
+	}
 	if hi.CompareTo(lo) <= 0 {
-		return UID{}, false
+		return nil, UID{}, false
 	}
 	gap := hi.Subtract(lo)
 	slots := uint64(count) + 1
 	if gap[0] == 0 && gap[1] < slots {
-		return UID{}, false
+		return nil, UID{}, false
 	}
-	return divScalar(gap, slots), true
+	stride = divScalar(gap, slots)
+	floors = make([]UID, count)
+	for i := range floors {
+		floors[i] = lo.Add(mulScalar(stride, uint64(i+1)))
+	}
+	return floors, stride, true
 }
 
 // randBelow returns a uniformly random UID in [0, bound) via masked rejection

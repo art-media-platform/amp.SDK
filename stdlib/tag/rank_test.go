@@ -193,3 +193,43 @@ func TestRanksEvenly(t *testing.T) {
 		t.Error("negative count: want ok=false")
 	}
 }
+
+// TestRanksEvenlyVectors pins the minted values: a sealed codex's ranks are
+// these bytes, so a formula change here re-ranks every committed seed and
+// must fail loudly.  Gap 8 over 3 → stride 2 → 102, 104, 106; the full fence
+// span over 3 → stride = RankCeil/4.
+func TestRanksEvenlyVectors(t *testing.T) {
+	vectors := []struct {
+		lo, hi tag.UID
+		count  int
+		want   []tag.UID
+	}{
+		{
+			lo:    tag.UID{0, 100},
+			hi:    tag.UID{0, 108},
+			count: 3,
+			want:  []tag.UID{{0, 102}, {0, 104}, {0, 106}},
+		},
+		{
+			lo:    tag.UID{},
+			hi:    tag.RankCeil,
+			count: 3,
+			want: []tag.UID{
+				{0x3FFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFC},
+				{0x7FFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFF8},
+				{0xBFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFF4},
+			},
+		},
+	}
+	for _, vec := range vectors {
+		ranks, ok := tag.RanksEvenly(vec.lo, vec.hi, vec.count)
+		if !ok || len(ranks) != len(vec.want) {
+			t.Fatalf("(%v, %v, %d): ok=%v len=%d", vec.lo, vec.hi, vec.count, ok, len(ranks))
+		}
+		for i, rank := range ranks {
+			if rank != vec.want[i] {
+				t.Errorf("(%v, %v, %d)[%d] = %v, want %v", vec.lo, vec.hi, vec.count, i, rank, vec.want[i])
+			}
+		}
+	}
+}
