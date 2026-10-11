@@ -305,9 +305,9 @@ export interface CrateRef {
 
 /**
  * One of an app factory Brand's DefaultPlanets (amp.FederationPeer as proto
- * JSON: FederationID is a tag, not FederationPeerEntry's base32 string).  A
- * planet's substrate Brand never carries DefaultPlanets; Brand names the field
- * so its shape mirrors amp.Brand whole (drift.test.ts).
+ * JSON: FederationID is a tag, not FederationPeerEntry's base32 string).
+ * DefaultPlanets is read from an app's factory Brand only (amp.Brand); Brand
+ * names the field so its shape mirrors amp.Brand whole (drift.test.ts).
  */
 export interface BrandDefaultPlanet {
   FederationID?: AmpTag;
