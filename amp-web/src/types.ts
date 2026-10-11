@@ -304,13 +304,14 @@ export interface CrateRef {
 }
 
 /**
- * One of a factory Brand's DefaultPlanets (amp.FederationPeer JSON; Address
- * rides base64).  Only an app's factory Brand carries these; a planet's
- * substrate Brand never does.
+ * One of an app factory Brand's DefaultPlanets (amp.FederationPeer as proto
+ * JSON: FederationID is a tag, not FederationPeerEntry's base32 string).  A
+ * planet's substrate Brand never carries DefaultPlanets; Brand names the field
+ * so its shape mirrors amp.Brand whole (drift.test.ts).
  */
 export interface BrandDefaultPlanet {
   FederationID?: AmpTag;
-  VaultAddrs?: { Transport?: string; Address?: string }[];
+  VaultAddrs?: VaultEndpoint[];
   Label?: string;
 }
 
