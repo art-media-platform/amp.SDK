@@ -38,6 +38,7 @@ type enclave struct {
 	revision int64
 	aad      []byte
 	closed   bool
+	changed  bool
 }
 
 // ringIndex is the in-memory index for a single keyring.
@@ -113,8 +114,8 @@ func OpenEnclave(
 // The install is durable at return: the re-sealed tome persists BEFORE ImportKey
 // reports success (the epoch-key PutKey discipline, one layer down).  Success ⟹
 // the key is on disk; a persist failure returns the error and is a durability
-// failure the caller must not read as success.  An exact-duplicate no-op does
-// not re-persist.
+// failure the caller must not read as success.  An exact duplicate skips
+// persistence only when no install remains unsaved.
 func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -146,8 +147,11 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 	if err := enc.mergeRecord(rec); err != nil {
 		return err
 	}
-	if enc.revision == priorRevision {
-		return nil // exact duplicate — nothing new to persist
+	if enc.revision != priorRevision {
+		enc.changed = true
+	}
+	if !enc.changed {
+		return nil // already durable duplicate
 	}
 	return enc.persistLocked(ctx)
 }
@@ -213,6 +217,7 @@ func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec Key
 			}
 			return PubKey{}, err
 		}
+		enc.changed = true
 		if err := enc.persistLocked(ctx); err != nil {
 			return PubKey{}, err
 		}
@@ -447,7 +452,7 @@ func (enc *enclave) Close(ctx context.Context) error {
 
 // persistLocked seals the in-memory key index into a KeyTome and saves it via
 // the Guard/TomeStore pair — the ONE persist site (ImportKey, GenerateKey,
-// Close).  Caller holds enc.mu.
+// RemoveKey, Close).  A successful Save clears changed.  Caller holds enc.mu.
 func (enc *enclave) persistLocked(ctx context.Context) error {
 	tome := &KeyTome{
 		Revision: enc.revision,
@@ -488,6 +493,7 @@ func (enc *enclave) persistLocked(ctx context.Context) error {
 	if err := enc.store.Save(ctx, sealed); err != nil {
 		return fmt.Errorf("safe: failed to save SealedTome: %w", err)
 	}
+	enc.changed = false
 	return nil
 }
 

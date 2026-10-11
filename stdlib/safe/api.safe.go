@@ -81,8 +81,8 @@ type Enclave interface {
 
 	// ImportKey inserts a keypair into the given keyring.
 	// If kp.Pub.TimeID is zero, it is set to tag.NowID().
-	// An exact-match duplicate is a no-op; a pub-key collision that is NOT an
-	// exact dupe is rejected as an error.
+	// An exact-match duplicate is a no-op when no install awaits persistence.
+	// A pub-key collision that is NOT an exact dupe is rejected as an error.
 	// The install is durable at method return: the re-sealed tome persists
 	// BEFORE ImportKey reports success, so an unclean kill after return cannot
 	// lose the key — a member's identity must never ride on a clean Close.
