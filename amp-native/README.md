@@ -18,10 +18,10 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 |---|---|
 | `bin/amp` | the `amp` CLI, built for the platform in the kit filename |
 | `bin/ampd` | the `ampd` node daemon — development and evaluation use only (see Running a Node Locally) |
-| `AOM/O4-standard-procedures.md` | the partner subset of AMP's standard procedures — retrieve/embed/redeem an invite (§4.4–§4.6), publish a name (§4.10), bring up a local replica node (§4.17), the mint-and-connect walk (§4.18) |
+| `AOM/O4-standard-procedures.md` | the partner subset of AMP's standard procedures — retrieve and embed an invite, join a planet by invite (§4.4–§4.6), publish a name (§4.10), bring up a local replica node (§4.17), the mint-and-connect walk (§4.18) |
 | `AOM/DD-name-service.md` | the naming and trust design: how planets are named, branded, resolved, and verified |
 | `docs/amp-cli.md` | the `amp` command reference, generated from the binary in this kit |
-| `docs/get-a-backend.md` | how to reach a node: your operator's, or the one in `bin/` |
+| `docs/get-a-backend.md` | how to reach a node: your node operator's, or the one in `bin/` |
 | `docs/install-troubleshooting.md` | what to try when a step above does not work |
 | `docs/siwe-primer.md` | signing in with a wallet, for the web rail |
 | `docs/aom-index.md` | what each shipped AOM shelf covers |
@@ -41,8 +41,8 @@ On macOS the kit is an installer package: it places `bin/*` in
      `sudo installer -pkg <file> -target /`. A later package replaces the
      installed kit in place.
    - **Linux, Windows:** unzip the kit and put its `bin/` on your `PATH`.
-2. Get an invite URL and its passphrase from your operator (out-of-band).
-3. Redeem it — the full procedure, verification, and recovery steps are
+2. Get an invite URL and its passphrase from a founder or admin of the planet (out-of-band).
+3. Join with the invite — the full procedure, verification, and recovery steps are
    `AOM/O4-standard-procedures.md` §4.6:
 
    ```
@@ -50,21 +50,21 @@ On macOS the kit is an installer package: it places `bin/*` in
        invite accept --file <invite-file> --invite-pass <passphrase>
    ```
 
-   Your operator supplies the node address; this document writes it
+   Your node operator supplies the node address; this document writes it
    `{your-node}`.
 4. Confirm membership by publishing a name (§4.10). The end-to-end ladder —
-   found, invite, redeem, brand, publish, resolve — is §4.18.
+   found, invite, join, brand, publish, resolve — is §4.18.
 
-No reachable node yet? `bin/ampd` is one — §4.17 brings up a local follower
+No reachable node yet? `bin/ampd` is one — §4.17 brings up a local replica
 node for client dogfooding. No AMP-operated eval planet endpoint is named in
-this kit revision; first contact runs against your operator's node, or against
+this kit revision; first contact runs against your node operator's node, or against
 the node you run yourself.
 
 ## Running a Node Locally
 
-`bin/ampd` is the AMP node daemon: the server software an operator runs, the
+`bin/ampd` is the AMP node daemon: the server software a node operator runs, the
 thing `bin/amp` and an amp-web-SDK app both talk to. It ships here so the kit
-is self-contained — you can work the whole ladder (found, invite, redeem,
+is self-contained — you can work the whole ladder (found, invite, join,
 brand, publish, resolve) on your own machine without waiting on someone else's
 endpoint.
 
@@ -99,7 +99,7 @@ Ships with this kit as the compatibility notice for existing CLI holders:
 - This CLI requires `--invite-pass` explicitly on `invite accept` and
   `invite inspect` — there is no typed default.
 - Older CLI builds still work against current hosts **only** when the
-  operator supplies a typed passphrase meeting the floor. This kit is the
+  invite's issuer supplies a typed passphrase meeting the floor. This kit is the
   upgrade path.
 
 ## The Shelves

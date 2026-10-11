@@ -2,7 +2,7 @@
   <img src="media/art-media-platform.svg" alt="art.media.platform" width="280">
 </p>
 
-**art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Each participant holds their own keys on their device, or entrusts them to a node they sign in through.  Every device can be a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
+**art.media.platform** ("AMP") is an open protocol and native 3D runtime for federated, end-to-end-encrypted applications.  Each participant's keys live on their own device, or on a node they sign in through.  Every device can be a full peer.  Content propagates through a mesh of independent nodes — no central server, no corporate intermediary, no single point of failure.
 
 This repository is the **SDK**: a dependency-light Go library defining the wire format, [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) addressing model, key/identity primitives, and `AppModule` interface.  Pair it with amp.planet to produce:
 
@@ -39,7 +39,7 @@ In crisis scenarios — natural disasters, infrastructure collapse, conflict zon
 
 ## Planet
 
-The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices and any relay nodes they choose to trust.
+The core abstraction is a **planet** — a cryptographic governance enclosure maintaining membership, channels, encryption keys, and history.  A planet is not a server.  It is a cryptographic identity shared among its members, replicated across their devices, the nodes they sync through, and any node that follows it (which holds a private planet sealed).
 
 A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a behavior contract.  Members post **transactions** ([`TxMsg`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go)) that propagate through whatever transports are available — TCP, UDP, USB stick, or mesh-networking.  Every `TxMsg` is signed by its author and optionally encrypted with the planet's current epoch key.
 
@@ -55,8 +55,8 @@ Channel-private encryption is designed and not yet shipped: once it is, a privat
 
 Identity and key-receipt have opposing rotation needs, so AMP splits them:
 
-- **SigningKey** — author identity.  Often hardware-bound (YubiKey P-256, MetaMask secp256k1).  Stable, rarely rotated, signs every TxMsg.
-- **EncryptKey** — software-resident, cheap to rotate.  Receives sealed-box wraps of new epoch keys.  Rotated whenever the planet rotates.
+- **SigningKey** — author identity.  Held in the device's or node's key store (for web logins the node mints it; a wallet or DID proves the login, not this key — except on a forums board that admits the member, where login also seats the wallet's or DID's own public key as the member's signing key); hardware-bound keys are not yet shipped.  Stable, rarely rotated, signs every TxMsg.
+- **EncryptKey** — software-resident, cheap to rotate.  Receives sealed-box wraps of new epoch keys.  A planet rotation wraps the new epoch key to it and leaves it unchanged; only its member's node replaces it.
 
 
 ### [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) Addressing
@@ -69,11 +69,11 @@ A planet's encryption changes over time through **epoch rotation**.  A founder r
 
 ## Vaults
 
-A **vault** is the storage-and-sync half of a node: it holds a planet's signed transaction log and content-addressed blobs and reconciles them with other vaults holding the same planet.  Any device can run one — phone, Raspberry Pi, always-on server — so a planet lives wherever its members and the relays they trust keep a copy.
+A **vault** is the storage-and-sync half of a node: it holds a planet's signed transaction log and content-addressed blobs and reconciles them with other vaults holding the same planet.  Any device can run one — phone, Raspberry Pi, always-on server — so a planet lives wherever its members, the nodes they sync through, and its followers keep a copy.
 
 **Offline-first, convergence-second.**  A vault accepts writes with no network at all; they land in the local log and propagate when a peer is next reachable.  Two vaults reconcile by exchanging a [Merkle](https://en.wikipedia.org/wiki/Merkle_tree) range hash over their transaction sets and streaming only the difference — `O(log n)` to find a gap, then a content-addressed transfer to close it.  The hash binds entry *bytes*, not just their IDs, so a corrupted or substituted entry surfaces as a mismatch and re-heals instead of spreading.  CRDT addressing makes the merged result identical on every replica, whatever the arrival order.
 
-**Zero-knowledge by construction.**  A relay vault — one on a node that holds no member's keys — stores and forwards a sealed message without decrypting it or learning who authored it; the members' own nodes check its membership proof and signature when they decrypt it.  A seized relay vault yields no private content: only encrypted content, planet-public content, membership proofs, each planet's member roster (member IDs, statuses, public keys, and which invite each member redeemed and when), and routing metadata — PlanetIDs, EpochIDs, the activity timeline, and the planets each connected node announces, including its home planet (whose ID is its member ID) and each planet's last-activity time, sent over an unencrypted control channel.  An operator of such a vault, willing or coerced, can hand over that much and never the content inside or a sealed post's author — the precise sense in which a vault is safe to rent in an adversarial jurisdiction, with one honest limit: the metadata alone can still support traffic analysis.
+**Zero-knowledge by construction.**  A relay vault — one on a node that holds no member's keys — stores and forwards a sealed message without decrypting it; the members' own nodes check its membership proof and signature when they decrypt it.  A seized relay vault yields no private content: only encrypted content, planet-public records (the charter, channel names and access grants, invite records), membership proofs, each planet's member roster (member IDs, statuses, public keys, and which invite each member joined with and when), and routing metadata — PlanetIDs, EpochIDs, the activity timeline, and the planets each connected node announces, including the home planet of each identity on that node (whose ID is that identity's ID) and each planet's last-activity time, sent over an unencrypted control channel that anyone on the network path can read.  Each sealed post carries its author's signature in the clear and the roster lists every member's public signing key, so whoever holds a vault's copy can tell which member signed each sealed post.  An operator of such a vault, willing or coerced, can hand over that much and never the content inside — the precise sense in which a vault is safe to rent in an adversarial jurisdiction: it protects content, not who posted when.
 
 **Self-certifying peers.**  Vaults authenticate by key, not by certificate authority: a peer's identity *is* a hash of its signing key, proven by a mutual challenge-response handshake — no CA to trust or breach.  Resource budgets bind to that proven identity, so one peer cannot masquerade as many and the metering holds against a sybil flood without a central allowlist.
 
@@ -90,18 +90,18 @@ Forks are morally neutral — the same primitive serves a community pruning bad-
 
 ## Identity
 
-Members are identified by a `MemberID` — for a wallet, email or DID login, derived from a canonic identity URI (`tag.HashName("eth:0xabc…").ID` and similar); for an identity a device makes for itself, a random UID.  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `safe.Kit` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password, and W3C [DID](https://www.w3.org/TR/did-1.0/) (login-only — `did:key` Ed25519 and `did:pkh:eip155`, the latter folding onto the same member as the wallet path).  Additional DID curves/methods (`did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) and hardware-token (YubiKey) login are not yet shipped — the kit registry already covers their crypto; what remains per method is the URI-decode/verify surface.
+An identity is named by a `MemberID` — for a wallet, email or DID login, derived from a canonic identity URI (`tag.HashName("eth:0xabc…").ID` and similar); for an identity a device makes for itself, a random UID.  Joining a planet from a native or CLI session gives the identity a separate random member ID and fresh keys for that planet; a web login with no home planet yet joins under its login ID.  The substrate is identity-method-agnostic: verification reduces to `kit.Signing.Verify` against whatever `safe.Kit` the URI resolves to.  Shipped login flows: EVM wallet (EIP-4361/SIWE), email/password, and W3C [DID](https://www.w3.org/TR/did-1.0/) (login-only — `did:key` Ed25519 and `did:pkh:eip155`, the latter folding onto the same member as the wallet path).  Additional DID curves/methods (`did:key` P-256/secp256k1, `did:pkh:solana`, `did:web`) and hardware-token (YubiKey) login are not yet shipped — the kit registry already covers their crypto; what remains per method is the URI-decode/verify surface.
 
 
 ## Federation & Naming
 
-Planets find each other through **federation** — no central registry, no DNS authority.  A planet publishes a signed [`Brand`](amp/amp.core.proto) record naming itself, and a **NameService** resolves a human FQDN to the planet `UID` that answers for it.  Resolution rides the same zero-knowledge mesh: a peer answers from records it has synced off the verified planet-public governance stream, so a host resolves over exactly the federations it holds.
+Planets find each other through **federation** — no central registry, no DNS authority.  A planet publishes a signed [`Brand`](amp/amp.core.proto) record naming itself, and a **NameService** resolves a human FQDN to the planet `UID` that answers for it.  Resolution rides the same zero-knowledge mesh: a peer answers from records it has synced off the verified planet-public governance stream, so a host resolves over exactly the federations it carries.
 
 - **Brand** — a planet's self-describing identity: display name, deep-link schemes, install targets, and operational fields (CORS origins, share-planet binding).  Signed and chronicle-tracked, so rotating any of it is a signed write, not an edit-and-restart.
 - **NameService** — `Resolve(FQDN) → planet`, ranked `Search`, and federation-peer enumeration for cross-federation forwarding.  `ampd` exposes it natively and over the web wire (`/api/v1/resolve`, `/api/v1/search`, `/api/v1/federation/peers`).
 - **Deep links** — an inbound web Host resolves through NameService to its planet's `Brand`, which renders the platform-detecting landing page — the same substrate-native path whether the link is yours or a federated peer's.
 
-**What naming does *not* claim.**  There is no global name authority — by design, which also means there is no universal namespace.  An FQDN resolves only within the federations a host holds; two federations may mint the same name and neither is canonical.  The durable identity is the planet `UID` — self-certifying and collision-free — with the human-readable name a convenience layered over it; first contact with a federation your host does not yet hold still needs an out-of-band pointer (a UID, an invite, or a peer that already carries the record).  That is the same cost inverted into the benefit: no registry to capture, censor, or bill, and you resolve over exactly the mesh you chose to trust.
+**What naming does *not* claim.**  There is no global name authority — by design, which also means there is no universal namespace.  An FQDN resolves only within the federations a host carries; two federations may mint the same name and neither is canonical.  The durable identity is the planet `UID` — self-certifying and collision-free — with the human-readable name a convenience layered over it; first contact with a federation your host does not yet carry still needs an out-of-band pointer (a UID, an invite, or a peer that already carries the record).  That is the same cost inverted into the benefit: no registry to capture, censor, or bill, and you resolve over exactly the mesh you chose to trust.
 
 
 ## AI
@@ -138,9 +138,9 @@ A Unity app with AMP embedded has end-to-end encrypted federated communication, 
 
 ## Package Management
 
-A planet's root will carry `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures root at hardware tokens (YubiKey P-256 / WebAuthn); dependency resolution uses Go's Minimum Version Selection algorithm.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM is the runtime substrate, content-addressed end-to-end, replayable to any historical state.
+A planet's root will carry `PlanetMod` (declared dependencies) and `PlanetLock` (hash-pinned content addresses) — together a live, hardware-signed [SBOM](https://www.cisa.gov/sbom).  Publisher signatures are designed to root at hardware tokens (YubiKey P-256 / WebAuthn), and dependency resolution to use Go's Minimum Version Selection algorithm; none of it is shipped yet, hardware-bound keys included.  Strictly more powerful than SPDX or CycloneDX file formats: AMP's SBOM will be the runtime substrate, content-addressed end-to-end, replayable to any historical state.
 
-Because it is a structural property of every planet rather than a bolt-on, federal contractors, regulated verticals, and supply-chain-conscious vendors inherit it by construction.
+Because it will be a structural property of every planet rather than a bolt-on, federal contractors, regulated verticals, and supply-chain-conscious vendors will inherit it by construction.
 
 
 ## Architecture
@@ -157,7 +157,7 @@ amp.Host
   │    ├── BlobStore                # content-addressed encrypted blobs
   │    └── vault.Transport          # Reticulum · TCP · UDP · mesh
   └── amp.Session                   # one per connected client
-       ├── safe.Enclave             # identity keys, never leave the device
+       ├── safe.Enclave             # identity keys: on the device for a device identity; on the host node for a web member
        ├── safe.EpochKeyStore       # symmetric epoch keys, per planet epoch
        └── AppInstances
             ├── app.home            # member identity, planet list

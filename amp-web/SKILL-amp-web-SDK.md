@@ -163,7 +163,7 @@ VITE_AMP_PLANET_TAG=my-planet-tag
 VITE_AMP_PUBLIC_SHARE_PLANET_TAG=my-planet-tag-shares
 ```
 
-**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` resolves anonymously only once the deploy operator performs genesis of a public planet and registers it host-side (`amp planet found --rest --public`, §6.4). Where that registration is stored is operator-side and substrate-native (§10) — not your concern. Without it, anonymous reads against the planet tag fall through to the standard Bearer gate.
+**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` resolves anonymously only once the deploy operator performs genesis of a public planet and registers it host-side (`amp planet found <name> --rest --public`, §6.4). Where that registration is stored is operator-side and substrate-native (§10) — not your concern. Without it, anonymous reads against the planet tag fall through to the standard Bearer gate.
 
 ---
 
@@ -331,7 +331,7 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 
 **Idempotency & retries.** `upsert` / `remove` / `withdraw` are keyed by a caller-supplied `ItemID`, so replaying one (e.g. after a network timeout that swallowed the `TxResponse`) is safe — same key, last-write-wins. A `create` *without* an explicit `ItemID` mints a fresh item on every call, so a blind retry duplicates; supply a deterministic `ItemID` (§5.8) to make `create` idempotent too. The `create()` sugar takes no `ItemID` — an idempotent create rides `tx([{ Kind: 'create', Channel, Attr, ItemID, Value }])` (or `upsert`, when overwrite semantics fit).
 
-**Verb-RPC — routing a batch to an app handler.** Set `InvokeURL` on `POST /api/v1/tx` to `"amp://~/{app}/{verb}"` (e.g. `amp://~/forums/post`) to route the whole batch to an app's verb handler instead of the default cabinet commit. The host delivers the ops to the named verb's `StartPin` as RPC arguments via the host-internal `TxCommitFlags_Invoke` submit flag — **not journaled as planet state** — carrying the session member as the tx `FromID`; the app authors any durable writes itself, custodially, recording the invoking member as author. **One batch = one verb**; an empty `InvokeURL` is a normal cabinet commit. This is the write path for a channel a member holds only `Access_ReadOnly` on — the verb, not a direct op, is how the mutation lands. SDK: `client.invoke(verbURL, ops, planetTag?)`, or `invoke` from `useAmpMutation()` (§5.3). (AD-app-forums §3.4.)
+**Verb-RPC — routing a batch to an app handler.** Set `InvokeURL` on `POST /api/v1/tx` to `"amp://~/{app}/{verb}"` (e.g. `amp://~/forums/post`) to route the whole batch to an app's verb handler instead of the default cabinet commit. The host delivers the ops to the named verb's `StartPin` as RPC arguments via the host-internal `TxCommitFlags_Invoke` submit flag — **not journaled as planet state** — carrying the session member as the tx `FromID`; the app authors any durable writes itself (the forums app signs them with its host writer session), recording the invoking member as author. **One batch = one verb**; an empty `InvokeURL` is a normal cabinet commit. This is the write path for a channel a member holds only `Access_ReadOnly` on — the verb, not a direct op, is how the mutation lands. SDK: `client.invoke(verbURL, ops, planetTag?)`, or `invoke` from `useAmpMutation()` (§5.3). (AD-app-forums §3.4.)
 
 ### 4.4 Media Upload
 
@@ -395,7 +395,7 @@ After upload, write a regular item that references the blob by ID (typically `aw
 
 The `URI` in the upload response is a live stream URL, **host-instance-scoped** (the publisher is in-memory, §above): usable immediately, but re-resolve via `/media/resolve` on later reads or from another host rather than persisting it.
 
-Encrypted blobs are decrypted on demand by `app.www` using the session's epoch key store; the served bytes are plaintext over the (TLS-protected) wire to the client. Plaintext is never persisted on the vault disk.
+Encrypted blobs are decrypted on demand by `app.www` using the session's epoch key store; the served bytes are plaintext over the (TLS-protected) wire to the client. Blobs up to 32 MiB (the default threshold) are cached decrypted on the host's disk (evictable); larger ones decrypt per read without a plaintext copy — except a blob whose reference lacks its content hash, which decrypts whole into a temporary file at any size. Uploads also pass through the host's disk as plaintext: a large upload is buffered in a temporary file until it is sealed. Temporary files are removed when the read or upload ends; a crash can leave one behind.
 
 ### 4.5 WebSocket Subscriptions
 
@@ -445,7 +445,7 @@ The server NEVER pushes telemetry frames (failed-login, rate-limit, audit) over 
 
 > **Three "resolve" verbs — keep them straight.** `/api/v1/tag/resolve` (§5.8) canonizes a *name string* to a `tag.UID` — a pure hash, anonymous, reveals nothing that exists. The NameService `resolve` below maps a registered *FQDN* (`spaces.example.com`) to the *planet* that serves it. The cross-planet `resolve(address)` (§9, lands M5) follows a packed `amp.Address` to one record. Same English word, three layers — don't wire them to the same code path.
 
-NameService is amp's federation directory: it answers "which planet is `spaces.example.com`, and where is its vault dialable?". **`resolve` is anonymous** — it answers a single exact FQDN off the host's federation resolver, so a fresh install or a deep-link source can dial + pin a named planet before it has any session. **`search` and `federation/peers` require `Authorization: Bearer`** — ranked enumeration is membership-gated, so a session walks only the federations it has joined (see Posture).
+NameService is amp's federation directory: it answers "which planet is `spaces.example.com`, and where is its vault dialable?". **`resolve` is anonymous** — it answers a single exact FQDN off the host's federation resolver, so a fresh install or a deep-link source can dial + pin a named planet before it has any session. **`search` and `federation/peers` require `Authorization: Bearer`** — ranked enumeration is Bearer-gated, so a session walks only the federations it is a member of (see Posture).
 
 ```
 POST /api/v1/resolve                         (anonymous — no Bearer)
@@ -472,7 +472,7 @@ React: `useAmpResolve(fqdn)` wraps the anonymous resolve for deep-link landings 
 **Never silently follow a non-`Verified` record.** A record is `Verified` only when the answering federation matches the planet's own `Brand` back-edge (the planet consents to being named there). `Refuted` flags a third party claiming a name the planet never authorized; `Unchecked` means the back-edge wasn't confirmed. When `Ambiguous` is set or `TrustState != 'Verified'`, surface it and let the user choose — do not auto-follow.
 
 **Posture — `resolve` is anonymous; bulk discovery is gated.** `resolve` answers one exact FQDN off the host's federation resolver with no Bearer, returning that planet's `VaultAddrs` in full so any caller can dial it. FQDN keys are low-entropy and dictionary-reversible, so a private namespace's privacy comes from federation **unreachability** (not a member → can't reach the federation that names it), never from key secrecy. What *is* gated is enumeration:
-- **`search` is best-effort discovery over the federations you've joined — Bearer-only, not a scrape endpoint.** Ranked enumeration is the scraping surface, so a session walks only its joined federations. Don't build features that depend on bulk-enumerating the namespace.
+- **`search` is best-effort discovery over the federations your session is a member of — Bearer-only, not a scrape endpoint.** Ranked enumeration is the scraping surface, so a session walks only the federations it is a member of. Don't build features that depend on bulk-enumerating the namespace.
 - **You don't need NameService to run a single deploy.** Your planet tag is handed to the client at construction (`VITE_AMP_PLANET_TAG`); reads/writes/subscribes never touch it. Resolve/search matter only when you discover *other* planets across federations.
 
 **Publishing a name (operator-side).** A name enters the directory when an operator registers it into a federation's NameService channel — a signed governance write, not a consumer call:
@@ -488,8 +488,8 @@ is the authorization to publish names** (§4.6). You don't need it to read or wr
 your *own* home planet — that works the moment you log in (§0) — but you **do**
 need it to register your planets / names into a federation and be discoverable
 across orgs (it mints your member keys on your side). This is the bootstrapping
-step for the cross-org / licensee workflow. Log in first (§4.1), then redeem the
-token:
+step for the cross-org / licensee workflow. Log in first (§4.1), then join with the
+invite:
 
 ```
 POST /api/v1/invite/accept            (Bearer)
@@ -510,7 +510,7 @@ POST /api/v1/invite/accept            (Bearer)
 - Returns `501` `Code: "Unimplemented"` on the in-memory dev backend (§14.7 —
   the invite family needs the host-bridged backend); live on a host-bridged
   operated node.
-- Issuing invites is the operator side of this — `POST /api/v1/invite/issue` (§14.4).
+- A planet's founders and root admins issue invites — `POST /api/v1/invite/issue` (§14.4).
 
 From the SDK:
 
@@ -524,7 +524,7 @@ const { PlanetID, MemberID } = await client.acceptInvite({
 // is §4.8.
 ```
 
-**Issuing, revoking, and listing invites** (operator side; Bearer, host-bridged):
+**Issuing, revoking, and listing invites** (issue and revoke: founders and root admins; list: any session; Bearer, host-bridged):
 
 ```
 POST /api/v1/invite/issue      Body { Planet, Passphrase, MaxRedemptions?, Access?, ExpiresAt?, VaultAddrs? }
@@ -536,10 +536,10 @@ GET  /api/v1/invite/list?planet={UID}    Response { Policies: [{ InviteID, MaxRe
 `MaxRedemptions` selects the invite kind: **0** (or omitted) mints a single-use
 pre-minted slot; **> 0** mints a multi-use self-mint policy that many members
 join off one URL, each minting their own identity. `Access` (`ReadWrite`, …) is
-what each redeemer is granted; `ExpiresAt` is unix seconds (0 = the planet's
+what each joining member is granted; `ExpiresAt` is unix seconds (0 = the planet's
 bootstrap TTL). `revoke` is **terminal** (reissue, never un-revoke); `Rotate`
-also rotates the planet epoch to retire the token-held key (node-custodial
-founder only). `list` shows each policy's redemption ledger with an adjudicated
+also rotates the planet epoch to retire the token-held key (only a founder
+whose key the node holds). `list` shows each policy's redemption ledger with an adjudicated
 `Rank` — a record with `InRank: false` is over the ceiling and void.
 
 ```ts
@@ -572,7 +572,7 @@ curl -sX POST https://{your-node}/api/v1/invite/accept \
 
 ### 4.8 Your own planets — mint, brand, register
 
-Joining a federation (§4.7) is not the same as owning a planet in it. One rule
+Joining a federation (§4.7) is not the same as founding a planet in it. One rule
 fixes the boundary: **the web bridge refuses governance-law attrs**
 (`LawPlanetEpoch`, `LawMemberEpoch`, `LawChannelEpoch`, `LawPlanetOrigin`,
 `LawEquivalence`) — a browser cannot address governance at all. Planet genesis
@@ -632,7 +632,7 @@ org planet — is a genesis act, and genesis is the CLI path below.
 epoch-key custody; it buys self-serve genesis and name registration (§14.8). The
 procedures ship in this bundle: `AOM/O4-standard-procedures.md` §4.18 is the
 end-to-end mint-and-connect walk, §4.17 stands up your own replica node, §4.10
-publishes a name, §4.6 redeems an invite from the CLI side.
+publishes a name, §4.6 joins a planet by invite from the CLI side.
 
 ---
 
@@ -740,7 +740,7 @@ const results = await tx([
 ]);
 
 // Verb-RPC — route the batch to an app handler instead of a cabinet commit (§4.3).
-// The write path for a channel you hold only Access_ReadOnly on; the app authors custodially:
+// The write path for a channel you hold only Access_ReadOnly on; the app authors the write:
 const posted = await invoke('amp://~/forums/post', [
   { Kind: 'create', Channel: 'threads', Attr: 'posts', Value: { body, threadID } },
 ]);
@@ -761,11 +761,11 @@ await withdraw('shares', 'link', itemID, {
 
 `tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg, sealed under a single encryption context, with one signature and one MemberProof. A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
 
-`invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write custodially (§4.3).
+`invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write (§4.3).
 
 **Edit verbs carry their base.** On an op that edits an existing item (e.g. `amp://~/forums/moderate`), set `BaseEdit` to the `_EditID` your UI DISPLAYED (`AmpItemMeta._EditID` from the read that rendered it). The SDK emits it into the op value as `BaseEdit_0`/`BaseEdit_1` — exact uint64 halves — which the app consumes as the edit's base, so a concurrent edit is resolved against what you saw rather than against whatever the app last loaded (omitting it authors wildcard: the app's own loaded edit). On the embedded-host divert (below) the host's own key signs and its Commander bases on its loaded edit; `BaseEdit` rides the HTTP path only.
 
-**Embedded-host divert.** When the SPA runs inside the Unity host and the host advertises a native handler for the verb (`window.__amp.bridgeVerbs`), `invoke` diverts the op to the host so the member's OWN key signs the write. The host bridge carries **exactly one op per diverted invoke** — a multi-op `invoke` on a diverted verb throws a typed `AmpError` (`BadRequest`); issue one `invoke()` per op there. In a plain browser (no `window.__amp`) multi-op invokes ride the custodial HTTP path unchanged.
+**Embedded-host divert.** When the SPA runs inside the Unity host and the host advertises a native handler for the verb (`window.__amp.bridgeVerbs`), `invoke` diverts the op to the host so the member's OWN key signs the write. The host bridge carries **exactly one op per diverted invoke** — a multi-op `invoke` on a diverted verb throws a typed `AmpError` (`BadRequest`); issue one `invoke()` per op there. In a plain browser (no `window.__amp`) multi-op invokes ride the HTTP path unchanged, and the app authors the write.
 
 `upsert` accepts any client-supplied `tag.UID` for the item. For singleton items, derive a stable UID from a well-known name — generate it at build time with `forge` or resolve it once via `client.resolveTag('settings:theme-preference')` (§5.8) — or reuse the member's own UID directly. The `scheme:identifier` form matches CAIP-10 / DID conventions.
 
@@ -1007,12 +1007,12 @@ Either form (canonic name or base32 UID) resolves to the same planet via `tag.Pa
 
 #### Sharing flow
 
-1. Owner clicks Share on a project. The web app copies (or canonical-forks) the project's `snapshot` from the owner's planet onto the share planet. Owner attribution is stripped by default; the owner can opt-in.
+1. The user clicks Share on a project. The web app copies (or canonical-forks) the project's `snapshot` from the app's main planet onto the share planet. Author attribution is stripped by default; the author can opt in.
 2. The share planet's `shares/link` item carries the slug → public-snapshot pointer.
-3. Anonymous viewers read the share planet via the channels-prefixed path above without `Authorization`. Only the share planet allows anonymous reads — the owner's main planet still requires auth.
-4. To unshare, the owner posts a `Withdraw` against the share planet's snapshot item; the public bytes survive in the share planet's journal but the consumer sees both the original and the withdrawal — see §7.
+3. Anonymous viewers read the share planet via the channels-prefixed path above without `Authorization`. Only the share planet allows anonymous reads — the app's main planet still requires auth.
+4. To unshare, the user posts a `Withdraw` against the share planet's snapshot item; the public bytes survive in the share planet's journal but the consumer sees both the original and the withdrawal — see §7.
 
-A whitelabel deploy registers two planet tags in its config: the owner planet and the share planet. Each `AmpWebClient` binds one default `planetTag` that rides its every call; read another reachable planet by passing a per-call `planetTag` to `query` — anonymous against a registered share planet, authenticated otherwise.
+A whitelabel deploy registers two planet tags in its config: the app's main planet and the share planet. Each `AmpWebClient` binds one default `planetTag` that rides its every call; read another reachable planet by passing a per-call `planetTag` to `query` — anonymous against a registered share planet, authenticated otherwise.
 
 ### 6.5 Identity & member shape
 
@@ -1069,7 +1069,7 @@ interface WithdrawNote {
 
 | Verb | Maps to | Used for |
 |---|---|---|
-| Delete | `remove` | "Remove this from my project list" — owner removes their own record |
+| Delete | `remove` | "Remove this from my project list" — the author removes their own record |
 | Unshare | `withdraw` | "Take down the public copy" — record stays signed; consumers see the withdrawal |
 | Forget me | `withdraw` with `Reason=Forgotten` | "Right-to-be-forgotten" request; per-jurisdiction node operators may also delete bytes locally to comply with law |
 | Memorial unshare | `withdraw` with `subject` + `delegation` | An authorized delegate withdraws on behalf of someone who can no longer act for themselves |
@@ -1424,7 +1424,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 5. **Never use `window.fetch`** inside a card. Always go through `window.amp.*`.
 6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
 7. **Never name specific crypto algorithms** in code or docs. Use `seal/open`, `sign/verify`, `hash`, `safe.KeyRef`.
-8. **Never build on bulk namespace enumeration.** `/api/v1/search` is membership-gated, best-effort discovery over the federations you've joined — not a public directory dump, and never anonymous. Resolve exact FQDNs you already know; don't crawl. (§4.6)
+8. **Never build on bulk namespace enumeration.** `/api/v1/search` is Bearer-gated, best-effort discovery over the federations your session is a member of — not a public directory dump, and never anonymous. Resolve exact FQDNs you already know; don't crawl. (§4.6)
 9. **Never call an operator verb (`/api/v1/admin/*`) from browser JS.** The operator Bearer is higher-privilege than a member session; putting it in XSS-exposed script is how an org gets its planet defaced and members mass-minted. These verbs deliberately have no browser client method — drive them from server-side tooling (a Stripe webhook, an ops script, the `amp` CLI), where the admin Bearer lives (§14.4). The one SDK surface is `AmpAdminClient` on the **Node-only** subpath `@art-media-platform/web/admin` (currently `issueEmailCredential`): it is excluded from the root export, refuses to construct in a browser, and the `operator-go-only` drift manifest pins which verbs may bind there — never import it from browser code.
 
 ---
@@ -1443,18 +1443,18 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Item** | A single CRDT record, identified by `tag.UID`. |
 | **Edit** | A versioned update to an item; CRDT-merged (`AOM/SD-edit-resolution.md`). |
 | **Genesis** | The founding ceremony of a planet — the first TxMsg, welding the identity facts later edits cannot forge (founder signatures, epoch-key root); an optional founding `Brand` edit rides it, admin-mutable after like every Brand field (`AOM/DD-name-service.md` §2.2). |
-| **Cabinet** | The substrate store a planet's channel items commit into — the destination of a normal `tx`. A verb-RPC (`invoke`) bypasses it; the app then authors the cabinet writes custodially. |
-| **Custodian** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums custodian founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
+| **Cabinet** | The substrate store a planet's channel items commit into — the destination of a normal `tx`. A verb-RPC (`invoke`) bypasses it; the app then authors the cabinet writes itself. |
+| **Host writer session** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums custodian founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
 | **TxMsg** | A signed, encrypted transaction containing one or more data ops. |
-| **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (host-internal `TxCommitFlags_Invoke`, not journaled) which authors the durable write custodially; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
+| **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (host-internal `TxCommitFlags_Invoke`, not journaled) which authors the durable write itself; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
 | **ACC** | **Access Control** — the per-channel grant engine deciding which TxOps may enter a planet: who may read, write, or govern each channel. Grants are committed as a `ChannelEpoch` via `POST /api/v1/governance/grant` (§14.4). |
 | **BYOK** | **Bring Your Own Key** — sealing user-supplied secrets client-side (`seal`/`open`, §6.2) under a device-local EncryptKey, so hosts, admins, and other members never see plaintext (`SECURITY-amp-web-SDK.md`). |
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
-| **Vault** | An `ampd` peer that stores and relays encrypted data; cannot read content. |
+| **Vault** | The storage-and-sync half of an `ampd` node. A relay vault (holding no member's keys) cannot read content; your host's vault holds your keys and can. |
 | **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards) (`AOM/AD-app-www.md`). |
 | **Member** | An authenticated identity within a planet. Its `Kind` is a `tag.UID` resolving to a `LawMemberKind_*` (Person / Group / Agent / Memorial) — an identity taxonomy, never an entitlement (§6.5, §12; `AOM/SD-substrate-agnostic-members.md`). |
-| **MemberProof** | An HMAC of derived proof key over TxID; lets a relay verify membership without decryption. |
+| **MemberProof** | An HMAC of a derived proof key over TxID; nodes holding the epoch key check it on decrypt — a relay vault cannot. |
 | **WebRect** | A Unity 3D Pane that renders a web card. |
 | **Pane** | The surface hosting one card: a Unity WebRect or a 2D browser drawer. Cards target their Pane via `window.amp` (§8). |
 | **Panel** | A Unity-host UI region that arranges and manages Panes. Card authors never address a Panel directly — the Pane is the card's whole world. |
@@ -1468,7 +1468,7 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
 | **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6; `AOM/DD-name-service.md`. |
 | **FQDN** | A fully-qualified domain name (`spaces.example.com`) registered in a federation's NameService and resolvable to a planet. |
-| **Federation** | A set of planets whose names a session resolves over once it has joined; the unit of namespace reachability. |
+| **Federation** | A planet whose NameService channel names other planets; the unit of namespace reachability. Anonymous `resolve` answers over the federations your host carries, `search` over those your session is a member of. |
 | **TrustState** | A resolve verdict — `Verified` / `Refuted` / `Unchecked` — from checking the planet's `Brand` back-edge against the answering federation. The UI must not silently pick when it isn't `Verified`. |
 
 ---
@@ -1546,7 +1546,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy, not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **The operator tier** (`POST /api/v1/admin/*`, Bearer + the operator admin allowlist — operator-side gating config, §10) is four verbs: `planet/create`, `planet/brand`, `forums/reserve`, and `credentials/email/issue` (mints an email-scheme member, returns `{ MemberID, Email }` — what a Stripe webhook calls server-side to provision a paying customer). None has a browser client method, deliberately (§12); `credentials/email/issue` binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`), and the wire shapes live in `webapi/webapi.types.go` under the `operator-go-only` drift manifest. Sealed invites are the *member-session* surface instead: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` redeems it (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **The operator tier** (`POST /api/v1/admin/*`, Bearer + the operator admin allowlist — operator-side gating config, §10) is four verbs: `planet/create`, `planet/brand`, `forums/reserve`, and `credentials/email/issue` (mints an email-scheme member, returns `{ MemberID, Email }` — what a Stripe webhook calls server-side to provision a paying customer). None has a browser client method, deliberately (§12); `credentials/email/issue` binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`), and the wire shapes live in `webapi/webapi.types.go` under the `operator-go-only` drift manifest. Sealed invites are the *member-session* surface instead: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` joins its planet (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability
@@ -1571,7 +1571,7 @@ For end-to-end tests without a production vault, point the client at a local `am
 
 > **Accepting an invite to *join* a federation does not require running your own vault — that's a web-client call (§4.7).** This section is the heavier, self-hosting path: running your **own** `ampd` so your planets are independently hosted and discoverable. A web app on an operated node needs none of it.
 
-When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. A parent federation is itself founded operator-custodially from the CLI — `amp federation found "<label>" --invite-pass … --invite-max … --fqdn <fqdn>` seals the genesis with the operator's own key and emits the multi-use onboarding invite in one act. Two ways to federate with one, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
+When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. A parent federation is itself founded from the CLI — `amp federation found "<label>" --invite-pass … --invite-max … --fqdn <fqdn>` seals the genesis with the founder's own key and emits the multi-use onboarding invite in one act. Two ways to federate with one, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
 
 - **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner accepts (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp --planet <parent-fed> name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port` (the global `--planet` binds the session to the federation — required from a fresh CLI session). Their names resolve to their planets, carrying their own vault as the bootstrap address.
 - **Peer two federations.** The partner runs their *own* federation; the parent links it in with `amp federation peer <partner-fed-UID> --vault tcp:their-host:port`. A resolver then forwards across the directory hop (`ResolveVia`) into the partner's federation. Either side can peer the other.
@@ -1582,7 +1582,7 @@ When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology)
 
 The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own.
 
-**The step-by-step procedures ship in this bundle** — `AOM/O4-standard-procedures.md`: §4.18 the end-to-end mint-and-connect walk, §4.17 your own replica node, §4.10 name publication + the resolve verdicts, §4.6 invite redemption, §4.4/§4.5 the invite artifact and its out-of-band passphrase. They name roles (`<host>`, `<FED-UID>`, `<planet-UID>`, …), never live values; bind them to your own deployment. Sections that run AMP's own nodes are held back and read `(operator)`. Which of these a web client can do without the CLI is §4.8.
+**The step-by-step procedures ship in this bundle** — `AOM/O4-standard-procedures.md`: §4.18 the end-to-end mint-and-connect walk, §4.17 your own replica node, §4.10 name publication + the resolve verdicts, §4.6 joining a planet by invite, §4.4/§4.5 the invite artifact and its out-of-band passphrase. They name roles (`<host>`, `<FED-UID>`, `<planet-UID>`, …), never live values; bind them to your own deployment. Sections that run AMP's own nodes are held back and read `(operator)`. Which of these a web client can do without the CLI is §4.8.
 
 ---
 

@@ -8,32 +8,41 @@ primer lives in the [amp.SDK README](https://github.com/art-media-platform/amp.S
 
 ## What a vault can and cannot see
 
-A vault (an `ampd` relay peer) stores and forwards encrypted transactions.
-On a **private** planet it can verify that a transaction came from a legitimate
-member — via an HMAC membership proof derived from the epoch key — **without
-decrypting the content or learning which member authored it**.
+A relay vault — an `ampd` node that holds no member's keys — stores and forwards
+encrypted transactions **without decrypting them**. On a **private** planet it
+cannot check a sealed transaction's membership proof (an HMAC derived from the
+epoch key); the members' own nodes check the proof and the author signature when
+they decrypt.
 
-| A vault sees | A vault does NOT see (private planet) |
+| A relay vault sees | A relay vault does NOT see (private planet) |
 |---|---|
-| PlanetID, EpochID | message payloads (encrypted) |
-| activity timeline (when, how much) | who authored an encrypted tx it relays (only an HMAC proof) |
-| membership-proof validity | private-channel keys it isn't a member of |
+| PlanetID, EpochID | message payloads and sealed blobs (encrypted) |
+| activity timeline (when, how much) | whether a membership proof is valid (checking it takes the epoch key) |
+| which member signed each sealed post — the author signature rides in the clear, and the roster lists every member's public signing key | |
+| planet-public records: the charter, channel names and access grants, invite records, and the member roster (member IDs, statuses, public keys, which invite each member joined with and when) | |
+| the planets each connected node announces — including the home planet of each identity on that node (whose ID is that identity's ID) — and each planet's last-activity time, sent over an unencrypted control channel anyone on the network path can read | |
 
-A seized vault yields opaque blobs and proofs — no plaintext. Routing metadata
-(PlanetID, EpochID, timing) is observable, and a sealed value still leaks its
-**size** (sealed-box adds a fixed overhead, so ciphertext length ≈ plaintext length)
-and its channel/attr/item address; treat that as your metadata surface. Sealing
-hides content, not that a secret of ~N bytes exists in slot X and changed at time T.
-(Note this is the *relay* layer — when the host serves you decrypted items/frames,
-each carries `_FromID`, the author; see Attribution below.)
+A seized relay vault yields encrypted content plus the left column — no plaintext.
+A sealed value still leaks its **size** (sealed-box adds a fixed overhead, so
+ciphertext length ≈ plaintext length) and its channel/attr/item address; treat that
+as your metadata surface. Sealing protects content, not who posted when, and not
+that a secret of ~N bytes exists in slot X and changed at time T.
+
+**Your host is not a relay vault.** A web member's host vault holds the member's
+keys (Key custody on the web rail, below), so it can read everything the member
+can. When the host serves you decrypted items/frames, each carries `_FromID`, the
+author; see Attribution below.
 
 ---
 
 ## Encryption
 
 - **Private planet** — every transaction is encrypted under the planet's current
-  **epoch key**. Only members holding that key decrypt. Removing a member rotates
-  the epoch; the revoked member never receives the new key.
+  **epoch key**. Whoever holds that key decrypts: members who received it, the
+  nodes holding it (your host, for a web member), a former member, and anyone
+  with an invite file and its passphrase. A founder can rotate the epoch from a
+  node holding the founder's key; only active members receive the new key. No
+  verb removes a member today.
 - **Public / share planet** — `PlanetCharter.Privacy = PrivacyMode_Public`, set at
   genesis and fixed for the planet's life: signed but not encrypted,
   anonymous-readable, member-writable. This is the *only* mode that allows
@@ -42,7 +51,13 @@ each carries `_FromID`, the author; see Attribution below.)
   cannot be flipped by a later one. amp has **no per-item visibility flag** —
   public content lives on a separate public planet (SKILL §6.4).
 - Encrypted blobs are decrypted on demand by the host and served as plaintext over
-  the (TLS-terminated) wire. **Plaintext is never persisted to vault disk.**
+  the (TLS-terminated) wire. Blobs up to 32 MiB (the default threshold) are
+  cached decrypted on the host's disk (evictable); larger ones decrypt per read
+  without a plaintext copy — except a blob whose reference lacks its content
+  hash, which decrypts whole into a temporary file at any size. Uploads also
+  pass through the host's disk as plaintext: a large upload is buffered in a
+  temporary file until it is sealed. Temporary files are removed when the read
+  or upload ends; a crash can leave one behind.
 
 ---
 
@@ -61,14 +76,14 @@ each carries `_FromID`, the author; see Attribution below.)
 ### Key custody on the web rail
 
 For every web login — wallet, DID, and email alike — the host mints and holds a
-**node-custodial AMP signing key** for the member. Your wallet signature or
+**node-held AMP signing key** for the member. Your wallet signature or
 `did:key` proves control of the login identity to the HTTP endpoint; it is
 **not** the member's substrate signing key, which lives host-side along with the
 member's planet epoch keys. Consequences to design around:
 
 - **Losing the login credential is an authentication loss, not a key loss.**
   The host's keys for the member still exist — there is simply no way left to
-  prove ownership of them. For a `did:key` member this is permanent: the
+  prove control of them. For a `did:key` member this is permanent: the
   MemberID is the hash of the key URI and can never be re-bound.
 - **The host holds a web member's content keys** (it is a member node). The
   sealed-box BYOK below is the exception — its private key is device-local and
@@ -136,10 +151,10 @@ What that storage means:
   GENERATION, every token records the generation it was minted under, and
   validation requires a match. Two verbs drive the bump: the member's own
   `POST /api/v1/session/revoke` ("sign out everywhere" — the caller's Bearer
-  names the subject; no request body) and the operator's
+  names the subject; no request body) and the node operator's
   `POST /api/v1/admin/session/revoke` (any member; admin allowlist). Either
   invalidates every outstanding token for the member instantly, surviving
-  host restarts. The revoke is **full — everywhere, including the session
+  host restarts. The sign-out is **full — everywhere, including the session
   that calls it**: the `200` response (`SessionRevokeResponse{MemberID,
   Dropped}`) is the last act the presenting Bearer performs, and a fresh
   login is required afterward. An "everywhere else" variant exempting the
@@ -218,7 +233,7 @@ To override the auto-installed key (e.g. derive it from a wallet), call
   is an app-layer policy**, not a wire guarantee: if your UI must not reveal authors,
   don't render `_FromID`.
 - **Share-planet attribution stripping is app-layer.** When you copy content to a
-  public share planet, strip owner attribution by default unless the owner opts in.
+  public share planet, strip author attribution by default unless the author opts in.
 - **Never persist ephemeral credentials in channels** (collab room tokens, short-lived
   service tokens). They're session-scoped; keep them out of the CRDT.
 

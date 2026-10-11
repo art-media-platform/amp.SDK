@@ -801,8 +801,8 @@ func (Access) EnumDescriptor() ([]byte, []int) {
 	return file_amp_amp_core_proto_rawDescGZIP(), []int{12}
 }
 
-// WatchdogCapability names one verb of a watchdog-class grant.  A grant whose
-// capability record is non-empty is custodial: its member writes the data
+// WatchdogCapability names one verb of a watchdog grant.  A grant whose
+// capability record is non-empty is a watchdog grant: its member writes the data
 // plane only inside the grant's Scopes.  No rule gates a verb on its
 // capability; the Access rung is ordering only and never implies a capability
 // (SD-channel-governance §9.1).
@@ -4313,16 +4313,16 @@ func (x *AttrScope) GetAttrSpace() string {
 }
 
 // AccessGrant maps a member (or default, if MemberTag is nil) to an Access
-// level.  A watchdog-class grant additionally carries the member's capability
-// record and data-plane scope whitelist; a grant carrying either is custodial —
+// level.  A watchdog grant additionally carries the member's capability
+// record and data-plane scope whitelist; a grant carrying either is a watchdog grant —
 // its member writes the data plane only inside Scopes (SD-channel-governance §9.1–§9.2).
 type AccessGrant struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	MemberTag *Tag                   `protobuf:"bytes,1,opt,name=MemberTag,proto3" json:"MemberTag,omitempty"` // Member identity (nil = default grant)
 	Access    Access                 `protobuf:"varint,2,opt,name=Access,proto3,enum=amp.Access" json:"Access,omitempty"`
 	// Capability record: the verbs this grant names (SD-channel-governance
-	// §9.1).  Read for presence only: a non-empty record makes the grant
-	// custodial; no rule reads an individual verb.
+	// §9.1).  Read for presence only: a non-empty record makes it a watchdog
+	// grant; no rule reads an individual verb.
 	Capabilities []WatchdogCapability `protobuf:"varint,3,rep,packed,name=Capabilities,proto3,enum=amp.WatchdogCapability" json:"Capabilities,omitempty"`
 	// Data-plane write whitelist: an op must fall inside one row
 	// (SD-channel-governance §9.2).

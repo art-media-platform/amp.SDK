@@ -55,10 +55,11 @@ Consequences worth internalizing:
 | `query('projects', 'labels')` | read items in cell (node `projects`, attr `labels`) |
 | `create('projects', 'labels', v)` | one-op TxMsg: signed, encrypted, journaled |
 | `tx([...])` | N ops, one atomic TxMsg, one signature |
-| `invoke('amp://~/forums/post', ops)` | hand ops to an app verb; it writes custodially (SKILL §4.3) |
+| `invoke('amp://~/forums/post', ops)` | hand ops to an app verb; the app authors the write (SKILL §4.3) |
 | `subscribe('projects', 'labels', cb)` | live edits on exactly that cell |
 
-Every write is an **edit** by an authenticated **member**, sealed under
-the planet's current epoch key, relayed by vaults that cannot read it
+Every write is an **edit** by an authenticated **member**, signed and, on
+a private planet, sealed under the planet's current epoch key; relay
+vaults cannot read it — the node you write through can
 (`SECURITY-amp-web-SDK.md`). Your web app is a disposable UI over that
 durable substrate.

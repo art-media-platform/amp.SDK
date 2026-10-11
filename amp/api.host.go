@@ -47,8 +47,8 @@ type TransportInfo struct {
 	RequiresAuth bool
 
 	// If set, the host trusts sessions on this transport as node operators — the
-	// node-custodian capability behind operator-only actions (e.g. node-local
-	// planet drop).  Set ONLY by transports the host itself runs as its operator
+	// node-operator capability behind operator-only actions (e.g. node-local
+	// planet removal).  Set ONLY by transports the host itself runs as its operator
 	// rail (embedded/in-proc, host-owned service sessions); a bridge or proxy
 	// transport fronting remote callers never sets it, and it is never derived
 	// from RequiresAuth or challenge posture (AOM SD-security-sync.md §8.5).
