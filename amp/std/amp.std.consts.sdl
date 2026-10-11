@@ -96,6 +96,9 @@ tags Attr {
             ChannelPropertySkybox         "skybox"
             ChannelPropertyGrid           "grid"
             ChannelPropertyCameraControls "camera.controls"
+            // The vis playlist a channel's player walks behind audio (an amp://
+            // URL; empty = std.VJ.DefaultPlaylistURL) — TODO/P1/B-vj-buildout R5.
+            ChannelPropertyVisPlaylist    "vis.playlist"
         }
         // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
         // as VALUES (a Tag field resolves to one), never as AttrIDs —
@@ -363,6 +366,14 @@ const Mantle {
     float DefaultNodeSizeMM     = 7;   // fingertip target: the authored on-screen diameter at the tap
     float DefaultNodeSizeMeters = 1;   // the size a reader resolves for a placement carrying Sx = 0
     float MinNodeScreenMM       = 1.5; // render-time floor on drawn size; never reaches the wire
+}
+
+// VJ — the player's vis background: two slots crossfading down a vis
+// playlist (AOM AD-playlists.md §9).  0 = unset → these defaults.
+const VJ {
+    string DefaultPlaylistURL = "amp://~/mandelship/presets/"; // the house pack, served by app.mandelship
+    float  DefaultDwellSecs   = 5;    // seconds a vis holds before the walk advances (astar: fixed time, R6)
+    float  DefaultFadeSecs    = 1.5;  // the crossfade between the two slots
 }
 
 // Atmosphere — stock URIs for the four-category (sky / sun / night / fog)

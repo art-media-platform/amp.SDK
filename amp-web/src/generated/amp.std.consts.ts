@@ -92,6 +92,9 @@ export const Attr = {
     ChannelPropertySkybox             : { id: [0x3DE032C924E7EC82n, 0x5FFF404B037126D4n], text: "channel.property.skybox" },            // 1xw0t-dk977-xk15zz-u09d1-r29qn
     ChannelPropertyGrid               : { id: [0x94EFC317CF34165Fn, 0xCAB7BCDADD7C784Dn], text: "channel.property.grid" },              // 4nxz1-jgmtn-2tgwpe-xwvcf-rsy2e
     ChannelPropertyCameraControls     : { id: [0x6FCB7C32C026A452n, 0xC4D5A0B4BB4DD5D7n], text: "channel.property.camera.controls" },   // 3gtey-35h16-nj9d9p-e0qkx-nvpfr
+    // The vis playlist a channel's player walks behind audio (an amp://
+    // URL; empty = std.VJ.DefaultPlaylistURL) — TODO/P1/B-vj-buildout R5.
+    ChannelPropertyVisPlaylist        : { id: [0xF7E6BA82895C346Bn, 0x82755CD465CD4DC9n], text: "channel.property.vis.playlist" },      // 7rwux-852bw-6jps4x-bwujk-wumf9
     // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
     // as VALUES (a Tag field resolves to one), never as AttrIDs —
     // exempt from the generated attr registration.
@@ -348,6 +351,14 @@ export const Mantle = {
     DefaultNodeSizeMM:     7,  // fingertip target: the authored on-screen diameter at the tap
     DefaultNodeSizeMeters: 1,  // the size a reader resolves for a placement carrying Sx = 0
     MinNodeScreenMM:       1.5,  // render-time floor on drawn size; never reaches the wire
+} as const;
+
+// ─── VJ — the player's vis background: two slots crossfading down a vis ───
+// playlist (AOM AD-playlists.md §9).  0 = unset → these defaults.
+export const VJ = {
+    DefaultPlaylistURL: "amp://~/mandelship/presets/",  // the house pack, served by app.mandelship
+    DefaultDwellSecs:   5,  // seconds a vis holds before the walk advances (astar: fixed time, R6)
+    DefaultFadeSecs:    1.5,  // the crossfade between the two slots
 } as const;
 
 // ─── Atmosphere — stock URIs for the four-category (sky / sun / night / fog) ───
