@@ -251,12 +251,12 @@ tags Attr {
 
     // Home planet attributes
     HomeAttr "amp.home" {
-        // The member's planet index, one home-cabinet entry per planet (ItemID
-        // = the planet UID): PlanetBinding a joined planet (epoch tag + label),
-        // FollowBinding a followed one — watched, not a member — written by
-        // the join intake (DD-name-service §5.2) and re-pinned at each login.
-        // The host mirrors both to the client's session channel
-        // (std.SessionIndex).
+        // The member's planet index, keyed by planet UID (ItemID): PlanetBinding
+        // a joined planet (epoch tag + label) on app.home's home node;
+        // FollowBinding a followed one — watched, not a member — on
+        // app.nameservice's, written by the join intake and relay adoption
+        // (DD-name-service §5.2) and re-pinned at each login.  The host mirrors
+        // both to the client's session channel (std.SessionIndex).
         PlanetBinding     "planet.binding.Tag"
         FollowBinding     "follow.binding.FederationPeer"
         PlanetStorageOpts "planet.storage.PlanetStorageOpts"

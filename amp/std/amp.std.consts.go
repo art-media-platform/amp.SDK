@@ -388,12 +388,12 @@ var Attr = struct {
 	// ─── Home planet attributes ─────────────────────────────────────
 	HomeAttr: tag.Name{ID: tag.UID{0x45A5C59F62D1113F, 0x73AEED98C41EFBFA}, Text: "amp.home"}, // 25nr2-tysqj-24zr7c-rem32-1xyzu
 
-	// The member's planet index, one home-cabinet entry per planet (ItemID
-	// = the planet UID): PlanetBinding a joined planet (epoch tag + label),
-	// FollowBinding a followed one — watched, not a member — written by
-	// the join intake (DD-name-service §5.2) and re-pinned at each login.
-	// The host mirrors both to the client's session channel
-	// (std.SessionIndex).
+	// The member's planet index, keyed by planet UID (ItemID): PlanetBinding
+	// a joined planet (epoch tag + label) on app.home's home node;
+	// FollowBinding a followed one — watched, not a member — on
+	// app.nameservice's, written by the join intake and relay adoption
+	// (DD-name-service §5.2) and re-pinned at each login.  The host mirrors
+	// both to the client's session channel (std.SessionIndex).
 	PlanetBinding:     tag.Name{ID: tag.UID{0xD1107652908E11D6, 0x1B2B3BC082553787}, Text: "amp.home.planet.binding.Tag"},               // 6j21v-5544f-27c1qb-tvs21-5bew7
 	FollowBinding:     tag.Name{ID: tag.UID{0x5F8A3072A49F9056, 0xF3BDF94A863329B6}, Text: "amp.home.follow.binding.FederationPeer"},    // 2zj8s-7594z-k1cg7g-gt9b3-36beq
 	PlanetStorageOpts: tag.Name{ID: tag.UID{0x69BFD182C13A9A31, 0xF66973A8296693D5}, Text: "amp.home.planet.storage.PlanetStorageOpts"}, // 39rz8-s5h9u-m8szdu-cmp0n-qe4yp
