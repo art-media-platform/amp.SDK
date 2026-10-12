@@ -483,6 +483,13 @@ const (
 	PlanetInviteFileExt = ".planet-invite"
 )
 
+// ─── NameService — the defaults verb's bound on a factory Brand's DefaultPlanets ───
+// (AOM DD-name-service.md §5.1).  A call naming more is refused whole: each
+// default costs a probe, a watch and a dial.
+const (
+	NameServiceMaxDefaultPlanets = int32(16)
+)
+
 // ─── Glyph URIs ─────────────────────────────────────────────────
 const (
 	GlyphWebLink       = "asset:glyph/web.link"
