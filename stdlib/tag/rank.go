@@ -56,7 +56,7 @@ func RanksAcross(lo, hi UID, count int) (ranks []UID, ok bool) {
 
 // RanksEvenly is RanksAcross without the random draw: each rank is its slot's
 // floor, so the same (lo, hi, count) always mints the same ranks.  It is for
-// ONE writer that produces a whole list at once — a sealed artifact (a codex
+// ONE writer that produces a whole list at once — a fixed artifact (a codex
 // seed, an export) or a list the writer regenerates whole on every serve.
 // The randomness in RanksAcross exists so that concurrent writers' runs do
 // not interleave (AOM AD-playlists.md §3); never mint with RanksEvenly where
