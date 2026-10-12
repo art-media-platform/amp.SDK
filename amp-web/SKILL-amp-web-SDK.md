@@ -191,6 +191,10 @@ GET  /api/v1/session
 GET  /api/v1/me
   Header: Authorization: Bearer <token>
   Response: AmpIdentity
+
+POST /api/v1/session/revoke
+  Header: Authorization: Bearer <token>   (no body)
+  Response: { MemberID: string, Dropped: number }
 ```
 
 The challenge response is the TS `WalletChallenge` shape (`types.ts`); SDK:
@@ -203,6 +207,13 @@ SDK: `client.fetchSession()` wraps `GET /session` (returns `AmpSession`) and
 bound. The client persists the session on login and rehydrates it across page
 reloads — see §5.1 (Session persistence) and SECURITY (Session persistence)
 for the storage exposure.
+
+`client.signOutEverywhere()` wraps `POST /session/revoke` — **Sign out
+everywhere** (§13.1): every web session of the caller's identity on this node
+ends, the calling session included, and the client drops its local session; a
+fresh login is required afterward. Native sessions and memberships are
+untouched. `Dropped` counts the live sessions ended in-process; a token held
+elsewhere fails at its next request.
 
 `LoginCredentials` is a discriminated union.  Keys are PascalCase like every
 wire field; the `Scheme` *values* stay lowercase (the server dispatches on
@@ -1470,6 +1481,48 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **FQDN** | A fully-qualified domain name (`spaces.example.com`) registered in a federation's NameService and resolvable to a planet. |
 | **Federation** | A planet whose NameService channel names other planets; the unit of namespace reachability. Anonymous `resolve` answers over the federations your host carries, `search` over those your session is a member of. |
 | **TrustState** | A resolve verdict — `Verified` / `Refuted` / `Unchecked` — from checking the planet's `Brand` back-edge against the answering federation. The UI must not silently pick when it isn't `Verified`. |
+
+### 13.1 Planet-Relationship Words
+
+The words for a person's or a node's relationship to a planet follow the
+platform lexicon (AOM `GR-planet-relationships.md`, an internal shelf this
+bundle does not ship); this section carries its user words. UI labels,
+confirms and help use them verbatim. A brand may change tone and the display
+noun "planet" (e.g. "station"), never an act word, its meaning or a
+consequence line. A *reserved* word names an act that is not built: no
+surface offers it.
+
+| Act | Meaning |
+|---|---|
+| **Found a planet** | Start a planet and sign its charter; its founders, privacy and declaration are fixed for its life. |
+| **Invite** · **Revoke invite** · **Pause / Resume invite** | A founder or admin issues a passphrase-sealed invite, usable until used up, expired, paused or revoked; revoking an invite removes no one who already joined. |
+| **Join** (UI: "Join with Invite…") | Use an invite and its passphrase to become a member of the planet (§4.7). |
+| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed records stay unreadable to a follower, but member content is not yet sealed (`SECURITY-amp-web-SDK.md`). Unfollow stops syncing and removes this device's copy. |
+| **Remove a planet from a node** (node operator) | A founder or node-operator session stops a node syncing a planet and reclaims its storage; peers keep their copies and no membership changes. |
+| **Rotate keys** | Founders replace the planet's key; only active members receive it. |
+| **Add member** | Founders or admins enroll a member by public key, without an invite. |
+| **Withdraw consent** | Publish a signed request that records about you no longer represent you; readers decide, and nothing is deleted (§7). |
+| **Sign out everywhere** | End every web session of your identity on this node (§4.1). |
+| **Sign a member out everywhere** (node operator) | An admin-allowlisted session ends every web session of one member on this node. |
+| *Reserved* | **Remove from this device** · **Resign membership** · **Revoke membership** · **Suspend member / Reinstate member** |
+
+| Role or state | Meaning |
+|---|---|
+| **Identity** | The keys this app made for you, or the wallet or email you sign in with, plus your home planet. |
+| **Member of {planet}** | Holds an active membership record on that planet; always scoped to a planet. |
+| **Following** (badge) / follower (prose) | Syncs a planet without membership; not on its roster. |
+| **Founder** | Signed the charter at founding; fixed for the planet's life. |
+| **Admin** · **Moderator** | Admin: full control of channels and member access. Moderator: approves, hides and withdraws posts; no member or key management. |
+| **Home planet** | Your own planet: your planet list, follows and settings. |
+| **Public planet** · **Private planet** | Public: anyone reads, members post. Private: members post; a record sealed under the planet's key is readable only by key holders, but member content is not yet sealed, so every node that syncs the planet can read it. Fixed at founding. |
+| **Node operator** | Runs a node that stores and serves planets; a node holding a member's keys (every web member's) can read that member's planets. |
+| **Watchdog** | A member whose grant carries a capability record or a scope whitelist; it writes only inside those scopes. |
+
+Status words: **Active · Suspended · Revoked**; **Resigned** is reserved.
+UI copy never says: "join" for follow · "drop", "leave" or "delete" for a planet ·
+"kick" or "ban" · "create planet" or "genesis" · "redeem" or "accept invite" ·
+"revoke" for sign-out · "owner" · "custodian" · "confidential" or "encrypted
+planet" · a bare "operator" or "host" for the node operator.
 
 ---
 
