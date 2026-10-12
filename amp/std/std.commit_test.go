@@ -87,3 +87,34 @@ func TestLoadRefusedSubmitClosesWrapper(t *testing.T) {
 		t.Fatalf("BlockingLoad returned %v and left its wrapper open or closed without the refusal", loadErr)
 	}
 }
+
+// closingApp has begun to close: Closing() has fired and Err reports it, while
+// Done() stays open, as it does for a goroutine the app itself owns.
+type closingApp struct {
+	rejectingApp
+	closing chan struct{}
+}
+
+func (app *closingApp) Closing() <-chan struct{} { return app.closing }
+func (app *closingApp) Err() error               { return context.Canceled }
+
+// A load whose app begins closing before the session answers reports the
+// close; a nil return would read as a loaded dst.
+func TestLoadClosingAppReportsCancel(t *testing.T) {
+	bound, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	closing := make(chan struct{})
+	close(closing)
+	sess := &rejectingSession{} // nil cause: the submit is accepted, never answered
+	app := &closingApp{
+		rejectingApp: rejectingApp{
+			bound:   bound,
+			session: sess,
+		},
+		closing: closing,
+	}
+	loadErr := BlockingLoad(app, tag.UID{1, 2}, &amp.Tags{})
+	if !errors.Is(loadErr, context.Canceled) {
+		t.Fatalf("BlockingLoad on a closing app returned %v, want context.Canceled", loadErr)
+	}
+}

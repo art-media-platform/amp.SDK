@@ -34,7 +34,7 @@ func BlockingLoad(appCtx amp.AppContext, attrID tag.UID, dst proto.Message) erro
 	case txOut := <-req.outTx:
 		err = txOut.ExtractValue(attrID, tag.UID{}, dst)
 	case <-appCtx.Closing():
-		err = ctx.Err()
+		err = appCtx.Err()
 	}
 
 	ctx.Close(err)
