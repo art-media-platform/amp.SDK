@@ -48,10 +48,10 @@ export interface EmailCredential {
   PlanetTag?: string;
 }
 
-/** Options for redeeming an emailed recovery code (SDK ergonomic shape). */
-export interface RedeemEmailOpts {
+/** Options for resetting a password with an emailed recovery code. */
+export interface ResetPasswordOpts {
   token: string;                // the code delivered to the member's inbox
-  newPassword: string;          // replaces the credential on redeem
+  newPassword: string;          // replaces the credential on reset
 }
 
 /**
@@ -109,8 +109,8 @@ export interface AmpAuth {
    * form, offer wallet login" (never dead-end the user).
    */
   recoverEmail: (email: string) => Promise<void>;
-  /** Redeem an emailed recovery code — sets the new password and signs in. */
-  redeemEmail: (opts: RedeemEmailOpts) => Promise<AmpIdentity>;
+  /** Reset the password with an emailed recovery code; signs in. */
+  resetPassword: (opts: ResetPasswordOpts) => Promise<AmpIdentity>;
   /** Claim a legacy account via its emailed activation token — sets the first password and signs in. */
   claimAccount: (opts: ClaimAccountOpts) => Promise<AmpIdentity>;
 }

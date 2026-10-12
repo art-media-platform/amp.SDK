@@ -46,7 +46,7 @@ export type {
   InviteListResult,
   LoginCredentials,
   PlanetBrand,
-  RedeemEmailOpts,
+  ResetPasswordOpts,
   ResolveResponse,
   SearchMatch,
   SignOutEverywhereResult,

@@ -236,14 +236,14 @@ The unified `/api/v1/login` is **shipped**: `wallet`, `email`, `did`, and `membe
 
 ```
 POST /api/v1/login/email/recover     (anonymous; returns 202 uniformly)          → client.recoverEmail(email)
-POST /api/v1/login/email/redeem      (anonymous; consumes code, mints session)   → client.redeemEmail({ token, newPassword })
+POST /api/v1/login/email/redeem      (anonymous; consumes code, mints session)   → client.resetPassword({ token, newPassword })
 POST /api/v1/account/claim           (anonymous; activation token → first pwd)   → client.claimAccount({ email, token, newPassword })
 POST /api/v1/admin/credentials/email/issue   (node-operator Bearer; admin-gated signup — Node-only AmpAdminClient, §12)
 ```
 
 `recoverEmail` emails a single-use recovery code and always resolves on the
 uniform 202 — the emailed code is the only existence side-channel.
-`redeemEmail` consumes it, swaps the password, and installs the minted session
+`resetPassword` consumes it, swaps the password, and installs the minted session
 (it doubles as a login; no follow-up `login()`).  `claimAccount` is the
 account-claim flow (AD-app-forums §8.4): an email-bound activation token admits
 a member with **no prior credential**, sets the first password, binds
@@ -655,18 +655,18 @@ Thin wrappers over §4, on the `./react` subpath (`import { AmpProvider, useAmpA
 
 ```tsx
 const { member, login, logout, isAuthenticated, loading, restoring,
-        recoverEmail, redeemEmail, claimAccount } = useAmpAuth();
+        recoverEmail, resetPassword, claimAccount } = useAmpAuth();
 
 await login({ Scheme: 'email', Email: email, Password: password });
 await login({ Scheme: 'wallet', Address: address, Signature: signature, Nonce: nonce });
 await login({ Scheme: 'did', DID: did, Signature: signature, Nonce: nonce });
 
 await recoverEmail(email);                                    // uniform 202; the code arrives by email
-await redeemEmail({ token, newPassword });                    // consumes the code, signs in
+await resetPassword({ token, newPassword });                  // consumes the code, signs in
 await claimAccount({ email, token, newPassword });            // activation link → first password, signs in
 ```
 
-`redeemEmail` and `claimAccount` mint a session exactly like `login` — the
+`resetPassword` and `claimAccount` mint a session exactly like `login` — the
 member lands authenticated with no second call.  All three throw `AmpError`
 code `Unsupported` when the host runs without an email credential store; gate
 the email form on that and fall back to wallet login (§4.1).

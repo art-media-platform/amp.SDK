@@ -22,7 +22,7 @@ import type {
   InviteRevokeOpts,
   LoginCredentials,
   PlanetBrand,
-  RedeemEmailOpts,
+  ResetPasswordOpts,
   ResolveResponse,
   SearchMatch,
   SignOutEverywhereResult,
@@ -88,8 +88,8 @@ export interface AmpAdapter {
    */
   recoverEmail(email: string): Promise<void>;
 
-  /** Redeem an emailed recovery code — sets the new password and mints the session (doubles as login). */
-  redeemEmail(opts: RedeemEmailOpts): Promise<AmpIdentity>;
+  /** Reset the password with an emailed recovery code — mints the session (doubles as login). */
+  resetPassword(opts: ResetPasswordOpts): Promise<AmpIdentity>;
 
   /** Claim a legacy account via its emailed activation token (AD-app-forums §8.4) — first password + session. */
   claimAccount(opts: ClaimAccountOpts): Promise<AmpIdentity>;

@@ -44,7 +44,7 @@ import type {
   InviteListResult,
   LoginCredentials,
   PlanetBrand,
-  RedeemEmailOpts,
+  ResetPasswordOpts,
   ResolveResponse,
   SearchMatch,
   SignOutEverywhereResult,
@@ -319,9 +319,9 @@ export class AmpWebClient implements AmpAdapter {
 
   /**
    * Install a freshly-minted session from any Bearer-issuing endpoint (login,
-   * email redeem, account claim) — the one authoritative install path: token +
-   * member in memory, persisted session record, device EncryptKey, listeners,
-   * WebSocket.
+   * password reset, account claim) — the one authoritative install path:
+   * token + member in memory, persisted session record, device EncryptKey,
+   * listeners, WebSocket.
    */
   private async installSession(data: WireLoginResponse): Promise<AmpIdentity> {
     this.sessionToken = data.SessionToken;
@@ -365,12 +365,12 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   /**
-   * Redeem an emailed recovery code — POST /api/v1/login/email/redeem.
-   * Sets the new password and installs the minted session (the redeem doubles
-   * as a login; no follow-up login() round-trip).  A bad/expired/consumed
-   * code is a uniform AmpError 401.
+   * Reset the password with an emailed recovery code — POST
+   * /api/v1/login/email/redeem.  Sets the new password and installs the minted
+   * session (the reset doubles as a login; no follow-up login() round-trip).
+   * A bad/expired/consumed code is a uniform AmpError 401.
    */
-  async redeemEmail(opts: RedeemEmailOpts): Promise<AmpIdentity> {
+  async resetPassword(opts: ResetPasswordOpts): Promise<AmpIdentity> {
     const data = await this.apiFetch<WireLoginResponse>('/login/email/redeem', {
       method: 'POST',
       body: JSON.stringify({ Token: opts.token, NewPassword: opts.newPassword }),

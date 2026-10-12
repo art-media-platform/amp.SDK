@@ -1,7 +1,8 @@
 /**
- * Email-flow client methods: recoverEmail / redeemEmail / claimAccount against
- * a stubbed wire, plus the wallet-only degradation when the host has no email
- * credential store (501 Unsupported must leave wallet login fully usable).
+ * Email-flow client methods: recoverEmail / resetPassword / claimAccount
+ * against a stubbed wire, plus the wallet-only degradation when the host has
+ * no email credential store (501 Unsupported must leave wallet login fully
+ * usable).
  *
  * Network is stubbed (fetch + WebSocket); the stores are real.
  */
@@ -128,14 +129,14 @@ describe('recoverEmail', () => {
   });
 });
 
-describe('redeemEmail', () => {
+describe('resetPassword', () => {
   it('sends Token + NewPassword and installs the minted session', async () => {
     const store = new MemorySessionStore();
     const amp = newAdapter(store);
     const events: (string | null)[] = [];
     amp.onAuthChange(m => events.push(m?.ID ?? null));
 
-    const member = await amp.redeemEmail({ token: 'recover-token-3f6b', newPassword: 'rotated-secret-4' });
+    const member = await amp.resetPassword({ token: 'recover-token-3f6b', newPassword: 'rotated-secret-4' });
 
     expect(calls[0].path).toBe('/login/email/redeem');
     expect(calls[0].body).toEqual({ Token: 'recover-token-3f6b', NewPassword: 'rotated-secret-4' });
@@ -156,7 +157,7 @@ describe('redeemEmail', () => {
     )) as typeof fetch;
 
     const amp = newAdapter();
-    await expect(amp.redeemEmail({ token: 'nope', newPassword: 'x' }))
+    await expect(amp.resetPassword({ token: 'nope', newPassword: 'x' }))
       .rejects.toMatchObject({ status: 401, code: AmpErrorCode.AuthFailed });
     expect(amp.getSession()).toBeNull();
   });
@@ -207,7 +208,7 @@ describe('wallet-only degradation (email transport off)', () => {
     // the login screen hides the email form instead of dead-ending the user.
     await expect(amp.recoverEmail('alice@example.com'))
       .rejects.toMatchObject({ status: 501, code: AmpErrorCode.Unsupported });
-    await expect(amp.redeemEmail({ token: 't', newPassword: 'p' }))
+    await expect(amp.resetPassword({ token: 't', newPassword: 'p' }))
       .rejects.toMatchObject({ status: 501, code: AmpErrorCode.Unsupported });
 
     // The non-email path stays fully usable on the same client instance.
