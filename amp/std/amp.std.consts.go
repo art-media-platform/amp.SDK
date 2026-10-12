@@ -512,7 +512,7 @@ const (
 )
 
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
-// playlist (AOM AD-playlists.md).  0 = unset → these defaults.
+// playlist.  0 = unset → these defaults.
 const (
 	VJDefaultPlaylistURL = "amp://~/mandelship/presets/" // the house pack, served by app.mandelship
 	VJDefaultDwellSecs   = float32(5)                    // seconds a vis holds before the walk advances (a fixed time)
