@@ -64,8 +64,8 @@ func (idx *SessionIndex) Open(sess amp.Session) {
 	idx.held = nil
 }
 
-// push sends one item; the caller holds mu, so items reach the session in the
-// order they were recorded.
+// push sends one item; the caller holds mu, so pushes after Open keep call
+// order, and the held set Open sends goes in no particular order.
 func (idx *SessionIndex) push(itemID tag.UID, value proto.Message) {
 	if err := PushSessionItem(idx.sess, idx.Attr, itemID, value); err != nil {
 		idx.sess.Log().Warnf("session index %s: item %s not pushed: %v", idx.Attr.AsLabel(), itemID.AsLabel(), err)
