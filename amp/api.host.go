@@ -463,6 +463,11 @@ type TxJournal interface {
 // SD-planet-storage.md §13.10).
 type TxOutbox interface {
 	EnqueueTx(planetID tag.UID, txTimeID tag.UID, raw []byte) error
+
+	// DrainTx offers each queued row to cb once per pass; cb returning nil
+	// consumes the row, and an error leaves the row and the rest of its
+	// planet's rows queued for a later pass.  Rows are offered per planet in
+	// txTimeID order (AOM SD-planet-storage.md §6.3).
 	DrainTx(cb func(planetID tag.UID, txTimeID tag.UID, raw []byte) error) error
 	Close() error
 }
