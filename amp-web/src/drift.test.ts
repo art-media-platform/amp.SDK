@@ -88,7 +88,7 @@ const SHAPES: Record<string, ShapeSpec> = {
     nested: { Member: 'AmpIdentity' },
   },
   // Sign out everywhere — bound as AmpWebClient.signOutEverywhere() (types.ts
-  // SessionRevokeResult): POST /api/v1/session/revoke, own Bearer, no body,
+  // SignOutEverywhereResult): POST /api/v1/session/revoke, own Bearer, no body,
   // full revoke including the calling session.
   SessionRevokeResponse: { required: ['MemberID', 'Dropped'] },
   // Operator sibling's request (POST /api/v1/admin/session/revoke) — operator
@@ -353,11 +353,11 @@ describe('wire fixtures match the Go shapes', () => {
   });
 });
 
-// ── OPERATOR_GO_ONLY — the operator tier has NO browser binding ─────
+// ── OPERATOR_GO_ONLY — the node-operator tier has NO browser binding ─
 //
 // testdata/operator-go-only.json lists the /api/v1/admin/* verbs: the
-// operator Bearer is higher-privilege than a member session and must never
-// normalize into XSS-exposed browser JS.  The Go side pins the same
+// node-operator Bearer is higher-privilege than a member session and must
+// never normalize into XSS-exposed browser JS.  The Go side pins the same
 // manifest's shapes into its drift guard; this side asserts the INVERSE — no
 // AmpWebClient method for any verb, and no admin endpoint string in client
 // source.  A verb ruled NodeAdminModule=true binds ONLY in src/admin.ts
@@ -387,7 +387,7 @@ function clientSourceFiles(): string[] {
 }
 
 describe('OPERATOR_GO_ONLY manifest — no browser binding', () => {
-  it('manifest lists the operator tier', () => {
+  it('manifest lists the node-operator tier', () => {
     expect(OPERATOR_GO_ONLY.length).toBeGreaterThan(0);
   });
 
@@ -435,7 +435,7 @@ describe('OPERATOR_GO_ONLY manifest — no browser binding', () => {
       .replace(/^\s*\/\/.*$/gm, '');
     expect(
       /from\s+['"]\.\/admin(\.js)?['"]/.test(entry) || /import\s+['"]\.\/admin(\.js)?['"]/.test(entry),
-      'index.ts exports ./admin — the operator tier must stay out of the browser surface',
+      'index.ts exports ./admin — the node-operator tier must stay out of the browser surface',
     ).toBe(false);
   });
 

@@ -28,7 +28,7 @@ VITE_AMP_PLANET_TAG=
 
 `VITE_AMP_VAULT_URL` is your operated node. Leave `VITE_AMP_PLANET_TAG`
 empty to write to the home planet your wallet login auto-provisions; put
-the handed planet tag there once you've accepted the deploy's invite
+the handed planet tag there once you've joined with the deploy's invite
 (SKILL §4.7).
 
 ## 2. Wire the Provider
@@ -164,5 +164,5 @@ tab, add a note there, and watch both update.
 - Batch writes and verb-RPC: SKILL §5.3.
 - A real app built this way: `examples/forums/`.
 - A `403` on write means the planet tag names a planet you're not a
-  member of yet — accept the deploy's invite (SKILL §4.7) or clear
+  member of yet — join with the deploy's invite (SKILL §4.7) or clear
   `VITE_AMP_PLANET_TAG` to use your home planet.

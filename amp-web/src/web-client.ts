@@ -38,8 +38,8 @@ import type {
   FederationPeerEntry,
   InviteIssueOpts,
   InviteIssueResult,
-  InviteAcceptOpts,
-  InviteAcceptResult,
+  JoinWithInviteOpts,
+  JoinWithInviteResult,
   InviteRevokeOpts,
   InviteListResult,
   LoginCredentials,
@@ -47,7 +47,7 @@ import type {
   RedeemEmailOpts,
   ResolveResponse,
   SearchMatch,
-  SessionRevokeResult,
+  SignOutEverywhereResult,
   SubscriptionEvent,
   TagResolution,
   TrustState,
@@ -515,8 +515,8 @@ export class AmpWebClient implements AmpAdapter {
    * presenting Bearer performs.  The local session is dropped on success; a
    * fresh login is required afterward.
    */
-  async signOutEverywhere(): Promise<SessionRevokeResult> {
-    const out = await this.apiFetch<SessionRevokeResult>('/session/revoke', { method: 'POST' });
+  async signOutEverywhere(): Promise<SignOutEverywhereResult> {
+    const out = await this.apiFetch<SignOutEverywhereResult>('/session/revoke', { method: 'POST' });
     await this.dropSession();
     return out;
   }
@@ -910,11 +910,11 @@ export class AmpWebClient implements AmpAdapter {
     });
   }
 
-  // acceptInvite redeems a sealed invite (its universal URL or amp-base32 body)
-  // to join the planet, minting this member's keys host-side.  Bearer; the
+  // joinWithInvite joins the planet a sealed invite names (its universal URL or
+  // amp-base32 body), minting this member's keys host-side.  Bearer; the
   // passphrase arrives out-of-band and the token is inert without it.
-  async acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult> {
-    return this.apiFetch<InviteAcceptResult>('/invite/accept', {
+  async joinWithInvite(opts: JoinWithInviteOpts): Promise<JoinWithInviteResult> {
+    return this.apiFetch<JoinWithInviteResult>('/invite/accept', {
       method: 'POST',
       body: JSON.stringify({ InviteText: opts.inviteText, Passphrase: opts.passphrase }),
     });

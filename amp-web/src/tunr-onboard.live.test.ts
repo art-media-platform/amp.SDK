@@ -1,7 +1,8 @@
 /**
  * Tunr onboarding dogfood — mirrors Charlie/Maplable's path (SKILL §0 + §4.7)
- * against a live node, as the "Tunr" app: wallet (SIWE) login -> acceptInvite ->
- * hello-world create/query.  Gated on DOGFOOD=1; inert in the normal unit run.
+ * against a live node, as the "Tunr" app: wallet (SIWE) login ->
+ * joinWithInvite -> hello-world create/query.  Gated on DOGFOOD=1; inert in
+ * the normal unit run.
  *
  *   DOGFOOD=1 VAULT_URL=https://{your-node} \
  *     TUNR_INVITE_FILE=/tmp/tunr.invite TUNR_PASS=… \
@@ -40,7 +41,7 @@ function personalSign(message: string, priv: Uint8Array): string {
 }
 
 run('Tunr onboarding against a live node (mirror Charlie)', () => {
-  it('login -> acceptInvite -> hello-world round-trip', async () => {
+  it('login -> joinWithInvite -> hello-world round-trip', async () => {
     const priv = secp256k1.utils.randomPrivateKey();
     const address = ethAddress(secp256k1.getPublicKey(priv, false));
     const tunr = new AmpWebClient({ vaultUrl: VAULT, planetTag: '' });
@@ -51,7 +52,7 @@ run('Tunr onboarding against a live node (mirror Charlie)', () => {
     console.log('[Tunr] logged in: member', member.ID, 'home planet', member.PlanetID);
 
     // SKILL §4.7 — join Federation Alpha with the sealed invite.
-    const joined = await tunr.acceptInvite({ inviteText: INVITE, passphrase: PASS });
+    const joined = await tunr.joinWithInvite({ inviteText: INVITE, passphrase: PASS });
     console.log('[Tunr] joined federation planet', joined.PlanetID, 'as member', joined.MemberID);
     expect(joined.PlanetID).toBeTruthy();
     expect(joined.MemberID).toBeTruthy();

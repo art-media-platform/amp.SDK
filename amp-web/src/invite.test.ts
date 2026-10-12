@@ -22,10 +22,10 @@ function stubFetch(body: unknown, status = 200) {
 describe('invites', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('acceptInvite POSTs InviteText + Passphrase', async () => {
+  it('joinWithInvite POSTs InviteText + Passphrase', async () => {
     const seen = stubFetch({ PlanetID: 'planetUID32', MemberID: 'memberUID32' }, 201);
     const amp = new AmpWebClient({ vaultUrl: 'https://{your-node}', planetTag: 'p' });
-    const out = await amp.acceptInvite({ inviteText: 'https://x/invite#abc', passphrase: 'hunter2' });
+    const out = await amp.joinWithInvite({ inviteText: 'https://x/invite#abc', passphrase: 'hunter2' });
 
     expect(out).toEqual({ PlanetID: 'planetUID32', MemberID: 'memberUID32' });
     expect(seen[0].url).toBe('https://{your-node}/api/v1/invite/accept');

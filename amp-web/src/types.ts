@@ -87,7 +87,7 @@ export interface AmpSession {
  * calling session: this response is the last act the presenting Bearer
  * performs, and a fresh login is required afterward.
  */
-export interface SessionRevokeResult {
+export interface SignOutEverywhereResult {
   MemberID: string;
   /** Live sessions dropped in-process; outstanding tokens elsewhere die at next validation. */
   Dropped: number;
@@ -141,14 +141,14 @@ export interface InviteIssueResult {
   InviteText: string;
 }
 
-/** Options for redeeming a sealed invite. */
-export interface InviteAcceptOpts {
+/** Options for joining a planet with a sealed invite. */
+export interface JoinWithInviteOpts {
   inviteText: string;           // the invite URL or its amp-base32 body
   passphrase: string;
 }
 
-/** Result of accepting an invite — the joined planet + this member, base32 UIDs. */
-export interface InviteAcceptResult {
+/** Result of joining with an invite: the joined planet + member (base32). */
+export interface JoinWithInviteResult {
   PlanetID: string;
   MemberID: string;
 }

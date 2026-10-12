@@ -14,8 +14,8 @@ import type {
   BlobRef,
   ClaimAccountOpts,
   FederationPeerEntry,
-  InviteAcceptOpts,
-  InviteAcceptResult,
+  JoinWithInviteOpts,
+  JoinWithInviteResult,
   InviteIssueOpts,
   InviteIssueResult,
   InviteListResult,
@@ -25,7 +25,7 @@ import type {
   RedeemEmailOpts,
   ResolveResponse,
   SearchMatch,
-  SessionRevokeResult,
+  SignOutEverywhereResult,
   SubscriptionEvent,
   TagResolution,
   TxOp,
@@ -54,7 +54,7 @@ export interface AmpAdapter {
    * FULL revoke including the calling session; the local session drops on
    * success and a fresh login is required afterward.
    */
-  signOutEverywhere(): Promise<SessionRevokeResult>;
+  signOutEverywhere(): Promise<SignOutEverywhereResult>;
 
   /** The locally-held member (sync, no I/O) — null on a fresh load until restoreSession(). */
   getSession(): AmpIdentity | null;
@@ -152,13 +152,13 @@ export interface AmpAdapter {
 
   // ── Federation invites ────────────────────────────────────────────
   // Member-session tier (planet-admin Bearer for issue/revoke/list) — NOT the
-  // operator tier, which deliberately has no client binding (SKILL §12).
+  // node-operator tier, which deliberately has no client binding (SKILL §12).
 
   /** Mint a sealed invite on a planet the session administers (SKILL §4.7). */
   issueInvite(opts: InviteIssueOpts): Promise<InviteIssueResult>;
 
-  /** Redeem a sealed invite (universal URL or bare amp-base32 body) to join its federation planet (Bearer; see SKILL §4.7). */
-  acceptInvite(opts: InviteAcceptOpts): Promise<InviteAcceptResult>;
+  /** Join the federation planet a sealed invite names (universal URL or bare amp-base32 body; Bearer; see SKILL §4.7). */
+  joinWithInvite(opts: JoinWithInviteOpts): Promise<JoinWithInviteResult>;
 
   /** Terminally revoke an invite policy (reissue rather than re-arm). */
   revokeInvite(opts: InviteRevokeOpts): Promise<void>;

@@ -118,7 +118,7 @@ await login({ Scheme: 'email', Email: email, Password: password });
 
 ### Joining a Federation
 
-Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.acceptInvite({ inviteText, passphrase })` joins you to that federation (passphrase arrives out-of-band). You don't need it to read/write your *own* planet, but **registering planets / names into a federation requires membership** — which the invite grants. A planet's founders and admins issue them with `client.issueInvite({ planet, passphrase, maxRedemptions })` (one URL, many self-minting members), revoke with `client.revokeInvite`, and audit with `client.listInvites`. See `SKILL-amp-web-SDK.md` §4.7.
+Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.joinWithInvite({ inviteText, passphrase })` joins you to that federation (passphrase arrives out-of-band). You don't need it to read/write your *own* planet, but **registering planets / names into a federation requires membership** — which the invite grants. A planet's founders and admins issue them with `client.issueInvite({ planet, passphrase, maxRedemptions })` (one URL, many self-minting members), revoke with `client.revokeInvite`, and audit with `client.listInvites`. See `SKILL-amp-web-SDK.md` §4.7.
 
 ## Hooks
 

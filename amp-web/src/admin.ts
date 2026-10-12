@@ -1,8 +1,8 @@
 /**
- * AmpAdminClient — the operator tier (`/api/v1/admin/*`) for SERVER-SIDE
+ * AmpAdminClient — the node-operator tier (`/api/v1/admin/*`) for SERVER-SIDE
  * tooling only: Node scripts, migration jobs, payment webhooks.
  *
- * NEVER import this module from browser code.  The operator Bearer is
+ * NEVER import this module from browser code.  The node-operator Bearer is
  * higher-privilege than a member session and must not enter XSS-exposed
  * script (SKILL-amp-web-SDK.md §12 rule 9; SECURITY-amp-web-SDK.md).  The
  * guards that keep it out of the browser surface:
@@ -17,7 +17,7 @@ import type { EmailCredential } from './types.js';
 
 export interface AmpAdminClientOpts {
   vaultUrl: string;      // operated node URL — e.g. https://{your-node}
-  adminToken: string;    // operator Bearer (allowlist-gated host-side); lives in server env only
+  adminToken: string;    // node-operator Bearer (allowlist-gated host-side); lives in server env only
 }
 
 /** Options for seeding an email-scheme credential (admin issue). */
@@ -39,7 +39,7 @@ export class AmpAdminClient {
   constructor(opts: AmpAdminClientOpts) {
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       throw new Error(
-        'AmpAdminClient is server-side tooling only — the operator Bearer must never enter browser JS (SKILL-amp-web-SDK.md §12)',
+        'AmpAdminClient is server-side tooling only — the node-operator Bearer must never enter browser JS (SKILL-amp-web-SDK.md §12)',
       );
     }
     this.vaultUrl = opts.vaultUrl.replace(/\/$/, '');

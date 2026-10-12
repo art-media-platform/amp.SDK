@@ -62,7 +62,7 @@ Log in again — this is by design, not a bug to work around.
 ## `403` on Writes, Reads Fine
 
 Your member isn't on the planet the constructor `planetTag` names.
-Accept the deploy's invite (SKILL §4.7), or construct with
+Join with the deploy's invite (SKILL §4.7), or construct with
 `planetTag: ''` to use your auto-provisioned home planet.
 
 ## Verifying an Install

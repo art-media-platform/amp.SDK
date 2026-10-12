@@ -30,8 +30,8 @@ stop — wrong path. Your whole footprint is one TypeScript package + HTTPS call
   already binds you to a private planet you can write to immediately (the
   round-trip below). But registering your planets / names into a federation — and
   being discoverable across orgs — **requires membership in it**, which is what
-  accepting your invite grants (§4.7). Prove the pipe with a Tx first, then accept
-  the invite to join Federation Alpha.
+  joining with your invite grants (§4.7). Prove the pipe with a Tx first, then
+  join Federation Alpha with the invite.
 
 ### Zero to first Tx
 
@@ -60,7 +60,7 @@ console.log(data[0].msg);     // 'hi' — round-tripped through a real journal. 
 
 No Go, no node, no genesis ceremony — just a client and HTTPS.
 
-The constructor `planetTag` rides every call, so this round-trip targets the handed planet. A `403` on the write means your member isn't on that planet (yet): construct with `planetTag: ''` to work against your own auto-provisioned home planet, or accept the deploy's invite (§4.7) first. A wrong planet fails **loudly** — it never silently lands your data elsewhere.
+The constructor `planetTag` rides every call, so this round-trip targets the handed planet. A `403` on the write means your member isn't on that planet (yet): construct with `planetTag: ''` to work against your own auto-provisioned home planet, or join with the deploy's invite (§4.7) first. A wrong planet fails **loudly** — it never silently lands your data elsewhere.
 
 | Do | Don't |
 |---|---|
@@ -492,9 +492,9 @@ React: `useAmpResolve(fqdn)` wraps the anonymous resolve for deep-link landings 
 amp name register <fqdn> --target <planet-UID> [--federation <UID>] [--vault transport:addr …]   # alias: amp ns
 ```
 
-### 4.7 Joining a federation — invite accept
+### 4.7 Joining a federation with an invite
 
-Accepting an invite is **how you join a federation**, and **federation membership
+An invite is **how you join a federation**, and **federation membership
 is the authorization to publish names** (§4.6). You don't need it to read or write
 your *own* home planet — that works the moment you log in (§0) — but you **do**
 need it to register your planets / names into a federation and be discoverable
@@ -526,7 +526,7 @@ POST /api/v1/invite/accept            (Bearer)
 From the SDK:
 
 ```ts
-const { PlanetID, MemberID } = await client.acceptInvite({
+const { PlanetID, MemberID } = await client.joinWithInvite({
   inviteText: 'https://{fqdn}/invite#…',   // the universal URL, or its amp-base32 body
   passphrase: '…',                          // out-of-band
 });
@@ -563,7 +563,7 @@ await client.revokeInvite({ planet, inviteId: InviteID, rotate: true });
 
 Bootstrapping with no SDK code yet? **The Bearer is your login `SessionToken`**
 (§4.1). With the SDK you never handle it — `client.login()` stores it and
-`client.acceptInvite()` sends it; for a raw curl, read `SessionToken` from a login
+`client.joinWithInvite()` sends it; for a raw curl, read `SessionToken` from a login
 response into `$AMP_TOKEN`:
 
 ```bash
@@ -1623,11 +1623,11 @@ For end-to-end tests without a production vault, point the client at a local `am
 
 ### 14.8 Running your own vault & federating (the licensee path)
 
-> **Accepting an invite to *join* a federation does not require running your own vault — that's a web-client call (§4.7).** This section is the heavier, self-hosting path: running your **own** `ampd` so your planets are independently hosted and discoverable. A web app on an operated node needs none of it.
+> **Joining a federation with an invite does not require running your own vault — that's a web-client call (§4.7).** This section is the heavier, self-hosting path: running your **own** `ampd` so your planets are independently hosted and discoverable. A web app on an operated node needs none of it.
 
 When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own node operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. A parent federation is itself founded from the CLI — `amp federation found "<label>" --invite-pass … --invite-max … --fqdn <fqdn>` seals the genesis with the founder's own key and emits the multi-use onboarding invite in one act. Two ways to federate with one, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
 
-- **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner accepts (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp --planet <parent-fed> name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port` (the global `--planet` binds the session to the federation — required from a fresh CLI session). Their names resolve to their planets, carrying their own vault as the bootstrap address.
+- **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner joins (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp --planet <parent-fed> name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port` (the global `--planet` binds the session to the federation — required from a fresh CLI session). Their names resolve to their planets, carrying their own vault as the bootstrap address.
 - **Peer two federations.** The partner runs their *own* federation; the parent links it in with `amp federation peer <partner-fed-UID> --vault tcp:their-host:port`. A resolver then forwards across the directory hop (`ResolveVia`) into the partner's federation. Either side can peer the other.
 
 **Following a federation at boot.** A self-hosted node pins the federations it follows with `ampd -federation <UID>@tcp:host:port` — it dials the bootstrap peer and watches that federation's NameService channel at startup, so its names are carried without a manual resolve-and-pin each boot (connectivity otherwise rides `-vault.peers`).

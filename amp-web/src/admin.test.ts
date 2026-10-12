@@ -1,7 +1,7 @@
 /**
  * AmpAdminClient — the Node-only operator-tier module: issue rides the admin
  * Bearer and matches the Go wire contract; the constructor refuses to run in
- * a browser context (the operator Bearer must never enter browser JS).
+ * a browser context (the node-operator Bearer must never enter browser JS).
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

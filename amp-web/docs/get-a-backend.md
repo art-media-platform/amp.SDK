@@ -13,7 +13,7 @@ Your amp contact hands you three things:
 |---|---|---|
 | Node URL | `https://{your-node}` | `vaultUrl` / `VITE_AMP_VAULT_URL` |
 | Planet tag | `my-app-planet` | `planetTag` / `VITE_AMP_PLANET_TAG` |
-| Invite URL + passphrase | `https://{fqdn}/invite#…` | `client.acceptInvite(…)` after login (SKILL §4.7) |
+| Invite URL + passphrase | `https://{fqdn}/invite#…` | `client.joinWithInvite(…)` after login (SKILL §4.7) |
 
 Also tell your contact the web origins your app runs on (e.g.
 `http://localhost:5173`, `https://myapp.example.com`) — the node's CORS
@@ -37,7 +37,7 @@ await client.create('hello', 'world', { msg: 'hi' });   // lands on YOUR planet
 
 An empty `planetTag` targets the session's own default planet. This is
 the fastest path to a working round-trip — prove the pipe first, join
-the deploy's federation second (`acceptInvite`, SKILL §4.7).
+the deploy's federation second (`joinWithInvite`, SKILL §4.7).
 
 Email-scheme members, by contrast, are **issued by the node operator** (an admin
 verb mints them — SKILL §14.4); you can't self-provision one.
