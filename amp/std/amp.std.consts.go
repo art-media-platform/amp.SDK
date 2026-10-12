@@ -508,7 +508,7 @@ const (
 // playlist (AOM AD-playlists.md).  0 = unset → these defaults.
 const (
 	VJDefaultPlaylistURL = "amp://~/mandelship/presets/" // the house pack, served by app.mandelship
-	VJDefaultDwellSecs   = float32(5)                    // seconds a vis holds before the walk advances (a fixed time, never beat-driven)
+	VJDefaultDwellSecs   = float32(5)                    // seconds a vis holds before the walk advances (a fixed time)
 	VJDefaultFadeSecs    = float32(1.5)                  // the crossfade between the two slots
 )
 

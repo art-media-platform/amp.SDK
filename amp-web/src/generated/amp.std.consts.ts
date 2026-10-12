@@ -357,7 +357,7 @@ export const Mantle = {
 // playlist (AOM AD-playlists.md).  0 = unset → these defaults.
 export const VJ = {
     DefaultPlaylistURL: "amp://~/mandelship/presets/",  // the house pack, served by app.mandelship
-    DefaultDwellSecs:   5,  // seconds a vis holds before the walk advances (a fixed time, never beat-driven)
+    DefaultDwellSecs:   5,  // seconds a vis holds before the walk advances (a fixed time)
     DefaultFadeSecs:    1.5,  // the crossfade between the two slots
 } as const;
 
