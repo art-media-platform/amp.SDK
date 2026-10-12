@@ -163,7 +163,7 @@ type TxScope struct {
 type AttrDef struct {
 	tag.Name                // maps the value Prototype to an explicit attr ID
 	Prototype proto.Message // cloned when this attribute is instantiated
-	EditFlow  EditFlow      // how the attr's edits materialize; 0 = Folded
+	EditFlow  EditFlow      // how the attr's edits materialize; 0 = Fold
 
 	// Folded only: cell fold depth K; 0 = unset → 1.  The host clamps to its
 	// node-local DefaultRetainEditsCap (host-side).  Meaningless for Tape
