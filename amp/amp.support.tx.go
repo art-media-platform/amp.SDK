@@ -731,10 +731,11 @@ type CryptoProvider interface {
 //
 // Signature length is stored in preamble[12:14] (uint16 BE). The signature is the trailing bytes of the wire.
 //
-// If crypto is nil, the TxMsg is marshaled without encryption or signing (local session use).
+// A nil crypto marshals an unsigned, unsealed frame — a test frame; every
+// production caller passes a crypto.
 func SealTx(tx *TxMsg, crypto CryptoProvider, dst *[]byte) error {
 	if crypto == nil {
-		// No crypto — standard marshal (local session traffic)
+		// nil crypto: an unsigned, unsealed frame (tests)
 		tx.MarshalToBuffer(dst)
 		return nil
 	}
