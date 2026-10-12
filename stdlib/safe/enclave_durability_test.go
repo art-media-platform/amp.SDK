@@ -269,13 +269,15 @@ func TestEnclave_UnsavedEncryptKeyReceivesNoWrap(t *testing.T) {
 }
 
 // A re-install of a key whose first install failed to save supersedes the
-// unsaved record — the FetchPubKey-first caller shape, whose zero TimeID
-// stamps a fresh one (probe P5) — and reaches disk.
+// unsaved record and reaches disk.  The FetchPubKey-first caller imports with
+// a zero TimeID, stamped fresh per call (probe P5); two fixed, distinct
+// TimeIDs stand in for those stamps.
 func TestEnclave_ReinstallSupersedesUnsaved(t *testing.T) {
 	rig := newFaultRig(t)
 	ringID := tag.NewID()
 	pair := enclaveImportPair()
-	pair.Pub.TimeID = tag.UID{}
+	reinstall := pair
+	reinstall.Pub.TimeID = tag.UID{pair.Pub.TimeID[0], pair.Pub.TimeID[1] + 1}
 	ref := &safe.KeyRef{Type: pair.Pub.KeyType}
 	ref.SetKeyringID(ringID)
 	rig.store.failSaves = 1
@@ -285,7 +287,7 @@ func TestEnclave_ReinstallSupersedesUnsaved(t *testing.T) {
 	if _, err := rig.enc.FetchPubKey(ref); err == nil {
 		t.Fatal("unsaved import resolved")
 	}
-	if err := rig.enc.ImportKey(rig.ctx, ringID, pair); err != nil {
+	if err := rig.enc.ImportKey(rig.ctx, ringID, reinstall); err != nil {
 		t.Fatalf("re-install after the key read absent: %v", err)
 	}
 	if _, err := rig.enc.FetchPubKey(ref); err != nil {
