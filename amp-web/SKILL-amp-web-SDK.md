@@ -1490,17 +1490,18 @@ bundle does not ship); this section carries its user words. UI labels,
 confirms and help use them verbatim. A brand may change tone and the display
 noun "planet" (e.g. "station"), never an act word, its meaning or a
 consequence line. A *reserved* word names an act that is not built: no
-surface offers it.
+surface offers it. GR §2–§4 and this section are two copies kept by hand, with
+no check that they agree.
 
 | Act | Meaning |
 |---|---|
 | **Found a planet** | Start a planet and sign its charter; its founders, privacy and declaration are fixed for its life. |
 | **Invite** · **Revoke invite** · **Pause / Resume invite** | A founder or admin issues a passphrase-sealed invite, usable until used up, expired, paused or revoked; revoking an invite removes no one who already joined. |
 | **Join** (UI: "Join with Invite…") | Use an invite and its passphrase to become a member of the planet (§4.7). |
-| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed records stay unreadable to a follower, but member content is not yet sealed (`SECURITY-amp-web-SDK.md`). Unfollow stops syncing and removes this device's copy. |
+| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed records stay unreadable to a follower, but member content is not yet sealed (`SECURITY-amp-web-SDK.md`). Unfollow stops syncing and removes this device's copy. An app default once unfollowed is not followed again automatically. |
 | **Remove a planet from a node** (node operator) | A founder or node-operator session stops a node syncing a planet and reclaims its storage; peers keep their copies and no membership changes. |
-| **Rotate keys** | Founders replace the planet's key; only active members receive it. |
-| **Add member** | Founders or admins enroll a member by public key, without an invite. |
+| **Rotate keys** | Founders replace the planet's key; only active members receive it; content sealed under earlier keys stays readable to whoever holds them. |
+| **Add member** | Founders or admins enroll a member by public key, without an invite; such a member cannot receive a private planet's keys. |
 | **Withdraw consent** | Publish a signed request that records about you no longer represent you; readers decide, and nothing is deleted (§7). |
 | **Sign out everywhere** | End every web session of your identity on this node (§4.1). |
 | **Sign a member out everywhere** (node operator) | An admin-allowlisted session ends every web session of one member on this node. |
@@ -1508,15 +1509,15 @@ surface offers it.
 
 | Role or state | Meaning |
 |---|---|
-| **Identity** | The keys this app made for you, or the wallet or email you sign in with, plus your home planet. |
+| **Identity** | The keys this app made for you, or the wallet or email you sign in with, plus your home planet. A device-made identity lost without a backup is lost with every membership it holds. |
 | **Member of {planet}** | Holds an active membership record on that planet; always scoped to a planet. |
 | **Following** (badge) / follower (prose) | Syncs a planet without membership; not on its roster. |
 | **Founder** | Signed the charter at founding; fixed for the planet's life. |
 | **Admin** · **Moderator** | Admin: full control of channels and member access. Moderator: approves, hides and withdraws posts; no member or key management. |
-| **Home planet** | Your own planet: your planet list, follows and settings. |
+| **Home planet** | Your own planet: your planet list, follows and settings; you are its founder; it cannot be resigned, unfollowed or removed. |
 | **Public planet** · **Private planet** | Public: anyone reads, members post. Private: members post; a record sealed under the planet's key is readable only by key holders, but member content is not yet sealed, so every node that syncs the planet can read it. Fixed at founding. |
 | **Node operator** | Runs a node that stores and serves planets; a node holding a member's keys (every web member's) can read that member's planets. |
-| **Watchdog** | A member whose grant carries a capability record or a scope whitelist; it writes only inside those scopes. |
+| **Watchdog** | A member whose grant carries a capability record or a scope whitelist; it writes the data plane only inside those scopes. |
 
 Status words: **Active · Suspended · Revoked**; **Resigned** is reserved.
 UI copy never says: "join" for follow · "drop", "leave" or "delete" for a planet ·
