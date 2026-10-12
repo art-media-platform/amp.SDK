@@ -1344,7 +1344,7 @@ The durable model: per-deploy configuration is **signed, chronicle-tracked facts
 
 **3. The share planet.** Anonymous-readable content lives on a separate public planet (`PlanetCharter.Privacy = PrivacyMode_Public`); the node operator founds it once and registers it host-side (§6.4). Your client points at it via `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`.
 
-**What this means for you:** none of this is in your bundle or code path — construct with `vaultUrl` + `planetTag` (+ share tag). What your node operator needs *from you*, once, at deploy time is a short, stable list: the web origins to allow (CORS) and the share-planet name. The field *semantics* are the stable integration surface; where they're stored is the node operator's choice and changes nothing in your integration.
+**What this means for you:** none of this is in your bundle or code path — construct with `vaultUrl` + `planetTag` (+ share tag). What your node operator needs *from you*, once, at deploy time is a short, stable list: the web origins to allow (CORS) and the share-planet name. The field *semantics* are the stable integration surface; where they're stored is on the node operator's side and changes nothing in your integration.
 
 > **Node operators:** the host reads CORS, the admin allowlist, and the share-planet UID from node-operator config (`app.brand.json` per whitelabel domain; documented in `deploy/`). It is deliberately **not** part of the consumer contract — don't build against the file. Planet identity and deep-link display are substrate-native `Brand`, resolved from the federation NameService — not this file.
 
