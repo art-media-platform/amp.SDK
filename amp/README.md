@@ -95,6 +95,9 @@ notes.OnItem = func(item amp.AttrItem[*NoteValue]) {
     // ... react to item.Value (item.Deleted marks a removal)
 }
 
+// Feed it a snapshot of nodeID's items (one OnNodeUpdate per pushed tx):
+std.LoadItems(app, nodeID, NotesAttr.ID, notes)
+
 // Read accumulated state back, typed:
 notes.EnumItems(func(itemID tag.UID, v *NoteValue) bool {
     // ... inspect current value
