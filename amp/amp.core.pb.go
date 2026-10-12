@@ -741,7 +741,7 @@ type Access int32
 
 const (
 	Access_NotAllowed Access = 0
-	Access_Invite     Access = 10 // sees the channel exists; grants no invite issuance (a founder or root Admin issues)
+	Access_Invite     Access = 10 // reserved: no rule admits on this rung; grants no invite issuance (a founder or root Admin issues)
 	Access_Private    Access = 30 // metadata, not content
 	Access_ReadOnly   Access = 40 // reads content
 	Access_Watchdog   Access = 50 // reads; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)

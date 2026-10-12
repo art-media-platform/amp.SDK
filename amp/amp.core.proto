@@ -1030,7 +1030,7 @@ message MemberEpoch {
 // (amp.HasAccess), never by value.
 enum Access {
     NotAllowed = 0;
-    Invite     = 10;  // sees the channel exists; grants no invite issuance (a founder or root Admin issues)
+    Invite     = 10;  // reserved: no rule admits on this rung; grants no invite issuance (a founder or root Admin issues)
     Private    = 30;  // metadata, not content
     ReadOnly   = 40;  // reads content
     Watchdog   = 50;  // reads; data-plane writes only inside the grant's Scopes (SD-channel-governance §9)
