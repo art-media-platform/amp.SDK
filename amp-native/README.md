@@ -36,10 +36,11 @@ On macOS the kit is an installer package: it places `bin/*` in
 ## Quick Start
 
 1. Put `amp` on your `PATH`.
-   - **macOS** (13 or later, Apple silicon or Intel): open
+   - **macOS** (Apple silicon or Intel): open
      `amp-maker-kit-v0.NNN.N-darwin-universal.pkg`, or run
      `sudo installer -pkg <file> -target /`. A later package replaces the
-     installed kit in place.
+     installed kit in place. The package declares its minimum macOS
+     ([Deploying to a Mac Fleet](#deploying-to-a-mac-fleet)).
    - **Linux, Windows:** unzip the kit and put its `bin/` on your `PATH`.
 2. Get an invite URL and its passphrase from a founder or admin of the planet (out-of-band).
 3. Join with the invite — the full procedure, verification, and recovery steps are
@@ -157,7 +158,7 @@ unchanged.
 | receipt identifier | `com.art-media-platform.amp-native-SDK` |
 | version | `0.NNN.N`, rising with every release |
 | detection | `pkgutil --pkg-info com.art-media-platform.amp-native-SDK` exits 0 and reports the version |
-| minimum macOS | 13; the package refuses an older system |
+| minimum macOS | the one the package declares: `pkgutil --expand <file> <dir>`, then `grep os-version <dir>/Distribution`; the package refuses an older system |
 | architecture | one universal package for Apple silicon and Intel |
 
 The package installs no `.app`, so a tool that detects installs by app bundle
