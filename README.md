@@ -49,7 +49,7 @@ A planet contains **channels** — addressed as `(NodeID, AttrID)` cells with a 
 | **Planet-Private** | Yes | Records the app seals; member content not yet (below) | Holders of its keys (sealed records); every node that syncs it (member content today) | Planet members |
 | **Channel-Private** (designed; not yet shipped) | Yes | Yes | Channel members | Channel members |
 
-On a private planet today, only the records the AMP apps seal themselves (the home planet's own records, the follow list) are encrypted.  Member content written through the Unity client or the web bridge is signed but not yet sealed, so every node that syncs the planet can read it; sealing it by default is in progress.
+On a private planet today, only the records an app seals under the planet's epoch key are encrypted.  Member content written through the Unity client or the web bridge is signed but not yet sealed, so every node that syncs the planet can read it; sealing it by default is in progress.
 
 Channel-private encryption is designed and not yet shipped: once it is, a private planet can contain public channels alongside private channels, and private channels can only be read by channel participants — even other planet members cannot decrypt them.
 
