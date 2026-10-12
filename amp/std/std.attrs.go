@@ -73,3 +73,73 @@ func IsGovernanceLawAttr(attrID tag.UID) bool {
 		attrID == Attr.LawPlanetOrigin.ID ||
 		attrID == Attr.LawEquivalence.ID
 }
+
+// IsPlanetPublicAttr reports whether attrID stays planet-public on a
+// Confidential planet because a node holding no planet key must read it
+// (AOM SD-security-sync.md §7.7).  A closed set, so every binary of one
+// release decides alike: every other attr is content, sealed by default.
+func IsPlanetPublicAttr(attrID tag.UID) bool {
+	if IsGovernanceLawAttr(attrID) {
+		return true
+	}
+	switch attrID {
+	case Attr.LawEpochLink.ID,
+		Attr.Brand.ID,
+		Attr.PlanetInvitePolicy.ID,
+		Attr.PlanetInviteRedemption.ID,
+		Attr.NameServiceRecord.ID,
+		Attr.FederationDirectory.ID,
+		Attr.PlanetStorageOpts.ID,
+		Attr.NodeLogEntry.ID,
+		Attr.NodeMessage.ID,
+		Attr.LedgerAttestation.ID:
+		return true
+	}
+	return false
+}
+
+// SealDomain classifies a tx's ops by IsPlanetPublicAttr (TxSealDomain).
+type SealDomain int32
+
+const (
+	SealDomain_Empty        SealDomain = iota // no ops
+	SealDomain_PlanetPublic                   // every op is planet-public
+	SealDomain_Content                        // every op is content
+	SealDomain_Mixed                          // planet-public and content ops
+)
+
+// TxSealDomain reports the seal domain of tx's ops.  One tx is one encryption
+// context, so a host refuses a Mixed tx on a Confidential planet (AOM
+// ZO-design-conventions.md §3.3).
+func TxSealDomain(tx *amp.TxMsg) SealDomain {
+	planetPublic := false
+	content := false
+	for _, op := range tx.Ops {
+		if IsPlanetPublicAttr(op.Addr.AttrID) {
+			planetPublic = true
+		} else {
+			content = true
+		}
+	}
+	switch {
+	case planetPublic && content:
+		return SealDomain_Mixed
+	case content:
+		return SealDomain_Content
+	case planetPublic:
+		return SealDomain_PlanetPublic
+	}
+	return SealDomain_Empty
+}
+
+func (domain SealDomain) String() string {
+	switch domain {
+	case SealDomain_PlanetPublic:
+		return "planet-public"
+	case SealDomain_Content:
+		return "content"
+	case SealDomain_Mixed:
+		return "mixed"
+	}
+	return "empty"
+}
