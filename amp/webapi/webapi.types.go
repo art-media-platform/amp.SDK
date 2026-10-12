@@ -470,7 +470,7 @@ type InviteAcceptResponse struct {
 // InviteRevokeRequest is the body of POST /api/v1/invite/revoke (Bearer).
 // Identify the invite by InviteID (the sealed-body hash) or InviteText.  Revoke
 // is terminal.  Rotate also rotates the planet epoch to retire the token-held
-// key (node-custodial founder only).
+// key (a founder whose key the node holds).
 type InviteRevokeRequest struct {
 	Planet     string `json:"Planet"`               // amp-base32 UID of the planet (required)
 	InviteID   string `json:"InviteID,omitempty"`   // amp-base32 invite ID
