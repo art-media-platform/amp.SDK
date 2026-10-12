@@ -560,9 +560,10 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 }
 
 // fetchRecord returns the record matched by ref, or an error if none.  It is
-// the one lookup every key op uses, so the unsaved refusal lives here: a
-// matched record whose persist has not succeeded reads KeyringNotFound
-// (SD-security-sync §20.6).
+// the one lookup every key op uses, so the unsaved rule lives here
+// (SD-security-sync §20.6): a record whose persist has not succeeded reads
+// KeyringNotFound by its own public key, and a newest-key lookup resolves the
+// newest saved record instead of it.
 //
 // Resolution rules:
 //   - ref.Type explicit + PubKey empty: returns newest record of that type.
@@ -573,48 +574,63 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 //
 // Must be called with enc.mu held.
 func (enc *enclave) fetchRecord(ref *KeyRef) (*KeyPairRecord, error) {
-	rec, err := enc.resolveRecord(ref)
-	if err != nil {
-		return nil, err
-	}
-	if _, pending := enc.unsaved[rec]; pending {
-		return nil, status.Code_KeyringNotFound.Errorf("keyring %v: %s held unsaved until a persist succeeds", ref.KeyringID(), rec.KeyType)
-	}
-	return rec, nil
-}
-
-// resolveRecord applies fetchRecord's resolution rules.  Must be called with
-// enc.mu held.
-func (enc *enclave) resolveRecord(ref *KeyRef) (*KeyPairRecord, error) {
 	ringID := ref.KeyringID()
 	ring := enc.byRing[ringID]
 	if ring == nil || len(ring.records) == 0 {
 		return nil, status.Code_KeyringNotFound.Errorf("keyring %v not found", ringID)
 	}
-	if len(ref.PubKey) == 0 {
-		if ref.Type != KeyType_Unspecified {
-			pub := ring.newestByType[ref.Type]
-			if len(pub) == 0 {
-				return nil, status.Code_KeyringNotFound.Errorf("keyring %v has no %s keys", ringID, ref.Type.String())
-			}
-			if rec := ringLookupTyped(ring, pub, ref.Type); rec != nil {
-				return rec, nil
-			}
+	rec := (*KeyPairRecord)(nil)
+	switch {
+	case len(ref.PubKey) > 0:
+		if rec = ringLookupTypedPrefix(ring, ref.PubKey, ref.Type); rec == nil {
+			return nil, status.Code_KeyringNotFound.Errorf("key not found in keyring %v (pubKey prefix: %x type: %s)",
+				ringID, ref.PubKey, ref.Type.String())
+		}
+	case ref.Type != KeyType_Unspecified:
+		pub := ring.newestByType[ref.Type]
+		if len(pub) == 0 {
+			return nil, status.Code_KeyringNotFound.Errorf("keyring %v has no %s keys", ringID, ref.Type.String())
+		}
+		if rec = ringLookupTyped(ring, pub, ref.Type); rec == nil {
 			return nil, status.Code_KeyringNotFound.Errorf("keyring %v: %s newest pointer stale", ringID, ref.Type.String())
 		}
+	default:
 		bestPub, _ := ringNewestAcrossTypes(ring)
 		if bestPub == nil {
 			return nil, status.Code_KeyringNotFound.Errorf("keyring %v has no keys", ringID)
 		}
-		if rec := ringLookup(ring, bestPub); rec != nil {
-			return rec, nil
+		if rec = ringLookup(ring, bestPub); rec == nil {
+			return nil, status.Code_KeyringNotFound.Errorf("keyring %v: newest pointer stale", ringID)
 		}
-		return nil, status.Code_KeyringNotFound.Errorf("keyring %v: newest pointer stale", ringID)
 	}
-	if rec := ringLookupTypedPrefix(ring, ref.PubKey, ref.Type); rec != nil {
+	if _, pending := enc.unsaved[rec]; !pending {
 		return rec, nil
 	}
-	return nil, status.Code_KeyringNotFound.Errorf("key not found in keyring %v (pubKey prefix: %x type: %s)", ringID, ref.PubKey, ref.Type.String())
+	if len(ref.PubKey) == 0 {
+		if saved := enc.newestSaved(ring, ref.Type); saved != nil {
+			return saved, nil
+		}
+	}
+	return nil, status.Code_KeyringNotFound.Errorf("keyring %v: %s held unsaved until a persist succeeds", ringID, rec.KeyType)
+}
+
+// newestSaved returns the newest (largest TimeID) record of kt — of any type
+// when kt is Unspecified — whose persist has succeeded, or nil.  Must be
+// called with enc.mu held.
+func (enc *enclave) newestSaved(ring *ringIndex, kt KeyType) *KeyPairRecord {
+	newest := (*KeyPairRecord)(nil)
+	for _, rec := range ring.records {
+		if kt != KeyType_Unspecified && rec.KeyType != kt {
+			continue
+		}
+		if _, pending := enc.unsaved[rec]; pending {
+			continue
+		}
+		if newest == nil || recordTimeID(rec).CompareTo(recordTimeID(newest)) > 0 {
+			newest = rec
+		}
+	}
+	return newest
 }
 
 // ringNewestAcrossTypes returns the newest record's pub key across all KeyType

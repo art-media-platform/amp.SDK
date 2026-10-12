@@ -204,16 +204,18 @@ func TestEnclave_FailedGenerateUnusableUntilSaved(t *testing.T) {
 	}
 }
 
-// An unsaved newest EncryptKey never resolves: neither as the keyring's newest
-// (the genesis founder lookup) nor by its own public key (an unwrap) — so no
-// wrap can land on a key a crash would lose.
+// An unsaved EncryptKey receives no wrap: its own public key does not resolve
+// (an unwrap refuses), and a type-only ref — the genesis founder lookup —
+// resolves the newest SAVED key of the type, never the unsaved one shadowing
+// it.  After a persist the new key is the newest.
 func TestEnclave_UnsavedEncryptKeyReceivesNoWrap(t *testing.T) {
 	rig := newFaultRig(t)
 	ringID := tag.NewID()
-	if _, err := rig.enc.GenerateKey(rig.ctx, ringID, safe.KeySpec{
+	saved, err := rig.enc.GenerateKey(rig.ctx, ringID, safe.KeySpec{
 		CryptoKitID: safe.Crypto.Poly25519.ID,
 		KeyType:     safe.KeyType_AsymmetricKey,
-	}); err != nil {
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 	kit, err := safe.CryptoKit(safe.Crypto.Poly25519.ID)
@@ -242,9 +244,12 @@ func TestEnclave_UnsavedEncryptKeyReceivesNoWrap(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if pub, err := rig.enc.FetchPubKey(newest); err == nil {
-		t.Fatalf("newest EncryptKey resolved while unsaved (same as held: %v)",
-			bytes.Equal(pub.Bytes, pair.Pub.Bytes))
+	if pub, err := rig.enc.FetchPubKey(newest); err != nil || !bytes.Equal(pub.Bytes, saved.Bytes) {
+		t.Fatalf("type-only ref must resolve the saved key while the newer one is unsaved: err=%v, unsaved returned: %v",
+			err, err == nil && bytes.Equal(pub.Bytes, pair.Pub.Bytes))
+	}
+	if _, err := rig.enc.FetchPubKey(exact); err == nil {
+		t.Fatal("the unsaved EncryptKey resolved by its own public key")
 	}
 	if _, err := rig.enc.OpenFromPub(exact, box); err == nil {
 		t.Fatal("OpenFromPub opened a wrap with an unsaved key")

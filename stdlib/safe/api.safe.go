@@ -107,7 +107,8 @@ type Enclave interface {
 	RemoveKey(ctx context.Context, ref *KeyRef) error
 
 	// FetchPubKey returns the PubKey for ref.
-	// If len(ref.PubKey) == 0, the newest key in the keyring is returned.
+	// If len(ref.PubKey) == 0, the newest key in the keyring is returned,
+	// skipping a key whose install has not saved yet (see ImportKey).
 	FetchPubKey(ref *KeyRef) (PubKey, error)
 
 	// CanSign reports whether ref resolves to a SigningKey whose PRIVATE half is
