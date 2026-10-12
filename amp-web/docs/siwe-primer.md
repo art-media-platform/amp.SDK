@@ -14,7 +14,7 @@ gives you the mental model plus a drop-in `useWalletLogin()` hook.
   `eth:<lowercase-address>` — the same wallet always resolves to the
   same member (`SECURITY-amp-web-SDK.md`, "Identity & login").
 - **Self-provisioning.** First wallet login auto-provisions a private
-  home planet — no operator step (`docs/get-a-backend.md`).
+  home planet — no node-operator step (`docs/get-a-backend.md`).
 
 ## The Flow (Three Round-Trips)
 

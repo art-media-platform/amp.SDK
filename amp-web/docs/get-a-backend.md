@@ -17,7 +17,7 @@ Your amp contact hands you three things:
 
 Also tell your contact the web origins your app runs on (e.g.
 `http://localhost:5173`, `https://myapp.example.com`) — the node's CORS
-allowlist is operator-side (SKILL §10), and a missing origin looks like a
+allowlist is node-operator config (SKILL §10), and a missing origin looks like a
 network failure in the browser console.
 
 With the node URL alone you can already log in and round-trip data
@@ -27,7 +27,7 @@ planets and federation.
 ## 2. Self-Provision: Wallet Login Mints Your Planet
 
 No planet tag yet? Wallet (SIWE) login **auto-provisions a private home
-planet** on the node — zero operator setup:
+planet** on the node — no node-operator setup:
 
 ```ts
 const client = new AmpWebClient({ vaultUrl, planetTag: '' });
@@ -39,7 +39,7 @@ An empty `planetTag` targets the session's own default planet. This is
 the fastest path to a working round-trip — prove the pipe first, join
 the deploy's federation second (`acceptInvite`, SKILL §4.7).
 
-Email-scheme members, by contrast, are **operator-issued** (an admin
+Email-scheme members, by contrast, are **issued by the node operator** (an admin
 verb mints them — SKILL §14.4); you can't self-provision one.
 
 ## 3. A Development Node

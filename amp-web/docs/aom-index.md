@@ -31,7 +31,7 @@ required reading.
 
 ## What Is Deliberately Not Shipped
 
-Operator runbooks, security-cluster internals, and audit files.
+Node-operator runbooks, security-cluster internals, and audit files.
 `AOM/O4-standard-procedures.md` ships as its partner-facing subset: the
 sections that run a node — deploy, wipe, provider setup, release — stay
 held, and a coordinate naming one reads `(operator)`. If a shipped doc

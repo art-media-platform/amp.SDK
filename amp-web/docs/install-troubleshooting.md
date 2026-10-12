@@ -41,7 +41,7 @@ The package is ESM-only (`"type": "module"`). Use `import` (or dynamic
 
 `fetch` to the node works from `curl` but the browser console shows a
 CORS error: your web origin isn't on the node's allowlist — an
-operator-side setting (SKILL §10). Send your operator the exact origin,
+node-operator setting (SKILL §10). Send your node operator the exact origin,
 scheme + host + port: `http://localhost:5173` and `http://127.0.0.1:5173`
 are **different origins**; dev and prod origins both need listing.
 

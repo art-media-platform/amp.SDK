@@ -17,9 +17,9 @@ stop — wrong path. Your whole footprint is one TypeScript package + HTTPS call
   dependency). The bare-name `npm install @art-media-platform/web` from the public
   registry is **not** available during beta — it lands when the SDK publishes at
   **v400**. We're pre-v400 today, so install the versioned bundle locally.
-- **Your server already exists.** You connect over HTTPS to an `ampd` node an
-  **operator runs for you** — you do not run, build, or host one. Your operator
-  supplies its URL; this document writes it **`https://{your-node}`**. (`:5193`,
+- **Your server already exists.** You connect over HTTPS to an `ampd` node that a
+  **node operator runs for you** — you do not run, build, or host one. Your node
+  operator supplies its URL; this document writes it **`https://{your-node}`**. (`:5193`,
   seen elsewhere in this doc, is only the local-dev default; an operated node is
   plain TLS on 443.) Where your node and planet come from:
   [`docs/get-a-backend.md`](docs/get-a-backend.md).
@@ -43,7 +43,7 @@ const client = new AmpWebClient({
   planetTag: '<handed to you>',
 });
 
-// Log in. Wallet (SIWE) auto-provisions a private home planet — zero operator setup.
+// Log in. Wallet (SIWE) auto-provisions a private home planet — no node-operator setup.
 // connectWallet / signWithWallet are YOUR wallet glue (EIP-1193), not SDK calls —
 // the full EIP-6963 + personal_sign version is in §5.1; the inline comments show it.
 const addr      = await connectWallet();                   // (await window.ethereum.request({ method: 'eth_requestAccounts' }))[0]
@@ -99,7 +99,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 
 ## 2. How to Use This SKILL
 
-**AI Agent rules.** You are writing a **web client** against an `ampd` node an operator already runs — never building, running, or embedding a server (§0). When generating or modifying code for a web project that uses amp:
+**AI Agent rules.** You are writing a **web client** against an `ampd` node that a node operator already runs — never building, running, or embedding a server (§0). When generating or modifying code for a web project that uses amp:
 
 1. **All data operations** go through `@art-media-platform/web` (never raw `fetch` to `/api/v1/*`).
 2. **File uploads** go through `useAmpUpload()`.
@@ -130,7 +130,7 @@ Publishing to npm as `@art-media-platform/web` lands at v400 — until then, ins
 
 ### Provider Configuration
 
-`vaultUrl` is the HTTPS address of an `ampd` node an **operator runs for you** — you never run, build, or host one (§0).  Your operator supplies it (`https://{your-node}`).
+`vaultUrl` is the HTTPS address of an `ampd` node that a **node operator runs for you** — you never run, build, or host one (§0).  Your node operator supplies it (`https://{your-node}`).
 
 ```tsx
 import { AmpWebClient } from '@art-media-platform/web';
@@ -163,13 +163,13 @@ VITE_AMP_PLANET_TAG=my-planet-tag
 VITE_AMP_PUBLIC_SHARE_PLANET_TAG=my-planet-tag-shares
 ```
 
-**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` resolves anonymously only once the deploy operator performs genesis of a public planet and registers it host-side (`amp planet found <name> --rest --public`, §6.4). Where that registration is stored is operator-side and substrate-native (§10) — not your concern. Without it, anonymous reads against the planet tag fall through to the standard Bearer gate.
+**Server-side prerequisite for share planets.** `VITE_AMP_PUBLIC_SHARE_PLANET_TAG` resolves anonymously only once the node operator founds a public planet and registers it host-side (`amp planet found <name> --rest --public`, §6.4). Where that registration is stored is on the node operator's side and substrate-native (§10) — not your concern. Without it, anonymous reads against the planet tag fall through to the standard Bearer gate.
 
 ---
 
 ## 4. Wire Shape — the Contract
 
-`app.www` listens on port 5193 (the local-dev default; an operated node terminates TLS on 443). Every endpoint accepts `Authorization: Bearer <session-token>`, except where noted. CORS is operator-configured per allowed web origin (§10). The server emits `Content-Type: application/json; charset=utf-8` on JSON responses.
+`app.www` listens on port 5193 (the local-dev default; an operated node terminates TLS on 443). Every endpoint accepts `Authorization: Bearer <session-token>`, except where noted. CORS is set by the node operator per allowed web origin (§10). The server emits `Content-Type: application/json; charset=utf-8` on JSON responses.
 
 ### 4.1 Authentication
 
@@ -238,7 +238,7 @@ The unified `/api/v1/login` is **shipped**: `wallet`, `email`, `did`, and `membe
 POST /api/v1/login/email/recover     (anonymous; returns 202 uniformly)          → client.recoverEmail(email)
 POST /api/v1/login/email/redeem      (anonymous; consumes code, mints session)   → client.redeemEmail({ token, newPassword })
 POST /api/v1/account/claim           (anonymous; activation token → first pwd)   → client.claimAccount({ email, token, newPassword })
-POST /api/v1/admin/credentials/email/issue   (operator Bearer; admin-gated signup — Node-only AmpAdminClient, §12)
+POST /api/v1/admin/credentials/email/issue   (node-operator Bearer; admin-gated signup — Node-only AmpAdminClient, §12)
 ```
 
 `recoverEmail` emails a single-use recovery code and always resolves on the
@@ -486,7 +486,7 @@ React: `useAmpResolve(fqdn)` wraps the anonymous resolve for deep-link landings 
 - **`search` is best-effort discovery over the federations your session is a member of — Bearer-only, not a scrape endpoint.** Ranked enumeration is the scraping surface, so a session walks only the federations it is a member of. Don't build features that depend on bulk-enumerating the namespace.
 - **You don't need NameService to run a single deploy.** Your planet tag is handed to the client at construction (`VITE_AMP_PLANET_TAG`); reads/writes/subscribes never touch it. Resolve/search matter only when you discover *other* planets across federations.
 
-**Publishing a name (operator-side).** A name enters the directory when an operator registers it into a federation's NameService channel — a signed governance write, not a consumer call:
+**Publishing a name (node operator).** A name enters the directory when a node operator registers it into a federation's NameService channel — a signed governance write, not a consumer call:
 
 ```bash
 amp name register <fqdn> --target <planet-UID> [--federation <UID>] [--vault transport:addr …]   # alias: amp ns
@@ -593,9 +593,9 @@ planned.
 | Act | Web client (Bearer session) | Native `amp` CLI |
 |---|---|---|
 | Home planet | ✅ auto-minted on your first login (§0) — one per member, private | ✅ same |
-| Another planet | ❌ no member wire verb — your operator mints one for you (`POST /api/v1/admin/planet/create`, admin-gated, public only) | ✅ `amp planet found "<label>"` (private by default, `--public` for anonymous-readable) |
+| Another planet | ❌ no member wire verb — your node operator mints one for you (`POST /api/v1/admin/planet/create`, admin-gated, public only) | ✅ `amp planet found "<label>"` (private by default, `--public` for anonymous-readable) |
 | Brand it, `NamedBy` included | ✅ member-authorized `invoke` — below | ✅ `amp brand set <planet-UID> --namedby <FED-UID>` |
-| Register an FQDN into a federation | ❌ no wire verb — your federation's operator registers it, or take the CLI path | ✅ `amp name register` (`AOM/O4-standard-procedures.md` §4.10) |
+| Register an FQDN into a federation | ❌ no wire verb — your federation's node operator registers it, or take the CLI path | ✅ `amp name register` (`AOM/O4-standard-procedures.md` §4.10) |
 | Resolve a name + judge trust | ✅ `POST /api/v1/resolve` (§4.6) | ✅ |
 
 **Branding your planet is a member act — and it is the back-edge.**
@@ -603,8 +603,8 @@ planned.
 `Verified` (§4.6), and the verb that authors it is member-authorized:
 `amp://~/home/planet/brand/<planet-UID>`, routed as a verb-RPC (§4.3). The gate
 is the planet's own authority — its founder, or an `Access_Admin` on its root —
-**not** the operator admin allowlist, so a web-only partner brands its own
-planet with no operator involvement. Address the op at the planet's single
+**not** the node operator's admin allowlist, so a web-only partner brands its
+own planet with no node-operator involvement. Address the op at the planet's single
 canonical Brand cell: `Attr` = `amp.Brand`, `ItemID` = that attr's own UID
 (resolve it once, §5.8); a batch addressed anywhere else is rejected.
 
@@ -635,7 +635,7 @@ record resolves `Refuted` — so brand and register together.
 **Private vs public.** There is no per-item visibility flag (§6.4). Privacy is a
 genesis-time fact of the planet (`PlanetCharter.Privacy`), not a runtime toggle,
 so it can never be flipped later from any surface. A web client's planets are:
-its own private home planet, plus whatever planets its operator minted and
+its own private home planet, plus whatever planets its node operator minted and
 admitted it to. An additional planet of *either* privacy — including a private
 org planet — is a genesis act, and genesis is the CLI path below.
 
@@ -809,7 +809,7 @@ const { url, loading, contentType, byteSize, error, refresh, generation } = useA
 <video key={generation} src={url ?? undefined} onError={() => void refresh()} controls />
 ```
 
-The URL is **the credential**: a member resolve answers `/www/{UID}.{ext}?t=<media token>`, a token bound to that blob, your session and its generation, valid for the token lifetime (default one hour; the same URL is answered for re-resolves inside that window, so the browser cache holds) — `/www/` carries no Bearer and no cookie, and a gated asset answers 404 to any GET without a valid token. Treat the URL as a short-lived secret: never log it, never persist it (persist the `BlobRef`), never put it where a `Referer` can carry it to a third party. A URL also stops serving when the node unpublishes an idle asset (no request for 5 minutes) or an operator revokes the member's sessions. A player that buffered, paused, and seeks later sees that 404 on the media element — bind `refresh` to `onError`: one resolve round answers a URL that serves (fresh token past the lifetime), `generation` increments, and keying the element on it reloads the source (or call `load()` yourself). `refresh` is idempotent — an error that was not an expiry re-resolves harmlessly and the element reports it again.
+The URL is **the credential**: a member resolve answers `/www/{UID}.{ext}?t=<media token>`, a token bound to that blob, your session and its generation, valid for the token lifetime (default one hour; the same URL is answered for re-resolves inside that window, so the browser cache holds) — `/www/` carries no Bearer and no cookie, and a gated asset answers 404 to any GET without a valid token. Treat the URL as a short-lived secret: never log it, never persist it (persist the `BlobRef`), never put it where a `Referer` can carry it to a third party. A URL also stops serving when the node unpublishes an idle asset (no request for 5 minutes) or a node operator signs the member out everywhere. A player that buffered, paused, and seeks later sees that 404 on the media element — bind `refresh` to `onError`: one resolve round answers a URL that serves (fresh token past the lifetime), `generation` increments, and keying the element on it reloads the source (or call `load()` yourself). `refresh` is idempotent — an error that was not an expiry re-resolves harmlessly and the element reports it again.
 
 Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
 POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —
@@ -992,9 +992,9 @@ Where the third-party API supports it (OpenRouter scoped tokens, Stripe Connect 
 
 amp does NOT have a per-item visibility flag. Public-readable content lives on a separate planet operating in public mode (`PlanetCharter.Privacy = PrivacyMode_Public` at genesis — see `SECURITY-amp-web-SDK.md`). Genesis-time means exactly that: no surface flips a planet's privacy afterwards, and a web client cannot genesis one (§4.8).
 
-#### Operator setup (one time per deploy)
+#### Node operator setup (one time per deploy)
 
-The deploy operator performs share planet genesis once and registers it with the running `ampd` host:
+The node operator founds the share planet once and registers it with the running `ampd` host:
 
 ```bash
 # After wallet-login via the web (POST /api/v1/login scheme=wallet),
@@ -1003,7 +1003,7 @@ AMP_TOKEN=<bearer> amp planet found <name> --rest --public
 # → { "PlanetID": "<base32 UID>", "Tag": "<canonic>", "Public": true }
 ```
 
-The host then records that planet as anonymous-readable so the registration survives restarts. Where that fact is stored is operator-side and substrate-native — see §10; it is not something your app ships or reads.
+The host then records that planet as anonymous-readable so the registration survives restarts. Where that fact is stored is on the node operator's side and substrate-native — see §10; it is not something your app ships or reads.
 
 #### Anonymous read URL shape
 
@@ -1200,7 +1200,7 @@ A card's first script is `/amp/bridge.js`, served by `app.www`: it installs `win
 
 #### Server route — `/cards/{cell}[/asset]`
 
-`app.www` serves card bundles at `/cards/{cell}` (anonymous; no Bearer required). Each cell is a flat directory containing `index.html` and any sibling assets. The canonical cells ship embedded in the `ampd` binary; an operator drop at `{homePath}/cards/{cell}/` shadows the embedded copy for whitelabel customization without a rebuild.
+`app.www` serves card bundles at `/cards/{cell}` (anonymous; no Bearer required). Each cell is a flat directory containing `index.html` and any sibling assets. The canonical cells ship embedded in the `ampd` binary; a node operator's drop at `{homePath}/cards/{cell}/` shadows the embedded copy for whitelabel customization without a rebuild.
 
 Cell names match `[A-Za-z0-9_-]+` and the filesystem is the registry (no allowlist). `/cards/{cell}` redirects (301) to `/cards/{cell}/`, which serves `index.html` so sibling assets resolve under the cell. Path traversal returns 404. Non-GET/HEAD verbs return 405. `/amp/bridge.js` is served beside the cards route (`application/javascript`, `Cache-Control: no-store`) and is `'self'` under the card CSP.
 
@@ -1326,7 +1326,7 @@ Cross-planet addressing is the substrate for shareable links: the share URL embe
 Two things get conflated; keep them apart:
 
 - **Your app's own branding is yours.** Your web UI — logo, theme, copy, fonts — lives in your app. amp never dictates your chrome.
-- **Per-deploy *host* configuration is operator-side and invisible to your SDK code.** The identity of the planets you display, the web origins allowed to call the host (CORS), the anonymous-readable share planet, deep-link schemes, and the admin allowlist are configured by whoever operates the `ampd` deploy and enforced by the host. **Your client is constructed with exactly `vaultUrl` + `planetTag` (+ an optional share-planet tag) and nothing else** — typically build-time env vars (`VITE_AMP_VAULT_URL`, `VITE_AMP_PLANET_TAG`, `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`). You never ship, fetch, or parse a deploy-config file.
+- **Per-deploy *host* configuration belongs to the node operator and is invisible to your SDK code.** The identity of the planets you display, the web origins allowed to call the host (CORS), the anonymous-readable share planet, deep-link schemes, and the admin allowlist are configured by whoever operates the `ampd` deploy and enforced by the host. **Your client is constructed with exactly `vaultUrl` + `planetTag` (+ an optional share-planet tag) and nothing else** — typically build-time env vars (`VITE_AMP_VAULT_URL`, `VITE_AMP_PLANET_TAG`, `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`). You never ship, fetch, or parse a deploy-config file.
 
 A single `ampd` can host many planets/orgs at once; that multi-tenancy is a host capability, not something your app coordinates.
 
@@ -1338,15 +1338,15 @@ The durable model: per-deploy configuration is **signed, chronicle-tracked facts
 
 > **Display-only — the durable security rule.** A planet's substrate `Brand` is read for **display only**: planet header, picker tile, publisher attribution. Because it is admin-mutable, it is **never** read for app *behavior*. Every behavioral field — your deep-link schemes, link host, install targets, crate feed — is read from your **build's own factory brand** (bundled in the app / SKU), never from a planet's `Brand`. So a planet rebrand changes what it *displays as*, never what your app *does*. (One resolver returns `planetBrand ?? factoryBrand` for display; behavioral code reads the factory directly.)
 
-**Reading it from the SDK.** `client.getBrand(planetTag?)` reads the planet's `Brand` off its head-node anchor over the standard items rail and returns `PlanetBrand { brand, namedBy, trustState, resolution? }` — or `null` for a planet with no Brand authored (a naked home planet; render `PlanetEpoch.Label` instead). `namedBy` is the base32 federation UID from `Brand.Identity.NamedBy` (the §4.6 back-edge; `''` when unset). `trustState` is the host resolver's verdict on the Brand's **claimed** `Identity.AppDomain` (obtained via the anonymous `resolve()`; `'Unchecked'` when no domain is claimed or no federation names it), with the full `ResolveResponse` riding as `resolution`. The verdict binds `(FQDN → resolution.PlanetID)`, not the planet you queried — when `resolution.PlanetID` differs from your planet's UID, the domain claim points elsewhere: surface it, never render a Verified badge. React: `useAmpBrand(planetTag?)` → `{ brand, loading, error }`. The wire types (`Brand`, `BrandIdentity`, `AppTarget`, `AppLink`, `CrateRef`, `AmpTag`) are package exports; consumption stays read-only — authoring a Brand is an operator act with no browser binding (§12).
+**Reading it from the SDK.** `client.getBrand(planetTag?)` reads the planet's `Brand` off its head-node anchor over the standard items rail and returns `PlanetBrand { brand, namedBy, trustState, resolution? }` — or `null` for a planet with no Brand authored (a naked home planet; render `PlanetEpoch.Label` instead). `namedBy` is the base32 federation UID from `Brand.Identity.NamedBy` (the §4.6 back-edge; `''` when unset). `trustState` is the host resolver's verdict on the Brand's **claimed** `Identity.AppDomain` (obtained via the anonymous `resolve()`; `'Unchecked'` when no domain is claimed or no federation names it), with the full `ResolveResponse` riding as `resolution`. The verdict binds `(FQDN → resolution.PlanetID)`, not the planet you queried — when `resolution.PlanetID` differs from your planet's UID, the domain claim points elsewhere: surface it, never render a Verified badge. React: `useAmpBrand(planetTag?)` → `{ brand, loading, error }`. The wire types (`Brand`, `BrandIdentity`, `AppTarget`, `AppLink`, `CrateRef`, `AmpTag`) are package exports; consumption stays read-only — authoring a Brand is a node-operator act with no browser binding (§12).
 
-**2. Host gating config — CORS origins + admin allowlist.** The web origins authorized to call the host (the CORS allow-list) and the operator-admin allowlist (who may hit `/api/v1/admin/*`) are **operator HTTP-gating config, not planet governance**. Stable field semantics: a list of allowed origins (`https://maplable.com`, `*.maplable.com` — never pair `"*"` with credentials; see `SECURITY-amp-web-SDK.md`) and a list of admin member-IDs (`eth:0x…`, `email:…`; empty fails closed → every admin call `403`). Stored operator-side, per whitelabel domain — never in your bundle or code path.
+**2. Host gating config — CORS origins + admin allowlist.** The web origins authorized to call the host (the CORS allow-list) and the node operator's admin allowlist (who may hit `/api/v1/admin/*`) are **node-operator HTTP-gating config, not planet governance**. Stable field semantics: a list of allowed origins (`https://maplable.com`, `*.maplable.com` — never pair `"*"` with credentials; see `SECURITY-amp-web-SDK.md`) and a list of admin member-IDs (`eth:0x…`, `email:…`; empty fails closed → every admin call `403`). Stored on the node operator's side, per whitelabel domain — never in your bundle or code path.
 
-**3. The share planet.** Anonymous-readable content lives on a separate public planet (`PlanetCharter.Privacy = PrivacyMode_Public`); the operator genesis's it once and registers it host-side (§6.4). Your client points at it via `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`.
+**3. The share planet.** Anonymous-readable content lives on a separate public planet (`PlanetCharter.Privacy = PrivacyMode_Public`); the node operator founds it once and registers it host-side (§6.4). Your client points at it via `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`.
 
-**What this means for you:** none of this is in your bundle or code path — construct with `vaultUrl` + `planetTag` (+ share tag). What your operator needs *from you*, once, at deploy time is a short, stable list: the web origins to allow (CORS) and the share-planet name. The field *semantics* are the stable integration surface; where they're stored is operator-side and changes nothing in your integration.
+**What this means for you:** none of this is in your bundle or code path — construct with `vaultUrl` + `planetTag` (+ share tag). What your node operator needs *from you*, once, at deploy time is a short, stable list: the web origins to allow (CORS) and the share-planet name. The field *semantics* are the stable integration surface; where they're stored is the node operator's choice and changes nothing in your integration.
 
-> **Operators:** the host reads CORS, the admin allowlist, and the share-planet UID from operator-side config (`app.brand.json` per whitelabel domain; documented in `deploy/`). It is deliberately **not** part of the consumer contract — don't build against the file. Planet identity and deep-link display are substrate-native `Brand`, resolved from the federation NameService — not this file.
+> **Node operators:** the host reads CORS, the admin allowlist, and the share-planet UID from node-operator config (`app.brand.json` per whitelabel domain; documented in `deploy/`). It is deliberately **not** part of the consumer contract — don't build against the file. Planet identity and deep-link display are substrate-native `Brand`, resolved from the federation NameService — not this file.
 
 ---
 
@@ -1428,7 +1428,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 
 ## 12. What NOT to do
 
-1. **Prefer `@art-media-platform/web`** over raw `/api/v1/*` fetches for every endpoint it wraps — login, tx, channels, upload, media, tag-resolve, invites, subscriptions. The client wraps the wire shape with typed errors, durable session rehydration, and sealed-box helpers; raw fetches will accumulate bugs. A handful of operator/consumer endpoints have no client method yet (`/resolve`, `/search`, `/federation/peers` §4.6; `/governance/grant` §14.4; `…/items/{itemID}/edits` §4.2) — those you call directly against the wire contract until a wrapper lands.
+1. **Prefer `@art-media-platform/web`** over raw `/api/v1/*` fetches for every endpoint it wraps — login, tx, channels, upload, media, tag-resolve, invites, subscriptions. The client wraps the wire shape with typed errors, durable session rehydration, and sealed-box helpers; raw fetches will accumulate bugs. A handful of node-operator/consumer endpoints have no client method yet (`/resolve`, `/search`, `/federation/peers` §4.6; `/governance/grant` §14.4; `…/items/{itemID}/edits` §4.2) — those you call directly against the wire contract until a wrapper lands.
 2. **Never store user-supplied secrets unsealed** in channel items. Run `seal()` before `upsert`. Plaintext API keys in `users/api_keys_overrides` is the single most common security mistake.
 3. **Never assume immediate consistency.** Writes propagate over WebSocket; design UI optimistically.
 4. **Never push SecurityEvent telemetry** to a replicated channel. Audit logs and rate-limit notifications are local-only.
@@ -1436,7 +1436,7 @@ const { data } = useAmpQuery('widgets', `instance.${member.ID}`, {});
 6. **Never gate UX on `member.kind`** at the protocol layer, and **never encode a payment/subscription tier in it**. `Kind` is an identity taxonomy (Person / Group / Agent / Memorial), not an entitlement. Apps may surface Kind in UI; model billing tier as app data + per-channel ACC (§14.4).
 7. **Never name specific crypto algorithms** in code or docs. Use `seal/open`, `sign/verify`, `hash`, `safe.KeyRef`.
 8. **Never build on bulk namespace enumeration.** `/api/v1/search` is Bearer-gated, best-effort discovery over the federations your session is a member of — not a public directory dump, and never anonymous. Resolve exact FQDNs you already know; don't crawl. (§4.6)
-9. **Never call an operator verb (`/api/v1/admin/*`) from browser JS.** The operator Bearer is higher-privilege than a member session; putting it in XSS-exposed script is how an org gets its planet defaced and members mass-minted. These verbs deliberately have no browser client method — drive them from server-side tooling (a Stripe webhook, an ops script, the `amp` CLI), where the admin Bearer lives (§14.4). The one SDK surface is `AmpAdminClient` on the **Node-only** subpath `@art-media-platform/web/admin` (currently `issueEmailCredential`): it is excluded from the root export, refuses to construct in a browser, and the `operator-go-only` drift manifest pins which verbs may bind there — never import it from browser code.
+9. **Never call a node-operator verb (`/api/v1/admin/*`) from browser JS.** The node-operator Bearer is higher-privilege than a member session; putting it in XSS-exposed script is how an org gets its planet defaced and members mass-minted. These verbs deliberately have no browser client method — drive them from server-side tooling (a Stripe webhook, an ops script, the `amp` CLI), where the admin Bearer lives (§14.4). The one SDK surface is `AmpAdminClient` on the **Node-only** subpath `@art-media-platform/web/admin` (currently `issueEmailCredential`): it is excluded from the root export, refuses to construct in a browser, and the `operator-go-only` drift manifest pins which verbs may bind there — never import it from browser code.
 
 ---
 
@@ -1474,8 +1474,8 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Address** | The cross-planet addressing token — on the wire a single base32 string packing 3–5 UIDs (element / +edit / +planet). The SDK treats it as opaque (use the base32 string as-is). Carries the element/planet identity. |
 | **Equivalence** | A symmetric claim that two addresses refer to the same thing in a stated context. |
 | **Withdraw** | A signed signal that the signer no longer consents to a cited record. Carries `subject` (whose consent) + optional `delegation` (a packed Address citing the record that grants authority) when a delegate speaks for someone else (`AOM/SD-withdrawal-consent.md`). |
-| **Share planet** | A planet operating in `PlanetCharter.Privacy = PrivacyMode_Public` mode — anonymous-readable, member-writable. The operator performs planet genesis (`amp planet found <name> --rest --public` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
-| **Admin endpoint** | The operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no browser client method** (§12); email-credential issue binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
+| **Share planet** | A planet operating in `PlanetCharter.Privacy = PrivacyMode_Public` mode — anonymous-readable, member-writable. The node operator founds it (`amp planet found <name> --rest --public` / `POST /api/v1/admin/planet/create`) and registers it host-side; see §6.4 / §10. |
+| **Admin endpoint** | The node-operator tier: `POST /api/v1/admin/*` (planet create, planet brand, forums reserve, email-credential issue) — Bearer + per-org admin allowlist, called from server-side tooling / CLI only. Deliberately has **no browser client method** (§12); email-credential issue binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`); the wire shapes live in `amp.SDK/amp/webapi` and are drift-guarded via the `operator-go-only` manifest. |
 | **ChannelEpoch** | A channel's per-epoch ACC + access grants. Committed via `POST /api/v1/governance/grant` (§14.4). |
 | **NameService** | amp's federation directory — resolves a registered FQDN to the planet that serves it and where its vault is dialable. `resolve` is anonymous; `search` / `federation/peers` are Bearer-gated. See §4.6; `AOM/DD-name-service.md`. |
 | **FQDN** | A fully-qualified domain name (`spaces.example.com`) registered in a federation's NameService and resolvable to a planet. |
@@ -1543,11 +1543,11 @@ instead of shipping:
   tx/item (`_ItemID`/`_EditID`/`_FromID` metadata keys), subscribe frames,
   edit chains, the full invite family (issue/accept/revoke/list with ledger
   rank), vault endpoints (base64 `Address` — opaque bytes, not a UID),
-  media/Tag shapes (`ContentTypeRaw`), the operator tier (planet
+  media/Tag shapes (`ContentTypeRaw`), the node-operator tier (planet
   create/brand, forums reserve, email issue — `operator.json`), enum-name
   goldens (AccessLevel / WithdrawReason / InviteStatus / TrustState), and the
   CryptoKitID small-int ↔ `tag.UID` mapping.  `operator-go-only.json` is the
-  enforcing manifest for the operator tier: the Go side requires its shapes
+  enforcing manifest for the node-operator tier: the Go side requires its shapes
   registered in the drift guard; the TS side requires that NO client binding
   exists for them (§12).
 - **Go side** — `go test ./amp/webapi/` decodes every fixture with
@@ -1565,14 +1565,14 @@ This section answers the architecture questions that come up when an existing pr
 
 ### 14.1 Deployment topologies — where the vault runs
 
-**The web SDK is a pure client — it never builds, embeds, or runs a vault.** For a web app the vault is an `ampd` host an operator already runs, reached over HTTPS (§0). The shapes below describe where *that host* lives — an operator / deploy concern, not something your web build ships.
+**The web SDK is a pure client — it never builds, embeds, or runs a vault.** For a web app the vault is an `ampd` host that a node operator already runs, reached over HTTPS (§0). The shapes below describe where *that host* lives — a node-operator / deploy concern, not something your web build ships.
 
 An `ampd` host is a full peer: it stores, signs, encrypts, and relays.
 
 - **Shared cloud vault (the default for a web app).** One `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab; your client connects to it over HTTPS (`https://{your-node}`). Simplest to operate; the app needs the server reachable to read / write.
 - **Embedded local vault (ADVANCED — bundled desktop/Electron only; *not* a web build).** Bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; reads, writes, and seals work with no network — this is what preserves an **offline-first** desktop product. It is the one topology that ships the Go host (cross-compile per target — darwin-arm64/x64, win-x64/arm64, linux-x64 — and code-sign each), and it is **not** part of a web-SDK integration. Reach for it only if you are explicitly building a bundled native app.
 - **Hybrid.** An embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. The native amp model for a desktop app, not a bolt-on.
-- **Self-hosted & federated (the licensee path).** A partner runs their *own* `ampd` and is therefore their own operator — their own CORS, planets, and admin, with no per-deploy config handoff to you. They join the wider network by **federating** with a parent deploy, so their planets are discoverable through it (and vice-versa). See §14.8.
+- **Self-hosted & federated (the licensee path).** A partner runs their *own* `ampd` and is therefore their own node operator — their own CORS, planets, and admin, with no per-deploy config handoff to you. They join the wider network by **federating** with a parent deploy, so their planets are discoverable through it (and vice-versa). See §14.8.
 
 A pure-JS / WASM in-process vault is **not** on the near-term path; the embeddable unit today is the native host (`ampd` / `libampd`). For a paid **desktop** app, **hybrid (embedded + optional cloud sync)** is the recommended shape — but a **web** app needs none of this: it connects to an operated node.
 
@@ -1599,7 +1599,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 ### 14.4 Membership tiers, Stripe, and the admin surface
 
 - **Don't put the tier in `member.kind`.** `Kind` is an identity taxonomy, not an entitlement, and the protocol never gates on it (§12). Model **payment tier as application data** your app reads (e.g. a `members/billing/{memberID}` item) and enforce capability with **per-channel ACC** — gate `projects.share`, `users.api_keys_overrides`, etc. on the member's access grants.
-- **The operator tier** (`POST /api/v1/admin/*`, Bearer + the operator admin allowlist — operator-side gating config, §10) is four verbs: `planet/create`, `planet/brand`, `forums/reserve`, and `credentials/email/issue` (mints an email-scheme member, returns `{ MemberID, Email }` — what a Stripe webhook calls server-side to provision a paying customer). None has a browser client method, deliberately (§12); `credentials/email/issue` binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`), and the wire shapes live in `webapi/webapi.types.go` under the `operator-go-only` drift manifest. Sealed invites are the *member-session* surface instead: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` joins its planet (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
+- **The node-operator tier** (`POST /api/v1/admin/*`, Bearer + the node operator's admin allowlist — node-operator gating config, §10) is four verbs: `planet/create`, `planet/brand`, `forums/reserve`, and `credentials/email/issue` (mints an email-scheme member, returns `{ MemberID, Email }` — what a Stripe webhook calls server-side to provision a paying customer). None has a browser client method, deliberately (§12); `credentials/email/issue` binds in the Node-only `AmpAdminClient` (`@art-media-platform/web/admin`), and the wire shapes live in `webapi/webapi.types.go` under the `operator-go-only` drift manifest. Sealed invites are the *member-session* surface instead: `POST /api/v1/invite/issue` mints a single- or multi-use sealed invite (with `/revoke` + `/list`) and `POST /api/v1/invite/accept` joins its planet (accept is the client-side join — §4.7; both Bearer, both need the production `SessionBackend` and return `501` on the in-memory dev backend).
 - **The tier → ACC grant surface is wired:** `POST /api/v1/governance/grant` (Bearer) commits a channel's complete `ChannelEpoch` — `MemberGrants` + `DefaultGrants`, plus an optional `Parent` channel and cited attestations. Semantics are **latest-wins-REPLACE**: to change one member's grant, read the current epoch, modify it, and re-commit the whole set (read-modify-write). This is where you enforce the tier you modeled as app data (above) — gate `projects.share`, `users.api_keys_overrides`, etc. on these grants, never on `Kind`.
 
 ### 14.5 SDK versioning & stability
@@ -1624,7 +1624,7 @@ For end-to-end tests without a production vault, point the client at a local `am
 
 > **Accepting an invite to *join* a federation does not require running your own vault — that's a web-client call (§4.7).** This section is the heavier, self-hosting path: running your **own** `ampd` so your planets are independently hosted and discoverable. A web app on an operated node needs none of it.
 
-When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. A parent federation is itself founded from the CLI — `amp federation found "<label>" --invite-pass … --invite-max … --fqdn <fqdn>` seals the genesis with the founder's own key and emits the multi-use onboarding invite in one act. Two ways to federate with one, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
+When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own node operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. A parent federation is itself founded from the CLI — `amp federation found "<label>" --invite-pass … --invite-max … --fqdn <fqdn>` seals the genesis with the founder's own key and emits the multi-use onboarding invite in one act. Two ways to federate with one, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
 
 - **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner accepts (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp --planet <parent-fed> name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port` (the global `--planet` binds the session to the federation — required from a fresh CLI session). Their names resolve to their planets, carrying their own vault as the bootstrap address.
 - **Peer two federations.** The partner runs their *own* federation; the parent links it in with `amp federation peer <partner-fed-UID> --vault tcp:their-host:port`. A resolver then forwards across the directory hop (`ResolveVia`) into the partner's federation. Either side can peer the other.
@@ -1633,7 +1633,7 @@ When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology)
 
 **Identity & trust.** A partner's planets set `Brand.NamedBy` to the naming federation — the back-edge (§4.6) that lets a resolver return `TrustState: 'Verified'`. Resolved records carry the partner's own `VaultAddrs`, so a consumer reaches the partner's vault **directly** — cross-host, never proxied through the parent.
 
-The CORS boundary from §10 still holds: on a *shared* host the operator allow-lists web origins; a self-hosted partner sets their own.
+The CORS boundary from §10 still holds: on a *shared* host the node operator allow-lists web origins; a self-hosted partner sets their own.
 
 **The step-by-step procedures ship in this bundle** — `AOM/O4-standard-procedures.md`: §4.18 the end-to-end mint-and-connect walk, §4.17 your own replica node, §4.10 name publication + the resolve verdicts, §4.6 joining a planet by invite, §4.4/§4.5 the invite artifact and its out-of-band passphrase. They name roles (`<host>`, `<FED-UID>`, `<planet-UID>`, …), never live values; bind them to your own deployment. Sections that run AMP's own nodes are held back and read `(operator)`. Which of these a web client can do without the CLI is §4.8.
 
