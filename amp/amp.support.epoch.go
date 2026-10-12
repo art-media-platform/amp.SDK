@@ -90,6 +90,22 @@ func (pe *PlanetEpoch) ParsedTerms() (*EpochTerms, error) {
 	return terms, nil
 }
 
+// ContentSealedSince returns the TxTimeID from which this planet refuses
+// planet-public content txs: the Terms marker when the carried Charter is
+// Confidential, else nil (AOM SD-security-sync.md §7.7).  An envelope with no
+// Charter (a session-registry stub, EpochFromTerms) answers nil.
+func (pe *PlanetEpoch) ContentSealedSince() tag.UID {
+	charter, err := pe.ParsedCharter()
+	if err != nil || charter.Privacy != PrivacyMode_Confidential {
+		return tag.UID{}
+	}
+	terms, err := pe.ParsedTerms()
+	if err != nil {
+		return tag.UID{}
+	}
+	return terms.GetContentSealedSince().UID()
+}
+
 // IsGenesis reports whether these terms describe a founding epoch — one that names no
 // predecessor.  A rotation (any later epoch in the chain) carries a non-nil PreviousEpoch.
 // The single discriminator the authority gate and the epoch-acceptance state machine share.
@@ -227,9 +243,10 @@ func (pe *PlanetEpoch) VerifyEpochTag() error {
 
 // VerifyCharterContinuity confirms this envelope's EpochTag copy matches its
 // Terms (VerifyEpochTag), its carried Charter matches the hash its Terms
-// commits to, and (when prev is supplied) that the chain is sound: identical
-// Charter bytes, Terms.PreviousEpoch == prev's EpochTag, height + 1, and that
-// prev was not Terminal-sealed (no epoch may chain off a Terminal one).
+// commits to, its ContentSealedSince obeys the chain rule (verifySealedSince),
+// and (when prev is supplied) that the chain is sound: identical Charter
+// bytes, Terms.PreviousEpoch == prev's EpochTag, height + 1, and that prev
+// was not Terminal-sealed (no epoch may chain off a Terminal one).
 func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 	if err := pe.VerifyEpochTag(); err != nil {
 		return err
@@ -246,7 +263,7 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 		return status.Code_AuthFailed.Error("amp: Terms.CharterHash does not match carried Charter")
 	}
 	if prev == nil {
-		return nil // genesis: nothing to chain against
+		return verifySealedSince(terms, nil) // genesis: nothing else to chain against
 	}
 	prevTerms, err := prev.ParsedTerms()
 	if err != nil {
@@ -270,6 +287,24 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 	// the single site it would relax (and where an authoring-epoch hash resolver lands).
 	if terms.HashKit != prevTerms.HashKit {
 		return status.Code_AuthFailed.Error("amp: HashKit changed across epoch chain (deliberate hash migration is not yet supported)")
+	}
+	return verifySealedSince(terms, prevTerms)
+}
+
+// verifySealedSince holds EpochTerms.ContentSealedSince to its chain rule
+// (AOM SD-security-sync.md §4.4, §7.7): a predecessor's marker is carried
+// unchanged, and a marker is introduced only equal to the introducing epoch's
+// own EpochTag.  prevTerms is nil at genesis.
+func verifySealedSince(terms, prevTerms *EpochTerms) error {
+	marker := terms.GetContentSealedSince().UID()
+	if prior := prevTerms.GetContentSealedSince().UID(); prior.IsSet() {
+		if marker != prior {
+			return status.Code_AuthFailed.Error("amp: ContentSealedSince dropped or changed from the predecessor's")
+		}
+		return nil
+	}
+	if marker.IsSet() && marker != terms.GetEpochTag().UID() {
+		return status.Code_AuthFailed.Error("amp: ContentSealedSince introduced at other than its epoch's own EpochTag")
 	}
 	return nil
 }
