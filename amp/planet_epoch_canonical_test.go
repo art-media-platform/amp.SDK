@@ -20,6 +20,7 @@ import (
 	"crypto/ed25519"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"slices"
 	"strings"
 	"testing"
@@ -488,9 +489,12 @@ func TestPlanetEpoch_Frame_GoldenDecode(t *testing.T) {
 			t.Errorf("%v: decoded Terms differ from the golden values\n"+
 				" got:  %v\nwant: %v", fixture.hashKit, terms, wantTerms)
 		}
-		if err := env.VerifyCharterContinuity(nil); err != nil {
-			t.Errorf("%v: CharterHash does not bind the Charter: %v",
-				fixture.hashKit, err)
+		// The golden is a wire fixture: a Public Charter carrying a marker,
+		// which continuity refuses only after the CharterHash check passes.
+		err = env.VerifyCharterContinuity(nil)
+		if !errors.Is(err, amp.ErrSealedSinceContinuity) {
+			t.Errorf("%v: continuity = %v, want the CharterHash bound "+
+				"and ErrSealedSinceContinuity", fixture.hashKit, err)
 		}
 	}
 }

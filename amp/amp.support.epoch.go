@@ -264,7 +264,7 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 		return status.Code_AuthFailed.Error("amp: Terms.CharterHash does not match carried Charter")
 	}
 	if prev == nil {
-		return verifySealedSince(terms, nil) // genesis: nothing else to chain against
+		return pe.verifySealedSince(terms, nil) // genesis: nothing else to chain against
 	}
 	prevTerms, err := prev.ParsedTerms()
 	if err != nil {
@@ -289,7 +289,7 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 	if terms.HashKit != prevTerms.HashKit {
 		return status.Code_AuthFailed.Error("amp: HashKit changed across epoch chain (deliberate hash migration is not yet supported)")
 	}
-	return verifySealedSince(terms, prevTerms)
+	return pe.verifySealedSince(terms, prevTerms)
 }
 
 // ErrSealedSinceContinuity wraps every ContentSealedSince chain-rule failure.
@@ -300,10 +300,10 @@ var ErrSealedSinceContinuity = status.Code_AuthFailed.Error("amp: ContentSealedS
 
 // verifySealedSince holds EpochTerms.ContentSealedSince to its chain rule
 // (AOM SD-security-sync.md §4.4, §7.7): a predecessor's marker is carried
-// unchanged, and a marker is introduced only equal to the introducing epoch's
-// own EpochTag.  prevTerms is nil at genesis.  A failure wraps
-// ErrSealedSinceContinuity.
-func verifySealedSince(terms, prevTerms *EpochTerms) error {
+// unchanged, and a marker is introduced only on a Confidential Charter,
+// equal to the introducing epoch's own EpochTag.  prevTerms is nil at
+// genesis.  A failure wraps ErrSealedSinceContinuity.
+func (pe *PlanetEpoch) verifySealedSince(terms, prevTerms *EpochTerms) error {
 	marker := terms.GetContentSealedSince().UID()
 	if prior := prevTerms.GetContentSealedSince().UID(); prior.IsSet() {
 		if marker != prior {
@@ -311,8 +311,18 @@ func verifySealedSince(terms, prevTerms *EpochTerms) error {
 		}
 		return nil
 	}
-	if marker.IsSet() && marker != terms.GetEpochTag().UID() {
+	if marker.IsNil() {
+		return nil
+	}
+	if marker != terms.GetEpochTag().UID() {
 		return fmt.Errorf("%w: introduced at other than its epoch's own EpochTag", ErrSealedSinceContinuity)
+	}
+	charter, err := pe.ParsedCharter()
+	if err != nil {
+		return err
+	}
+	if charter.Privacy != PrivacyMode_Confidential {
+		return fmt.Errorf("%w: introduced on a %v Charter", ErrSealedSinceContinuity, charter.Privacy)
 	}
 	return nil
 }

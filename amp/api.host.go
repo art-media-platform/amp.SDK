@@ -173,8 +173,10 @@ type Session interface {
 	// DialVaultPeers asks the vault controller to dial peer addresses learned at
 	// runtime — the VaultAddrs carried by a PlanetInvite or a NameService record —
 	// so a fresh peer can bootstrap a connection without a static, operator-
-	// configured peer.  Best-effort and asynchronous; a no-op when the host runs
-	// without a vault transport.  See vault.Transport.AddPeer (host-side).
+	// configured peer.  Best-effort and asynchronous: an address the transport
+	// accepts stays dialed; the call refuses only a set the transport refuses
+	// whole (an unsupported transport name, a malformed address) or a host
+	// with no vault transport.  See vault.Transport.AddPeer (host-side).
 	DialVaultPeers(addrs []*VaultAddr) error
 
 	// WatchPlanet starts syncing a planet's journal without joining as a member —

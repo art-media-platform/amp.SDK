@@ -1,9 +1,8 @@
 package amp_test
 
 // The ContentSealedSince chain rule (AOM SD-security-sync.md §4.4, §7.7): a
-// marker is introduced only equal to its epoch's own EpochTag and is carried
-// unchanged by every successor; the planet-level answer ignores it on a
-// Public Charter.
+// marker is introduced only on a Confidential Charter, only equal to its
+// epoch's own EpochTag, and is carried unchanged by every successor.
 
 import (
 	"errors"
@@ -98,8 +97,17 @@ func TestVerifyCharterContinuity_ContentSealedSince(t *testing.T) {
 			Privacy:       amp.PrivacyMode_Public,
 		},
 	}
-	if got := public.epoch(100, 200, nil, uid(100, 200)).ContentSealedSince(); got.IsSet() {
+	publicMarked := public.epoch(100, 200, nil, uid(100, 200))
+	if got := publicMarked.ContentSealedSince(); got.IsSet() {
 		t.Errorf("Public ContentSealedSince = %v, want nil (inert)", got)
+	}
+	// A marker is introduced only on a Confidential chain.
+	if err := publicMarked.VerifyCharterContinuity(nil); !errors.Is(err, amp.ErrSealedSinceContinuity) {
+		t.Errorf("a Public genesis introducing a marker: %v, want ErrSealedSinceContinuity", err)
+	}
+	publicPlain := public.epoch(100, 200, nil, nil)
+	if err := public.epoch(101, 201, publicPlain, uid(101, 201)).VerifyCharterContinuity(publicPlain); !errors.Is(err, amp.ErrSealedSinceContinuity) {
+		t.Errorf("a Public rotation introducing a marker: %v, want ErrSealedSinceContinuity", err)
 	}
 	if got := amp.EpochFromTerms(&amp.EpochTerms{ContentSealedSince: uid(1, 2)}).ContentSealedSince(); got.IsSet() {
 		t.Errorf("Charterless ContentSealedSince = %v, want nil", got)
