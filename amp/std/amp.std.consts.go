@@ -426,7 +426,7 @@ var Attr = struct {
 
 	NodeCredentials: tag.Name{ID: tag.UID{0x38E9C390B7C5C376, 0x0906744822BD89F5}, Text: "node.Credentials"}, // 1sx71-t1ey5-sev0k1-mn90j-cv2gp
 
-	// ─── Node log rail (SD-planet-storage §4.2.1) ───────────────────
+	// ─── Node log rail ──────────────────────────────────────────────
 	// Planet-public rows a host-owned courier authors onto its home planet:
 	// the log channel holds one NodeLogEntry per row, keyed by time; the
 	// message channel one NodeMessage per row, addressed to members by UID.

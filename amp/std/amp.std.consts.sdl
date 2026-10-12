@@ -286,7 +286,7 @@ tags Attr {
         NodeCredentials "Credentials" : sealed
     }
 
-    // Node log rail (SD-planet-storage §4.2.1)
+    // Node log rail
     // Planet-public rows a host-owned courier authors onto its home planet:
     // the log channel holds one NodeLogEntry per row, keyed by time; the
     // message channel one NodeMessage per row, addressed to members by UID.
