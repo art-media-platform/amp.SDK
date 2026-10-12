@@ -6393,8 +6393,9 @@ type Artifact struct {
 	// On import, this is replaced by the importing TxMsg's TxID.
 	EditID_0 uint64 `protobuf:"fixed64,7,opt,name=EditID_0,json=EditID0,proto3" json:"EditID_0,omitempty"`
 	EditID_1 uint64 `protobuf:"fixed64,8,opt,name=EditID_1,json=EditID1,proto3" json:"EditID_1,omitempty"`
-	// The value.  Exactly one of these is set.  Threshold between inline and
-	// blob is a writer policy (default 64 KiB); importers accept either form.
+	// The value.  At most one of these is set; a presence cell (a ChildLink)
+	// sets neither.  Threshold between inline and blob is a writer policy
+	// (default 64 KiB); importers accept either form.
 	InlineValue   []byte   `protobuf:"bytes,10,opt,name=InlineValue,proto3" json:"InlineValue,omitempty"`
 	BlobValue     *BlobRef `protobuf:"bytes,11,opt,name=BlobValue,proto3" json:"BlobValue,omitempty"`
 	unknownFields protoimpl.UnknownFields
