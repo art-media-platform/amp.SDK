@@ -509,7 +509,9 @@ func (enc *enclave) persistLocked(ctx context.Context) error {
 // mergeRecord inserts a single record into the index, rejecting mismatched
 // (PubKey, KeyType) collisions.  Exact duplicates are ignored.  An unsaved
 // record is not yet an install, so a mismatched record supersedes it: the
-// re-install a caller makes once the key reads absent.  Same PubKey under
+// re-install a caller makes once the key reads absent.  A pub-only record
+// never supersedes one holding a private half; it is ignored as a duplicate
+// is, and the held record waits for the next persist.  Same PubKey under
 // different KeyTypes is permitted: a keyring may hold one identity SigningKey
 // and one encrypt AsymmetricKey whose raw bytes happen to coincide (e.g. a
 // temp bootstrap key imported under both types during invite onboarding).
@@ -536,6 +538,9 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 		}
 		if _, pending := enc.unsaved[held]; !pending {
 			return status.Code_BadKeyFormat.Errorf("safe: pub-key collision for keyring %s", ringID.Base32())
+		}
+		if len(rec.PrvKey) == 0 && len(held.PrvKey) > 0 {
+			return nil // a pub-only re-install keeps the held private half
 		}
 		delete(enc.unsaved, held)
 		Zero(held.PrvKey)

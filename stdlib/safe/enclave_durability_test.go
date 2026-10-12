@@ -351,3 +351,49 @@ func TestEnclave_WrapDEKFailureSavesNothing(t *testing.T) {
 		t.Fatal("a persist with a failed WrapDEK put the key on disk")
 	}
 }
+
+// A pub-only re-import over an unsaved full keypair keeps the private half: it
+// carries less than the held record, so the held record stays and the persist
+// the import drives carries it to disk (SD-security-sync §20.6).
+func TestEnclave_PubOnlyReimportKeepsUnsavedPrivate(t *testing.T) {
+	rig := newFaultRig(t)
+	kit, err := safe.CryptoKit(safe.Crypto.Poly25519.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pair := safe.KeyPair{
+		Pub: safe.PubKey{
+			CryptoKitID: kit.ID,
+			KeyType:     safe.KeyType_SigningKey,
+			TimeID:      tag.NowID(),
+		},
+	}
+	if err := kit.Signing.Generate(rand.Reader, &pair); err != nil {
+		t.Fatal(err)
+	}
+	ringID := tag.NewID()
+	ref := &safe.KeyRef{Type: safe.KeyType_SigningKey, PubKey: pair.Pub.Bytes}
+	ref.SetKeyringID(ringID)
+	rig.store.failSaves = 1
+	if err := rig.enc.ImportKey(rig.ctx, ringID, pair); err == nil {
+		t.Fatal("ImportKey reported success despite failed Save")
+	}
+	pubOnly := safe.KeyPair{
+		Pub: pair.Pub,
+	}
+	pubOnly.Pub.TimeID = tag.UID{pair.Pub.TimeID[0], pair.Pub.TimeID[1] + 1}
+	if err := rig.enc.ImportKey(rig.ctx, ringID, pubOnly); err != nil {
+		t.Fatalf("pub-only re-import: %v", err)
+	}
+	if !rig.enc.CanSign(ref) {
+		t.Fatal("a pub-only re-import discarded the held private half")
+	}
+	reader, err := safe.OpenEnclave(rig.ctx, rig.inner, rig.guard, []byte("unsaved"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reader.Close(rig.ctx)
+	if !reader.CanSign(ref) {
+		t.Fatal("the tome on disk lacks the private half after the re-import's persist")
+	}
+}
