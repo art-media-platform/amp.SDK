@@ -87,7 +87,9 @@ type Enclave interface {
 	// BEFORE ImportKey reports success, so an unclean kill after return cannot
 	// lose the key — a member's identity must never ride on a clean Close.
 	// The guard must be open at install (it closes only at teardown, after all
-	// installs); a persist failure returns the error and is NOT a durable install.
+	// installs); a persist failure returns the error and is NOT a durable
+	// install: the key stays held for the next persist, and every key op
+	// refuses it (KeyringNotFound) until one succeeds.
 	ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error
 
 	// GenerateKey creates a new keypair in the given keyring and registers it.

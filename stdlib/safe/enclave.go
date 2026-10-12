@@ -38,7 +38,11 @@ type enclave struct {
 	revision int64
 	aad      []byte
 	closed   bool
-	changed  bool
+
+	// unsaved holds each installed record whose persist has not succeeded:
+	// held for the next persist, refused by every key op until then
+	// (SD-security-sync §20.6).  A successful persist empties it.
+	unsaved map[*KeyPairRecord]struct{}
 }
 
 // ringIndex is the in-memory index for a single keyring.
@@ -70,10 +74,11 @@ func OpenEnclave(
 ) (Enclave, error) {
 
 	enc := &enclave{
-		store:  store,
-		guard:  guard,
-		aad:    append([]byte(nil), aad...),
-		byRing: make(map[tag.UID]*ringIndex),
+		store:   store,
+		guard:   guard,
+		aad:     append([]byte(nil), aad...),
+		byRing:  make(map[tag.UID]*ringIndex),
+		unsaved: make(map[*KeyPairRecord]struct{}),
 	}
 
 	sealed, err := store.Load(ctx)
@@ -113,8 +118,8 @@ func OpenEnclave(
 // ImportKey inserts a keypair into the given keyring.
 // The install is durable at return: the re-sealed tome persists BEFORE ImportKey
 // reports success (the epoch-key PutKey discipline, one layer down).  Success ⟹
-// the key is on disk; a persist failure returns the error and is a durability
-// failure the caller must not read as success.  An exact duplicate skips
+// the key is on disk; a persist failure returns the error and leaves the key
+// held but unusable until a later persist succeeds.  An exact duplicate skips
 // persistence only when no install remains unsaved.
 func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error {
 	enc.mu.Lock()
@@ -147,21 +152,25 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 	if err := enc.mergeRecord(rec); err != nil {
 		return err
 	}
-	if enc.revision != priorRevision {
-		enc.changed = true
-	}
-	if !enc.changed {
+	inserted := enc.revision != priorRevision
+	if !inserted && len(enc.unsaved) == 0 {
 		return nil // already durable duplicate
 	}
-	return enc.persistLocked(ctx)
+	if err := enc.persistLocked(ctx); err != nil {
+		if inserted {
+			enc.unsaved[rec] = struct{}{}
+		}
+		return err
+	}
+	return nil
 }
 
 // GenerateKey creates a new keypair under the given keyring.
 // The install is durable at return (see ImportKey): success ⟹ the key is on
-// disk.  A persist failure returns the error and the caller must treat it as a
-// durability failure — the guard must be open at install, which every real
-// flow satisfies (the session enclave's guard closes only at teardown, after
-// all installs).
+// disk; a persist failure leaves it held but unusable until a later persist
+// succeeds.  The guard must be open at install, which every real flow
+// satisfies (the session enclave's guard closes only at teardown, after all
+// installs).
 func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec KeySpec) (PubKey, error) {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -217,8 +226,8 @@ func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec Key
 			}
 			return PubKey{}, err
 		}
-		enc.changed = true
 		if err := enc.persistLocked(ctx); err != nil {
+			enc.unsaved[rec] = struct{}{}
 			return PubKey{}, err
 		}
 		return pubKeyFromRecord(rec), nil
@@ -452,7 +461,7 @@ func (enc *enclave) Close(ctx context.Context) error {
 
 // persistLocked seals the in-memory key index into a KeyTome and saves it via
 // the Guard/TomeStore pair — the ONE persist site (ImportKey, GenerateKey,
-// RemoveKey, Close).  A successful Save clears changed.  Caller holds enc.mu.
+// RemoveKey, Close).  A successful Save empties unsaved.  Caller holds enc.mu.
 func (enc *enclave) persistLocked(ctx context.Context) error {
 	tome := &KeyTome{
 		Revision: enc.revision,
@@ -493,15 +502,17 @@ func (enc *enclave) persistLocked(ctx context.Context) error {
 	if err := enc.store.Save(ctx, sealed); err != nil {
 		return fmt.Errorf("safe: failed to save SealedTome: %w", err)
 	}
-	enc.changed = false
+	clear(enc.unsaved)
 	return nil
 }
 
 // mergeRecord inserts a single record into the index, rejecting mismatched
-// (PubKey, KeyType) collisions.  Exact duplicates are ignored.  Same PubKey
-// under different KeyTypes is permitted: a keyring may hold one identity
-// SigningKey and one encrypt AsymmetricKey whose raw bytes happen to coincide
-// (e.g. a temp bootstrap key imported under both types during invite onboarding).
+// (PubKey, KeyType) collisions.  Exact duplicates are ignored.  An unsaved
+// record is not yet an install, so a mismatched record supersedes it: the
+// re-install a caller makes once the key reads absent.  Same PubKey under
+// different KeyTypes is permitted: a keyring may hold one identity SigningKey
+// and one encrypt AsymmetricKey whose raw bytes happen to coincide (e.g. a
+// temp bootstrap key imported under both types during invite onboarding).
 //
 // Must be called with enc.mu held.
 func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
@@ -516,12 +527,21 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 		return bytes.Compare(ring.records[i].PubKey, rec.PubKey) >= 0
 	})
 	for i := pos; i < len(ring.records) && bytes.Equal(ring.records[i].PubKey, rec.PubKey); i++ {
-		if ring.records[i].KeyType != rec.KeyType {
+		held := ring.records[i]
+		if held.KeyType != rec.KeyType {
 			continue
 		}
-		if !recordsEqual(ring.records[i], rec) {
+		if recordsEqual(held, rec) {
+			return nil
+		}
+		if _, pending := enc.unsaved[held]; !pending {
 			return status.Code_BadKeyFormat.Errorf("safe: pub-key collision for keyring %s", ringID.Base32())
 		}
+		delete(enc.unsaved, held)
+		Zero(held.PrvKey)
+		ring.records[i] = rec
+		ring.newestByType[rec.KeyType] = ringNewestPubOfType(ring, rec.KeyType)
+		enc.revision++
 		return nil
 	}
 
@@ -539,7 +559,10 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 	return nil
 }
 
-// fetchRecord returns the record matched by ref, or an error if none.
+// fetchRecord returns the record matched by ref, or an error if none.  It is
+// the one lookup every key op uses, so the unsaved refusal lives here: a
+// matched record whose persist has not succeeded reads KeyringNotFound
+// (SD-security-sync §20.6).
 //
 // Resolution rules:
 //   - ref.Type explicit + PubKey empty: returns newest record of that type.
@@ -550,6 +573,19 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 //
 // Must be called with enc.mu held.
 func (enc *enclave) fetchRecord(ref *KeyRef) (*KeyPairRecord, error) {
+	rec, err := enc.resolveRecord(ref)
+	if err != nil {
+		return nil, err
+	}
+	if _, pending := enc.unsaved[rec]; pending {
+		return nil, status.Code_KeyringNotFound.Errorf("keyring %v: %s held unsaved until a persist succeeds", ref.KeyringID(), rec.KeyType)
+	}
+	return rec, nil
+}
+
+// resolveRecord applies fetchRecord's resolution rules.  Must be called with
+// enc.mu held.
+func (enc *enclave) resolveRecord(ref *KeyRef) (*KeyPairRecord, error) {
 	ringID := ref.KeyringID()
 	ring := enc.byRing[ringID]
 	if ring == nil || len(ring.records) == 0 {
@@ -635,6 +671,7 @@ func (enc *enclave) zeroState() {
 		}
 	}
 	enc.byRing = nil
+	enc.unsaved = nil
 	Zero(enc.aad)
 	enc.closed = true
 }
