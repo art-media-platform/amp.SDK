@@ -10,7 +10,7 @@ The design language follows Flarum (re-implemented, not its GPL source).
 
 ## Run Against an Operated Node
 
-You connect to an `ampd` node an operator runs — you do not run one
+You connect to an `ampd` node a node operator runs — you do not run one
 (SKILL §0). Ask your amp contact for the node URL and the board planet tag.
 
 1. Make the SDK package resolvable. The example depends on `file:../..` —
@@ -39,7 +39,7 @@ You connect to an `ampd` node an operator runs — you do not run one
    ```
 
 Your dev origin (`http://localhost:5174`) must be on the node's CORS
-allowlist — an operator-side setting (SKILL §10). Ask for it when you get
+allowlist — a node-operator setting (SKILL §10). Ask for it when you get
 the planet tag.
 
 ## Run Against a Local ampd (AMP-Internal / Self-Hosted Dev)

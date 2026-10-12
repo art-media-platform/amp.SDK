@@ -206,7 +206,7 @@ on `client.getEncryptPub() !== null`, or let `seal()`'s throw propagate and abor
 on first login and persists it in the browser (IndexedDB), reinstalling it on every
 later login — so `seal`/`open` work for any logged-in member with no out-of-band
 setup. The private key never reaches the host or any other member, so a sealed
-secret stays opaque to admins, vault operators, other planet members, and a
+secret stays opaque to admins, node operators, other planet members, and a
 cold-store / forensic adversary holding the planet epoch key. That is the
 property the planet epoch key alone cannot give you.
 
@@ -253,7 +253,7 @@ device-local.
 
 ---
 
-## Operator notes (deploy-side)
+## Node-Operator Notes (Deploy-Side)
 
 - **CORS:** `AllowedOrigins: ["*"]` together with credentials echoes any origin back —
   a footgun. List specific origins in `app.brand.json`.
