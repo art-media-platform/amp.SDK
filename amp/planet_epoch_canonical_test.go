@@ -32,7 +32,7 @@ import (
 
 // goldenFrameHex is the FRAME of goldenEpoch: u64BE(len Charter), the Charter
 // in 32-byte lines, u64BE(len Terms), the Terms.  Whitespace is layout only.
-// Oracle: the proto3 encoder over the goldenLayers values; 996 bytes.
+// Oracle: the proto3 encoder over the goldenLayers values; 1017 bytes.
 const goldenFrameHex = `
 	0000000000000180
 	080112121973370000000000002178030000000000001a1219aa000000000000
@@ -47,7 +47,7 @@ const goldenFrameHex = `
 	6d2208e20105656e2d555332160a14e201114f7574206f66206d616e792c206f
 	6e652e32250a23e201204d656d6265727320617574686f723b20616e796f6e65
 	206d617920726561642e421219fe0f00000000000021ff0f0000000000004801
-	0000000000000254
+	0000000000000269
 	0801121219aaaa00000000000021bbbb0000000000001a121911110000000000
 	0021222200000000000020073220b55f2acbfc80f01d73a3ac55a5e21d08694e
 	375459a1bd03def097c6a6c7806d39bdcc3ab62bc98d18419fa0a3fff85320e2
@@ -66,7 +66,8 @@ const goldenFrameHex = `
 	2880f52430ac0238e80740644880f52450808080fa0158901c621e0a03746370
 	12177661756c742e706c616e65742e746f6f6c733a3531393362170a03756470
 	12103230332e302e3131332e373a3531393368808080808002800280ceda038a
-	0212191c00000000000000211d00000000000000
+	0212191c00000000000000211d0000000000000092021219aaaa000000000000
+	21bbbb000000000000
 `
 
 // goldenCharterHashHex = blake2s-256(Charter), the CharterHash in the Terms.
@@ -74,13 +75,13 @@ const goldenCharterHashHex = "b55f2acbfc80f01d73a3ac55a5e21d08" +
 	"694e375459a1bd03def097c6a6c7806d"
 
 // goldenDigestHex is goldenEpoch's CoSignatureDigest:
-// blake2s-256(0x10 ‖ "amp.sig.epoch.v1" ‖ u32BE(996) ‖ FRAME).
-const goldenDigestHex = "365d8d25a8b73b5b6a42d523a0680cc1" +
-	"3f55dae848bd54a3c82d76608ef54e31"
+// blake2s-256(0x10 ‖ "amp.sig.epoch.v1" ‖ u32BE(1017) ‖ FRAME).
+const goldenDigestHex = "f19447f894654d9bb30e3fac0dd75337" +
+	"fbda21602222135cbfaf8da182438240"
 
 // goldenFrameSHA3Hex is the FRAME of goldenEpochUnder(HashKitID_SHA3_256): the
 // Terms carry HashKit (field 5, `28 03`) and CharterHash = sha3-256(Charter).
-// Oracle: the proto3 encoder; 998 bytes.
+// Oracle: the proto3 encoder; 1019 bytes.
 const goldenFrameSHA3Hex = `
 	0000000000000180
 	080112121973370000000000002178030000000000001a1219aa000000000000
@@ -95,7 +96,7 @@ const goldenFrameSHA3Hex = `
 	6d2208e20105656e2d555332160a14e201114f7574206f66206d616e792c206f
 	6e652e32250a23e201204d656d6265727320617574686f723b20616e796f6e65
 	206d617920726561642e421219fe0f00000000000021ff0f0000000000004801
-	0000000000000256
+	000000000000026b
 	0801121219aaaa00000000000021bbbb0000000000001a121911110000000000
 	002122220000000000002007280332205e0aa9e4673525a4540192512804d8f0
 	3e80ce1a5d6dc6ea1e4f0cf8b1e19b3339bdcc3ab62bc98d18419fa0a3fff853
@@ -114,7 +115,8 @@ const goldenFrameSHA3Hex = `
 	a3052880f52430ac0238e80740644880f52450808080fa0158901c621e0a0374
 	637012177661756c742e706c616e65742e746f6f6c733a3531393362170a0375
 	647012103230332e302e3131332e373a3531393368808080808002800280ceda
-	038a0212191c00000000000000211d00000000000000
+	038a0212191c00000000000000211d0000000000000092021219aaaa00000000
+	000021bbbb000000000000
 `
 
 // goldenCharterHashSHA3Hex = sha3-256(Charter).
@@ -122,12 +124,12 @@ const goldenCharterHashSHA3Hex = "5e0aa9e4673525a4540192512804d8f0" +
 	"3e80ce1a5d6dc6ea1e4f0cf8b1e19b33"
 
 // goldenDigestSHA3Hex is the SHA3 variant's CoSignatureDigest:
-// sha3-256(0x10 ‖ "amp.sig.epoch.v1" ‖ u32BE(998) ‖ FRAME).
-const goldenDigestSHA3Hex = "c15f7575d99dd546fee34cb99e1705bd" +
-	"b6d70d539eb2a845d0b063750249c056"
+// sha3-256(0x10 ‖ "amp.sig.epoch.v1" ‖ u32BE(1019) ‖ FRAME).
+const goldenDigestSHA3Hex = "1118c3fc752bf0291d910cd7d1feb174" +
+	"c5a910c2e73296583956b04498c06278"
 
 // genesisFrameHex is the FRAME of genesisLayers under the default Blake2s_256.
-// Oracle: the proto3 encoder; 343 bytes.
+// Oracle: the proto3 encoder; 364 bytes.
 const genesisFrameHex = `
 	00000000000000a1
 	080112121907e5b4c2613a8f0d2171605f4e3d2c1b9a1a1219e5d4c3b2a1f092
@@ -136,19 +138,19 @@ const genesisFrameHex = `
 	65722e32280a26e20123576861742061206d656d62657220617574686f727320
 	7374617973207468656972732e42121968241f9d7a5e3b0c21ce8a4602df9b57
 	13
-	00000000000000a6
+	00000000000000bb
 	0801121219e5d4c3b2a1f092012178695a4b3c2d1e0f3220afe2bf9fb54f234b
 	823401e30285e6f638c651e44a84274a90295c32c3c5ee26396fda3447b83491
 	6241e6e112bbd10a87cc520a4865786f73706865726562121907e5b4c2613a8f
 	0d2171605f4e3d2c1b9aca0139621e0a0374637012177661756c742e706c616e
 	65742e746f6f6c733a3531393362170a0374637012103230332e302e3131332e
-	373a35313933
+	373a3531393392021219e5d4c3b2a1f092012178695a4b3c2d1e0f
 `
 
-// genesisDigestHex = blake2s-256(0x10 ‖ "amp.sig.epoch.v1" ‖ u32BE(343) ‖
+// genesisDigestHex = blake2s-256(0x10 ‖ "amp.sig.epoch.v1" ‖ u32BE(364) ‖
 // FRAME).
-const genesisDigestHex = "e3c9a9eedc22b95135994f11e6cf1ce1" +
-	"178ec1ec9c8f6747ee549947f30b70ce"
+const genesisDigestHex = "891b3511205ab1a78dc2d057b422918b" +
+	"bd3488302c31893440f39d8b45f4fac0"
 
 // RFC 8032 §7.1 TEST 1: the Ed25519 secret key (seed) and its public key.
 const (
@@ -161,10 +163,10 @@ const (
 // goldenCoSignatureHex is the RFC 8032 TEST 1 key's Ed25519 signature over
 // goldenDigestHex.  Oracle: OpenSSL 3.6 `pkeyutl -sign -rawin` (the same
 // method reproduces RFC 8032 TEST 2).
-const goldenCoSignatureHex = "c3c9e1c4c189384140a3716b0b306b0d" +
-	"f52abba31b79cde6c44e59ea785d7bea" +
-	"1621ab78eb5f65a3b44c289f3a6d64f1" +
-	"6dd8848b53cee8637da03e50a64e8e0c"
+const goldenCoSignatureHex = "072cdfa3b7cbed741b9fd11dfd657584" +
+	"c3ed528297a8fe1f18fc9ce76dd121f8" +
+	"d9a6af87b26f5c882fae80aa47fe3467" +
+	"8445bc5fc4efb62f3b024b4f22a7ff0c"
 
 // goldenLayers returns the golden epoch's layers: a fully-populated epoch
 // envelope (rotation-shaped: PreviousEpoch and EpochHeight are set, so
@@ -278,8 +280,9 @@ func goldenLayers() (*amp.PlanetCharter, *amp.EpochTerms) {
 			},
 			MaxBlobBytesPerObject: 64 << 30,
 		},
-		MaxGracePeriod: 90 * 86400,
-		LicenseClass:   tagWithUID(0x1C, 0x1D),
+		MaxGracePeriod:     90 * 86400,
+		LicenseClass:       tagWithUID(0x1C, 0x1D),
+		ContentSealedSince: tagWithUID(0xAAAA, 0xBBBB),
 	}
 	return charter, terms
 }
@@ -288,7 +291,8 @@ func goldenLayers() (*amp.PlanetCharter, *amp.EpochTerms) {
 // assembleGenesis (home.genesis.go) builds one from a genesis pin: one
 // founder, Confidential (the zero PrivacyMode), a declaration as
 // parseDeclaration emits it (Head + one Child per clause), Foyer = the planet,
-// a Poly25519 suite, two bootstrap VaultAddrs, no PreviousEpoch, height 0.
+// a Poly25519 suite, two bootstrap VaultAddrs, ContentSealedSince = its own
+// EpochTag (SD-security-sync §7.7), no PreviousEpoch, height 0.
 // GenesisRequiredSignatures (0 = all founders) and Admission are unset, as a
 // genesis pin leaves them.  The UIDs are fixed stand-ins for NewID / NowID.
 func genesisLayers() (*amp.PlanetCharter, *amp.EpochTerms) {
@@ -311,12 +315,13 @@ func genesisLayers() (*amp.PlanetCharter, *amp.EpochTerms) {
 		},
 	}
 	terms := &amp.EpochTerms{
-		TermsSchema:   1,
-		EpochTag:      epoch,
-		CryptoKitID_0: safe.Crypto.Poly25519.ID[0],
-		CryptoKitID_1: safe.Crypto.Poly25519.ID[1],
-		Label:         "Hexosphere",
-		Foyer:         planet,
+		TermsSchema:        1,
+		EpochTag:           epoch,
+		CryptoKitID_0:      safe.Crypto.Poly25519.ID[0],
+		CryptoKitID_1:      safe.Crypto.Poly25519.ID[1],
+		Label:              "Hexosphere",
+		Foyer:              planet,
+		ContentSealedSince: epoch,
 		VaultConfig: &amp.VaultConfig{
 			VaultAddrs: []*amp.VaultAddr{
 				{

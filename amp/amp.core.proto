@@ -769,6 +769,13 @@ message EpochTerms {
     // const (amp.std.consts.sdl), quorum-signed with the epoch so a change is
     // a rotation.  Unset resolves to LawLicenseClass_NonCommercial.
     Tag                 LicenseClass = 33;
+
+    // The TxTimeID from which a Confidential planet refuses planet-public
+    // txs carrying content ops (AOM SD-security-sync.md §7.7).  Unset = not
+    // enforced; inert on a Public planet.  Introduced equal to the
+    // introducing epoch's own EpochTag (a Confidential genesis, or one later
+    // rotation), then carried unchanged by every rotation.
+    Tag                 ContentSealedSince = 34;
 }
 
 
@@ -2279,7 +2286,7 @@ enum RefusalClass {
     ConflictingBytes   = 1; // the TxTimeID already names different verified bytes on the refuser
     Oversized          = 2; // exceeds the refuser's MaxTxMsgSize (Detail = that limit, bytes)
     FutureSkew         = 3; // stamped past the refuser's MaxFutureSkew (Detail = that window, seconds)
-    ProtocolViolation  = 4; // the bytes themselves break the protocol — a sealed tx with no MemberProof, a MetaOp-flagged authored op; final, never journaled (SD-security-sync §11.1)
+    ProtocolViolation  = 4; // the bytes themselves break the protocol — a sealed tx with no MemberProof or a MetaOp-flagged authored op (final), a planet-public content tx at or after its planet's ContentSealedSince; never journaled (SD-security-sync §11.1)
 }
 
 
