@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -295,5 +296,58 @@ func TestEnclave_ReinstallSupersedesUnsaved(t *testing.T) {
 	}
 	if !rig.onDisk(t, ref) {
 		t.Fatal("re-installed key not on disk")
+	}
+}
+
+// faultGuard delegates to a real Guard but fails the next failWraps WrapDEK
+// calls.
+type faultGuard struct {
+	safe.Guard
+	failWraps int
+}
+
+var errInjectedWrap = errors.New("faultGuard: injected WrapDEK failure")
+
+func (guard *faultGuard) WrapDEK(ctx context.Context, dek, aad []byte) (*safe.WrappedDEK, error) {
+	if guard.failWraps > 0 {
+		guard.failWraps--
+		return nil, errInjectedWrap
+	}
+	return guard.Guard.WrapDEK(ctx, dek, aad)
+}
+
+// A persist whose WrapDEK fails reports the failure and saves nothing: the
+// import returns the error, and the tome on disk is the last good one, without
+// the key.
+func TestEnclave_WrapDEKFailureSavesNothing(t *testing.T) {
+	ctx := context.Background()
+	inner := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "enclave.tome"))
+	base := safe.NewFileGuard([]byte("test pass"), []byte("wrap fault"))
+	defer base.Close()
+	guard := &faultGuard{
+		Guard: base,
+	}
+	enc, err := safe.OpenEnclave(ctx, inner, guard, []byte("wrap fault"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer enc.Close(ctx)
+	if err := enc.ImportKey(ctx, tag.NewID(), enclaveImportPair()); err != nil {
+		t.Fatalf("baseline install: %v", err)
+	}
+	ringID := tag.NewID()
+	ref := &safe.KeyRef{Type: safe.KeyType_SymmetricKey}
+	ref.SetKeyringID(ringID)
+	guard.failWraps = 1
+	if err := enc.ImportKey(ctx, ringID, enclaveImportPair()); !errors.Is(err, errInjectedWrap) {
+		t.Fatalf("ImportKey with a failing WrapDEK returned %v, want the wrap error", err)
+	}
+	reader, err := safe.OpenEnclave(ctx, inner, base, []byte("wrap fault"))
+	if err != nil {
+		t.Fatalf("the tome on disk does not open after a failed wrap: %v", err)
+	}
+	defer reader.Close(ctx)
+	if _, err := reader.FetchPubKey(ref); err == nil {
+		t.Fatal("a persist with a failed WrapDEK put the key on disk")
 	}
 }
