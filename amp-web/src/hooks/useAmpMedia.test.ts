@@ -47,7 +47,7 @@ function mediaServer(opts: { resolveFails?: boolean } = {}) {
     idleOut(): void { published.clear(); },
     /** The token lifetime's bucket passes: every outstanding token is expired. */
     expireTokens(): void { bucket++; },
-    /** admin/session/revoke: the member's generation bumps and the session is gone. */
+    /** POST /session/revoke: the member's generation bumps and the session is gone. */
     signOutEverywhere(): void { generation++; signedOut = true; },
     /** What a <video> range request sees at the URL. */
     serve(url: string | null): number {
