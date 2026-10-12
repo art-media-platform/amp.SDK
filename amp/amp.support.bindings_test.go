@@ -154,3 +154,137 @@ func TestFoldBinding_DeleteFiresOnItemDeleted(t *testing.T) {
 		t.Errorf("OnAdmit consulted %d times, want >= 2 (upsert + delete)", admits)
 	}
 }
+
+// nodeProbe counts one binding's callbacks: a FoldBinding read at item 0 or a
+// LocusBinding read at cell 0, both of *amp.Tag.
+type nodeProbe struct {
+	responder amp.NodeResponder
+	bind      func(nodeID tag.UID)
+	boundTo   func() tag.UID
+	value     func() (*amp.Tag, bool)
+	items     int
+	syncs     int
+}
+
+func newNodeProbe(attr tag.Name, locus bool) *nodeProbe {
+	probe := &nodeProbe{}
+	if locus {
+		binding := amp.NewLocusBinding[*amp.Tag](attr)
+		binding.OnCell = func(int, amp.AttrItem[*amp.Tag]) { probe.items++ }
+		binding.OnSync = func() { probe.syncs++ }
+		probe.responder = binding
+		probe.bind = binding.Bind
+		probe.boundTo = binding.NodeID
+		probe.value = func() (*amp.Tag, bool) { return binding.GetCell(0) }
+		return probe
+	}
+	binding := amp.NewFoldBinding[*amp.Tag](attr)
+	binding.OnItem = func(amp.AttrItem[*amp.Tag]) { probe.items++ }
+	binding.OnSync = func() { probe.syncs++ }
+	probe.responder = binding
+	probe.bind = binding.Bind
+	probe.boundTo = binding.NodeID
+	probe.value = func() (*amp.Tag, bool) { return binding.GetItem(tag.UID{}) }
+	return probe
+}
+
+// offerNodes hands tx to the probe once per node, in order: the way a
+// caller feeding bindings from one tx offers each node it touches.
+func (probe *nodeProbe) offerNodes(tx *amp.TxMsg, nodeIDs ...tag.UID) {
+	for _, nodeID := range nodeIDs {
+		probe.responder.OnNodeUpdate(amp.NodeUpdate{
+			NodeID: nodeID,
+			Tx:     tx,
+		})
+	}
+}
+
+// expect fails unless the probe is bound to node and holds node's value,
+// delivered by exactly one item callback and one sync callback.
+func (probe *nodeProbe) expect(t *testing.T, node tag.UID) {
+	t.Helper()
+	if probe.boundTo() != node {
+		t.Errorf("bound to %s, want %s", probe.boundTo(), node)
+	}
+	value, found := probe.value()
+	if !found || tagText(value) != node.Base32() {
+		t.Errorf("value = %q (found=%v), want %q", tagText(value), found, node.Base32())
+	}
+	if probe.items != 1 || probe.syncs != 1 {
+		t.Errorf("callbacks: items=%d syncs=%d, want 1 each", probe.items, probe.syncs)
+	}
+}
+
+// filterCase is one binding kind offered nodes A and B in one order.
+type filterCase struct {
+	name  string
+	locus bool
+	order []tag.UID
+}
+
+// filterFixture returns nodes A and B, a locus-base *amp.Tag attr, and the
+// cases spanning both bindings that share acceptUpdateNode and both orders.
+func filterFixture() (nodeA, nodeB tag.UID, attr tag.Name, cases []filterCase) {
+	nodeA = tag.Name{}.With("test.bindings.node-a").ID
+	nodeB = tag.Name{}.With("test.bindings.node-b").ID
+	attr = tag.Name{}.With("test.bindings.locus.Tag")
+	attr.ID = attr.ID.LocusBase()
+	for _, locus := range []bool{false, true} {
+		kind := "fold"
+		if locus {
+			kind = "locus"
+		}
+		cases = append(cases, filterCase{
+			name:  kind + "/a-first",
+			locus: locus,
+			order: []tag.UID{nodeA, nodeB},
+		}, filterCase{
+			name:  kind + "/b-first",
+			locus: locus,
+			order: []tag.UID{nodeB, nodeA},
+		})
+	}
+	return nodeA, nodeB, attr, cases
+}
+
+// nodesTx carries one upsert per node at (node, attrID, item 0), each valued
+// with its node's base32.
+func nodesTx(t *testing.T, attrID tag.UID, nodeIDs ...tag.UID) *amp.TxMsg {
+	tx := amp.TxNew()
+	tx.SetTxID(tag.NowID())
+	for _, nodeID := range nodeIDs {
+		value := &amp.Tag{Text: nodeID.Base32()}
+		if err := tx.Upsert(nodeID, attrID, tag.UID{}, value); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return tx
+}
+
+// TestBindings_BoundNodeRefusesOthers: a binding bound to A, offered a tx
+// touching A and B in either order, keeps A's value with one item and one
+// sync; B is refused whole, its sync included.
+func TestBindings_BoundNodeRefusesOthers(t *testing.T) {
+	nodeA, nodeB, attr, cases := filterFixture()
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			probe := newNodeProbe(attr, test.locus)
+			probe.bind(nodeA)
+			probe.offerNodes(nodesTx(t, attr.ID, nodeA, nodeB), test.order...)
+			probe.expect(t, nodeA)
+		})
+	}
+}
+
+// TestBindings_UnboundBindsFirstNode: an unbound binding binds to the first
+// node it is offered and refuses the next.
+func TestBindings_UnboundBindsFirstNode(t *testing.T) {
+	nodeA, nodeB, attr, cases := filterFixture()
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			probe := newNodeProbe(attr, test.locus)
+			probe.offerNodes(nodesTx(t, attr.ID, nodeA, nodeB), test.order...)
+			probe.expect(t, test.order[0])
+		})
+	}
+}
