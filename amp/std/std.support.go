@@ -178,35 +178,8 @@ func (pin *Pin[AppT]) AddChild(sub Item[AppT]) {
 	pin.children[childID] = sub
 }
 
-func (pin *Pin[AppT]) GetItem(target tag.UID) Item[AppT] {
-	if pin.Item != nil && target == pin.Item.Root().ID {
-		return pin.Item
-	}
-	if item, exists := pin.children[target]; exists {
-		return item
-	}
-	return nil
-}
-
 func (pin *Pin[AppT]) Context() task.Context {
 	return pin.ctx
-}
-
-func (pin *Pin[AppT]) StartPin(req *amp.Request) (amp.Pin, error) {
-	if err := req.ParseAsAddressURL(); err != nil {
-		return nil, err
-	}
-	if len(req.Selector.Spans) == 0 {
-		return nil, status.Code_BadRequest.Error("missing node selector")
-	}
-
-	targetID := req.Selector.Spans[0].NodeID()
-
-	item := pin.GetItem(targetID)
-	if item == nil {
-		return nil, status.ErrItemNotFound
-	}
-	return PinAndServe(item, pin.App, req)
 }
 
 // pushState builds and sends the current state of all items to the client.

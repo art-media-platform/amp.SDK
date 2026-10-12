@@ -82,8 +82,6 @@ type Pinner interface {
 
 // Pin is an attribute state connection to an app (read-serving).
 type Pin interface {
-	Pinner
-
 	// Context returns the task.Context associated with this Pin.  Apps start a Pin
 	// as a child Context of amp.AppContext.Context or as a child of another Pin.
 	// This means an AppContext contains all its Pins, and Close() will close all

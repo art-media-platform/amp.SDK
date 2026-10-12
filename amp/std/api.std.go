@@ -1,9 +1,8 @@
 // Package std provides Go support classes for building amp apps.
 //
-// Most amp apps embed App and use Pin to manage bidirectional state flow.
-// Send-only apps (e.g. serving a file listing) use the Item/PinAndServe
-// pattern.  Interactive apps (e.g. planet viewers, editors) use
-// Pin.Bind/MergeIncoming with FoldBinding.
+// Most amp apps embed App.  An app serves state through the send-only
+// Item/PinAndServe pattern; it reads typed planet state through an
+// amp.FoldBinding fed by LoadItems.
 package std
 
 import (
@@ -40,60 +39,19 @@ type ItemNode[AppT amp.AppInstance] struct {
 	ID tag.UID
 }
 
-// Pin manages bidirectional state flow for an amp app request.
-//
-// For send-only apps (Item pattern):
-//   - PinAndServe populates items via PinInto, serializes via MarshalAttrs, pushes to client.
-//
-// For interactive apps (binding pattern):
-//   - Bind registers NodeResponders (typically FoldBinding instances).
-//   - MergeIncoming dispatches incoming TxMsg ops to bound responders.
-//   - Responders fire typed callbacks per item, enabling reactive state management.
+// Pin serves one request send-only: PinAndServe populates the pinned item
+// and its children via PinInto, serializes them via MarshalAttrs, pushes that
+// state once (Snapshot or MaintainSync), then completes.  A Pin takes no
+// writes: it is not an amp.PinCommitter.
 type Pin[AppT amp.AppInstance] struct {
 	Request *amp.Request // originating request
-	Item    Item[AppT]   // pinned item (nil for binding-only pins)
+	Item    Item[AppT]   // pinned item
 	App     AppT         // parent app instance
 	Sync    amp.PinMode  // Op.Request().PinMode
 
-	fatal      error                  // fatal error, if any
-	children   map[tag.UID]Item[AppT] // child items (Item pattern)
-	ctx        task.Context           // task context for this pin
-	responders []amp.NodeResponder    // bound responders (binding pattern)
-}
-
-// Bind registers a NodeResponder on this pin; bind each responder once, since
-// one bound twice is offered each node twice.  When MergeIncoming is called,
-// matching ops are dispatched to this responder.  Typically used with
-// amp.FoldBinding[V] instances.
-func (pin *Pin[AppT]) Bind(resp amp.NodeResponder) {
-	pin.responders = append(pin.responders, resp)
-}
-
-// MergeIncoming processes an incoming TxMsg by offering each node it touches,
-// in order of first appearance, to each bound entry once.  Supports
-// multi-pass iteration: if a responder adds new responders during its
-// callback, additional passes ensure the new responders also process the tx.
-func (pin *Pin[AppT]) MergeIncoming(tx *amp.TxMsg) {
-	nodeIDs := amp.EnumNodeIDs(tx)
-
-	// Bind only appends: responders[:handled] have been offered every node.
-	handled := 0
-	for range 100 {
-		bound := len(pin.responders)
-		if handled == bound {
-			break
-		}
-		for _, nodeID := range nodeIDs {
-			update := amp.NodeUpdate{
-				Tx:     tx,
-				NodeID: nodeID,
-			}
-			for _, resp := range pin.responders[handled:bound] {
-				resp.OnNodeUpdate(update)
-			}
-		}
-		handled = bound
-	}
+	fatal    error                  // fatal error, if any
+	children map[tag.UID]Item[AppT] // child items
+	ctx      task.Context           // task context for this pin
 }
 
 // ItemWriter serializes item attributes into a transaction.
