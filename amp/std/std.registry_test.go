@@ -102,10 +102,10 @@ func TestRegistryConcurrentReadWrite(t *testing.T) {
 // forge registration emitted is live in the process registry, count-exact
 // and §4.8-conformant, with golden UIDs asserted as BYTES.
 func TestGeneratedAttrRegistration(t *testing.T) {
-	// amp.std.consts.sdl declares 65 registrable attrs (trailing message-type
+	// amp.std.consts.sdl declares 67 registrable attrs (trailing message-type
 	// word, ZO §4.8); std.terminal.go registers 2 more at use-site.  A count
 	// drift means a registration was added or lost — both are conscious edits.
-	const generatedAttrs = 65
+	const generatedAttrs = 67
 	const useSiteAttrs = 2
 
 	count := 0
