@@ -6,6 +6,7 @@ package amp_test
 // Public Charter.
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/art-media-platform/amp.SDK/amp"
@@ -68,8 +69,8 @@ func TestVerifyCharterContinuity_ContentSealedSince(t *testing.T) {
 	if err := chain.epoch(101, 201, genesis, uid(100, 200)).VerifyCharterContinuity(genesis); err != nil {
 		t.Errorf("a rotation carrying the marker refused: %v", err)
 	}
-	if err := chain.epoch(101, 201, genesis, nil).VerifyCharterContinuity(genesis); err == nil {
-		t.Error("a rotation dropping the marker passed")
+	if err := chain.epoch(101, 201, genesis, nil).VerifyCharterContinuity(genesis); !errors.Is(err, amp.ErrSealedSinceContinuity) {
+		t.Errorf("a rotation dropping the marker: %v, want ErrSealedSinceContinuity", err)
 	}
 	if err := chain.epoch(101, 201, genesis, uid(101, 201)).VerifyCharterContinuity(genesis); err == nil {
 		t.Error("a rotation changing the marker passed")

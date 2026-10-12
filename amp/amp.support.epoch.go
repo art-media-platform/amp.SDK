@@ -3,6 +3,7 @@ package amp
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"sort"
 
@@ -291,20 +292,27 @@ func (pe *PlanetEpoch) VerifyCharterContinuity(prev *PlanetEpoch) error {
 	return verifySealedSince(terms, prevTerms)
 }
 
+// ErrSealedSinceContinuity wraps every ContentSealedSince chain-rule failure.
+// The failure is version-shaped — a binary that predates the marker rotates
+// without it — not forgery-shaped, so a verifier refuses such an epoch
+// without punishing its signers (AOM SD-security-sync.md §4.4).
+var ErrSealedSinceContinuity = status.Code_AuthFailed.Error("amp: ContentSealedSince continuity")
+
 // verifySealedSince holds EpochTerms.ContentSealedSince to its chain rule
 // (AOM SD-security-sync.md §4.4, §7.7): a predecessor's marker is carried
 // unchanged, and a marker is introduced only equal to the introducing epoch's
-// own EpochTag.  prevTerms is nil at genesis.
+// own EpochTag.  prevTerms is nil at genesis.  A failure wraps
+// ErrSealedSinceContinuity.
 func verifySealedSince(terms, prevTerms *EpochTerms) error {
 	marker := terms.GetContentSealedSince().UID()
 	if prior := prevTerms.GetContentSealedSince().UID(); prior.IsSet() {
 		if marker != prior {
-			return status.Code_AuthFailed.Error("amp: ContentSealedSince dropped or changed from the predecessor's")
+			return fmt.Errorf("%w: dropped or changed from the predecessor's", ErrSealedSinceContinuity)
 		}
 		return nil
 	}
 	if marker.IsSet() && marker != terms.GetEpochTag().UID() {
-		return status.Code_AuthFailed.Error("amp: ContentSealedSince introduced at other than its epoch's own EpochTag")
+		return fmt.Errorf("%w: introduced at other than its epoch's own EpochTag", ErrSealedSinceContinuity)
 	}
 	return nil
 }
