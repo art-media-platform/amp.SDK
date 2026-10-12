@@ -156,6 +156,10 @@ var Attr = struct {
 	BlobProgress                       tag.Name
 	NodeAttr                           tag.Name
 	NodeCredentials                    tag.Name
+	NodeLog                            tag.Name
+	NodeLogEntry                       tag.Name
+	NodeMessages                       tag.Name
+	NodeMessage                        tag.Name
 	TileServerAttr                     tag.Name
 	TileServer                         tag.Name
 }{
@@ -421,6 +425,18 @@ var Attr = struct {
 	NodeAttr: tag.Name{ID: tag.UID{0x93F76E7915DC92BF, 0x6DD22A7FFF8A1FA8}, Text: "node"}, // 4myxr-7k5fw-kbzqvn-jbgzz-sn7x8
 
 	NodeCredentials: tag.Name{ID: tag.UID{0x38E9C390B7C5C376, 0x0906744822BD89F5}, Text: "node.Credentials"}, // 1sx71-t1ey5-sev0k1-mn90j-cv2gp
+
+	// ─── Node log rail (SD-planet-storage §4.2.1) ───────────────────
+	// Planet-public rows a host-owned courier authors onto its home planet:
+	// the log channel holds one NodeLogEntry per row, keyed by time; the
+	// message channel one NodeMessage per row, addressed to members by UID.
+	NodeLog: tag.Name{ID: tag.UID{0x5079E1442711FE50, 0x89F03FDF195BBCF4}, Text: "amp.node.log"}, // 2hg7h-n89sj-zt88mw-1zvwd-prg7n
+
+	NodeLogEntry: tag.Name{ID: tag.UID{0x64F926FAC9832025, 0xB4B5E362D8A69547}, Text: "amp.node.log.NodeLogEntry"}, // 34z4m-gpkd3-40kv9e-g3dcd-be5b7
+
+	NodeMessages: tag.Name{ID: tag.UID{0x6835050E40BB1B6D, 0xB432ED1DC5269E85}, Text: "amp.node.messages"}, // 386n2-hwh5v-3eqv8d-re3r2-ke7n5
+
+	NodeMessage: tag.Name{ID: tag.UID{0xD815C003AD450330, 0xE42103CA3FB7A690}, Text: "amp.node.messages.NodeMessage"}, // 6s2r0-07cb5-0dsf88-83t8z-vg9nh
 
 	// ─── Tile-server registry — list of available raster / terrain / vector ───
 	// tile backends.  Each entry is a TileServer proto stored as one item
@@ -693,5 +709,7 @@ func init() {
 	RegisterAttrDeclared(Attr.NodeBlobs, &amp.BlobRef{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.BlobProgress, &amp.BlobProgress{}, amp.EditFlow_Fold)
 	RegisterAttrDeclaredSealed(Attr.NodeCredentials, &Credentials{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.NodeLogEntry, &amp.NodeLogEntry{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.NodeMessage, &amp.NodeMessage{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.TileServer, &TileServer{}, amp.EditFlow_Fold)
 }

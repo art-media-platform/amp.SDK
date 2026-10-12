@@ -286,6 +286,17 @@ tags Attr {
         NodeCredentials "Credentials" : sealed
     }
 
+    // Node log rail (SD-planet-storage §4.2.1)
+    // Planet-public rows a host-owned courier authors onto its home planet:
+    // the log channel holds one NodeLogEntry per row, keyed by time; the
+    // message channel one NodeMessage per row, addressed to members by UID.
+    NodeLog "amp.node.log" {
+        NodeLogEntry "NodeLogEntry"
+    }
+    NodeMessages "amp.node.messages" {
+        NodeMessage "NodeMessage"
+    }
+
     // Tile-server registry — list of available raster / terrain / vector
     // tile backends.  Each entry is a TileServer proto stored as one item
     // under TileServer; consumers (TileService, mantle compositor) filter
