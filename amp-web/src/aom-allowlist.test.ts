@@ -10,7 +10,7 @@
  * the .ts for the hand-written client — never by widening the list.
  *
  * Runs from both views this file ships in: the amp.SDK repo (amp-web/) and
- * the amp-web-SDK bundle (pack.sh stages aom-allowlist.txt beside src/).
+ * the AMP Web Kit bundle (pack.sh stages aom-allowlist.txt beside src/).
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';

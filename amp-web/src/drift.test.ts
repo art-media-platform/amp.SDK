@@ -31,7 +31,7 @@ import { AmpWebClient } from './web-client.js';
 import type { AccessLevel, InvitePolicyEntry, TrustState, WithdrawReason } from './types.js';
 
 // Fixture root, probed for both views this file ships in: the amp.SDK repo
-// (amp/webapi/testdata) and the amp-web-SDK bundle (pack.sh stages the same
+// (amp/webapi/testdata) and the AMP Web Kit bundle (pack.sh stages the same
 // fixtures at webapi/testdata).
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TESTDATA_CANDIDATES = [

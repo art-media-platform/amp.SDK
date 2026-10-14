@@ -23,7 +23,7 @@ go test ./...
 | [`amp/webapi/`](amp/webapi/) | the canonical HTTP/WebSocket request and response shapes, with golden fixtures |
 | [`stdlib/`](stdlib/) | the primitives the contract rests on — `tag` UIDs, `safe` key handling, `task` contexts, `data` publishing |
 | [`amp-web/`](amp-web/) | the TypeScript client (`@art-media-platform/web`) and its bundle |
-| [`amp-native/`](amp-native/) | the README that ships inside the native kit |
+| [`amp-maker/`](amp-maker/) | the README that ships inside the AMP Maker Kit |
 
 `amp/README.md` is the guide for shipping an AMP channel or channel UI; the
 [top-level README](README.md) is the protocol overview.

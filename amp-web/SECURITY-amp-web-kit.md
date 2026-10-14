@@ -1,4 +1,4 @@
-# Security model — amp-web-SDK
+# Security model — AMP Web Kit
 
 What a web app built on amp can rely on, and the handful of things the SDK
 **cannot** do for you. This is the consumer-facing summary; the protocol

@@ -1,8 +1,8 @@
-# SKILL: amp-web-SDK
+# SKILL: AMP Web Kit
 
 > **What this document is:** Instructions for an AI coding agent (Claude Code, Cursor, Replit Agent, etc.) — and a contract for human web developers — to build web applications that persist data through the art.media.platform (amp) vault infrastructure. Drop this file into any web project. Generated code uses the `@art-media-platform/web` library to talk to `app.www`, the unified HTTP service inside `ampd`.
 
-> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is signed, replicated across independent nodes ("vaults"), and encrypted where an app seals it; member content written through this SDK is not yet sealed (`SECURITY-amp-web-SDK.md`). Every host is a full peer — an app on an embedded/local vault works offline (§14.1); **this web client is cloud-only** and needs its operated node reachable (§14.2). Your web app is a disposable UI layer; amp is the durable substrate underneath.
+> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is signed, replicated across independent nodes ("vaults"), and encrypted where an app seals it; member content written through this SDK is not yet sealed (`SECURITY-amp-web-kit.md`). Every host is a full peer — an app on an embedded/local vault works offline (§14.1); **this web client is cloud-only** and needs its operated node reachable (§14.2). Your web app is a disposable UI layer; amp is the durable substrate underneath.
 
 ---
 
@@ -13,7 +13,7 @@ not build, run, compile, embed, or `go build` any server.** If you catch yoursel
 cloning amp.planet / amp.SDK, writing Go, running `make`, or "standing up a node,"
 stop — wrong path. Your whole footprint is one TypeScript package + HTTPS calls.
 
-- **Your dependency** is the SDK bundle: `npm install ./amp-web-SDK` (a `file:`
+- **Your dependency** is the SDK bundle: `npm install ./amp-web-kit` (a `file:`
   dependency). The bare-name `npm install @art-media-platform/web` from the public
   registry is **not** available during beta — it lands when the SDK publishes at
   **v400**. We're pre-v400 today, so install the versioned bundle locally.
@@ -64,7 +64,7 @@ The constructor `planetTag` rides every call, so this round-trip targets the han
 
 | Do | Don't |
 |---|---|
-| `npm install ./amp-web-SDK` (the bundle) | `git clone` / `go build` amp.planet or amp.SDK |
+| `npm install ./amp-web-kit` (the bundle) | `git clone` / `go build` amp.planet or amp.SDK |
 | construct `AmpWebClient` at the operated `vaultUrl` | run / compile / embed `ampd`, or stand up a node |
 | `login` → `create` / `query` / `subscribe` / `upload` | reimplement tag canonization (use `resolveTag`, §5.8) |
 | build your React UI + cards (§8) | raw-`fetch` `/api/v1/*` (always go through the SDK) |
@@ -93,7 +93,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 | **This SKILL** | AI-agent instructions, API reference, data model conventions, WebRect bridge IDL | Always |
 | **`@art-media-platform/web`** (the client package in this bundle) | TypeScript reference client — React hooks, sealed-box helpers, cross-planet address helper | At `npm install` time |
 | **`webapi/webapi.types.go`** (canonical source: `amp.SDK/amp/webapi`) | The wire contract verbatim — Go structs + JSON tags for every `/api/v1/*` shape. Mirror these field names one-to-one in any language. | Implementing a non-TS client |
-| **[`SECURITY-amp-web-SDK.md`](SECURITY-amp-web-SDK.md)** | The security model a consumer relies on — encryption, identity, what a vault can and cannot see | Auditing security claims |
+| **[`SECURITY-amp-web-kit.md`](SECURITY-amp-web-kit.md)** | The security model a consumer relies on — encryption, identity, what a vault can and cannot see | Auditing security claims |
 
 ---
 
@@ -116,17 +116,17 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 
 ### Install
 
-**Beta (pre-v400)** — distributed in the `amp-web-SDK` bundle, not yet on npm. Get it from your amp contact (or build it from an `amp.SDK` checkout: `amp-web/pack.sh`), unzip it **inside your project directory**, and install the local package:
+**Beta (pre-v400)** — distributed as the AMP Web Kit bundle, not yet on npm. Get it from your amp contact (or build it from an `amp.SDK` checkout: `amp-web/pack.sh`), unzip it **inside your project directory**, and install the local package:
 
 ```bash
-npm install ./amp-web-SDK
+npm install ./amp-web-kit
 ```
 
 ```json
-{ "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
+{ "dependencies": { "@art-media-platform/web": "file:./amp-web-kit" } }
 ```
 
-Publishing to npm as `@art-media-platform/web` lands at v400 — until then, install the versioned bundle locally (above). Keep the bundle **inside** the project: npm links a path dependency as a symlink, and from an outside directory the bundle's `@noble/*` runtime deps don't resolve through the link. The bundle ships **no `node_modules`**: `npm install ./amp-web-SDK` fetches the three `@noble/*` runtime deps from the registry at install time (network required once). Two entries: the root `@art-media-platform/web` is **React-free** (`AmpWebClient`, the codecs, `parseUID`, `std`/`safe` — imports without React, from a bundler or a Node harness alike); React apps import `<AmpProvider>` and the hooks from `@art-media-platform/web/react`, where `react` (>= 18) is the peer dependency — add it explicitly if your package manager does not install it. Symptoms + fixes: [`docs/install-troubleshooting.md`](docs/install-troubleshooting.md).
+Publishing to npm as `@art-media-platform/web` lands at v400 — until then, install the versioned bundle locally (above). Keep the bundle **inside** the project: npm links a path dependency as a symlink, and from an outside directory the bundle's `@noble/*` runtime deps don't resolve through the link. The bundle ships **no `node_modules`**: `npm install ./amp-web-kit` fetches the three `@noble/*` runtime deps from the registry at install time (network required once). Two entries: the root `@art-media-platform/web` is **React-free** (`AmpWebClient`, the codecs, `parseUID`, `std`/`safe` — imports without React, from a bundler or a Node harness alike); React apps import `<AmpProvider>` and the hooks from `@art-media-platform/web/react`, where `react` (>= 18) is the peer dependency — add it explicitly if your package manager does not install it. Symptoms + fixes: [`docs/install-troubleshooting.md`](docs/install-troubleshooting.md).
 
 ### Provider Configuration
 
@@ -517,7 +517,7 @@ POST /api/v1/invite/accept            (Bearer)
   human-chosen word: the sealed token is offline-attackable by anyone who captures
   it, so its safety rests on passphrase entropy, not on the token being secret. With
   a strong passphrase the token is inert in transit; with a weak one it is
-  brute-forceable — see SECURITY-amp-web-SDK.md.
+  brute-forceable — see SECURITY-amp-web-kit.md.
 - Returns `501` `Code: "Unimplemented"` on the in-memory dev backend (§14.7 —
   the invite family needs the host-bridged backend); live on a host-bridged
   operated node.
@@ -770,7 +770,7 @@ await withdraw('shares', 'link', itemID, {
 });
 ```
 
-`tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg under a single encryption context, with one signature (not yet sealed, `SECURITY-amp-web-SDK.md`). A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
+`tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg under a single encryption context, with one signature (not yet sealed, `SECURITY-amp-web-kit.md`). A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
 
 `invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write (§4.3).
 
@@ -952,7 +952,7 @@ async function useCesiumIonToken() {
 
 The `seal/open` primitives wrap `safe.Encrypt.Seal` / `safe.Encrypt.Open` against the session member's `EncryptKey` — a sealed box (anonymous-sender). The sealed bytes are opaque to anyone but the sealing member, including admins, vault relays, other planet members, and even a future memory snapshot of `eks.keys`.
 
-That `EncryptKey` is **device-local and auto-managed**: the client generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-SDK.md`. Surface the trade-off in your UI so it isn't a surprise — e.g. label a BYOK field *"Stored on this device only — re-enter it when you sign in elsewhere."*
+That `EncryptKey` is **device-local and auto-managed**: the client generates it on first login and persists it in browser storage (IndexedDB), then installs it on every later login — so `seal`/`open` work for any logged-in member with no setup. Because the private key never leaves the device, scope is **same-device**: a member who clears storage or signs in on another device re-derives a fresh key there and re-enters their (re-enterable) BYOK secrets. Cross-device "seal on phone, open on laptop" is a deliberate non-goal of this model — see `SECURITY-amp-web-kit.md`. Surface the trade-off in your UI so it isn't a surprise — e.g. label a BYOK field *"Stored on this device only — re-enter it when you sign in elsewhere."*
 
 The default kit is **Poly25519** (X25519 + XChaCha20-Poly1305 + HKDF-SHA256) — pure JS via `@noble/curves` + `@noble/ciphers` + `@noble/hashes` (the SDK's only runtime dependencies), no WASM. It is the **only kit in the default bundle**; P-256 (YubiKey-attached members) and secp256k1 (crypto-wallet members) register when their auth schemes ship and are absent until then. Bundle-minimization is **transparent** — there is no separate entry point or build flag to set: importing `@art-media-platform/web` and sealing BYOK pulls Poly25519 plus the three `@noble/*` packages and nothing more, so a card or widget that only seals secrets stays small.
 
@@ -990,7 +990,7 @@ Where the third-party API supports it (OpenRouter scoped tokens, Stripe Connect 
 
 ### 6.4 Public reads & sharing
 
-amp does NOT have a per-item visibility flag. Public-readable content lives on a separate planet operating in public mode (`PlanetCharter.Privacy = PrivacyMode_Public` at genesis — see `SECURITY-amp-web-SDK.md`). Genesis-time means exactly that: no surface flips a planet's privacy afterwards, and a web client cannot genesis one (§4.8).
+amp does NOT have a per-item visibility flag. Public-readable content lives on a separate planet operating in public mode (`PlanetCharter.Privacy = PrivacyMode_Public` at genesis — see `SECURITY-amp-web-kit.md`). Genesis-time means exactly that: no surface flips a planet's privacy afterwards, and a web client cannot genesis one (§4.8).
 
 #### Node operator setup (one time per deploy)
 
@@ -1340,7 +1340,7 @@ The durable model: per-deploy configuration is **signed, chronicle-tracked facts
 
 **Reading it from the SDK.** `client.getBrand(planetTag?)` reads the planet's `Brand` off its head-node anchor over the standard items rail and returns `PlanetBrand { brand, namedBy, trustState, resolution? }` — or `null` for a planet with no Brand authored (a naked home planet; render `PlanetEpoch.Label` instead). `namedBy` is the base32 federation UID from `Brand.Identity.NamedBy` (the §4.6 back-edge; `''` when unset). `trustState` is the host resolver's verdict on the Brand's **claimed** `Identity.AppDomain` (obtained via the anonymous `resolve()`; `'Unchecked'` when no domain is claimed or no federation names it), with the full `ResolveResponse` riding as `resolution`. The verdict binds `(FQDN → resolution.PlanetID)`, not the planet you queried — when `resolution.PlanetID` differs from your planet's UID, the domain claim points elsewhere: surface it, never render a Verified badge. React: `useAmpBrand(planetTag?)` → `{ brand, loading, error }`. The wire types (`Brand`, `BrandIdentity`, `AppTarget`, `AppLink`, `CrateRef`, `AmpTag`) are package exports; consumption stays read-only — authoring a Brand is a node-operator act with no browser binding (§12).
 
-**2. Host gating config — CORS origins + admin allowlist.** The web origins authorized to call the host (the CORS allow-list) and the node operator's admin allowlist (who may hit `/api/v1/admin/*`) are **node-operator HTTP-gating config, not planet governance**. Stable field semantics: a list of allowed origins (`https://maplable.com`, `*.maplable.com` — never pair `"*"` with credentials; see `SECURITY-amp-web-SDK.md`) and a list of admin member-IDs (`eth:0x…`, `email:…`; empty fails closed → every admin call `403`). Stored on the node operator's side, per whitelabel domain — never in your bundle or code path.
+**2. Host gating config — CORS origins + admin allowlist.** The web origins authorized to call the host (the CORS allow-list) and the node operator's admin allowlist (who may hit `/api/v1/admin/*`) are **node-operator HTTP-gating config, not planet governance**. Stable field semantics: a list of allowed origins (`https://maplable.com`, `*.maplable.com` — never pair `"*"` with credentials; see `SECURITY-amp-web-kit.md`) and a list of admin member-IDs (`eth:0x…`, `email:…`; empty fails closed → every admin call `403`). Stored on the node operator's side, per whitelabel domain — never in your bundle or code path.
 
 **3. The share planet.** Anonymous-readable content lives on a separate public planet (`PlanetCharter.Privacy = PrivacyMode_Public`); the node operator founds it once and registers it host-side (§6.4). Your client points at it via `VITE_AMP_PUBLIC_SHARE_PLANET_TAG`.
 
@@ -1460,7 +1460,7 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (host-internal `TxCommitFlags_Invoke`, not journaled) which authors the durable write itself; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
 | **ACC** | **Access Control** — the per-channel grant engine deciding which TxOps may enter a planet: who may read, write, or govern each channel. Grants are committed as a `ChannelEpoch` via `POST /api/v1/governance/grant` (§14.4). |
-| **BYOK** | **Bring Your Own Key** — sealing user-supplied secrets client-side (`seal`/`open`, §6.2) under a device-local EncryptKey, so hosts, admins, and other members never see plaintext (`SECURITY-amp-web-SDK.md`). |
+| **BYOK** | **Bring Your Own Key** — sealing user-supplied secrets client-side (`seal`/`open`, §6.2) under a device-local EncryptKey, so hosts, admins, and other members never see plaintext (`SECURITY-amp-web-kit.md`). |
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
 | **Vault** | The storage-and-sync half of an `ampd` node. A relay vault (holding no member's keys) cannot read sealed content (member content is not yet sealed); your host's vault holds your keys and can. |
 | **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards) (`AOM/AD-app-www.md`). |
@@ -1498,7 +1498,7 @@ no check that they agree.
 | **Found a planet** | Start a planet and sign its charter; its founders, privacy and declaration are fixed for its life. |
 | **Invite** · **Revoke invite** · **Pause / Resume invite** | A founder or admin issues a passphrase-sealed invite, usable until used up, expired, paused or revoked; revoking an invite removes no one who already joined. |
 | **Join** (UI: "Join with Invite…") | Use an invite and its passphrase to become a member of the planet (§4.7). |
-| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed records stay unreadable to a follower, but member content is not yet sealed (`SECURITY-amp-web-SDK.md`). Unfollow stops syncing and removes this device's copy. An app default once unfollowed is not followed again automatically. |
+| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed records stay unreadable to a follower, but member content is not yet sealed (`SECURITY-amp-web-kit.md`). Unfollow stops syncing and removes this device's copy. An app default once unfollowed is not followed again automatically. |
 | **Remove a planet from a node** (node operator) | A founder or node-operator session stops a node syncing a planet and reclaims its storage; peers keep their copies and no membership changes. |
 | **Rotate keys** | Founders replace the planet's key; only active members receive it; content sealed under earlier keys stays readable to whoever holds them. |
 | **Add member** | Founders or admins enroll a member by public key, without an invite; such a member cannot receive a private planet's keys. |
@@ -1605,7 +1605,7 @@ There is **no first-class "issue an anonymous device member" API** today — don
 
 ### 14.5 SDK versioning & stability
 
-The SDK is **beta (pre-v400)**. Between minor revs, breaking changes are possible, and there is no public npm channel during beta — you receive a versioned bundle (`amp-web-SDK-vNNN[.P].zip`). One source of truth ties it together: the bundle label, the `package.json` version, and the `amp.SDK` git tag are the same revision. **Pin the bundle you integrated** (vendor it / commit the version) rather than floating; upgrade deliberately and re-run your contract tests. At v400 ("Production Ready") it flips to public GitHub Releases under an open license with a semver compatibility promise.
+The SDK is **beta (pre-v400)**. Between minor revs, breaking changes are possible, and there is no public npm channel during beta — you receive a versioned bundle (`amp-web-kit-vNNN[.P].zip`). One source of truth ties it together: the bundle label, the `package.json` version, and the `amp.SDK` git tag are the same revision. **Pin the bundle you integrated** (vendor it / commit the version) rather than floating; upgrade deliberately and re-run your contract tests. At v400 ("Production Ready") it flips to public GitHub Releases under an open license with a semver compatibility promise.
 
 ### 14.6 amp as a signaling / coordination plane
 
@@ -1640,4 +1640,4 @@ The CORS boundary from §10 still holds: on a *shared* host the node operator al
 
 ---
 
-*This SKILL is maintained by the art.media.platform engineering team. For the protocol primer and primitives, see [`amp.SDK`](https://github.com/art-media-platform/amp.SDK); for the security model, see the companion `SECURITY-amp-web-SDK.md` in this bundle.*
+*This SKILL is maintained by the art.media.platform engineering team. For the protocol primer and primitives, see [`amp.SDK`](https://github.com/art-media-platform/amp.SDK); for the security model, see the companion `SECURITY-amp-web-kit.md` in this bundle.*

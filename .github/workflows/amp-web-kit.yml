@@ -1,7 +1,7 @@
-name: amp-web-SDK
+name: amp-web-kit
 
-# Builds the amp-web-SDK bundle from an amp.SDK release tag (e.g. v0.240.0) — the
-# SDK ships in lockstep with amp.SDK, and pack.sh stamps the bundle version from
+# Builds the AMP Web Kit bundle from an amp.SDK release tag (e.g. v0.240.0) — the
+# kit ships in lockstep with amp.SDK, and pack.sh stamps the bundle version from
 # the release tag (the single source of truth; no package.json bump per release).
 # During beta this produces a build artifact only; the public Release attach is
 # enabled at v400 (see LICENSE).
@@ -23,18 +23,19 @@ jobs:
       # pack.sh stamps the bundle version from the tag that triggered this run
       # (AMP_WEB_VERSION), so the bundle always matches the amp.SDK release with no
       # package.json bump to keep in sync.
-      - name: Build amp-web-SDK bundle
+      - name: Build amp-web-kit bundle
         env:
           AMP_WEB_VERSION: ${{ github.ref_name }}
+          AMP_WEB_OUT: dist
         run: bash amp-web/pack.sh
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: amp-web-SDK
-          path: dist/amp-web-SDK-*.zip
+          name: amp-web-kit
+          path: dist/amp-web-kit-*/amp-web-kit-*.zip
 
       # Public Release attach is enabled at v400 (TRL "Production Ready"),
       # alongside flipping the LICENSE open + the service-boundary access gate.
-      # During beta (TRL 2xx) the bundle is distributed to partners directly —
-      # build locally with `bash amp-web/pack.sh`, or pull the artifact above.
+      # During beta the bundle is distributed to partners directly — build
+      # locally with `bash amp-web/pack.sh`, or pull the artifact above.

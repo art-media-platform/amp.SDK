@@ -76,7 +76,7 @@ export type { UID } from './generated/amp.std.consts.js';
 // Operator tier: deliberately NOT exported here.  AmpAdminClient (admin
 // credential issue and future operator verbs) is server-side tooling only —
 // import '@art-media-platform/web/admin' from Node, never from browser code
-// (SKILL-amp-web-SDK.md §12).
+// (SKILL-amp-web-kit.md §12).
 
 // Typed errors
 export { AmpError, AmpErrorCode } from './errors.js';

@@ -62,5 +62,5 @@ Every write is an **edit** by an authenticated **member**, signed.  On a
 private planet, sealing member content under the planet's epoch key is not
 yet built, so every node that syncs the planet can read it — relay vaults
 included
-(`SECURITY-amp-web-SDK.md`). Your web app is a disposable UI over that
+(`SECURITY-amp-web-kit.md`). Your web app is a disposable UI over that
 durable substrate.

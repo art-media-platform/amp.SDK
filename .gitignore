@@ -20,6 +20,6 @@ go.work
 
 .claude/settings.local.json
 
-# amp-web-SDK build outputs
+# build outputs: the CI pack (AMP_WEB_OUT=dist) and pack.sh staging (build/)
 /dist/
 /build/

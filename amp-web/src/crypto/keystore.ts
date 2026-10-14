@@ -6,7 +6,7 @@
  * per-member key here on login: load it from device storage, or generate and
  * persist one on first use.  The private key never leaves the device, so a
  * seal-to-self stays opaque to the host and to every other planet member —
- * admin-can't-read holds for free (see SECURITY-amp-web-SDK.md).
+ * admin-can't-read holds for free (see SECURITY-amp-web-kit.md).
  *
  * Scope is same-device.  The key is device-local, so a member who clears
  * browser storage or signs in on a second device re-derives a fresh key there

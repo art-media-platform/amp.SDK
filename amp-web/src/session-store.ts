@@ -5,7 +5,7 @@
  * by vault URL; AmpWebClient.restoreSession() reads it back on a fresh load
  * and re-validates against GET /api/v1/session before trusting it.  The token
  * is an opaque Bearer readable by any same-origin script — see
- * SECURITY-amp-web-SDK.md ("Session persistence") for the exposure this
+ * SECURITY-amp-web-kit.md ("Session persistence") for the exposure this
  * implies and why it is accepted.
  *
  * No key material lives here: the device EncryptKey has its own store

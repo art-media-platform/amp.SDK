@@ -8,7 +8,7 @@ import { useAmpContext } from '../provider.js';
  * channel item; `open(sealed)` recovers plaintext using the session's
  * EncryptKey.  The adapter installs that key on login (device-local, generated
  * on first use), so seal/open work for any logged-in member; both throw if
- * there is no active session.  See SKILL-amp-web-SDK.md §"Storing
+ * there is no active session.  See SKILL-amp-web-kit.md §"Storing
  * user-supplied secrets (BYOK)" for the canonical usage pattern.
  */
 export function useAmpCrypto(): {

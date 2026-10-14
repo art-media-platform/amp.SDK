@@ -16,7 +16,7 @@ You connect to an `ampd` node a node operator runs — you do not run one
 1. Make the SDK package resolvable. The example depends on `file:../..` —
    the package root two levels up:
 
-   - **Bundle view** (`amp-web-SDK/examples/forums`): `dist/` ships prebuilt;
+   - **Bundle view** (`amp-web-kit/examples/forums`): `dist/` ships prebuilt;
      run `npm install` once at the bundle root so its `@noble/*` deps resolve.
    - **Repo view** (`amp.SDK/amp-web/examples/forums`): build the client
      once — `cd ../.. && npm install && npm run build`.

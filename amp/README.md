@@ -162,7 +162,7 @@ notes.RegisterWith(reg) // your one line, beside the stock apps
 
 That call is the *entire* integration surface.
 
-**Client side (web).** The [amp-web-SDK](../amp-web/) consumes the same channel by name.  No glue, no schema duplication — the wire contract is shared:
+**Client side (web).** The [AMP Web Kit](../amp-web/) consumes the same channel by name.  No glue, no schema duplication — the wire contract is shared:
 
 ```tsx
 // useAmpQuery<T>(channel, attr, opts) — 'notes' is the channel verb, 'snapshot' the attr name:
@@ -245,7 +245,7 @@ example that stays inside this line is `amp.planet/amp/apps/app.hello/app.hello.
 - [`../stdlib/safe/`](../stdlib/safe/README.md) — `Enclave`, `Kit`, keys, AEAD (all key material lives here)
 - [`../stdlib/tag/`](../stdlib/tag/README.md) — UID derivation, `Address`, the addressing algebra
 - [`../stdlib/task/`](../stdlib/task/api.task.go) — the goroutine lifecycle model every Pin lives in
-- [`../amp-web/`](../amp-web/) — `@art-media-platform/web`, the TypeScript/React consumer; full contract in [`SKILL-amp-web-SDK.md`](../amp-web/SKILL-amp-web-SDK.md)
+- [`../amp-web/`](../amp-web/) — `@art-media-platform/web`, the TypeScript/React consumer; full contract in [`SKILL-amp-web-kit.md`](../amp-web/SKILL-amp-web-kit.md)
 - `amp.planet/AOM/0-amp-operations-manual.md` (internal) — the deep design specs (PRDs) behind this SDK: architecture, security/sync, crates, Mantle, commerce
 
 ---

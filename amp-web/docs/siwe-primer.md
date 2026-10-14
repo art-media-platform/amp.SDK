@@ -12,7 +12,7 @@ gives you the mental model plus a drop-in `useWalletLogin()` hook.
   Nothing secret is stored server-side, nothing to breach.
 - **Deterministic identity.** The MemberID derives from
   `eth:<lowercase-address>` — the same wallet always resolves to the
-  same member (`SECURITY-amp-web-SDK.md`, "Identity & login").
+  same member (`SECURITY-amp-web-kit.md`, "Identity & login").
 - **Self-provisioning.** First wallet login auto-provisions a private
   home planet — no node-operator step (`docs/get-a-backend.md`).
 

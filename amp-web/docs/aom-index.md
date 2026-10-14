@@ -2,7 +2,7 @@
 
 The bundle's `AOM/` directory carries a curated slice of AMP's internal
 Operations Manual — background reading, **not the contract** (the
-contract is the README, `SKILL-amp-web-SDK.md`, and
+contract is the README, `SKILL-amp-web-kit.md`, and
 `webapi/webapi.types.go`). The docs are written for AMP engineers, so
 they reference internal chapters that are deliberately not shipped;
 those references are marked `(internal)` — background provenance, not

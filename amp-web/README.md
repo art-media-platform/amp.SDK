@@ -1,15 +1,16 @@
 # @art-media-platform/web
 
-The **amp-web-SDK** TypeScript client — React hooks + a backend adapter for
+The **AMP Web Kit** TypeScript client — React hooks + a backend adapter for
 building web apps on [art.media.platform](https://github.com/art-media-platform).
 Talks the `ampd` `app.www` wire contract — defined in
 [`amp.SDK/amp/webapi`](https://github.com/art-media-platform/amp.SDK/tree/main/amp/webapi),
 and copied into this SDK bundle at `webapi/webapi.types.go`.
 
-> **Beta.** Distributed in the `amp-web-SDK` bundle — not yet on npm.
+> **Beta.** Distributed as the AMP Web Kit bundle — not yet on npm.
 > Publishing to npm as `@art-media-platform/web` lands at **v400**.
 > Get the latest from your amp contact, or build it from an `amp.SDK`
-> checkout: `amp-web/pack.sh` → `dist/amp-web-SDK-vNNN[.P].zip`.
+> checkout: `AMP_WEB_OUT=<dir> amp-web/pack.sh` →
+> `<dir>/amp-web-kit-v0.NNN.P/amp-web-kit-vNNN[.P].zip`.
 > AMP intends to move to public releases under an open license when resources
 > allow and the business is more stable; no timeline is committed.
 
@@ -17,7 +18,7 @@ and copied into this SDK bundle at `webapi/webapi.types.go`.
 > server software a node operator runs; this package is a browser / Node **client**
 > that talks to it over HTTPS. Your node operator supplies the node URL — this SDK's
 > examples write it `https://{your-node}`.
-> Building a Go server means you're off the path — see `SKILL-amp-web-SDK.md` §0.
+> Building a Go server means you're off the path — see `SKILL-amp-web-kit.md` §0.
 
 ## Install
 
@@ -25,14 +26,14 @@ Unzip the bundle **inside your project directory** and install it by path — it
 resolves under its package name, `@art-media-platform/web`:
 
 ```bash
-unzip amp-web-SDK-vNNN.zip   # → ./amp-web-SDK
-npm install ./amp-web-SDK
+unzip amp-web-kit-vNNN.zip   # → ./amp-web-kit
+npm install ./amp-web-kit
 ```
 
 Or pin it as a path dependency in your `package.json`:
 
 ```json
-{ "dependencies": { "@art-media-platform/web": "file:./amp-web-SDK" } }
+{ "dependencies": { "@art-media-platform/web": "file:./amp-web-kit" } }
 ```
 
 Two install traps to know up front (fixes and symptoms in
@@ -42,7 +43,7 @@ Two install traps to know up front (fixes and symptoms in
   symlink; from a directory outside the project the bundle's `@noble/*`
   runtime deps do not resolve through the link (`Cannot find package
   '@noble/curves'`). If the bundle must live elsewhere, run `npm install`
-  once inside `amp-web-SDK/` so it carries its own `node_modules`.
+  once inside `amp-web-kit/` so it carries its own `node_modules`.
 - **React hooks use a separate entry.** Import `AmpWebClient` and codecs
   from `@art-media-platform/web`; that entry does not import React.
   `<AmpProvider>` and hooks come from `@art-media-platform/web/react`
@@ -93,7 +94,7 @@ function Labels() {
 
 ### Login
 
-`connectWallet` / `signWithWallet` / `signChallenge` below are **your** wallet glue (EIP-1193 / Ed25519), not SDK exports — see `SKILL-amp-web-SDK.md` §5.1 for the full implementation.
+`connectWallet` / `signWithWallet` / `signChallenge` below are **your** wallet glue (EIP-1193 / Ed25519), not SDK exports — see `SKILL-amp-web-kit.md` §5.1 for the full implementation.
 
 ```tsx
 const { login } = useAmpAuth();
@@ -118,7 +119,7 @@ await login({ Scheme: 'email', Email: email, Password: password });
 
 ### Joining a Federation
 
-Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.joinWithInvite({ inviteText, passphrase })` joins you to that federation (passphrase arrives out-of-band). You don't need it to read/write your *own* planet, but **registering planets / names into a federation requires membership** — which the invite grants. A planet's founders and admins issue them with `client.issueInvite({ planet, passphrase, maxRedemptions })` (one URL, many self-minting members), revoke with `client.revokeInvite`, and audit with `client.listInvites`. See `SKILL-amp-web-SDK.md` §4.7.
+Handed an invite URL (`https://{fqdn}/invite#…`)? After login, `await client.joinWithInvite({ inviteText, passphrase })` joins you to that federation (passphrase arrives out-of-band). You don't need it to read/write your *own* planet, but **registering planets / names into a federation requires membership** — which the invite grants. A planet's founders and admins issue them with `client.issueInvite({ planet, passphrase, maxRedemptions })` (one URL, many self-minting members), revoke with `client.revokeInvite`, and audit with `client.listInvites`. See `SKILL-amp-web-kit.md` §4.7.
 
 ## Hooks
 
@@ -165,7 +166,7 @@ against an operated node.
 
 ## Verifying the Bundle
 
-`npm test` (inside `amp-web-SDK/`, after `npm install`) runs the SDK's own
+`npm test` (inside `amp-web-kit/`, after `npm install`) runs the SDK's own
 suite, including the wire-contract drift guard against the golden fixtures
 shipped in `webapi/testdata/` (repo: `amp/webapi/testdata/`) — no server
 needed. `webapi/webapi.types.go` is the wire contract those fixtures pin.
@@ -180,9 +181,9 @@ listed in `aom-allowlist.txt` — the one list `pack.sh` reads to stage `AOM/`.
 
 ## Full API reference
 
-- **[`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md)** — the complete SDK contract:
+- **[`SKILL-amp-web-kit.md`](SKILL-amp-web-kit.md)** — the complete SDK contract:
   wire shape, data-model conventions, sealed-box BYOK, card / WebRect bridge.
-- **[`SECURITY-amp-web-SDK.md`](SECURITY-amp-web-SDK.md)** — the security model a
+- **[`SECURITY-amp-web-kit.md`](SECURITY-amp-web-kit.md)** — the security model a
   consumer relies on (encryption, identity, what a vault can and cannot see).
 
 ## Onboarding Docs
@@ -201,7 +202,7 @@ The distributed bundle ships a curated set of design docs from AMP's
 **Operations Manual (AOM)** under `AOM/` — background reading for deeper
 architectural context (bundle view only; in the `amp.SDK` repo these live in
 the private `amp.planet`). They are **not the contract**: this README,
-[`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md), and `webapi/webapi.types.go` are.
+[`SKILL-amp-web-kit.md`](SKILL-amp-web-kit.md), and `webapi/webapi.types.go` are.
 **[`docs/aom-index.md`](docs/aom-index.md)** is the reading guide — start at
 `AOM/DD-architecture-overview.md`, then dip in as questions arise.
 
@@ -238,7 +239,7 @@ Rules the pack enforces on partner-visible text:
 
 **Beta.** Breaking changes are possible between minor revisions, and
 there is no public npm channel yet — you integrate a versioned bundle
-(`amp-web-SDK-vNNN[.P].zip`). The `amp.SDK` git tag is the single source of truth:
+(`amp-web-kit-vNNN[.P].zip`). The `amp.SDK` git tag is the single source of truth:
 `pack.sh` stamps the bundle label and the packaged `package.json` version from it
 at build time (the committed `package.json` carries only the `0.0.0-dev`
 placeholder). **Pin the bundle you integrated** (vendor it, or commit the version)
@@ -253,4 +254,4 @@ as `@art-media-platform/web`, under an open license with a semver compatibility
 promise, lands at that band. No timeline is committed.
 
 Deployment topologies, offline-auth, device identity, and membership-tier
-guidance live in [`SKILL-amp-web-SDK.md`](SKILL-amp-web-SDK.md) §14.
+guidance live in [`SKILL-amp-web-kit.md`](SKILL-amp-web-kit.md) §14.

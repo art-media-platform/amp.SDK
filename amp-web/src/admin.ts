@@ -4,7 +4,7 @@
  *
  * NEVER import this module from browser code.  The node-operator Bearer is
  * higher-privilege than a member session and must not enter XSS-exposed
- * script (SKILL-amp-web-SDK.md §12 rule 9; SECURITY-amp-web-SDK.md).  The
+ * script (SKILL-amp-web-kit.md §12 rule 9; SECURITY-amp-web-kit.md).  The
  * guards that keep it out of the browser surface:
  *   - excluded from the package root export — import '@art-media-platform/web/admin';
  *   - the constructor refuses to run where a browser `window`+`document` exist;
@@ -39,7 +39,7 @@ export class AmpAdminClient {
   constructor(opts: AmpAdminClientOpts) {
     if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       throw new Error(
-        'AmpAdminClient is server-side tooling only — the node-operator Bearer must never enter browser JS (SKILL-amp-web-SDK.md §12)',
+        'AmpAdminClient is server-side tooling only — the node-operator Bearer must never enter browser JS (SKILL-amp-web-kit.md §12)',
       );
     }
     this.vaultUrl = opts.vaultUrl.replace(/\/$/, '');

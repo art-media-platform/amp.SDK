@@ -8,7 +8,7 @@ This repository is the **SDK**: a dependency-light Go library defining the wire 
 
 - `ampd` — standalone server / vault (macOS, Windows, Linux, Raspberry Pi, Android, Graphene)
 - `libampd` — embeddable C library for Unity and Unreal clients
-- [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks) for web apps
+- [**AMP Web Kit**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks) for web apps
 - Reticulum gateway for transport over LoRa / packet radio / I2P
 
 Born from [PLAN](https://plan-systems.org/plan-technology-components/) (2017) and its cryptographic [proof of correctness](https://github.com/plan-systems/design-docs/blob/master/PLAN-Proof-of-Correctness.md), AMP is the third generation of this architecture.
@@ -29,7 +29,7 @@ In crisis scenarios — natural disasters, infrastructure collapse, conflict zon
 | **Total Data Privacy** | Only holders of a planet's keys can decrypt its sealed records: members who received them, the nodes those keys live on, and anyone else holding one — a former member, or whoever has an invite file and its passphrase (member content is not yet sealed; see the privacy table) | Epoch keys split via HKDF into `content_key` (encryption) and `proof_key` (membership proofs; a relay checks only that one is present); relay vaults *cannot* decrypt |
 | **Community-Centric Permissions** | Nested hierarchies, local authority, flexible governance | Planet → channel permission model; founders rotate epoch keys (today, from a node holding the founder's key) — no central authority |
 | **Off-Grid First** | Data accessible and updatable without the internet | Transport-agnostic sync over [Reticulum](https://reticulum.network/)/[LoRa](https://en.wikipedia.org/wiki/LoRa), TCP, UDP — even sneakernet; all sync is [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type), so offline edits merge deterministically |
-| **Usability & Accessibility** | Open protocols for any technical skill level | The [amp-web-SDK](amp-web/) (`@art-media-platform/web`) TypeScript SDK with React hooks — web apps, menu cells, and spatial UIs speak one adapter |
+| **Usability & Accessibility** | Open protocols for any technical skill level | The [AMP Web Kit](amp-web/) (`@art-media-platform/web`) TypeScript SDK with React hooks — web apps, menu cells, and spatial UIs speak one adapter |
 | **Spatial UX / App Support** | Integrated real-time 3D with full workstation power |  C library `libampd` embeds into Unity / Unreal apps; UI panels render as 2D overlay, world-space canvas, or XR |
 | **Hardware Agnostic** | No restriction on device count or type | Builds for iOS, Android, macOS, Windows, Linux; one binary serves TCP clients and HTTP browsers; same protocol over radio and fiber |
 | **Pluggable & Extensible** | Anyone can grow, enhance, or fork | Apps register via [`amp.Registry`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.host.go); a new [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) = a new capability; transport is an interface, not a dependency |
@@ -182,7 +182,7 @@ Apps register via [`amp.Registry`](https://github.com/art-media-platform/amp.SDK
 | [`stdlib/tag/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/tag) | Universal tagging and addressing |
 | [`stdlib/task/`](https://github.com/art-media-platform/amp.SDK/tree/main/stdlib/task) | Goroutine lifecycle management (parent-child process model) |
 | [`amp/webapi/`](amp/webapi/) | HTTP/JSON wire contract for the web SDK — the `/api/v1/*` shapes |
-| [`amp-web/`](amp-web/) | [`@art-media-platform/web`](amp-web/) — the **amp-web-SDK** TypeScript client (React hooks); contract in [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) |
+| [`amp-web/`](amp-web/) | [`@art-media-platform/web`](amp-web/) — the **AMP Web Kit** TypeScript client (React hooks); contract in [`amp-web/SKILL-amp-web-kit.md`](amp-web/SKILL-amp-web-kit.md) |
 
 
 ### Integration Flow
@@ -191,9 +191,9 @@ This repo is the SDK — lightweight, dependency-minimal, safe to add to any Go 
 
 1. Add [amp.SDK](https://github.com/art-media-platform/amp.SDK) to your Go project
 2. Implement an [`amp.AppModule`](https://github.com/art-media-platform/amp.SDK/blob/main/amp/api.apps.go) for your functionality
-3. Get `ampd` from the [amp-native kit](amp-native/) — the **public tier** ships a ready-to-run `ampd` (standalone server) to develop and evaluate against
+3. Get `ampd` from the [AMP Maker Kit](amp-maker/) — it ships a ready-to-run `ampd` (standalone server) to develop and evaluate against
 4. Registering your module into an `ampd` build is the partner path (partners/internal: clone `amp.planet`; `make build` produces `ampd` and `libampd`, the embeddable C library)
-5. For web apps, use the [**amp-web-SDK**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-SDK.md`](amp-web/SKILL-amp-web-SDK.md) for the full contract
+5. For web apps, use the [**AMP Web Kit**](amp-web/) — the [`@art-media-platform/web`](amp-web/) TypeScript SDK (React hooks); see [`amp-web/SKILL-amp-web-kit.md`](amp-web/SKILL-amp-web-kit.md) for the full contract
 
 > **Deep design specs.** The PRDs behind this SDK — architecture, security/sync, crates, Mantle, commerce — are indexed in `amp.planet/AOM/0-amp-operations-manual.md` (internal).
 

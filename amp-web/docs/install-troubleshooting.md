@@ -1,6 +1,6 @@
 # Install Troubleshooting
 
-Symptoms seen installing the `amp-web-SDK` bundle, with fixes. Install
+Symptoms seen installing the AMP Web Kit bundle, with fixes. Install
 steps: README "Install".
 
 ## `Cannot find package '@noble/curves'` (or `@noble/hashes`, `@noble/ciphers`)
@@ -13,9 +13,9 @@ dependency as a symlink and resolves the package's own deps from its
 Fix (either):
 
 - Move the bundle inside the project root and reinstall:
-  `npm install ./amp-web-SDK`.
-- Or give the bundle its own deps once: `cd amp-web-SDK && npm install`.
-  A sibling path (`file:../amp-web-SDK`) resolves after that.
+  `npm install ./amp-web-kit`.
+- Or give the bundle its own deps once: `cd amp-web-kit && npm install`.
+  A sibling path (`file:../amp-web-kit`) resolves after that.
 
 ## `Cannot find module 'react'` When Using Hooks
 
@@ -51,7 +51,7 @@ Your `vaultUrl` is `http://` on a non-loopback host. The session token
 rides the WS URL, so the SDK refuses to send it in cleartext. Use
 `https://` (the node terminates TLS on 443); plain `http://` is allowed
 only to loopback — `localhost`, `127.0.0.1`, or `[::1]`
-(`SECURITY-amp-web-SDK.md`).
+(`SECURITY-amp-web-kit.md`).
 
 ## `401` on Every Call After Login Worked Earlier
 
@@ -67,7 +67,7 @@ Join with the deploy's invite (SKILL §4.7), or construct with
 
 ## Verifying an Install
 
-From inside `amp-web-SDK/` (after `npm install` there):
+From inside `amp-web-kit/` (after `npm install` there):
 
 ```bash
 npm test    # wire-contract drift guard vs the shipped webapi/testdata fixtures

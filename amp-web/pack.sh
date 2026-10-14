@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
-# Build the amp-web-SDK distributable bundle.
+# Build the AMP Web Kit distributable bundle.
 #
-#   amp.SDK/amp-web/pack.sh   →   amp.SDK/dist/amp-web-SDK-<vNNN>.zip
+#   amp.SDK/amp-web/pack.sh   →   <out>/amp-web-kit-v0.NNN.P/amp-web-kit-<vNNN>.zip
+#
+# <out> is AMP_WEB_OUT when set — CI, a standalone checkout, and the release
+# cut, which passes the workspace's OUT/kits (AOM O4 §4.20 stage 7); else the
+# OUT/kits of the workspace holding this checkout (AOM O2 §2.11).  With
+# neither, the pack refuses rather than guess.
 #
 # Assembles the amp-web/ TypeScript client plus the canonical wire contract in
 # amp/webapi.  Version is derived from the amp.SDK git tag at build time
@@ -11,7 +16,7 @@
 # This script owns the TypeScript build, which is node's job.  The two document
 # passes are NOT its job: `amp-kit aom-subset` and `amp-kit delink`
 # (amp.planet/cmd/amp-kit) are the one authoritative site for both, shared with
-# the native kit.  AMP_KIT points the calls at that checkout.
+# the AMP Maker Kit.  AMP_PLANET_SRC points the calls at that checkout.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # amp.SDK/amp-web
@@ -40,11 +45,20 @@ if [ "$PATCH" = "0" ]; then
 else
   LABEL="v$MINOR.$PATCH"
 fi
-STAGE="$SDK/build/amp-web-SDK"                          # extracts to ./amp-web-SDK
-OUT="$SDK/dist"
-ZIP="$OUT/amp-web-SDK-$LABEL.zip"
+if [ -n "${AMP_WEB_OUT:-}" ]; then
+  mkdir -p "$AMP_WEB_OUT"
+  KITS="$(cd "$AMP_WEB_OUT" && pwd)"                    # resolved before any cd
+elif [ -d "$SDK/../OUT" ]; then
+  KITS="$(cd "$SDK/../OUT" && pwd)/kits"
+else
+  echo "ERROR: no workspace OUT/ beside $SDK — set AMP_WEB_OUT=<dir> to name where the kit lands." >&2
+  exit 1
+fi
+STAGE="$SDK/build/amp-web-kit"                          # extracts to ./amp-web-kit
+OUT="$KITS/amp-web-kit-v$VER"
+ZIP="$OUT/amp-web-kit-$LABEL.zip"
 
-echo "+++ amp-web-SDK $LABEL  (package version $VER)"
+echo "+++ amp-web-kit $LABEL  (package version $VER)"
 
 # 1. Build the TypeScript client.
 cd "$HERE"
@@ -56,7 +70,7 @@ npm run build
 # 2. Stage the bundle.
 rm -rf "$STAGE"
 mkdir -p "$STAGE/webapi"
-cp README.md SKILL-amp-web-SDK.md SECURITY-amp-web-SDK.md LICENSE \
+cp README.md SKILL-amp-web-kit.md SECURITY-amp-web-kit.md LICENSE \
    package.json package-lock.json "$STAGE/"
 # Stamp the resolved version into the bundled package.json (the committed source
 # carries a placeholder; the tag is authoritative).  Format-preserving rewrite.
@@ -174,10 +188,10 @@ echo "+++ AOM-ref gate: shipped src/ cites only allowlisted AOM docs"
 # 4. Strip cruft.
 find "$STAGE" -name '.DS_Store' -delete 2>/dev/null || true
 
-# 5. Zip from the build root so the archive contains a single amp-web-SDK/ dir.
+# 5. Zip from the build root so the archive contains a single amp-web-kit/ dir.
 mkdir -p "$OUT"
 rm -f "$ZIP"
-( cd "$SDK/build" && zip -rq "$ZIP" amp-web-SDK )
+( cd "$SDK/build" && zip -rq "$ZIP" amp-web-kit )
 rm -rf "$SDK/build"
 
 echo "+++ wrote $ZIP ($(du -h "$ZIP" | cut -f1))"

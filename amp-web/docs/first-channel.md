@@ -12,8 +12,8 @@ explains the login mechanics).
 npm create vite@latest my-amp-app -- --template react-ts
 cd my-amp-app
 npm install
-unzip ~/Downloads/amp-web-SDK-vNNN.zip -d .   # → ./amp-web-SDK, INSIDE the project (vNNN = your bundle's version)
-npm install ./amp-web-SDK
+unzip ~/Downloads/amp-web-kit-vNNN.zip -d .   # → ./amp-web-kit, INSIDE the project (vNNN = your bundle's version)
+npm install ./amp-web-kit
 ```
 
 (The bundle must sit inside the project — see
@@ -154,7 +154,7 @@ tab, add a note there, and watch both update.
 - `'my-first-channel'` / `'notes'` were canonized server-side to
   `tag.UID`s on first use (SKILL §5.8) — no schema, no migration.
 - `create(...)` sent one signed TxMsg (not yet sealed); the vault journaled
-  it (`SECURITY-amp-web-SDK.md`).
+  it (`SECURITY-amp-web-kit.md`).
 - `useAmpQuery` subscribed to exactly that `(channel, attr)` cell
   (`docs/concepts-primer.md`) once logged in; anonymous reads are
   fetch-only.

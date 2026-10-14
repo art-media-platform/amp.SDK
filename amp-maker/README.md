@@ -1,6 +1,6 @@
-# amp-maker-kit
+# AMP Maker Kit
 
-The native rail of AMP's two partner kits. Its sibling, **amp-web-SDK**, is the
+The native rail of AMP's two partner kits. Its sibling, the **AMP Web Kit**, is the
 web rail — a pure JS/TS package that never carries a native binary. This kit
 carries the native surface: the `amp` CLI and the `ampd` node daemon, plus the
 curated AMP Operations Manual (AOM) shelves a CLI partner works from.
@@ -25,8 +25,8 @@ References marked (internal) name AMP-internal design docs not shipped in this b
 | `docs/install-troubleshooting.md` | what to try when a step above does not work |
 | `docs/siwe-primer.md` | signing in with a wallet, for the web rail |
 | `docs/aom-index.md` | what each shipped AOM shelf covers |
-| `SKILL-amp-web-SDK.md` | the web-rail skill doc — drop it into a web project to build against `app.www`; the web kit itself ships separately as amp-web-SDK |
-| `SECURITY-amp-web-SDK.md` | the web rail's security model: what the client may hold, and what it may never |
+| `SKILL-amp-web-kit.md` | the web-rail skill doc — drop it into a web project to build against `app.www`; the AMP Web Kit itself ships separately as `amp-web-kit-vNNN[.P].zip` |
+| `SECURITY-amp-web-kit.md` | the web rail's security model: what the client may hold, and what it may never |
 | `LICENSE` | the Beta Evaluation License this kit is delivered under |
 | `VERSION` | the build record for this exact kit (see Version Identity) |
 
@@ -64,7 +64,7 @@ the node you run yourself.
 ## Running a Node Locally
 
 `bin/ampd` is the AMP node daemon: the server software a node operator runs, the
-thing `bin/amp` and an amp-web-SDK app both talk to. It ships here so the kit
+thing `bin/amp` and an AMP Web Kit app both talk to. It ships here so the kit
 is self-contained — you can work the whole ladder (found, invite, join,
 brand, publish, resolve) on your own machine without waiting on someone else's
 endpoint.

@@ -1,7 +1,7 @@
 {
   "name": "@art-media-platform/web",
   "version": "0.0.0-dev",
-  "description": "amp-web-SDK \u2014 TypeScript client (React hooks + adapter) for art.media.platform web apps over the ampd app.www wire contract",
+  "description": "AMP Web Kit \u2014 TypeScript client (React hooks + adapter) for art.media.platform web apps over the ampd app.www wire contract",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -33,8 +33,8 @@
     "scripts",
     "README.md",
     "LICENSE",
-    "SKILL-amp-web-SDK.md",
-    "SECURITY-amp-web-SDK.md"
+    "SKILL-amp-web-kit.md",
+    "SECURITY-amp-web-kit.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
