@@ -2200,6 +2200,28 @@ message SyncMsg {
 // marks.  Sent on peer connect and whenever the watch list changes.
 message SyncWatchList {
     repeated SyncPlanetStatus Planets = 1;
+
+    // The sender's member attestations — each a member's signed claim that
+    // THIS vault is its device, which a relay hosting the named planet admits
+    // the vault's announced planets on (AOM SD-security-sync.md §5.8).
+    repeated MemberVaultAttestation Attestations = 2;
+}
+
+
+// MemberVaultAttestation is a member's signed claim that a vault (a device's
+// transport identity, AOM SD-security-sync.md §11.3) is its own.  Signature
+// covers amp.VaultAttestationDigest: the builtin hash kit over PlanetID,
+// MemberID and VaultID under safe.SigningDomain_MemberVault.  A relay verifies
+// it against the member's MemberEpoch on PlanetID before it stores anything
+// of the vault's planets (AOM SD-security-sync.md §5.8).  Never journaled.
+message MemberVaultAttestation {
+    fixed64             PlanetID_0 = 1;  // the planet the member claims membership on
+    fixed64             PlanetID_1 = 2;
+    fixed64             MemberID_0 = 3;  // the signing member
+    fixed64             MemberID_1 = 4;
+    fixed64             VaultID_0  = 5;  // the attested vault (the handshake PeerID)
+    fixed64             VaultID_1  = 6;
+    bytes               Signature  = 7;
 }
 
 
