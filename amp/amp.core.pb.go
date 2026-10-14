@@ -7831,11 +7831,12 @@ func (x *SyncWatchList) GetAttestations() []*MemberVaultAttestation {
 }
 
 // MemberVaultAttestation is a member's signed claim that a vault (a device's
-// transport identity, AOM SD-security-sync.md §11.3) is its own.  Signature
-// covers amp.VaultAttestationDigest: the builtin hash kit over PlanetID,
-// MemberID and VaultID under safe.SigningDomain_MemberVault.  A relay verifies
-// it against the member's MemberEpoch on PlanetID before it stores anything
-// of the vault's planets (AOM SD-security-sync.md §5.8).  Never journaled.
+// transport identity, AOM SD-security-sync.md §11.3) is its own and founded
+// one planet.  Signature covers amp.VaultAttestationDigest: the builtin hash
+// kit over PlanetID, MemberID, VaultID and FoundedID under
+// safe.SigningDomain_MemberVault.  A relay verifies it against the member's
+// MemberEpoch on PlanetID before it stores anything of the founded planet
+// (AOM SD-security-sync.md §5.8).  Never journaled.
 type MemberVaultAttestation struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	PlanetID_0    uint64                 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"` // the planet the member claims membership on
@@ -7845,6 +7846,8 @@ type MemberVaultAttestation struct {
 	VaultID_0     uint64                 `protobuf:"fixed64,5,opt,name=VaultID_0,json=VaultID0,proto3" json:"VaultID_0,omitempty"` // the attested vault (the handshake PeerID)
 	VaultID_1     uint64                 `protobuf:"fixed64,6,opt,name=VaultID_1,json=VaultID1,proto3" json:"VaultID_1,omitempty"`
 	Signature     []byte                 `protobuf:"bytes,7,opt,name=Signature,proto3" json:"Signature,omitempty"`
+	FoundedID_0   uint64                 `protobuf:"fixed64,8,opt,name=FoundedID_0,json=FoundedID0,proto3" json:"FoundedID_0,omitempty"` // the planet the device founded that the claim admits
+	FoundedID_1   uint64                 `protobuf:"fixed64,9,opt,name=FoundedID_1,json=FoundedID1,proto3" json:"FoundedID_1,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -7926,6 +7929,20 @@ func (x *MemberVaultAttestation) GetSignature() []byte {
 		return x.Signature
 	}
 	return nil
+}
+
+func (x *MemberVaultAttestation) GetFoundedID_0() uint64 {
+	if x != nil {
+		return x.FoundedID_0
+	}
+	return 0
+}
+
+func (x *MemberVaultAttestation) GetFoundedID_1() uint64 {
+	if x != nil {
+		return x.FoundedID_1
+	}
+	return 0
 }
 
 // SyncPlanetStatus carries a planet UID and the peer's current high-water mark,
@@ -9076,7 +9093,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\tTxRefused\x18\x06 \x01(\v2\x12.amp.SyncTxRefusedR\tTxRefused\"\x81\x01\n" +
 	"\rSyncWatchList\x12/\n" +
 	"\aPlanets\x18\x01 \x03(\v2\x15.amp.SyncPlanetStatusR\aPlanets\x12?\n" +
-	"\fAttestations\x18\x02 \x03(\v2\x1b.amp.MemberVaultAttestationR\fAttestations\"\xec\x01\n" +
+	"\fAttestations\x18\x02 \x03(\v2\x1b.amp.MemberVaultAttestationR\fAttestations\"\xae\x02\n" +
 	"\x16MemberVaultAttestation\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +
@@ -9088,7 +9105,11 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"MemberID_1\x18\x04 \x01(\x06R\tMemberID1\x12\x1b\n" +
 	"\tVaultID_0\x18\x05 \x01(\x06R\bVaultID0\x12\x1b\n" +
 	"\tVaultID_1\x18\x06 \x01(\x06R\bVaultID1\x12\x1c\n" +
-	"\tSignature\x18\a \x01(\fR\tSignature\"\xab\x02\n" +
+	"\tSignature\x18\a \x01(\fR\tSignature\x12\x1f\n" +
+	"\vFoundedID_0\x18\b \x01(\x06R\n" +
+	"FoundedID0\x12\x1f\n" +
+	"\vFoundedID_1\x18\t \x01(\x06R\n" +
+	"FoundedID1\"\xab\x02\n" +
 	"\x10SyncPlanetStatus\x12\x1d\n" +
 	"\n" +
 	"PlanetID_0\x18\x01 \x01(\x06R\tPlanetID0\x12\x1d\n" +

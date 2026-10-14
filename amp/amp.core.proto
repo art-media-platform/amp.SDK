@@ -2209,19 +2209,22 @@ message SyncWatchList {
 
 
 // MemberVaultAttestation is a member's signed claim that a vault (a device's
-// transport identity, AOM SD-security-sync.md §11.3) is its own.  Signature
-// covers amp.VaultAttestationDigest: the builtin hash kit over PlanetID,
-// MemberID and VaultID under safe.SigningDomain_MemberVault.  A relay verifies
-// it against the member's MemberEpoch on PlanetID before it stores anything
-// of the vault's planets (AOM SD-security-sync.md §5.8).  Never journaled.
+// transport identity, AOM SD-security-sync.md §11.3) is its own and founded
+// one planet.  Signature covers amp.VaultAttestationDigest: the builtin hash
+// kit over PlanetID, MemberID, VaultID and FoundedID under
+// safe.SigningDomain_MemberVault.  A relay verifies it against the member's
+// MemberEpoch on PlanetID before it stores anything of the founded planet
+// (AOM SD-security-sync.md §5.8).  Never journaled.
 message MemberVaultAttestation {
-    fixed64             PlanetID_0 = 1;  // the planet the member claims membership on
-    fixed64             PlanetID_1 = 2;
-    fixed64             MemberID_0 = 3;  // the signing member
-    fixed64             MemberID_1 = 4;
-    fixed64             VaultID_0  = 5;  // the attested vault (the handshake PeerID)
-    fixed64             VaultID_1  = 6;
-    bytes               Signature  = 7;
+    fixed64             PlanetID_0  = 1;  // the planet the member claims membership on
+    fixed64             PlanetID_1  = 2;
+    fixed64             MemberID_0  = 3;  // the signing member
+    fixed64             MemberID_1  = 4;
+    fixed64             VaultID_0   = 5;  // the attested vault (the handshake PeerID)
+    fixed64             VaultID_1   = 6;
+    bytes               Signature   = 7;
+    fixed64             FoundedID_0 = 8;  // the planet the device founded that the claim admits
+    fixed64             FoundedID_1 = 9;
 }
 
 
