@@ -116,7 +116,7 @@ A **flagship consumer** anchors the contract: **Maplable**, an offline-first 3D 
 
 ### Install
 
-**Beta (pre-v400)** — distributed as the AMP Web Kit bundle, not yet on npm. Get it from your amp contact (or build it from an `amp.SDK` checkout: `amp-web/pack.sh`), unzip it **inside your project directory**, and install the local package:
+**Beta (pre-v400)** — distributed as the AMP Web Kit bundle, not yet on npm. Get it from your amp contact (or build it from an `amp.SDK` checkout: `AMP_WEB_OUT=<dir> amp-web/pack.sh`), unzip it **inside your project directory**, and install the local package:
 
 ```bash
 npm install ./amp-web-kit
@@ -1571,7 +1571,7 @@ This section answers the architecture questions that come up when an existing pr
 An `ampd` host is a full peer: it stores, signs, encrypts, and relays.
 
 - **Shared cloud vault (the default for a web app).** One `ampd` on a server is the rendezvous point for cross-device sync and multi-member collab; your client connects to it over HTTPS (`https://{your-node}`). Simplest to operate; the app needs the server reachable to read / write.
-- **Embedded local vault (ADVANCED — bundled desktop/Electron only; *not* a web build).** Bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; reads, writes, and seals work with no network — this is what preserves an **offline-first** desktop product. It is the one topology that ships the Go host (cross-compile per target — darwin-arm64/x64, win-x64/arm64, linux-x64 — and code-sign each), and it is **not** part of a web-SDK integration. Reach for it only if you are explicitly building a bundled native app.
+- **Embedded local vault (ADVANCED — bundled desktop/Electron only; *not* a web build).** Bundle `ampd` (or the `libampd` shared library) inside a desktop / Electron app and spawn it as a child process / link it in-process. The user *is* the vault; reads, writes, and seals work with no network — this is what preserves an **offline-first** desktop product. It is the one topology that ships the Go host (cross-compile per target — darwin-arm64/x64, win-x64/arm64, linux-x64 — and code-sign each), and it is **not** part of an AMP Web Kit integration. Reach for it only if you are explicitly building a bundled native app.
 - **Hybrid.** An embedded local vault for offline work plus a cloud vault as a sync / relay peer. CRDT writes queue locally and replicate when the cloud peer is reachable. The native amp model for a desktop app, not a bolt-on.
 - **Self-hosted & federated (the licensee path).** A partner runs their *own* `ampd` and is therefore their own node operator — their own CORS, planets, and admin, with no per-deploy config handoff to you. They join the wider network by **federating** with a parent deploy, so their planets are discoverable through it (and vice-versa). See §14.8.
 

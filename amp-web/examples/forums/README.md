@@ -44,7 +44,7 @@ the planet tag.
 
 ## Run Against a Local ampd (AMP-Internal / Self-Hosted Dev)
 
-Only if you build `ampd` yourself — not part of a web-SDK integration
+Only if you build `ampd` yourself — not part of an AMP Web Kit integration
 (SKILL §14.8):
 
 1. Start `ampd` as a forums host (founds a public board planet + routes verb

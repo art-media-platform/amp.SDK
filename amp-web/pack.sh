@@ -5,8 +5,9 @@
 #
 # <out> is AMP_WEB_OUT when set — CI, a standalone checkout, and the release
 # cut, which passes the workspace's OUT/kits (AOM O4 §4.20 stage 7); else the
-# OUT/kits of the workspace holding this checkout (AOM O2 §2.11).  With
-# neither, the pack refuses rather than guess.
+# OUT/kits of the workspace holding this checkout (AOM O2 §2.11), where an
+# existing zip is never replaced.  With neither, the pack refuses rather than
+# guess.
 #
 # Assembles the amp-web/ TypeScript client plus the canonical wire contract in
 # amp/webapi.  Version is derived from the amp.SDK git tag at build time
@@ -57,6 +58,13 @@ fi
 STAGE="$SDK/build/amp-web-kit"                          # extracts to ./amp-web-kit
 OUT="$KITS/amp-web-kit-v$VER"
 ZIP="$OUT/amp-web-kit-$LABEL.zip"
+# The fallback never replaces a zip: one already at the workspace path may be
+# a recorded release artifact.  A caller that means to replace it names the
+# destination with AMP_WEB_OUT.
+if [ -z "${AMP_WEB_OUT:-}" ] && [ -e "$ZIP" ]; then
+  echo "ERROR: $ZIP exists — set AMP_WEB_OUT=<dir> to pack elsewhere or to replace it." >&2
+  exit 1
+fi
 
 echo "+++ amp-web-kit $LABEL  (package version $VER)"
 

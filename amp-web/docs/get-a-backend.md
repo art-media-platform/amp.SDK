@@ -57,7 +57,7 @@ node are the two development paths.
 
 Operating your own `ampd` — your own planets, CORS, admin — and
 federating it with a parent deploy is the heavier, self-hosting path:
-SKILL §14.8. It is never required for a web-SDK integration.
+SKILL §14.8. It is never required for an AMP Web Kit integration.
 
 ## Time to First Success
 
