@@ -201,7 +201,7 @@ func (pin *Pin[AppT]) pushState() error {
 
 		for childID, child := range pin.children {
 			w.nodeID = childID
-			tx.Upsert(pinnedID, Attr.ChildLink.ID, childID, nil)
+			tx.Upsert(pinnedID, Attr.ChildLink.ID, childID, childLinkOf(child))
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err
@@ -211,6 +211,20 @@ func (pin *Pin[AppT]) pushState() error {
 
 	tx.Status = amp.PinStatus_Synced
 	return pin.Request.PushTx(tx, pin.ctx)
+}
+
+// childLinkOf is the child's own pin URL as the ChildLink value; nil (a
+// presence cell) for an Item no pin of its own serves.
+func childLinkOf[AppT amp.AppInstance](child Item[AppT]) proto.Message {
+	linker, ok := child.(ChildLinker)
+	if !ok {
+		return nil
+	}
+	link := linker.ChildLink()
+	if link == nil {
+		return nil
+	}
+	return link
 }
 
 var _ ItemWriter = (*itemWriter)(nil)

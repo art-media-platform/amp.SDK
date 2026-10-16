@@ -89,6 +89,7 @@ var Attr = struct {
 	ChannelTypeBrand                   tag.Name
 	ChannelTypeNameService             tag.Name
 	ChannelTypeTerminal                tag.Name
+	ChannelTypeFiles                   tag.Name
 	Surface                            tag.Name
 	SurfacePane                        tag.Name
 	SurfaceVolume                      tag.Name
@@ -271,6 +272,7 @@ var Attr = struct {
 	ChannelTypeBrand:        tag.Name{ID: tag.UID{0xB65147BCC3C55E4C, 0x9BE811A46788AFF8}, Text: "channel.type.Brand"},        // 5qb53-vthy5-ct69ru-0jnjm-sjczs
 	ChannelTypeNameService:  tag.Name{ID: tag.UID{0x7F92C1A4067E91BF, 0x9ED36CF793A42DBF}, Text: "channel.type.NameService"},  // 3zkc0-u81my-k6ztxn-vdyy9-u8cez
 	ChannelTypeTerminal:     tag.Name{ID: tag.UID{0xA2A7D0965CBFE1C2, 0x203CD7FD9136CB7B}, Text: "channel.type.Terminal"},     // 52nz8-9dr5z-w7120g-6rzq8-mekvv
+	ChannelTypeFiles:        tag.Name{ID: tag.UID{0x4E9ABE1B0FDA2145, 0x73F373E63CB14BF3}, Text: "channel.type.Files"},        // 2fmbz-1q3yu-452r7w-vmwsy-c2kzm
 	// Render surface a channel is staged on — a value the staging host
 	// selects and a presenter resolves by (chType, surface); never a
 	// C# enum (surface vocabulary in client code breaks the whitelabel

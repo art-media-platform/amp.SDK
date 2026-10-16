@@ -34,6 +34,14 @@ type Item[AppT amp.AppInstance] interface {
 	MarshalAttrs(w ItemWriter)
 }
 
+// ChildLinker is an Item a pin of its own serves: pushState writes that pin's
+// URL into the parent's ChildLink cell, so a client pins a listed child
+// directly — a file's MediaLink is minted only on its own pin
+// (MD-unity-client §3.11).  Optional.
+type ChildLinker interface {
+	ChildLink() *amp.Tag
+}
+
 // ItemNode is a base struct for Item implementations — holds a stable node ID.
 type ItemNode[AppT amp.AppInstance] struct {
 	ID tag.UID

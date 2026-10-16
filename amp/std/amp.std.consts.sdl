@@ -122,6 +122,7 @@ tags Attr {
             ChannelTypeBrand        "Brand"
             ChannelTypeNameService  "NameService"
             ChannelTypeTerminal     "Terminal"
+            ChannelTypeFiles        "Files"
         }
         // Render surface a channel is staged on — a value the staging host
         // selects and a presenter resolves by (chType, surface); never a
