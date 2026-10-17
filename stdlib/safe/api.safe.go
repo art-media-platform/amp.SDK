@@ -8,7 +8,8 @@
 //	TomeStore  — persists a SealedTome to durable storage (file, cloud, etc).
 //
 //	Enclave    — the runtime session: loads a KeyTome via TomeStore+Guard,
-//	             provides crypto ops, key management, and re-seals on Close().
+//	             provides crypto ops and key management, and persists each
+//	             mutation; Close persists only an install still unsaved.
 //
 //	Kit  — pluggable crypto implementation keyed by CryptoKitID.
 //	             Nil function fields indicate unsupported capabilities.
@@ -55,7 +56,10 @@ type Guard interface {
 	Close() error
 }
 
-// TomeStore persists and retrieves a SealedTome.
+// TomeStore persists and retrieves a SealedTome.  The handles opened on one
+// store coordinate by its identity: TomeStoreIdentity when implemented (a
+// wrapping store forwards its inner store's), else the store value itself,
+// which must then be comparable.
 //
 // Implementations:
 //   - localTomeStore — reads/writes a single file on the local filesystem
@@ -73,8 +77,13 @@ type KeySpec struct {
 
 // Enclave is a live cryptographic session backed by an in-memory key index.
 //
-// On Open:  TomeStore.Load() -> Guard.UnwrapDEK() -> decrypt -> KeyTome -> index
-// On Close: index -> KeyTome -> new DEK -> Guard.WrapDEK() -> encrypt -> TomeStore.Save()
+// On Open:     TomeStore.Load() -> Guard.UnwrapDEK() -> decrypt -> KeyTome -> index
+// On mutation: reload + fold the tome -> KeyTome -> new DEK -> Guard.WrapDEK() -> encrypt -> TomeStore.Save()
+// On Close:    the same persist, only while an install is unsaved
+//
+// Handles open on one tome coordinate within the process (TomeStoreIdentity):
+// a mutation folds in the tome as it stands, so no handle drops a sibling's
+// install, and a read folds in a sibling's save first.
 //
 // All methods are threadsafe.
 type Enclave interface {

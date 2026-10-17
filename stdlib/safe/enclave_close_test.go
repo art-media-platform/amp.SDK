@@ -1,10 +1,10 @@
 package safe_test
 
-// Close persists only what is still unsaved (SD-security-sync §8.5): every
-// mutation persists at its own site, so a Close with nothing unsaved writes
-// nothing — a handle opened before a sibling's install never re-seals its
-// stale index over that install, and a read-only open leaves the tome's
-// bytes as it found them.
+// Close persists only what is still unsaved (SD-security-sync §20.6): every
+// mutation persists at its own site, so a clean handle's Close writes
+// nothing — even one opened before a sibling's install — and a read-only
+// open leaves the tome's bytes as it found them.  An unsaved install's Close
+// folds in the tome first (enclave_siblings_test.go).
 
 import (
 	"bytes"
@@ -67,6 +67,31 @@ func TestEnclave_CloseKeepsSiblingInstall(t *testing.T) {
 	}
 	if err := handleA.Close(ctx); err != nil {
 		t.Fatalf("A.Close: %v", err)
+	}
+}
+
+// The handle that installed first closes after a sibling's later install: it
+// is clean, so its Close leaves the later install on disk — the arm that
+// tells the unsaved predicate from a dirty-since-open one.
+func TestEnclave_InstallerCloseKeepsLaterSiblingInstall(t *testing.T) {
+	ctx := context.Background()
+	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "enclave.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte(closeTestAAD))
+	defer guard.Close()
+
+	handleA := openCloseTestEnclave(t, store, guard)
+	generateSigningKey(t, handleA, tag.NewID())
+	handleB := openCloseTestEnclave(t, store, guard)
+	laterRing := tag.NewID()
+	generateSigningKey(t, handleB, laterRing)
+	if err := handleA.Close(ctx); err != nil {
+		t.Fatalf("A.Close: %v", err)
+	}
+	if !signingKeyOnDisk(t, store, guard, laterRing) {
+		t.Fatal("the installer's Close dropped the sibling's later install")
+	}
+	if err := handleB.Close(ctx); err != nil {
+		t.Fatalf("B.Close: %v", err)
 	}
 }
 
