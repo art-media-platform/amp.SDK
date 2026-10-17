@@ -3492,7 +3492,7 @@ func (x *DeviceVars) GetTargetFPS() int32 {
 // and resolve at point of use.
 type MemberVars struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	DefaultSkyboxURI  string                 `protobuf:"bytes,1,opt,name=DefaultSkyboxURI,proto3" json:"DefaultSkyboxURI,omitempty"`                  // default space skybox asset URI; empty → channel default
+	DefaultSkyboxURI  string                 `protobuf:"bytes,1,opt,name=DefaultSkyboxURI,proto3" json:"DefaultSkyboxURI,omitempty"`                  // the member's fallback space skybox asset URI: a world's own Backdrop entry wins over it; empty → the std.Atmosphere default
 	ReticleStyle      ReticleStyleID         `protobuf:"varint,2,opt,name=ReticleStyle,proto3,enum=std.ReticleStyleID" json:"ReticleStyle,omitempty"` // center reticle style; 0 → ReticleLine
 	ReticleOverlayURI string                 `protobuf:"bytes,3,opt,name=ReticleOverlayURI,proto3" json:"ReticleOverlayURI,omitempty"`                // center reticle overlay sprite URI; empty → overlay hidden
 	unknownFields     protoimpl.UnknownFields
