@@ -73,7 +73,7 @@ var shapeCtors = map[string]func() any{
 	"MediaResolveRequest":     func() any { return &webapi.MediaResolveRequest{} },
 	"Tag":                     func() any { return &amp.Tag{} },
 
-	// Operator tier (Go-only by design — see testdata/operator-go-only.json;
+	// Node operator tier (Go-only by design — see testdata/operator-go-only.json;
 	// TestOperatorGoOnlyManifest pins these registrations to that manifest).
 	"PlanetCreateRequest":   func() any { return &webapi.PlanetCreateRequest{} },
 	"PlanetCreateResponse":  func() any { return &webapi.PlanetCreateResponse{} },

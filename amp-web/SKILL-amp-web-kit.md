@@ -400,7 +400,7 @@ interface BlobRef {
 
 **Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}.{ext}?t=<media token>` URL (`{ext}` = the Tag's MIME subtype; the token binds the URL to the blob, your session and its generation for the token lifetime — one hour by default — and is the credential `/www/` checks).  The publisher is in-memory — repeated resolves inside a token lifetime answer the same URL, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
-**A sealed blob from another client resolves by cell.**  A blob the native client or the CLI uploaded into a sealed planet is recorded in a `BlobRef` cell (the item whose `blobRef` you read); pass that cell's packed `Address` as `resolveMedia(blob, planetTag, cell)` (or `useAmpMedia(blob, planetTag, cell)`) and the node completes the ref from the cell under your session's keys — so the blob resolves on any node holding its bytes, not only the node that sealed it.  Without a cell, a sealed blob resolves only on the node that sealed it (its sealed-ref companion), which is what a web upload's own blob does today; a refused resolve is a 404 either way.
+**A sealed blob from another client resolves by cell.**  A blob the native client or the CLI uploaded into a sealed planet is recorded in an `Attr.BlobRef` cell (`amp.blob.BlobRef`, keyed by the asset's UID on the item's channel node); pass that cell's packed `Address` as `resolveMedia(blob, planetTag, cell)` (or `useAmpMedia(blob, planetTag, cell)`) and the node completes the ref from the cell under your session's keys — so the blob resolves on any node holding its bytes, not only the node that sealed it.  `Attr.BlobRef` is the only cell the node accepts, and the ref it holds must name your blob: any other cell refuses (404); a malformed `Cell` (not 3–5 packed UIDs) is a 400.  Without a cell, a sealed blob resolves only on the node that sealed it (its sealed-ref companion), which is what a web upload's own blob does today; a refused resolve is a 404 either way.
 
 After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
 
@@ -806,7 +806,7 @@ no byte-level upload events. Gate spinners on `uploading`.
 ### 5.5 `useAmpMedia()`
 
 ```tsx
-const { url, loading, contentType, byteSize, error, refresh, generation } = useAmpMedia(blobRef, planetTag?);
+const { url, loading, contentType, byteSize, error, refresh, generation } = useAmpMedia(blobRef, planetTag?, cell?);
 // url is the server's /www/{UID}.{ext}?t=<media token>; pass to <img>, <video>, <audio>, or download <a>
 <video key={generation} src={url ?? undefined} onError={() => void refresh()} controls />
 ```
@@ -817,7 +817,7 @@ Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
 POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —
 accepted — publishes under `/www/{UID}.plain` and serves as an
 `application/octet-stream` download.  Resolves via
-`POST /api/v1/media/resolve` (`client.resolveMedia(blob, planetTag?)`); there
+`POST /api/v1/media/resolve` (`client.resolveMedia(blob, planetTag?, cell?)`); there
 is no client-built URL — when resolve fails `url` is null and `error` carries
 the failure (a revoked session fails here, as 401).
 
@@ -1166,7 +1166,7 @@ interface AmpBridge {
 
   // ── Media ──
   upload(channel: string, opts?: UploadOpts): Promise<BlobRef>;
-  resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef>;  // returns blob with URI (stream URL) set; cell = the BlobRef cell a sealed blob resolves by (§5.5)
+  resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef>;  // returns blob with URI (stream URL) set; cell = the BlobRef cell a sealed blob resolves by (§4.4)
 
   // ── Sealed secrets ──
   seal(plaintext: Uint8Array): Promise<Uint8Array>;

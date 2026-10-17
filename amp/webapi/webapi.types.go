@@ -326,11 +326,14 @@ type EditChainResponse struct {
 //
 // Cell, when set, names the cabinet cell holding the blob's full amp.BlobRef:
 // a std.Attr.BlobRef cell, the 3-UID Address form (channel, attr, item;
-// PlanetTag names the planet).  The node reads it under the session's keys
-// and opens the blob by that ref, so a SEALED blob resolves on any node
-// holding its bytes and the cell, not only on the node that sealed it
-// (AD-app-www §3.4).  The cell must name Blob's UID.  Absent, the resolve is
-// Tag-only: a planet-public blob, or a sealed blob on the node that sealed it.
+// PlanetTag names the planet).  The node also accepts the 4- and 5-UID
+// forms: an EditID is ignored (the cell's current value is read) and a
+// PlanetID must name the resolved planet.  The node reads the cell under the
+// session's keys and opens the blob by that ref, so a SEALED blob resolves on
+// any node holding its bytes and the cell, not only on the node that sealed
+// it (AD-app-www §3.4).  The cell must name Blob's UID.  A zero Address (JSON
+// "") names no cell and refuses.  Absent, the resolve is Tag-only: a
+// planet-public blob, or a sealed blob on the node that sealed it.
 type MediaResolveRequest struct {
 	PlanetTag string       `json:"PlanetTag,omitempty"`
 	Blob      *amp.Tag     `json:"Blob"`

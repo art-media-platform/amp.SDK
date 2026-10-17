@@ -16,6 +16,9 @@ import { AmpWebClient } from './web-client.js';
 
 const VAULT = 'http://127.0.0.1:5193';
 const UID = '06efv-w28sb-60036d-tm6dt-m6dtm';
+// A packed 3-UID Address (channel, attr, item): the BlobRef cell a sealed blob
+// resolves by (the amp/webapi testdata/media.json byCell golden).
+const CELL = 'z41s2udrrbg06q1qry3f1rvg7vtt1jcwuz0pqj8my77ry1yrn13q4e67n47xrnyf2cy29fze1me36';
 const TOKEN = 'GE3TEMBQGAYDAMBQ.6yxaa-aaaaa-abbbbb-bbbbb-bcccc.06efv-w28sb-60036d-tm6dt-m6dtm.GA.MFRGGZDFMZTWQ2LK';
 const realFetch = globalThis.fetch;
 
@@ -82,6 +85,19 @@ describe('resolveMedia carries the server URI verbatim', () => {
     expect(resolves).toHaveLength(1);
     expect(resolves[0]!.auth).toBe('Bearer bearer-alice');
     expect(resolves[0]!.body).toEqual({ Blob: { UID, ContentTypeRaw: 'video/mp4', I: 10, Units: 2 }, PlanetTag: 'home' });
+  });
+
+  it('sends the cell as Cell when given, and no Cell key when it is empty (Tag-only)', async () => {
+    const { client } = await loggedInClient();
+    await client.resolveMedia({ UID, ContentTypeRaw: 'video/mp4' }, undefined, CELL);
+    await client.resolveMedia({ UID, ContentTypeRaw: 'video/mp4' }, undefined, '');
+    await client.resolveMedia({ UID, ContentTypeRaw: 'video/mp4' });
+    const bodies = calls.filter(c => c.path === '/api/v1/media/resolve').map(c => c.body as Record<string, unknown>);
+    expect(bodies).toHaveLength(3);
+    expect(bodies[0]!['Cell']).toBe(CELL);
+    expect(bodies[0]).toEqual({ Blob: { UID, ContentTypeRaw: 'video/mp4' }, PlanetTag: 'home', Cell: CELL });
+    expect('Cell' in bodies[1]!).toBe(false);
+    expect('Cell' in bodies[2]!).toBe(false);
   });
 
   it('exposes no client-side /www/ URL builder', () => {

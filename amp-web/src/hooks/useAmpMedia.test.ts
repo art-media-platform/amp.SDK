@@ -90,6 +90,20 @@ describe('useAmpMedia resolve round', () => {
     expect(res.error?.message).toContain('no URI');
   });
 
+  it('forwards planetTag and the cell to the adapter (refresh too)', async () => {
+    const cell = 'cell-address';
+    const seen: Array<[BlobRef, string | undefined, string | undefined]> = [];
+    const server = {
+      async resolveMedia(blob: BlobRef, planetTag?: string, cellArg?: string): Promise<BlobRef> {
+        seen.push([blob, planetTag, cellArg]);
+        return { ...blob, URI: `/www/${blob.UID}.mp4?t=tok` };
+      },
+    };
+    await resolveMediaURL(server, CABINET, 'home', cell);
+    await refreshMediaURL(server, CABINET, 'home', cell);
+    expect(seen).toEqual([[CABINET, 'home', cell], [CABINET, 'home', cell]]);
+  });
+
   it('a bare UID degrades to a UID-only Tag (server ⇒ text/plain)', async () => {
     const server = mediaServer();
     const res = await resolveMediaURL(server, mediaTagFor(UID));

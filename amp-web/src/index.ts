@@ -131,6 +131,7 @@ export type { SessionStore, StoredSession } from './session-store.js';
 // also augments the global `Window` with an optional `amp` field.
 export type {
   AmpBridge,
+  BridgeItem,
   BridgeMember,
   FormPayload,
   ListOpts,

@@ -885,12 +885,17 @@ export class AmpWebClient implements AmpAdapter {
   // opaque, host-relative, valid for the token lifetime and the session's
   // generation.  Nothing here rebuilds it.  cell names the BlobRef cell
   // (a packed Address) the node completes a sealed blob's ref from, so the
-  // blob resolves on a node that did not seal it; omitted, the resolve is
-  // Tag-only.
+  // blob resolves on a node that did not seal it; omitted or empty, no Cell
+  // is sent and the resolve is Tag-only (an empty Cell would reach the node
+  // as a zero Address, which names no cell and refuses).
   async resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef> {
     return this.apiFetch<BlobRef>('/media/resolve', {
       method: 'POST',
-      body: JSON.stringify({ Blob: blob, PlanetTag: this.planetTagFor(planetTag), Cell: cell }),
+      body: JSON.stringify({
+        Blob: blob,
+        PlanetTag: this.planetTagFor(planetTag),
+        ...(cell ? { Cell: cell } : {}),
+      }),
     });
   }
 
