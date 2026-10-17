@@ -33,7 +33,9 @@ export const Attr = {
     // ─── Item attributes ────────────────────────────────────────────
     ItemAttr                          : { id: [0xE8D8BECA5B3BBEB3n, 0x1308458DB27C3504n], text: "item" },                        // 78v2z-dnqtv-rutj62-25jqt-7se84
 
+    // the child set: the ItemID is the child NodeID; no value
     ChildLink                         : { id: [0x1D7FCD10B1143140n, 0xB45F595E9B29E11En], text: "item.child.link.UID" },         // 0xgz6-j1d8n-650c8r-utcue-kms8y
+    // a child's own pin URL, beside its ChildLink (std.ChildPinner)
     ChildPin                          : { id: [0xDF5F04821DAFB6B0n, 0xF4BA35EA76A24D8Bn], text: "item.child.pin.Tag" },          // 6zcw2-847eg-qusg9f-jpx9v-b4mdc
     ItemLabels                        : { id: [0x89DC7C30D083C0B7n, 0xCCB62B4FAAB34B4Dn], text: "item.Labels" },                 // 49vjy-31n43-s2vwte-jc9yp-c6kue
     ItemTextTag                       : { id: [0xE961CE2BB0D11C6Fn, 0x77C2DB21D0B1B894n], text: "item.text" },                   // 79d77-2rd6j-3jrrgh-qv478-c3f4n

@@ -188,10 +188,12 @@ var Attr = struct {
 	// ─── Item attributes ────────────────────────────────────────────
 	ItemAttr: tag.Name{ID: tag.UID{0xE8D8BECA5B3BBEB3, 0x1308458DB27C3504}, Text: "item"}, // 78v2z-dnqtv-rutj62-25jqt-7se84
 
-	ChildLink:   tag.Name{ID: tag.UID{0x1D7FCD10B1143140, 0xB45F595E9B29E11E}, Text: "item.child.link.UID"}, // 0xgz6-j1d8n-650c8r-utcue-kms8y
-	ChildPin:    tag.Name{ID: tag.UID{0xDF5F04821DAFB6B0, 0xF4BA35EA76A24D8B}, Text: "item.child.pin.Tag"},  // 6zcw2-847eg-qusg9f-jpx9v-b4mdc
-	ItemLabels:  tag.Name{ID: tag.UID{0x89DC7C30D083C0B7, 0xCCB62B4FAAB34B4D}, Text: "item.Labels"},         // 49vjy-31n43-s2vwte-jc9yp-c6kue
-	ItemTextTag: tag.Name{ID: tag.UID{0xE961CE2BB0D11C6F, 0x77C2DB21D0B1B894}, Text: "item.text"},           // 79d77-2rd6j-3jrrgh-qv478-c3f4n
+	// the child set: the ItemID is the child NodeID; no value
+	ChildLink: tag.Name{ID: tag.UID{0x1D7FCD10B1143140, 0xB45F595E9B29E11E}, Text: "item.child.link.UID"}, // 0xgz6-j1d8n-650c8r-utcue-kms8y
+	// a child's own pin URL, beside its ChildLink (std.ChildPinner)
+	ChildPin:    tag.Name{ID: tag.UID{0xDF5F04821DAFB6B0, 0xF4BA35EA76A24D8B}, Text: "item.child.pin.Tag"}, // 6zcw2-847eg-qusg9f-jpx9v-b4mdc
+	ItemLabels:  tag.Name{ID: tag.UID{0x89DC7C30D083C0B7, 0xCCB62B4FAAB34B4D}, Text: "item.Labels"},        // 49vjy-31n43-s2vwte-jc9yp-c6kue
+	ItemTextTag: tag.Name{ID: tag.UID{0xE961CE2BB0D11C6F, 0x77C2DB21D0B1B894}, Text: "item.text"},          // 79d77-2rd6j-3jrrgh-qv478-c3f4n
 
 	ItemLabel:         tag.Name{ID: tag.UID{0xF02E86C443B0CC5E, 0xBD0EB67840F71680}, Text: "item.text.label.Tag"},      // 7h5u3-d8hxh-tjgcu3-pqg10-gf5n0
 	ItemCaption:       tag.Name{ID: tag.UID{0x05D0FD10FDF9905E, 0x704796E74A32F7B6}, Text: "item.text.caption.Tag"},    // 05u3y-j1zgt-k1g70j-wqwx5-35xxq

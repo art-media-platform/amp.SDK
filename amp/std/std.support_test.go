@@ -2,6 +2,7 @@ package std
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -103,38 +104,38 @@ func TestPinContextBeforePopulationAndPush(t *testing.T) {
 	}
 }
 
-// linkedItem is a child a pin of its own serves (ChildLinker).
-type linkedItem struct {
+// pinnedItem is a child a pin of its own serves (ChildPinner); pin is what
+// ChildPin() answers.
+type pinnedItem struct {
 	ItemNode[*joiningApp]
-	url string
+	pin *amp.Tag
 }
 
-func (item *linkedItem) PinInto(*Pin[*joiningApp]) error { return nil }
-func (item *linkedItem) MarshalAttrs(ItemWriter)         {}
-func (item *linkedItem) ChildLink() *amp.Tag {
-	return &amp.Tag{
-		URI: item.url,
-	}
+func (item *pinnedItem) PinInto(*Pin[*joiningApp]) error { return nil }
+func (item *pinnedItem) MarshalAttrs(ItemWriter)         {}
+func (item *pinnedItem) ChildPin() *amp.Tag {
+	return item.pin
 }
 
-// listingItem lists one linked child and one plain child.
+// listingItem lists its children.
 type listingItem struct {
 	ItemNode[*joiningApp]
-	linked *linkedItem
-	plain  *contextItem
+	children []Item[*joiningApp]
 }
 
 func (item *listingItem) PinInto(pin *Pin[*joiningApp]) error {
-	pin.AddChild(item.linked)
-	pin.AddChild(item.plain)
+	for _, child := range item.children {
+		pin.AddChild(child)
+	}
 	return nil
 }
 
 func (item *listingItem) MarshalAttrs(ItemWriter) {}
 
-// pushRequester keeps the tx a push carries.
+// pushRequester keeps the tx a push carries and the pin's completion.
 type pushRequester struct {
-	tx *amp.TxMsg
+	tx       *amp.TxMsg
+	complete *amp.PinEvent
 }
 
 func (requester *pushRequester) PushTx(tx *amp.TxMsg, _ context.Context) error {
@@ -142,13 +143,17 @@ func (requester *pushRequester) PushTx(tx *amp.TxMsg, _ context.Context) error {
 	return nil
 }
 
-func (requester *pushRequester) RecvEvent(amp.PinEvent) {}
+func (requester *pushRequester) RecvEvent(evt amp.PinEvent) {
+	if evt.Status == amp.PinStatus_Complete {
+		requester.complete = &evt
+	}
+}
 
-// A listing's ChildPin cell carries a ChildLinker child's own pin URL beside a
-// value-less ChildLink; a plain child has the ChildLink alone (ZO §4.8;
-// AD-playlists §6; MD-unity-client §3.11).
-func TestPushStateChildLink(t *testing.T) {
-	parent, err := task.NewChild(nil, "child-link-parent")
+// serveListing serves item as a Snapshot pin and returns what it pushed and
+// how it completed (joiningApp runs the pin to completion inside PinAndServe).
+func serveListing(t *testing.T, item *listingItem) *pushRequester {
+	t.Helper()
+	parent, err := task.NewChild(nil, "child-pin-parent")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,12 +168,6 @@ func TestPushStateChildLink(t *testing.T) {
 	app := &joiningApp{
 		parent: parent,
 	}
-	item := &listingItem{
-		linked: &linkedItem{url: "amp://~/app.filesys.posix?path=%2Fmusic%2Fa.aac"},
-		plain:  &contextItem{},
-	}
-	item.linked.ID = tag.NowID()
-	item.plain.ID = tag.NowID()
 	requester := &pushRequester{}
 	_, err = PinAndServe(item, app, &amp.Request{
 		Requester: requester,
@@ -177,32 +176,95 @@ func TestPushStateChildLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if requester.complete == nil {
+		t.Fatal("the pin did not complete")
+	}
+	return requester
+}
+
+// childLinkValueLens is the value byte length of every ChildLink cell at
+// (nodeID, ChildLink, itemID) in tx.
+func childLinkValueLens(t *testing.T, tx *amp.TxMsg, nodeID, itemID tag.UID) []int {
+	t.Helper()
+	lens := []int{}
+	for idx, op := range tx.Ops {
+		if op.Addr.NodeID != nodeID || op.Addr.AttrID != Attr.ChildLink.ID || op.Addr.ItemID != itemID {
+			continue
+		}
+		raw, err := tx.OpValueBytes(idx)
+		if err != nil {
+			t.Fatalf("ChildLink op %d: %v", idx, err)
+		}
+		lens = append(lens, len(raw))
+	}
+	return lens
+}
+
+// A listing's ChildPin cell carries a ChildPinner child's own pin URL beside a
+// value-less ChildLink; a ChildPinner answering nil and a plain child have the
+// ChildLink alone; the head's ChildLink naming the pinned item is value-less
+// too (ZO §4.8; AD-playlists §6; MD-unity-client §3.11).
+func TestPushStateChildLink(t *testing.T) {
+	url := "amp://~/app.filesys.posix?path=%2Fmusic%2Fa.aac"
+	pinned := &pinnedItem{
+		pin: &amp.Tag{URI: url},
+	}
+	unpinned := &pinnedItem{}
+	plain := &contextItem{}
+	pinned.ID = tag.NowID()
+	unpinned.ID = tag.NowID()
+	plain.ID = tag.NowID()
+	item := &listingItem{
+		children: []Item[*joiningApp]{pinned, unpinned, plain},
+	}
+	item.ID = tag.NowID()
+	requester := serveListing(t, item)
+	if requester.complete.Error != nil {
+		t.Fatalf("listing completed with %v", requester.complete.Error)
+	}
 	if requester.tx == nil {
 		t.Fatal("no state pushed")
 	}
-	link := &amp.Tag{}
-	if err := requester.tx.ExtractValue(Attr.ChildPin.ID, item.linked.ID, link); err != nil {
-		t.Fatalf("linked child's ChildPin cell missing: %v", err)
+	tx := requester.tx
+	childPin := &amp.Tag{}
+	if err := tx.ExtractValue(Attr.ChildPin.ID, pinned.ID, childPin); err != nil {
+		t.Fatalf("pinned child's ChildPin cell missing: %v", err)
 	}
-	if link.URI != item.linked.url {
-		t.Errorf("linked child's ChildPin URI = %q, want %q", link.URI, item.linked.url)
+	if childPin.URI != url {
+		t.Errorf("pinned child's ChildPin URI = %q, want %q", childPin.URI, url)
 	}
-	if err := requester.tx.ExtractValue(Attr.ChildPin.ID, item.plain.ID, &amp.Tag{}); err == nil {
+	if err := tx.ExtractValue(Attr.ChildPin.ID, unpinned.ID, &amp.Tag{}); err == nil {
+		t.Error("a ChildPinner answering nil carries a ChildPin cell, want none")
+	}
+	if err := tx.ExtractValue(Attr.ChildPin.ID, plain.ID, &amp.Tag{}); err == nil {
 		t.Error("plain child carries a ChildPin cell, want none")
 	}
-	for _, child := range []tag.UID{item.linked.ID, item.plain.ID} {
-		found := false
-		for idx, op := range requester.tx.Ops {
-			if op.Addr.AttrID != Attr.ChildLink.ID || op.Addr.ItemID != child {
-				continue
-			}
-			found = true
-			if raw, err := requester.tx.OpValueBytes(idx); err != nil || len(raw) != 0 {
-				t.Errorf("child %s: ChildLink carries %d value bytes (err %v), want a value-less set marker", child.Base32(), len(raw), err)
-			}
+	if lens := childLinkValueLens(t, tx, amp.HeadNodeID, item.ID); len(lens) != 1 || lens[0] != 0 {
+		t.Errorf("head ChildLink value byte lengths %v, want one value-less set marker", lens)
+	}
+	for _, child := range []tag.UID{pinned.ID, unpinned.ID, plain.ID} {
+		if lens := childLinkValueLens(t, tx, item.ID, child); len(lens) != 1 || lens[0] != 0 {
+			t.Errorf("child %s: ChildLink value byte lengths %v, want one value-less set marker", child.Base32(), lens)
 		}
-		if !found {
-			t.Errorf("child %s: no ChildLink cell", child.Base32())
-		}
+	}
+}
+
+// A ChildPin the tx refuses (Tag.Validate: Data with no ContentTypeRaw) fails
+// the listing: pushState returns the Upsert error and nothing is pushed.
+func TestPushStateChildPinRefused(t *testing.T) {
+	refused := &pinnedItem{
+		pin: &amp.Tag{Data: []byte("no content type")},
+	}
+	refused.ID = tag.NowID()
+	item := &listingItem{
+		children: []Item[*joiningApp]{refused},
+	}
+	item.ID = tag.NowID()
+	requester := serveListing(t, item)
+	if !errors.Is(requester.complete.Error, amp.ErrTagNoContentType) {
+		t.Errorf("listing completed with %v, want %v", requester.complete.Error, amp.ErrTagNoContentType)
+	}
+	if requester.tx != nil {
+		t.Errorf("a refused listing pushed %d ops", len(requester.tx.Ops))
 	}
 }

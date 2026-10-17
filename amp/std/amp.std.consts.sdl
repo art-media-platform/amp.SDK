@@ -37,8 +37,10 @@ tags Attr {
 
     // Item attributes
     ItemAttr "item" {
-        ChildLink         "child.link.UID"  // the child set: the ItemID is the child NodeID; no value
-        ChildPin          "child.pin.Tag"   // a child's own pin URL, beside its ChildLink (std.ChildLinker)
+        // the child set: the ItemID is the child NodeID; no value
+        ChildLink         "child.link.UID"
+        // a child's own pin URL, beside its ChildLink (std.ChildPinner)
+        ChildPin          "child.pin.Tag"
         ItemLabels        "Labels"
         ItemTextTag       "text" {
             ItemLabel      "label.Tag"

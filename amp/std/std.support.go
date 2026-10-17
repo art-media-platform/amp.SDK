@@ -206,8 +206,8 @@ func (pin *Pin[AppT]) pushState() error {
 			if err := tx.Upsert(pinnedID, Attr.ChildLink.ID, childID, nil); err != nil {
 				return err
 			}
-			if link := childLinkOf(child); link != nil {
-				if err := tx.Upsert(pinnedID, Attr.ChildPin.ID, childID, link); err != nil {
+			if childPin := childPinOf(child); childPin != nil {
+				if err := tx.Upsert(pinnedID, Attr.ChildPin.ID, childID, childPin); err != nil {
 					return err
 				}
 			}
@@ -222,14 +222,14 @@ func (pin *Pin[AppT]) pushState() error {
 	return pin.Request.PushTx(tx, pin.ctx)
 }
 
-// childLinkOf is the child's own pin URL, the ChildPin value; nil for an
+// childPinOf is the child's own pin URL, the ChildPin value; nil for an
 // Item no pin of its own serves (its ChildLink cell alone lists it).
-func childLinkOf[AppT amp.AppInstance](child Item[AppT]) *amp.Tag {
-	linker, ok := child.(ChildLinker)
+func childPinOf[AppT amp.AppInstance](child Item[AppT]) *amp.Tag {
+	pinner, ok := child.(ChildPinner)
 	if !ok {
 		return nil
 	}
-	return linker.ChildLink()
+	return pinner.ChildPin()
 }
 
 var _ ItemWriter = (*itemWriter)(nil)
