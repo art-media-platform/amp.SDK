@@ -176,7 +176,8 @@ amp_kit delink "$STAGE" "$AOM_SRC"
 #     runs under `npm test` (src/aom-allowlist.test.ts, which asserts its
 #     regex equals AOM_REF_RE below), so the pre-cut slate catches a cite
 #     before the tag (O4 §4.20 leg 5); this pass gates the STAGED tree.
-AOM_REF_RE='\b(DD|SD|AD|QO|ZO|O[0-9]|Q[0-9]?)-[a-z0-9]+(-[a-z0-9]+)*(\.md)?'
+# Every AOM shelf letter (ZD Appendix A), not only the ones the bundle ships.
+AOM_REF_RE='\b(AD|AP|AQ|AT|CD|CR|DD|DQ|ED|EO|GR|MD|MQ|QD|QO|QP|SD|UD|ZD|ZO|ZP|ZR|O[0-9]|Q[0-9]?)-[a-z0-9]+(-[a-z0-9]+)*(\.md)?'
 AOM_ALLOWED="$({ aom_listed whole; aom_listed public; } | sed 's/\.md$//' | sort -u)"
 AOM_OFFENDERS="$(grep -rhoE "$AOM_REF_RE" "$STAGE/src" \
                  | sed 's/\.md$//' | sort -u | grep -vxF "$AOM_ALLOWED" || true)"

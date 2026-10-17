@@ -24,7 +24,8 @@ const ALLOWLIST_PATH = join(HERE, '..', 'aom-allowlist.txt');
 const PACK_SH_PATH = join(HERE, '..', 'pack.sh');                // repo view only
 
 // Must equal pack.sh's AOM_REF_RE byte-for-byte — the test below asserts it.
-const AOM_REF_RE_SOURCE = String.raw`\b(DD|SD|AD|QO|ZO|O[0-9]|Q[0-9]?)-[a-z0-9]+(-[a-z0-9]+)*(\.md)?`;
+// Every AOM shelf letter (ZD Appendix A), not only the ones the bundle ships.
+const AOM_REF_RE_SOURCE = String.raw`\b(AD|AP|AQ|AT|CD|CR|DD|DQ|ED|EO|GR|MD|MQ|QD|QO|QP|SD|UD|ZD|ZO|ZP|ZR|O[0-9]|Q[0-9]?)-[a-z0-9]+(-[a-z0-9]+)*(\.md)?`;
 const AOM_REF_RE = new RegExp(AOM_REF_RE_SOURCE, 'g');
 
 const MODES = new Set(['whole', 'public']);
