@@ -149,7 +149,8 @@ type Enclave interface {
 	// process, not the Enclave API.
 	ExportSymmetricKey(ref *KeyRef) ([]byte, error)
 
-	// Close re-seals the key index and persists it, then zeros sensitive material.
+	// Close persists any install still unsaved (every mutation persists at its
+	// own site, so a clean handle writes nothing), then zeros sensitive material.
 	Close(ctx context.Context) error
 }
 

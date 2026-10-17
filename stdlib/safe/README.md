@@ -18,11 +18,12 @@ Secure key storage and retrieval for the **amp** platform.
 │   EncryptSym() / DecryptSym()   — symmetric seal/open   │
 │   OpenFromPub()  — open a sealed box for a held key     │
 │   ExportSymmetricKey()  — symmetric material only       │
-│   Close()        — re-seal, persist, zero               │
+│   Close()        — persist what is unsaved, zero        │
 │                                                         │
 │   Open:   TomeStore.Load() → Guard.UnwrapDEK()          │
 │           → AEAD decrypt → KeyTome                      │
-│   Close:  new DEK → Guard.WrapDEK()                     │
+│   Persist (each install; Close only while unsaved):     │
+│           new DEK → Guard.WrapDEK()                     │
 │           → AEAD encrypt(KeyTome) → TomeStore.Save()    │
 └─────────────────────────────────────────────────────────┘
           │                             │

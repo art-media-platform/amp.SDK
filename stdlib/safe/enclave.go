@@ -21,7 +21,7 @@ import (
 //	              -> decrypts KeyTome payload
 //	              -> returns Enclave with live key index
 //
-//	enclave.Close() -> generates fresh DEK
+//	enclave.Close() -> (only while an install is unsaved) generates fresh DEK
 //	                -> encrypts serialized KeyTome
 //	                -> wraps DEK via Guard
 //	                -> saves SealedTome to TomeStore
@@ -442,7 +442,11 @@ func (enc *enclave) ExportSymmetricKey(ref *KeyRef) ([]byte, error) {
 	return out, nil
 }
 
-// Close seals the current key index and persists it, then zeros sensitive material.
+// Close persists any install still unsaved, then zeros sensitive material.
+// Every mutation persists at its own site, so a clean handle writes nothing:
+// a handle opened before a sibling's install never re-seals its stale index
+// over that install, and a read-only open leaves the tome as it found it.  A
+// failed persist returns the error and keeps the handle open for a retry.
 func (enc *enclave) Close(ctx context.Context) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -451,8 +455,10 @@ func (enc *enclave) Close(ctx context.Context) error {
 		return nil
 	}
 
-	if err := enc.persistLocked(ctx); err != nil {
-		return err
+	if len(enc.unsaved) > 0 {
+		if err := enc.persistLocked(ctx); err != nil {
+			return err
+		}
 	}
 
 	enc.zeroState()
