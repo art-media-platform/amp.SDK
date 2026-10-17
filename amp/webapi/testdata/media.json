@@ -8,6 +8,14 @@
       "ContentTypeRaw": "audio/mpeg"
     }
   },
+  "MediaResolveRequest.byCell": {
+    "PlanetTag": "amp.planet.demo",
+    "Blob": {
+      "UID": "06efv-w28sb-60036d-tm6dt-m6dtm",
+      "ContentTypeRaw": "audio/mpeg"
+    },
+    "Cell": "z41s2udrrbg06q1qry3f1rvg7vtt1jcwuz0pqj8my77ry1yrn13q4e67n47xrnyf2cy29fze1me36"
+  },
   "Tag.mediaResponse": {
     "UID": "06efv-w28sb-60036d-tm6dt-m6dtm",
     "I": 1048576,

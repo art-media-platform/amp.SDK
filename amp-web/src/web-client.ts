@@ -28,6 +28,7 @@ import {
   defaultSessionStore,
 } from './session-store.js';
 import type {
+  Address,
   AmpItemMeta,
   AmpIdentity,
   AmpQueryOpts,
@@ -882,11 +883,14 @@ export class AmpWebClient implements AmpAdapter {
   // resolveMedia answers the server's Tag whole; its URI is the stream URL
   // WITH the media token a member resolve carries (/www/{UID}.{ext}?t=…) —
   // opaque, host-relative, valid for the token lifetime and the session's
-  // generation.  Nothing here rebuilds it.
-  async resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef> {
+  // generation.  Nothing here rebuilds it.  cell names the BlobRef cell
+  // (a packed Address) the node completes a sealed blob's ref from, so the
+  // blob resolves on a node that did not seal it; omitted, the resolve is
+  // Tag-only.
+  async resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef> {
     return this.apiFetch<BlobRef>('/media/resolve', {
       method: 'POST',
-      body: JSON.stringify({ Blob: blob, PlanetTag: this.planetTagFor(planetTag) }),
+      body: JSON.stringify({ Blob: blob, PlanetTag: this.planetTagFor(planetTag), Cell: cell }),
     });
   }
 

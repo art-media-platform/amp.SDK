@@ -27,13 +27,15 @@ function referenceHost(): { amp: AmpBridge; attach(): void } {
   const inert = () => { throw new Error('not exercised'); };
   const amp: AmpBridge = {
     member: null,
+    item: { PlanetID: '', ChannelID: '', ItemID: '' },
+    theme: {},
     onReady(cb) {
       if (attached) cb(amp);
       else readyCbs.push(cb);
     },
     read: inert, list: inert, tx: inert, write: inert, remove: inert, withdraw: inert,
     subscribe: inert, upload: inert, resolveMedia: inert, seal: inert, open: inert,
-    navigate: inert, back: inert, setTitle: inert, focus: inert, onBack: inert,
+    close: inert, navigate: inert, back: inert, setTitle: inert, focus: inert, onBack: inert,
     onFocusChanged: inert, onScroll: inert, submit: inert, setVar: inert, onVar: inert,
   };
   return {

@@ -103,19 +103,19 @@ type SessionResponse struct {
 // the 200 carrying this shape is the last act the presenting Bearer performs,
 // and a fresh login is required afterward.  Dropped counts the live sessions
 // dropped in-process; outstanding tokens elsewhere die at next validation.
-// The operator sibling (POST /api/v1/admin/session/revoke) shares this
-// response; its request is SessionRevokeRequest (operator tier — no browser
-// binding, per the rule below).
+// The node-operator sibling (POST /api/v1/admin/session/revoke) shares this
+// response; its request is SessionRevokeRequest (node-operator tier — no
+// browser binding, per the rule below).
 type SessionRevokeResponse struct {
 	MemberID tag.UID `json:"MemberID"`
 	Dropped  int     `json:"Dropped"`
 }
 
-// SessionRevokeRequest is the body of the operator sibling POST
+// SessionRevokeRequest is the body of the node-operator sibling POST
 // /api/v1/admin/session/revoke: exactly one of Address (an Eth wallet
 // address; the member UID derives server-side) or MemberID (base32 UID, any
-// identity scheme) names the subject.  Operator tier — no browser binding
-// (testdata/operator-go-only.json).
+// identity scheme) names the subject.  Node-operator tier — no browser
+// binding (testdata/operator-go-only.json).
 type SessionRevokeRequest struct {
 	Address  string `json:"Address,omitempty"`
 	MemberID string `json:"MemberID,omitempty"`
@@ -134,9 +134,9 @@ type EmailIssueResponse struct {
 	Email    string  `json:"Email"`
 }
 
-// Operator tier (POST /api/v1/admin/*) — node-custodial verbs gated by the
-// per-org admin allowlist, deliberately WITHOUT a browser-SDK binding: the
-// operator Bearer is higher-privilege than a member session and must never
+// Node-operator tier (POST /api/v1/admin/*) — node-custodial verbs gated by
+// the per-org admin allowlist, deliberately WITHOUT a browser-SDK binding: the
+// node operator's Bearer is higher-privilege than a member session and must never
 // normalize into XSS-exposed browser JS.  testdata/operator-go-only.json is
 // the enforcing manifest — the TS drift test asserts the browser client has
 // no binding for these verbs (a NodeAdminModule verb binds only in the SDK's
@@ -313,7 +313,7 @@ type EditChainResponse struct {
 // MediaResolveRequest is the body of POST /api/v1/media/resolve.
 //
 // Blob is an amp.Tag carrying the blob's identity + metadata:
-//   - Tag.UID: blob ID (leading 16 bytes of plaintext hash), base32
+//   - Tag.UID: blob ID (leading 16 bytes of the STORED bytes' hash), base32
 //   - Tag.ContentType(): MIME type
 //   - Tag.I + Tag.Units (= Bytes): plaintext byte length
 //   - Tag.URI: server-populated stream URL on response; ignored on request
@@ -323,9 +323,18 @@ type EditChainResponse struct {
 // idempotent — the same blob always resolves to the same URL on a given
 // host, and a vault outage is recoverable by republishing on whichever
 // host the SDK reaches next.
+//
+// Cell, when set, names the cabinet cell holding the blob's full amp.BlobRef:
+// a std.Attr.BlobRef cell, the 3-UID Address form (channel, attr, item;
+// PlanetTag names the planet).  The node reads it under the session's keys
+// and opens the blob by that ref, so a SEALED blob resolves on any node
+// holding its bytes and the cell, not only on the node that sealed it
+// (AD-app-www §3.4).  The cell must name Blob's UID.  Absent, the resolve is
+// Tag-only: a planet-public blob, or a sealed blob on the node that sealed it.
 type MediaResolveRequest struct {
-	PlanetTag string   `json:"PlanetTag,omitempty"`
-	Blob      *amp.Tag `json:"Blob"`
+	PlanetTag string       `json:"PlanetTag,omitempty"`
+	Blob      *amp.Tag     `json:"Blob"`
+	Cell      *amp.Address `json:"Cell,omitempty"`
 }
 
 // SubscribeFrame is the WebSocket fan-out shape for /ws.  Clients send

@@ -7,6 +7,7 @@
 
 import type { KeyPair, PubKeyRef } from './crypto/types.js';
 import type {
+  Address,
   AmpItemMeta,
   AmpIdentity,
   AmpQueryOpts,
@@ -147,8 +148,10 @@ export interface AmpAdapter {
   /** Caller-carries-the-Tag resolve: BlobRef → BlobRef with URI (stream URL) set.
    *  The URI is opaque — a member resolve answers /www/{UID}.{ext}?t=<media token>,
    *  the credential the media plane checks; carry it verbatim, never rebuild it.
-   *  Pass planetTag to resolve a blob on another planet (e.g. an anonymous public share). */
-  resolveMedia(blob: BlobRef, planetTag?: string): Promise<BlobRef>;
+   *  Pass planetTag to resolve a blob on another planet (e.g. an anonymous public share).
+   *  Pass cell (the packed Address of the item's BlobRef cell) so a sealed blob resolves on a
+   *  node that did not seal it — the node completes the ref from the cell under your keys. */
+  resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef>;
 
   // ── Federation invites ────────────────────────────────────────────
   // Member-session tier (planet-admin Bearer for issue/revoke/list) — NOT the

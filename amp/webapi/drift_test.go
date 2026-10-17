@@ -27,7 +27,7 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 )
 
-// nonShapeFiles hold enum-name goldens and the operator manifest, not struct
+// nonShapeFiles hold enum-name goldens and the node-operator manifest, not struct
 // shapes; each has its own test below.
 var nonShapeFiles = map[string]bool{
 	"access.json":           true,
@@ -180,12 +180,12 @@ func roundTrip(t *testing.T, label string, fixture json.RawMessage, target any) 
 	}
 }
 
-// TestOperatorGoOnlyManifest pins the operator-tier manifest: every listed
+// TestOperatorGoOnlyManifest pins the node-operator-tier manifest: every listed
 // verb's request/response shape must be registered in shapeCtors (and so
 // fixture-guarded by TestWireFixturesRoundTrip's reverse coverage).  The TS
 // side asserts the inverse against the same file — that the browser client
 // has no binding for these verbs (NodeAdminModule=true verbs bind only in the
-// Node-only admin module) — so an operator verb cannot silently gain a
+// Node-only admin module) — so a node-operator verb cannot silently gain a
 // browser method or silently fall out of the drift guard.
 func TestOperatorGoOnlyManifest(t *testing.T) {
 	manifest := struct {
@@ -201,7 +201,7 @@ func TestOperatorGoOnlyManifest(t *testing.T) {
 	loadJSON(t, filepath.Join("testdata", "operator-go-only.json"), &manifest)
 
 	if len(manifest.Verbs) == 0 {
-		t.Fatal("operator manifest lists no verbs")
+		t.Fatal("node-operator manifest lists no verbs")
 	}
 	for _, verb := range manifest.Verbs {
 		if verb.Verb == "" || !strings.HasPrefix(verb.Endpoint, "/api/v1/admin/") {
@@ -209,7 +209,7 @@ func TestOperatorGoOnlyManifest(t *testing.T) {
 		}
 		for _, shape := range []string{verb.Request, verb.Response} {
 			if shapeCtors[shape] == nil {
-				t.Errorf("manifest verb %q: shape %s not registered in shapeCtors — operator shape outside the drift guard", verb.Verb, shape)
+				t.Errorf("manifest verb %q: shape %s not registered in shapeCtors — node-operator shape outside the drift guard", verb.Verb, shape)
 			}
 		}
 	}

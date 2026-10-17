@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { AmpAdapter } from '../adapter.js';
 import { useAmpContext } from '../provider.js';
-import type { AmpMediaResult, BlobRef } from '../types.js';
+import type { Address, AmpMediaResult, BlobRef } from '../types.js';
 
 /**
  * The Tag the hook carries to /media/resolve: the cabinet's BlobRef as given.
@@ -27,13 +27,15 @@ export interface MediaResolution {
  * the answered URI verbatim — a member resolve's URI holds the media token
  * (/www/{UID}.{ext}?t=…), the only credential the media plane accepts, so
  * there is no URL to build client-side: a failed resolve is a null url plus
- * the error.  Metadata comes from the answer, else the Tag.
+ * the error.  Metadata comes from the answer, else the Tag.  cell names the
+ * item's BlobRef cell (a packed Address) so a sealed blob resolves on a node
+ * that did not seal it.
  */
 export async function resolveMediaURL(
-  adapter: Pick<AmpAdapter, 'resolveMedia'>, tag: BlobRef, planetTag?: string,
+  adapter: Pick<AmpAdapter, 'resolveMedia'>, tag: BlobRef, planetTag?: string, cell?: Address,
 ): Promise<MediaResolution> {
   try {
-    const blob = await adapter.resolveMedia(tag, planetTag);
+    const blob = await adapter.resolveMedia(tag, planetTag, cell);
     if (!blob.URI) {
       throw new Error('media resolve answered no URI');
     }
@@ -63,9 +65,9 @@ export async function resolveMediaURL(
  * client drops its session) and surfaces as the error.
  */
 export async function refreshMediaURL(
-  adapter: Pick<AmpAdapter, 'resolveMedia'>, tag: BlobRef, planetTag?: string,
+  adapter: Pick<AmpAdapter, 'resolveMedia'>, tag: BlobRef, planetTag?: string, cell?: Address,
 ): Promise<MediaResolution> {
-  return resolveMediaURL(adapter, tag, planetTag);
+  return resolveMediaURL(adapter, tag, planetTag, cell);
 }
 
 /**
@@ -75,9 +77,11 @@ export async function refreshMediaURL(
  * served MIME type + extension); a bare UID is accepted, degraded to an
  * octet-stream download.  Pass the result `url` to <img>/<video>/<audio>, and bind
  * `refresh` to the element's onError — past the server's idle expiry or the
- * token lifetime the URL 404s until a refresh re-resolves it.
+ * token lifetime the URL 404s until a refresh re-resolves it.  Pass cell (the
+ * item's BlobRef cell, a packed Address) for a sealed blob the node did not
+ * seal — the node completes the ref from the cell.
  */
-export function useAmpMedia(blob: string | BlobRef, planetTag?: string): AmpMediaResult {
+export function useAmpMedia(blob: string | BlobRef, planetTag?: string, cell?: Address): AmpMediaResult {
   const { adapter } = useAmpContext();
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +111,7 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string): AmpMedi
     if (byteLen !== undefined) posted.I = byteLen;
     if (units !== undefined) posted.Units = units;
 
-    resolveMediaURL(adapter, posted, planetTag).then((res) => {
+    resolveMediaURL(adapter, posted, planetTag, cell).then((res) => {
       if (cancelled) return;
       setUrl(res.url);
       setContentType(res.contentType);
@@ -117,7 +121,7 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string): AmpMedi
     });
 
     return () => { cancelled = true; };
-  }, [adapter, uid, contentTypeRaw, byteLen, units, planetTag]);
+  }, [adapter, uid, contentTypeRaw, byteLen, units, planetTag, cell]);
 
   const refresh = useCallback(async () => {
     if (!uid) return;
@@ -125,13 +129,13 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string): AmpMedi
     if (contentTypeRaw !== undefined) posted.ContentTypeRaw = contentTypeRaw;
     if (byteLen !== undefined) posted.I = byteLen;
     if (units !== undefined) posted.Units = units;
-    const res = await refreshMediaURL(adapter, posted, planetTag);
+    const res = await refreshMediaURL(adapter, posted, planetTag, cell);
     setUrl(res.url);
     setContentType(res.contentType);
     setByteSize(res.byteSize);
     setError(res.error);
     setGeneration(prev => prev + 1);
-  }, [adapter, uid, contentTypeRaw, byteLen, units, planetTag]);
+  }, [adapter, uid, contentTypeRaw, byteLen, units, planetTag, cell]);
 
   return { url, loading, contentType, byteSize, error, refresh, generation };
 }

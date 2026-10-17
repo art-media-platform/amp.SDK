@@ -400,6 +400,8 @@ interface BlobRef {
 
 **Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}.{ext}?t=<media token>` URL (`{ext}` = the Tag's MIME subtype; the token binds the URL to the blob, your session and its generation for the token lifetime — one hour by default — and is the credential `/www/` checks).  The publisher is in-memory — repeated resolves inside a token lifetime answer the same URL, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
+**A sealed blob from another client resolves by cell.**  A blob the native client or the CLI uploaded into a sealed planet is recorded in a `BlobRef` cell (the item whose `blobRef` you read); pass that cell's packed `Address` as `resolveMedia(blob, planetTag, cell)` (or `useAmpMedia(blob, planetTag, cell)`) and the node completes the ref from the cell under your session's keys — so the blob resolves on any node holding its bytes, not only the node that sealed it.  Without a cell, a sealed blob resolves only on the node that sealed it (its sealed-ref companion), which is what a web upload's own blob does today; a refused resolve is a 404 either way.
+
 After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
 
 **The SDK picks the door.** `upload(file, channel, opts)` sends a file that fits in one chunk as a single `/upload` POST and streams a larger one through `/upload/chunk` — sequential chunks of `UploadOpts.chunkSize` (default `DefaultUploadChunkBytes`, 32 MiB) under one fresh `uploadID`, the final chunk sealing the assembly. `chunked: true | false` forces either door. Both return the same `BlobRef`; `onProgress` ticks once per chunk ack with the server-acknowledged percent, then 100 on the sealing response. **The server sizes the chunks.** The client never mirrors the node's per-request cap: it reads `X-Amp-Upload-Max-Bytes` from every upload-door response (refusals included) and clamps its chunk size to cap − `UploadChunkHeadroomBytes` (the multipart envelope's share). A chunk past a cap the client has not yet seen is refused 413 — the refusal touched no server state — and the same index is re-sent under the cap, the rest of the file re-chunked; a single `/upload` past the cap falls to the chunk door the same way (unless `chunked: false` pinned it). Any other refused chunk throws the typed `AmpError` (409 `Conflict`, 404 `NotFound`, 401 drops the session) and the client sends nothing further — v1 has no resume: retry the whole `upload()`.
@@ -1148,6 +1150,8 @@ The manifest reaches the Pane as one `amp.card.manifest` message posted by an in
 interface AmpBridge {
   // ── Identity ──
   member: { ID: string; DisplayName: string; PlanetID: string; Kind?: string } | null;
+  item: { PlanetID: string; ChannelID: string; ItemID: string };  // the card's subject, from the card URL's ?planet= &channel= &item= ('' when absent)
+  theme: Record<string, string>;                // the host's CSS custom properties, set on :root at attach; {} until then
   onReady(cb: (amp: AmpBridge) => void): void;  // the host attached; member is set
 
   // ── Data ──
@@ -1162,13 +1166,14 @@ interface AmpBridge {
 
   // ── Media ──
   upload(channel: string, opts?: UploadOpts): Promise<BlobRef>;
-  resolveMedia(blob: BlobRef): Promise<BlobRef>;     // returns blob with URI (stream URL) set
+  resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef>;  // returns blob with URI (stream URL) set; cell = the BlobRef cell a sealed blob resolves by (§5.5)
 
   // ── Sealed secrets ──
   seal(plaintext: Uint8Array): Promise<Uint8Array>;
   open(sealed: Uint8Array): Promise<Uint8Array>;
 
   // ── Card navigation ──
+  close(): void;                              // the host closes the card (its Pane or drawer)
   navigate(cardUrl: string): void;            // push next card on the stack
   back(): void;                               // pop current card
   setTitle(title: string): void;              // card tells Pane its title

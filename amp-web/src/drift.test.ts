@@ -224,9 +224,11 @@ const SHAPES: Record<string, ShapeSpec> = {
     nested: { VaultAddrs: 'VaultEndpoint' },
   },
 
+  // Cell is a packed base32 amp.Address (types.ts Address): the BlobRef cell
+  // a sealed blob resolves by on a node that did not seal it.
   MediaResolveRequest: {
     required: ['Blob'],
-    optional: ['PlanetTag'],
+    optional: ['PlanetTag', 'Cell'],
     nested: { Blob: 'Tag' },
   },
   // amp.Tag JSON (Go tagJSON): every field omitempty.
