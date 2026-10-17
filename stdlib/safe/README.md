@@ -22,9 +22,10 @@ Secure key storage and retrieval for the **amp** platform.
 │                                                         │
 │   Open:   TomeStore.Load() → Guard.UnwrapDEK()          │
 │           → AEAD decrypt → KeyTome                      │
-│   Persist (each install; Close only while unsaved):     │
-│           new DEK → Guard.WrapDEK()                     │
-│           → AEAD encrypt(KeyTome) → TomeStore.Save()    │
+│   Persist (each mutation; Close only while unsaved):    │
+│           reload + fold the tome → new DEK              │
+│           → Guard.WrapDEK() → AEAD encrypt(KeyTome)     │
+│           → TomeStore.Save()                            │
 └─────────────────────────────────────────────────────────┘
           │                             │
     ┌─────▼──────┐              ┌───────▼───────┐
@@ -59,7 +60,9 @@ separated so only current epochs stay resident.
 | Private material leaves? | never (except `ExportSymmetricKey`) | yes — `GetKey` returns bytes to derive subkeys |
 | Rotation unit | per key | per scoped epoch (`PutKey` / `SetCurrentEpoch` / `ShredKeys`) |
 
-Use `safe.Scope(planetID)` for planet keys and `safe.ChannelScope(planetID, channelID)` for channel keys. `InstallKey` atomically compares and durably installs; `PutKey` remains the verified-receipt upsert. `ShredKeys` requires one scope. Channel resolution considers ownership across all roles and retains non-secret claims after shredding, so deletion cannot erase an ambiguity. Ownership must be explicit on disk; unowned entries refuse rather than being assigned from a globally matching epoch ID. Local handles sharing a tome coordinate mutations within one process.
+Use `safe.Scope(planetID)` for planet keys and `safe.ChannelScope(planetID, channelID)` for channel keys. `InstallKey` atomically compares and durably installs; `PutKey` remains the verified-receipt upsert. `ShredKeys` requires one scope. Channel resolution considers ownership across all roles and retains non-secret claims after shredding, so deletion cannot erase an ambiguity. Ownership must be explicit on disk; unowned entries refuse rather than being assigned from a globally matching epoch ID.
+
+Local handles sharing a tome coordinate within one process, for both stores: one lock and save revision per tome identity (`TomeStoreIdentity`; a wrapping store forwards its inner store's). Each mutation reloads the tome first, and a read after a sibling's save refreshes. An `Enclave` reload is a union — every record on disk joins, every held record stays, less a record some handle removed — so a handle opened before a sibling's install never drops it, and a stale writer's tome never sheds a held key.
 
 Both seal to disk through the same Guard/DEK mechanism, and both return
 `ErrStoreClosed` once `Close` has sealed the session — "no custody" reads as
@@ -131,6 +134,7 @@ safe/
 ├── crypto.go               # XChaCha20-Poly1305 AEAD + HKDF primitives + X25519
 ├── enclave.go              # Enclave implementation (thread-safe KeyTome session)
 ├── epoch_keys.go           # EpochKeyStore — symmetric epoch keys, per (planet, scope, epoch, role)
+├── tome_lock.go            # per-tome coordination shared by Enclave and EpochKeyStore handles
 ├── file_guard.go           # fileGuard — passphrase-based Guard + localTomeStore
 ├── phrase.go               # mnemonic phrase ↔ key material
 ├── safe.keys.go            # KeyRef / PubKey / SymKey / KeyPair value types

@@ -143,7 +143,7 @@ func NewLocalTomeStore(pathname string) TomeStore {
 	}
 }
 
-// TomeStoreIdentity coordinates complete epoch-tome mutations across handles.
+// TomeStoreIdentity coordinates the handles open on one tome file (tomeLock).
 func (s *localTomeStore) TomeStoreIdentity() string {
 	absolute, err := filepath.Abs(s.pathname)
 	if err != nil {

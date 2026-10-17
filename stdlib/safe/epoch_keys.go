@@ -4,69 +4,12 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
-	"reflect"
 	"sync"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/proto"
 )
-
-// TomeStoreIdentity is optional for stores whose separately constructed handles
-// share storage. Wrappers should forward the identity of their underlying store.
-// Without it, coordination covers handles using the same comparable TomeStore.
-type TomeStoreIdentity interface {
-	TomeStoreIdentity() string
-}
-
-// epochTomeLock is the per-tome coordination point shared by every live
-// handle on one tome identity. Pending destruction is per tome: a shred whose
-// save failed stays in shredded until any handle's save persists it, and every
-// handle's loadState applies it. The set dies with the last handle.
-type epochTomeLock struct {
-	mu       sync.Mutex
-	refs     int
-	revision uint64
-	shredded map[epochAddress]struct{}
-}
-
-var epochTomeLocks = struct {
-	sync.Mutex
-	byID map[any]*epochTomeLock
-}{byID: make(map[any]*epochTomeLock)}
-
-func acquireEpochTome(store TomeStore) (any, *epochTomeLock, error) {
-	identity := any(store)
-	if named, ok := store.(TomeStoreIdentity); ok {
-		identity = named.TomeStoreIdentity()
-		if identity == "" {
-			return nil, nil, fmt.Errorf("safe: empty tome identity")
-		}
-	} else if store == nil || !reflect.TypeOf(store).Comparable() {
-		return nil, nil, fmt.Errorf("safe: tome requires a stable comparable identity")
-	}
-	epochTomeLocks.Lock()
-	defer epochTomeLocks.Unlock()
-	shared := epochTomeLocks.byID[identity]
-	if shared == nil {
-		shared = &epochTomeLock{
-			shredded: make(map[epochAddress]struct{}),
-		}
-		epochTomeLocks.byID[identity] = shared
-	}
-	shared.refs++
-	return identity, shared, nil
-}
-
-func releaseEpochTome(identity any) {
-	epochTomeLocks.Lock()
-	defer epochTomeLocks.Unlock()
-	shared := epochTomeLocks.byID[identity]
-	shared.refs--
-	if shared.refs == 0 {
-		delete(epochTomeLocks.byID, identity)
-	}
-}
 
 type epochAddress struct {
 	scope KeyScope
@@ -110,7 +53,7 @@ type epochKeyStore struct {
 	aad      []byte
 	closed   bool
 	identity any
-	shared   *epochTomeLock
+	shared   *tomeLock
 	revision uint64
 	state    *epochState
 }
@@ -118,7 +61,7 @@ type epochKeyStore struct {
 var _ EpochKeyStore = (*epochKeyStore)(nil)
 
 func OpenEpochKeyStore(ctx context.Context, store TomeStore, guard Guard, aad []byte) (EpochKeyStore, error) {
-	identity, shared, err := acquireEpochTome(store)
+	identity, shared, err := acquireTome(store)
 	if err != nil {
 		return nil, err
 	}
@@ -131,11 +74,11 @@ func OpenEpochKeyStore(ctx context.Context, store TomeStore, guard Guard, aad []
 	}
 	shared.mu.Lock()
 	eks.state, err = eks.loadState(ctx)
-	eks.revision = shared.revision
+	eks.revision = shared.revision.Load()
 	shared.mu.Unlock()
 	if err != nil {
 		Zero(eks.aad)
-		releaseEpochTome(identity)
+		releaseTome(identity)
 		return nil, err
 	}
 	return eks, nil
@@ -334,11 +277,11 @@ func (entry *EpochKeyEntry) roleKey(role KeyRole) *RoleKey {
 func (eks *epochKeyStore) publish(state *epochState) {
 	eks.state.zero()
 	eks.state = state
-	eks.revision = eks.shared.revision
+	eks.revision = eks.shared.revision.Load()
 }
 
 func (eks *epochKeyStore) refreshLocked(ctx context.Context) error {
-	if eks.revision == eks.shared.revision {
+	if eks.revision == eks.shared.revision.Load() {
 		return nil
 	}
 	state, err := eks.loadState(ctx)
@@ -608,7 +551,7 @@ func (eks *epochKeyStore) Close(ctx context.Context) error {
 	eks.state = nil
 	Zero(eks.aad)
 	eks.closed = true
-	releaseEpochTome(eks.identity)
+	releaseTome(eks.identity)
 	return err
 }
 
@@ -634,7 +577,7 @@ func (eks *epochKeyStore) flushPendingLocked(ctx context.Context) error {
 // saveState is called under both the session and shared tome locks. Even an
 // error changes the revision: a backend can publish before returning an error.
 func (eks *epochKeyStore) saveState(ctx context.Context, state *epochState) error {
-	defer func() { eks.shared.revision++ }()
+	defer eks.shared.revision.Add(1)
 	if err := ctx.Err(); err != nil {
 		return err
 	}

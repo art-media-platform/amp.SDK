@@ -16,16 +16,18 @@ import (
 //
 // Lifecycle:
 //
-//	OpenEnclave() -> loads SealedTome from TomeStore
-//	              -> unwraps DEK via Guard
-//	              -> decrypts KeyTome payload
-//	              -> returns Enclave with live key index
+//	OpenEnclave() -> joins the tome's coordination point (tomeLock)
+//	              -> loads SealedTome from TomeStore, unwraps its DEK via
+//	                 Guard, decrypts the KeyTome into the live key index
 //
-//	enclave.Close() -> (only while an install is unsaved) generates fresh DEK
-//	                -> encrypts serialized KeyTome
-//	                -> wraps DEK via Guard
-//	                -> saves SealedTome to TomeStore
-//	                -> zeros all sensitive material
+//	a mutation    -> reloads the tome and folds it into the index
+//	              -> applies the install or removal
+//	              -> persists: fresh DEK, encrypt, wrap via Guard, Save
+//
+//	a read        -> first folds in a sibling handle's save, if one landed
+//
+//	Close()       -> reloads and persists only while an install is unsaved
+//	              -> zeros all sensitive material, leaves the tomeLock
 //
 // The key index is fully internal; callers interact via ImportKey, GenerateKey,
 // FetchPubKey, CanSign, the crypt ops (SignRaw, EncryptSym, DecryptSym,
@@ -43,6 +45,12 @@ type enclave struct {
 	// held for the next persist, refused by every key op until then
 	// (SD-security-sync §20.6).  A successful persist empties it.
 	unsaved map[*KeyPairRecord]struct{}
+
+	// identity and shared coordinate the handles open on one tome; synced is
+	// the shared save revision this index has folded in.
+	identity any
+	shared   *tomeLock
+	synced   uint64
 }
 
 // ringIndex is the in-memory index for a single keyring.
@@ -66,53 +74,151 @@ var errEnclaveClosed = status.Code_Closed.Error("safe: enclave is closed")
 //
 // If the TomeStore has no existing SealedTome, a fresh empty index is created.
 // The aad parameter is bound to every seal/unseal operation for domain separation.
+// Handles opened on one tome coordinate within the process (TomeStoreIdentity),
+// so a store needs a stable identity: its TomeStoreIdentity, or the store
+// value itself when comparable.
 func OpenEnclave(
 	ctx context.Context,
 	store TomeStore,
 	guard Guard,
 	aad []byte,
 ) (Enclave, error) {
-
+	identity, shared, err := acquireTome(store)
+	if err != nil {
+		return nil, err
+	}
 	enc := &enclave{
-		store:   store,
-		guard:   guard,
-		aad:     append([]byte(nil), aad...),
-		byRing:  make(map[tag.UID]*ringIndex),
-		unsaved: make(map[*KeyPairRecord]struct{}),
+		store:    store,
+		guard:    guard,
+		aad:      append([]byte(nil), aad...),
+		byRing:   make(map[tag.UID]*ringIndex),
+		revision: 1,
+		unsaved:  make(map[*KeyPairRecord]struct{}),
+		identity: identity,
+		shared:   shared,
 	}
-
-	sealed, err := store.Load(ctx)
+	shared.mu.Lock()
+	err = enc.reloadLocked(ctx)
+	shared.mu.Unlock()
 	if err != nil {
-		return nil, fmt.Errorf("safe: failed to load SealedTome: %w", err)
+		Zero(enc.aad)
+		releaseTome(identity)
+		return nil, err
 	}
+	return enc, nil
+}
 
+// lockView locks the index for a read, first folding in a sibling handle's
+// save when the tome's save revision moved since this index synced; unlock
+// releases whichever lock it took.
+func (enc *enclave) lockView() (unlock func(), err error) {
+	enc.mu.RLock()
+	if enc.closed || enc.synced == enc.shared.revision.Load() {
+		return enc.mu.RUnlock, nil
+	}
+	enc.mu.RUnlock()
+	enc.mu.Lock()
+	if !enc.closed {
+		enc.shared.mu.Lock()
+		if enc.synced != enc.shared.revision.Load() {
+			err = enc.reloadLocked(context.Background())
+		}
+		enc.shared.mu.Unlock()
+	}
+	if err != nil {
+		enc.mu.Unlock()
+		return nil, err
+	}
+	return enc.mu.Unlock, nil
+}
+
+// loadTomeLocked reads the tome as the store holds it now: its revision and
+// records (none when no tome exists).  Caller holds shared.mu.
+func (enc *enclave) loadTomeLocked(ctx context.Context) (int64, []*KeyPairRecord, error) {
+	sealed, err := enc.store.Load(ctx)
+	if err != nil {
+		return 0, nil, fmt.Errorf("safe: failed to load SealedTome: %w", err)
+	}
 	if sealed == nil {
-		enc.revision = 1
-		return enc, nil
+		return 0, nil, nil
 	}
 
-	dek, err := guard.UnwrapDEK(ctx, sealed.WrappedDEK, enc.aad)
+	dek, err := enc.guard.UnwrapDEK(ctx, sealed.WrappedDEK, enc.aad)
 	if err != nil {
-		return nil, fmt.Errorf("safe: failed to unwrap DEK: %w", err)
+		return 0, nil, fmt.Errorf("safe: failed to unwrap DEK: %w", err)
 	}
 	defer Zero(dek)
 
 	tomeBytes, err := OpenAEAD(dek, sealed.TomeNonce, sealed.Cipherblob, enc.aad)
 	if err != nil {
-		return nil, fmt.Errorf("safe: failed to decrypt KeyTome: %w", err)
+		return 0, nil, fmt.Errorf("safe: failed to decrypt KeyTome: %w", err)
 	}
 	defer Zero(tomeBytes)
 
 	tome := &KeyTome{}
 	if err := proto.Unmarshal(tomeBytes, tome); err != nil {
-		return nil, fmt.Errorf("safe: failed to unmarshal KeyTome: %w", err)
+		return 0, nil, fmt.Errorf("safe: failed to unmarshal KeyTome: %w", err)
 	}
+	return tome.Revision, tome.Keys, nil
+}
 
-	enc.revision = tome.Revision
-	for _, rec := range tome.Keys {
-		enc.mergeRecord(rec)
+// reloadLocked folds the tome as the store holds it now into the index — the
+// step every mutation, and a read after a sibling's save, takes first.  The
+// fold is a union: every record on disk joins, and every held record stays
+// (this handle's installs, saved or not, and records it learned earlier), so
+// a stale writer's tome never sheds a key from a live view; a record some
+// handle removed (shared.removed) leaves.  A held record that differs from
+// the disk record of its key and type yields to it, unless only the held one
+// carries the private half.  Caller holds enc.mu (write) and shared.mu.
+func (enc *enclave) reloadLocked(ctx context.Context) error {
+	diskRevision, disk, err := enc.loadTomeLocked(ctx)
+	if err != nil {
+		return err
 	}
-	return enc, nil
+	merged := make(map[tag.UID]*ringIndex)
+	for _, rec := range disk {
+		if _, removed := enc.shared.removed[addressOf(rec)]; removed || !insertRecord(merged, rec) {
+			Zero(rec.PrvKey)
+		}
+	}
+	for _, ring := range enc.byRing {
+		for _, held := range ring.records {
+			enc.foldHeld(merged, held)
+		}
+	}
+	enc.byRing = merged
+	if diskRevision > enc.revision {
+		enc.revision = diskRevision
+	}
+	enc.synced = enc.shared.revision.Load()
+	return nil
+}
+
+// foldHeld carries one held record into merged (reloadLocked's union rule).
+func (enc *enclave) foldHeld(merged map[tag.UID]*ringIndex, held *KeyPairRecord) {
+	if _, removed := enc.shared.removed[addressOf(held)]; removed {
+		delete(enc.unsaved, held)
+		Zero(held.PrvKey)
+		return
+	}
+	ring := merged[recordKeyringID(held)]
+	pos := -1
+	if ring != nil {
+		pos = ringIndexTyped(ring, held.PubKey, held.KeyType)
+	}
+	if pos < 0 {
+		insertRecord(merged, held)
+		return
+	}
+	onDisk := ring.records[pos]
+	if recordsEqual(onDisk, held) || (len(held.PrvKey) > 0 && len(onDisk.PrvKey) == 0) {
+		ring.records[pos] = held // the held pointer carries its unsaved mark
+		Zero(onDisk.PrvKey)
+		ring.newestByType[held.KeyType] = ringNewestPubOfType(ring, held.KeyType)
+		return
+	}
+	delete(enc.unsaved, held)
+	Zero(held.PrvKey)
 }
 
 // ImportKey inserts a keypair into the given keyring.
@@ -120,7 +226,8 @@ func OpenEnclave(
 // reports success (the epoch-key PutKey discipline, one layer down).  Success ⟹
 // the key is on disk; a persist failure returns the error and leaves the key
 // held but unusable until a later persist succeeds.  An exact duplicate skips
-// persistence only when no install remains unsaved.
+// persistence only when no install remains unsaved.  The collision rules run
+// against the tome as reloaded, so a sibling's record of the same key counts.
 func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -130,6 +237,12 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 	}
 	if len(kp.Pub.Bytes) < MinPubKeyPrefixSz {
 		return status.Code_BadKeyFormat.Errorf("safe: imported public key too short (got %d bytes)", len(kp.Pub.Bytes))
+	}
+
+	enc.shared.mu.Lock()
+	defer enc.shared.mu.Unlock()
+	if err := enc.reloadLocked(ctx); err != nil {
+		return err
 	}
 
 	timeID := kp.Pub.TimeID
@@ -156,6 +269,9 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 	if !inserted && len(enc.unsaved) == 0 {
 		return nil // already durable duplicate
 	}
+	if inserted {
+		delete(enc.shared.removed, addressOf(rec)) // a re-install lifts a removal
+	}
 	if err := enc.persistLocked(ctx); err != nil {
 		if inserted {
 			enc.unsaved[rec] = struct{}{}
@@ -181,6 +297,12 @@ func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec Key
 
 	kit, err := CryptoKit(spec.CryptoKitID)
 	if err != nil {
+		return PubKey{}, err
+	}
+
+	enc.shared.mu.Lock()
+	defer enc.shared.mu.Unlock()
+	if err := enc.reloadLocked(ctx); err != nil {
 		return PubKey{}, err
 	}
 
@@ -236,7 +358,8 @@ func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec Key
 }
 
 // RemoveKey deletes the exact (keyring, Type, PubKey) record and persists; a
-// failed persist re-merges the record so the key stays held.
+// failed persist re-merges the record so the key stays held.  A removal holds
+// for every handle on the tome: none restores the record (shared.removed).
 func (enc *enclave) RemoveKey(ctx context.Context, ref *KeyRef) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -246,6 +369,11 @@ func (enc *enclave) RemoveKey(ctx context.Context, ref *KeyRef) error {
 	}
 	if ref == nil || len(ref.PubKey) == 0 || ref.Type == KeyType_Unspecified {
 		return status.Code_BadRequest.Error("RemoveKey: ref must name the key type and the full public key")
+	}
+	enc.shared.mu.Lock()
+	defer enc.shared.mu.Unlock()
+	if err := enc.reloadLocked(ctx); err != nil {
+		return err
 	}
 	ringID := ref.KeyringID()
 	ring := enc.byRing[ringID]
@@ -263,7 +391,10 @@ func (enc *enclave) RemoveKey(ctx context.Context, ref *KeyRef) error {
 		delete(enc.byRing, ringID)
 	}
 	enc.revision++
+	address := addressOf(rec)
+	enc.shared.removed[address] = struct{}{}
 	if err := enc.persistLocked(ctx); err != nil {
+		delete(enc.shared.removed, address)
 		if mergeErr := enc.mergeRecord(rec); mergeErr != nil {
 			return fmt.Errorf("safe: RemoveKey persist failed (%v) and the record could not be restored: %w", err, mergeErr)
 		}
@@ -275,8 +406,11 @@ func (enc *enclave) RemoveKey(ctx context.Context, ref *KeyRef) error {
 
 // FetchPubKey returns the PubKey for the referenced entry.
 func (enc *enclave) FetchPubKey(ref *KeyRef) (PubKey, error) {
-	enc.mu.RLock()
-	defer enc.mu.RUnlock()
+	unlock, err := enc.lockView()
+	if err != nil {
+		return PubKey{}, err
+	}
+	defer unlock()
 
 	if enc.closed {
 		return PubKey{}, errEnclaveClosed
@@ -295,8 +429,11 @@ func (enc *enclave) FetchPubKey(ref *KeyRef) (PubKey, error) {
 // FetchPubKey success must NOT be read as "can sign."  Fails closed (false) when the enclave
 // is closed, ref is unresolved, the entry is not a SigningKey, or no private half is held.
 func (enc *enclave) CanSign(ref *KeyRef) bool {
-	enc.mu.RLock()
-	defer enc.mu.RUnlock()
+	unlock, err := enc.lockView()
+	if err != nil {
+		return false
+	}
+	defer unlock()
 
 	if enc.closed {
 		return false
@@ -335,8 +472,11 @@ func (enc *enclave) fetchTypedRecord(ref *KeyRef, wantType KeyType, opLabel stri
 // TxSignedDigest) or the documented MemberToken text-message exception; new
 // signing contexts go through SignDomain.
 func (enc *enclave) SignRaw(ref *KeyRef, msg []byte) ([]byte, error) {
-	enc.mu.RLock()
-	defer enc.mu.RUnlock()
+	unlock, err := enc.lockView()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 
 	rec, kit, err := enc.fetchTypedRecord(ref, KeyType_SigningKey, "SignRaw")
 	if err != nil {
@@ -358,8 +498,11 @@ func (enc *enclave) SignRaw(ref *KeyRef, msg []byte) ([]byte, error) {
 // EncryptSym encrypts plaintext using ref's SymmetricKey.
 // Output: nonce (24) || ciphertext+tag.  XChaCha20-Poly1305 is kit-agnostic.
 func (enc *enclave) EncryptSym(ref *KeyRef, plaintext []byte) ([]byte, error) {
-	enc.mu.RLock()
-	defer enc.mu.RUnlock()
+	unlock, err := enc.lockView()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 
 	rec, _, err := enc.fetchTypedRecord(ref, KeyType_SymmetricKey, "EncryptSym")
 	if err != nil {
@@ -374,8 +517,11 @@ func (enc *enclave) EncryptSym(ref *KeyRef, plaintext []byte) ([]byte, error) {
 
 // DecryptSym decrypts a buffer produced by EncryptSym using ref's SymmetricKey.
 func (enc *enclave) DecryptSym(ref *KeyRef, ciphertext []byte) ([]byte, error) {
-	enc.mu.RLock()
-	defer enc.mu.RUnlock()
+	unlock, err := enc.lockView()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 
 	rec, _, err := enc.fetchTypedRecord(ref, KeyType_SymmetricKey, "DecryptSym")
 	if err != nil {
@@ -391,8 +537,11 @@ func (enc *enclave) DecryptSym(ref *KeyRef, ciphertext []byte) ([]byte, error) {
 // key referenced by ref.  The ephemeral sender pubkey is parsed from the front
 // of msg per the kit's wire format.  ref must reference an AsymmetricKey.
 func (enc *enclave) OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error) {
-	enc.mu.RLock()
-	defer enc.mu.RUnlock()
+	unlock, err := enc.lockView()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 
 	if enc.closed {
 		return nil, errEnclaveClosed
@@ -419,8 +568,11 @@ func (enc *enclave) OpenFromPub(ref *KeyRef, msg []byte) ([]byte, error) {
 }
 
 func (enc *enclave) ExportSymmetricKey(ref *KeyRef) ([]byte, error) {
-	enc.mu.RLock()
-	defer enc.mu.RUnlock()
+	unlock, err := enc.lockView()
+	if err != nil {
+		return nil, err
+	}
+	defer unlock()
 
 	if enc.closed {
 		return nil, errEnclaveClosed
@@ -443,10 +595,10 @@ func (enc *enclave) ExportSymmetricKey(ref *KeyRef) ([]byte, error) {
 }
 
 // Close persists any install still unsaved, then zeros sensitive material.
-// Every mutation persists at its own site, so a clean handle writes nothing:
-// a handle opened before a sibling's install never re-seals its stale index
-// over that install, and a read-only open leaves the tome as it found it.  A
-// failed persist returns the error and keeps the handle open for a retry.
+// Every mutation persists at its own site, so a clean handle writes nothing
+// and a read-only open leaves the tome as it found it; an unsaved install is
+// carried by a reload and persist like any mutation's.  A failed persist
+// returns the error and keeps the handle open for a retry.
 func (enc *enclave) Close(ctx context.Context) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
@@ -456,18 +608,28 @@ func (enc *enclave) Close(ctx context.Context) error {
 	}
 
 	if len(enc.unsaved) > 0 {
-		if err := enc.persistLocked(ctx); err != nil {
+		enc.shared.mu.Lock()
+		err := enc.reloadLocked(ctx)
+		if err == nil && len(enc.unsaved) > 0 {
+			err = enc.persistLocked(ctx)
+		}
+		enc.shared.mu.Unlock()
+		if err != nil {
 			return err
 		}
 	}
 
 	enc.zeroState()
+	releaseTome(enc.identity)
 	return nil
 }
 
 // persistLocked seals the in-memory key index into a KeyTome and saves it via
 // the Guard/TomeStore pair — the ONE persist site (ImportKey, GenerateKey,
-// RemoveKey, Close).  A successful Save empties unsaved.  Caller holds enc.mu.
+// RemoveKey, Close), each of which reloaded the index first under shared.mu.
+// Every Save attempt bumps the shared revision (a backend may publish before
+// it errs); a successful Save empties unsaved.  Caller holds enc.mu and
+// shared.mu.
 func (enc *enclave) persistLocked(ctx context.Context) error {
 	tome := &KeyTome{
 		Revision: enc.revision,
@@ -505,7 +667,9 @@ func (enc *enclave) persistLocked(ctx context.Context) error {
 		Cipherblob: cipherblob,
 	}
 
-	if err := enc.store.Save(ctx, sealed); err != nil {
+	err = enc.store.Save(ctx, sealed)
+	enc.synced = enc.shared.revision.Add(1)
+	if err != nil {
 		return fmt.Errorf("safe: failed to save SealedTome: %w", err)
 	}
 	clear(enc.unsaved)
@@ -525,37 +689,47 @@ func (enc *enclave) persistLocked(ctx context.Context) error {
 // Must be called with enc.mu held.
 func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 	ringID := recordKeyringID(rec)
-	ring := enc.byRing[ringID]
+	if ring := enc.byRing[ringID]; ring != nil {
+		if pos := ringIndexTyped(ring, rec.PubKey, rec.KeyType); pos >= 0 {
+			held := ring.records[pos]
+			if recordsEqual(held, rec) {
+				return nil
+			}
+			if _, pending := enc.unsaved[held]; !pending {
+				return status.Code_BadKeyFormat.Errorf("safe: pub-key collision for keyring %s", ringID.Base32())
+			}
+			if len(rec.PrvKey) == 0 && len(held.PrvKey) > 0 {
+				return nil // a pub-only re-install keeps the held private half
+			}
+			delete(enc.unsaved, held)
+			Zero(held.PrvKey)
+			ring.records[pos] = rec
+			ring.newestByType[rec.KeyType] = ringNewestPubOfType(ring, rec.KeyType)
+			enc.revision++
+			return nil
+		}
+	}
+	insertRecord(enc.byRing, rec)
+	enc.revision++
+	return nil
+}
+
+// insertRecord places rec in its ring's sorted index and its type's newest
+// pointer, or reports false when a record of its key and type is already
+// there — the one sorted-insert site (mergeRecord, reloadLocked).
+func insertRecord(byRing map[tag.UID]*ringIndex, rec *KeyPairRecord) bool {
+	ringID := recordKeyringID(rec)
+	ring := byRing[ringID]
 	if ring == nil {
 		ring = &ringIndex{}
-		enc.byRing[ringID] = ring
+		byRing[ringID] = ring
 	}
-
+	if ringIndexTyped(ring, rec.PubKey, rec.KeyType) >= 0 {
+		return false
+	}
 	pos := sort.Search(len(ring.records), func(i int) bool {
 		return bytes.Compare(ring.records[i].PubKey, rec.PubKey) >= 0
 	})
-	for i := pos; i < len(ring.records) && bytes.Equal(ring.records[i].PubKey, rec.PubKey); i++ {
-		held := ring.records[i]
-		if held.KeyType != rec.KeyType {
-			continue
-		}
-		if recordsEqual(held, rec) {
-			return nil
-		}
-		if _, pending := enc.unsaved[held]; !pending {
-			return status.Code_BadKeyFormat.Errorf("safe: pub-key collision for keyring %s", ringID.Base32())
-		}
-		if len(rec.PrvKey) == 0 && len(held.PrvKey) > 0 {
-			return nil // a pub-only re-install keeps the held private half
-		}
-		delete(enc.unsaved, held)
-		Zero(held.PrvKey)
-		ring.records[i] = rec
-		ring.newestByType[rec.KeyType] = ringNewestPubOfType(ring, rec.KeyType)
-		enc.revision++
-		return nil
-	}
-
 	ring.records = append(ring.records, nil)
 	copy(ring.records[pos+1:], ring.records[pos:])
 	ring.records[pos] = rec
@@ -566,8 +740,7 @@ func (enc *enclave) mergeRecord(rec *KeyPairRecord) error {
 		(recTID[0] == newestTID[0] && recTID[1] >= newestTID[1]) {
 		ring.newestByType[rec.KeyType] = rec.PubKey
 	}
-	enc.revision++
-	return nil
+	return true
 }
 
 // fetchRecord returns the record matched by ref, or an error if none.  It is
