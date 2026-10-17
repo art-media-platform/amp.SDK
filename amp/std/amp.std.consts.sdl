@@ -103,7 +103,7 @@ tags Attr {
             // URL; empty = std.VJ.DefaultPlaylistURL).
             ChannelPropertyVisPlaylist    "vis.playlist"
         }
-        // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
+        // `: vocab` (a declared flag): these leaves mint UIDs used
         // as VALUES (a Tag field resolves to one), never as AttrIDs —
         // exempt from the generated attr registration.
         ChannelType "type" : vocab {
@@ -285,7 +285,7 @@ tags Attr {
     // The node's own operational records.  Credentials: one sealed cell per
     // provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
     // the node operator's confidential planet — a safe.SealedValue box whose
-    // plaintext is Credentials, opened only by keyholders (O4 §4.15 step 5).
+    // plaintext is Credentials, opened only by keyholders.
     NodeAttr "node" {
         NodeCredentials "Credentials" : sealed
     }

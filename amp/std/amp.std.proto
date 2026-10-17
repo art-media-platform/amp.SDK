@@ -611,7 +611,9 @@ message DeviceVars {
 // planet head node (std.Attr.HomeMemberVars).  Zero/empty fields are "unset"
 // and resolve at point of use.
 message MemberVars {
-    string         DefaultSkyboxURI  = 1; // the member's fallback space skybox asset URI: a world's own Backdrop entry wins over it; empty → the std.Atmosphere default
+    // The member's fallback space skybox asset URI: a channel's own skybox
+    // (std.Attr.ChannelPropertySkybox) wins over it; empty → no fallback.
+    string         DefaultSkyboxURI  = 1;
     ReticleStyleID ReticleStyle      = 2; // center reticle style; 0 → ReticleLine
     string         ReticleOverlayURI = 3; // center reticle overlay sprite URI; empty → overlay hidden
 }

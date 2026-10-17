@@ -98,7 +98,7 @@ export const Attr = {
     // The vis playlist a channel's player walks behind audio (an amp://
     // URL; empty = std.VJ.DefaultPlaylistURL).
     ChannelPropertyVisPlaylist        : { id: [0xF7E6BA82895C346Bn, 0x82755CD465CD4DC9n], text: "channel.property.vis.playlist" },      // 7rwux-852bw-6jps4x-bwujk-wumf9
-    // `: vocab` (ZO §4.8 declared flags): these leaves mint UIDs used
+    // `: vocab` (a declared flag): these leaves mint UIDs used
     // as VALUES (a Tag field resolves to one), never as AttrIDs —
     // exempt from the generated attr registration.
     ChannelType                       : { id: [0xE16EE14B4532E786n, 0x8166AD32465165B0n], text: "channel.type" },                       // 71evh-nqj9k-wy382t-pe693-52teh
@@ -272,7 +272,7 @@ export const Attr = {
     // ─── The node's own operational records.  Credentials: one sealed cell per ───
     // provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
     // the node operator's confidential planet — a safe.SealedValue box whose
-    // plaintext is Credentials, opened only by keyholders (O4 §4.15 step 5).
+    // plaintext is Credentials, opened only by keyholders.
     NodeAttr                          : { id: [0x93F76E7915DC92BFn, 0x6DD22A7FFF8A1FA8n], text: "node" },              // 4myxr-7k5fw-kbzqvn-jbgzz-sn7x8
 
     NodeCredentials                   : { id: [0x38E9C390B7C5C376n, 0x0906744822BD89F5n], text: "node.Credentials" },  // 1sx71-t1ey5-sev0k1-mn90j-cv2gp
