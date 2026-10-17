@@ -193,7 +193,9 @@ func (pin *Pin[AppT]) pushState() error {
 			nodeID: pinnedID,
 		}
 
-		tx.Upsert(amp.HeadNodeID, Attr.ChildLink.ID, pinnedID, nil)
+		if err := tx.Upsert(amp.HeadNodeID, Attr.ChildLink.ID, pinnedID, nil); err != nil {
+			return err
+		}
 		pin.Item.MarshalAttrs(&w)
 		if w.err != nil {
 			return w.err
@@ -201,7 +203,14 @@ func (pin *Pin[AppT]) pushState() error {
 
 		for childID, child := range pin.children {
 			w.nodeID = childID
-			tx.Upsert(pinnedID, Attr.ChildLink.ID, childID, childLinkOf(child))
+			if err := tx.Upsert(pinnedID, Attr.ChildLink.ID, childID, nil); err != nil {
+				return err
+			}
+			if link := childLinkOf(child); link != nil {
+				if err := tx.Upsert(pinnedID, Attr.ChildPin.ID, childID, link); err != nil {
+					return err
+				}
+			}
 			child.MarshalAttrs(&w)
 			if w.err != nil {
 				return w.err
@@ -213,18 +222,14 @@ func (pin *Pin[AppT]) pushState() error {
 	return pin.Request.PushTx(tx, pin.ctx)
 }
 
-// childLinkOf is the child's own pin URL as the ChildLink value; nil (a
-// presence cell) for an Item no pin of its own serves.
-func childLinkOf[AppT amp.AppInstance](child Item[AppT]) proto.Message {
+// childLinkOf is the child's own pin URL, the ChildPin value; nil for an
+// Item no pin of its own serves (its ChildLink cell alone lists it).
+func childLinkOf[AppT amp.AppInstance](child Item[AppT]) *amp.Tag {
 	linker, ok := child.(ChildLinker)
 	if !ok {
 		return nil
 	}
-	link := linker.ChildLink()
-	if link == nil {
-		return nil
-	}
-	return link
+	return linker.ChildLink()
 }
 
 var _ ItemWriter = (*itemWriter)(nil)

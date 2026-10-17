@@ -27,6 +27,7 @@ var Attr = struct {
 	AppState                           tag.Name
 	ItemAttr                           tag.Name
 	ChildLink                          tag.Name
+	ChildPin                           tag.Name
 	ItemLabels                         tag.Name
 	ItemTextTag                        tag.Name
 	ItemLabel                          tag.Name
@@ -188,6 +189,7 @@ var Attr = struct {
 	ItemAttr: tag.Name{ID: tag.UID{0xE8D8BECA5B3BBEB3, 0x1308458DB27C3504}, Text: "item"}, // 78v2z-dnqtv-rutj62-25jqt-7se84
 
 	ChildLink:   tag.Name{ID: tag.UID{0x1D7FCD10B1143140, 0xB45F595E9B29E11E}, Text: "item.child.link.UID"}, // 0xgz6-j1d8n-650c8r-utcue-kms8y
+	ChildPin:    tag.Name{ID: tag.UID{0xDF5F04821DAFB6B0, 0xF4BA35EA76A24D8B}, Text: "item.child.pin.Tag"},  // 6zcw2-847eg-qusg9f-jpx9v-b4mdc
 	ItemLabels:  tag.Name{ID: tag.UID{0x89DC7C30D083C0B7, 0xCCB62B4FAAB34B4D}, Text: "item.Labels"},         // 49vjy-31n43-s2vwte-jc9yp-c6kue
 	ItemTextTag: tag.Name{ID: tag.UID{0xE961CE2BB0D11C6F, 0x77C2DB21D0B1B894}, Text: "item.text"},           // 79d77-2rd6j-3jrrgh-qv478-c3f4n
 
@@ -522,7 +524,7 @@ const (
 const (
 	MantleDefaultTileMaterial = "asset:mantle/tile.material.default"
 	MantleDefaultVolumePrefab = "asset:mantle/volume.prefab.default"
-	// Node sizing (AOM UD-cmdr-yoke.md §4): a tap authors a node persisted as
+	// Node sizing (the yoke's tap contract): a tap authors a node persisted as
 	// TRS.Sx in meters at the tapped depth.
 	MantleDefaultNodeSizeMM     = float32(7)   // fingertip target: the authored on-screen diameter at the tap
 	MantleDefaultNodeSizeMeters = float32(1)   // the size a reader resolves for a placement carrying Sx = 0
@@ -532,7 +534,7 @@ const (
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
 // playlist.  0 = unset → these defaults.
 const (
-	VJDefaultPlaylistURL = "amp://~/mandelship/presets/" // the house pack, served by app.mandelship
+	VJDefaultPlaylistURL = "amp://~/mandelship/presets/" // the factory pack, served by app.mandelship
 	VJDefaultDwellSecs   = float32(5)                    // seconds a vis holds before the walk advances (a fixed time)
 	VJDefaultFadeSecs    = float32(1.5)                  // the crossfade between the two slots
 )
@@ -606,6 +608,10 @@ const (
 	ThemeSlotPrefix = "asset:theme/" // ThemeMap owns this namespace
 	// Factory atlas (in Crates.BaseAssets).
 	ThemeDefaultAtlas = "asset:crates.planet.tools/amp.3D.base.assets/theme.default"
+	// The slot a theme or glyph URI that does not resolve falls back to: the
+	// unknown-asset glyph, shown in place of an empty image, with one damped
+	// warning per URI.
+	ThemeUnknownSlot = "sys/unknown"
 )
 
 // ─── DeviceVars / MemberVars defaults. ──────────────────────────
@@ -658,6 +664,7 @@ func init() {
 	RegisterAttrDeclared(Attr.LaunchWeb, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.LaunchOAuth, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.AppState, &amp.Tag{}, amp.EditFlow_Fold)
+	RegisterAttrDeclared(Attr.ChildPin, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.ItemLabels, &Labels{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.ItemLabel, &amp.Tag{}, amp.EditFlow_Fold)
 	RegisterAttrDeclared(Attr.ItemCaption, &amp.Tag{}, amp.EditFlow_Fold)

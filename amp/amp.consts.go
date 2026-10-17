@@ -82,3 +82,16 @@ const (
 	// what it knows
 	LibKindRailNote = int32(3)
 )
+
+// ─── Serve-by-ID (AOM AD-app-www.md §6.10): an embedded node's loopback portal ───
+// serves an admitted blob by ID — http://127.0.0.1:{port}/www/{blobID} — to a
+// loopback peer presenting lib-ampd's per-boot secret (ampd_ServeSecret).
+const (
+	// The /www/ query parameter carrying the secret (?s={secret}): the carrier
+	// for every player shipped today (FMOD sends no headers; the Core-edition
+	// AVPro drops custom headers), never a path segment (the node logs the path).
+	ServeSecretParam = "s"
+	// The request header carrying the secret where the player can send one (an
+	// Ultra-edition AVPro's custom headers); it takes precedence over the query.
+	ServeSecretHeader = "X-Amp-Serve"
+)

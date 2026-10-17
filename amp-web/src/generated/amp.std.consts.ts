@@ -34,6 +34,7 @@ export const Attr = {
     ItemAttr                          : { id: [0xE8D8BECA5B3BBEB3n, 0x1308458DB27C3504n], text: "item" },                        // 78v2z-dnqtv-rutj62-25jqt-7se84
 
     ChildLink                         : { id: [0x1D7FCD10B1143140n, 0xB45F595E9B29E11En], text: "item.child.link.UID" },         // 0xgz6-j1d8n-650c8r-utcue-kms8y
+    ChildPin                          : { id: [0xDF5F04821DAFB6B0n, 0xF4BA35EA76A24D8Bn], text: "item.child.pin.Tag" },          // 6zcw2-847eg-qusg9f-jpx9v-b4mdc
     ItemLabels                        : { id: [0x89DC7C30D083C0B7n, 0xCCB62B4FAAB34B4Dn], text: "item.Labels" },                 // 49vjy-31n43-s2vwte-jc9yp-c6kue
     ItemTextTag                       : { id: [0xE961CE2BB0D11C6Fn, 0x77C2DB21D0B1B894n], text: "item.text" },                   // 79d77-2rd6j-3jrrgh-qv478-c3f4n
 
@@ -366,7 +367,7 @@ export const Glyph = {
 export const Mantle = {
     DefaultTileMaterial:   "asset:mantle/tile.material.default",
     DefaultVolumePrefab:   "asset:mantle/volume.prefab.default",
-    // Node sizing (AOM UD-cmdr-yoke.md §4): a tap authors a node persisted as
+    // Node sizing (the yoke's tap contract): a tap authors a node persisted as
     // TRS.Sx in meters at the tapped depth.
     DefaultNodeSizeMM:     7,  // fingertip target: the authored on-screen diameter at the tap
     DefaultNodeSizeMeters: 1,  // the size a reader resolves for a placement carrying Sx = 0
@@ -376,7 +377,7 @@ export const Mantle = {
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
 // playlist.  0 = unset → these defaults.
 export const VJ = {
-    DefaultPlaylistURL: "amp://~/mandelship/presets/",  // the house pack, served by app.mandelship
+    DefaultPlaylistURL: "amp://~/mandelship/presets/",  // the factory pack, served by app.mandelship
     DefaultDwellSecs:   5,  // seconds a vis holds before the walk advances (a fixed time)
     DefaultFadeSecs:    1.5,  // the crossfade between the two slots
 } as const;
@@ -450,6 +451,10 @@ export const Theme = {
     SlotPrefix:   "asset:theme/",  // ThemeMap owns this namespace
     // Factory atlas (in Crates.BaseAssets).
     DefaultAtlas: "asset:crates.planet.tools/amp.3D.base.assets/theme.default",
+    // The slot a theme or glyph URI that does not resolve falls back to: the
+    // unknown-asset glyph, shown in place of an empty image, with one damped
+    // warning per URI.
+    UnknownSlot:  "sys/unknown",
 } as const;
 
 // ─── DeviceVars / MemberVars defaults. ──────────────────────────

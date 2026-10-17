@@ -35,9 +35,10 @@ type Item[AppT amp.AppInstance] interface {
 }
 
 // ChildLinker is an Item a pin of its own serves: pushState writes that pin's
-// URL into the parent's ChildLink cell, so a client pins a listed child
+// URL into the parent's ChildPin cell beside the child's ChildLink (which
+// stays the value-less set marker, ZO §4.8), so a client pins a listed child
 // directly — a file's MediaLink is minted only on its own pin
-// (MD-unity-client §3.11).  Optional.
+// (MD-unity-client §3.11; AD-playlists §6).  Optional.
 type ChildLinker interface {
 	ChildLink() *amp.Tag
 }

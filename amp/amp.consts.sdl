@@ -56,6 +56,20 @@ const Lib {
 }
 
 
+// Serve-by-ID (AOM AD-app-www.md §6.10): an embedded node's loopback portal
+// serves an admitted blob by ID — http://127.0.0.1:{port}/www/{blobID} — to a
+// loopback peer presenting lib-ampd's per-boot secret (ampd_ServeSecret).
+const Serve {
+    // The /www/ query parameter carrying the secret (?s={secret}): the carrier
+    // for every player shipped today (FMOD sends no headers; the Core-edition
+    // AVPro drops custom headers), never a path segment (the node logs the path).
+    const string SecretParam = "s";
+    // The request header carrying the secret where the player can send one (an
+    // Ultra-edition AVPro's custom headers); it takes precedence over the query.
+    const string SecretHeader = "X-Amp-Serve";
+}
+
+
 // Connection-type prefix — the first 4 bytes a peer writes on a new amp.Host
 // TCP connection so the host demultiplexes traffic types on one port without
 // rewinding the stream.  A client login connection continues with a TxMsg

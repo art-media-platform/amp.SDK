@@ -37,7 +37,8 @@ tags Attr {
 
     // Item attributes
     ItemAttr "item" {
-        ChildLink         "child.link.UID"
+        ChildLink         "child.link.UID"  // the child set: the ItemID is the child NodeID; no value
+        ChildPin          "child.pin.Tag"   // a child's own pin URL, beside its ChildLink (std.ChildLinker)
         ItemLabels        "Labels"
         ItemTextTag       "text" {
             ItemLabel      "label.Tag"
@@ -380,7 +381,7 @@ const Mantle {
     string DefaultTileMaterial = "asset:mantle/tile.material.default";
     string DefaultVolumePrefab = "asset:mantle/volume.prefab.default";
 
-    // Node sizing (AOM UD-cmdr-yoke.md §4): a tap authors a node persisted as
+    // Node sizing (the yoke's tap contract): a tap authors a node persisted as
     // TRS.Sx in meters at the tapped depth.
     float DefaultNodeSizeMM     = 7;   // fingertip target: the authored on-screen diameter at the tap
     float DefaultNodeSizeMeters = 1;   // the size a reader resolves for a placement carrying Sx = 0
@@ -390,7 +391,7 @@ const Mantle {
 // VJ — the player's vis background: two slots crossfading down a vis
 // playlist.  0 = unset → these defaults.
 const VJ {
-    string DefaultPlaylistURL = "amp://~/mandelship/presets/"; // the house pack, served by app.mandelship
+    string DefaultPlaylistURL = "amp://~/mandelship/presets/"; // the factory pack, served by app.mandelship
     float  DefaultDwellSecs   = 5;    // seconds a vis holds before the walk advances (a fixed time)
     float  DefaultFadeSecs    = 1.5;  // the crossfade between the two slots
 }
@@ -466,6 +467,10 @@ const Theme {
     string SlotPrefix   = "asset:theme/"; // ThemeMap owns this namespace
     // Factory atlas (in Crates.BaseAssets).
     string DefaultAtlas = "asset:crates.planet.tools/amp.3D.base.assets/theme.default";
+    // The slot a theme or glyph URI that does not resolve falls back to: the
+    // unknown-asset glyph, shown in place of an empty image, with one damped
+    // warning per URI.
+    string UnknownSlot  = "sys/unknown";
 }
 
 // DeviceVars / MemberVars defaults.

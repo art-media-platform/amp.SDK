@@ -144,8 +144,9 @@ func (requester *pushRequester) PushTx(tx *amp.TxMsg, _ context.Context) error {
 
 func (requester *pushRequester) RecvEvent(amp.PinEvent) {}
 
-// A listing's ChildLink cell carries a ChildLinker child's own pin URL; a
-// plain child's stays a presence cell (MD-unity-client §3.11).
+// A listing's ChildPin cell carries a ChildLinker child's own pin URL beside a
+// value-less ChildLink; a plain child has the ChildLink alone (ZO §4.8;
+// AD-playlists §6; MD-unity-client §3.11).
 func TestPushStateChildLink(t *testing.T) {
 	parent, err := task.NewChild(nil, "child-link-parent")
 	if err != nil {
@@ -180,17 +181,28 @@ func TestPushStateChildLink(t *testing.T) {
 		t.Fatal("no state pushed")
 	}
 	link := &amp.Tag{}
-	if err := requester.tx.ExtractValue(Attr.ChildLink.ID, item.linked.ID, link); err != nil {
-		t.Fatalf("linked child's ChildLink carries no value: %v", err)
+	if err := requester.tx.ExtractValue(Attr.ChildPin.ID, item.linked.ID, link); err != nil {
+		t.Fatalf("linked child's ChildPin cell missing: %v", err)
 	}
 	if link.URI != item.linked.url {
-		t.Errorf("linked child's ChildLink URI = %q, want %q", link.URI, item.linked.url)
+		t.Errorf("linked child's ChildPin URI = %q, want %q", link.URI, item.linked.url)
 	}
-	plain := &amp.Tag{}
-	if err := requester.tx.ExtractValue(Attr.ChildLink.ID, item.plain.ID, plain); err != nil {
-		t.Fatalf("plain child's ChildLink cell missing: %v", err)
+	if err := requester.tx.ExtractValue(Attr.ChildPin.ID, item.plain.ID, &amp.Tag{}); err == nil {
+		t.Error("plain child carries a ChildPin cell, want none")
 	}
-	if plain.URI != "" {
-		t.Errorf("plain child's ChildLink URI = %q, want none (a presence cell)", plain.URI)
+	for _, child := range []tag.UID{item.linked.ID, item.plain.ID} {
+		found := false
+		for idx, op := range requester.tx.Ops {
+			if op.Addr.AttrID != Attr.ChildLink.ID || op.Addr.ItemID != child {
+				continue
+			}
+			found = true
+			if raw, err := requester.tx.OpValueBytes(idx); err != nil || len(raw) != 0 {
+				t.Errorf("child %s: ChildLink carries %d value bytes (err %v), want a value-less set marker", child.Base32(), len(raw), err)
+			}
+		}
+		if !found {
+			t.Errorf("child %s: no ChildLink cell", child.Base32())
+		}
 	}
 }
