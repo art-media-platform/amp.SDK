@@ -572,6 +572,7 @@ const (
 	ErrUnsupported     = "Unsupported"
 	ErrTxRejected      = "TxRejected"
 	ErrPayloadTooLarge = "PayloadTooLarge"
+	ErrCapReached      = "CapReached" // HTTP 507: a Tier-1 storage cap refused the upload before any byte landed (AD-app-www §3.3)
 	ErrRateLimited     = "RateLimited"
 	ErrInternal        = "Internal"
 	ErrUnimplemented   = "Unimplemented"
