@@ -337,8 +337,8 @@ type EditChainResponse struct {
 // forms: an EditID is ignored (the cell's current value is read) and a
 // PlanetID must name the resolved planet.  The node reads the cell under the
 // session's keys and opens the blob by that ref, so a SEALED blob resolves on
-// any node holding its bytes and the cell, not only on the node that sealed
-// it (AD-app-www §3.4).  The cell must name Blob's UID.  A zero Address (JSON
+// any node holding the cell, not only on the node that sealed it; bytes not
+// local are fetched on demand when the answered URL is read (AD-app-www §3.4).  The cell must name Blob's UID.  A zero Address (JSON
 // "") names no cell and refuses.  Absent, the resolve is Tag-only: a
 // planet-public blob, or a sealed blob on the node that sealed it.
 type MediaResolveRequest struct {
@@ -352,7 +352,7 @@ type MediaResolveRequest struct {
 // rendered through amp.Tag's own JSON, plus Cell, the std.Attr.BlobRef cell
 // the upload wrote (the 3-UID Address: node, attr, item; PlanetTag names the
 // planet).  A later resolve names it (MediaResolveRequest.Cell), so a sealed
-// blob resolves on any node holding its bytes and the cell.  Cell is absent
+// blob resolves on any node holding the cell.  Cell is absent
 // when the upload wrote none: a planet-public upload on a planet the member
 // never joined (its Tag-only resolve serves it), or a fixture backend.
 // Additive over the bare Tag the doors answered before (AD-app-www §3.4).

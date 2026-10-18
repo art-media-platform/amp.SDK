@@ -478,8 +478,8 @@ export interface AmpMutationResult {
  * (server-populated on resolve); I carries the plaintext byte length when
  * Units = Bytes.  Cell is the BlobRef cell the upload wrote (webapi
  * UploadResponse): persist it with the BlobRef — resolveMedia sends it by
- * default, so a sealed blob resolves on any node holding its bytes and the
- * cell (SKILL §4.4).
+ * default, so a sealed blob resolves on any node holding the cell (SKILL
+ * §4.4).
  */
 export interface BlobRef {
   UID: string;             // blob tag.UID, base32

@@ -897,7 +897,7 @@ export class AmpWebClient implements AmpAdapter {
   // generation.  Nothing here rebuilds it.  The cell — the argument, else the
   // BlobRef's own Cell (the one the upload wrote) — names the BlobRef cell (a
   // packed Address) the node completes a sealed blob's ref from, so the blob
-  // resolves on any node holding its bytes and the cell; an empty one is not
+  // resolves on any node holding the cell; an empty one is not
   // sent and the resolve is Tag-only (an empty Cell would reach the node as a
   // zero Address, which names no cell and refuses).  The Tag goes without its
   // Cell key: the node reads the cell from the request's Cell.
