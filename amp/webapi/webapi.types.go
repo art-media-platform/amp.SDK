@@ -342,8 +342,8 @@ type EditChainResponse struct {
 // §3.4).  The cell must name Blob's UID, and where the node holds the bytes
 // its ref must agree with them (epoch, plaintext hash, length).  A zero
 // Address (JSON "") names no cell and refuses.  Absent, the resolve is
-// Tag-only: a planet-public blob, or a sealed blob on the node that sealed
-// it.
+// Tag-only: a planet-public blob only — a sealed blob's Tag alone refuses on
+// every node, the one that sealed it included.
 type MediaResolveRequest struct {
 	PlanetTag string       `json:"PlanetTag,omitempty"`
 	Blob      *amp.Tag     `json:"Blob"`
