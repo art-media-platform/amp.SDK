@@ -338,9 +338,12 @@ type EditChainResponse struct {
 // PlanetID must name the resolved planet.  The node reads the cell under the
 // session's keys and opens the blob by that ref, so a SEALED blob resolves on
 // any node holding the cell, not only on the node that sealed it; bytes not
-// local are fetched on demand when the answered URL is read (AD-app-www §3.4).  The cell must name Blob's UID.  A zero Address (JSON
-// "") names no cell and refuses.  Absent, the resolve is Tag-only: a
-// planet-public blob, or a sealed blob on the node that sealed it.
+// local are fetched on demand when the answered URL is read (AD-app-www
+// §3.4).  The cell must name Blob's UID, and where the node holds the bytes
+// its ref must agree with them (epoch, plaintext hash, length).  A zero
+// Address (JSON "") names no cell and refuses.  Absent, the resolve is
+// Tag-only: a planet-public blob, or a sealed blob on the node that sealed
+// it.
 type MediaResolveRequest struct {
 	PlanetTag string       `json:"PlanetTag,omitempty"`
 	Blob      *amp.Tag     `json:"Blob"`
