@@ -4746,7 +4746,7 @@ type Attestation struct {
 	// (e.g. "strikes in the last 30 days").
 	ObservedAt int64 `protobuf:"varint,10,opt,name=ObservedAt,proto3" json:"ObservedAt,omitempty"`
 	// Expiry of this attestation (unix seconds, ObservedAt's clock).  0 = unset:
-	// resolved at the point of use to the licensing planet's charter ceiling
+	// resolved at the point of use to the default term
 	// (AOM ED-license-model.md §7.2, §7.4).
 	ValidThrough int64 `protobuf:"varint,11,opt,name=ValidThrough,proto3" json:"ValidThrough,omitempty"`
 	// Optional free-text rationale.  Not cryptographic; for human review.
