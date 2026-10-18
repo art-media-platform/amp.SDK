@@ -357,8 +357,10 @@ POST   /api/v1/upload
                node (the default).  metadata — reserved, dropped.
        Response: 201 UploadResponse = amp.Tag (UID + URI + ContentTypeRaw +
                  I/Units=Bytes) + Cell, the BlobRef cell the node wrote (a
-                 packed Address) — PERSIST it with the BlobRef; absent on a
-                 public planet you have not joined (its Tag resolves alone).
+                 packed Address) — PERSIST it with the BlobRef; absent when
+                 the planet refuses a planet-public upload's cell for
+                 permission (a public planet you have not joined is the
+                 case) — its Tag resolves alone.
                  An empty file uploads (I = 0).
        Per-request body cap (node default 256 MiB), ADVERTISED on every
        upload-door response as X-Amp-Upload-Max-Bytes; a body past it is
@@ -367,8 +369,9 @@ POST   /api/v1/upload
        any byte landed (the node reserves your declared bytes first); no
        retry helps until the operator raises the cap.  404 NotFound: the
        node holds no planet by that planetTag; 403 Forbidden: a
-       confidential planet you have not joined; 400 BadRequest: a
-       planetTag that does not parse.  The chunk door answers the same on
+       confidential planet you have not joined, or a sealed upload whose
+       cell the planet refuses for permission (its bytes stay stored,
+       unnamed); 400 BadRequest: a planetTag that does not parse.  The chunk door answers the same on
        the chunk that names the planet.
 
 POST   /api/v1/upload/chunk
