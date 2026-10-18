@@ -307,10 +307,10 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 // GenerateKey creates a new keypair under the given keyring.
 // The install is durable at return (see ImportKey): success ⟹ the key is on
 // disk; a persist failure leaves it held but unusable until a later persist
-// succeeds.  The guard must stay open while the handle is — an install wraps
-// a fresh DEK, and a read after a sibling's save unwraps the reloaded tome's
-// — which every in-tree flow satisfies (no session closes its guard before
-// its enclave).
+// succeeds.  The guard must stay open while the handle is (an install wraps
+// a fresh DEK; a read after a sibling's save unwraps the reloaded tome's
+// DEK), which every in-tree flow satisfies: no session closes its guard
+// before its enclave.
 func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec KeySpec) (PubKey, error) {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
