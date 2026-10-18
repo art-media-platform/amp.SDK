@@ -63,7 +63,9 @@ var tomeLocks = struct {
 
 // acquireTome joins store's coordination point, creating it for the first
 // handle.  A store needs a stable identity: its TomeStoreIdentity, or the
-// store value itself when comparable.
+// store value itself when comparable as held (a comparable struct type can
+// carry an uncomparable value in an interface field, which cannot key the
+// map).
 func acquireTome(store TomeStore) (any, *tomeLock, error) {
 	identity := any(store)
 	if named, ok := store.(TomeStoreIdentity); ok {
@@ -71,7 +73,7 @@ func acquireTome(store TomeStore) (any, *tomeLock, error) {
 		if identity == "" {
 			return nil, nil, fmt.Errorf("safe: empty tome identity")
 		}
-	} else if store == nil || !reflect.TypeOf(store).Comparable() {
+	} else if store == nil || !reflect.ValueOf(store).Comparable() {
 		return nil, nil, fmt.Errorf("safe: tome requires a stable comparable identity")
 	}
 	tomeLocks.Lock()
