@@ -212,7 +212,9 @@ type Session interface {
 	//
 	// meta describes the blob's MIME type (ContentType), human label (Text), and
 	// byte size (I with Units = Bytes, used as the progress denominator); or may
-	// be nil.  The stored BlobRef's AssetTag carries ContentType and Text from
+	// be nil.  A host may bind a session to its declared size — the web rail's
+	// does, reserving it against its storage caps first and refusing a missing
+	// size or a stream past it.  The stored BlobRef's AssetTag carries ContentType and Text from
 	// meta; AssetTag.UID is the leading 16 bytes of the plaintext hash
 	// (content-addressed, AOM SD-security-sync.md §13.2), and for a planet-public
 	// blob BlobTag.UID coincides with it.  BlobTag itself stays lean — UID +

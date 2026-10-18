@@ -359,12 +359,17 @@ POST   /api/v1/upload
                  I/Units=Bytes) + Cell, the BlobRef cell the node wrote (a
                  packed Address) — PERSIST it with the BlobRef; absent on a
                  public planet you have not joined (its Tag resolves alone).
+                 An empty file uploads (I = 0).
        Per-request body cap (node default 256 MiB), ADVERTISED on every
        upload-door response as X-Amp-Upload-Max-Bytes; a body past it is
        refused 413 PayloadTooLarge — beyond it, the chunk door.
        507 CapReached: the planet's storage cap refused the upload before
        any byte landed (the node reserves your declared bytes first); no
-       retry helps until the operator raises the cap.
+       retry helps until the operator raises the cap.  404 NotFound: the
+       node holds no planet by that planetTag; 403 Forbidden: a
+       confidential planet you have not joined; 400 BadRequest: a
+       planetTag that does not parse.  The chunk door answers the same on
+       the chunk that names the planet.
 
 POST   /api/v1/upload/chunk
        Content-Type: multipart/form-data — one chunk per request, each inside
