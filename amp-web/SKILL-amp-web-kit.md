@@ -841,7 +841,10 @@ Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
 POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —
 accepted — publishes under `/www/{UID}.plain` and serves as an
 `application/octet-stream` download; its `Cell` (the upload's BlobRef cell)
-rides along, so a sealed blob resolves by it without a `cell` argument.
+rides along, so a sealed blob resolves by it without a `cell` argument — at
+once on the node that answered the upload (it answers once the cell is in your
+cabinet); another node refuses it (404) until it has synced the planet's
+journal, and `refresh()` re-resolves.
 Resolves via `POST /api/v1/media/resolve`
 (`client.resolveMedia(blob, planetTag?, cell?)`); there is no client-built URL —
 when resolve fails `url` is null and `error` carries the failure (a revoked
