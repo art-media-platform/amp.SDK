@@ -9,9 +9,13 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-// TomeStoreIdentity is optional for stores whose separately constructed handles
-// share storage. Wrappers should forward the identity of their underlying store.
-// Without it, coordination covers handles using the same comparable TomeStore.
+// TomeStoreIdentity names a store's storage for handle coordination.  A store
+// whose separately constructed values share storage (two values over one
+// file, a wrapper around another store) MUST implement it — a wrapper forwards
+// its inner store's identity — or its handles coordinate no more than separate
+// processes do: no read refresh, no shared removal, and persists that can
+// interleave.  Without it, coordination covers only the handles opened on one
+// comparable store value.
 type TomeStoreIdentity interface {
 	TomeStoreIdentity() string
 }

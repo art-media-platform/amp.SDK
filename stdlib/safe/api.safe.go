@@ -59,7 +59,8 @@ type Guard interface {
 // TomeStore persists and retrieves a SealedTome.  The handles opened on one
 // store coordinate by its identity: TomeStoreIdentity when implemented (a
 // wrapping store forwards its inner store's), else the store value itself,
-// which must then be comparable.
+// which must then be comparable as held.  A store whose separately
+// constructed values share storage must implement TomeStoreIdentity.
 //
 // Implementations:
 //   - localTomeStore — reads/writes a single file on the local filesystem
@@ -83,7 +84,10 @@ type KeySpec struct {
 //
 // Handles open on one tome coordinate within the process (TomeStoreIdentity):
 // a mutation folds in the tome as it stands, so no handle drops a sibling's
-// install, and a read folds in a sibling's save first.
+// install, and a read folds in a sibling's save first.  That read reloads the
+// tome (TomeStore.Load, Guard.UnwrapDEK, decrypt), so a read can return the
+// tome's I/O or unwrap error (CanSign then reads false), and the Guard must
+// stay open for the handle's whole life, reads included.
 //
 // All methods are threadsafe.
 type Enclave interface {
@@ -95,10 +99,10 @@ type Enclave interface {
 	// The install is durable at method return: the re-sealed tome persists
 	// BEFORE ImportKey reports success, so an unclean kill after return cannot
 	// lose the key — a member's identity must never ride on a clean Close.
-	// The guard must be open at install (it closes only at teardown, after all
-	// installs); a persist failure returns the error and is NOT a durable
-	// install: the key stays held for the next persist, and every key op
-	// refuses it (KeyringNotFound) until one succeeds.
+	// The guard must stay open while the handle is (an install wraps a fresh
+	// DEK; a read may reload the tome); a persist failure returns the error
+	// and is NOT a durable install: the key stays held for the next persist,
+	// and every key op refuses it (KeyringNotFound) until one succeeds.
 	ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair) error
 
 	// GenerateKey creates a new keypair in the given keyring and registers it.

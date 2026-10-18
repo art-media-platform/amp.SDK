@@ -24,7 +24,8 @@ import (
 //	              -> applies the install or removal
 //	              -> persists: fresh DEK, encrypt, wrap via Guard, Save
 //
-//	a read        -> first folds in a sibling handle's save, if one landed
+//	a read        -> first folds in a sibling handle's save, if one landed:
+//	                 Load + UnwrapDEK + decrypt, so a read can return a tome error
 //
 //	Persist()     -> reloads and persists on request (EnclavePersister)
 //
@@ -306,9 +307,10 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 // GenerateKey creates a new keypair under the given keyring.
 // The install is durable at return (see ImportKey): success ⟹ the key is on
 // disk; a persist failure leaves it held but unusable until a later persist
-// succeeds.  The guard must be open at install, which every real flow
-// satisfies (the session enclave's guard closes only at teardown, after all
-// installs).
+// succeeds.  The guard must stay open while the handle is — an install wraps
+// a fresh DEK, and a read after a sibling's save unwraps the reloaded tome's
+// — which every in-tree flow satisfies (no session closes its guard before
+// its enclave).
 func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec KeySpec) (PubKey, error) {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()
