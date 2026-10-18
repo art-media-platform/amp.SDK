@@ -42,8 +42,8 @@ export interface MediaResolution {
  * (/www/{UID}.{ext}?t=…), the only credential the media plane accepts, so
  * there is no URL to build client-side: a failed resolve is a null url plus
  * the error.  Metadata comes from the answer, else the Tag.  cell names the
- * item's BlobRef cell (a packed Address) so a sealed blob resolves on a node
- * that did not seal it.
+ * item's BlobRef cell (a packed Address), else the adapter sends the Tag's own
+ * Cell: a sealed blob resolves only by its BlobRef cell, on every node.
  */
 export async function resolveMediaURL(
   adapter: Pick<AmpAdapter, 'resolveMedia'>, tag: BlobRef, planetTag?: string, cell?: Address,

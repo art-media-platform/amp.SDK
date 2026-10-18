@@ -158,7 +158,7 @@ type MediaAsset struct {
 	Node        tag.UID   // channel node the record is written at
 	Source      io.Reader // blob bytes, streamed into the blob store (not buffered in heap)
 	ContentType string    // MIME type of the blob (e.g. "audio/mpeg")
-	ByteLen     int64     // blob byte length when known (0 = unknown)
+	ByteLen     int64     // blob byte length when known (0 = unknown; see below)
 	MediaRecord
 }
 
@@ -167,7 +167,10 @@ type MediaAsset struct {
 // the stored BlobRef.  It is the one-shot path an app uses to cache a complete media
 // asset (a downloaded mix, an attached file); an app that also maintains an index
 // builds WriteMediaRecord into its own tx instead.  Source is streamed straight into
-// the blob store, so a multi-hour asset never resides whole in heap.
+// the blob store, so a multi-hour asset never resides whole in heap.  ByteLen rides
+// as the store's declared size (I, Units = Bytes): a host that binds a session to its
+// declared size (amp.Session.StoreBlob; the web rail's does) takes a ByteLen of 0 as
+// an empty blob and refuses a longer Source.
 func CommitMediaAsset(appCtx amp.AppContext, asset MediaAsset) (*amp.BlobRef, error) {
 	blobMeta := &amp.Tag{
 		ContentTypeRaw: asset.ContentType,

@@ -22,7 +22,7 @@ export const AmpErrorCode = {
   Unsupported:     'Unsupported',
   TxRejected:      'TxRejected',
   PayloadTooLarge: 'PayloadTooLarge',
-  CapReached:      'CapReached',       // HTTP 507: a storage cap refused the upload before any byte landed
+  CapReached:      'CapReached',       // HTTP 507: a storage cap refused it
   RateLimited:     'RateLimited',
   Internal:        'Internal',
   Unimplemented:   'Unimplemented',

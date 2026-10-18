@@ -149,8 +149,10 @@ export interface AmpAdapter {
    *  The URI is opaque — a member resolve answers /www/{UID}.{ext}?t=<media token>,
    *  the credential the media plane checks; carry it verbatim, never rebuild it.
    *  Pass planetTag to resolve a blob on another planet (e.g. an anonymous public share).
-   *  Pass cell (the packed Address of the item's BlobRef cell) so a sealed blob resolves on a
-   *  node that did not seal it — the node completes the ref from the cell under your keys. */
+   *  The request's cell is `cell`, else `blob.Cell` (the BlobRef cell its upload wrote): an
+   *  implementation applies that default, since the node reads the cell from the request's
+   *  Cell, never from the Tag.  A sealed blob resolves only by its BlobRef cell, on every
+   *  node — the node completes the ref from the cell under your keys. */
   resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef>;
 
   // ── Federation invites ────────────────────────────────────────────

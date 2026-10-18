@@ -78,7 +78,7 @@ export interface AmpBridge {
 
   // ── Media ──
   upload(channel: string, opts?: UploadOpts): Promise<BlobRef>;
-  resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef>;  // returns blob with URI (stream URL) set; cell = the BlobRef cell a sealed blob resolves by
+  resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef>;  // returns blob with URI (stream URL) set; cell, else blob.Cell, names the BlobRef cell a sealed blob resolves by
 
   // ── Sealed secrets ──
   seal(plaintext: Uint8Array): Promise<Uint8Array>;

@@ -358,8 +358,7 @@ type MediaResolveRequest struct {
 // blob resolves on any node holding the cell.  Cell is absent
 // when the upload wrote none: a planet-public upload whose cell commit was
 // refused for permission — a planet the member never joined — (its Tag-only
-// resolve serves it), or a fixture backend.
-// Additive over the bare Tag the doors answered before (AD-app-www §3.4).
+// resolve serves it), or a fixture backend (AD-app-www §3.4).
 type UploadResponse struct {
 	Tag  *amp.Tag
 	Cell *amp.Address
@@ -389,6 +388,8 @@ func (resp UploadResponse) MarshalJSON() ([]byte, error) {
 	return append(out, '}'), nil
 }
 
+// UnmarshalJSON reads the Tag through amp.Tag's own JSON, which skips the Cell
+// key, and the Cell key beside it.
 func (resp *UploadResponse) UnmarshalJSON(data []byte) error {
 	blobTag := &amp.Tag{}
 	if err := blobTag.UnmarshalJSON(data); err != nil {
@@ -637,7 +638,7 @@ const (
 	ErrUnsupported     = "Unsupported"
 	ErrTxRejected      = "TxRejected"
 	ErrPayloadTooLarge = "PayloadTooLarge"
-	ErrCapReached      = "CapReached" // HTTP 507: a Tier-1 storage cap refused the upload before any byte landed (AD-app-www §3.3)
+	ErrCapReached      = "CapReached" // HTTP 507: a storage cap (AD-app-www §3.3)
 	ErrRateLimited     = "RateLimited"
 	ErrInternal        = "Internal"
 	ErrUnimplemented   = "Unimplemented"
