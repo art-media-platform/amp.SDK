@@ -10,6 +10,7 @@
 package crates
 
 import (
+	amp "github.com/art-media-platform/amp.SDK/amp"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -552,7 +553,10 @@ type CrateInfo struct {
 	// crate.
 	URL string `protobuf:"bytes,55,opt,name=URL,proto3" json:"URL,omitempty"`
 	// Approximate size of this crate in bytes (or 0 if unknown).
-	ApproxSize    int64 `protobuf:"varint,60,opt,name=ApproxSize,proto3" json:"ApproxSize,omitempty"`
+	ApproxSize int64 `protobuf:"varint,60,opt,name=ApproxSize,proto3" json:"ApproxSize,omitempty"`
+	// Variants holds one entry per platform .crate file of this build.  Empty
+	// when unrecorded, which leaves a fetch nothing to check the file against.
+	Variants      []*CrateVariant `protobuf:"bytes,70,rep,name=Variants,proto3" json:"Variants,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -699,6 +703,79 @@ func (x *CrateInfo) GetApproxSize() int64 {
 	return 0
 }
 
+func (x *CrateInfo) GetVariants() []*CrateVariant {
+	if x != nil {
+		return x.Variants
+	}
+	return nil
+}
+
+// CrateVariant is one platform's .crate file of a crate build: its byte size
+// and SHA-256, written when the build is copied into the crate store and
+// checked when a client fetches the file (CD-crate-as-channel §12, FETCH).
+type CrateVariant struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Platform is the build target this file serves.
+	Platform amp.PlatformID `protobuf:"varint,1,opt,name=Platform,proto3,enum=amp.PlatformID" json:"Platform,omitempty"`
+	// Size is the byte length of the .crate file.
+	Size int64 `protobuf:"varint,2,opt,name=Size,proto3" json:"Size,omitempty"`
+	// SHA256 is the SHA-256 digest of the .crate file (32 bytes).
+	SHA256        []byte `protobuf:"bytes,3,opt,name=SHA256,proto3" json:"SHA256,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CrateVariant) Reset() {
+	*x = CrateVariant{}
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CrateVariant) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CrateVariant) ProtoMessage() {}
+
+func (x *CrateVariant) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CrateVariant.ProtoReflect.Descriptor instead.
+func (*CrateVariant) Descriptor() ([]byte, []int) {
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CrateVariant) GetPlatform() amp.PlatformID {
+	if x != nil {
+		return x.Platform
+	}
+	return amp.PlatformID(0)
+}
+
+func (x *CrateVariant) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *CrateVariant) GetSHA256() []byte {
+	if x != nil {
+		return x.SHA256
+	}
+	return nil
+}
+
 // CrateManifest is the top-level manifest/catalog for an amp asset module
 // called a "crate".  It contains catalog and type info that amp loads at
 // runtime to know what's inside binary asset bundles without having to load
@@ -720,7 +797,7 @@ type CrateManifest struct {
 
 func (x *CrateManifest) Reset() {
 	*x = CrateManifest{}
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[3]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -732,7 +809,7 @@ func (x *CrateManifest) String() string {
 func (*CrateManifest) ProtoMessage() {}
 
 func (x *CrateManifest) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[3]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -745,7 +822,7 @@ func (x *CrateManifest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CrateManifest.ProtoReflect.Descriptor instead.
 func (*CrateManifest) Descriptor() ([]byte, []int) {
-	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{3}
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CrateManifest) GetInfo() *CrateInfo {
@@ -788,7 +865,7 @@ type CrateSnapshot struct {
 
 func (x *CrateSnapshot) Reset() {
 	*x = CrateSnapshot{}
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[4]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -800,7 +877,7 @@ func (x *CrateSnapshot) String() string {
 func (*CrateSnapshot) ProtoMessage() {}
 
 func (x *CrateSnapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_crates_amp_crates_proto_msgTypes[4]
+	mi := &file_amp_crates_amp_crates_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -813,7 +890,7 @@ func (x *CrateSnapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CrateSnapshot.ProtoReflect.Descriptor instead.
 func (*CrateSnapshot) Descriptor() ([]byte, []int) {
-	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{4}
+	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CrateSnapshot) GetRevID() int64 {
@@ -841,7 +918,7 @@ var File_amp_crates_amp_crates_proto protoreflect.FileDescriptor
 
 const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\n" +
-	"\x1bamp/crates/amp.crates.proto\x12\x06crates\"\x8f\x05\n" +
+	"\x1bamp/crates/amp.crates.proto\x12\x06crates\x1a\x12amp/amp.core.proto\"\x8f\x05\n" +
 	"\n" +
 	"AssetEntry\x12%\n" +
 	"\x04Kind\x18\x01 \x01(\x0e2\x11.crates.AssetKindR\x04Kind\x12\x1a\n" +
@@ -875,7 +952,7 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	" \x03(\v2\x12.crates.AssetEntryR\x06Assets\x12 \n" +
 	"\vLoadAllHint\x18\x14 \x01(\bR\vLoadAllHint\x12\x19\n" +
 	"\bBlobID_0\x18\x1e \x01(\x06R\aBlobID0\x12\x19\n" +
-	"\bBlobID_1\x18\x1f \x01(\x06R\aBlobID1\"\xe7\x03\n" +
+	"\bBlobID_1\x18\x1f \x01(\x06R\aBlobID1\"\x99\x04\n" +
 	"\tCrateInfo\x12 \n" +
 	"\vCrateSchema\x18\x01 \x01(\x05R\vCrateSchema\x12\x16\n" +
 	"\x06InstID\x18\x02 \x01(\rR\x06InstID\x12\x1a\n" +
@@ -895,7 +972,12 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x03URL\x187 \x01(\tR\x03URL\x12\x1e\n" +
 	"\n" +
 	"ApproxSize\x18< \x01(\x03R\n" +
-	"ApproxSize\"\x90\x01\n" +
+	"ApproxSize\x120\n" +
+	"\bVariants\x18F \x03(\v2\x14.crates.CrateVariantR\bVariants\"g\n" +
+	"\fCrateVariant\x12+\n" +
+	"\bPlatform\x18\x01 \x01(\x0e2\x0f.amp.PlatformIDR\bPlatform\x12\x12\n" +
+	"\x04Size\x18\x02 \x01(\x03R\x04Size\x12\x16\n" +
+	"\x06SHA256\x18\x03 \x01(\fR\x06SHA256\"\x90\x01\n" +
 	"\rCrateManifest\x12%\n" +
 	"\x04Info\x18\x01 \x01(\v2\x11.crates.CrateInfoR\x04Info\x12&\n" +
 	"\x0eIconBundleName\x18\x05 \x01(\tR\x0eIconBundleName\x120\n" +
@@ -937,27 +1019,31 @@ func file_amp_crates_amp_crates_proto_rawDescGZIP() []byte {
 }
 
 var file_amp_crates_amp_crates_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_amp_crates_amp_crates_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_amp_crates_amp_crates_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_amp_crates_amp_crates_proto_goTypes = []any{
 	(AssetKind)(0),         // 0: crates.AssetKind
 	(CrateSchema)(0),       // 1: crates.CrateSchema
 	(*AssetEntry)(nil),     // 2: crates.AssetEntry
 	(*BundleManifest)(nil), // 3: crates.BundleManifest
 	(*CrateInfo)(nil),      // 4: crates.CrateInfo
-	(*CrateManifest)(nil),  // 5: crates.CrateManifest
-	(*CrateSnapshot)(nil),  // 6: crates.CrateSnapshot
+	(*CrateVariant)(nil),   // 5: crates.CrateVariant
+	(*CrateManifest)(nil),  // 6: crates.CrateManifest
+	(*CrateSnapshot)(nil),  // 7: crates.CrateSnapshot
+	(amp.PlatformID)(0),    // 8: amp.PlatformID
 }
 var file_amp_crates_amp_crates_proto_depIdxs = []int32{
 	0, // 0: crates.AssetEntry.Kind:type_name -> crates.AssetKind
 	2, // 1: crates.BundleManifest.Assets:type_name -> crates.AssetEntry
-	4, // 2: crates.CrateManifest.Info:type_name -> crates.CrateInfo
-	3, // 3: crates.CrateManifest.Bundles:type_name -> crates.BundleManifest
-	4, // 4: crates.CrateSnapshot.Crates:type_name -> crates.CrateInfo
-	5, // [5:5] is the sub-list for method output_type
-	5, // [5:5] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	5, // 2: crates.CrateInfo.Variants:type_name -> crates.CrateVariant
+	8, // 3: crates.CrateVariant.Platform:type_name -> amp.PlatformID
+	4, // 4: crates.CrateManifest.Info:type_name -> crates.CrateInfo
+	3, // 5: crates.CrateManifest.Bundles:type_name -> crates.BundleManifest
+	4, // 6: crates.CrateSnapshot.Crates:type_name -> crates.CrateInfo
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_amp_crates_amp_crates_proto_init() }
@@ -971,7 +1057,7 @@ func file_amp_crates_amp_crates_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_crates_amp_crates_proto_rawDesc), len(file_amp_crates_amp_crates_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   5,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

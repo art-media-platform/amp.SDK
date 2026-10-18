@@ -7,6 +7,8 @@ package crates;
 option csharp_namespace = "art.media.platform";
 option go_package = "github.com/art-media-platform/amp.SDK/amp/crates";
 
+import "amp/amp.core.proto";
+
 
 // AssetKind identifies what an asset *is* — exactly one kind per AssetEntry.
 // Orthogonal properties (placeable, private, auto-scale, etc.) live as explicit
@@ -193,6 +195,25 @@ message CrateInfo {
 
     // Approximate size of this crate in bytes (or 0 if unknown).
     int64                   ApproxSize = 60;
+
+    // Variants holds one entry per platform .crate file of this build.  Empty
+    // when unrecorded, which leaves a fetch nothing to check the file against.
+    repeated CrateVariant   Variants = 70;
+}
+
+// CrateVariant is one platform's .crate file of a crate build: its byte size
+// and SHA-256, written when the build is copied into the crate store and
+// checked when a client fetches the file (CD-crate-as-channel §12, FETCH).
+message CrateVariant {
+
+    // Platform is the build target this file serves.
+    amp.PlatformID          Platform = 1;
+
+    // Size is the byte length of the .crate file.
+    int64                   Size = 2;
+
+    // SHA256 is the SHA-256 digest of the .crate file (32 bytes).
+    bytes                   SHA256 = 3;
 }
 
 // CrateManifest is the top-level manifest/catalog for an amp asset module
