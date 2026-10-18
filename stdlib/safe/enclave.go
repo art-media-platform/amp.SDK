@@ -172,9 +172,10 @@ func (enc *enclave) loadTomeLocked(ctx context.Context) (int64, []*KeyPairRecord
 // fold is a union: every record on disk joins, and every held record stays
 // (this handle's installs, saved or not, and records it learned earlier), so
 // a stale writer's tome never sheds a key from a live view; a record some
-// handle removed (shared.removed) leaves.  A held record that differs from
-// the disk record of its key and type yields to it, unless only the held one
-// carries the private half.  Caller holds enc.mu (write) and shared.mu.
+// handle removed (shared.removed) leaves, and so does a held copy that
+// predates a re-install (shared.reinstalled).  A held record that differs
+// from the disk record of its key and type yields to it, unless only the held
+// one carries the private half.  Caller holds enc.mu (write) and shared.mu.
 func (enc *enclave) reloadLocked(ctx context.Context) error {
 	diskRevision, disk, err := enc.loadTomeLocked(ctx)
 	if err != nil {
@@ -201,7 +202,7 @@ func (enc *enclave) reloadLocked(ctx context.Context) error {
 
 // foldHeld carries one held record into merged (reloadLocked's union rule).
 func (enc *enclave) foldHeld(merged map[tag.UID]*ringIndex, held *KeyPairRecord) {
-	if _, removed := enc.shared.removed[addressOf(held)]; removed {
+	if enc.retractedLocked(addressOf(held)) {
 		delete(enc.unsaved, held)
 		Zero(held.PrvKey)
 		return
@@ -224,6 +225,18 @@ func (enc *enclave) foldHeld(merged map[tag.UID]*ringIndex, held *KeyPairRecord)
 	}
 	delete(enc.unsaved, held)
 	Zero(held.PrvKey)
+}
+
+// retractedLocked reports whether a held record of address no longer holds:
+// a handle removed it, or re-installed it after this index last synced — the
+// held copy then predates the removal the re-install lifted.  Caller holds
+// shared.mu.
+func (enc *enclave) retractedLocked(address recordAddress) bool {
+	if _, removed := enc.shared.removed[address]; removed {
+		return true
+	}
+	reinstalledAt, reinstalled := enc.shared.reinstalled[address]
+	return reinstalled && reinstalledAt > enc.synced
 }
 
 // ImportKey inserts a keypair into the given keyring.
@@ -275,7 +288,11 @@ func (enc *enclave) ImportKey(ctx context.Context, keyringID tag.UID, kp KeyPair
 		return nil // already durable duplicate
 	}
 	if inserted {
-		delete(enc.shared.removed, addressOf(rec)) // a re-install lifts a removal
+		address := addressOf(rec)
+		if _, removed := enc.shared.removed[address]; removed {
+			delete(enc.shared.removed, address) // a re-install lifts a removal
+			enc.shared.reinstalled[address] = enc.shared.revision.Load()
+		}
 	}
 	if err := enc.persistLocked(ctx); err != nil {
 		if inserted {
@@ -364,7 +381,8 @@ func (enc *enclave) GenerateKey(ctx context.Context, keyringID tag.UID, spec Key
 
 // RemoveKey deletes the exact (keyring, Type, PubKey) record and persists; a
 // failed persist re-merges the record so the key stays held.  A removal holds
-// for every handle on the tome: none restores the record (shared.removed).
+// for every handle on the tome: none restores the record (shared.removed),
+// nor a copy it held from before a later re-install (shared.reinstalled).
 func (enc *enclave) RemoveKey(ctx context.Context, ref *KeyRef) error {
 	enc.mu.Lock()
 	defer enc.mu.Unlock()

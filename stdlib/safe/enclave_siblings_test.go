@@ -145,6 +145,51 @@ func TestEnclave_SiblingRemovalStaysRemoved(t *testing.T) {
 	closeHandle(t, minter)
 }
 
+// A removal a re-install lifted still holds against a handle that synced
+// before it: the remover drops a full keypair and re-imports its public half;
+// a holder that still carries the private half yields to the re-installed
+// record, so neither its view, its next persist nor the remover's view brings
+// the private half back.
+func TestEnclave_ReimportAfterRemovalKeepsPrivateHalfRemoved(t *testing.T) {
+	ctx := context.Background()
+	store, guard := siblingRig(t)
+	holder := openCloseTestEnclave(t, store, guard)
+	remover := openCloseTestEnclave(t, store, guard)
+	ringID := tag.NewID()
+	pub := generateSigningKey(t, holder, ringID)
+	ref := &safe.KeyRef{
+		Type:   safe.KeyType_SigningKey,
+		PubKey: pub.Bytes,
+	}
+	ref.SetKeyringID(ringID)
+	if !remover.CanSign(ref) {
+		t.Fatal("premise void: the remover never served the holder's full keypair")
+	}
+	if err := remover.RemoveKey(ctx, ref); err != nil {
+		t.Fatalf("RemoveKey: %v", err)
+	}
+	if err := remover.ImportKey(ctx, ringID, safe.KeyPair{Pub: pub}); err != nil {
+		t.Fatalf("pub-only re-import: %v", err)
+	}
+	generateSigningKey(t, holder, tag.NewID())
+	if holder.CanSign(ref) {
+		t.Error("the stale holder still signs with the removed private half")
+	}
+	if remover.CanSign(ref) {
+		t.Error("the remover signs with the private half it removed")
+	}
+	reader := openCloseTestEnclave(t, store, guard)
+	if reader.CanSign(ref) {
+		t.Error("the stale holder's persist wrote the removed private half back")
+	}
+	if _, err := reader.FetchPubKey(ref); err != nil {
+		t.Errorf("the re-installed public half is not on disk: %v", err)
+	}
+	closeHandle(t, reader)
+	closeHandle(t, remover)
+	closeHandle(t, holder)
+}
+
 // A stale handle cannot replace a sibling's full keypair with a pub-only
 // record of the same key: the import collides with the reloaded record and
 // the private half stays on disk.

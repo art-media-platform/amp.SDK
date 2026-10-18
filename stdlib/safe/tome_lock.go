@@ -34,6 +34,11 @@ type tomeLock struct {
 	// removed (enclave tomes): records a handle removed — no handle's reload
 	// restores one, and a re-install lifts it.
 	removed map[recordAddress]struct{}
+
+	// reinstalled (enclave tomes): the save revision at which a re-install
+	// lifted a removal — a handle synced before it holds the removed record,
+	// whose held copy yields to the tome.
+	reinstalled map[recordAddress]uint64
 }
 
 // recordAddress names one Enclave record: keyring, type and full public key.
@@ -74,8 +79,9 @@ func acquireTome(store TomeStore) (any, *tomeLock, error) {
 	shared := tomeLocks.byID[identity]
 	if shared == nil {
 		shared = &tomeLock{
-			shredded: make(map[epochAddress]struct{}),
-			removed:  make(map[recordAddress]struct{}),
+			shredded:    make(map[epochAddress]struct{}),
+			removed:     make(map[recordAddress]struct{}),
+			reinstalled: make(map[recordAddress]uint64),
 		}
 		tomeLocks.byID[identity] = shared
 	}
