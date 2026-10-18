@@ -26,6 +26,8 @@ import (
 //
 //	a read        -> first folds in a sibling handle's save, if one landed
 //
+//	Persist()     -> reloads and persists on request (EnclavePersister)
+//
 //	Close()       -> reloads and persists only while an install is unsaved
 //	              -> zeros all sensitive material, leaves the tomeLock
 //
@@ -65,7 +67,10 @@ type ringIndex struct {
 	newestByType [KeyType_NumTypes][]byte
 }
 
-var _ Enclave = (*enclave)(nil)
+var (
+	_ Enclave          = (*enclave)(nil)
+	_ EnclavePersister = (*enclave)(nil)
+)
 
 // errEnclaveClosed is returned by every Enclave method once Close() has sealed the session.
 var errEnclaveClosed = status.Code_Closed.Error("safe: enclave is closed")
@@ -624,9 +629,27 @@ func (enc *enclave) Close(ctx context.Context) error {
 	return nil
 }
 
+// Persist reloads and folds the tome, then persists the whole index — the
+// route for a save the store acknowledged without writing (EnclavePersister).
+func (enc *enclave) Persist(ctx context.Context) error {
+	enc.mu.Lock()
+	defer enc.mu.Unlock()
+
+	if enc.closed {
+		return errEnclaveClosed
+	}
+	enc.shared.mu.Lock()
+	defer enc.shared.mu.Unlock()
+	if err := enc.reloadLocked(ctx); err != nil {
+		return err
+	}
+	return enc.persistLocked(ctx)
+}
+
 // persistLocked seals the in-memory key index into a KeyTome and saves it via
 // the Guard/TomeStore pair — the ONE persist site (ImportKey, GenerateKey,
-// RemoveKey, Close), each of which reloaded the index first under shared.mu.
+// RemoveKey, Persist, Close), each of which reloaded the index first under
+// shared.mu.
 // Every Save attempt bumps the shared revision (a backend may publish before
 // it errs); a successful Save empties unsaved.  Caller holds enc.mu and
 // shared.mu.

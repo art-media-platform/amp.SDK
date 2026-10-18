@@ -163,6 +163,17 @@ type Enclave interface {
 	Close(ctx context.Context) error
 }
 
+// EnclavePersister is the re-persist entry point of the Enclave OpenEnclave
+// returns, for a TomeStore that acknowledges a save it does not write until
+// later (a login gate holding a session's saves until its verdict): Persist
+// seals the handle's whole index again — the tome reloaded and folded in
+// under its lock, as every mutation persists — so the acknowledged installs
+// reach the tome without dropping a sibling's save made meanwhile.  A closed
+// handle returns its closed error.
+type EnclavePersister interface {
+	Persist(ctx context.Context) error
+}
+
 // KeyScope identifies a key's owning planet and optional channel. A channel
 // remains distinct from planet scope even when their UIDs are equal.
 type KeyScope struct {
