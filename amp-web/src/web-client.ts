@@ -758,6 +758,7 @@ export class AmpWebClient implements AmpAdapter {
     }
     const form = new FormData();
     form.append('file', file);
+    this.appendPlanetTag(form, opts);
     this.appendUploadFields(form, channel, opts);
     let resp: Response;
     try {
@@ -799,8 +800,11 @@ export class AmpWebClient implements AmpAdapter {
    * per-request cap is refused 413 with the cap advertised: the same index is
    * re-sent under it (the refusal touched no server state) and the rest of
    * the file re-chunks at the clamped size.  Any other refused chunk (409
-   * out-of-order, 404 unknown upload, 401) throws; the server sweeps the
-   * abandoned upload after its idle TTL.  v1: no resume, no parallel chunks.
+   * out-of-order, 404 unknown upload, 401, 507 CapReached — the planet's
+   * storage cap, the upload dropped server-side) throws; the server sweeps
+   * an abandoned upload after its idle TTL.  planetTag rides every chunk:
+   * the first names the planet the server reserves the spill on.  v1: no
+   * resume, no parallel chunks.
    */
   private async uploadChunked(
     file: File, channel: string, chunkSize: number, opts?: UploadOpts,
@@ -815,6 +819,7 @@ export class AmpWebClient implements AmpAdapter {
       form.append('uploadID', uploadID);
       form.append('index', String(index));
       form.append('file', file.slice(offset, end), file.name);
+      this.appendPlanetTag(form, opts);
       if (last) {
         form.append('complete', '1');
         this.appendUploadFields(form, channel, opts);
@@ -847,16 +852,20 @@ export class AmpWebClient implements AmpAdapter {
   }
 
   /**
-   * The /upload form vocabulary beside the file part: planetTag (read by the
-   * server) plus the reserved channel/attr/metadata fields (SKILL §4.4).  On
-   * the chunked path these ride the sealing request only.
+   * The /upload form vocabulary beside the file part: channel + attr (the
+   * BlobRef cell's placement, SKILL §4.4) and the reserved metadata field.  On
+   * the chunked path these ride the sealing request only; planetTag rides
+   * every request (appendPlanetTag).
    */
   private appendUploadFields(form: FormData, channel: string, opts?: UploadOpts): void {
     form.append('channel', channel);
     if (opts?.attr) form.append('attr', opts.attr);
+    if (opts?.metadata) form.append('metadata', JSON.stringify(opts.metadata));
+  }
+
+  private appendPlanetTag(form: FormData, opts?: UploadOpts): void {
     const planetTag = this.planetTagFor(opts?.planetTag);
     if (planetTag) form.append('planetTag', planetTag);
-    if (opts?.metadata) form.append('metadata', JSON.stringify(opts.metadata));
   }
 
   /**
@@ -883,18 +892,22 @@ export class AmpWebClient implements AmpAdapter {
   // resolveMedia answers the server's Tag whole; its URI is the stream URL
   // WITH the media token a member resolve carries (/www/{UID}.{ext}?t=…) —
   // opaque, host-relative, valid for the token lifetime and the session's
-  // generation.  Nothing here rebuilds it.  cell names the BlobRef cell
-  // (a packed Address) the node completes a sealed blob's ref from, so the
-  // blob resolves on a node that did not seal it; omitted or empty, no Cell
-  // is sent and the resolve is Tag-only (an empty Cell would reach the node
-  // as a zero Address, which names no cell and refuses).
+  // generation.  Nothing here rebuilds it.  The cell — the argument, else the
+  // BlobRef's own Cell (the one the upload wrote) — names the BlobRef cell (a
+  // packed Address) the node completes a sealed blob's ref from, so the blob
+  // resolves on any node holding its bytes and the cell; an empty one is not
+  // sent and the resolve is Tag-only (an empty Cell would reach the node as a
+  // zero Address, which names no cell and refuses).  The Tag goes without its
+  // Cell key: the node reads the cell from the request's Cell.
   async resolveMedia(blob: BlobRef, planetTag?: string, cell?: Address): Promise<BlobRef> {
+    const { Cell: ownCell, ...blobTag } = blob;
+    const named = cell ?? ownCell;
     return this.apiFetch<BlobRef>('/media/resolve', {
       method: 'POST',
       body: JSON.stringify({
-        Blob: blob,
+        Blob: blobTag,
         PlanetTag: this.planetTagFor(planetTag),
-        ...(cell ? { Cell: cell } : {}),
+        ...(named ? { Cell: named } : {}),
       }),
     });
   }

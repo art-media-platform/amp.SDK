@@ -16,6 +16,7 @@
 package webapi
 
 import (
+	"bytes"
 	"encoding/json"
 
 	"github.com/art-media-platform/amp.SDK/amp"
@@ -326,7 +327,8 @@ type EditChainResponse struct {
 //
 // Cell, when set, names the cabinet cell holding the blob's full amp.BlobRef:
 // a std.Attr.BlobRef cell, the 3-UID Address form (channel, attr, item;
-// PlanetTag names the planet).  The node also accepts the 4- and 5-UID
+// PlanetTag names the planet) — a web upload answers its own as
+// UploadResponse.Cell.  The node also accepts the 4- and 5-UID
 // forms: an EditID is ignored (the cell's current value is read) and a
 // PlanetID must name the resolved planet.  The node reads the cell under the
 // session's keys and opens the blob by that ref, so a SEALED blob resolves on
@@ -338,6 +340,60 @@ type MediaResolveRequest struct {
 	PlanetTag string       `json:"PlanetTag,omitempty"`
 	Blob      *amp.Tag     `json:"Blob"`
 	Cell      *amp.Address `json:"Cell,omitempty"`
+}
+
+// UploadResponse is the body of POST /api/v1/upload and of the chunk door's
+// complete (201): the blob's amp.Tag — UID, URI, ContentTypeRaw, I, Units —
+// rendered through amp.Tag's own JSON, plus Cell, the std.Attr.BlobRef cell
+// the upload wrote (the 3-UID Address: node, attr, item; PlanetTag names the
+// planet).  A later resolve names it (MediaResolveRequest.Cell), so a sealed
+// blob resolves on any node holding its bytes and the cell.  Cell is absent
+// when the upload wrote none: a planet-public upload on a planet the member
+// never joined (its Tag-only resolve serves it), or a fixture backend.
+// Additive over the bare Tag the doors answered before (AD-app-www §3.4).
+type UploadResponse struct {
+	Tag  *amp.Tag
+	Cell *amp.Address
+}
+
+// MarshalJSON renders the Tag's own JSON object with the Cell key appended,
+// so the Tag keys keep amp.Tag's one field list and order.
+func (resp UploadResponse) MarshalJSON() ([]byte, error) {
+	blobTag := resp.Tag
+	if blobTag == nil {
+		blobTag = &amp.Tag{}
+	}
+	tagJSON, err := blobTag.MarshalJSON()
+	if err != nil || resp.Cell == nil {
+		return tagJSON, err
+	}
+	cellJSON, err := resp.Cell.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	out := bytes.TrimSuffix(tagJSON, []byte("}"))
+	if len(out) > 1 {
+		out = append(out, ',')
+	}
+	out = append(out, `"Cell":`...)
+	out = append(out, cellJSON...)
+	return append(out, '}'), nil
+}
+
+func (resp *UploadResponse) UnmarshalJSON(data []byte) error {
+	blobTag := &amp.Tag{}
+	if err := blobTag.UnmarshalJSON(data); err != nil {
+		return err
+	}
+	cell := struct {
+		Cell *amp.Address `json:"Cell"`
+	}{}
+	if err := json.Unmarshal(data, &cell); err != nil {
+		return err
+	}
+	resp.Tag = blobTag
+	resp.Cell = cell.Cell
+	return nil
 }
 
 // SubscribeFrame is the WebSocket fan-out shape for /ws.  Clients send

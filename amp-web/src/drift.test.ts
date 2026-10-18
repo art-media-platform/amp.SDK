@@ -237,6 +237,12 @@ const SHAPES: Record<string, ShapeSpec> = {
     required: [],
     optional: ['UID', 'I', 'J', 'K', 'Units', 'ContentTypeRaw', 'URI', 'Text'],
   },
+  // The upload door's answer: the Tag's keys plus Cell, the BlobRef cell the
+  // upload wrote (absent when none was) — types.ts BlobRef.Cell.
+  UploadResponse: {
+    required: [],
+    optional: ['UID', 'I', 'J', 'K', 'Units', 'ContentTypeRaw', 'URI', 'Text', 'Cell'],
+  },
 
   // Operator tier — Go-only by ruling (see OPERATOR_GO_ONLY below): these
   // assert the Go wire shape so the fixtures stay honest, and deliberately

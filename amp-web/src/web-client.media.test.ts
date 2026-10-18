@@ -100,6 +100,18 @@ describe('resolveMedia carries the server URI verbatim', () => {
     expect('Cell' in bodies[2]!).toBe(false);
   });
 
+  it('sends the BlobRef\'s own Cell by default, outside the posted Tag; an argument wins', async () => {
+    const { client } = await loggedInClient();
+    const own = { UID, ContentTypeRaw: 'audio/mpeg', Cell: CELL };
+    await client.resolveMedia(own);
+    const byOwn = calls[calls.length - 1]!.body as { Blob: Record<string, unknown>; Cell?: string };
+    expect(byOwn.Cell).toBe(CELL);
+    expect(byOwn.Blob).toEqual({ UID, ContentTypeRaw: 'audio/mpeg' });
+    const other = CELL.replace(/^z/, 'y');
+    await client.resolveMedia(own, undefined, other);
+    expect((calls[calls.length - 1]!.body as { Cell?: string }).Cell).toBe(other);
+  });
+
   it('exposes no client-side /www/ URL builder', () => {
     const client = new AmpWebClient({
       vaultUrl: VAULT,

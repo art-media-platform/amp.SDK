@@ -71,6 +71,7 @@ var shapeCtors = map[string]func() any{
 	"SearchResponse":          func() any { return &webapi.SearchResponse{} },
 	"FederationPeersResponse": func() any { return &webapi.FederationPeersResponse{} },
 	"MediaResolveRequest":     func() any { return &webapi.MediaResolveRequest{} },
+	"UploadResponse":          func() any { return &webapi.UploadResponse{} },
 	"Tag":                     func() any { return &amp.Tag{} },
 
 	// Node operator tier (Go-only by design — see testdata/operator-go-only.json;

@@ -15,12 +15,15 @@ import { MemorySessionStore } from './session-store.js';
 import { AmpWebClient, DefaultUploadChunkBytes, UploadChunkHeadroomBytes, UploadMaxBytesHeader } from './web-client.js';
 
 const VAULT = 'http://127.0.0.1:5193';
+// The BlobRef cell the node wrote (the amp/webapi testdata/media.json UploadResponse golden).
+const CELL = 'z41s2udrrbg06q1qry3f1rvg7vtt1jcwuz0pqj8my77ry1yrn13q4e67n47xrnyf2cy29fze1me36';
 const TAG = {
   UID: '06efv-w28sb-60036d-tm6dt-m6dtm',
   URI: '/www/06efvw28sb60036dtm6dtm6dtm',
   ContentTypeRaw: 'video/mp4',
   I: 10,
   Units: 2,
+  Cell: CELL,
 };
 
 const realFetch = globalThis.fetch;
@@ -90,7 +93,7 @@ function stubFetch(): void {
     const uploadID = fields['uploadID'];
     const index = Number(fields['index']);
     if (index === failIndex) {
-      const code = { 401: 'AuthRequired', 409: 'Conflict' }[failStatus] ?? 'Internal';
+      const code = { 401: 'AuthRequired', 409: 'Conflict', 507: 'CapReached' }[failStatus] ?? 'Internal';
       return json(failStatus, { Code: code, Message: 'injected' });
     }
     let upload = open.get(uploadID);
@@ -194,9 +197,11 @@ describe('chunk sequencing + completion', () => {
     expect(uploadID.length).toBeGreaterThan(0);
     expect(uploadID.length).toBeLessThanOrEqual(128);
 
-    // complete + the /upload vocabulary ride the sealing request only.
+    // complete + channel/attr/metadata ride the sealing request only; planetTag
+    // rides every chunk (the first names the planet the spill is reserved on).
     expect(calls.slice(0, 2).every(c => c.fields['complete'] === undefined)).toBe(true);
-    expect(calls.slice(0, 2).every(c => c.fields['planetTag'] === undefined)).toBe(true);
+    expect(calls.slice(0, 2).every(c => c.fields['channel'] === undefined)).toBe(true);
+    expect(calls.every(c => c.fields['planetTag'] === 'home')).toBe(true);
     expect(calls[2].fields).toMatchObject({
       complete: '1',
       channel: 'projects',
@@ -240,6 +245,38 @@ describe('chunk sequencing + completion', () => {
     form.append('file', new Blob(['x']), 'x');
     const resp = await fetch(`${VAULT}/api/v1/upload/chunk`, { method: 'POST', body: form });
     expect(resp.status).toBe(404);
+  });
+});
+
+describe('the upload response', () => {
+  it('carries the BlobRef cell the node wrote, decoded verbatim, on both doors', async () => {
+    const c = client();
+    const single = await c.upload(TEN, 'projects');
+    expect(single.Cell).toBe(CELL);
+    const chunked = await c.upload(TEN, 'projects', { chunkSize: 4 });
+    expect(chunked.Cell).toBe(CELL);
+  });
+
+  it('planetTag rides every chunk, not only the sealing request', async () => {
+    const c = client();
+    await c.upload(TEN, 'projects', { chunkSize: 4, planetTag: 'board' });
+    const chunks = calls.filter(call => call.path === '/upload/chunk');
+    expect(chunks.length).toBe(3);
+    for (const call of chunks) {
+      expect(call.fields['planetTag']).toBe('board');
+    }
+    expect(chunks[0]!.fields['channel']).toBeUndefined();
+    expect(chunks[2]!.fields['channel']).toBe('projects');
+  });
+
+  it('a 507 CapReached refusal surfaces as the typed AmpError and stops the loop', async () => {
+    failIndex = 1;
+    failStatus = 507;
+    const c = client();
+    await expect(c.upload(TEN, 'projects', { chunkSize: 4 })).rejects.toMatchObject({
+      name: 'AmpError', status: 507, code: AmpErrorCode.CapReached,
+    });
+    expect(calls.filter(call => call.path === '/upload/chunk').length).toBe(2);
   });
 });
 

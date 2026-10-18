@@ -475,7 +475,10 @@ export interface AmpMutationResult {
  * BlobRef mirrors the amp.Tag the server returns from /upload and
  * /media/resolve.  UID is the blob's base32 tag.UID; URI is the stream URL
  * (server-populated on resolve); I carries the plaintext byte length when
- * Units = Bytes.
+ * Units = Bytes.  Cell is the BlobRef cell the upload wrote (webapi
+ * UploadResponse): persist it with the BlobRef — resolveMedia sends it by
+ * default, so a sealed blob resolves on any node holding its bytes and the
+ * cell (SKILL §4.4).
  */
 export interface BlobRef {
   UID: string;             // blob tag.UID, base32
@@ -483,10 +486,11 @@ export interface BlobRef {
   ContentTypeRaw?: string;
   I?: number;              // plaintext byte length (when Units = Bytes)
   Units?: number;
+  Cell?: Address;          // the std.Attr.BlobRef cell the upload wrote (packed 3-UID Address); absent when none was written
 }
 
 export interface UploadOpts {
-  attr?: string;                              // attr to associate (optional)
+  attr?: string;                              // 'amp.blob.BlobRef' puts the BlobRef cell on the channel's node; else the uploads node (SKILL §4.4)
   planetTag?: string;                         // target planet (optional)
   metadata?: Record<string, unknown>;
   onProgress?: (pct: number) => void;         // one tick per chunk ack (chunked path); 100 on completion

@@ -13,6 +13,20 @@ export function mediaTagFor(blob: string | BlobRef): BlobRef {
   return typeof blob === 'string' ? { UID: blob } : blob;
 }
 
+/**
+ * The Tag the hook posts, built from the effect-key scalars: UID,
+ * ContentTypeRaw, I, Units and the Tag's own Cell (the BlobRef cell its upload
+ * wrote, which the client's resolveMedia sends when no cell argument does).
+ */
+export function postedMediaTag(fields: Pick<BlobRef, 'UID' | 'ContentTypeRaw' | 'I' | 'Units' | 'Cell'>): BlobRef {
+  const posted: BlobRef = { UID: fields.UID };
+  if (fields.ContentTypeRaw !== undefined) posted.ContentTypeRaw = fields.ContentTypeRaw;
+  if (fields.I !== undefined) posted.I = fields.I;
+  if (fields.Units !== undefined) posted.Units = fields.Units;
+  if (fields.Cell !== undefined) posted.Cell = fields.Cell;
+  return posted;
+}
+
 /** What useAmpMedia settles to once resolve answers or fails. */
 export interface MediaResolution {
   url: string | null;
@@ -77,9 +91,9 @@ export async function refreshMediaURL(
  * served MIME type + extension); a bare UID is accepted, degraded to an
  * octet-stream download.  Pass the result `url` to <img>/<video>/<audio>, and bind
  * `refresh` to the element's onError — past the server's idle expiry or the
- * token lifetime the URL 404s until a refresh re-resolves it.  Pass cell (the
- * item's BlobRef cell, a packed Address) for a sealed blob the node did not
- * seal — the node completes the ref from the cell.
+ * token lifetime the URL 404s until a refresh re-resolves it.  A sealed blob
+ * resolves by its BlobRef cell: the BlobRef's own Cell (the upload's) rides
+ * along by default; pass cell (a packed Address) to name another.
  */
 export function useAmpMedia(blob: string | BlobRef, planetTag?: string, cell?: Address): AmpMediaResult {
   const { adapter } = useAmpContext();
@@ -93,7 +107,7 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string, cell?: A
   // Effect keys are the Tag's scalar fields, not the BlobRef identity: an
   // inline object literal is a fresh identity every render.
   const tag = mediaTagFor(blob);
-  const { UID: uid, ContentTypeRaw: contentTypeRaw, I: byteLen, Units: units } = tag;
+  const { UID: uid, ContentTypeRaw: contentTypeRaw, I: byteLen, Units: units, Cell: tagCell } = tag;
 
   useEffect(() => {
     if (!uid) {
@@ -106,11 +120,7 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string, cell?: A
     setLoading(true);
     setError(null);
 
-    const posted: BlobRef = { UID: uid };
-    if (contentTypeRaw !== undefined) posted.ContentTypeRaw = contentTypeRaw;
-    if (byteLen !== undefined) posted.I = byteLen;
-    if (units !== undefined) posted.Units = units;
-
+    const posted = postedMediaTag({ UID: uid, ContentTypeRaw: contentTypeRaw, I: byteLen, Units: units, Cell: tagCell });
     resolveMediaURL(adapter, posted, planetTag, cell).then((res) => {
       if (cancelled) return;
       setUrl(res.url);
@@ -121,21 +131,18 @@ export function useAmpMedia(blob: string | BlobRef, planetTag?: string, cell?: A
     });
 
     return () => { cancelled = true; };
-  }, [adapter, uid, contentTypeRaw, byteLen, units, planetTag, cell]);
+  }, [adapter, uid, contentTypeRaw, byteLen, units, tagCell, planetTag, cell]);
 
   const refresh = useCallback(async () => {
     if (!uid) return;
-    const posted: BlobRef = { UID: uid };
-    if (contentTypeRaw !== undefined) posted.ContentTypeRaw = contentTypeRaw;
-    if (byteLen !== undefined) posted.I = byteLen;
-    if (units !== undefined) posted.Units = units;
+    const posted = postedMediaTag({ UID: uid, ContentTypeRaw: contentTypeRaw, I: byteLen, Units: units, Cell: tagCell });
     const res = await refreshMediaURL(adapter, posted, planetTag, cell);
     setUrl(res.url);
     setContentType(res.contentType);
     setByteSize(res.byteSize);
     setError(res.error);
     setGeneration(prev => prev + 1);
-  }, [adapter, uid, contentTypeRaw, byteLen, units, planetTag, cell]);
+  }, [adapter, uid, contentTypeRaw, byteLen, units, tagCell, planetTag, cell]);
 
   return { url, loading, contentType, byteSize, error, refresh, generation };
 }

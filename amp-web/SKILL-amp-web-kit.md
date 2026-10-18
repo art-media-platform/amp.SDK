@@ -349,33 +349,45 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 ```
 POST   /api/v1/upload
        Content-Type: multipart/form-data
-       Fields: file (required), planetTag (optional)
-               channel, attr, metadata — reserved: sent by the SDK, IGNORED by
-               the server today; association happens via your follow-up item
-               write (below), never via these fields
-       Response: amp.Tag (UID + URI + ContentTypeRaw + I/Units=Bytes)
+       Fields: file (required), planetTag (optional; default = your home)
+               channel + attr — where the node writes the blob's BlobRef
+               cell: attr = "amp.blob.BlobRef" places it on channel's node;
+               any other or empty attr places it on the planet's uploads
+               node (the default).  metadata — reserved, dropped.
+       Response: 201 UploadResponse = amp.Tag (UID + URI + ContentTypeRaw +
+                 I/Units=Bytes) + Cell, the BlobRef cell the node wrote (a
+                 packed Address) — PERSIST it with the BlobRef; absent on a
+                 public planet you have not joined (its Tag resolves alone).
        Per-request body cap (node default 256 MiB), ADVERTISED on every
        upload-door response as X-Amp-Upload-Max-Bytes; a body past it is
-       refused 413 PayloadTooLarge — beyond it, the chunk door:
+       refused 413 PayloadTooLarge — beyond it, the chunk door.
+       507 CapReached: the planet's storage cap refused the upload before
+       any byte landed (the node reserves your declared bytes first); no
+       retry helps until the operator raises the cap.
 
 POST   /api/v1/upload/chunk
        Content-Type: multipart/form-data — one chunk per request, each inside
-       the advertised cap; no cap on the assembled upload
+       the advertised cap; the assembled upload is bounded by the planet's
+       storage cap, reserved chunk by chunk (507 CapReached on the chunk
+       that crosses it; the upload is dropped)
        Fields: uploadID (client-chosen, ≤128 bytes; namespaced per session),
                index (0-based, strictly sequential — one chunk in flight; an
                out-of-order or duplicate index is refused 409 and the upload
                stays at its expected index), file (the chunk bytes),
                complete=1 on the final chunk (its file-part filename names the
                blob; ContentType inferred from the extension), planetTag
-               (read on the final chunk)
+               (on EVERY chunk: the first names the planet the spill is
+               reserved on, the final names the blob's), channel + attr
+               (read on the final chunk, as on /upload)
        Response: 200 { uploadID, index, received } per chunk (received =
-                 cumulative bytes); 201 amp.Tag on complete — the same shape
-                 /upload returns.  An upload idle for an hour is swept by
-                 the node's upload sweeper (every five minutes, traffic or
-                 not); a spill orphaned by a node restart is reaped at boot.
+                 cumulative bytes); 201 UploadResponse on complete — the
+                 same shape /upload returns.  An upload idle for an hour is
+                 swept by the node's upload sweeper (every five minutes,
+                 traffic or not); a spill orphaned by a node restart is
+                 reaped at boot.
 
 POST   /api/v1/media/resolve
-       Body: { PlanetTag?, Blob: amp.Tag }
+       Body: { PlanetTag?, Blob: amp.Tag, Cell? }
        Response: amp.Tag (with URI filled by the host's asset publisher)
 
 GET    /www/{UID}.{ext}?t=<media token>
@@ -395,16 +407,17 @@ interface BlobRef {
                            // ContentTypeRaw — amp.Tag's raw content-type field
   I?: number;              // plaintext byte length (when Units = Bytes)
   Units?: number;
+  Cell?: Address;          // the BlobRef cell the upload wrote — persist it; resolveMedia sends it by default
 }
 ```
 
 **Caller-carries-the-Tag.** The cabinet (channel item that surfaced the BlobRef) is the source of truth for blob metadata.  When you need to render a blob in `<img>`/`<video>`, send the blob's `amp.Tag` (read from the cabinet) to `POST /api/v1/media/resolve`; the host's asset publisher maps it to a streamable `/www/{UID}.{ext}?t=<media token>` URL (`{ext}` = the Tag's MIME subtype; the token binds the URL to the blob, your session and its generation for the token lifetime — one hour by default — and is the credential `/www/` checks).  The publisher is in-memory — repeated resolves inside a token lifetime answer the same URL, vault outage / restart / cross-vault read all just republish on demand.  No cold-store window for filenames or ContentType; no persistent publisher state to migrate.
 
-**A sealed blob from another client resolves by cell.**  A blob the native client or the CLI uploaded into a sealed planet is recorded in an `Attr.BlobRef` cell (`amp.blob.BlobRef`, keyed by the asset's UID on the item's channel node); pass that cell's packed `Address` as `resolveMedia(blob, planetTag, cell)` (or `useAmpMedia(blob, planetTag, cell)`) and the node completes the ref from the cell under your session's keys — so the blob resolves on any node holding its bytes, not only the node that sealed it.  `Attr.BlobRef` is the only cell the node accepts, and the ref it holds must name your blob: any other cell refuses (404); a malformed `Cell` (not 3–5 packed UIDs) is a 400.  Without a cell, a sealed blob resolves only on the node that sealed it (its sealed-ref companion), which is what a web upload's own blob does today; a refused resolve is a 404 either way.
+**A sealed blob resolves by its BlobRef cell.**  Every upload writes the blob's full `amp.BlobRef` into an `Attr.BlobRef` cell (`amp.blob.BlobRef`, keyed by the asset's UID) — on the planet's uploads node by default, or on your `channel`'s node when you upload with `attr: 'amp.blob.BlobRef'` — and answers that cell's packed `Address` as `Cell`.  A blob the native client or the CLI uploaded is recorded the same way on the item's channel node.  `resolveMedia(blob)` sends the BlobRef's own `Cell`; pass `resolveMedia(blob, planetTag, cell)` (or `useAmpMedia(blob, planetTag, cell)`) to name another.  The node reads the cell under your session's keys and completes the ref from it — so a sealed blob resolves on any node holding its bytes and the cell, not only the node that sealed it.  `Attr.BlobRef` is the only cell the node accepts, and the ref it holds must name your blob: any other cell refuses (404); a malformed `Cell` (not 3–5 packed UIDs) is a 400.  Without a cell, a sealed blob resolves only on the node that sealed it (its sealed-ref companion); a planet-public blob resolves Tag-only anywhere.
 
-After upload, write a regular item that references the blob by ID (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })`) — the upload endpoint stores the blob bytes; the channel item is the addressable record that points at them. **This item write is the ONLY durable association** — the `channel`/`attr`/`metadata` form fields are reserved and dropped server-side today, so anything you want kept (caption, tags, attribution) goes in the item value, not the upload form.
+After upload, write a regular item that references the blob (typically `await upsert(channel, attr, blobRef.UID, { blobRef, ... })` — `blobRef` whole, `Cell` included) — the upload endpoint stores the bytes and writes the `BlobRef` cell; your item is the application record that points at them.  Keep that item off the cell's own address: under `attr: 'amp.blob.BlobRef'` the cell is `(channel, amp.blob.BlobRef, asset UID)`, and a planet-public blob's asset UID is its `UID`, so an item written there replaces the cell.  Anything else you want kept (caption, tags, attribution) goes in the item value: the `metadata` form field is reserved and dropped server-side.
 
-**The SDK picks the door.** `upload(file, channel, opts)` sends a file that fits in one chunk as a single `/upload` POST and streams a larger one through `/upload/chunk` — sequential chunks of `UploadOpts.chunkSize` (default `DefaultUploadChunkBytes`, 32 MiB) under one fresh `uploadID`, the final chunk sealing the assembly. `chunked: true | false` forces either door. Both return the same `BlobRef`; `onProgress` ticks once per chunk ack with the server-acknowledged percent, then 100 on the sealing response. **The server sizes the chunks.** The client never mirrors the node's per-request cap: it reads `X-Amp-Upload-Max-Bytes` from every upload-door response (refusals included) and clamps its chunk size to cap − `UploadChunkHeadroomBytes` (the multipart envelope's share). A chunk past a cap the client has not yet seen is refused 413 — the refusal touched no server state — and the same index is re-sent under the cap, the rest of the file re-chunked; a single `/upload` past the cap falls to the chunk door the same way (unless `chunked: false` pinned it). Any other refused chunk throws the typed `AmpError` (409 `Conflict`, 404 `NotFound`, 401 drops the session) and the client sends nothing further — v1 has no resume: retry the whole `upload()`.
+**The SDK picks the door.** `upload(file, channel, opts)` sends a file that fits in one chunk as a single `/upload` POST and streams a larger one through `/upload/chunk` — sequential chunks of `UploadOpts.chunkSize` (default `DefaultUploadChunkBytes`, 32 MiB) under one fresh `uploadID`, the final chunk sealing the assembly. `chunked: true | false` forces either door. Both return the same `BlobRef`; `onProgress` ticks once per chunk ack with the server-acknowledged percent, then 100 on the sealing response. **The server sizes the chunks.** The client never mirrors the node's per-request cap: it reads `X-Amp-Upload-Max-Bytes` from every upload-door response (refusals included) and clamps its chunk size to cap − `UploadChunkHeadroomBytes` (the multipart envelope's share). A chunk past a cap the client has not yet seen is refused 413 — the refusal touched no server state — and the same index is re-sent under the cap, the rest of the file re-chunked; a single `/upload` past the cap falls to the chunk door the same way (unless `chunked: false` pinned it). Any other refused chunk throws the typed `AmpError` (409 `Conflict`, 404 `NotFound`, 507 `CapReached`, 401 drops the session) and the client sends nothing further — v1 has no resume: retry the whole `upload()`.
 
 The `URI` in the upload response is a live stream URL, **host-instance-scoped** (the publisher is in-memory, §above): usable immediately, but re-resolve via `/media/resolve` on later reads or from another host rather than persisting it.
 
@@ -788,9 +801,10 @@ await withdraw('shares', 'link', itemID, {
 const { upload, progress, uploading } = useAmpUpload();
 
 const blobRef = await upload(file, 'projects', { attr: 'media' });
-// The follow-up item write is the ONLY durable association (§4.4) — captions,
+// blobRef.Cell is the BlobRef cell the node wrote (§4.4) — keep it with the
+// BlobRef: the follow-up item write is your application's record; captions,
 // tags, attribution all go in the item value (UploadOpts.metadata is a
-// reserved form field the server drops today):
+// reserved form field the server drops):
 await upsert('projects', 'media', blobRef.UID, {
   blobRef,
   filename: file.name,
@@ -816,10 +830,12 @@ The URL is **the credential**: a member resolve answers `/www/{UID}.{ext}?t=<med
 Pass the cabinet's `BlobRef` whole: the server publishes and serves under the
 POSTED Tag's `ContentTypeRaw` (empty ⇒ `text/plain`), so a bare UID string —
 accepted — publishes under `/www/{UID}.plain` and serves as an
-`application/octet-stream` download.  Resolves via
-`POST /api/v1/media/resolve` (`client.resolveMedia(blob, planetTag?, cell?)`); there
-is no client-built URL — when resolve fails `url` is null and `error` carries
-the failure (a revoked session fails here, as 401).
+`application/octet-stream` download; its `Cell` (the upload's BlobRef cell)
+rides along, so a sealed blob resolves by it without a `cell` argument.
+Resolves via `POST /api/v1/media/resolve`
+(`client.resolveMedia(blob, planetTag?, cell?)`); there is no client-built URL —
+when resolve fails `url` is null and `error` carries the failure (a revoked
+session fails here, as 401).
 
 ### 5.6 Sealed-box helpers (§6.2)
 

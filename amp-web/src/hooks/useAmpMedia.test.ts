@@ -11,7 +11,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { BlobRef } from '../types.js';
-import { mediaTagFor, refreshMediaURL, resolveMediaURL } from './useAmpMedia.js';
+import { mediaTagFor, postedMediaTag, refreshMediaURL, resolveMediaURL } from './useAmpMedia.js';
 
 const UID = '06efv-w28sb-60036d-tm6dt-m6dtm';
 const CABINET: BlobRef = { UID, ContentTypeRaw: 'video/mp4', I: 10, Units: 2 };
@@ -102,6 +102,23 @@ describe('useAmpMedia resolve round', () => {
     await resolveMediaURL(server, CABINET, 'home', cell);
     await refreshMediaURL(server, CABINET, 'home', cell);
     expect(seen).toEqual([[CABINET, 'home', cell], [CABINET, 'home', cell]]);
+  });
+
+  it('posts the Tag\'s own Cell (the upload\'s BlobRef cell) by default, and only the resolve fields', async () => {
+    const cell = 'z41s2udrrbg06q1qry3f1rvg7vtt1jcwuz0pqj8my77ry1yrn13q4e67n47xrnyf2cy29fze1me36';
+    const uploaded: BlobRef = { ...CABINET, URI: '/www/stale?t=old', Cell: cell };
+    const posted = postedMediaTag(mediaTagFor(uploaded));
+    expect(posted).toEqual({ ...CABINET, Cell: cell });
+    const seen: Array<[BlobRef, string | undefined]> = [];
+    const server = {
+      async resolveMedia(blob: BlobRef, _planetTag?: string, cellArg?: string): Promise<BlobRef> {
+        seen.push([blob, cellArg]);
+        return { ...blob, URI: `/www/${blob.UID}.mp4?t=tok` };
+      },
+    };
+    await resolveMediaURL(server, posted);
+    expect(seen).toEqual([[{ ...CABINET, Cell: cell }, undefined]]);
+    expect(postedMediaTag(mediaTagFor(CABINET))).toEqual(CABINET);
   });
 
   it('a bare UID degrades to a UID-only Tag (server ⇒ text/plain)', async () => {
