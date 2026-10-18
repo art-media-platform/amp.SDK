@@ -75,7 +75,8 @@
     "_EditID": "06efv-w28sb-80048j-248j2-48j24",
     "_FromID": "06efv-w28sb-b005bp-bpbpb-pbpbp",
     "_UpdatedAt": "2026-07-02T12:34:56Z",
-    "Value": {"Title": "First post", "Body": "hello world"}
+    "Value": {"Title": "First post", "Body": "hello world"},
+    "_Address": "z41s2udrrbg06q1qry3f1rvg7vtt1jcwuz0pqj8my77ry1yrn13q4e67n47xrnyf2cy29fze1me36"
   },
   "Item.withdrawn": {
     "_ItemID": "06efv-w28sb-60036d-tm6dt-m6dtm",

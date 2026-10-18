@@ -390,6 +390,7 @@ export interface AmpItemMeta {
   _FromID: string;
   _UpdatedAt: string;         // ISO-8601, derived from the item's tag.UID
   _Withdrawn?: WithdrawNote;  // present when a Withdraw cites this item
+  _Address?: Address;         // the item's cell (packed node, attr, item) — an amp.blob.BlobRef item's is the Cell resolveMedia takes
 }
 
 // ── Query ───────────────────────────────────────────────────────────

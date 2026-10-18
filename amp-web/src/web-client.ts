@@ -115,6 +115,7 @@ interface WireItem {
   _UpdatedAt: string;
   Value: Record<string, unknown>;
   _Withdrawn?: WireWithdrawNote;
+  _Address?: Address;
 }
 
 /**
@@ -289,6 +290,7 @@ export class AmpWebClient implements AmpAdapter {
       _FromID: item._FromID,
       _UpdatedAt: item._UpdatedAt,
       _Withdrawn: item._Withdrawn ? wireToWithdrawNote(item._Withdrawn) : undefined,
+      _Address: item._Address,
     } as T & AmpItemMeta;
   }
 

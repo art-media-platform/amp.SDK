@@ -125,7 +125,7 @@ const SHAPES: Record<string, ShapeSpec> = {
   },
   Item: {
     required: ['_ItemID', '_EditID', '_FromID', '_UpdatedAt', 'Value'],
-    optional: ['_Withdrawn'],
+    optional: ['_Withdrawn', '_Address'],
     nested: { _Withdrawn: 'WithdrawNote' },
   },
   ListResponse: {

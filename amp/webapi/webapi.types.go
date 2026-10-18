@@ -246,8 +246,12 @@ type TxResponse struct {
 }
 
 // Item is one CRDT entry on the wire.  Underscore-prefixed fields surface the
-// protocol's metadata (item / edit / from IDs, server-stamp time) alongside
-// the application value — the `_` sigil keeps them clear of app data keys.
+// protocol's metadata (item / edit / from IDs, server-stamp time, the cell's
+// address) alongside the application value — the `_` sigil keeps them clear
+// of app data keys.  Address is the item's cell, the packed 3-UID amp.Address
+// (node, attr, item): a client names a cell back to the node with it — a
+// std.Attr.BlobRef item's as MediaResolveRequest.Cell — and never packs one
+// itself; the one packing site is amp.Address.MarshalJSON (AD-app-www §3.4).
 type Item struct {
 	ItemID    tag.UID         `json:"_ItemID"`
 	EditID    tag.UID         `json:"_EditID"`
@@ -255,6 +259,7 @@ type Item struct {
 	UpdatedAt string          `json:"_UpdatedAt"` // ISO-8601, derived from ItemID's tag.UID
 	Value     json.RawMessage `json:"Value"`
 	Withdrawn *WithdrawNote   `json:"_Withdrawn,omitempty"`
+	Address   *amp.Address    `json:"_Address,omitempty"`
 }
 
 // ListResponse is the body of GET /api/v1/channels/:ch/attrs/:attr/items.
