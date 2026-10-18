@@ -28,6 +28,51 @@ func generateSigningKey(t *testing.T, enc safe.Enclave, ringID tag.UID) safe.Pub
 	return pub
 }
 
+// fullSigningPair returns a fresh signing keypair, private half included.
+func fullSigningPair(t *testing.T) safe.KeyPair {
+	t.Helper()
+	kit, err := safe.CryptoKit(safe.Crypto.Poly25519.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pair := safe.KeyPair{
+		Pub: safe.PubKey{
+			CryptoKitID: kit.ID,
+			KeyType:     safe.KeyType_SigningKey,
+			TimeID:      tag.NowID(),
+		},
+	}
+	if err := kit.Signing.Generate(rand.Reader, &pair); err != nil {
+		t.Fatal(err)
+	}
+	return pair
+}
+
+// uncoordinatedStore reads and writes a tome without joining its handles'
+// coordination point (a distinct identity): the tome as another process
+// sees and writes it.
+type uncoordinatedStore struct {
+	inner safe.TomeStore
+}
+
+func (store *uncoordinatedStore) Load(ctx context.Context) (*safe.SealedTome, error) {
+	return store.inner.Load(ctx)
+}
+
+func (store *uncoordinatedStore) Save(ctx context.Context, sealed *safe.SealedTome) error {
+	return store.inner.Save(ctx, sealed)
+}
+
+// rawKeyOnDisk reports whether the tome holds ref's key as written, read
+// through an uncoordinated handle that knows no removal.
+func rawKeyOnDisk(t *testing.T, store safe.TomeStore, guard safe.Guard, ref *safe.KeyRef) bool {
+	t.Helper()
+	reader := openCloseTestEnclave(t, &uncoordinatedStore{inner: store}, guard)
+	defer reader.Close(context.Background())
+	_, err := reader.FetchPubKey(ref)
+	return err == nil
+}
+
 func siblingRig(t *testing.T) (safe.TomeStore, safe.Guard) {
 	t.Helper()
 	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "enclave.tome"))
@@ -190,6 +235,92 @@ func TestEnclave_ReimportAfterRemovalKeepsPrivateHalfRemoved(t *testing.T) {
 	closeHandle(t, holder)
 }
 
+// A removal holds against a stale writer — a tome saved before the removal
+// and written back after it, by a writer outside the tome lock: a handle
+// opened after the stale write never serves the removed key, and the
+// remover's next persist writes it out of the tome again.
+func TestEnclave_RemovalHoldsAgainstStaleWriter(t *testing.T) {
+	ctx := context.Background()
+	store, guard := siblingRig(t)
+	remover := openCloseTestEnclave(t, store, guard)
+	ringID := tag.NewID()
+	pub := generateSigningKey(t, remover, ringID)
+	ref := &safe.KeyRef{
+		Type:   safe.KeyType_SigningKey,
+		PubKey: pub.Bytes,
+	}
+	ref.SetKeyringID(ringID)
+	staleTome, err := store.Load(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := remover.RemoveKey(ctx, ref); err != nil {
+		t.Fatalf("RemoveKey: %v", err)
+	}
+	if err := store.Save(ctx, staleTome); err != nil {
+		t.Fatal(err)
+	}
+	if !rawKeyOnDisk(t, store, guard, ref) {
+		t.Fatal("premise void: the stale writer's tome lacks the removed key")
+	}
+	newcomer := openCloseTestEnclave(t, store, guard)
+	if _, err := newcomer.FetchPubKey(ref); err == nil {
+		t.Error("a handle opened after the stale write serves the removed key")
+	}
+	generateSigningKey(t, remover, tag.NewID())
+	if _, err := remover.FetchPubKey(ref); err == nil {
+		t.Error("the remover's reload restored the key it removed")
+	}
+	if rawKeyOnDisk(t, store, guard, ref) {
+		t.Error("the remover's persist kept the removed key in the tome")
+	}
+	closeHandle(t, newcomer)
+	closeHandle(t, remover)
+}
+
+// A re-install lifts a removal for every handle: a keypair removed and then
+// imported again stays in every view and on disk after a sibling — one that
+// held it before the removal — saves.
+func TestEnclave_ReinstallAfterRemovalHolds(t *testing.T) {
+	ctx := context.Background()
+	store, guard := siblingRig(t)
+	remover := openCloseTestEnclave(t, store, guard)
+	sibling := openCloseTestEnclave(t, store, guard)
+	ringID := tag.NewID()
+	pair := fullSigningPair(t)
+	if err := remover.ImportKey(ctx, ringID, pair); err != nil {
+		t.Fatal(err)
+	}
+	ref := &safe.KeyRef{
+		Type:   safe.KeyType_SigningKey,
+		PubKey: pair.Pub.Bytes,
+	}
+	ref.SetKeyringID(ringID)
+	if !sibling.CanSign(ref) {
+		t.Fatal("premise void: the sibling never served the imported keypair")
+	}
+	if err := remover.RemoveKey(ctx, ref); err != nil {
+		t.Fatalf("RemoveKey: %v", err)
+	}
+	if err := remover.ImportKey(ctx, ringID, pair); err != nil {
+		t.Fatalf("re-import: %v", err)
+	}
+	generateSigningKey(t, sibling, tag.NewID())
+	if !sibling.CanSign(ref) {
+		t.Error("the sibling's save dropped the re-installed key from its view")
+	}
+	if !remover.CanSign(ref) {
+		t.Error("the re-installed key left the remover's view")
+	}
+	reader := openCloseTestEnclave(t, store, guard)
+	if !reader.CanSign(ref) {
+		t.Error("the re-installed key is not on disk after the sibling's save")
+	}
+	closeHandle(t, reader)
+	closeHandle(t, sibling)
+	closeHandle(t, remover)
+}
+
 // A stale handle cannot replace a sibling's full keypair with a pub-only
 // record of the same key: the import collides with the reloaded record and
 // the private half stays on disk.
@@ -257,23 +388,6 @@ func TestEnclave_PersistRestoresRecordAStaleWriterDropped(t *testing.T) {
 func TestEnclave_ReloadKeepsThePrivateHalf(t *testing.T) {
 	ctx := context.Background()
 	store, guard := siblingRig(t)
-	kit, err := safe.CryptoKit(safe.Crypto.Poly25519.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	fullPair := func() safe.KeyPair {
-		pair := safe.KeyPair{
-			Pub: safe.PubKey{
-				CryptoKitID: kit.ID,
-				KeyType:     safe.KeyType_SigningKey,
-				TimeID:      tag.NowID(),
-			},
-		}
-		if err := kit.Signing.Generate(rand.Reader, &pair); err != nil {
-			t.Fatal(err)
-		}
-		return pair
-	}
 	// writeTomeHolding saves, as a writer that does not coordinate would, a
 	// tome holding only pair under ringID.
 	writeTomeHolding := func(ringID tag.UID, pair safe.KeyPair) {
@@ -303,7 +417,7 @@ func TestEnclave_ReloadKeepsThePrivateHalf(t *testing.T) {
 	holder := openCloseTestEnclave(t, store, guard)
 
 	// Held pub-only, disk full: the reload takes the disk's private half.
-	adoptedRing, adopted := tag.NewID(), fullPair()
+	adoptedRing, adopted := tag.NewID(), fullSigningPair(t)
 	if err := holder.ImportKey(ctx, adoptedRing, safe.KeyPair{Pub: adopted.Pub}); err != nil {
 		t.Fatal(err)
 	}
@@ -314,7 +428,7 @@ func TestEnclave_ReloadKeepsThePrivateHalf(t *testing.T) {
 	}
 
 	// Held full, disk pub-only: the holder's persist writes its private half back.
-	mintedRing, minted := tag.NewID(), fullPair()
+	mintedRing, minted := tag.NewID(), fullSigningPair(t)
 	if err := holder.ImportKey(ctx, mintedRing, minted); err != nil {
 		t.Fatal(err)
 	}
