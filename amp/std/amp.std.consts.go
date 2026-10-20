@@ -156,6 +156,7 @@ var Attr = struct {
 	BlobRef                            tag.Name
 	NodeBlobs                          tag.Name
 	BlobProgress                       tag.Name
+	Uploads                            tag.Name
 	NodeAttr                           tag.Name
 	NodeCredentials                    tag.Name
 	NodeLog                            tag.Name
@@ -423,6 +424,10 @@ var Attr = struct {
 	BlobRef:      tag.Name{ID: tag.UID{0xF390C57CD7C15B45, 0x13F1CF7F07D7A047}, Text: "amp.blob.BlobRef"},      // 7mk32-rtpy1-ce2j7w-fggw3-xg827
 	NodeBlobs:    tag.Name{ID: tag.UID{0xAD0BA6086B8A5202, 0xB15FFA7352307DEF}, Text: "amp.blob.node.BlobRef"}, // 5e1fm-0huwb-b81c2r-zufe9-30zgg
 	BlobProgress: tag.Name{ID: tag.UID{0x3B8B4210F065A307, 0xA3C1A421CADE791B}, Text: "amp.blob.BlobProgress"}, // 1vje1-11w35-nd3u7h-e4475-ewy8v
+
+	// ─── The web uploads root: a web upload's BlobRef cell lands on its author's ───
+	// own child node, uploads/<member> (std.UploadsNode, AD-app-www §3.4).
+	Uploads: tag.Name{ID: tag.UID{0x5B209AB6FC3161FC, 0x597F41F31E388874}, Text: "uploads"}, // 2v42e-cez1j-d7y5kz-u1ydg-3j23n
 
 	// ─── The node's own operational records.  Credentials: one sealed cell per ───
 	// provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on

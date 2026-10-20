@@ -269,6 +269,10 @@ export const Attr = {
     NodeBlobs                         : { id: [0xAD0BA6086B8A5202n, 0xB15FFA7352307DEFn], text: "amp.blob.node.BlobRef" },  // 5e1fm-0huwb-b81c2r-zufe9-30zgg
     BlobProgress                      : { id: [0x3B8B4210F065A307n, 0xA3C1A421CADE791Bn], text: "amp.blob.BlobProgress" },  // 1vje1-11w35-nd3u7h-e4475-ewy8v
 
+    // ─── The web uploads root: a web upload's BlobRef cell lands on its author's ───
+    // own child node, uploads/<member> (std.UploadsNode, AD-app-www §3.4).
+    Uploads                           : { id: [0x5B209AB6FC3161FCn, 0x597F41F31E388874n], text: "uploads" },  // 2v42e-cez1j-d7y5kz-u1ydg-3j23n
+
     // ─── The node's own operational records.  Credentials: one sealed cell per ───
     // provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
     // the node operator's confidential planet — a safe.SealedValue box whose

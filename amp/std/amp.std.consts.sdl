@@ -282,6 +282,10 @@ tags Attr {
         BlobProgress "BlobProgress" // the ?progress=1 pin's observation, latest-wins at one item (AD-app-www §6.10)
     }
 
+    // The web uploads root: a web upload's BlobRef cell lands on its author's
+    // own child node, uploads/<member> (std.UploadsNode, AD-app-www §3.4).
+    Uploads "uploads"
+
     // The node's own operational records.  Credentials: one sealed cell per
     // provider (ItemID = the provider name, e.g. `sendgrid`, `frisky`) on
     // the node operator's confidential planet — a safe.SealedValue box whose
