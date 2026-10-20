@@ -648,3 +648,73 @@ func TestEpochKeys_PendingShredSharedAcrossHandles(t *testing.T) {
 		t.Fatalf("Close A: %v", err)
 	}
 }
+
+// TestEpochKeys_StageKeyNeverElects pins StageKey: the staged key is held, the
+// scope's election stays where it was — across a reopen without Close too, so
+// the newest-held default never elects it — and SetCurrentEpoch elects it.  A
+// scope with no election before the stage has none after.
+func TestEpochKeys_StageKeyNeverElects(t *testing.T) {
+	ctx := context.Background()
+	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("stage-key"))
+	defer guard.Close()
+	eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("stage-key"))
+	if err != nil {
+		t.Fatalf("OpenEpochKeyStore: %v", err)
+	}
+	defer eks.Close(ctx)
+
+	elected := tag.NewID()
+	electedEpoch := tag.UID{100, 1}
+	stagedEpoch := tag.UID{200, 2}
+	putEpochKey(t, eks, elected, electedEpoch, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	unelected := tag.NewID()
+	for _, containerID := range []tag.UID{elected, unelected} {
+		err := eks.StageKey(ctx, safe.Scope(containerID), safe.SymKey{
+			CryptoKitID: safe.Crypto.Poly25519.ID,
+			EpochID:     stagedEpoch,
+			Role:        safe.KeyRole_ContentKey,
+			Bytes:       randomKeyBytes(t),
+		})
+		if err != nil {
+			t.Fatalf("StageKey: %v", err)
+		}
+	}
+
+	reopened, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("stage-key"))
+	if err != nil {
+		t.Fatalf("reopen without Close: %v", err)
+	}
+	defer reopened.Close(ctx)
+	for _, view := range []struct {
+		label string
+		store safe.EpochKeyStore
+	}{
+		{"staging handle", eks},
+		{"reopened tome", reopened},
+	} {
+		held, err := view.store.GetKey(safe.Scope(elected), stagedEpoch, safe.KeyRole_ContentKey)
+		if err != nil {
+			t.Fatalf("%s: the staged key is not held: %v", view.label, err)
+		}
+		held.Zero()
+		current, err := view.store.GetCurrentKey(safe.Scope(elected), safe.KeyRole_ContentKey)
+		if err != nil || current.EpochID != electedEpoch {
+			t.Errorf("%s: current %s (%v), want the elected %s", view.label, current.EpochID.Base32(), err, electedEpoch.Base32())
+		}
+		current.Zero()
+		if current, err := view.store.GetCurrentKey(safe.Scope(unelected), safe.KeyRole_ContentKey); err == nil {
+			current.Zero()
+			t.Errorf("%s: a scope with no election elected the staged key %s", view.label, current.EpochID.Base32())
+		}
+	}
+
+	if err := eks.SetCurrentEpoch(ctx, safe.Scope(elected), stagedEpoch); err != nil {
+		t.Fatalf("SetCurrentEpoch(staged): %v", err)
+	}
+	current, err := eks.GetCurrentKey(safe.Scope(elected), safe.KeyRole_ContentKey)
+	if err != nil || current.EpochID != stagedEpoch {
+		t.Fatalf("after SetCurrentEpoch: current %s (%v), want %s", current.EpochID.Base32(), err, stagedEpoch.Base32())
+	}
+	current.Zero()
+}

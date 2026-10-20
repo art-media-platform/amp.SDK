@@ -216,6 +216,13 @@ type EpochKeyStore interface {
 	// An equal retry persists before success. Caller owns key.Bytes.
 	InstallKey(ctx context.Context, scope KeyScope, key SymKey) (bool, error)
 
+	// StageKey replaces the addressed role as PutKey does but never elects
+	// it: the scope's current epoch stays as elected, recorded in the tome so
+	// a reopen does not elect the staged key as the newest held.  A rotation
+	// stages its ContentKey until its epoch commits, then SetCurrentEpoch
+	// elects it (SD-security-sync §20.1).
+	StageKey(ctx context.Context, scope KeyScope, key SymKey) error
+
 	// GetKey returns an owned copy; the caller must zero its Bytes.
 	GetKey(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error)
 	GetCurrentKey(scope KeyScope, role KeyRole) (SymKey, error)

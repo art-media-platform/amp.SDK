@@ -292,16 +292,31 @@ func (eks *epochKeyStore) refreshLocked(ctx context.Context) error {
 	return nil
 }
 
+// putMode is how putKey treats held material and the scope's election.
+type putMode int32
+
+const (
+	putReplace putMode = iota + 1 // PutKey: replace; elect the newest
+	putInstall                    // InstallKey: install absent; elect the newest
+	putStage                      // StageKey: replace; never elect
+)
+
 func (eks *epochKeyStore) PutKey(ctx context.Context, scope KeyScope, key SymKey) error {
-	_, err := eks.putKey(ctx, scope, key, false)
+	_, err := eks.putKey(ctx, scope, key, putReplace)
 	return err
 }
 
 func (eks *epochKeyStore) InstallKey(ctx context.Context, scope KeyScope, key SymKey) (bool, error) {
-	return eks.putKey(ctx, scope, key, true)
+	return eks.putKey(ctx, scope, key, putInstall)
 }
 
-func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey, compare bool) (bool, error) {
+func (eks *epochKeyStore) StageKey(ctx context.Context, scope KeyScope, key SymKey) error {
+	_, err := eks.putKey(ctx, scope, key, putStage)
+	return err
+}
+
+func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey, mode putMode) (bool, error) {
+	compare := mode == putInstall
 	eks.mu.Lock()
 	defer eks.mu.Unlock()
 	if eks.closed {
@@ -367,7 +382,13 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 			Key:  append([]byte(nil), key.Bytes...),
 		})
 	}
-	if !compare || installed {
+	switch {
+	case mode == putStage:
+		// The election as it stands, recorded explicitly: a reopen otherwise
+		// elects the newest held key (loadState).
+		elected := state.current[scope]
+		state.current[scope] = elected
+	case !compare || installed:
 		if current := state.current[scope]; current.IsNil() || key.EpochID.CompareTo(current) > 0 {
 			state.current[scope] = key.EpochID
 		}
