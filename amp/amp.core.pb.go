@@ -3382,6 +3382,24 @@ func (x *PlanetCharter) GetGenesisRequiredSignatures() int32 {
 // (Mark) lives here so a spoof rename requires convening the quorum, not a lone
 // admin write.  Non-identity Brand fields (home URLs, links, install targets,
 // hash-pinned BundledCrates) stay on the admin-mutable Brand attr.
+//
+// FIELD-NUMBER BANDS (ZO-design-conventions §2.8).  A successor's Terms are
+// its predecessor's, cloned (amp.NextEpochTerms), so a binary handles a field
+// it does not know by the field's number.  A new field takes its number from
+// the band of its disposition:
+//
+//	1–499      carried to the successor unless a template sets it
+//	500–999    epoch-local: never carried
+//	1000–1999  must-understand: a binary that does not know the field refuses
+//	           to author a successor of an epoch carrying it; vaults still
+//	           admit that epoch and readers still read it.  Stays empty unless
+//	           the field's entry states why carry or drop cannot serve: such
+//	           a field blocks rotation, key retraction included, on every
+//	           older binary.
+//	≥ 2000     unallocated: refused as must-understand
+//
+// Fields 1–34 predate the bands; amp.NextEpochTerms classifies each by number.
+// TermsSchema stays 1; no added field raises it.
 type EpochTerms struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Layout version of this EpochTerms.
