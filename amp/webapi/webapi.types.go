@@ -355,10 +355,9 @@ type MediaResolveRequest struct {
 // rendered through amp.Tag's own JSON, plus Cell, the std.Attr.BlobRef cell
 // the upload wrote (the 3-UID Address: node, attr, item; PlanetTag names the
 // planet).  A later resolve names it (MediaResolveRequest.Cell), so a sealed
-// blob resolves on any node holding the cell.  Cell is absent
-// when the upload wrote none: a planet-public upload whose cell commit was
-// refused for permission — a planet the member never joined — (its Tag-only
-// resolve serves it), or a fixture backend (AD-app-www §3.4).
+// blob resolves on any node holding the cell.  A node answers Cell on every
+// upload it admits — a refused cell commit refuses the upload — so Cell is
+// absent only from a fixture backend (AD-app-www §3.4).
 type UploadResponse struct {
 	Tag  *amp.Tag
 	Cell *amp.Address
