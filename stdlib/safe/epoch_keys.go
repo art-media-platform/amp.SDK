@@ -443,6 +443,32 @@ func (eks *epochKeyStore) HeldEpochs(scope KeyScope) ([]tag.UID, error) {
 	return held, nil
 }
 
+func (eks *epochKeyStore) HeldScopes() ([]KeyScope, error) {
+	eks.mu.Lock()
+	defer eks.mu.Unlock()
+	if eks.closed {
+		return nil, ErrStoreClosed
+	}
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	if err := eks.refreshLocked(context.Background()); err != nil {
+		return nil, err
+	}
+	seen := map[KeyScope]struct{}{}
+	held := []KeyScope{}
+	for address, entry := range eks.state.keys {
+		if len(entry.RoleKeys) == 0 {
+			continue
+		}
+		if _, listed := seen[address.scope]; listed {
+			continue
+		}
+		seen[address.scope] = struct{}{}
+		held = append(held, address.scope)
+	}
+	return held, nil
+}
+
 func (state *epochState) get(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error) {
 	address := epochAddress{
 		scope: scope,

@@ -231,6 +231,11 @@ type EpochKeyStore interface {
 	// in no order — a shredded epoch is not held.  A key reaper reads it to
 	// find held epochs nothing else names.
 	HeldEpochs(scope KeyScope) ([]tag.UID, error)
+
+	// HeldScopes lists the scopes holding key material, in no order — a
+	// scope whose every epoch is shredded is not held.  A key reaper walks it
+	// to reach scopes nothing else names.
+	HeldScopes() ([]KeyScope, error)
 	SetCurrentEpoch(ctx context.Context, scope KeyScope, epochID tag.UID) error
 
 	// ResolveChannelScope resolves one channel across ALL ownership claims,

@@ -750,3 +750,45 @@ func TestEpochKeys_HeldEpochs(t *testing.T) {
 		t.Fatalf("held %v, want only %s", held, kept.Base32())
 	}
 }
+
+func TestEpochKeys_HeldScopes(t *testing.T) {
+	ctx := context.Background()
+	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("held-scopes"))
+	defer guard.Close()
+	eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("held-scopes"))
+	if err != nil {
+		t.Fatalf("OpenEpochKeyStore: %v", err)
+	}
+	defer eks.Close(ctx)
+
+	kept := tag.NewID()
+	emptied := tag.NewID()
+	channel := safe.ChannelScope(kept, tag.NewID())
+	putEpochKey(t, eks, kept, tag.UID{100, 1}, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	putEpochKey(t, eks, emptied, tag.UID{200, 2}, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	if err := eks.PutKey(ctx, channel, safe.SymKey{
+		CryptoKitID: safe.Crypto.Poly25519.ID,
+		EpochID:     tag.UID{300, 3},
+		Role:        safe.KeyRole_ContentKey,
+		Bytes:       randomKeyBytes(t),
+	}); err != nil {
+		t.Fatalf("PutKey(channel): %v", err)
+	}
+	if err := eks.ShredKeys(ctx, safe.Scope(emptied), []tag.UID{{200, 2}}); err != nil {
+		t.Fatalf("ShredKeys: %v", err)
+	}
+	held, err := eks.HeldScopes()
+	if err != nil {
+		t.Fatalf("HeldScopes: %v", err)
+	}
+	want := map[safe.KeyScope]bool{safe.Scope(kept): true, channel: true}
+	if len(held) != len(want) {
+		t.Fatalf("held %v, want the planet scope and the channel scope only", held)
+	}
+	for _, scope := range held {
+		if !want[scope] {
+			t.Fatalf("held %v names a scope with no key material", scope)
+		}
+	}
+}
