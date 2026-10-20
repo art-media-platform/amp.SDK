@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
+	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // ── PlanetEpoch: three-layer verbatim-signed authority ────────────────────────
@@ -171,16 +174,18 @@ func (pe *PlanetEpoch) VerifyCoSignature(cosig *CoSignature, signerPubKey []byte
 	return safe.VerifySignature(signerKit, cosig.Signature, digest, signerPubKey)
 }
 
-// AssembleEpoch marshals charter + terms exactly ONCE, binds the Charter hash
-// into Terms (so charter continuity is checkable from the small Terms alone),
-// and returns a PlanetEpoch envelope ready for co-signing.  The returned
-// envelope's Charter/Terms bytes are the verbatim signed artifact; SignedBytes
-// over them yields the FRAME each founder signs.
+// AssembleEpoch builds an epoch from a parsed Charter: it marshals charter +
+// terms exactly ONCE, binds the Charter hash into Terms (so charter continuity
+// is checkable from the small Terms alone), and returns a PlanetEpoch envelope
+// ready for co-signing.  The returned envelope's Charter/Terms bytes are the
+// verbatim signed artifact; SignedBytes over them yields the FRAME each
+// founder signs.
 //
-// hashKit selects the digest used for CharterHash (carried, not hardcoded).
-// charter.PlanetID / charter.GenesisEpoch and terms.EpochTag must already be set
-// by the caller (genesis builder); for genesis, terms.PreviousEpoch is nil and
-// terms.EpochHeight is 0.
+// AssembleEpoch is the genesis builder: hashKit selects the digest used for
+// CharterHash (carried, not hardcoded); charter.PlanetID /
+// charter.GenesisEpoch and terms.EpochTag must already be set, with
+// terms.PreviousEpoch nil and terms.EpochHeight 0.  A successor carries its
+// predecessor's STORED Charter bytes instead (AssembleSuccessor).
 func AssembleEpoch(charter *PlanetCharter, terms *EpochTerms, hashKit safe.HashKitID) (*PlanetEpoch, error) {
 	if charter == nil || terms == nil {
 		return nil, status.Code_BadRequest.Error("amp: AssembleEpoch needs charter + terms")
@@ -189,6 +194,30 @@ func AssembleEpoch(charter *PlanetCharter, terms *EpochTerms, hashKit safe.HashK
 	if err != nil {
 		return nil, err
 	}
+	return assembleLayers(charterBytes, terms, hashKit)
+}
+
+// AssembleSuccessor assembles the successor of prev from its Terms (built by
+// NextEpochTerms).  The Charter is a copy of prev's STORED bytes, never a
+// re-marshal of the parsed Charter, so a Charter stored in any valid field
+// order keeps its byte identity (SD-canonization-spec §2.2.1); CharterHash is
+// their digest under prev's HashKit, which a chain keeps
+// (VerifyCharterContinuity).
+func AssembleSuccessor(prev *PlanetEpoch, terms *EpochTerms) (*PlanetEpoch, error) {
+	if terms == nil || len(prev.GetCharter()) == 0 {
+		return nil, status.Code_BadRequest.Error("amp: AssembleSuccessor needs a predecessor with a Charter + terms")
+	}
+	prevTerms, err := prev.ParsedTerms()
+	if err != nil {
+		return nil, err
+	}
+	return assembleLayers(bytes.Clone(prev.Charter), terms, prevTerms.EffectiveHashKit())
+}
+
+// assembleLayers binds charterBytes into terms (HashKit, and CharterHash under
+// it), marshals terms once, and returns the unsigned envelope — the one
+// assembly site under AssembleEpoch and AssembleSuccessor.
+func assembleLayers(charterBytes []byte, terms *EpochTerms, hashKit safe.HashKitID) (*PlanetEpoch, error) {
 	digest, err := hashBytes(hashKit, charterBytes)
 	if err != nil {
 		return nil, err
@@ -204,6 +233,447 @@ func AssembleEpoch(charter *PlanetCharter, terms *EpochTerms, hashKit safe.HashK
 		Terms:    termsBytes,
 		EpochTag: terms.EpochTag, // unsigned copy; Terms is authoritative
 	}, nil
+}
+
+// ── Successor Terms: the banded clone carry (SD-security-sync §4.4) ──────────
+//
+// Every epoch's Terms derive through NextEpochTerms: a node's rotation, the
+// client's check of a frame it co-signs (VerifySuccessor), and genesis (no
+// predecessor).  The predecessor is cloned, so a field this binary does not
+// know survives the clone; each top-level field then resolves by its class —
+// fields 1–34 by termsFieldTable, every other number by its band
+// (ZO-design-conventions §2.8).
+
+// TermsChange is what one epoch changes over its predecessor's Terms.
+type TermsChange struct {
+	// Template holds the terms this epoch sets.  Without Paths, a set
+	// top-level term replaces the predecessor's and a zero term carries.
+	Template *EpochTerms
+
+	// Paths names the terms this epoch sets or clears, each a dotted proto
+	// field path ("Label", "VaultConfig.VaultAddrs"): a path the Template
+	// holds a value at sets it, a path it holds none at clears it, and a
+	// repeated or message value replaces whole.  Every term the Template
+	// sets must be named.
+	Paths []string
+
+	// EpochTag is the new epoch's own identity.
+	EpochTag *Tag
+
+	// IntroduceSealedSince sets ContentSealedSince to EpochTag when the
+	// predecessor carries none: a Confidential genesis, or the one rotation
+	// that introduces the marker (SD-security-sync §7.7).
+	IntroduceSealedSince bool
+}
+
+// termsClass is how a successor derives one top-level EpochTerms field.
+type termsClass int32
+
+const (
+	termsChain           termsClass = iota + 1 // the chain position
+	termsAssembled                             // set by assembly
+	termsKit                                   // template's suite pair, or carried
+	termsCarry                                 // carried; a template sets it
+	termsCarryOnly                             // carried; no template sets it
+	termsTemplateOnly                          // the template's, never carried
+	termsPredecessorOnly                       // carried; IntroduceSealedSince
+	termsMustUnderstand                        // derived, else refused
+	termsUnallocated                           // refused
+)
+
+// EpochTerms field-number band edges (ZO-design-conventions §2.8).
+const (
+	termsBandEpochLocal     = 500  // 500–999: epoch-local, dropped
+	termsBandMustUnderstand = 1000 // 1000–1999: must-understand
+	termsBandUnallocated    = 2000 // ≥ 2000: unallocated
+)
+
+// termsFieldTable classifies EpochTerms fields 1–34 by NUMBER; the name rides
+// in the comment, so a field rename touches no code here.
+var termsFieldTable = map[protoreflect.FieldNumber]termsClass{
+	1:  termsChain,           // TermsSchema
+	2:  termsChain,           // EpochTag
+	3:  termsChain,           // PreviousEpoch
+	4:  termsChain,           // EpochHeight
+	5:  termsAssembled,       // HashKit
+	6:  termsAssembled,       // CharterHash
+	7:  termsKit,             // CryptoKitID_0
+	8:  termsKit,             // CryptoKitID_1
+	10: termsCarry,           // Label
+	11: termsCarry,           // Mark
+	12: termsCarry,           // Foyer
+	13: termsCarry,           // Index
+	16: termsCarry,           // GovernanceGroup
+	18: termsCarry,           // RequiredSignatures
+	20: termsCarry,           // Seal
+	21: termsCarry,           // Admission
+	22: termsTemplateOnly,    // CodexEdition
+	25: termsCarry,           // VaultConfig
+	32: termsCarry,           // MaxGracePeriod
+	33: termsCarryOnly,       // LicenseClass
+	34: termsPredecessorOnly, // ContentSealedSince
+}
+
+// termsDerivation sets one must-understand field on a successor.
+type termsDerivation func(prev, next *EpochTerms, change TermsChange) error
+
+// termsDerivations holds the derivation of every known must-understand field
+// (1000–1999); the band test holds each such field to an entry.
+var termsDerivations = map[protoreflect.FieldNumber]termsDerivation{}
+
+// termsFieldClass classifies an EpochTerms field number, known or not: the
+// 1–34 table, else the band.
+func termsFieldClass(num protoreflect.FieldNumber) termsClass {
+	if class, listed := termsFieldTable[num]; listed {
+		return class
+	}
+	switch {
+	case num < termsBandEpochLocal:
+		return termsCarry
+	case num < termsBandMustUnderstand:
+		return termsTemplateOnly
+	case num < termsBandUnallocated:
+		return termsMustUnderstand
+	}
+	return termsUnallocated
+}
+
+// ErrTermsMustUnderstand wraps a refusal to author a successor of an epoch
+// carrying a field this binary must understand and cannot derive (ZO §2.8).
+// Vaults still admit such an epoch and readers still read it.
+var ErrTermsMustUnderstand = status.Code_Unimplemented.Error("amp: EpochTerms field must be understood to author a successor")
+
+// ErrTermsTemplate wraps a refused terms template or path: a field this binary
+// does not know, a term no template sets, or a path outside the grammar.
+var ErrTermsTemplate = status.Code_BadValue.Error("amp: EpochTerms template refused")
+
+// NextEpochTerms derives an epoch's Terms from its predecessor's (nil for a
+// genesis: no PreviousEpoch, height 0) and change — the one derivation site
+// for every epoch (SD-security-sync §4.4).  It clones prev and advances the
+// chain fields; resolves the clone's fields by class — an unknown field by
+// its band: 1–499 carried, 500–999 dropped, ≥ 1000 refused naming its number;
+// applies the template (TermsChange); and runs each must-understand field's
+// derivation.  HashKit and CharterHash are left to assembly
+// (AssembleSuccessor).  A template carrying a field this binary does not
+// know, at any depth, is refused.
+func NextEpochTerms(prev *EpochTerms, change TermsChange) (*EpochTerms, error) {
+	if change.EpochTag.UID().IsNil() {
+		return nil, status.Code_BadRequest.Error("amp: NextEpochTerms needs the new EpochTag")
+	}
+	template := &EpochTerms{}
+	if change.Template != nil {
+		template = proto.Clone(change.Template).(*EpochTerms)
+	}
+	if err := refuseUnknownFields(template.ProtoReflect(), ""); err != nil {
+		return nil, err
+	}
+	next := &EpochTerms{}
+	if prev != nil {
+		next = proto.Clone(prev).(*EpochTerms)
+		next.PreviousEpoch = next.EpochTag
+		next.EpochHeight = prev.GetEpochHeight() + 1
+	}
+	next.TermsSchema = 1
+	next.EpochTag = proto.Clone(change.EpochTag).(*Tag)
+	if err := applyTermsBands(next); err != nil {
+		return nil, err
+	}
+	applyTemplate := applyTermsTemplate
+	if len(change.Paths) > 0 {
+		applyTemplate = func(next, template *EpochTerms) error {
+			return applyTermsPaths(next, template, change.Paths)
+		}
+	}
+	if err := applyTemplate(next, template); err != nil {
+		return nil, err
+	}
+	if change.IntroduceSealedSince && next.GetContentSealedSince().UID().IsNil() {
+		next.ContentSealedSince = proto.Clone(change.EpochTag).(*Tag)
+	}
+	if err := applyTermsDerivations(prev, next, change); err != nil {
+		return nil, err
+	}
+	return next, nil
+}
+
+// applyTermsBands resolves the clone's fields by class before the template
+// applies: an unknown field carries (1–499), drops (500–999) or refuses
+// (≥ 1000); a known template-only field clears; a known field ≥ 2000
+// refuses.
+func applyTermsBands(next *EpochTerms) error {
+	msg := next.ProtoReflect()
+	raw := msg.GetUnknown()
+	kept := protoreflect.RawFields(nil)
+	for len(raw) > 0 {
+		num, _, size := protowire.ConsumeField(raw)
+		if size < 0 {
+			return status.Code_DataFailure.Errorf("amp: predecessor EpochTerms carries a malformed unknown field: %v", protowire.ParseError(size))
+		}
+		switch termsFieldClass(num) {
+		case termsCarry:
+			kept = append(kept, raw[:size]...)
+		case termsTemplateOnly:
+		default:
+			return fmt.Errorf("%w: the predecessor carries field %d, unknown to this binary", ErrTermsMustUnderstand, num)
+		}
+		raw = raw[size:]
+	}
+	msg.SetUnknown(kept)
+	fields := msg.Descriptor().Fields()
+	for i := 0; i < fields.Len(); i++ {
+		fd := fields.Get(i)
+		switch termsFieldClass(fd.Number()) {
+		case termsTemplateOnly:
+			msg.Clear(fd)
+		case termsUnallocated:
+			if msg.Has(fd) {
+				return fmt.Errorf("%w: the predecessor carries %s (%d), an unallocated number", ErrTermsMustUnderstand, fd.Name(), fd.Number())
+			}
+		}
+	}
+	return nil
+}
+
+// applyTermsTemplate is the no-path rule: a set top-level term replaces the
+// carried one and a zero term carries; the suite pair moves as one; a
+// template-only term takes the template's value; chain and assembled fields
+// on the template are ignored.  A carry-only or predecessor-only term set on
+// the template refuses.
+func applyTermsTemplate(next, template *EpochTerms) error {
+	dst := next.ProtoReflect()
+	err := error(nil)
+	template.ProtoReflect().Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
+		switch termsFieldClass(fd.Number()) {
+		case termsCarry, termsTemplateOnly:
+			dst.Set(fd, value)
+		case termsCarryOnly, termsPredecessorOnly, termsUnallocated:
+			err = fmt.Errorf("%w: the template sets %s (%d), which no template sets", ErrTermsTemplate, fd.Name(), fd.Number())
+		}
+		return err == nil
+	})
+	if kit := template.CryptoKitID(); err == nil && !kit.IsNil() {
+		next.SetCryptoKitID(kit)
+	}
+	return err
+}
+
+// applyTermsPaths applies the template at each named path: a value sets, an
+// absent one clears, a repeated or message leaf replaces whole (never
+// proto.Merge, which appends lists and merges messages).  A path resolves by
+// proto field names; it may name a carried term or a leaf beneath one, a
+// template-only term whole, or both suite halves.  Every term the template
+// sets must be named, or the template refuses: never a silent ignore.
+func applyTermsPaths(next, template *EpochTerms, paths []string) error {
+	resolved := make([][]protoreflect.FieldDescriptor, 0, len(paths))
+	named := make(map[string]bool, len(paths))
+	kitHalves := make(map[protoreflect.FieldNumber]bool, 2)
+	for _, path := range paths {
+		fields, err := resolveTermsPath(path)
+		if err != nil {
+			return err
+		}
+		top := fields[0]
+		switch termsFieldClass(top.Number()) {
+		case termsCarry:
+		case termsKit:
+			kitHalves[top.Number()] = true
+		case termsTemplateOnly:
+			if len(fields) > 1 {
+				return fmt.Errorf("%w: path %q: %s is set whole", ErrTermsTemplate, path, top.Name())
+			}
+		default:
+			return fmt.Errorf("%w: path %q: %s (%d) is not settable", ErrTermsTemplate, path, top.Name(), top.Number())
+		}
+		resolved = append(resolved, fields)
+		named[path] = true
+	}
+	if len(kitHalves) == 1 {
+		return fmt.Errorf("%w: a suite path must name both CryptoKitID halves", ErrTermsTemplate)
+	}
+	if err := refuseUnnamedFields(template.ProtoReflect(), "", named); err != nil {
+		return err
+	}
+	for _, fields := range resolved {
+		applyTermsPath(next.ProtoReflect(), template.ProtoReflect(), fields)
+	}
+	return nil
+}
+
+// resolveTermsPath resolves a dotted EpochTerms field path; a segment this
+// binary does not know, or a step through a repeated field, refuses.
+func resolveTermsPath(path string) ([]protoreflect.FieldDescriptor, error) {
+	desc := (&EpochTerms{}).ProtoReflect().Descriptor()
+	segments := strings.Split(path, ".")
+	fields := make([]protoreflect.FieldDescriptor, 0, len(segments))
+	for i, segment := range segments {
+		fd := desc.Fields().ByName(protoreflect.Name(segment))
+		if fd == nil {
+			return nil, fmt.Errorf("%w: path %q: %q is not a field this binary knows", ErrTermsTemplate, path, segment)
+		}
+		fields = append(fields, fd)
+		if i == len(segments)-1 {
+			break
+		}
+		if fd.Message() == nil || fd.IsList() || fd.IsMap() {
+			return nil, fmt.Errorf("%w: path %q: %s is not a singular message", ErrTermsTemplate, path, segment)
+		}
+		desc = fd.Message()
+	}
+	return fields, nil
+}
+
+// applyTermsPath sets or clears one resolved path's leaf on dst from src,
+// descending only where either side holds the parent.
+func applyTermsPath(dst, src protoreflect.Message, fields []protoreflect.FieldDescriptor) {
+	fd := fields[0]
+	if len(fields) == 1 {
+		if src.Has(fd) {
+			dst.Set(fd, src.Get(fd))
+		} else {
+			dst.Clear(fd)
+		}
+		return
+	}
+	if !src.Has(fd) && !dst.Has(fd) {
+		return
+	}
+	applyTermsPath(dst.Mutable(fd).Message(), src.Get(fd).Message(), fields[1:])
+}
+
+// refuseUnnamedFields refuses a template term no path names: each set field
+// at or beneath prefix must be named by a path, itself or a parent.
+func refuseUnnamedFields(msg protoreflect.Message, prefix string, named map[string]bool) error {
+	err := error(nil)
+	msg.Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
+		path := prefix + string(fd.Name())
+		switch {
+		case named[path]:
+		case fd.Message() != nil && !fd.IsList() && !fd.IsMap():
+			err = refuseUnnamedFields(value.Message(), path+".", named)
+		default:
+			err = fmt.Errorf("%w: the template sets %s, which no path names", ErrTermsTemplate, path)
+		}
+		return err == nil
+	})
+	return err
+}
+
+// refuseUnknownFields refuses a message carrying, at any depth, a field this
+// binary does not know: a template term it could neither apply nor check.
+func refuseUnknownFields(msg protoreflect.Message, prefix string) error {
+	if raw := msg.GetUnknown(); len(raw) > 0 {
+		nums := []protoreflect.FieldNumber{}
+		for len(raw) > 0 {
+			num, _, size := protowire.ConsumeField(raw)
+			if size < 0 {
+				break
+			}
+			nums = append(nums, num)
+			raw = raw[size:]
+		}
+		return fmt.Errorf("%w: the template sets %sfield(s) %v, unknown to this binary", ErrTermsTemplate, prefix, nums)
+	}
+	err := error(nil)
+	msg.Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
+		if fd.Message() == nil || fd.IsMap() {
+			return true
+		}
+		inner := prefix + string(fd.Name()) + "."
+		if !fd.IsList() {
+			err = refuseUnknownFields(value.Message(), inner)
+			return err == nil
+		}
+		list := value.List()
+		for i := 0; i < list.Len() && err == nil; i++ {
+			err = refuseUnknownFields(list.Get(i).Message(), inner)
+		}
+		return err == nil
+	})
+	return err
+}
+
+// applyTermsDerivations runs each known must-understand field's derivation;
+// a field without one refuses.
+func applyTermsDerivations(prev, next *EpochTerms, change TermsChange) error {
+	fields := next.ProtoReflect().Descriptor().Fields()
+	for i := 0; i < fields.Len(); i++ {
+		fd := fields.Get(i)
+		if termsFieldClass(fd.Number()) != termsMustUnderstand {
+			continue
+		}
+		derive, registered := termsDerivations[fd.Number()]
+		if !registered {
+			return fmt.Errorf("%w: %s (%d) has no derivation", ErrTermsMustUnderstand, fd.Name(), fd.Number())
+		}
+		if err := derive(prev, next, change); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// VerifySuccessor checks that pe is the successor of prev that change
+// derives: VerifyCharterContinuity(prev), then pe's Terms proto.Equal to
+// NextEpochTerms over prev's, fed pe's own EpochTag and assembled by
+// AssembleSuccessor — never byte equality, which differs when one side knows
+// a field the other does not.  The one successor check, for a client's frame
+// check before it co-signs and a node's refusal before it commits
+// (SD-security-sync §4.4).
+func (pe *PlanetEpoch) VerifySuccessor(prev *PlanetEpoch, change TermsChange) error {
+	if prev == nil {
+		return status.Code_BadRequest.Error("amp: VerifySuccessor needs the predecessor")
+	}
+	if err := pe.VerifyCharterContinuity(prev); err != nil {
+		return err
+	}
+	terms, err := pe.ParsedTerms()
+	if err != nil {
+		return err
+	}
+	prevTerms, err := prev.ParsedTerms()
+	if err != nil {
+		return err
+	}
+	change.EpochTag = terms.GetEpochTag()
+	derived, err := NextEpochTerms(prevTerms, change)
+	if err != nil {
+		return err
+	}
+	expected, err := AssembleSuccessor(prev, derived)
+	if err != nil {
+		return err
+	}
+	want, err := expected.ParsedTerms()
+	if err != nil {
+		return err
+	}
+	if !proto.Equal(terms, want) {
+		return status.Code_AuthFailed.Errorf("amp: successor Terms differ from their derivation at %v", termsDiff(terms, want))
+	}
+	return nil
+}
+
+// termsDiff names the top-level EpochTerms fields where got and want differ;
+// "unknown" when their unknown fields do.
+func termsDiff(got, want *EpochTerms) []string {
+	diffs := []string{}
+	gotMsg := got.ProtoReflect()
+	wantMsg := want.ProtoReflect()
+	fields := gotMsg.Descriptor().Fields()
+	for i := 0; i < fields.Len(); i++ {
+		fd := fields.Get(i)
+		if gotMsg.Has(fd) != wantMsg.Has(fd) || !gotMsg.Get(fd).Equal(wantMsg.Get(fd)) {
+			diffs = append(diffs, string(fd.Name()))
+		}
+	}
+	gotUnknown := &EpochTerms{}
+	gotUnknown.ProtoReflect().SetUnknown(gotMsg.GetUnknown())
+	wantUnknown := &EpochTerms{}
+	wantUnknown.ProtoReflect().SetUnknown(wantMsg.GetUnknown())
+	if !proto.Equal(gotUnknown, wantUnknown) {
+		diffs = append(diffs, "unknown")
+	}
+	return diffs
 }
 
 // EpochFromTerms wraps an EpochTerms in a runtime PlanetEpoch envelope carrying
