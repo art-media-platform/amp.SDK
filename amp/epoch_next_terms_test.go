@@ -17,6 +17,7 @@ import (
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
 	"github.com/art-media-platform/amp.SDK/stdlib/status"
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -833,5 +834,21 @@ func TestNextEpochTerms_MixedVersionMatrix(t *testing.T) {
 	})
 	if !errors.Is(err, amp.ErrTermsTemplate) || !strings.Contains(err.Error(), "40") {
 		t.Errorf("newer template: err = %v, want a refusal naming 40", err)
+	}
+}
+
+// FounderPlanetID's golden: the expected UID was computed outside Go
+// (Python hashlib.blake2s over "amp.planet-id.v1" ‖ founder ‖ nonce, each UID
+// big-endian, the 32-byte digest's little-endian 64-bit words folded
+// h0^h2, h1^h3); the derivation is a persistent address and never changes.
+func TestFounderPlanetID_Golden(t *testing.T) {
+	founder := tag.UID{0x0123456789ABCDEF, 0x1122334455667788}
+	nonce := tag.UID{0x0F0E0D0C0B0A0908, 0x0706050403020100}
+	want := tag.UID{0xBEB5FBA89A850645, 0x13704A9D7D060AC9}
+	if got := amp.FounderPlanetID(founder, nonce); got != want {
+		t.Fatalf("FounderPlanetID = %#x, want the oracle's %#x", got, want)
+	}
+	if amp.FounderPlanetID(nonce, founder) == want {
+		t.Fatal("FounderPlanetID is symmetric in founder and nonce")
 	}
 }

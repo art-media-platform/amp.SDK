@@ -843,6 +843,22 @@ func (pe *PlanetEpoch) VerifyGenesis(planetID tag.UID) error {
 	return nil
 }
 
+// planetIDDomain separates FounderPlanetID's hash from every other UID
+// derivation over the same bytes.
+const planetIDDomain = "amp.planet-id.v1"
+
+// FounderPlanetID is the PlanetID a founding takes when its request carries a
+// nonce: tag.UID_HashLiteral("amp.planet-id.v1" ‖ founderID ‖ nonce), each
+// UID as its 16 big-endian bytes (UID.AppendTo) — blake2s-256, folded to 128
+// bits.  The planet is bound to its founder, so no founding names a UID it
+// did not derive, another member's home planet (home UID = member UID)
+// included (DD-name-service.md §5.4).  The one derivation site: the CLI
+// derives it to check the challenge it co-signs; the node derives it to found.
+func FounderPlanetID(founderID, nonce tag.UID) tag.UID {
+	literal := append([]byte(planetIDDomain), founderID.AppendTo(nil)...)
+	return tag.UID_HashLiteral(nonce.AppendTo(literal))
+}
+
 // hashBytes runs data through the given HashKit and returns the digest.
 func hashBytes(kitID safe.HashKitID, data []byte) ([]byte, error) {
 	kit, err := safe.NewHashKit(kitID)
