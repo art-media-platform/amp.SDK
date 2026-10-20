@@ -420,6 +420,29 @@ func (eks *epochKeyStore) GetKey(scope KeyScope, epochID tag.UID, role KeyRole) 
 	return eks.state.get(scope, epochID, role)
 }
 
+func (eks *epochKeyStore) HeldEpochs(scope KeyScope) ([]tag.UID, error) {
+	eks.mu.Lock()
+	defer eks.mu.Unlock()
+	if eks.closed {
+		return nil, ErrStoreClosed
+	}
+	if err := validateKeyScope(scope); err != nil {
+		return nil, err
+	}
+	eks.shared.mu.Lock()
+	defer eks.shared.mu.Unlock()
+	if err := eks.refreshLocked(context.Background()); err != nil {
+		return nil, err
+	}
+	held := []tag.UID{}
+	for address, entry := range eks.state.keys {
+		if address.scope == scope && len(entry.RoleKeys) > 0 {
+			held = append(held, address.epoch)
+		}
+	}
+	return held, nil
+}
+
 func (state *epochState) get(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error) {
 	address := epochAddress{
 		scope: scope,

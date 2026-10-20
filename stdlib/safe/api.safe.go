@@ -226,6 +226,11 @@ type EpochKeyStore interface {
 	// GetKey returns an owned copy; the caller must zero its Bytes.
 	GetKey(scope KeyScope, epochID tag.UID, role KeyRole) (SymKey, error)
 	GetCurrentKey(scope KeyScope, role KeyRole) (SymKey, error)
+
+	// HeldEpochs lists the epochs holding key material in the exact scope,
+	// in no order — a shredded epoch is not held.  A key reaper reads it to
+	// find held epochs nothing else names.
+	HeldEpochs(scope KeyScope) ([]tag.UID, error)
 	SetCurrentEpoch(ctx context.Context, scope KeyScope, epochID tag.UID) error
 
 	// ResolveChannelScope resolves one channel across ALL ownership claims,

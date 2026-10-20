@@ -718,3 +718,35 @@ func TestEpochKeys_StageKeyNeverElects(t *testing.T) {
 	}
 	current.Zero()
 }
+
+// TestEpochKeys_HeldEpochs lists the epochs holding material in the exact
+// scope — not another scope's, not a shredded one's.
+func TestEpochKeys_HeldEpochs(t *testing.T) {
+	ctx := context.Background()
+	store := safe.NewLocalTomeStore(filepath.Join(t.TempDir(), "epoch-keys.tome"))
+	guard := safe.NewFileGuard([]byte("pass"), []byte("held-epochs"))
+	defer guard.Close()
+	eks, err := safe.OpenEpochKeyStore(ctx, store, guard, []byte("held-epochs"))
+	if err != nil {
+		t.Fatalf("OpenEpochKeyStore: %v", err)
+	}
+	defer eks.Close(ctx)
+
+	planet := tag.NewID()
+	other := tag.NewID()
+	kept := tag.UID{100, 1}
+	shredded := tag.UID{200, 2}
+	putEpochKey(t, eks, planet, kept, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	putEpochKey(t, eks, planet, shredded, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	putEpochKey(t, eks, other, tag.UID{300, 3}, safe.KeyRole_ContentKey, randomKeyBytes(t))
+	if err := eks.ShredKeys(ctx, safe.Scope(planet), []tag.UID{shredded}); err != nil {
+		t.Fatalf("ShredKeys: %v", err)
+	}
+	held, err := eks.HeldEpochs(safe.Scope(planet))
+	if err != nil {
+		t.Fatalf("HeldEpochs: %v", err)
+	}
+	if len(held) != 1 || held[0] != kept {
+		t.Fatalf("held %v, want only %s", held, kept.Base32())
+	}
+}
