@@ -172,3 +172,34 @@ func TestMediaStreamReader_CrossBoundaryRange(t *testing.T) {
 	}
 	reader.Close()
 }
+
+// TestUploadsNode: a member's uploads node is the UID a web client names by
+// the channel string uploads/<member.Base32()> (tag.ParseUID), distinct per
+// member and from the uploads root, which keeps its hashed-name UID.
+func TestUploadsNode(t *testing.T) {
+	if Attr.Uploads.ID != tag.HashName("uploads").ID {
+		t.Fatalf("Attr.Uploads %s, want the hashed name uploads", Attr.Uploads.ID.Base32())
+	}
+	members := []tag.UID{
+		tag.NewID(),
+		tag.NowID(),
+		tag.HashName("eth:0xuploads-member").ID,
+		{1, 2},
+		{0xFFFFFFFFFFFFFFFF, 0},
+	}
+	seen := map[tag.UID]tag.UID{}
+	for _, member := range members {
+		node := UploadsNode(member)
+		spelled := "uploads/" + member.Base32()
+		if parsed := tag.ParseUID(spelled); node != parsed {
+			t.Fatalf("UploadsNode(%s) = %s, want %q's %s", member.Base32(), node.Base32(), spelled, parsed.Base32())
+		}
+		if node == Attr.Uploads.ID {
+			t.Fatalf("UploadsNode(%s) is the uploads root", member.Base32())
+		}
+		if prior, dup := seen[node]; dup {
+			t.Fatalf("members %s and %s share node %s", prior.Base32(), member.Base32(), node.Base32())
+		}
+		seen[node] = member
+	}
+}

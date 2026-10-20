@@ -37,7 +37,7 @@ function stubFetch(): void {
         status: 200, headers: { 'content-type': 'application/json' },
       });
     }
-    if (path.startsWith('/api/v1/channels/uploads/attrs/amp.blob.BlobRef/items')) {
+    if (path.startsWith(`/api/v1/channels/uploads%2F${UID}/attrs/amp.blob.BlobRef/items`)) {
       return new Response(JSON.stringify({
         Items: [{
           _ItemID: UID, _EditID: UID, _FromID: UID, _UpdatedAt: '2026-10-17T00:00:00Z',
@@ -123,7 +123,10 @@ describe('resolveMedia carries the server URI verbatim', () => {
 
   it('a listed item carries its cell as _Address, the Cell a resolve names (no client-side packing)', async () => {
     const { client } = await loggedInClient();
-    const listed = await client.query<{ BlobTag: { UID: string } }>('uploads', 'amp.blob.BlobRef');
+    // The member's own uploads node: the '/' rides percent-encoded.
+    const listed = await client.query<{ BlobTag: { UID: string } }>(`uploads/${UID}`, 'amp.blob.BlobRef');
+    const list = calls.filter(c => c.path.startsWith('/api/v1/channels/')).pop()!;
+    expect(list.path.startsWith(`/api/v1/channels/uploads%2F${UID}/attrs/`)).toBe(true);
     expect(listed.data).toHaveLength(1);
     expect(listed.data[0]!._Address).toBe(CELL);
     await client.resolveMedia({ UID, ContentTypeRaw: 'audio/mpeg' }, undefined, listed.data[0]!._Address);

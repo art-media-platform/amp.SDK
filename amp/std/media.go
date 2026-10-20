@@ -151,6 +151,15 @@ func WriteMediaRecord(tx *amp.TxMsg, node tag.UID, ref *amp.BlobRef, rec MediaRe
 	return tx.Upsert(node, Attr.ItemLabels.ID, tag.UID{}, labels)
 }
 
+// UploadsNode is the node a web upload's BlobRef cell lands on by default: the
+// uploading member's own child of the uploads root, the tag-name path
+// uploads/<member.Base32()> — the channel string a web client names, which the
+// node parses (tag.ParseUID) to this UID.  member is the identity that authors
+// the cell on the planet (amp.Session.PlanetMember), AD-app-www §3.4.
+func UploadsNode(member tag.UID) tag.UID {
+	return Attr.Uploads.With("/" + member.Base32()).ID
+}
+
 // A MediaAsset is the parameter block for CommitMediaAsset: one streamed media blob
 // plus the MediaRecord describing it.
 type MediaAsset struct {

@@ -255,7 +255,10 @@ export class AmpWebClient implements AmpAdapter {
     return resp.json();
   }
 
-  /** Encode a channel/attr/itemID path segment (canonic names + UIDs are slash-free). */
+  /**
+   * Encode a channel/attr/itemID path segment: a '/' in a name
+   * (uploads/<member>) rides as %2F, which the node decodes within the segment.
+   */
   private seg(s: string): string {
     return encodeURIComponent(s);
   }

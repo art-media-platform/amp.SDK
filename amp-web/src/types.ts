@@ -491,7 +491,9 @@ export interface BlobRef {
 }
 
 export interface UploadOpts {
-  attr?: string;                              // 'amp.blob.BlobRef' puts the BlobRef cell on the channel's node; else the uploads node (SKILL §4.4)
+  // 'amp.blob.BlobRef' puts the BlobRef cell on the channel's node; else your
+  // uploads node, uploads/<your member UID on the planet> (SKILL §4.4)
+  attr?: string;
   planetTag?: string;                         // target planet (optional)
   metadata?: Record<string, unknown>;
   onProgress?: (pct: number) => void;         // one tick per chunk ack (chunked path); 100 on completion
