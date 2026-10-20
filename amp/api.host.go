@@ -214,8 +214,8 @@ type Session interface {
 	// byte size (I with Units = Bytes, used as the progress denominator); or may
 	// be nil.  A host may bind a session to its declared size — the web rail's
 	// does, reserving it against its storage caps first and refusing a missing
-	// size or a stream past it, and refuses a planet the session has not
-	// joined, planet-public included.  The stored BlobRef's AssetTag carries
+	// size or a stream past it.  The web rail also refuses a planet the session
+	// has not joined, public included.  The stored BlobRef's AssetTag carries
 	// ContentType and Text from meta; AssetTag.UID is the leading 16 bytes of
 	// the plaintext hash (content-addressed, AOM SD-security-sync.md §13.2), and
 	// for a planet-public blob BlobTag.UID coincides with it.  BlobTag itself

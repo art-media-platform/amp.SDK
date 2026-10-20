@@ -487,7 +487,9 @@ export interface BlobRef {
   ContentTypeRaw?: string;
   I?: number;              // plaintext byte length (when Units = Bytes)
   Units?: number;
-  Cell?: Address;          // the std.Attr.BlobRef cell the upload wrote (packed 3-UID Address); absent when none was written
+  // The std.Attr.BlobRef cell the upload wrote (packed 3-UID Address): every
+  // upload answers it; absent only from a fixture backend.
+  Cell?: Address;
 }
 
 export interface UploadOpts {

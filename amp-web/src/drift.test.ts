@@ -238,7 +238,7 @@ const SHAPES: Record<string, ShapeSpec> = {
     optional: ['UID', 'I', 'J', 'K', 'Units', 'ContentTypeRaw', 'URI', 'Text'],
   },
   // The upload door's answer: the Tag's keys plus Cell, the BlobRef cell the
-  // upload wrote (absent when none was) — types.ts BlobRef.Cell.
+  // upload wrote (absent only from a fixture backend) — types.ts BlobRef.Cell.
   UploadResponse: {
     required: [],
     optional: ['UID', 'I', 'J', 'K', 'Units', 'ContentTypeRaw', 'URI', 'Text', 'Cell'],
