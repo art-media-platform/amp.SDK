@@ -276,6 +276,7 @@ const (
 	termsCarry                                 // carried; a template sets it
 	termsCarryOnly                             // carried; no template sets it
 	termsTemplateOnly                          // the template's, never carried
+	termsEpochLocal                            // 500–999: the template's, dropped
 	termsPredecessorOnly                       // carried; IntroduceSealedSince
 	termsMustUnderstand                        // derived, else refused
 	termsUnallocated                           // refused
@@ -314,7 +315,9 @@ var termsFieldTable = map[protoreflect.FieldNumber]termsClass{
 	34: termsPredecessorOnly, // ContentSealedSince
 }
 
-// termsDerivation sets one must-understand field on a successor.
+// termsDerivation sets one must-understand field on a successor.  It owns
+// the field's value: a no-path template's value for the field is the
+// derivation's to read (change.Template), and a path naming it refuses.
 type termsDerivation func(prev, next *EpochTerms, change TermsChange) error
 
 // termsDerivations holds the derivation of every known must-understand field
@@ -331,7 +334,7 @@ func termsFieldClass(num protoreflect.FieldNumber) termsClass {
 	case num < termsBandEpochLocal:
 		return termsCarry
 	case num < termsBandMustUnderstand:
-		return termsTemplateOnly
+		return termsEpochLocal
 	case num < termsBandUnallocated:
 		return termsMustUnderstand
 	}
@@ -359,6 +362,9 @@ var ErrTermsTemplate = status.Code_BadValue.Error("amp: EpochTerms template refu
 func NextEpochTerms(prev *EpochTerms, change TermsChange) (*EpochTerms, error) {
 	if change.EpochTag.UID().IsNil() {
 		return nil, status.Code_BadRequest.Error("amp: NextEpochTerms needs the new EpochTag")
+	}
+	if prev != nil && change.EpochTag.UID() == prev.GetEpochTag().UID() {
+		return nil, status.Code_BadRequest.Error("amp: NextEpochTerms: the new EpochTag is the predecessor's own")
 	}
 	template := &EpochTerms{}
 	if change.Template != nil {
@@ -398,8 +404,8 @@ func NextEpochTerms(prev *EpochTerms, change TermsChange) (*EpochTerms, error) {
 
 // applyTermsBands resolves the clone's fields by class before the template
 // applies: an unknown field carries (1–499), drops (500–999) or refuses
-// (≥ 1000); a known template-only field clears; a known field ≥ 2000
-// refuses.
+// (≥ 1000); a known template-only or epoch-local field clears; a known field
+// ≥ 2000 refuses.
 func applyTermsBands(next *EpochTerms) error {
 	msg := next.ProtoReflect()
 	raw := msg.GetUnknown()
@@ -412,7 +418,7 @@ func applyTermsBands(next *EpochTerms) error {
 		switch termsFieldClass(num) {
 		case termsCarry:
 			kept = append(kept, raw[:size]...)
-		case termsTemplateOnly:
+		case termsEpochLocal:
 		default:
 			return fmt.Errorf("%w: the predecessor carries field %d, unknown to this binary", ErrTermsMustUnderstand, num)
 		}
@@ -423,7 +429,7 @@ func applyTermsBands(next *EpochTerms) error {
 	for i := 0; i < fields.Len(); i++ {
 		fd := fields.Get(i)
 		switch termsFieldClass(fd.Number()) {
-		case termsTemplateOnly:
+		case termsTemplateOnly, termsEpochLocal:
 			msg.Clear(fd)
 		case termsUnallocated:
 			if msg.Has(fd) {
@@ -444,7 +450,7 @@ func applyTermsTemplate(next, template *EpochTerms) error {
 	err := error(nil)
 	template.ProtoReflect().Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 		switch termsFieldClass(fd.Number()) {
-		case termsCarry, termsTemplateOnly:
+		case termsCarry, termsTemplateOnly, termsEpochLocal:
 			dst.Set(fd, value)
 		case termsCarryOnly, termsPredecessorOnly, termsUnallocated:
 			err = fmt.Errorf("%w: the template sets %s (%d), which no template sets", ErrTermsTemplate, fd.Name(), fd.Number())
@@ -477,7 +483,7 @@ func applyTermsPaths(next, template *EpochTerms, paths []string) error {
 		case termsCarry:
 		case termsKit:
 			kitHalves[top.Number()] = true
-		case termsTemplateOnly:
+		case termsTemplateOnly, termsEpochLocal:
 			if len(fields) > 1 {
 				return fmt.Errorf("%w: path %q: %s is set whole", ErrTermsTemplate, path, top.Name())
 			}
@@ -541,14 +547,22 @@ func applyTermsPath(dst, src protoreflect.Message, fields []protoreflect.FieldDe
 }
 
 // refuseUnnamedFields refuses a template term no path names: each set field
-// at or beneath prefix must be named by a path, itself or a parent.
+// at or beneath prefix must be named by a path, itself or a parent; a set
+// message holding no field must be named itself.
 func refuseUnnamedFields(msg protoreflect.Message, prefix string, named map[string]bool) error {
 	err := error(nil)
 	msg.Range(func(fd protoreflect.FieldDescriptor, value protoreflect.Value) bool {
 		path := prefix + string(fd.Name())
+		populated := false
+		if fd.Message() != nil && !fd.IsList() && !fd.IsMap() {
+			value.Message().Range(func(protoreflect.FieldDescriptor, protoreflect.Value) bool {
+				populated = true
+				return false
+			})
+		}
 		switch {
 		case named[path]:
-		case fd.Message() != nil && !fd.IsList() && !fd.IsMap():
+		case populated:
 			err = refuseUnnamedFields(value.Message(), path+".", named)
 		default:
 			err = fmt.Errorf("%w: the template sets %s, which no path names", ErrTermsTemplate, path)

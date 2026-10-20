@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// Build Spec 6: every EpochTerms field this binary knows is held to the band
+// Every EpochTerms field this binary knows is held to the band
 // rule (ZO-design-conventions §2.8) — 1–34 classified in termsFieldTable, a
 // later number in an allocated band, a must-understand field derived — and
 // every table entry is a field this binary knows.
@@ -39,21 +39,22 @@ func TestEpochTermsBand_EveryFieldClassified(t *testing.T) {
 	}
 }
 
-// The band edges, and the 1–34 numbers no field holds (C11: the pre-freeze
-// 9, 14, 15, 17), which carry.
+// The band edges, and the 1–34 numbers no field holds (the pre-freeze
+// layout's 9, 14, 15, 17), which carry.
 func TestEpochTermsBand_Edges(t *testing.T) {
 	cases := []struct {
 		num  protoreflect.FieldNumber
 		want termsClass
 	}{
 		{9, termsCarry},
+		{22, termsTemplateOnly},
 		{14, termsCarry},
 		{33, termsCarryOnly},
 		{34, termsPredecessorOnly},
 		{35, termsCarry},
 		{499, termsCarry},
-		{500, termsTemplateOnly},
-		{999, termsTemplateOnly},
+		{500, termsEpochLocal},
+		{999, termsEpochLocal},
 		{1000, termsMustUnderstand},
 		{1999, termsMustUnderstand},
 		{2000, termsUnallocated},

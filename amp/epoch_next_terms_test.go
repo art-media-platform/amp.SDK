@@ -16,6 +16,7 @@ import (
 
 	"github.com/art-media-platform/amp.SDK/amp"
 	"github.com/art-media-platform/amp.SDK/stdlib/safe"
+	"github.com/art-media-platform/amp.SDK/stdlib/status"
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -138,7 +139,7 @@ func assertTerms(t *testing.T, label string, got, want *amp.EpochTerms) {
 	}
 }
 
-// Build Spec 1: LicenseClass (33) and an unknown carry-band field (40) carry.
+// LicenseClass (33) and an unknown carry-band field (40) carry.
 func TestNextEpochTerms_CarriesLicenseClassAndUnknown(t *testing.T) {
 	prev := rotationPrev()
 	withUnknown(prev, 40, "carry-40")
@@ -147,7 +148,7 @@ func TestNextEpochTerms_CarriesLicenseClassAndUnknown(t *testing.T) {
 	assertTerms(t, "carry-only successor", nextTerms(t, prev, amp.TermsChange{}), want)
 }
 
-// Build Spec 2: an unknown epoch-local field (540) drops; an unknown
+// An unknown epoch-local field (540) drops; an unknown
 // must-understand (1540) or unallocated (2040) field refuses, naming it.
 func TestNextEpochTerms_UnknownFieldBands(t *testing.T) {
 	prev := rotationPrev()
@@ -166,7 +167,7 @@ func TestNextEpochTerms_UnknownFieldBands(t *testing.T) {
 	}
 }
 
-// Build Spec 3: a template carrying a field this binary does not know, at
+// A template carrying a field this binary does not know, at
 // any depth, refuses, naming the number.
 func TestNextEpochTerms_TemplateUnknownRefused(t *testing.T) {
 	top := &amp.EpochTerms{
@@ -183,7 +184,14 @@ func TestNextEpochTerms_TemplateUnknownRefused(t *testing.T) {
 		want   string
 	}{
 		{"top level", amp.TermsChange{Template: top}, "40"},
-		{"top level, paths", amp.TermsChange{Template: top, Paths: []string{"Label"}}, "40"},
+		{
+			name: "top level, paths",
+			change: amp.TermsChange{
+				Template: top,
+				Paths:    []string{"Label"},
+			},
+			want: "40",
+		},
 		{"nested", amp.TermsChange{Template: nested}, "VaultConfig.field(s) [99]"},
 	}
 	for _, c := range cases {
@@ -195,7 +203,7 @@ func TestNextEpochTerms_TemplateUnknownRefused(t *testing.T) {
 	}
 }
 
-// Build Spec 4: a path with no template value clears, so Seal resumes Open
+// A path with no template value clears, so Seal resumes Open
 // and RequiredSignatures returns to 0; without paths a zero term carries.
 func TestNextEpochTerms_PathClears(t *testing.T) {
 	want := rotationNext()
@@ -214,7 +222,7 @@ func TestNextEpochTerms_PathClears(t *testing.T) {
 	assertTerms(t, "no paths: zero terms carry", got, rotationNext())
 }
 
-// R2: a nested path replaces its leaf and keeps the leaf's siblings and the
+// A nested path replaces its leaf and keeps the leaf's siblings and the
 // parent's unknown fields; a leaf list or message replaces whole, never
 // merged.  Without paths a set message term replaces whole.
 func TestNextEpochTerms_PathLeafReplacesWhole(t *testing.T) {
@@ -272,27 +280,45 @@ func TestNextEpochTerms_PathLeafReplacesWhole(t *testing.T) {
 	assertTerms(t, "no paths: whole-value replacement", got, wholeWant)
 }
 
-// The path grammar's refusals (each fails closed, naming what it refuses);
-// both suite halves together are accepted.
+// The path grammar's refusals, each failing closed and naming what it
+// refuses; both suite halves together, and CodexEdition named whole, are
+// accepted.
 func TestNextEpochTerms_PathRefusals(t *testing.T) {
 	labelled := &amp.EpochTerms{
 		Label: "New",
+	}
+	siblings := &amp.EpochTerms{
+		VaultConfig: &amp.VaultConfig{
+			MaxTxMsgSize: 9,
+			VaultAddrs: []*amp.VaultAddr{{
+				Transport: "tcp",
+				Address:   []byte("b:2"),
+			}},
+		},
+	}
+	emptyMessage := &amp.EpochTerms{
+		Label:       "New",
+		VaultConfig: &amp.VaultConfig{},
 	}
 	cases := []struct {
 		name     string
 		template *amp.EpochTerms
 		paths    []string
+		want     string
 	}{
-		{"unknown segment", nil, []string{"LicenseTier"}},
-		{"empty segment", nil, []string{"VaultConfig."}},
-		{"through a repeated field", nil, []string{"VaultConfig.VaultAddrs.Transport"}},
-		{"chain field", nil, []string{"EpochHeight"}},
-		{"assembled field", nil, []string{"HashKit"}},
-		{"one suite half", nil, []string{"CryptoKitID_0"}},
-		{"predecessor-only", nil, []string{"ContentSealedSince"}},
-		{"carry-only LicenseClass", nil, []string{"LicenseClass"}},
-		{"into a template-only term", nil, []string{"CodexEdition.PlanetID_0"}},
-		{"a template term no path names", labelled, []string{"Seal"}},
+		{"unknown segment", nil, []string{"LicenseTier"}, `"LicenseTier" is not a field this binary knows`},
+		{"empty segment", nil, []string{"VaultConfig."}, `"" is not a field this binary knows`},
+		{"through a repeated field", nil, []string{"VaultConfig.VaultAddrs.Transport"}, "VaultAddrs is not a singular message"},
+		{"through a scalar", nil, []string{"Label.Text"}, "Label is not a singular message"},
+		{"chain field", nil, []string{"EpochHeight"}, "EpochHeight (4) is not settable"},
+		{"assembled field", nil, []string{"HashKit"}, "HashKit (5) is not settable"},
+		{"one suite half", nil, []string{"CryptoKitID_0"}, "both CryptoKitID halves"},
+		{"predecessor-only", nil, []string{"ContentSealedSince"}, "ContentSealedSince (34) is not settable"},
+		{"carry-only LicenseClass", nil, []string{"LicenseClass"}, "LicenseClass (33) is not settable"},
+		{"into a template-only term", nil, []string{"CodexEdition.PlanetID_0"}, "CodexEdition is set whole"},
+		{"a template term no path names", labelled, []string{"Seal"}, "the template sets Label, which no path names"},
+		{"a sibling leaf no path names", siblings, []string{"VaultConfig.VaultAddrs"}, "sets VaultConfig.MaxTxMsgSize, which no path names"},
+		{"an empty message no path names", emptyMessage, []string{"Label"}, "the template sets VaultConfig, which no path names"},
 	}
 	for _, c := range cases {
 		_, err := amp.NextEpochTerms(rotationPrev(), amp.TermsChange{
@@ -300,8 +326,8 @@ func TestNextEpochTerms_PathRefusals(t *testing.T) {
 			Paths:    c.paths,
 			EpochTag: successorTag(),
 		})
-		if !errors.Is(err, amp.ErrTermsTemplate) {
-			t.Errorf("%s: err = %v, want ErrTermsTemplate", c.name, err)
+		if !errors.Is(err, amp.ErrTermsTemplate) || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("%s: err = %v, want ErrTermsTemplate naming %q", c.name, err, c.want)
 		}
 	}
 
@@ -314,11 +340,73 @@ func TestNextEpochTerms_PathRefusals(t *testing.T) {
 	want := rotationNext()
 	want.SetCryptoKitID(safe.Crypto.P256.ID)
 	assertTerms(t, "both suite halves", got, want)
+
+	edition := &amp.EpochTerms{
+		CodexEdition: &amp.Address{
+			NodeID_0: 7,
+		},
+	}
+	got = nextTerms(t, rotationPrev(), amp.TermsChange{
+		Template: edition,
+		Paths:    []string{"CodexEdition"},
+	})
+	want = rotationNext()
+	want.CodexEdition = &amp.Address{
+		NodeID_0: 7,
+	}
+	assertTerms(t, "CodexEdition named whole", got, want)
+}
+
+// Bands classify top-level numbers only: an unknown epoch-local field nested
+// inside a carried message travels with the message.
+func TestNextEpochTerms_NestedUnknownCarries(t *testing.T) {
+	prev := rotationPrev()
+	withUnknown(prev.VaultConfig, 540, "nested-local")
+	want := rotationNext()
+	withUnknown(want.VaultConfig, 540, "nested-local")
+	assertTerms(t, "nested 540", nextTerms(t, prev, amp.TermsChange{}), want)
+}
+
+// A predecessor whose unknown bytes do not parse refuses as a data failure;
+// a new EpochTag equal to the predecessor's own refuses, here and in
+// VerifySuccessor.
+func TestNextEpochTerms_MalformedOrSelfLoopRefused(t *testing.T) {
+	prev := rotationPrev()
+	prev.ProtoReflect().SetUnknown(protowire.AppendTag(nil, 40, protowire.BytesType))
+	_, err := amp.NextEpochTerms(prev, amp.TermsChange{
+		EpochTag: successorTag(),
+	})
+	if !status.IsError(err, status.Code_DataFailure) {
+		t.Errorf("malformed unknown bytes: err = %v, want DataFailure", err)
+	}
+
+	_, err = amp.NextEpochTerms(rotationPrev(), amp.TermsChange{
+		EpochTag: rotationPrev().GetEpochTag(),
+	})
+	if !status.IsError(err, status.Code_BadRequest) || !strings.Contains(err.Error(), "predecessor's own") {
+		t.Errorf("self-loop: err = %v, want a BadRequest naming the predecessor's own EpochTag", err)
+	}
+
+	genesis := genesisEpoch(t)
+	prevTerms, err := genesis.ParsedTerms()
+	if err != nil {
+		t.Fatal(err)
+	}
+	loopTerms := proto.Clone(prevTerms).(*amp.EpochTerms)
+	loopTerms.PreviousEpoch = prevTerms.EpochTag
+	loopTerms.EpochHeight = 1
+	loop, err := amp.AssembleSuccessor(genesis, loopTerms)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := loop.VerifySuccessor(genesis, amp.TermsChange{}); err == nil || !strings.Contains(err.Error(), "predecessor's own") {
+		t.Errorf("VerifySuccessor of a self-loop: err = %v, want a refusal naming the predecessor's own EpochTag", err)
+	}
 }
 
 // The no-path template classes: a carried term replaces when set, the suite
 // pair moves as one, CodexEdition is the template's only, chain fields are
-// ignored, and LicenseClass (until its writer, row 467) and
+// ignored, and LicenseClass (until it gains a writer) and
 // ContentSealedSince refuse.
 func TestNextEpochTerms_TemplateClasses(t *testing.T) {
 	edition := &amp.Address{
@@ -373,7 +461,7 @@ func TestNextEpochTerms_IntroduceSealedSince(t *testing.T) {
 		nextTerms(t, prev, amp.TermsChange{IntroduceSealedSince: true}), want)
 }
 
-// Build Spec 8: the successor of goldenEpoch, assembled, is the golden Terms
+// The successor of goldenEpoch, assembled, is the golden Terms
 // with CodexEdition cleared and the chain advanced; every other term — the
 // Public Charter's marker and Seal Paused included — equal.  want is
 // goldenLayers' literal with those changes written here.
@@ -407,7 +495,7 @@ func TestNextEpochTerms_GoldenSuccessor(t *testing.T) {
 	}
 }
 
-// Ruling 477 Q7: genesis Terms derive through the same function over no
+// Genesis Terms derive through the same function over no
 // predecessor, and the result assembles to the canonical genesis FRAME.
 func TestNextEpochTerms_Genesis(t *testing.T) {
 	charter, want := genesisLayers()
@@ -433,7 +521,7 @@ func TestNextEpochTerms_Genesis(t *testing.T) {
 	assertFrame(t, genesis, genesisFrameHex)
 }
 
-// Build Spec 9 (GREASE): golden Terms carrying one unknown field in each band
+// GREASE: golden Terms carrying one unknown field in each band
 // a successor survives — 77 (carry) and 777 (epoch-local) — rotate twice: 77
 // rides every successor, 777 none, and each verifies against its
 // predecessor.
@@ -474,7 +562,7 @@ func TestNextEpochTerms_Grease(t *testing.T) {
 	}
 }
 
-// Build Spec 10 (R3): a Charter stored in a valid non-Go field order keeps
+// A Charter stored in a valid non-Go field order keeps
 // its bytes across a successor, so continuity holds; a re-marshal would
 // reorder them and every rotation would refuse itself as a charter swap.
 func TestAssembleSuccessor_CopiesStoredCharter(t *testing.T) {
@@ -630,7 +718,7 @@ func TestVerifySuccessor_Refusals(t *testing.T) {
 	}
 }
 
-// ── Mixed-version matrix (Build Spec 7) ──────────────────────────────────────
+// ── Mixed-version matrix ─────────────────────────────────────────────────────
 
 // Fields a newer binary knows and this one does not, one per band.
 const (
