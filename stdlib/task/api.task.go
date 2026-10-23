@@ -91,7 +91,9 @@ func (adapter closingContext) Done() <-chan struct{} { return adapter.Context.Cl
 // wedge its owner's shutdown (AOM ZO-design-conventions.md §1.2). Owned work
 // uses Go; the parent drains it. State the reason at the call site. fn should
 // still leave on ctx.Closing() wherever it can — Detach bounds the damage of
-// the one path that cannot, it does not excuse the others.
+// the one path that cannot, it does not excuse the others. The permission is
+// transitive: a detached child can outlive the root, so every resource fn can
+// reach must fail closed after its close — a typed error, never a nil handle.
 //
 // A nil parent makes it a root, as with Start. Returns ErrNotRunning if parent
 // is no longer running.
