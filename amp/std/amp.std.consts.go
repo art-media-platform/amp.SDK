@@ -598,9 +598,11 @@ const (
 // ─── Actor — in-world actor skins resolve through the crate / asset system.  A mod ───
 // registers an override at the same key to ship a custom actor without touching
 // code.  An unresolved URI falls back to a primitive so a MantleActor is always
-// visible.
+// visible.  DefaultSkinLayer is the composed body's vis layer: a scene AssetMap
+// binds it to a crate entry, so a whitelabel picks its own.
 const (
 	ActorDefaultSkin             = "asset:actor/skin.default"
+	ActorDefaultSkinLayer        = "asset:actor/skin.layer.default"
 	ActorDefaultBodyHeightMeters = float32(1.6) // composed-body height (m)
 	ActorDefaultBodySides        = int32(6)     // composed-body facets
 	ActorDefaultEyeHeightMeters  = 1.7          // eye reference height (m)
