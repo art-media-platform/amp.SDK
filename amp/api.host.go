@@ -315,7 +315,8 @@ type HostSession interface {
 
 	// Returns the local journal's high-water TxID and entry count for planetID —
 	// metadata only (never plaintext), so it needs no epoch key.  A journal that
-	// cannot be read is the error; a zero head stands only for an empty journal.
+	// cannot be read is the error; (0, 0, nil) is an empty journal, or a host
+	// that serves no journal.
 	PlanetHighWater(planetID tag.UID) (highWater tag.UID, count int, err error)
 
 	// Returns the vault endpoint(s) this node serves and advertises (the operator's
