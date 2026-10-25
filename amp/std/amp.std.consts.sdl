@@ -403,6 +403,7 @@ const Mantle {
     float BrowseCeilingViewFill = 0.25; // the ceiling: the sphere never smaller than this fraction of the view height
     float ItemFrameViewFill     = 0.35; // an item framed (a tap, now playing): its size as a fraction of the view height
     float BrowseTiltCapDeg      = 30;   // a browse sphere is viewed straight on: no auto-tilt, a two-finger tilt at most this far from straight down
+    float BrowsePanGain         = 2;    // a one-finger pan turns a browse sphere this many times the grabbed point's travel (1 = the ground stays under the finger)
 }
 
 // VJ — the player's vis background: two slots crossfading down a vis
