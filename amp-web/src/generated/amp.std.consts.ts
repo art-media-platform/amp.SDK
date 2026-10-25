@@ -387,6 +387,7 @@ export const Mantle = {
     BrowseEntryViewFill:   0.8,  // the entry shot: the sphere's diameter as a fraction of the view height
     BrowseCeilingViewFill: 0.25,  // the ceiling: the sphere never smaller than this fraction of the view height
     ItemFrameViewFill:     0.35,  // an item framed (a tap, now playing): its size as a fraction of the view height
+    BrowseTiltCapDeg:      30,  // a browse sphere is viewed straight on: no auto-tilt, a two-finger tilt at most this far from straight down
 } as const;
 
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
