@@ -478,9 +478,10 @@ export const Theme = {
 
 // ─── DeviceVars / MemberVars defaults. ──────────────────────────
 export const HomeVars = {
-    DefaultTargetFPS: 60,
-    MinTargetFPS:     15,
-    MaxTargetFPS:     120,
+    DefaultTargetFPS:   60,
+    MinTargetFPS:       15,
+    MaxTargetFPS:       120,
+    DefaultAVLatencyMS: 120,  // vis lead handed to the sampler (ms); a set std.DeviceVars.AVLatencyMS overrides
 } as const;
 
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───

@@ -498,6 +498,7 @@ const HomeVars {
     int32 DefaultTargetFPS = 60;
     int32 MinTargetFPS     = 15;
     int32 MaxTargetFPS     = 120;
+    int32 DefaultAVLatencyMS = 120;  // vis lead handed to the sampler (ms); a set std.DeviceVars.AVLatencyMS overrides
 }
 
 // amp.Terminal emulator / grid + shuttle transport defaults.

@@ -3435,9 +3435,13 @@ func (x *TileServer) GetElevationEncoding() string {
 // A zero field is the "unset" sentinel; resolution happens at point of use
 // (std.HomeVars defaults), never in a field initializer.
 type DeviceVars struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UIScale       float32                `protobuf:"fixed32,1,opt,name=UIScale,proto3" json:"UIScale,omitempty"`    // item size scale; 0 → derived from display DPI
-	TargetFPS     int32                  `protobuf:"varint,2,opt,name=TargetFPS,proto3" json:"TargetFPS,omitempty"` // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	UIScale   float32                `protobuf:"fixed32,1,opt,name=UIScale,proto3" json:"UIScale,omitempty"`    // item size scale; 0 → derived from display DPI
+	TargetFPS int32                  `protobuf:"varint,2,opt,name=TargetFPS,proto3" json:"TargetFPS,omitempty"` // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
+	// vis lead: how far ahead of the ear the visualization's PCM tap runs
+	// on this device, ms (the mixer's buffers plus the output route);
+	// 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice
+	AVLatencyMS   int32 `protobuf:"varint,3,opt,name=AVLatencyMS,proto3" json:"AVLatencyMS,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3482,6 +3486,13 @@ func (x *DeviceVars) GetUIScale() float32 {
 func (x *DeviceVars) GetTargetFPS() int32 {
 	if x != nil {
 		return x.TargetFPS
+	}
+	return 0
+}
+
+func (x *DeviceVars) GetAVLatencyMS() int32 {
+	if x != nil {
+		return x.AVLatencyMS
 	}
 	return 0
 }
@@ -3961,11 +3972,12 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"TileSizePx\x12$\n" +
 	"\rMinIntervalMs\x18\x17 \x01(\x05R\rMinIntervalMs\x12 \n" +
 	"\vContentType\x18\x1e \x01(\tR\vContentType\x12,\n" +
-	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"D\n" +
+	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"f\n" +
 	"\n" +
 	"DeviceVars\x12\x18\n" +
 	"\aUIScale\x18\x01 \x01(\x02R\aUIScale\x12\x1c\n" +
-	"\tTargetFPS\x18\x02 \x01(\x05R\tTargetFPS\"\xc1\x01\n" +
+	"\tTargetFPS\x18\x02 \x01(\x05R\tTargetFPS\x12 \n" +
+	"\vAVLatencyMS\x18\x03 \x01(\x05R\vAVLatencyMS\"\xc1\x01\n" +
 	"\n" +
 	"MemberVars\x12*\n" +
 	"\x10DefaultSkyboxURI\x18\x01 \x01(\tR\x10DefaultSkyboxURI\x127\n" +

@@ -637,9 +637,10 @@ const (
 
 // ─── DeviceVars / MemberVars defaults. ──────────────────────────
 const (
-	HomeVarsDefaultTargetFPS = int32(60)
-	HomeVarsMinTargetFPS     = int32(15)
-	HomeVarsMaxTargetFPS     = int32(120)
+	HomeVarsDefaultTargetFPS   = int32(60)
+	HomeVarsMinTargetFPS       = int32(15)
+	HomeVarsMaxTargetFPS       = int32(120)
+	HomeVarsDefaultAVLatencyMS = int32(120) // vis lead handed to the sampler (ms); a set std.DeviceVars.AVLatencyMS overrides
 )
 
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───
