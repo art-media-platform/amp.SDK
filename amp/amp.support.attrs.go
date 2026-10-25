@@ -20,9 +20,10 @@ const (
 	// After an epoch rotation, old-epoch TxMsgs are accepted for this duration.
 	DefaultMaxGracePeriod int64 = 90 * 24 * 60 * 60
 
-	// DefaultQuarantineRetention is the default TTL for journal entries quarantined
-	// for failed MemberProof or bad signature (7 days).  Long enough for Strike
-	// attestations to propagate and be audited against the rejected bytes.
+	// DefaultQuarantineRetention is the default TTL for quarantined journal
+	// entries — a failed MemberProof or signature, an authority refusal (7 days).
+	// Long enough for the refusal, and a Strike citing it where one names an
+	// authenticated author, to be audited against the rejected bytes.
 	// One of TWO quarantine TTL doors: the O4 §4.24 restore-ceremony CLI carries
 	// its own default (720h) — the doors are independent and may diverge.
 	DefaultQuarantineRetention int64 = 7 * 24 * 60 * 60

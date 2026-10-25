@@ -3037,17 +3037,18 @@ func (x *BrandMark) GetGlyphs() *Tags {
 // have to guard.
 type VaultConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Rate limiting (per-member, sliding window):
+	// Intake quotas (per (planet, peer), sliding window; SD-security-sync §11.2):
 	MaxTxMsgSize        int64 `protobuf:"varint,1,opt,name=MaxTxMsgSize,proto3" json:"MaxTxMsgSize,omitempty"`               // Max single TxMsg bytes (default: 1 MB)
-	MaxBytesPerWindow   int64 `protobuf:"varint,2,opt,name=MaxBytesPerWindow,proto3" json:"MaxBytesPerWindow,omitempty"`     // Max bytes per member per window (default: 100 MB)
-	MaxTxPerWindow      int64 `protobuf:"varint,3,opt,name=MaxTxPerWindow,proto3" json:"MaxTxPerWindow,omitempty"`           // Max TxMsg count per member per window (default: 10000)
+	MaxBytesPerWindow   int64 `protobuf:"varint,2,opt,name=MaxBytesPerWindow,proto3" json:"MaxBytesPerWindow,omitempty"`     // Max bytes per peer per window (default: 100 MB)
+	MaxTxPerWindow      int64 `protobuf:"varint,3,opt,name=MaxTxPerWindow,proto3" json:"MaxTxPerWindow,omitempty"`           // Max TxMsg count per peer per window (default: 10000)
 	RateLimitWindowSecs int64 `protobuf:"varint,4,opt,name=RateLimitWindowSecs,proto3" json:"RateLimitWindowSecs,omitempty"` // Sliding window duration in seconds (default: 86400 = 24h)
-	// Quarantine retention for TxMsgs that fail MemberProof or signature
-	// verification.  Quarantined entries are excluded from fanout + ReadSince
-	// but remain in the journal so Strike attestations citing the rejected TxID
-	// can be audited against the bytes.  After expiry, Badger GC evicts; the
-	// Strike still stands (canonical bytes include TxID).  If 0,
-	// DefaultQuarantineRetention applies (7 days).
+	// Quarantine retention for refused TxMsgs — a failed MemberProof or
+	// signature, an authority refusal.  Quarantined entries are excluded from
+	// fanout + ReadSince but remain in the journal so the refusal — and a Strike
+	// citing it, which names only an authenticated author (SD-security-sync
+	// §15.4) — can be audited against the bytes.  After expiry the journal's
+	// sweep reaps the entry; a Strike still stands (canonical bytes include
+	// TxID).  If 0, DefaultQuarantineRetention applies (7 days).
 	QuarantineRetentionSecs int64 `protobuf:"varint,5,opt,name=QuarantineRetentionSecs,proto3" json:"QuarantineRetentionSecs,omitempty"`
 	// Maximum seconds a TxMsg's TxID timestamp may exceed the receiving vault's
 	// wall clock.  TxMsgs stamped further into the future are dropped at
