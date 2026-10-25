@@ -616,6 +616,7 @@ message MemberVars {
     string         DefaultSkyboxURI  = 1;
     ReticleStyleID ReticleStyle      = 2; // center reticle style; 0 → ReticleLine
     string         ReticleOverlayURI = 3; // center reticle overlay sprite URI; empty → overlay hidden
+    float          VJDwellSecs       = 4; // seconds each vis holds in the player's vis walk; 0 → std.VJ.DefaultDwellSecs
 }
 
 // BodyEncoding is how an HTTP request body is encoded.

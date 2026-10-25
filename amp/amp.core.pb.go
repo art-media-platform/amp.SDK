@@ -1109,7 +1109,7 @@ type BlobPullKind int32
 const (
 	BlobPullKind_Chunks BlobPullKind = 0 // a span of stored-byte chunks on the meta's index space
 	BlobPullKind_Meta   BlobPullKind = 1 // the blob's BlobMeta companion object
-	BlobPullKind_Have   BlobPullKind = 2 // a holding probe: does the peer hold the blob — answered on the data plane, no bytes (SD-security-sync §13.8)
+	BlobPullKind_Have   BlobPullKind = 2 // a have-map ask: the holder's chunk bitmap, ceil(NumChunks/8) bytes LSB-first, as one data-plane stream; a holder of nothing rejects (SD-security-sync §13.8)
 )
 
 // Enum value maps for BlobPullKind.

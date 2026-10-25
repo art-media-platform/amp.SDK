@@ -554,8 +554,8 @@ const (
 // playlist.  0 = unset → these defaults.
 const (
 	VJDefaultPlaylistURL = "amp://~/mandelship/presets/" // the factory pack, served by app.mandelship
-	VJDefaultDwellSecs   = float32(5)                    // seconds a vis holds before the walk advances (a fixed time)
-	VJDefaultFadeSecs    = float32(1.5)                  // the crossfade between the two slots
+	VJDefaultDwellSecs   = float32(15)                   // seconds a vis holds before the walk advances; a set std.MemberVars.VJDwellSecs overrides
+	VJDefaultFadeSecs    = float32(3)                    // seconds of crossfade between the two slots
 )
 
 // ─── Atmosphere — stock URIs for the four-category (sky / sun / night / fog) ───
@@ -651,7 +651,7 @@ const (
 	TerminalDefaultRows                = int32(24)   // PTY grid rows
 	TerminalDefaultScrollbackRows      = int32(1000) // emulator scrollback rows
 	TerminalDefaultKeyframeMs          = 10000       // keyframe cadence — the DVR replay bound
-	TerminalDefaultJogMs               = 16000       // transport jog step
+	TerminalDefaultJogMs               = 10000       // transport jog step: one skip back or forward
 	TerminalDefaultReplayResidentBytes = 8388608     // replay-window residency budget (Buffered cap)
 )
 

@@ -3497,6 +3497,7 @@ type MemberVars struct {
 	DefaultSkyboxURI  string         `protobuf:"bytes,1,opt,name=DefaultSkyboxURI,proto3" json:"DefaultSkyboxURI,omitempty"`
 	ReticleStyle      ReticleStyleID `protobuf:"varint,2,opt,name=ReticleStyle,proto3,enum=std.ReticleStyleID" json:"ReticleStyle,omitempty"` // center reticle style; 0 → ReticleLine
 	ReticleOverlayURI string         `protobuf:"bytes,3,opt,name=ReticleOverlayURI,proto3" json:"ReticleOverlayURI,omitempty"`                // center reticle overlay sprite URI; empty → overlay hidden
+	VJDwellSecs       float32        `protobuf:"fixed32,4,opt,name=VJDwellSecs,proto3" json:"VJDwellSecs,omitempty"`                          // seconds each vis holds in the player's vis walk; 0 → std.VJ.DefaultDwellSecs
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -3550,6 +3551,13 @@ func (x *MemberVars) GetReticleOverlayURI() string {
 		return x.ReticleOverlayURI
 	}
 	return ""
+}
+
+func (x *MemberVars) GetVJDwellSecs() float32 {
+	if x != nil {
+		return x.VJDwellSecs
+	}
+	return 0
 }
 
 // LoginForm is the recipe for exchanging a username + password for a session
@@ -3957,12 +3965,13 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
 	"DeviceVars\x12\x18\n" +
 	"\aUIScale\x18\x01 \x01(\x02R\aUIScale\x12\x1c\n" +
-	"\tTargetFPS\x18\x02 \x01(\x05R\tTargetFPS\"\x9f\x01\n" +
+	"\tTargetFPS\x18\x02 \x01(\x05R\tTargetFPS\"\xc1\x01\n" +
 	"\n" +
 	"MemberVars\x12*\n" +
 	"\x10DefaultSkyboxURI\x18\x01 \x01(\tR\x10DefaultSkyboxURI\x127\n" +
 	"\fReticleStyle\x18\x02 \x01(\x0e2\x13.std.ReticleStyleIDR\fReticleStyle\x12,\n" +
-	"\x11ReticleOverlayURI\x18\x03 \x01(\tR\x11ReticleOverlayURI\"\xba\x01\n" +
+	"\x11ReticleOverlayURI\x18\x03 \x01(\tR\x11ReticleOverlayURI\x12 \n" +
+	"\vVJDwellSecs\x18\x04 \x01(\x02R\vVJDwellSecs\"\xba\x01\n" +
 	"\tLoginForm\x12-\n" +
 	"\bEncoding\x18\x01 \x01(\x0e2\x11.std.BodyEncodingR\bEncoding\x12\x1c\n" +
 	"\tUserField\x18\x02 \x01(\tR\tUserField\x12\x1c\n" +
