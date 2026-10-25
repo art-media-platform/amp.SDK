@@ -1640,7 +1640,7 @@ message BlobPullRequest {
 enum BlobPullKind {
     Chunks = 0;  // a span of stored-byte chunks on the meta's index space
     Meta   = 1;  // the blob's BlobMeta companion object
-    Have   = 2;  // a holding probe: does the peer hold the blob — answered on the data plane, no bytes (SD-security-sync §13.8)
+    Have   = 2;  // a have-map ask: the holder's chunk bitmap, ceil(NumChunks/8) bytes LSB-first, as one data-plane stream; a holder of nothing rejects (SD-security-sync §13.8)
 }
 
 
