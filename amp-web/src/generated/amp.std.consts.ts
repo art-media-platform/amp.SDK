@@ -122,6 +122,7 @@ export const Attr = {
     ChannelTypeNameService            : { id: [0x7F92C1A4067E91BFn, 0x9ED36CF793A42DBFn], text: "channel.type.NameService" },           // 3zkc0-u81my-k6ztxn-vdyy9-u8cez
     ChannelTypeTerminal               : { id: [0xA2A7D0965CBFE1C2n, 0x203CD7FD9136CB7Bn], text: "channel.type.Terminal" },              // 52nz8-9dr5z-w7120g-6rzq8-mekvv
     ChannelTypeFiles                  : { id: [0x4E9ABE1B0FDA2145n, 0x73F373E63CB14BF3n], text: "channel.type.Files" },                 // 2fmbz-1q3yu-452r7w-vmwsy-c2kzm
+    ChannelTypePlayer                 : { id: [0x6FD8A5BAF7D6656Fn, 0x1DB1BBC33CA53A27n], text: "channel.type.Player" },                // 3gv2k-vpxyq-dprjvd-evsdy-bbfj7
     // Render surface a channel is staged on — a value the staging host
     // selects and a presenter resolves by (chType, surface); never a
     // C# enum (surface vocabulary in client code breaks the whitelabel
