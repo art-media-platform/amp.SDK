@@ -538,6 +538,14 @@ const (
 	MantleDefaultNodeSizeMM     = float32(7)   // fingertip target: the authored on-screen diameter at the tap
 	MantleDefaultNodeSizeMeters = float32(1)   // the size a reader resolves for a placement carrying Sx = 0
 	MantleMinNodeScreenMM       = float32(1.5) // render-time floor on drawn size; never reaches the wire
+	// The browse envelope — an item picker's orbital camera, stated in view
+	// terms so it holds at any globe radius, item size or field of view
+	// (MantleItemPickerChannel.conformBrowseCamera; MD-mantle-player §13).
+	MantleBrowseFovDegrees      = float32(55)   // the picker camera's vertical field of view
+	MantleBrowseFloorViewItems  = float32(3)    // at the floor the view is this many items tall
+	MantleBrowseEntryViewFill   = float32(0.8)  // the entry shot: the sphere's diameter as a fraction of the view height
+	MantleBrowseCeilingViewFill = float32(0.25) // the ceiling: the sphere never smaller than this fraction of the view height
+	MantleItemFrameViewFill     = float32(0.35) // an item framed (a tap, now playing): its size as a fraction of the view height
 )
 
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
