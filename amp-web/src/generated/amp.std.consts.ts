@@ -381,7 +381,7 @@ export const Mantle = {
     MinNodeScreenMM:         1.5,  // render-time floor on drawn size; never reaches the wire
     // The browse envelope — an item picker's orbital camera, stated in view
     // terms so it holds at any globe radius, item size or field of view
-    // (MantleItemPickerChannel.conformBrowseCamera; MD-mantle-player §13).
+    // (MantleItemPickerChannel.conformBrowseCamera).
     BrowseFovDegrees:        55,  // the picker camera's vertical field of view
     BrowseFloorViewItems:    3,  // at the floor the view is this many items tall
     BrowseEntryViewFill:     0.8,  // the entry shot: the sphere's diameter as a fraction of the view height
