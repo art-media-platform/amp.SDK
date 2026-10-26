@@ -548,6 +548,11 @@ const (
 	MantleItemFrameViewFill     = float32(0.35) // an item framed (a tap, now playing): its size as a fraction of the view height
 	MantleBrowseTiltCapDeg      = float32(30)   // a browse sphere is viewed straight on: no auto-tilt, a two-finger tilt at most this far from straight down
 	MantleBrowsePanGain         = float32(2)    // a one-finger pan turns a browse sphere this many times the grabbed point's travel (1 = the ground stays under the finger)
+	// A browse sphere's surface: the picker wears this mesh and skin layer at the
+	// globe radius; two-segment, so each build scene's AssetMap binds it to a crate
+	// entry (a whitelabel picks its own looks; unmapped = no surface drawn).
+	MantleDefaultBrowseSphereMesh = "asset:mantle/browse.sphere.mesh"
+	MantleDefaultBrowseSphereSkin = "asset:mantle/browse.sphere.skin"
 )
 
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
@@ -653,6 +658,8 @@ const (
 	TerminalDefaultScrollbackRows      = int32(1000) // emulator scrollback rows
 	TerminalDefaultKeyframeMs          = 10000       // keyframe cadence — the DVR replay bound
 	TerminalDefaultJogMs               = 10000       // transport jog step: one skip back or forward
+	TerminalDefaultPrefetchAhead       = int32(2)    // resolved tracks kept ahead of the playing one (the off-screen advance)
+	TerminalDefaultPrefetchMaxAgeMs    = 300000      // a prefetched link older than this is re-resolved on screen before use
 	TerminalDefaultReplayResidentBytes = 8388608     // replay-window residency budget (Buffered cap)
 )
 

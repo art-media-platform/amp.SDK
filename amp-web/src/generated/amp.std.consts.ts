@@ -372,23 +372,28 @@ export const Glyph = {
 // points.  Each URI resolves through the crate / asset system; a mod
 // registers an override at the same key.
 export const Mantle = {
-    DefaultTileMaterial:   "asset:mantle/tile.material.default",
-    DefaultVolumePrefab:   "asset:mantle/volume.prefab.default",
+    DefaultTileMaterial:     "asset:mantle/tile.material.default",
+    DefaultVolumePrefab:     "asset:mantle/volume.prefab.default",
     // Node sizing (the yoke's tap contract): a tap authors a node persisted as
     // TRS.Sx in meters at the tapped depth.
-    DefaultNodeSizeMM:     7,  // fingertip target: the authored on-screen diameter at the tap
-    DefaultNodeSizeMeters: 1,  // the size a reader resolves for a placement carrying Sx = 0
-    MinNodeScreenMM:       1.5,  // render-time floor on drawn size; never reaches the wire
+    DefaultNodeSizeMM:       7,  // fingertip target: the authored on-screen diameter at the tap
+    DefaultNodeSizeMeters:   1,  // the size a reader resolves for a placement carrying Sx = 0
+    MinNodeScreenMM:         1.5,  // render-time floor on drawn size; never reaches the wire
     // The browse envelope — an item picker's orbital camera, stated in view
     // terms so it holds at any globe radius, item size or field of view
     // (MantleItemPickerChannel.conformBrowseCamera; MD-mantle-player §13).
-    BrowseFovDegrees:      55,  // the picker camera's vertical field of view
-    BrowseFloorViewItems:  3,  // at the floor the view is this many items tall
-    BrowseEntryViewFill:   0.8,  // the entry shot: the sphere's diameter as a fraction of the view height
-    BrowseCeilingViewFill: 0.25,  // the ceiling: the sphere never smaller than this fraction of the view height
-    ItemFrameViewFill:     0.35,  // an item framed (a tap, now playing): its size as a fraction of the view height
-    BrowseTiltCapDeg:      30,  // a browse sphere is viewed straight on: no auto-tilt, a two-finger tilt at most this far from straight down
-    BrowsePanGain:         2,  // a one-finger pan turns a browse sphere this many times the grabbed point's travel (1 = the ground stays under the finger)
+    BrowseFovDegrees:        55,  // the picker camera's vertical field of view
+    BrowseFloorViewItems:    3,  // at the floor the view is this many items tall
+    BrowseEntryViewFill:     0.8,  // the entry shot: the sphere's diameter as a fraction of the view height
+    BrowseCeilingViewFill:   0.25,  // the ceiling: the sphere never smaller than this fraction of the view height
+    ItemFrameViewFill:       0.35,  // an item framed (a tap, now playing): its size as a fraction of the view height
+    BrowseTiltCapDeg:        30,  // a browse sphere is viewed straight on: no auto-tilt, a two-finger tilt at most this far from straight down
+    BrowsePanGain:           2,  // a one-finger pan turns a browse sphere this many times the grabbed point's travel (1 = the ground stays under the finger)
+    // A browse sphere's surface: the picker wears this mesh and skin layer at the
+    // globe radius; two-segment, so each build scene's AssetMap binds it to a crate
+    // entry (a whitelabel picks its own looks; unmapped = no surface drawn).
+    DefaultBrowseSphereMesh: "asset:mantle/browse.sphere.mesh",
+    DefaultBrowseSphereSkin: "asset:mantle/browse.sphere.skin",
 } as const;
 
 // ─── VJ — the player's vis background: two slots crossfading down a vis ───
@@ -494,6 +499,8 @@ export const Terminal = {
     DefaultScrollbackRows:      1000,  // emulator scrollback rows
     DefaultKeyframeMs:          10000n,  // keyframe cadence — the DVR replay bound
     DefaultJogMs:               10000n,  // transport jog step: one skip back or forward
+    DefaultPrefetchAhead:       2,  // resolved tracks kept ahead of the playing one (the off-screen advance)
+    DefaultPrefetchMaxAgeMs:    300000n,  // a prefetched link older than this is re-resolved on screen before use
     DefaultReplayResidentBytes: 8388608n,  // replay-window residency budget (Buffered cap)
 } as const;
 
