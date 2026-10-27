@@ -438,26 +438,27 @@ type ACCEngine interface {
 // preserves the original wire-format TxMsg bytes for signature verification and
 // peer-to-peer propagation.
 //
-// Quarantine suppresses refused entries with an optional TTL. Quarantined entries are
-// suppressed from ReadSince (and therefore from fanout + sync propagation)
-// while remaining retrievable via ReadQuarantined for audit.  HighWater
-// includes them, so peers converge on the same journal shape; RangeHash (the
-// accepted digest) excludes them.  The underlying store evicts quarantined
-// entries after a positive TTL; zero retains them until a local verdict lifts
-// the quarantine or an operator assigns an expiry.
+// Quarantine suppresses refused entries with an optional TTL.  Quarantined
+// entries are suppressed from ReadSince (and therefore from fanout + sync
+// propagation) while remaining retrievable via ReadQuarantined for audit.
+// HighWater includes them, so peers converge on the same journal shape;
+// RangeHash (the accepted digest) excludes them.  The underlying store evicts
+// quarantined entries after a positive TTL; zero holds them until a local
+// verdict lifts the quarantine or an operator assigns an expiry.
 type TxJournal interface {
 	Close() error
-	// Append reports the durable change. Identical bytes leave all status intact;
-	// differing bytes may replace only a quarantined entry, clearing its status.
-	// The result is meaningful only when err == nil.
+	// Append reports the durable change.  Identical bytes leave all status
+	// intact; differing bytes may replace only an entry quarantined with a
+	// positive TTL, clearing its status — a held entry is immutable.  The
+	// result is meaningful only when err == nil.
 	Append(planetID tag.UID, txTimeID tag.UID, raw []byte) (TxAppend, error)
 	ReadSince(planetID tag.UID, after tag.UID, cb func(txTimeID tag.UID, raw []byte) bool) error
 	HighWater(planetID tag.UID) (tag.UID, error)
 	RangeHash(planetID tag.UID, start, end tag.UID) (tag.UID, error)
 
-	// Quarantine marks an existing entry. A zero TTL retains it without expiry;
-	// a positive TTL schedules reclamation. Negative TTLs are invalid.
-	// Returns ErrNotFound-style status if the entry is absent.
+	// Quarantine marks an existing entry.  A zero TTL holds it without
+	// expiry; a positive TTL schedules reclamation.  Negative TTLs are
+	// invalid.  Returns ErrNotFound-style status if the entry is absent.
 	Quarantine(planetID tag.UID, txTimeID tag.UID, ttl time.Duration) error
 
 	// ReadQuarantined iterates quarantined entries strictly after the `after`
@@ -472,7 +473,7 @@ type TxAppend uint8
 const (
 	TxAppend_Unchanged TxAppend = iota // identical bytes; status is unchanged
 	TxAppend_Inserted                  // a previously absent entry
-	TxAppend_Replaced                  // differing bytes healed a quarantined entry
+	TxAppend_Replaced                  // differing bytes healed a timed quarantine
 )
 
 // TxOutbox queues locally authored TxMsgs for propagation to vaults.  Entries
