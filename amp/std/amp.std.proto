@@ -604,9 +604,9 @@ enum ReticleStyleID {
 message DeviceVars {
     float UIScale   = 1; // item size scale; 0 → derived from display DPI
     int32 TargetFPS = 2; // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
-    // vis lead: how far ahead of the ear the visualization's PCM tap runs
-    // on this device, ms (the mixer's buffers plus the output route);
-    // 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice
+    // output latency: how long this device's output route and speaker take
+    // past FMOD's mixer, ms; the vis delay is the mixer's measured lead plus
+    // this; 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice
     int32 AVLatencyMS = 3;
 }
 

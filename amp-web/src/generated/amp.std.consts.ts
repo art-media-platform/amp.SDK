@@ -486,7 +486,7 @@ export const HomeVars = {
     DefaultTargetFPS:   60,
     MinTargetFPS:       15,
     MaxTargetFPS:       120,
-    DefaultAVLatencyMS: 120,  // vis lead handed to the sampler (ms); a set std.DeviceVars.AVLatencyMS overrides
+    DefaultAVLatencyMS: 60,  // the output path past FMOD's mixer (ms), added to its measured lead for the vis delay; a set std.DeviceVars.AVLatencyMS overrides
 } as const;
 
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───

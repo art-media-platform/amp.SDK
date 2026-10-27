@@ -3438,9 +3438,9 @@ type DeviceVars struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	UIScale   float32                `protobuf:"fixed32,1,opt,name=UIScale,proto3" json:"UIScale,omitempty"`    // item size scale; 0 → derived from display DPI
 	TargetFPS int32                  `protobuf:"varint,2,opt,name=TargetFPS,proto3" json:"TargetFPS,omitempty"` // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
-	// vis lead: how far ahead of the ear the visualization's PCM tap runs
-	// on this device, ms (the mixer's buffers plus the output route);
-	// 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice
+	// output latency: how long this device's output route and speaker take
+	// past FMOD's mixer, ms; the vis delay is the mixer's measured lead plus
+	// this; 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice
 	AVLatencyMS   int32 `protobuf:"varint,3,opt,name=AVLatencyMS,proto3" json:"AVLatencyMS,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
