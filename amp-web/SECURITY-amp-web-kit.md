@@ -21,7 +21,7 @@ itself today.
 | member content a node older than v0.285.0 wrote, which is unsealed (Encryption, below) | |
 | activity timeline (when, how much) | whether a membership proof is valid (checking it takes the epoch key) |
 | which member signed each sealed post — the author signature rides in the clear, and the roster lists every member's public signing key | |
-| planet-public records, which every node must read: governance records (among them the charter, channel names and access grants, and the member roster — member IDs, statuses, public keys, which invite each member joined with and when), invite policies and redemptions, name and federation-directory records, the planet's brand and storage options, node log entries and node messages, and ledger attestations; the closed set is `std.IsPlanetPublicAttr` in the amp.SDK's `amp/std` package | |
+| planet-public records, which every node must read: governance records (among them the charter, channel names and access grants, and the member roster — member IDs, statuses, public keys, which invite each member joined with and when), epoch links, invite policies and redemptions, name and federation-directory records, the planet's brand and storage options, node log entries and node messages, and ledger attestations; the closed set is `std.IsPlanetPublicAttr` in the amp.SDK's `amp/std` package | |
 | the planets each connected node announces — including the home planet of each identity on that node (whose ID is that identity's ID) — and each planet's last-activity time, sent over an unencrypted control channel anyone on the network path can read | |
 
 A seized relay vault yields encrypted content plus the left column.
