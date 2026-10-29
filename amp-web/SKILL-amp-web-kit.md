@@ -1531,7 +1531,7 @@ no check that they agree.
 | **Found a planet** | Start a planet and sign its charter; its founders, privacy and declaration are fixed for its life. |
 | **Invite** · **Revoke invite** · **Pause / Resume invite** | A founder or admin issues a passphrase-sealed invite, usable until used up, expired, paused or revoked; revoking an invite removes no one who already joined. |
 | **Join** (UI: "Join with Invite…") | Use an invite and its passphrase to become a member of the planet (§4.7). |
-| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed content stays unreadable to a follower — member content included, except content written before sealing by default (`SECURITY-amp-web-kit.md`). Unfollow stops syncing and removes this device's copy. An app default once unfollowed is not followed again automatically. |
+| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed content stays unreadable to a follower — member content included, unless a node from before sealing by default wrote it (`SECURITY-amp-web-kit.md`). Unfollow stops syncing and removes this device's copy. An app default once unfollowed is not followed again automatically. |
 | **Remove a planet from a node** (node operator) | A founder or node-operator session stops a node syncing a planet and reclaims its storage; peers keep their copies and no membership changes. |
 | **Rotate keys** | Founders replace the planet's key; only active members receive it; content sealed under earlier keys stays readable to whoever holds them. |
 | **Add member** | Founders or admins enroll a member by public key, without an invite; such a member cannot receive a private planet's keys. |
@@ -1548,7 +1548,7 @@ no check that they agree.
 | **Founder** | Signed the charter at founding; fixed for the planet's life. |
 | **Admin** · **Moderator** | Admin: full control of channels and member access. Moderator: approves, hides and withdraws posts; no member or key management. |
 | **Home planet** | Your own planet: your planet list, follows and settings; you are its founder; it cannot be resigned, unfollowed or removed. |
-| **Public planet** · **Private planet** | Public: anyone reads, members post. Private: members post; member content is sealed under the planet's key and readable only by key holders, except content written before sealing by default (`SECURITY-amp-web-kit.md`). Fixed at founding. |
+| **Public planet** · **Private planet** | Public: anyone reads, members post. Private: members post; member content is sealed under the planet's key and readable only by key holders, unless a node from before sealing by default wrote it (`SECURITY-amp-web-kit.md`). Fixed at founding. |
 | **Node operator** | Runs a node that stores and serves planets; a node holding a member's keys (every web member's) can read that member's planets. |
 | **Watchdog** | A member whose grant carries a capability record or a scope whitelist; it writes the data plane only inside those scopes. |
 
