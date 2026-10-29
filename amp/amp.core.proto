@@ -467,7 +467,7 @@ enum MemberAdmission {
 // forks instead).  Confidential and Public are the endpoints; the reserved 1–6
 // gap leaves room for graduated intermediate modes without disturbing them.
 enum PrivacyMode {
-    Confidential = 0; // members author; a tx sealed under the epoch key is readable only by key holders (member content is not yet sealed)
+    Confidential = 0; // members author; content is sealed under the epoch key, readable only by key holders (planet-public records stay signature-only)
     Public       = 7; // signature-only: no payload encryption; anyone may syndicate/view, only members author
 }
 

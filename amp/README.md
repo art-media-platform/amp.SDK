@@ -196,7 +196,7 @@ These rails are worth standing on because when you implement a channel these are
 
 | *Feature* | |
 |---------|-|
-| **Sovereign Secrecy** | End-to-end by construction — key exchange, epoch rotation, sealed-box wraps, a TxMsg sealed under the planet epoch key when its writer names the epoch (member content is not yet sealed; [root README](../README.md)).  Your keys, your crypt |
+| **Sovereign Secrecy** | End-to-end by construction — key exchange, epoch rotation, sealed-box wraps, and on a private planet each content TxMsg sealed under the planet epoch key by its writer's node ([root README](../README.md)).  Your keys, your crypt |
 | **Authorship + Integrity** | Every write signed by its author; a sealed TxMsg carries a membership proof (relays check its presence only), and its signature identifies the signer |
 | **CRDT Sync** | Offline edits, automatic conflict-free merge, multi-device convergence |
 | **Transport Independence** | TCP, UDP, USB hand-carry, or [Reticulum](../README.md#reticulum) mesh over LoRa — your channel doesn't know or care |

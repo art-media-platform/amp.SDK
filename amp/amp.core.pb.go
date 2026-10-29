@@ -636,7 +636,7 @@ func (MemberAdmission) EnumDescriptor() ([]byte, []int) {
 type PrivacyMode int32
 
 const (
-	PrivacyMode_Confidential PrivacyMode = 0 // members author; a tx sealed under the epoch key is readable only by key holders (member content is not yet sealed)
+	PrivacyMode_Confidential PrivacyMode = 0 // members author; content is sealed under the epoch key, readable only by key holders (planet-public records stay signature-only)
 	PrivacyMode_Public       PrivacyMode = 7 // signature-only: no payload encryption; anyone may syndicate/view, only members author
 )
 

@@ -2,7 +2,7 @@
 
 > **What this document is:** Instructions for an AI coding agent (Claude Code, Cursor, Replit Agent, etc.) — and a contract for human web developers — to build web applications that persist data through the art.media.platform (amp) vault infrastructure. Drop this file into any web project. Generated code uses the `@art-media-platform/web` library to talk to `app.www`, the unified HTTP service inside `ampd`.
 
-> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is signed, replicated across independent nodes ("vaults"), and encrypted where an app seals it; member content written through this SDK is not yet sealed (`SECURITY-amp-web-kit.md`). Every host is a full peer — an app on an embedded/local vault works offline (§14.1); **this web client is cloud-only** and needs its operated node reachable (§14.2). Your web app is a disposable UI layer; amp is the durable substrate underneath.
+> **What amp is (30-second version):** amp is a decentralized storage and communication protocol where data is signed, replicated across independent nodes ("vaults"), and encrypted where it is sealed — on a private planet, your host seals the member content you write through this SDK (`SECURITY-amp-web-kit.md`). Every host is a full peer — an app on an embedded/local vault works offline (§14.1); **this web client is cloud-only** and needs its operated node reachable (§14.2). Your web app is a disposable UI layer; amp is the durable substrate underneath.
 
 ---
 
@@ -794,7 +794,7 @@ await withdraw('shares', 'link', itemID, {
 });
 ```
 
-`tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg under a single encryption context, with one signature (not yet sealed, `SECURITY-amp-web-kit.md`). A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
+`tx(ops)` is the canonical write — all ops in one batch ride a single TxMsg under a single encryption context, with one signature, sealed by your host on a private planet (`SECURITY-amp-web-kit.md`). A debounced project save with 50 entity changes is **one** TxMsg, not 50. Mixing encryption domains in one batch (planet-public alongside private-channel ops) is rejected — split into separate `tx()` calls.
 
 `invoke(verbURL, ops)` posts the same op batch to an app verb handler (`amp://~/{app}/{verb}`) instead of committing to a cabinet — the write path for channels you hold only `Access_ReadOnly` on, where the app authors the durable write (§4.3).
 
@@ -1489,13 +1489,13 @@ directory (reading guide: [`docs/aom-index.md`](docs/aom-index.md)).
 | **Genesis** | The founding ceremony of a planet — the first TxMsg, welding the identity facts later edits cannot forge (founder signatures, epoch-key root); an optional founding `Brand` edit rides it, admin-mutable after like every Brand field (`AOM/DD-name-service.md` §2.2). |
 | **Cabinet** | The substrate store a planet's channel items commit into — the destination of a normal `tx`. A verb-RPC (`invoke`) bypasses it; the app then authors the cabinet writes itself. |
 | **Host writer session** | A host-owned session an app uses to author writes on members' behalf — e.g. the forums host service founds the board planet and lands every post (`AOM/AD-app-forums.md` §3.4). How `Access_ReadOnly` members still get content written. |
-| **TxMsg** | A signed transaction containing one or more data ops; its payload is encrypted when its writer seals it under an epoch key (member content is not yet sealed). |
+| **TxMsg** | A signed transaction containing one or more data ops; its payload is encrypted when it is sealed under an epoch key, as member content is on a private planet. |
 | **Verb-RPC** | A `POST /api/v1/tx` carrying `InvokeURL: amp://~/{app}/{verb}` — routes the batch to an app's verb handler (host-internal `TxCommitFlags_Invoke`, not journaled) which authors the durable write itself; the write path for `Access_ReadOnly` channels. SDK `invoke()` (§4.3). |
 | **Epoch** | A key rotation period; new epoch = new encryption key for the planet. |
 | **ACC** | **Access Control** — the per-channel grant engine deciding which TxOps may enter a planet: who may read, write, or govern each channel. Grants are committed as a `ChannelEpoch` via `POST /api/v1/governance/grant` (§14.4). |
 | **BYOK** | **Bring Your Own Key** — sealing user-supplied secrets client-side (`seal`/`open`, §6.2) under a device-local EncryptKey, so hosts, admins, and other members never see plaintext (`SECURITY-amp-web-kit.md`). |
 | **BlobRef** | A reference to a binary blob stored outside the TxMsg. |
-| **Vault** | The storage-and-sync half of an `ampd` node. A relay vault (holding no member's keys) cannot read sealed content (member content is not yet sealed); your host's vault holds your keys and can. |
+| **Vault** | The storage-and-sync half of an `ampd` node. A relay vault (holding no member's keys) cannot read sealed content; your host's vault holds your keys and can. |
 | **Portal** | `app.www` — the unified HTTP service inside `ampd` (`/www/*` asset streaming, REST, WebSocket, deep links, static sites, cards) (`AOM/AD-app-www.md`). |
 | **Member** | An authenticated identity within a planet. Its `Kind` is a `tag.UID` resolving to a `LawMemberKind_*` (Person / Group / Agent / Memorial) — an identity taxonomy, never an entitlement (§6.5, §12; `AOM/SD-substrate-agnostic-members.md`). |
 | **MemberProof** | An HMAC of a derived proof key over TxID, carried on every sealed tx; a relay vault requires it but cannot check it, and no node checks it today. |
@@ -1531,7 +1531,7 @@ no check that they agree.
 | **Found a planet** | Start a planet and sign its charter; its founders, privacy and declaration are fixed for its life. |
 | **Invite** · **Revoke invite** · **Pause / Resume invite** | A founder or admin issues a passphrase-sealed invite, usable until used up, expired, paused or revoked; revoking an invite removes no one who already joined. |
 | **Join** (UI: "Join with Invite…") | Use an invite and its passphrase to become a member of the planet (§4.7). |
-| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed records stay unreadable to a follower, but member content is not yet sealed (`SECURITY-amp-web-kit.md`). Unfollow stops syncing and removes this device's copy. An app default once unfollowed is not followed again automatically. |
+| **Follow** · **Unfollow** | Sync a planet without membership; the follower cannot post, and members are not told. On a private planet, sealed content stays unreadable to a follower — member content included, except content written before sealing by default (`SECURITY-amp-web-kit.md`). Unfollow stops syncing and removes this device's copy. An app default once unfollowed is not followed again automatically. |
 | **Remove a planet from a node** (node operator) | A founder or node-operator session stops a node syncing a planet and reclaims its storage; peers keep their copies and no membership changes. |
 | **Rotate keys** | Founders replace the planet's key; only active members receive it; content sealed under earlier keys stays readable to whoever holds them. |
 | **Add member** | Founders or admins enroll a member by public key, without an invite; such a member cannot receive a private planet's keys. |
@@ -1548,7 +1548,7 @@ no check that they agree.
 | **Founder** | Signed the charter at founding; fixed for the planet's life. |
 | **Admin** · **Moderator** | Admin: full control of channels and member access. Moderator: approves, hides and withdraws posts; no member or key management. |
 | **Home planet** | Your own planet: your planet list, follows and settings; you are its founder; it cannot be resigned, unfollowed or removed. |
-| **Public planet** · **Private planet** | Public: anyone reads, members post. Private: members post; a record sealed under the planet's key is readable only by key holders, but member content is not yet sealed, so every node that syncs the planet can read it. Fixed at founding. |
+| **Public planet** · **Private planet** | Public: anyone reads, members post. Private: members post; member content is sealed under the planet's key and readable only by key holders, except content written before sealing by default (`SECURITY-amp-web-kit.md`). Fixed at founding. |
 | **Node operator** | Runs a node that stores and serves planets; a node holding a member's keys (every web member's) can read that member's planets. |
 | **Watchdog** | A member whose grant carries a capability record or a scope whitelist; it writes the data plane only inside those scopes. |
 
