@@ -37,6 +37,7 @@ const (
 	SigningDomain_FounderSet   SigningDomain = "amp.fp.founders.v1" // founder-set fingerprint — hash commitment to a planet's genesis founder authority root (amp.FounderFingerprint)
 	SigningDomain_MemberReKey  SigningDomain = "amp.sig.rekey.v1"   // member re-key quorum co-signature over the re-key digest (amp.MemberEpoch.ReKey; SD-member-rekey)
 	SigningDomain_MemberVault  SigningDomain = "amp.sig.device.v1"  // member attestation that a vault is its device (amp.MemberVaultAttestation; SD-security-sync §5.8)
+	SigningDomain_MemberStatus SigningDomain = "amp.sig.status.v1"  // founder-quorum co-signature over a founder-target status record (amp.MemberEpoch.StatusQuorum; SD-channel-governance §3.2)
 )
 
 // AllSigningDomains enumerates every registered SigningDomain — the audit
@@ -52,6 +53,7 @@ var AllSigningDomains = []SigningDomain{
 	SigningDomain_FounderSet,
 	SigningDomain_MemberReKey,
 	SigningDomain_MemberVault,
+	SigningDomain_MemberStatus,
 }
 
 // SigningDomainTag returns the length-prefixed domain bytes that prefix every
