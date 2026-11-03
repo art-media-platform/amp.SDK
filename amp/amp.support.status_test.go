@@ -8,7 +8,7 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-// statusRow builds a founder-target status record co-signed by signers
+// statusRow builds a founder-target status record co-signed by each of keys
 // over StatusQuorumDigest(planet, member, memberStatus, editID).
 func statusRow(t *testing.T, planetID, memberID, editID tag.UID, memberStatus amp.MemberStatus, keys map[tag.UID][]byte) *amp.MemberEpoch {
 	t.Helper()

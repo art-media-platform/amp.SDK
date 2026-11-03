@@ -19,12 +19,11 @@ import (
 // StatusQuorumDigest returns the domain-separated digest each
 // MemberEpoch.StatusQuorum CoSignature signs — SigningDomain_MemberStatus
 // over (planetID, memberID, Status, editID) in that part order, each
-// u32-length-framed by
-// SigningParts, under the planet's hash policy.  editID is the record's op
-// EditID (== its carrier's TxID): binding it is the replay guard — a quorum
-// co-signed over one status record cannot be re-attached to a later record
-// after a reinstatement.  Recomputed from fields, never from the record's
-// value bytes, which carry the co-signatures themselves.
+// u32-length-framed by SigningParts, under the planet's hash policy.  editID
+// is the record's op EditID (== its carrier's TxID): binding it is the replay
+// guard — a quorum co-signed over one status record cannot be re-attached to
+// a later record after a reinstatement.  Recomputed from fields, never from
+// the record's value bytes, which carry the co-signatures themselves.
 func StatusQuorumDigest(hashKit safe.HashKitID, planetID, memberID, editID tag.UID, memberStatus MemberStatus) ([]byte, error) {
 	if planetID.IsNil() {
 		return nil, status.Code_BadRequest.Error("amp: status quorum digest needs a planet")
