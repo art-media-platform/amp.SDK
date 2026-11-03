@@ -1030,6 +1030,36 @@ func ParseTxEnvelope(wire []byte) (*TxEnvelope, error) {
 	return env, nil
 }
 
+// ParsePublicTxHeader extracts the TxEnvelope and TxHeader of a planet-public
+// sealed TxMsg without verifying it or parsing its ops.  The author
+// (TxHeader.FromID) rides the payload, not the envelope, so a reader that must
+// know the author before it can verify — the vault's admission pre-pass
+// (SD-security-sync §15.4) — reads it here.  A sealed (encrypted) tx is
+// refused: its header is ciphertext.
+func ParsePublicTxHeader(wire []byte) (*TxEnvelope, *TxHeader, error) {
+	if len(wire) < int(TxPreambleSize) || string(wire[:4]) != TxPreambleSignature {
+		return nil, nil, status.ErrMalformedTx
+	}
+	headLen := int(binary.BigEndian.Uint32(wire[4:8]))
+	if headLen < int(TxPreambleSize) || headLen > len(wire) {
+		return nil, nil, status.ErrMalformedTx
+	}
+	headBody := wire[TxPreambleSize:headLen]
+	env := &TxEnvelope{}
+	p := 0
+	if err := readPb(headBody, &p, env); err != nil {
+		return nil, nil, err
+	}
+	if !env.IsPublic() {
+		return nil, nil, status.Code_BadRequest.Error("amp: a sealed tx carries no public TxHeader")
+	}
+	header := &TxHeader{}
+	if err := readPb(headBody, &p, header); err != nil {
+		return nil, nil, err
+	}
+	return env, header, nil
+}
+
 // marshalPayload marshals TxHeader + ops section (the encrypted portion) without preamble or envelope.
 func marshalPayload(tx *TxMsg, dst []byte) []byte {
 	dst, _ = writePb(dst, &tx.TxHeader)

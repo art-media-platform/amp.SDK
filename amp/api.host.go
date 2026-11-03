@@ -340,11 +340,40 @@ type HostSession interface {
 	// before app.home MakeReady (AOM SD-security-sync.md §8.5).
 	KeyAdmission() KeyAdmission
 
+	// standing
+
+	// PlanetStanding is the one standing predicate (SD-invite-governance §5):
+	// JoinConfirmed = memberID holds an anchored, Active signing key rooted
+	// under a founder admission; JoinEnded = rooted and Suspended or Revoked;
+	// JoinPending = an admitted keyless record (a pre-mint or a reservation)
+	// whose keyring this session holds, or a join awaiting the founder's act;
+	// JoinUnset = no standing.  ACCEngine.IsMember alone confers nothing.
+	PlanetStanding(planetID, memberID tag.UID) JoinState
+
+	// BootstrapAuthorized reports whether memberID may take the bootstrap
+	// action purpose names on planetID: true when its standing is
+	// JoinConfirmed, or when the planet holds a founder-authored keyless
+	// Active MemberEpoch for it (a reservation).  Subject-bound and
+	// purpose-scoped; BootstrapPurposeUnset is refused.  It never confers
+	// JoinConfirmed and never authorizes content, receipts, Strikes or
+	// publication (SD-invite-governance §5).
+	BootstrapAuthorized(planetID, memberID tag.UID, purpose BootstrapPurpose) bool
+
 	// access control
 
 	// ACC returns the host's access-control engine.
 	ACC() ACCEngine
 }
+
+// BootstrapPurpose scopes a BootstrapAuthorized query to the one action a
+// founder-authored reservation may bootstrap (SD-invite-governance §5).
+type BootstrapPurpose int32
+
+const (
+	BootstrapPurposeUnset       BootstrapPurpose = 0
+	BootstrapProvisioning       BootstrapPurpose = 1 // home provisioning and the forums key seat
+	BootstrapFederationFounding BootstrapPurpose = 2 // federation-gated founding
+)
 
 // KeyAdmission is the login boundary's ruling on member-signing-key custody for
 // one session.  At most one of AdoptDeclared / MintNodeKey is acted on by
@@ -423,7 +452,8 @@ type ACCEngine interface {
 	InvitePolicies(planetID tag.UID) map[tag.UID]*PlanetInvitePolicy
 
 	// InviteRedemptions returns one invite's admitted redemption ledger, keyed
-	// by RedeemedAt item ID.  Rank over it is the redemption count.
+	// by RedeemedAt item ID — the evidence a founder admission act cites; a
+	// redemption's standing is PlanetStanding's (SD-invite-governance §4).
 	InviteRedemptions(planetID, inviteID tag.UID) map[tag.UID]*PlanetInviteRedemption
 
 	// WatchdogGrants returns the watchdog grants naming
