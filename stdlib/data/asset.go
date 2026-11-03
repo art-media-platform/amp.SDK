@@ -7,8 +7,30 @@ import (
 	"io"
 	"time"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 	"github.com/art-media-platform/amp.SDK/stdlib/task"
 )
+
+// PublishOp names the outward effect a PublishAsset call performs; the
+// publisher judges Source.Actor's standing by it (SD-invite-governance §5).
+// PublishOpUnset is refused at every publisher: a caller names its effect.
+type PublishOp int32
+
+const (
+	PublishOpUnset        PublishOp = 0
+	PublishNewExposure    PublishOp = 1 // a new URL exposing Source.Planet's content: Actor must stand JoinConfirmed there
+	PublishAuthorizedRead PublishOp = 2 // a read the caller already authorized: a non-nil Gate, or a registered public planet
+	PublishLocalDelivery  PublishOp = 3 // the session's own local capability: Actor is the login member, no planet
+)
+
+// PublishSource is the actor and source context a publisher judges — the
+// planet the asset exposes (nil for PublishLocalDelivery), the member
+// performing the effect, and the effect itself.  In-process, never wire.
+type PublishSource struct {
+	Planet tag.UID
+	Actor  tag.UID
+	Op     PublishOp
+}
 
 // PublishOpts specifies options when publishing an asset.
 type PublishOpts struct {
@@ -17,6 +39,7 @@ type PublishOpts struct {
 	HostAddr  string        // Domain or IP address used in the generated URL; if empty -> "localhost"
 	OnExpired func()        // Called when the asset expires
 	Gate      any           // Publisher-defined admission scope: the URL admits only a request the publisher verifies against it (a media token); nil = the URL serves any GET. A publisher that cannot honor a non-nil Gate MUST refuse (status.Code_Unsupported) — never publish it ungated.
+	Source    PublishSource // The effect and its actor; the publisher refuses PublishOpUnset and judges the actor's standing per Op.
 }
 
 // Publisher publishes an Asset to a URL.
