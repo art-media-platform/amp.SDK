@@ -8,20 +8,20 @@ import (
 	"github.com/art-media-platform/amp.SDK/stdlib/tag"
 )
 
-// statusRecord builds a founder-target status record co-signed by signers
+// statusRow builds a founder-target status record co-signed by signers
 // over StatusQuorumDigest(planet, member, memberStatus, editID).
-func statusRecord(t *testing.T, planetID, memberID, editID tag.UID, state amp.MemberStatus, signers map[tag.UID][]byte) *amp.MemberEpoch {
+func statusRow(t *testing.T, planetID, memberID, editID tag.UID, memberStatus amp.MemberStatus, keys map[tag.UID][]byte) *amp.MemberEpoch {
 	t.Helper()
 	record := &amp.MemberEpoch{
 		MemberTag: amp.TagFromUID(memberID),
 		Node:      amp.TagFromUID(amp.HeadNodeID),
-		Status:    state,
+		Status:    memberStatus,
 	}
-	digest, err := amp.StatusQuorumDigest(safe.HashKitID_Blake2s_256, planetID, memberID, editID, state)
+	digest, err := amp.StatusQuorumDigest(safe.HashKitID_Blake2s_256, planetID, memberID, editID, memberStatus)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for signerID, prv := range signers {
+	for signerID, prv := range keys {
 		record.StatusQuorum = append(record.StatusQuorum, &amp.CoSignature{
 			MemberTag: amp.TagFromUID(signerID),
 			Signature: signDigest(t, digest, prv),
@@ -48,7 +48,7 @@ func TestVerifyStatusQuorum(t *testing.T) {
 	}
 
 	// Both founders co-sign a suspension of founder A: verifies at 0 = all.
-	suspended := statusRecord(t, planetID, founderA, editID, amp.MemberStatus_Suspended,
+	suspended := statusRow(t, planetID, founderA, editID, amp.MemberStatus_Suspended,
 		map[tag.UID][]byte{founderA: prvA, founderB: prvB})
 	verified, err := suspended.VerifyStatusQuorum(check(planetID, editID, 0))
 	if err != nil || len(verified) != 2 {
@@ -56,7 +56,7 @@ func TestVerifyStatusQuorum(t *testing.T) {
 	}
 
 	// One signer short of all founders is refused; at threshold 1 it passes.
-	oneSigner := statusRecord(t, planetID, founderA, editID, amp.MemberStatus_Suspended,
+	oneSigner := statusRow(t, planetID, founderA, editID, amp.MemberStatus_Suspended,
 		map[tag.UID][]byte{founderB: prvB})
 	if _, err := oneSigner.VerifyStatusQuorum(check(planetID, editID, 0)); err == nil {
 		t.Error("one of two founders passed as all")
@@ -94,7 +94,7 @@ func TestVerifyStatusQuorum(t *testing.T) {
 
 	// An outsider's co-signature names no founder key.
 	outsider, _, prvX := newSigner(t)
-	forged := statusRecord(t, planetID, founderA, editID, amp.MemberStatus_Suspended,
+	forged := statusRow(t, planetID, founderA, editID, amp.MemberStatus_Suspended,
 		map[tag.UID][]byte{outsider: prvX})
 	if _, err := forged.VerifyStatusQuorum(check(planetID, editID, 1)); err == nil {
 		t.Error("an outsider's co-signature verified")

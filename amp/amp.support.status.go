@@ -18,7 +18,8 @@ import (
 
 // StatusQuorumDigest returns the domain-separated digest each
 // MemberEpoch.StatusQuorum CoSignature signs — SigningDomain_MemberStatus
-// over (planetID, memberID, Status, editID) in that part order, each u32-length-framed by
+// over (planetID, memberID, Status, editID) in that part order, each
+// u32-length-framed by
 // SigningParts, under the planet's hash policy.  editID is the record's op
 // EditID (== its carrier's TxID): binding it is the replay guard — a quorum
 // co-signed over one status record cannot be re-attached to a later record
