@@ -351,12 +351,14 @@ type HostSession interface {
 	PlanetStanding(planetID, memberID tag.UID) JoinState
 
 	// BootstrapAuthorized reports whether memberID may take the bootstrap
-	// action purpose names on planetID: true when its standing is
-	// JoinConfirmed, or when the planet holds a founder-authored keyless
-	// Active MemberEpoch for it (a reservation).  Subject-bound and
-	// purpose-scoped; BootstrapPurposeUnset is refused.  It never confers
-	// JoinConfirmed and never authorizes content, receipts, Strikes or
-	// publication (SD-invite-governance §5).
+	// action purpose names on planetID.  The contract (SD-invite-governance
+	// §5): true when its standing is JoinConfirmed, or when the planet holds
+	// a founder-authored keyless Active MemberEpoch for it (a reservation).
+	// The host completes the reservation's key/author class with the ACC's
+	// admission classes; until then the host reads the keyless-Active half
+	// only (its comment names the gap).  Subject-bound and purpose-scoped;
+	// BootstrapPurposeUnset is refused.  It never confers JoinConfirmed and
+	// never authorizes content, receipts, Strikes or publication.
 	BootstrapAuthorized(planetID, memberID tag.UID, purpose BootstrapPurpose) bool
 
 	// access control
