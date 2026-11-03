@@ -603,6 +603,20 @@ message VaultConfig {
 }
 
 
+// CharterFeature names a protocol feature a planet's era requires of every
+// reader.  A planet is founded under the feature set of its era
+// (amp.EraRequiredFeatures) and carries it in its Charter; a reader refuses a
+// genesis naming a feature it lacks, or omitting one its own era requires
+// (amp.VerifyGenesis; SD-security-sync §4.4).
+enum CharterFeature {
+    CharterFeatureUnset = 0;
+
+    // Membership is admitted only under a founder's AdmissionAct covering the
+    // join's exact signed bytes (SD-invite-governance §5).
+    FounderAdmission    = 1;
+}
+
+
 // PlanetCharter holds a planet's lifetime-IMMUTABLE founding terms.  It is
 // marshaled exactly once at genesis, stored verbatim in PlanetEpoch.Charter,
 // and carried byte-identically on every epoch for the planet's whole life.
@@ -665,6 +679,12 @@ message PlanetCharter {
     // rule under which the planet legitimately came into being cannot be
     // restated.
     int32               GenesisRequiredSignatures = 9;
+
+    // The era's required feature set, frozen at founding.  A reader refuses
+    // the genesis when the set omits any of amp.EraRequiredFeatures, names a
+    // feature outside amp.SupportedCharterFeatures, or names
+    // CharterFeatureUnset (amp.VerifyGenesis; SD-security-sync §4.4).
+    repeated CharterFeature RequiredFeatures = 10;
 }
 
 
@@ -1047,6 +1067,45 @@ message MemberEpoch {
     // after a later rotation names a stale key and is refused (the replay
     // guard).  Set ONLY alongside ReKey.
     safe.KeyRef         ReKeyPrior = 36;
+
+    // A founder's admission of this member's invite redemption — the act
+    // that roots the membership (SD-invite-governance §5).  Set on a
+    // founder-authored record whose SigningKey, EncryptKey and Epoch equal
+    // the embedded join's.
+    AdmissionAct        AdmissionAct = 37;
+
+    // Founder-quorum co-signatures over amp.StatusQuorumDigest (planet,
+    // member, Status, EditID) under safe.SigningDomain_MemberStatus.  Required
+    // on a status record whose Item is a genesis founder and whose author is
+    // not that founder (SD-channel-governance §3.2); such a record carries no
+    // SigningKey, EncryptKey, WrappedKeys or ReKey.
+    repeated CoSignature StatusQuorum = 38;
+}
+
+
+// AdmissionAct is a founder's admission of one invite redemption
+// (SD-invite-governance §5).  It embeds the evidence it admits and cites no
+// part of its own carrier: a verifier hashes the embedded bytes and never
+// re-marshals them.  The signed digest, redemption address, policy EditID,
+// signing key, encrypt key and granted access are derived from the embedded
+// bytes at one site (acc.VerifyAdmissionCertificate).
+message AdmissionAct {
+
+    // The redemption record admitted: Node = InviteID,
+    // Attr = PlanetInviteRedemption, Item = RedeemedAt, Edit = the join's
+    // TxID; PlanetID 0.
+    Address             Redemption  = 1;
+
+    // The join's exact signed wire bytes (the TxMsg carrying the redeemer's
+    // MemberEpoch and PlanetInviteRedemption).
+    bytes               JoinTx      = 2;
+
+    // The invite policy version judged: Node = PlanetInvites,
+    // Attr = PlanetInvitePolicy, Item = InviteID, Edit = that version's TxID.
+    Address             Policy      = 3;
+
+    // That version as a marshaled PlanetInvitePolicy, founder-vouched.
+    bytes               PolicyValue = 4;
 }
 
 
@@ -1456,6 +1515,27 @@ message PlanetInviteOp {
     // identity now seated on the planet.
     fixed64             MemberID_0 = 22;
     fixed64             MemberID_1 = 23;
+
+    // The minted member's standing on the planet (redeem response).
+    JoinState           JoinState = 24;
+
+    // The redemption's RedeemedAt NowID (redeem response) — the ledger item
+    // a re-redeem while Pending replaces.
+    fixed64             RedeemedAt_0 = 25;
+    fixed64             RedeemedAt_1 = 26;
+}
+
+
+// JoinState is a member's standing on a planet (SD-invite-governance §5):
+// Confirmed = rooted under a founder admission with an anchored, Active
+// signing key; Ended = rooted and Suspended or Revoked; Pending = a join or
+// keyless record awaiting the founder's act; Unset = no standing (the
+// refusal sentinel).
+enum JoinState {
+    JoinUnset     = 0;
+    JoinPending   = 1;
+    JoinConfirmed = 2;
+    JoinEnded     = 3;
 }
 
 
