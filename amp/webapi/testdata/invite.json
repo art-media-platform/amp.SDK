@@ -41,25 +41,25 @@
         "GrantedAccess": "ReadWrite",
         "Status": "InviteActive",
         "ExpiresAt": 1785000000,
+        "Admitted": 1,
         "Redemptions": [
           {
             "Member": "06efv-w28sb-n00bpb-pbpbp-bpbpb",
             "RedeemedAt": 1782900000,
-            "Rank": 1,
-            "InRank": true
+            "JoinState": "JoinConfirmed"
           },
           {
             "Member": "06efv-w28sb-k009m6-dtm6d-tm6dt",
             "RedeemedAt": 1782950000,
-            "Rank": 6,
-            "InRank": false
+            "JoinState": "JoinPending"
           }
         ]
       },
       {
         "InviteID": "06efv-w28sb-h008j2-48j24-8j248",
         "MaxRedemptions": 0,
-        "Status": "InviteRevoked"
+        "Status": "InviteRevoked",
+        "Admitted": 0
       }
     ]
   }

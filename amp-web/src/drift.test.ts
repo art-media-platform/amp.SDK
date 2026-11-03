@@ -171,11 +171,11 @@ const SHAPES: Record<string, ShapeSpec> = {
     nested: { Policies: 'InvitePolicyEntry' },
   },
   InvitePolicyEntry: {
-    required: ['InviteID', 'MaxRedemptions', 'Status'],
+    required: ['InviteID', 'MaxRedemptions', 'Status', 'Admitted'],
     optional: ['GrantedAccess', 'ExpiresAt', 'Redemptions'],
     nested: { Redemptions: 'InviteRedemptionEntry' },
   },
-  InviteRedemptionEntry: { required: ['Member', 'RedeemedAt', 'Rank', 'InRank'] },
+  InviteRedemptionEntry: { required: ['Member', 'RedeemedAt', 'JoinState'] },
 
   // NOTE: no TS interface models the governance-grant family yet (the SDK has
   // no governance API — raw-fetch per the SKILL §12 item-1 carve-out for

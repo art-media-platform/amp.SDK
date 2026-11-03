@@ -170,22 +170,26 @@ export type AccessLevel =
   | 'NotAllowed' | 'Invite' | 'Private'
   | 'ReadOnly' | 'Watchdog' | 'ReadWrite' | 'Moderator' | 'Admin';
 
-/** One invite policy with its rank-adjudicated redemption ledger. */
+/** A member's standing on a planet (amp.JoinState). */
+export type JoinState = 'JoinUnset' | 'JoinPending' | 'JoinConfirmed' | 'JoinEnded';
+
+/** One invite policy with its redemption ledger; `Admitted` counts the
+ *  redemptions standing `JoinConfirmed`. */
 export interface InvitePolicyEntry {
   InviteID: string;
   MaxRedemptions: number;
   GrantedAccess?: string;
   Status: 'InviteActive' | 'InviteRevoked' | 'InvitePaused';
   ExpiresAt?: number;
+  Admitted: number;
   Redemptions?: InviteRedemptionEntry[];
 }
 
-/** One ledger record; `InRank` is false for an over-rank (void) record. */
+/** One ledger record with the member's standing. */
 export interface InviteRedemptionEntry {
   Member: string;
   RedeemedAt: number;           // unix seconds
-  Rank: number;
-  InRank: boolean;
+  JoinState: JoinState;
 }
 
 /** Result of listing a planet's invites. */

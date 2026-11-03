@@ -565,7 +565,7 @@ const { PlanetID, MemberID } = await client.joinWithInvite({
 POST /api/v1/invite/issue      Body { Planet, Passphrase, MaxRedemptions?, Access?, ExpiresAt?, VaultAddrs? }
                                Response { PlanetID, InviteID, InviteText }   // 201
 POST /api/v1/invite/revoke     Body { Planet, InviteID? | InviteText?, Rotate? }   // 200
-GET  /api/v1/invite/list?planet={UID}    Response { Policies: [{ InviteID, MaxRedemptions, Status, ExpiresAt?, Redemptions:[{ Member, RedeemedAt, Rank, InRank }] }] }
+GET  /api/v1/invite/list?planet={UID}    Response { Policies: [{ InviteID, MaxRedemptions, Status, ExpiresAt?, Admitted, Redemptions:[{ Member, RedeemedAt, JoinState }] }] }
 ```
 
 `MaxRedemptions` selects the invite kind: **0** (or omitted) mints a single-use
@@ -574,8 +574,10 @@ join off one URL, each minting their own identity. `Access` (`ReadWrite`, …) i
 what each joining member is granted; `ExpiresAt` is unix seconds (0 = the planet's
 bootstrap TTL). `revoke` is **terminal** (reissue, never un-revoke); `Rotate`
 also rotates the planet epoch to retire the token-held key (only a founder
-whose key the node holds). `list` shows each policy's redemption ledger with an adjudicated
-`Rank` — a record with `InRank: false` is over the ceiling and void.
+whose key the node holds). `list` shows each policy's redemption ledger with each
+member's standing (`JoinState`: `JoinConfirmed` once the founder's admission act
+covers the join, `JoinPending` until then) and `Admitted`, the count standing
+`JoinConfirmed`.
 
 ```ts
 const { InviteID, InviteText } = await client.issueInvite({

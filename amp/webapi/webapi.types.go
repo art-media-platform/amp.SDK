@@ -561,24 +561,26 @@ type InviteListResponse struct {
 	Policies []InvitePolicyEntry `json:"Policies"`
 }
 
-// InvitePolicyEntry is one invite policy with its ranked redemption ledger.
-// Status rides as its enum name ("InviteActive" / "InviteRevoked").
+// InvitePolicyEntry is one invite policy with its redemption ledger.  Status
+// rides as its enum name ("InviteActive" / "InviteRevoked"); Admitted counts
+// the redemptions standing JoinConfirmed (SD-invite-governance §4).
 type InvitePolicyEntry struct {
 	InviteID       tag.UID                 `json:"InviteID"`
 	MaxRedemptions uint32                  `json:"MaxRedemptions"`
 	GrantedAccess  string                  `json:"GrantedAccess,omitempty"`
 	Status         string                  `json:"Status"`
 	ExpiresAt      int64                   `json:"ExpiresAt,omitempty"`
+	Admitted       int                     `json:"Admitted"`
 	Redemptions    []InviteRedemptionEntry `json:"Redemptions,omitempty"`
 }
 
-// InviteRedemptionEntry is one ledger record with its adjudicated rank; InRank
-// is false for an over-rank (void) record.
+// InviteRedemptionEntry is one ledger record with the member's standing —
+// an amp.JoinState name ("JoinConfirmed", "JoinPending", "JoinEnded",
+// "JoinUnset").
 type InviteRedemptionEntry struct {
 	Member     tag.UID `json:"Member"`
 	RedeemedAt int64   `json:"RedeemedAt"` // unix seconds
-	Rank       int     `json:"Rank"`
-	InRank     bool    `json:"InRank"`
+	JoinState  string  `json:"JoinState"`
 }
 
 // ── Governance (§ app.home ChannelEpoch) ────────────────────────────────
