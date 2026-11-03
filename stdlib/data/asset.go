@@ -39,7 +39,7 @@ type PublishOpts struct {
 	HostAddr  string        // Domain or IP address used in the generated URL; if empty -> "localhost"
 	OnExpired func()        // Called when the asset expires
 	Gate      any           // Publisher-defined admission scope: the URL admits only a request the publisher verifies against it (a media token); nil = the URL serves any GET. A publisher that cannot honor a non-nil Gate MUST refuse (status.Code_Unsupported) — never publish it ungated.
-	Source    PublishSource // The effect and its actor; the publisher refuses PublishOpUnset and judges the actor's standing per Op.
+	Source    PublishSource // The effect and its actor (SD-invite-governance §5): a publisher judges the actor's standing per Op and refuses PublishOpUnset, as each publisher adopts the contract.
 }
 
 // Publisher publishes an Asset to a URL.
