@@ -174,10 +174,11 @@ func TestPlanetEpoch_Declaration_ParticipatesInSigning(t *testing.T) {
 	mkEnv := func(declaration string) *amp.PlanetEpoch {
 		t.Helper()
 		charter := &amp.PlanetCharter{
-			CharterSchema: 1,
-			PlanetID:      amp.TagFromUID(tag.UID{0xABCD, 0xEF01}),
-			GenesisEpoch:  amp.TagFromUID(tag.UID{100, 200}),
-			Declaration:   &amp.Tags{Head: &amp.Tag{Text: declaration}},
+			CharterSchema:    1,
+			PlanetID:         amp.TagFromUID(tag.UID{0xABCD, 0xEF01}),
+			GenesisEpoch:     amp.TagFromUID(tag.UID{100, 200}),
+			RequiredFeatures: amp.EraRequiredFeatures,
+			Declaration:      &amp.Tags{Head: &amp.Tag{Text: declaration}},
 		}
 		terms := &amp.EpochTerms{
 			TermsSchema:   1,
@@ -282,9 +283,10 @@ func TestPlanetEpoch_Witnesses_VerifyOverSameFrame(t *testing.T) {
 func makeTestEpoch(t *testing.T) *amp.PlanetEpoch {
 	t.Helper()
 	charter := &amp.PlanetCharter{
-		CharterSchema: 1,
-		PlanetID:      amp.TagFromUID(tag.UID{0xABCD, 0xEF01}),
-		GenesisEpoch:  amp.TagFromUID(tag.UID{100, 200}),
+		CharterSchema:    1,
+		PlanetID:         amp.TagFromUID(tag.UID{0xABCD, 0xEF01}),
+		GenesisEpoch:     amp.TagFromUID(tag.UID{100, 200}),
+		RequiredFeatures: amp.EraRequiredFeatures,
 	}
 	terms := &amp.EpochTerms{
 		TermsSchema:   1,

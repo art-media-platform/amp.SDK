@@ -47,10 +47,11 @@ func TestVerifyCharterContinuity_ContentSealedSince(t *testing.T) {
 	chain := sealedSinceChain{
 		t: t,
 		charter: &amp.PlanetCharter{
-			CharterSchema: 1,
-			PlanetID:      uid(0x5EA1, 0x5EA1),
-			GenesisEpoch:  uid(100, 200),
-			Privacy:       amp.PrivacyMode_Confidential,
+			RequiredFeatures: amp.EraRequiredFeatures,
+			CharterSchema:    1,
+			PlanetID:         uid(0x5EA1, 0x5EA1),
+			GenesisEpoch:     uid(100, 200),
+			Privacy:          amp.PrivacyMode_Confidential,
 		},
 	}
 
@@ -91,10 +92,11 @@ func TestVerifyCharterContinuity_ContentSealedSince(t *testing.T) {
 	public := sealedSinceChain{
 		t: t,
 		charter: &amp.PlanetCharter{
-			CharterSchema: 1,
-			PlanetID:      uid(0xB0B, 0xB0B),
-			GenesisEpoch:  uid(100, 200),
-			Privacy:       amp.PrivacyMode_Public,
+			RequiredFeatures: amp.EraRequiredFeatures,
+			CharterSchema:    1,
+			PlanetID:         uid(0xB0B, 0xB0B),
+			GenesisEpoch:     uid(100, 200),
+			Privacy:          amp.PrivacyMode_Public,
 		},
 	}
 	publicMarked := public.epoch(100, 200, nil, uid(100, 200))
