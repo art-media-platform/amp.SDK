@@ -354,10 +354,11 @@ func TestPlanetEpoch_VerifyGenesis_Refusals(t *testing.T) {
 	planetID := uid(0xC0, 0x01).UID()
 	charter := func() *amp.PlanetCharter {
 		return &amp.PlanetCharter{
-			CharterSchema: 1,
-			PlanetID:      uid(0xC0, 0x01),
-			GenesisEpoch:  uid(100, 200),
-			Founders:      []*amp.Tag{uid(0xF1, 0)},
+			CharterSchema:    1,
+			PlanetID:         uid(0xC0, 0x01),
+			GenesisEpoch:     uid(100, 200),
+			Founders:         []*amp.Tag{uid(0xF1, 0)},
+			RequiredFeatures: amp.EraRequiredFeatures,
 		}
 	}
 	terms := func() *amp.EpochTerms {

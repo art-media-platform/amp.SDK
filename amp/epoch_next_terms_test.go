@@ -570,10 +570,11 @@ func TestAssembleSuccessor_CopiesStoredCharter(t *testing.T) {
 	planet := tagWithUID(0x7C, 0x01)
 	genesisTag := tagWithUID(0x7C, 0x02)
 	goCharter := &amp.PlanetCharter{
-		CharterSchema: 1,
-		PlanetID:      planet,
-		GenesisEpoch:  genesisTag,
-		Privacy:       amp.PrivacyMode_Public,
+		CharterSchema:    1,
+		PlanetID:         planet,
+		GenesisEpoch:     genesisTag,
+		Privacy:          amp.PrivacyMode_Public,
+		RequiredFeatures: amp.EraRequiredFeatures,
 	}
 	privacy, err := proto.Marshal(&amp.PlanetCharter{
 		Privacy: amp.PrivacyMode_Public,
@@ -582,9 +583,10 @@ func TestAssembleSuccessor_CopiesStoredCharter(t *testing.T) {
 		t.Fatal(err)
 	}
 	rest, err := proto.Marshal(&amp.PlanetCharter{
-		CharterSchema: 1,
-		PlanetID:      planet,
-		GenesisEpoch:  genesisTag,
+		CharterSchema:    1,
+		PlanetID:         planet,
+		GenesisEpoch:     genesisTag,
+		RequiredFeatures: amp.EraRequiredFeatures,
 	})
 	if err != nil {
 		t.Fatal(err)

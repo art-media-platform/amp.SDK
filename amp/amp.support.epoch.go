@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strings"
 
@@ -811,11 +812,53 @@ func (pe *PlanetEpoch) verifySealedSince(terms, prevTerms *EpochTerms) error {
 	return nil
 }
 
+// SupportedCharterFeatures is every CharterFeature this binary implements;
+// a genesis naming another is refused (VerifyCharterFeatures).
+var SupportedCharterFeatures = []CharterFeature{
+	CharterFeature_FounderAdmission,
+}
+
+// EraRequiredFeatures is the feature set every genesis of this era carries
+// (both Charter producers stamp it) and every reader of this era requires: a
+// Charter omitting one is refused at every VerifyGenesis caller, and the
+// device re-founds (SD-security-sync §4.4; the era boundary).
+var EraRequiredFeatures = []CharterFeature{
+	CharterFeature_FounderAdmission,
+}
+
+// VerifyCharterFeatures is the era boundary: charter.RequiredFeatures must
+// hold every EraRequiredFeatures entry, name only SupportedCharterFeatures
+// entries, and never CharterFeatureUnset.  The list reads as a set
+// (duplicates normalize).  The Charter is inside the founder-signed genesis
+// frame, so the set cannot be altered without re-signing.
+func VerifyCharterFeatures(charter *PlanetCharter) error {
+	named := make(map[CharterFeature]struct{}, len(charter.GetRequiredFeatures()))
+	for _, feature := range charter.GetRequiredFeatures() {
+		if feature == CharterFeature_CharterFeatureUnset {
+			return status.Code_AuthFailed.Error(
+				"amp: genesis Charter names CharterFeatureUnset")
+		}
+		if !slices.Contains(SupportedCharterFeatures, feature) {
+			return status.Code_AuthFailed.Errorf(
+				"amp: genesis Charter requires feature %d this binary lacks", feature)
+		}
+		named[feature] = struct{}{}
+	}
+	for _, feature := range EraRequiredFeatures {
+		if _, ok := named[feature]; !ok {
+			return status.Code_AuthFailed.Errorf(
+				"amp: genesis Charter omits this era's required feature %v", feature)
+		}
+	}
+	return nil
+}
+
 // VerifyGenesis is the one structural check of a founding epoch: its
 // EpochTag and CharterHash (VerifyCharterContinuity with no predecessor),
-// Terms naming no predecessor at height 0, and a Charter naming planetID and
-// this epoch as its genesis (SD-channel-governance §3.3).  The founder
-// signatures are the caller's to check (acc.VerifyGenesisBrand).
+// Terms naming no predecessor at height 0, a Charter naming planetID and
+// this epoch as its genesis (SD-channel-governance §3.3), and the era's
+// required feature set (VerifyCharterFeatures).  The founder signatures are
+// the caller's to check (acc.VerifyGenesisBrand).
 func (pe *PlanetEpoch) VerifyGenesis(planetID tag.UID) error {
 	if err := pe.VerifyCharterContinuity(nil); err != nil {
 		return err
@@ -840,7 +883,7 @@ func (pe *PlanetEpoch) VerifyGenesis(planetID tag.UID) error {
 		return status.Code_AuthFailed.Error(
 			"amp: genesis Charter names another epoch as its genesis")
 	}
-	return nil
+	return VerifyCharterFeatures(charter)
 }
 
 // planetIDDomain separates FounderPlanetID's hash from every other UID
