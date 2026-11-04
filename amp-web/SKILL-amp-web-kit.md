@@ -556,9 +556,10 @@ const { PlanetID, MemberID } = await client.joinWithInvite({
   inviteText: 'https://{fqdn}/invite#…',   // the universal URL, or its amp-base32 body
   passphrase: '…',                          // out-of-band
 });
-// You are now a member of that federation's planet.  What you can do with your
-// own planets from here — brand them yourself, and who registers their names —
-// is §4.8.
+// JoinState says where you stand: `JoinConfirmed` is a member, `JoinPending` waits
+// for a founder's admission act (reads only; writes refuse until then).  Accepting
+// again submits a new request.  What you can do with your own planets from here —
+// brand them yourself, and who registers their names — is §4.8.
 ```
 
 **Issuing, revoking, and listing invites** (issue and revoke: founders and root admins; list: any session; Bearer, host-bridged):
@@ -578,8 +579,10 @@ bootstrap TTL). `revoke` is **terminal** (reissue, never un-revoke); `Rotate`
 also rotates the planet epoch to retire the token-held key (only a founder
 whose key the node holds). `list` shows each policy's redemption ledger with each
 member's standing (`JoinState`: `JoinConfirmed` once the founder's admission act
-covers the join, `JoinPending` until then) and `Admitted`, the count standing
-`JoinConfirmed`.
+covers the join, `JoinEnded` once suspended or revoked) and `Admitted`, the count
+of founder admission acts, a since-suspended member's included. The ledger holds
+covered joins only; a request still waiting appears in `amp invite list`, for a
+founder or root Admin.
 
 ```ts
 const { InviteID, InviteText } = await client.issueInvite({
@@ -1664,7 +1667,7 @@ For end-to-end tests without a production vault, point the client at a local `am
 
 When a partner runs their **own** `ampd` (the §14.1 cloud or embedded topology) they are their own node operator — their own CORS, planets, and admin — so there is **no per-deploy config handoff**. What federating with a parent buys them is *discoverability*: their planets resolve through the parent's federation, and the parent's through theirs. A parent federation is itself founded from the CLI — `amp federation found "<label>" --invite-pass … --invite-max … --fqdn <fqdn>` seals the genesis with the founder's own key and emits the multi-use onboarding invite in one act. Two ways to federate with one, both proven over the public member-signed APIs (no special grant — **federation membership is the authorization to publish names**):
 
-- **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner joins (`amp invite accept`) and is now a member, then registers their own records into the parent's federation: `amp --planet <parent-fed> name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port` (the global `--planet` binds the session to the federation — required from a fresh CLI session). Their names resolve to their planets, carrying their own vault as the bootstrap address.
+- **Join the parent's federation (invited member).** The parent issues an invite (`amp invite issue`); the partner joins (`amp invite accept`), becomes a member once the founder admits the request, then registers their own records into the parent's federation: `amp --planet <parent-fed> name register <fqdn> --target <planet> --federation <parent-fed> --vault tcp:their-host:port` (the global `--planet` binds the session to the federation — required from a fresh CLI session). Their names resolve to their planets, carrying their own vault as the bootstrap address.
 - **Peer two federations.** The partner runs their *own* federation; the parent links it in with `amp federation peer <partner-fed-UID> --vault tcp:their-host:port`. A resolver then forwards across the directory hop (`ResolveVia`) into the partner's federation. Either side can peer the other.
 
 **Following a federation at boot.** A self-hosted node pins the federations it follows with `ampd -federation <UID>@tcp:host:port` — it dials the bootstrap peer and watches that federation's NameService channel at startup, so its names are carried without a manual resolve-and-pin each boot (connectivity otherwise rides `-vault.peers`).

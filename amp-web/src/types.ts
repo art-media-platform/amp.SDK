@@ -176,8 +176,8 @@ export type AccessLevel =
 /** A member's standing on a planet (amp.JoinState). */
 export type JoinState = 'JoinUnset' | 'JoinPending' | 'JoinConfirmed' | 'JoinEnded';
 
-/** One invite policy with its redemption ledger; `Admitted` counts the
- *  redemptions standing `JoinConfirmed`. */
+/** One invite policy with its redemption ledger; `Admitted` counts the founder
+ *  admission acts indexed for the invite, a since-suspended member's included. */
 export interface InvitePolicyEntry {
   InviteID: string;
   MaxRedemptions: number;

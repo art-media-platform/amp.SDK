@@ -567,7 +567,8 @@ type InviteListResponse struct {
 
 // InvitePolicyEntry is one invite policy with its redemption ledger.  Status
 // rides as its enum name ("InviteActive" / "InviteRevoked"); Admitted counts
-// the redemptions standing JoinConfirmed (SD-invite-governance §4).
+// the founder admission acts indexed for the invite, a since-suspended member's
+// included (SD-invite-governance §4).
 type InvitePolicyEntry struct {
 	InviteID       tag.UID                 `json:"InviteID"`
 	MaxRedemptions uint32                  `json:"MaxRedemptions"`
