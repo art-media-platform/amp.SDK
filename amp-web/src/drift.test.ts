@@ -161,7 +161,7 @@ const SHAPES: Record<string, ShapeSpec> = {
   },
   InviteIssueResponse: { required: ['PlanetID', 'InviteID', 'InviteText'] },
   InviteAcceptRequest: { required: ['InviteText', 'Passphrase'] },
-  InviteAcceptResponse: { required: ['PlanetID', 'MemberID'] },
+  InviteAcceptResponse: { required: ['PlanetID', 'MemberID', 'InviteID', 'JoinState', 'RedeemedAt'] },
   InviteRevokeRequest: {
     required: ['Planet'],
     optional: ['InviteID', 'InviteText', 'Rotate'],

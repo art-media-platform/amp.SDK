@@ -538,10 +538,14 @@ type InviteAcceptRequest struct {
 	Passphrase string `json:"Passphrase"`
 }
 
-// InviteAcceptResponse returns the joined planet and the redeemer's member UID.
+// InviteAcceptResponse describes accepted Pending or Confirmed membership.
+// RedeemedAt is a full UID, empty when a Confirmed repeat authored no request.
 type InviteAcceptResponse struct {
-	PlanetID tag.UID `json:"PlanetID"`
-	MemberID tag.UID `json:"MemberID"`
+	PlanetID   tag.UID `json:"PlanetID"`
+	MemberID   tag.UID `json:"MemberID"`
+	InviteID   tag.UID `json:"InviteID"`
+	JoinState  string  `json:"JoinState"`
+	RedeemedAt tag.UID `json:"RedeemedAt"`
 }
 
 // InviteRevokeRequest is the body of POST /api/v1/invite/revoke (Bearer).

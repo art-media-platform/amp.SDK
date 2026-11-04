@@ -22,7 +22,10 @@
   },
   "InviteAcceptResponse": {
     "PlanetID": "06efv-w28sb-400248-j248j-248j2",
-    "MemberID": "06efv-w28sb-n00bpb-pbpbp-bpbpb"
+    "MemberID": "06efv-w28sb-n00bpb-pbpbp-bpbpb",
+    "InviteID": "06efv-w28sb-f007fx-vrfxv-rfxvr",
+    "JoinState": "JoinPending",
+    "RedeemedAt": "06efv-w28sb-k009m6-dtm6d-tm6dt"
   },
   "InviteRevokeRequest": {
     "Planet": "06efv-w28sb-400248-j248j-248j2",

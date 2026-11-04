@@ -109,6 +109,8 @@ func PublishMediaStream(appCtx amp.AppContext, src MediaStreamSource, opts Media
 	if publisher == nil {
 		return nil, fmt.Errorf("std: PublishMediaStream: session has no asset publisher")
 	}
+	pub.Source.Planet = src.Planet
+	pub.Source.Actor = appCtx.Session().PlanetMember(src.Planet)
 	url, err := publisher.PublishAsset(asset, pub)
 	if err != nil {
 		return nil, err

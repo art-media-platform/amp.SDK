@@ -940,6 +940,7 @@ export class AmpWebClient implements AmpAdapter {
   // joinWithInvite joins the planet a sealed invite names (its universal URL or
   // amp-base32 body), minting this member's keys host-side.  Bearer; the
   // passphrase arrives out-of-band and the token is inert without it.
+  // A Pending response awaits admission; repeat calls create fresh requests.
   async joinWithInvite(opts: JoinWithInviteOpts): Promise<JoinWithInviteResult> {
     return this.apiFetch<JoinWithInviteResult>('/invite/accept', {
       method: 'POST',

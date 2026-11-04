@@ -529,7 +529,9 @@ invite:
 ```
 POST /api/v1/invite/accept            (Bearer)
      Body:     { InviteText: string, Passphrase: string }
-     Response: { PlanetID: string, MemberID: string }    // 201 Created; base32 UIDs
+     Response: { PlanetID: string, MemberID: string, InviteID: string, JoinState: JoinState, RedeemedAt: string }
+     // 202 Pending; 201 newly Confirmed; 200 Confirmed no-op (empty RedeemedAt).
+     // RedeemedAt is a full base32 UID, not Unix seconds. Do not re-accept to poll.
 ```
 
 - `InviteText` is the invite's **universal URL** `https://{fqdn}/invite#{body}`

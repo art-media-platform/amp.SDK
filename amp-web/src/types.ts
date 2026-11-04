@@ -147,10 +147,13 @@ export interface JoinWithInviteOpts {
   passphrase: string;
 }
 
-/** Result of joining with an invite: the joined planet + member (base32). */
+/** Accepted join: Pending awaits a founder act; Confirmed grants standing. */
 export interface JoinWithInviteResult {
   PlanetID: string;
   MemberID: string;
+  InviteID: string;
+  JoinState: JoinState;
+  RedeemedAt: string; // full UID; empty for a Confirmed no-op
 }
 
 /** Options for revoking an invite (terminal). */
