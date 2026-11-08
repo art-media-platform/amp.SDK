@@ -192,7 +192,7 @@ export interface InvitePolicyEntry {
 /** One ledger record with the member's standing. */
 export interface InviteRedemptionEntry {
   Member: string;
-  RedeemedAt: number;           // unix seconds
+  RedeemedAtUnix: number;       // unix seconds (JoinWithInviteResult.RedeemedAt is the UID)
   JoinState: JoinState;
 }
 

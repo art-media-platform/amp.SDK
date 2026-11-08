@@ -591,7 +591,7 @@ const { PlanetID, MemberID } = await client.joinWithInvite({
 POST /api/v1/invite/issue      Body { Planet, Passphrase, MaxRedemptions?, Access?, ExpiresAt?, VaultAddrs? }
                                Response { PlanetID, InviteID, InviteText }   // 201
 POST /api/v1/invite/revoke     Body { Planet, InviteID? | InviteText?, Rotate? }   // 200
-GET  /api/v1/invite/list?planet={UID}    Response { Policies: [{ InviteID, MaxRedemptions, Status, ExpiresAt?, Admitted, Redemptions:[{ Member, RedeemedAt, JoinState }] }] }
+GET  /api/v1/invite/list?planet={UID}    Response { Policies: [{ InviteID, MaxRedemptions, Status, ExpiresAt?, Admitted, Redemptions:[{ Member, RedeemedAtUnix, JoinState }] }] }   // RedeemedAtUnix: unix seconds
 ```
 
 `MaxRedemptions` selects the invite kind: **0** (or omitted) mints a single-use

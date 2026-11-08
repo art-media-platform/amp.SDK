@@ -5,7 +5,9 @@
     "MaxRedemptions": 5,
     "Access": "ReadWrite",
     "ExpiresAt": 1785000000,
-    "VaultAddrs": ["{your-node}:5192"]
+    "VaultAddrs": [
+      "{your-node}:5192"
+    ]
   },
   "InviteIssueRequest.singleUse": {
     "Planet": "06efv-w28sb-400248-j248j-248j2",
@@ -49,13 +51,13 @@
         "Redemptions": [
           {
             "Member": "06efv-w28sb-n00bpb-pbpbp-bpbpb",
-            "RedeemedAt": 1782900000,
-            "JoinState": "JoinConfirmed"
+            "JoinState": "JoinConfirmed",
+            "RedeemedAtUnix": 1782900000
           },
           {
             "Member": "06efv-w28sb-k009m6-dtm6d-tm6dt",
-            "RedeemedAt": 1782950000,
-            "JoinState": "JoinPending"
+            "JoinState": "JoinPending",
+            "RedeemedAtUnix": 1782950000
           }
         ]
       },

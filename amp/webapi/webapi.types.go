@@ -586,9 +586,9 @@ type InvitePolicyEntry struct {
 // an amp.JoinState name ("JoinConfirmed", "JoinPending", "JoinEnded",
 // "JoinUnset").
 type InviteRedemptionEntry struct {
-	Member     tag.UID `json:"Member"`
-	RedeemedAt int64   `json:"RedeemedAt"` // unix seconds
-	JoinState  string  `json:"JoinState"`
+	Member         tag.UID `json:"Member"`
+	RedeemedAtUnix int64   `json:"RedeemedAtUnix"` // unix seconds (InviteAcceptResponse.RedeemedAt is the UID)
+	JoinState      string  `json:"JoinState"`
 }
 
 // ── Governance (§ app.home ChannelEpoch) ────────────────────────────────
