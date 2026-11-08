@@ -542,7 +542,7 @@ when a request was journaled before the failure — wait on it, do not re-accept
 |------|-----------------|--------------------------------------------------------------------------------------------|-------------------------------------|
 | 400  | `BadRequest`    | `InviteText` undecodable (a mangled paste fails the CRC), malformed body                   | no — fix the input                  |
 | 403  | `Forbidden`     | the passphrase did not open the token, the invite expired, no permission to join           | no                                  |
-| 404  | `NotFound`      | the node does not carry the invite's planet                                                | no — another node, or a reissue     |
+| 404  | `NotFound`      | reserved for a planet this node never carries; no accept path answers it today (a policy not yet synced is `503 NotReady`) | no — another node, or a reissue     |
 | 409  | `TxRejected`    | the policy is Paused, or this node's verifier refused the journaled request (`TxID`)        | Paused: later; refused: no          |
 | 410  | `NotFound`      | the invite is revoked (terminal): ask for a reissue                                        | no                                  |
 | 429  | `RateLimited`   | this member's accept budget is spent (each accept costs one attempt before the stretch)     | after `Retry-After`                 |
