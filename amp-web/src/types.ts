@@ -127,7 +127,7 @@ export interface AmpAuth {
 /** Options for issuing an invite (SDK ergonomic shape, camelCase). */
 export interface InviteIssueOpts {
   planet: string;               // base32 UID of the planet to invite to
-  passphrase: string;           // seals the returned invite (delivered out-of-band)
+  passphrase: string;           // the issuer's pass (≥ 10 chars, 2 not letters; spacing and case ignored), delivered out-of-band
   maxRedemptions?: number;      // 0 / omitted = single-use pre-minted slot; > 0 = multi-use ceiling
   access?: AccessLevel;         // access each redeemer is granted; omitted = planet default
   expiresAt?: number;           // unix seconds; omitted = planet bootstrap TTL

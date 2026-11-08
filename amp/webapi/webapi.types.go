@@ -517,7 +517,7 @@ type FederationPeerEntry struct {
 // = the planet's bootstrap TTL.
 type InviteIssueRequest struct {
 	Planet         string   `json:"Planet"`                   // amp-base32 UID of the planet to invite to
-	Passphrase     string   `json:"Passphrase"`               // seals the returned invite (out-of-band from the URL)
+	Passphrase     string   `json:"Passphrase"`               // the issuer's pass, delivered out-of-band; floor amp.InvitePass*
 	MaxRedemptions uint32   `json:"MaxRedemptions,omitempty"` // 0 = single-use; > 0 = multi-use ceiling
 	Access         string   `json:"Access,omitempty"`         // access enum name granted per redeemer
 	ExpiresAt      int64    `json:"ExpiresAt,omitempty"`      // unix seconds; 0 = planet bootstrap TTL

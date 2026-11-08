@@ -95,3 +95,12 @@ const (
 	// Ultra-edition AVPro's custom headers); it takes precedence over the query.
 	ServeSecretHeader = "X-Amp-Serve"
 )
+
+// ─── The invite passphrase floor (PlanetInviteOp.Passphrase). ───
+// It counts the pass's canonic form: whitespace and invisible characters
+// removed, letters in lower case (AOM SD-canonization-spec.md §1.8).  The
+// issuer chooses the pass; the node refuses one below the floor at issue.
+const (
+	InvitePassMinChars      = int32(10) // canonic characters
+	InvitePassMinNonLetters = int32(2)  // canonic characters other than a–z
+)

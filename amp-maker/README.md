@@ -92,16 +92,14 @@ a node for others and embedding AMP in a shipped product are not.
 
 ## Invite Passphrase Floor
 
-Ships with this kit as the compatibility notice for existing CLI holders:
-
-- Hosts now refuse a sub-floor invite sealing passphrase from **any**
-  client: at least **6 words** (8 for grants). Short or default passphrases
-  (`test123`-class) are refused host-side at mint.
-- This CLI requires `--invite-pass` explicitly on `invite accept` and
-  `invite inspect` — there is no typed default.
-- Older CLI builds still work against current hosts **only** when the
-  invite's issuer supplies a typed passphrase meeting the floor. This kit is the
-  upgrade path.
+- The issuer chooses each invite's passphrase; hosts refuse one below the
+  floor from **any** client: at least **10 characters**, 2 or more of them not
+  letters (a digit, a symbol, punctuation).
+- Spaces and capitals are not counted and do not matter: `Blue Moon, 42
+  tacos!` and `bluemoon,42tacos!` open the same invite.
+- `invite issue` and `federation found --invite` take `--invite-pass`;
+  `invite issue --count N` (N > 1) generates a distinct pass per invite
+  instead. `invite accept` and `invite inspect` require `--invite-pass`.
 
 ## The Shelves
 

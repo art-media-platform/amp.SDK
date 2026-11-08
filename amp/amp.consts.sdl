@@ -84,6 +84,15 @@ const string VaultAccessMagic = "AMPV"; // node-to-node vault sync peer connecti
 // meta-ops (Login, PlanetInviteOp).  Deterministic across all planets.
 const uid HeadNodeID = {0x0, 0x37};
 
+// The invite passphrase floor (PlanetInviteOp.Passphrase).
+// It counts the pass's canonic form: whitespace and invisible characters
+// removed, letters in lower case (AOM SD-canonization-spec.md §1.8).  The
+// issuer chooses the pass; the node refuses one below the floor at issue.
+const InvitePass {
+    const int32 MinChars      = 10; // canonic characters
+    const int32 MinNonLetters = 2;  // canonic characters other than a–z
+}
+
 // Default TCP port used to expose amp.Host service.
 const int32 DefaultServicePort = 5192;
 
