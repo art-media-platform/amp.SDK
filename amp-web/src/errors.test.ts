@@ -25,4 +25,25 @@ describe('ampErrorFromResponse', () => {
     expect(err.message).toBe('gateway down');
     expect(err.status).toBe(502);
   });
+
+  it('reads Retry-After and TxID, and names the two retryable codes', async () => {
+    const busy = new Response(JSON.stringify({ Code: 'NotReady', Message: 'anonymous session mint still running' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': '3' },
+    });
+    const err = await ampErrorFromResponse(busy);
+    expect(err.code).toBe('NotReady');
+    expect(err.retryAfter).toBe(3);
+    expect(err.retryable).toBe(true);
+
+    const limited = await ampErrorFromResponse(jsonResponse(429, { Code: 'RateLimited', Message: 'slow down' }));
+    expect(limited.retryable).toBe(true);
+    expect(limited.retryAfter).toBeUndefined();
+
+    const journaled = await ampErrorFromResponse(jsonResponse(409, {
+      Code: 'TxRejected', Message: 'refused', TxID: '06efv-w28sb-m00a94-ta94t-a94ta',
+    }));
+    expect(journaled.retryable).toBe(false);
+    expect(journaled.txID).toBe('06efv-w28sb-m00a94-ta94t-a94ta');
+  });
 });

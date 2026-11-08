@@ -646,6 +646,11 @@ const (
 	ErrPayloadTooLarge = "PayloadTooLarge"
 	ErrCapReached      = "CapReached" // HTTP 507: a storage cap (AD-app-www §3.3)
 	ErrRateLimited     = "RateLimited"
-	ErrInternal        = "Internal"
-	ErrUnimplemented   = "Unimplemented"
+	// ErrNotReady rides HTTP 503 + Retry-After: the node cannot answer yet
+	// (an anonymous session still minting, host bring-up, a policy not yet
+	// synced) and the same request succeeds later.  The one retryable shape
+	// beside RateLimited's 429 (AD-app-www §16.3).
+	ErrNotReady      = "NotReady"
+	ErrInternal      = "Internal"
+	ErrUnimplemented = "Unimplemented"
 )

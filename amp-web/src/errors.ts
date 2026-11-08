@@ -23,7 +23,8 @@ export const AmpErrorCode = {
   TxRejected:      'TxRejected',
   PayloadTooLarge: 'PayloadTooLarge',
   CapReached:      'CapReached',       // HTTP 507: a storage cap refused it
-  RateLimited:     'RateLimited',
+  RateLimited:     'RateLimited',      // HTTP 429 + Retry-After: retry after it
+  NotReady:        'NotReady',         // HTTP 503 + Retry-After: the node cannot answer yet; retry after it
   Internal:        'Internal',
   Unimplemented:   'Unimplemented',
 } as const;
@@ -38,32 +39,52 @@ export type AmpErrorCode = (typeof AmpErrorCode)[keyof typeof AmpErrorCode];
 export class AmpError extends Error {
   readonly code: string;
   readonly status: number;
+  /** Seconds from the Retry-After header, when the host sent one. */
+  readonly retryAfter?: number;
+  /** The request the failed call journaled before failing (invite accept), when the host sent one. */
+  readonly txID?: string;
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, retryAfter?: number, txID?: string) {
     super(message);
     this.name = 'AmpError';
     this.code = code;
     this.status = status;
+    this.retryAfter = retryAfter;
+    this.txID = txID;
+  }
+
+  /**
+   * retryable: the same request succeeds later — RateLimited (429) or
+   * NotReady (503), each with Retry-After.  Every other code is a verdict on
+   * the request itself.
+   */
+  get retryable(): boolean {
+    return this.code === AmpErrorCode.RateLimited || this.code === AmpErrorCode.NotReady;
   }
 }
 
 /**
  * ampErrorFromResponse decodes a non-2xx Response into an AmpError, reading the
- * { Code, Message } envelope when the body is JSON and falling back to the raw
- * text / status line otherwise.
+ * { Code, Message, TxID? } envelope when the body is JSON and falling back to
+ * the raw text / status line otherwise; Retry-After rides along in seconds.
  */
 export async function ampErrorFromResponse(resp: Response): Promise<AmpError> {
   const text = await resp.text().catch(() => '');
   let code = '';
   let message = text;
+  let txID: string | undefined;
   if (text) {
     try {
-      const body = JSON.parse(text) as { Code?: string; Message?: string };
+      const body = JSON.parse(text) as { Code?: string; Message?: string; TxID?: string };
       code = body.Code ?? '';
       message = body.Message ?? text;
+      txID = body.TxID || undefined;
     } catch {
       // Non-JSON body — keep the raw text as the message.
     }
   }
-  return new AmpError(resp.status, code, message || resp.statusText);
+  const header = resp.headers?.get?.('Retry-After');
+  const seconds = header ? Number(header) : NaN;
+  const retryAfter = Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
+  return new AmpError(resp.status, code, message || resp.statusText, retryAfter, txID);
 }
