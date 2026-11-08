@@ -655,15 +655,18 @@ const (
 const (
 	// The ContentType of a terminal session's MediaLink Tag; a transport
 	// controller routes the channel to the terminal shuttle runtime on it.
-	TerminalContentType                = "application/x-amp-terminal"
-	TerminalDefaultCols                = int32(80)   // PTY grid columns
-	TerminalDefaultRows                = int32(24)   // PTY grid rows
-	TerminalDefaultScrollbackRows      = int32(1000) // emulator scrollback rows
-	TerminalDefaultKeyframeMs          = 10000       // keyframe cadence — the DVR replay bound
-	TerminalDefaultJogMs               = 10000       // transport jog step: one skip back or forward
-	TerminalDefaultPrefetchAhead       = int32(2)    // resolved tracks kept ahead of the playing one (the off-screen advance)
-	TerminalDefaultPrefetchMaxAgeMs    = 300000      // a prefetched link older than this is re-resolved on screen before use
-	TerminalDefaultReplayResidentBytes = 8388608     // replay-window residency budget (Buffered cap)
+	TerminalContentType           = "application/x-amp-terminal"
+	TerminalDefaultCols           = int32(80)   // PTY grid columns
+	TerminalDefaultRows           = int32(24)   // PTY grid rows
+	TerminalDefaultScrollbackRows = int32(1000) // emulator scrollback rows
+	TerminalDefaultKeyframeMs     = 10000       // keyframe cadence — the DVR replay bound
+	TerminalDefaultJogMs          = 15000       // transport jog step: one skip back or forward
+	// An item at least this long shows the lock screen's jog buttons in place of
+	// its track buttons (iOS shows one pair); an item flagged SkipIsLikely always.
+	TerminalDefaultJogMinItemMs        = 300000
+	TerminalDefaultPrefetchAhead       = int32(2) // resolved tracks kept ahead of the playing one (the off-screen advance)
+	TerminalDefaultPrefetchMaxAgeMs    = 300000   // a prefetched link older than this is re-resolved on screen before use
+	TerminalDefaultReplayResidentBytes = 8388608  // replay-window residency budget (Buffered cap)
 )
 
 // ─── Locus spatial binding ──────────────────────────────────────

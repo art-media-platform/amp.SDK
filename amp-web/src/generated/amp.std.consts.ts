@@ -501,7 +501,10 @@ export const Terminal = {
     DefaultRows:                24,  // PTY grid rows
     DefaultScrollbackRows:      1000,  // emulator scrollback rows
     DefaultKeyframeMs:          10000n,  // keyframe cadence — the DVR replay bound
-    DefaultJogMs:               10000n,  // transport jog step: one skip back or forward
+    DefaultJogMs:               15000n,  // transport jog step: one skip back or forward
+    // An item at least this long shows the lock screen's jog buttons in place of
+    // its track buttons (iOS shows one pair); an item flagged SkipIsLikely always.
+    DefaultJogMinItemMs:        300000n,
     DefaultPrefetchAhead:       2,  // resolved tracks kept ahead of the playing one (the off-screen advance)
     DefaultPrefetchMaxAgeMs:    300000n,  // a prefetched link older than this is re-resolved on screen before use
     DefaultReplayResidentBytes: 8388608n,  // replay-window residency budget (Buffered cap)

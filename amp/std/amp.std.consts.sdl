@@ -519,7 +519,10 @@ const Terminal {
     int32 DefaultRows                = 24;      // PTY grid rows
     int32 DefaultScrollbackRows      = 1000;    // emulator scrollback rows
     int64 DefaultKeyframeMs          = 10000;   // keyframe cadence — the DVR replay bound
-    int64 DefaultJogMs               = 10000;   // transport jog step: one skip back or forward
+    int64 DefaultJogMs               = 15000;   // transport jog step: one skip back or forward
+    // An item at least this long shows the lock screen's jog buttons in place of
+    // its track buttons (iOS shows one pair); an item flagged SkipIsLikely always.
+    int64 DefaultJogMinItemMs        = 300000;
     int32 DefaultPrefetchAhead       = 2;       // resolved tracks kept ahead of the playing one (the off-screen advance)
     int64 DefaultPrefetchMaxAgeMs    = 300000;  // a prefetched link older than this is re-resolved on screen before use
     int64 DefaultReplayResidentBytes = 8388608; // replay-window residency budget (Buffered cap)
