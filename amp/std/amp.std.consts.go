@@ -493,8 +493,8 @@ const (
 // reader's wanted position keeps steering the span planner, and the H4 state bands
 // a client reads an undeclared value by.
 const (
-	BlobProgressDefaultTickMs         = 250       // nominal observation cadence; latest-wins at one item
-	BlobProgressDefaultHeartbeatMs    = 2000      // an unchanged observation repeats at this cadence
+	BlobProgressDefaultTickMs         = 250       // nominal observation cadence (meta ops: never stored)
+	BlobProgressDefaultHeartbeatMs    = 2000      // a pull in flight re-sends an unchanged observation this often
 	BlobProgressDefaultWantedLingerMs = 30000     // a closed reader's position keeps its planner priority this long
 	BlobProgressBandWaitingMin        = int32(1)  // state values 1–15: waiting (the pull moves or is about to)
 	BlobProgressBandHeldMin           = int32(16) // state values 16–23: held (blocked on something that may clear)

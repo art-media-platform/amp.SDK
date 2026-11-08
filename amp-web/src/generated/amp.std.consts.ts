@@ -334,8 +334,8 @@ export const Amp = {
 // reader's wanted position keeps steering the span planner, and the H4 state bands
 // a client reads an undeclared value by.
 export const BlobProgress = {
-    DefaultTickMs:         250n,  // nominal observation cadence; latest-wins at one item
-    DefaultHeartbeatMs:    2000n,  // an unchanged observation repeats at this cadence
+    DefaultTickMs:         250n,  // nominal observation cadence (meta ops: never stored)
+    DefaultHeartbeatMs:    2000n,  // a pull in flight re-sends an unchanged observation this often
     DefaultWantedLingerMs: 30000n,  // a closed reader's position keeps its planner priority this long
     BandWaitingMin:        1,  // state values 1–15: waiting (the pull moves or is about to)
     BandHeldMin:           16,  // state values 16–23: held (blocked on something that may clear)
