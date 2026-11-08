@@ -794,6 +794,28 @@ func UID_ParseBase32(text string) (UID, error) {
 	return id, nil
 }
 
+// UID_ParseBase32Full is UID_ParseBase32 for an operator's selector: exactly
+// UID_Base32Length digits (hyphens and whitespace aside).  A log line's short
+// label parses as a tiny number under UID_ParseBase32; a flag or query that
+// names a planet, member, join or manifest must never resolve to one.
+func UID_ParseBase32Full(text string) (UID, error) {
+	id, err := UID_ParseBase32(text)
+	if err != nil {
+		return UID{}, err
+	}
+	digits := len(strings.Map(func(r rune) rune {
+		if r == '-' || unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, text))
+	if digits != UID_Base32Length {
+		return UID{}, fmt.Errorf("%w: %q has %d base32 digits, a UID has %d (a log line's short label is not a UID)",
+			ErrUnrecognizedFormat, text, digits, UID_Base32Length)
+	}
+	return id, nil
+}
+
 var base32Lookup = [127]byte{}
 
 func init() {

@@ -265,3 +265,26 @@ func BenchmarkNowID(b *testing.B) {
 		tag.NowID()
 	}
 }
+
+// UID_ParseBase32Full admits exactly UID_Base32Length digits: a log line's
+// short label — a valid UID_ParseBase32 input — is refused (mutant: the
+// digit count unchecked).
+func TestUID_ParseBase32Full(t *testing.T) {
+	tid := tag.NewID()
+	full := tid.Base32()
+	if uid, err := tag.UID_ParseBase32Full(full); err != nil || uid != tid {
+		t.Fatalf("full UID refused: %v (err %v)", uid, err)
+	}
+	if uid, err := tag.UID_ParseBase32Full(tid.AsLabel()); err == nil {
+		t.Fatalf("short label %q parsed as UID %v", tid.AsLabel(), uid)
+	}
+	if _, err := tag.UID_ParseBase32Full(full[:len(full)-1]); err == nil {
+		t.Fatal("a UID one digit short parsed")
+	}
+	if _, err := tag.UID_ParseBase32Full(full + "0"); err == nil {
+		t.Fatal("a UID one digit long parsed")
+	}
+	if _, err := tag.UID_ParseBase32Full("not a uid"); err == nil {
+		t.Fatal("garbage parsed")
+	}
+}
