@@ -268,3 +268,44 @@ func TestPushStateChildPinRefused(t *testing.T) {
 		t.Errorf("a refused listing pushed %d ops", len(requester.tx.Ops))
 	}
 }
+
+// TestMarshalMetaOp pins the meta-op rail at any element: the flags, the
+// address as given, and the value's round trip; a nil value deletes.
+func TestMarshalMetaOp(t *testing.T) {
+	tx := amp.TxNew()
+	tx.SetTxID(tag.NowID())
+	elem := tag.ElementID{
+		NodeID: tag.NowID(),
+		AttrID: tag.NowID(),
+		ItemID: tag.NowID(),
+	}
+	want := &amp.Tag{
+		I:     4096,
+		Units: amp.Units_Bytes,
+	}
+	if err := MarshalMetaOp(tx, elem, want); err != nil {
+		t.Fatalf("upsert: %v", err)
+	}
+	if err := MarshalMetaOp(tx, elem, nil); err != nil {
+		t.Fatalf("delete: %v", err)
+	}
+	if len(tx.Ops) != 2 {
+		t.Fatalf("ops = %d, want 2", len(tx.Ops))
+	}
+	if got := tx.Ops[0].Flags; got != amp.TxOpFlags_Upsert|amp.TxOpFlags_MetaOp {
+		t.Errorf("upsert flags = %v", got)
+	}
+	if got := tx.Ops[1].Flags; got != amp.TxOpFlags_Delete|amp.TxOpFlags_MetaOp {
+		t.Errorf("delete flags = %v", got)
+	}
+	if got := tx.Ops[0].Addr.ElementID; got != elem {
+		t.Errorf("address = %v, want %v", got, elem)
+	}
+	got := &amp.Tag{}
+	if err := tx.UnmarshalOpValue(0, got); err != nil {
+		t.Fatalf("value: %v", err)
+	}
+	if got.I != want.I || got.Units != want.Units {
+		t.Errorf("value = %v, want %v", got, want)
+	}
+}

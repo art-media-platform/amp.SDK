@@ -28,7 +28,11 @@ func PushMetaOp(attrID tag.UID, value proto.Message, dst amp.TxReceiver, sess am
 	tx.Status = status
 
 	if value != nil {
-		if err := marshalMetaOp(tx, attrID, tag.UID{}, value); err != nil {
+		head := tag.ElementID{
+			NodeID: amp.HeadNodeID,
+			AttrID: attrID,
+		}
+		if err := MarshalMetaOp(tx, head, value); err != nil {
 			return err
 		}
 	}
@@ -44,24 +48,30 @@ func PushSessionItem(sess amp.Session, attrID, itemID tag.UID, value proto.Messa
 	tx := sess.NewTx(amp.TxScope{Target: amp.PlanetTarget_None})
 	tx.SetContextID(SessionContextID)
 	tx.Status = amp.PinStatus_Synced
-	if err := marshalMetaOp(tx, attrID, itemID, value); err != nil {
+	item := tag.ElementID{
+		NodeID: amp.HeadNodeID,
+		AttrID: attrID,
+		ItemID: itemID,
+	}
+	if err := MarshalMetaOp(tx, item, value); err != nil {
 		return err
 	}
 	return sess.PushTx(tx, sess)
 }
 
-// marshalMetaOp appends one meta op at (HeadNodeID, attrID, itemID): an
-// upsert of value, or a delete when value is nil.
-func marshalMetaOp(tx *amp.TxMsg, attrID, itemID tag.UID, value proto.Message) error {
+// MarshalMetaOp appends one meta op at elem: an upsert of value, or a delete
+// when value is nil.  A meta op is a host push a client receives and never
+// stores (TxOpFlags_MetaOp, SD-edit-resolution §10 entry 24): session control
+// on the session context, and an app pin's observations (a blob's progress
+// ticks, AD-app-www §6.10) on the pin's own.  No commit carries one.
+func MarshalMetaOp(tx *amp.TxMsg, elem tag.ElementID, value proto.Message) error {
 	op := amp.TxOp{
 		Flags: amp.TxOpFlags_Upsert | amp.TxOpFlags_MetaOp,
 	}
 	if value == nil {
 		op.Flags = amp.TxOpFlags_Delete | amp.TxOpFlags_MetaOp
 	}
-	op.Addr.NodeID = amp.HeadNodeID
-	op.Addr.AttrID = attrID
-	op.Addr.ItemID = itemID
+	op.Addr.ElementID = elem
 	return tx.MarshalOp(&op, value)
 }
 
