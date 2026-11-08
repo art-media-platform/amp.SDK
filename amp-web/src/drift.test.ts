@@ -102,7 +102,7 @@ const SHAPES: Record<string, ShapeSpec> = {
     optional: ['Email', 'Password', 'Token', 'NewPassword', 'PlanetTag'],
   },
   EmailIssueResponse: { required: ['MemberID', 'Email'] },
-  ErrorResponse: { required: ['Code', 'Message'] },
+  ErrorResponse: { required: ['Code', 'Message'], optional: ['TxID'] },
 
   WithdrawNote: {
     required: ['Reason'],
@@ -161,7 +161,7 @@ const SHAPES: Record<string, ShapeSpec> = {
   },
   InviteIssueResponse: { required: ['PlanetID', 'InviteID', 'InviteText'] },
   InviteAcceptRequest: { required: ['InviteText', 'Passphrase'] },
-  InviteAcceptResponse: { required: ['PlanetID', 'MemberID', 'InviteID', 'JoinState', 'RedeemedAt'] },
+  InviteAcceptResponse: { required: ['PlanetID', 'MemberID', 'InviteID', 'JoinState', 'RedeemedAt', 'TxID'] },
   InviteRevokeRequest: {
     required: ['Planet'],
     optional: ['InviteID', 'InviteText', 'Rotate'],

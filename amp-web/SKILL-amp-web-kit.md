@@ -529,10 +529,32 @@ invite:
 ```
 POST /api/v1/invite/accept            (Bearer)
      Body:     { InviteText: string, Passphrase: string }
-     Response: { PlanetID: string, MemberID: string, InviteID: string, JoinState: JoinState, RedeemedAt: string }
-     // 202 Pending; 201 newly Confirmed; 200 Confirmed no-op (empty RedeemedAt).
-     // RedeemedAt is a full base32 UID, not Unix seconds. Do not re-accept to poll.
+     Response: { PlanetID: string, MemberID: string, InviteID: string, JoinState: JoinState, RedeemedAt: string, TxID: string }
+     // 202 Pending; 201 newly Confirmed; 200 Confirmed no-op (empty RedeemedAt and TxID).
+     // RedeemedAt is a full base32 UID, not Unix seconds; TxID is the journaled
+     // join request.  Do not re-accept to poll: every accept submits a new request.
 ```
+
+Accept's refusals, each the `{ Code, Message, TxID? }` envelope (`TxID` present
+when a request was journaled before the failure — wait on it, do not re-accept):
+
+| HTTP | `Code`          | Meaning                                                                                    | Retry?                              |
+|------|-----------------|--------------------------------------------------------------------------------------------|-------------------------------------|
+| 400  | `BadRequest`    | `InviteText` undecodable (a mangled paste fails the CRC), malformed body                   | no — fix the input                  |
+| 403  | `Forbidden`     | the passphrase did not open the token, the invite expired, no permission to join           | no                                  |
+| 404  | `NotFound`      | the node does not carry the invite's planet                                                | no — another node, or a reissue     |
+| 409  | `TxRejected`    | the policy is Paused, or this node's verifier refused the journaled request (`TxID`)        | Paused: later; refused: no          |
+| 410  | `NotFound`      | the invite is revoked (terminal): ask for a reissue                                        | no                                  |
+| 429  | `RateLimited`   | this member's accept budget is spent (each accept costs one attempt before the stretch)     | after `Retry-After`                 |
+| 501  | `Unimplemented` | the in-memory dev backend (§14.7)                                                          | no                                  |
+| 503  | `NotReady`      | the node cannot answer yet: its policy not yet synced, host bring-up, no vault connection   | after `Retry-After`                 |
+
+Two retryable shapes exist on every endpoint, and only these two: `429 RateLimited`
+and `503 NotReady`, each with `Retry-After` in seconds.  The SDK's `AmpError`
+exposes them as `retryable` and `retryAfter` (and `txID` when the envelope
+carries one).  A `503 NotReady` also answers a channel read, an item read, an
+edit chain or `/media/resolve` while the node's anonymous session is still
+minting, and `/invite/issue` during host bring-up.
 
 - `InviteText` is the invite's **universal URL** `https://{fqdn}/invite#{body}`
   (the sealed token rides the URL fragment, so a click never sends it to the

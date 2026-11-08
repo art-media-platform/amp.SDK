@@ -540,12 +540,15 @@ type InviteAcceptRequest struct {
 
 // InviteAcceptResponse describes accepted Pending or Confirmed membership.
 // RedeemedAt is a full UID, empty when a Confirmed repeat authored no request.
+// TxID is the journaled join request (empty for a Confirmed no-op): a Pending
+// client waits on it; accepting again submits a new request.
 type InviteAcceptResponse struct {
 	PlanetID   tag.UID `json:"PlanetID"`
 	MemberID   tag.UID `json:"MemberID"`
 	InviteID   tag.UID `json:"InviteID"`
 	JoinState  string  `json:"JoinState"`
 	RedeemedAt tag.UID `json:"RedeemedAt"`
+	TxID       tag.UID `json:"TxID"`
 }
 
 // InviteRevokeRequest is the body of POST /api/v1/invite/revoke (Bearer).
@@ -623,10 +626,14 @@ type GovernanceGrantResponse struct {
 	Channel  tag.UID `json:"Channel"`
 }
 
-// ErrorResponse is the body of every non-2xx /api/v1/* response.
+// ErrorResponse is the body of every non-2xx /api/v1/* response.  TxID names
+// the request a failed call journaled before it failed (invite accept: the
+// Pending request a client waits on instead of accepting again); absent when
+// nothing was journaled.
 type ErrorResponse struct {
 	Code    string `json:"Code"`
 	Message string `json:"Message"`
+	TxID    string `json:"TxID,omitempty"`
 }
 
 // Error codes are the client-facing error vocabulary carried on the

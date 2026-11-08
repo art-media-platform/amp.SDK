@@ -940,7 +940,10 @@ export class AmpWebClient implements AmpAdapter {
   // joinWithInvite joins the planet a sealed invite names (its universal URL or
   // amp-base32 body), minting this member's keys host-side.  Bearer; the
   // passphrase arrives out-of-band and the token is inert without it.
-  // A Pending response awaits admission; repeat calls create fresh requests.
+  // A Pending response awaits admission; its TxID names the journaled request.
+  // Repeat calls create fresh requests, so retry only an AmpError whose
+  // `retryable` is true (NotReady / RateLimited, after `retryAfter` seconds);
+  // an error carrying `txID` journaled a request before failing — wait on it.
   async joinWithInvite(opts: JoinWithInviteOpts): Promise<JoinWithInviteResult> {
     return this.apiFetch<JoinWithInviteResult>('/invite/accept', {
       method: 'POST',

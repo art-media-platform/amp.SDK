@@ -154,6 +154,7 @@ export interface JoinWithInviteResult {
   InviteID: string;
   JoinState: JoinState;
   RedeemedAt: string; // full UID; empty for a Confirmed no-op
+  TxID: string;       // the journaled join request; empty for a Confirmed no-op
 }
 
 /** Options for revoking an invite (terminal). */

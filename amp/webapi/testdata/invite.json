@@ -25,7 +25,8 @@
     "MemberID": "06efv-w28sb-n00bpb-pbpbp-bpbpb",
     "InviteID": "06efv-w28sb-f007fx-vrfxv-rfxvr",
     "JoinState": "JoinPending",
-    "RedeemedAt": "06efv-w28sb-k009m6-dtm6d-tm6dt"
+    "RedeemedAt": "06efv-w28sb-k009m6-dtm6d-tm6dt",
+    "TxID": "06efv-w28sb-h008j2-48j24-8j248"
   },
   "InviteRevokeRequest": {
     "Planet": "06efv-w28sb-400248-j248j-248j2",
