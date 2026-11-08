@@ -135,7 +135,8 @@ const (
 
 	// PlanetTarget_None leaves the envelope planet unset: session control
 	// (std.PushMetaOp, the seal challenge) is not planet data.  A receiving
-	// client separates a planet merge from a session push by the stamp alone.
+	// client separates a planet merge from a session push by the stamp alone;
+	// an app pin's meta ops (std.MarshalMetaOp) carry the pin's planet.
 	PlanetTarget_None PlanetTarget = 1
 )
 

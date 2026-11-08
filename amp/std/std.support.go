@@ -17,8 +17,9 @@ import (
 
 // PushMetaOp sends a meta-op tx to the receiver for the client's session agent.
 // Session control is not planet data: the tx carries no planet stamp
-// (amp.PlanetTarget_None), so a receiving client splits planet merges off by
-// envelope planet alone.  guard bounds the push (dst.PushTx): the caller's
+// (amp.PlanetTarget_None), so a receiving client tells a session push from a
+// planet merge by envelope planet alone; an app pin's meta ops (MarshalMetaOp)
+// carry the pin's planet.  guard bounds the push (dst.PushTx): the caller's
 // concern — a request's submitter context, so a departed consumer cancels the
 // push while a live one still receives it; sess itself when the push has no
 // narrower owner.
