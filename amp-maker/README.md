@@ -93,11 +93,11 @@ a node for others and embedding AMP in a shipped product are not.
 ## Invite Passphrase Floor
 
 - The issuer chooses each invite's passphrase; hosts refuse one below the
-  floor from **any** client: at least **10 characters**, 2 or more of them not
-  letters (a digit, a symbol, punctuation).
-- Spaces and capitals are not counted and do not matter: `Blue Moon, 42
-  tacos!` and `bluemoon,42tacos!` open the same invite.
-- `invite issue` and `federation found --invite` take `--invite-pass`;
+  floor from **any** client: at least **12 characters**.
+- Spaces, capitals and punctuation are not counted and do not matter; letters,
+  digits, emoji and symbols such as `# $ % @ * + =` count, and `&` reads as
+  "and": `Blue Moon, 42 tacos!` and `bluemoon42tacos` open the same invite.
+- `invite issue` and `federation found` take `--invite-pass`;
   `invite issue --count N` (N > 1) generates a distinct pass per invite
   instead. `invite accept` and `invite inspect` require `--invite-pass`.
 

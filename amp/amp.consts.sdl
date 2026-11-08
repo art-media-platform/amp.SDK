@@ -85,12 +85,12 @@ const string VaultAccessMagic = "AMPV"; // node-to-node vault sync peer connecti
 const uid HeadNodeID = {0x0, 0x37};
 
 // The invite passphrase floor (PlanetInviteOp.Passphrase).
-// It counts the pass's canonic form: whitespace and invisible characters
-// removed, letters in lower case (AOM SD-canonization-spec.md §1.8).  The
-// issuer chooses the pass; the node refuses one below the floor at issue.
+// It counts the pass's canonic form: spaces, punctuation and invisible
+// characters removed, letters in lower case; letters, digits and symbols
+// count (AOM SD-canonization-spec.md §1.8).  The issuer chooses the pass;
+// the node refuses one below the floor at issue.
 const InvitePass {
-    const int32 MinChars      = 10; // canonic characters
-    const int32 MinNonLetters = 2;  // canonic characters other than a–z
+    const int32 MinChars = 12; // canonic characters
 }
 
 // Default TCP port used to expose amp.Host service.

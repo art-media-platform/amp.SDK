@@ -539,12 +539,12 @@ POST /api/v1/invite/accept            (Bearer)
   host) — or its bare amp-base32 body. Whitespace / newline / case-tolerant, so
   it survives copy-paste and transit; a mangled paste fails the CRC cleanly.
 - `Passphrase` is chosen by the issuer and delivered **out-of-band**. The node
-  refuses one below the floor: at least 10 characters, 2 or more of them not
-  letters (a digit, a symbol, punctuation). Spaces and capitals are not counted
-  and do not matter, so `Blue Moon, 42 tacos!` and `bluemoon,42tacos!` open the
+  refuses one below the floor: at least 12 characters. Spaces, capitals and
+  punctuation (`. , ; : ! ? ' " - _ /`, brackets) are not counted and do not
+  matter; letters, digits, emoji and symbols such as `# $ % @ * + =` count, and
+  `&` reads as "and". So `Blue Moon, 42 tacos!` and `bluemoon42tacos` open the
   same invite. Anyone who captures the token can guess at the passphrase
-  offline, so choose an odd phrase no one would guess; the node refuses the
-  commonest passwords.
+  offline, so choose an odd phrase no one would guess.
 - Returns `501` `Code: "Unimplemented"` on the in-memory dev backend (§14.7 —
   the invite family needs the host-bridged backend); live on a host-bridged
   operated node.
