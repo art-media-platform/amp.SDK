@@ -53,6 +53,22 @@ On macOS the kit is an installer package: it places `bin/*` in
 
    Your node operator supplies the node address; this document writes it
    `{your-node}`.
+
+   A closed node (one that admits only keys its federation records) refuses
+   the login of a key it has never seen, so `invite accept` from a tome fails
+   there with `login: refused by node: invalid login`. On such a node, have
+   your key added instead (§4.6, "added by key"):
+
+   ```
+   amp --tome member.tome tome pubkey --create   # send the member and pubkey lines
+   # the founder runs: amp … --planet <FED-UID> member add <member-UID> --pubkey <hex>
+   amp --addr {your-node}:{port} --tome member.tome --member <member-UID> \
+       --planet <FED-UID> me
+   ```
+
+   `--planet` is required: the key is recorded on the federation, so a bare
+   login is refused. A login refused just after the add succeeds once the
+   add reaches your node; retry it.
 4. Confirm membership by publishing a name (§4.10). The end-to-end ladder —
    found, invite, join, brand, publish, resolve — is §4.18.
 
