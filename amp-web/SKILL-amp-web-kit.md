@@ -343,7 +343,7 @@ POST   /api/v1/channels/{channel}/attrs/{attr}/items/{itemID}/withdraw     ─ s
 
 **Idempotency & retries.** `upsert` / `remove` / `withdraw` are keyed by a caller-supplied `ItemID`, so replaying one (e.g. after a network timeout that swallowed the `TxResponse`) is safe — same key, last-write-wins. A `create` *without* an explicit `ItemID` mints a fresh item on every call, so a blind retry duplicates; supply a deterministic `ItemID` (§5.8) to make `create` idempotent too. The `create()` sugar takes no `ItemID` — an idempotent create rides `tx([{ Kind: 'create', Channel, Attr, ItemID, Value }])` (or `upsert`, when overwrite semantics fit).
 
-**Verb-RPC — routing a batch to an app handler.** Set `InvokeURL` on `POST /api/v1/tx` to `"amp://~/{app}/{verb}"` (e.g. `amp://~/forums/post`) to route the whole batch to an app's verb handler instead of the default cabinet commit. The host delivers the ops to the named verb's `StartPin` as RPC arguments via the host-internal `TxCommitFlags_Invoke` submit flag — **not journaled as planet state** — carrying the session member as the tx `FromID`; the app authors any durable writes itself (the forums app signs them with its host writer session), recording the invoking member as author. **One batch = one verb**; an empty `InvokeURL` is a normal cabinet commit. This is the write path for a channel a member holds only `Access_ReadOnly` on — the verb, not a direct op, is how the mutation lands. SDK: `client.invoke(verbURL, ops, planetTag?)`, or `invoke` from `useAmpMutation()` (§5.3). (AD-app-forums §3.4.) The node refuses, by the resolved app whatever alias spells it, the verbs that are native or node-operator acts: `home` `planet/remove`, `name` `defaults`, every `blob` verb (blobs read through media resolve, §4.4) and every `codex` verb (import and export) — 400 `TxRejected`, the refusal in the message.
+**Verb-RPC — routing a batch to an app handler.** Set `InvokeURL` on `POST /api/v1/tx` to `"amp://~/{app}/{verb}"` (e.g. `amp://~/forums/post`) to route the whole batch to an app's verb handler instead of the default cabinet commit. The host delivers the ops to the named verb's `StartPin` as RPC arguments via the host-internal `TxCommitFlags_Invoke` submit flag — **not journaled as planet state** — carrying the session member as the tx `FromID`; the app authors any durable writes itself (the forums app signs them with its host writer session), recording the invoking member as author. **One batch = one verb**; an empty `InvokeURL` is a normal cabinet commit. This is the write path for a channel a member holds only `Access_ReadOnly` on — the verb, not a direct op, is how the mutation lands. SDK: `client.invoke(verbURL, ops, planetTag?)`, or `invoke` from `useAmpMutation()` (§5.3). (AD-app-forums §3.4.) The call answers when the verb ends: 200 with the batch's `TxID` once it completes, 400 `TxRejected` carrying the verb's own refusal when it refuses; a verb still running at the node's commit bound (10 s) answers 400 `commit timed out`, and its effect may still land. The node refuses, by the resolved app whatever alias spells it, the verbs that are native or node-operator acts: `home` `planet/remove`, `name` `defaults`, every `blob` verb (blobs read through media resolve, §4.4) and every `codex` verb (import and export) — 400 `TxRejected`, the refusal in the message.
 
 ### 4.4 Media Upload
 
@@ -369,7 +369,10 @@ POST   /api/v1/upload
        node holds no planet by that planetTag; 403 Forbidden: a planet you
        have not joined, public included (before any byte is stored), or an
        upload whose cell the planet refuses for permission (its bytes stay
-       stored, unnamed); 400 BadRequest: a planetTag that does not parse.
+       stored, unnamed); 400 BadRequest: a planetTag that does not parse;
+       400 TxRejected "admission pending": your join on that planet is
+       Pending (before any byte is stored) — it lifts once a founder
+       admits you (§4.7), and POST /api/v1/tx answers the same.
        The chunk door answers the same on the chunk that names the planet.
 
 POST   /api/v1/upload/chunk
