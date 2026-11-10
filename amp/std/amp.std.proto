@@ -5,6 +5,7 @@ option csharp_namespace = "art.media.platform.std";
 option go_package = "github.com/art-media-platform/amp.SDK/amp/std";
 
 import "amp/amp.core.proto";
+import "google/protobuf/descriptor.proto";
 
 // TRS_Flags selects special placement behavior for a TRS.
 enum TRS_Flags {
@@ -622,6 +623,118 @@ message MemberVars {
     string         ReticleOverlayURI = 3; // center reticle overlay sprite URI; empty → overlay hidden
     float          VJDwellSecs       = 4; // seconds each vis holds in the player's vis walk; 0 → std.VJ.DefaultDwellSecs
 }
+
+// ─── Settings controls: definitions a menu, a web card or a script renders ───
+
+// FieldAccess says whether a control may change a value; the strictest of a
+// ControlSpec's and its layers' policies wins.  A value a client does not
+// know reads as read-only.
+enum FieldAccess {
+    FieldAccess_Editable     = 0;
+    FieldAccess_Immutable    = 1; // a founding fact, e.g. PlanetCharter.Declaration
+    FieldAccess_Generated    = 2; // computed or written by the host
+    FieldAccess_Locked       = 3; // held by a brand, template or license tier; the value resolves at the locking layer
+    FieldAccess_Unauthorized = 4; // the viewer has no write authority
+    FieldAccess_Hidden       = 5; // a brand or license tier removes the setting; no cell is drawn
+}
+
+enum RangeScale {
+    RangeScale_Linear = 0;
+    RangeScale_Log    = 1; // a tick multiplies by a constant ratio; Step still snaps
+}
+
+enum RangeFormat {
+    RangeFormat_Number   = 0; // shown to Step's precision
+    RangeFormat_Duration = 1; // [h[h:[m]]]m:ss
+}
+
+// FieldRange is a number's control range.  Min < Max bounds the value (an
+// infinite end leaves that side open); otherwise the value is unbounded.
+message FieldRange {
+    double      Min       = 1;
+    double      Max       = 2;
+    double      Step      = 3; // 0 = continuous: one tick = 1/90 of the span
+    RangeScale  Scale     = 4;
+    RangeFormat Format    = 5;
+    amp.Units   Units     = 6; // what the number measures
+    string      UnitLabel = 7; // a display override; empty → the Units symbol
+}
+
+// Switch is a boolean setting: 0 is unset, so "no entry" and "off" differ.
+enum Switch {
+    Switch_Unset = 0;
+    Switch_Off   = 1;
+    Switch_On    = 2;
+}
+
+// ControlKind names a control's interaction under the four verbs and the one
+// axis (AOM UD-cmdr-yoke.md §2, §7.4); the look belongs to the skin.
+enum ControlKind {
+    ControlKind_Nil    = 0;
+    ControlKind_Menu   = 1; // a submenu (Children); Enter pushes
+    ControlKind_Toggle = 2; // Enter flips
+    ControlKind_Number = 3; // Enter captures the axis; ticks step; Enter commits; Back restores
+    ControlKind_Choice = 4; // Enter pushes Choices; Enter on one sets it
+    ControlKind_Text   = 5; // Enter pushes the editor
+    ControlKind_Action = 6; // Enter invokes the handler bound to ActionID
+    ControlKind_List   = 7; // an array or repeated field: Children are its elements
+}
+
+// SettingLayer names where a setting's value may live, nearest first.
+enum SettingLayer {
+    SettingLayer_Nil     = 0;
+    SettingLayer_Channel = 1; // the playing channel's property: channel.property.<ValueID>
+    SettingLayer_Device  = 2; // std.DeviceVars
+    SettingLayer_Member  = 3; // std.MemberVars
+    SettingLayer_Brand   = 4; // the factory Brand's defaults and locks (reserved)
+    SettingLayer_Planet  = 5; // planet-wide, set by its admins (reserved)
+    SettingLayer_Local   = 6; // this device only, never synced (reserved)
+    SettingLayer_Host    = 7; // a default the host computes, below every stored layer (reserved)
+}
+
+message ControlChoice {
+    Labels    Labels   = 1;
+    JsonValue Value    = 2;
+    string    GlyphURI = 3;
+}
+
+// A setting's value is a JsonValue:
+//   - no entry: null, so the layer below shows through;
+//   - explicit none ("None", "Off" over a lower layer's value): Kind Null;
+//   - bool: True / False; number: Number; text or URI: String;
+//   - enum: String, the value's proto name ("ReticleLine"); an unknown name is refused;
+//   - color: String "#RRGGBBAA"; vector: Array of Numbers; UID: String, base32.
+//
+// A ValueID names the setting itself, the same in every layer; each store
+// binds it to its own address (a field whose (Control) option states it, a
+// channel property, a document path).  It is a tag expression of dot
+// segments ("frame.target.fps", "camera.controls.panSpeed"), compared in its
+// canonic form (AOM ZO-design-conventions.md §4.8).
+//
+// ControlSpec is one control's definition: a cell, or with Children a submenu.
+message ControlSpec {
+    string                 ValueID    = 1;  // the setting this control shows and edits, e.g. "frame.target.fps"
+    string                 ActionID   = 2;  // the act Enter performs: an Action's handler, a Menu's or List's push
+    Labels                 Labels     = 3;
+    string                 GlyphURI   = 4;  // a theme slot ("sys/settings") or an asset URI
+    ControlKind            Kind       = 5;
+    FieldRange             Range      = 6;  // Number
+    JsonValue              Default    = 7;  // the bottom layer
+    FieldAccess            Access     = 8;
+    string                 AccessNote = 9;  // why the value is read-only
+    repeated ControlChoice Choices    = 10; // Choice
+    repeated SettingLayer  Layers     = 11; // nearest first; empty = the menu's own store
+    repeated ControlSpec   Children   = 12; // Menu, List
+    ControlSpec            Template   = 13; // List: a new element's spec
+    string                 StyleURI   = 14; // a look other than the kind's default, e.g. "cell/number.knob"
+}
+
+// Control is a ControlSpec beside a proto field.  Every option states its
+// ValueID; an unset Kind takes the field's type.
+extend google.protobuf.FieldOptions {
+    ControlSpec Control = 50001;
+}
+
 
 // BodyEncoding is how an HTTP request body is encoded.
 enum BodyEncoding {

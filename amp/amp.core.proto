@@ -110,6 +110,12 @@ enum Units {
     Millimeters = 10; // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
     Meters      = 11; // length for humans
     LightYears  = 16; // 1 light year == 9460730472580800. meters
+    Percent         = 20; // hundredths of a whole
+    Milliseconds    = 21; // 10^3 ms == 1 s
+    Hertz           = 22; // cycles per second
+    FramesPerSecond = 23; // rendered frames per second
+    Degrees         = 24; // 360 degrees == 1 turn
+    Decibels        = 25; // a power ratio, 10·log10
 }
 
 

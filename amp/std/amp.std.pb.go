@@ -10,6 +10,7 @@ import (
 	amp "github.com/art-media-platform/amp.SDK/amp"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -806,6 +807,340 @@ func (ReticleStyleID) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{13}
 }
 
+// FieldAccess says whether a control may change a value; the strictest of a
+// ControlSpec's and its layers' policies wins.  A value a client does not
+// know reads as read-only.
+type FieldAccess int32
+
+const (
+	FieldAccess_FieldAccess_Editable     FieldAccess = 0
+	FieldAccess_FieldAccess_Immutable    FieldAccess = 1 // a founding fact, e.g. PlanetCharter.Declaration
+	FieldAccess_FieldAccess_Generated    FieldAccess = 2 // computed or written by the host
+	FieldAccess_FieldAccess_Locked       FieldAccess = 3 // held by a brand, template or license tier; the value resolves at the locking layer
+	FieldAccess_FieldAccess_Unauthorized FieldAccess = 4 // the viewer has no write authority
+	FieldAccess_FieldAccess_Hidden       FieldAccess = 5 // a brand or license tier removes the setting; no cell is drawn
+)
+
+// Enum value maps for FieldAccess.
+var (
+	FieldAccess_name = map[int32]string{
+		0: "FieldAccess_Editable",
+		1: "FieldAccess_Immutable",
+		2: "FieldAccess_Generated",
+		3: "FieldAccess_Locked",
+		4: "FieldAccess_Unauthorized",
+		5: "FieldAccess_Hidden",
+	}
+	FieldAccess_value = map[string]int32{
+		"FieldAccess_Editable":     0,
+		"FieldAccess_Immutable":    1,
+		"FieldAccess_Generated":    2,
+		"FieldAccess_Locked":       3,
+		"FieldAccess_Unauthorized": 4,
+		"FieldAccess_Hidden":       5,
+	}
+)
+
+func (x FieldAccess) Enum() *FieldAccess {
+	p := new(FieldAccess)
+	*p = x
+	return p
+}
+
+func (x FieldAccess) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (FieldAccess) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[14].Descriptor()
+}
+
+func (FieldAccess) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[14]
+}
+
+func (x FieldAccess) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use FieldAccess.Descriptor instead.
+func (FieldAccess) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
+}
+
+type RangeScale int32
+
+const (
+	RangeScale_RangeScale_Linear RangeScale = 0
+	RangeScale_RangeScale_Log    RangeScale = 1 // a tick multiplies by a constant ratio; Step still snaps
+)
+
+// Enum value maps for RangeScale.
+var (
+	RangeScale_name = map[int32]string{
+		0: "RangeScale_Linear",
+		1: "RangeScale_Log",
+	}
+	RangeScale_value = map[string]int32{
+		"RangeScale_Linear": 0,
+		"RangeScale_Log":    1,
+	}
+)
+
+func (x RangeScale) Enum() *RangeScale {
+	p := new(RangeScale)
+	*p = x
+	return p
+}
+
+func (x RangeScale) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RangeScale) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[15].Descriptor()
+}
+
+func (RangeScale) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[15]
+}
+
+func (x RangeScale) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RangeScale.Descriptor instead.
+func (RangeScale) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{15}
+}
+
+type RangeFormat int32
+
+const (
+	RangeFormat_RangeFormat_Number   RangeFormat = 0 // shown to Step's precision
+	RangeFormat_RangeFormat_Duration RangeFormat = 1 // [h[h:[m]]]m:ss
+)
+
+// Enum value maps for RangeFormat.
+var (
+	RangeFormat_name = map[int32]string{
+		0: "RangeFormat_Number",
+		1: "RangeFormat_Duration",
+	}
+	RangeFormat_value = map[string]int32{
+		"RangeFormat_Number":   0,
+		"RangeFormat_Duration": 1,
+	}
+)
+
+func (x RangeFormat) Enum() *RangeFormat {
+	p := new(RangeFormat)
+	*p = x
+	return p
+}
+
+func (x RangeFormat) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RangeFormat) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[16].Descriptor()
+}
+
+func (RangeFormat) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[16]
+}
+
+func (x RangeFormat) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RangeFormat.Descriptor instead.
+func (RangeFormat) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{16}
+}
+
+// Switch is a boolean setting: 0 is unset, so "no entry" and "off" differ.
+type Switch int32
+
+const (
+	Switch_Switch_Unset Switch = 0
+	Switch_Switch_Off   Switch = 1
+	Switch_Switch_On    Switch = 2
+)
+
+// Enum value maps for Switch.
+var (
+	Switch_name = map[int32]string{
+		0: "Switch_Unset",
+		1: "Switch_Off",
+		2: "Switch_On",
+	}
+	Switch_value = map[string]int32{
+		"Switch_Unset": 0,
+		"Switch_Off":   1,
+		"Switch_On":    2,
+	}
+)
+
+func (x Switch) Enum() *Switch {
+	p := new(Switch)
+	*p = x
+	return p
+}
+
+func (x Switch) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Switch) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[17].Descriptor()
+}
+
+func (Switch) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[17]
+}
+
+func (x Switch) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Switch.Descriptor instead.
+func (Switch) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{17}
+}
+
+// ControlKind names a control's interaction under the four verbs and the one
+// axis (AOM UD-cmdr-yoke.md §2, §7.4); the look belongs to the skin.
+type ControlKind int32
+
+const (
+	ControlKind_ControlKind_Nil    ControlKind = 0
+	ControlKind_ControlKind_Menu   ControlKind = 1 // a submenu (Children); Enter pushes
+	ControlKind_ControlKind_Toggle ControlKind = 2 // Enter flips
+	ControlKind_ControlKind_Number ControlKind = 3 // Enter captures the axis; ticks step; Enter commits; Back restores
+	ControlKind_ControlKind_Choice ControlKind = 4 // Enter pushes Choices; Enter on one sets it
+	ControlKind_ControlKind_Text   ControlKind = 5 // Enter pushes the editor
+	ControlKind_ControlKind_Action ControlKind = 6 // Enter invokes the handler bound to ActionID
+	ControlKind_ControlKind_List   ControlKind = 7 // an array or repeated field: Children are its elements
+)
+
+// Enum value maps for ControlKind.
+var (
+	ControlKind_name = map[int32]string{
+		0: "ControlKind_Nil",
+		1: "ControlKind_Menu",
+		2: "ControlKind_Toggle",
+		3: "ControlKind_Number",
+		4: "ControlKind_Choice",
+		5: "ControlKind_Text",
+		6: "ControlKind_Action",
+		7: "ControlKind_List",
+	}
+	ControlKind_value = map[string]int32{
+		"ControlKind_Nil":    0,
+		"ControlKind_Menu":   1,
+		"ControlKind_Toggle": 2,
+		"ControlKind_Number": 3,
+		"ControlKind_Choice": 4,
+		"ControlKind_Text":   5,
+		"ControlKind_Action": 6,
+		"ControlKind_List":   7,
+	}
+)
+
+func (x ControlKind) Enum() *ControlKind {
+	p := new(ControlKind)
+	*p = x
+	return p
+}
+
+func (x ControlKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ControlKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[18].Descriptor()
+}
+
+func (ControlKind) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[18]
+}
+
+func (x ControlKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ControlKind.Descriptor instead.
+func (ControlKind) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{18}
+}
+
+// SettingLayer names where a setting's value may live, nearest first.
+type SettingLayer int32
+
+const (
+	SettingLayer_SettingLayer_Nil     SettingLayer = 0
+	SettingLayer_SettingLayer_Channel SettingLayer = 1 // the playing channel's property: channel.property.<ValueID>
+	SettingLayer_SettingLayer_Device  SettingLayer = 2 // std.DeviceVars
+	SettingLayer_SettingLayer_Member  SettingLayer = 3 // std.MemberVars
+	SettingLayer_SettingLayer_Brand   SettingLayer = 4 // the factory Brand's defaults and locks (reserved)
+	SettingLayer_SettingLayer_Planet  SettingLayer = 5 // planet-wide, set by its admins (reserved)
+	SettingLayer_SettingLayer_Local   SettingLayer = 6 // this device only, never synced (reserved)
+	SettingLayer_SettingLayer_Host    SettingLayer = 7 // a default the host computes, below every stored layer (reserved)
+)
+
+// Enum value maps for SettingLayer.
+var (
+	SettingLayer_name = map[int32]string{
+		0: "SettingLayer_Nil",
+		1: "SettingLayer_Channel",
+		2: "SettingLayer_Device",
+		3: "SettingLayer_Member",
+		4: "SettingLayer_Brand",
+		5: "SettingLayer_Planet",
+		6: "SettingLayer_Local",
+		7: "SettingLayer_Host",
+	}
+	SettingLayer_value = map[string]int32{
+		"SettingLayer_Nil":     0,
+		"SettingLayer_Channel": 1,
+		"SettingLayer_Device":  2,
+		"SettingLayer_Member":  3,
+		"SettingLayer_Brand":   4,
+		"SettingLayer_Planet":  5,
+		"SettingLayer_Local":   6,
+		"SettingLayer_Host":    7,
+	}
+)
+
+func (x SettingLayer) Enum() *SettingLayer {
+	p := new(SettingLayer)
+	*p = x
+	return p
+}
+
+func (x SettingLayer) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SettingLayer) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[19].Descriptor()
+}
+
+func (SettingLayer) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[19]
+}
+
+func (x SettingLayer) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SettingLayer.Descriptor instead.
+func (SettingLayer) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{19}
+}
+
 // BodyEncoding is how an HTTP request body is encoded.
 type BodyEncoding int32
 
@@ -837,11 +1172,11 @@ func (x BodyEncoding) String() string {
 }
 
 func (BodyEncoding) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[14].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[20].Descriptor()
 }
 
 func (BodyEncoding) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[14]
+	return &file_amp_std_amp_std_proto_enumTypes[20]
 }
 
 func (x BodyEncoding) Number() protoreflect.EnumNumber {
@@ -850,7 +1185,7 @@ func (x BodyEncoding) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BodyEncoding.Descriptor instead.
 func (BodyEncoding) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{14}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{20}
 }
 
 type GeoPath_RenderType int32
@@ -886,11 +1221,11 @@ func (x GeoPath_RenderType) String() string {
 }
 
 func (GeoPath_RenderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[15].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[21].Descriptor()
 }
 
 func (GeoPath_RenderType) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[15]
+	return &file_amp_std_amp_std_proto_enumTypes[21]
 }
 
 func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
@@ -3571,6 +3906,322 @@ func (x *MemberVars) GetVJDwellSecs() float32 {
 	return 0
 }
 
+// FieldRange is a number's control range.  Min < Max bounds the value (an
+// infinite end leaves that side open); otherwise the value is unbounded.
+type FieldRange struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Min           float64                `protobuf:"fixed64,1,opt,name=Min,proto3" json:"Min,omitempty"`
+	Max           float64                `protobuf:"fixed64,2,opt,name=Max,proto3" json:"Max,omitempty"`
+	Step          float64                `protobuf:"fixed64,3,opt,name=Step,proto3" json:"Step,omitempty"` // 0 = continuous: one tick = 1/90 of the span
+	Scale         RangeScale             `protobuf:"varint,4,opt,name=Scale,proto3,enum=std.RangeScale" json:"Scale,omitempty"`
+	Format        RangeFormat            `protobuf:"varint,5,opt,name=Format,proto3,enum=std.RangeFormat" json:"Format,omitempty"`
+	Units         amp.Units              `protobuf:"varint,6,opt,name=Units,proto3,enum=amp.Units" json:"Units,omitempty"` // what the number measures
+	UnitLabel     string                 `protobuf:"bytes,7,opt,name=UnitLabel,proto3" json:"UnitLabel,omitempty"`         // a display override; empty → the Units symbol
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FieldRange) Reset() {
+	*x = FieldRange{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FieldRange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FieldRange) ProtoMessage() {}
+
+func (x *FieldRange) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FieldRange.ProtoReflect.Descriptor instead.
+func (*FieldRange) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *FieldRange) GetMin() float64 {
+	if x != nil {
+		return x.Min
+	}
+	return 0
+}
+
+func (x *FieldRange) GetMax() float64 {
+	if x != nil {
+		return x.Max
+	}
+	return 0
+}
+
+func (x *FieldRange) GetStep() float64 {
+	if x != nil {
+		return x.Step
+	}
+	return 0
+}
+
+func (x *FieldRange) GetScale() RangeScale {
+	if x != nil {
+		return x.Scale
+	}
+	return RangeScale_RangeScale_Linear
+}
+
+func (x *FieldRange) GetFormat() RangeFormat {
+	if x != nil {
+		return x.Format
+	}
+	return RangeFormat_RangeFormat_Number
+}
+
+func (x *FieldRange) GetUnits() amp.Units {
+	if x != nil {
+		return x.Units
+	}
+	return amp.Units(0)
+}
+
+func (x *FieldRange) GetUnitLabel() string {
+	if x != nil {
+		return x.UnitLabel
+	}
+	return ""
+}
+
+type ControlChoice struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Labels        *Labels                `protobuf:"bytes,1,opt,name=Labels,proto3" json:"Labels,omitempty"`
+	Value         *JsonValue             `protobuf:"bytes,2,opt,name=Value,proto3" json:"Value,omitempty"`
+	GlyphURI      string                 `protobuf:"bytes,3,opt,name=GlyphURI,proto3" json:"GlyphURI,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ControlChoice) Reset() {
+	*x = ControlChoice{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ControlChoice) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ControlChoice) ProtoMessage() {}
+
+func (x *ControlChoice) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ControlChoice.ProtoReflect.Descriptor instead.
+func (*ControlChoice) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *ControlChoice) GetLabels() *Labels {
+	if x != nil {
+		return x.Labels
+	}
+	return nil
+}
+
+func (x *ControlChoice) GetValue() *JsonValue {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+func (x *ControlChoice) GetGlyphURI() string {
+	if x != nil {
+		return x.GlyphURI
+	}
+	return ""
+}
+
+// A setting's value is a JsonValue:
+//   - no entry: null, so the layer below shows through;
+//   - explicit none ("None", "Off" over a lower layer's value): Kind Null;
+//   - bool: True / False; number: Number; text or URI: String;
+//   - enum: String, the value's proto name ("ReticleLine"); an unknown name is refused;
+//   - color: String "#RRGGBBAA"; vector: Array of Numbers; UID: String, base32.
+//
+// A ValueID names the setting itself, the same in every layer; each store
+// binds it to its own address (a field whose (Control) option states it, a
+// channel property, a document path).  It is a tag expression of dot
+// segments ("frame.target.fps", "camera.controls.panSpeed"), compared in its
+// canonic form (AOM ZO-design-conventions.md §4.8).
+//
+// ControlSpec is one control's definition: a cell, or with Children a submenu.
+type ControlSpec struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ValueID       string                 `protobuf:"bytes,1,opt,name=ValueID,proto3" json:"ValueID,omitempty"`   // the setting this control shows and edits, e.g. "frame.target.fps"
+	ActionID      string                 `protobuf:"bytes,2,opt,name=ActionID,proto3" json:"ActionID,omitempty"` // the act Enter performs: an Action's handler, a Menu's or List's push
+	Labels        *Labels                `protobuf:"bytes,3,opt,name=Labels,proto3" json:"Labels,omitempty"`
+	GlyphURI      string                 `protobuf:"bytes,4,opt,name=GlyphURI,proto3" json:"GlyphURI,omitempty"` // a theme slot ("sys/settings") or an asset URI
+	Kind          ControlKind            `protobuf:"varint,5,opt,name=Kind,proto3,enum=std.ControlKind" json:"Kind,omitempty"`
+	Range         *FieldRange            `protobuf:"bytes,6,opt,name=Range,proto3" json:"Range,omitempty"`     // Number
+	Default       *JsonValue             `protobuf:"bytes,7,opt,name=Default,proto3" json:"Default,omitempty"` // the bottom layer
+	Access        FieldAccess            `protobuf:"varint,8,opt,name=Access,proto3,enum=std.FieldAccess" json:"Access,omitempty"`
+	AccessNote    string                 `protobuf:"bytes,9,opt,name=AccessNote,proto3" json:"AccessNote,omitempty"`                        // why the value is read-only
+	Choices       []*ControlChoice       `protobuf:"bytes,10,rep,name=Choices,proto3" json:"Choices,omitempty"`                             // Choice
+	Layers        []SettingLayer         `protobuf:"varint,11,rep,packed,name=Layers,proto3,enum=std.SettingLayer" json:"Layers,omitempty"` // nearest first; empty = the menu's own store
+	Children      []*ControlSpec         `protobuf:"bytes,12,rep,name=Children,proto3" json:"Children,omitempty"`                           // Menu, List
+	Template      *ControlSpec           `protobuf:"bytes,13,opt,name=Template,proto3" json:"Template,omitempty"`                           // List: a new element's spec
+	StyleURI      string                 `protobuf:"bytes,14,opt,name=StyleURI,proto3" json:"StyleURI,omitempty"`                           // a look other than the kind's default, e.g. "cell/number.knob"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ControlSpec) Reset() {
+	*x = ControlSpec{}
+	mi := &file_amp_std_amp_std_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ControlSpec) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ControlSpec) ProtoMessage() {}
+
+func (x *ControlSpec) ProtoReflect() protoreflect.Message {
+	mi := &file_amp_std_amp_std_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ControlSpec.ProtoReflect.Descriptor instead.
+func (*ControlSpec) Descriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *ControlSpec) GetValueID() string {
+	if x != nil {
+		return x.ValueID
+	}
+	return ""
+}
+
+func (x *ControlSpec) GetActionID() string {
+	if x != nil {
+		return x.ActionID
+	}
+	return ""
+}
+
+func (x *ControlSpec) GetLabels() *Labels {
+	if x != nil {
+		return x.Labels
+	}
+	return nil
+}
+
+func (x *ControlSpec) GetGlyphURI() string {
+	if x != nil {
+		return x.GlyphURI
+	}
+	return ""
+}
+
+func (x *ControlSpec) GetKind() ControlKind {
+	if x != nil {
+		return x.Kind
+	}
+	return ControlKind_ControlKind_Nil
+}
+
+func (x *ControlSpec) GetRange() *FieldRange {
+	if x != nil {
+		return x.Range
+	}
+	return nil
+}
+
+func (x *ControlSpec) GetDefault() *JsonValue {
+	if x != nil {
+		return x.Default
+	}
+	return nil
+}
+
+func (x *ControlSpec) GetAccess() FieldAccess {
+	if x != nil {
+		return x.Access
+	}
+	return FieldAccess_FieldAccess_Editable
+}
+
+func (x *ControlSpec) GetAccessNote() string {
+	if x != nil {
+		return x.AccessNote
+	}
+	return ""
+}
+
+func (x *ControlSpec) GetChoices() []*ControlChoice {
+	if x != nil {
+		return x.Choices
+	}
+	return nil
+}
+
+func (x *ControlSpec) GetLayers() []SettingLayer {
+	if x != nil {
+		return x.Layers
+	}
+	return nil
+}
+
+func (x *ControlSpec) GetChildren() []*ControlSpec {
+	if x != nil {
+		return x.Children
+	}
+	return nil
+}
+
+func (x *ControlSpec) GetTemplate() *ControlSpec {
+	if x != nil {
+		return x.Template
+	}
+	return nil
+}
+
+func (x *ControlSpec) GetStyleURI() string {
+	if x != nil {
+		return x.StyleURI
+	}
+	return ""
+}
+
 // LoginForm is the recipe for exchanging a username + password for a session
 // token:  POST the credentials to an endpoint and read the minted token from
 // the response.
@@ -3591,7 +4242,7 @@ type LoginForm struct {
 
 func (x *LoginForm) Reset() {
 	*x = LoginForm{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[27]
+	mi := &file_amp_std_amp_std_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3603,7 +4254,7 @@ func (x *LoginForm) String() string {
 func (*LoginForm) ProtoMessage() {}
 
 func (x *LoginForm) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[27]
+	mi := &file_amp_std_amp_std_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3616,7 +4267,7 @@ func (x *LoginForm) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginForm.ProtoReflect.Descriptor instead.
 func (*LoginForm) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{27}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *LoginForm) GetEncoding() BodyEncoding {
@@ -3670,7 +4321,7 @@ type Credentials struct {
 
 func (x *Credentials) Reset() {
 	*x = Credentials{}
-	mi := &file_amp_std_amp_std_proto_msgTypes[28]
+	mi := &file_amp_std_amp_std_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3682,7 +4333,7 @@ func (x *Credentials) String() string {
 func (*Credentials) ProtoMessage() {}
 
 func (x *Credentials) ProtoReflect() protoreflect.Message {
-	mi := &file_amp_std_amp_std_proto_msgTypes[28]
+	mi := &file_amp_std_amp_std_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3695,7 +4346,7 @@ func (x *Credentials) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Credentials.ProtoReflect.Descriptor instead.
 func (*Credentials) Descriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{28}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *Credentials) GetUser() string {
@@ -3712,11 +4363,28 @@ func (x *Credentials) GetSecret() string {
 	return ""
 }
 
+var file_amp_std_amp_std_proto_extTypes = []protoimpl.ExtensionInfo{
+	{
+		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
+		ExtensionType: (*ControlSpec)(nil),
+		Field:         50001,
+		Name:          "std.Control",
+		Tag:           "bytes,50001,opt,name=Control",
+		Filename:      "amp/std/amp.std.proto",
+	},
+}
+
+// Extension fields to descriptorpb.FieldOptions.
+var (
+	// optional std.ControlSpec Control = 50001;
+	E_Control = &file_amp_std_amp_std_proto_extTypes[0]
+)
+
 var File_amp_std_amp_std_proto protoreflect.FileDescriptor
 
 const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\n" +
-	"\x15amp/std/amp.std.proto\x12\x03std\x1a\x12amp/amp.core.proto\"\xd1\x01\n" +
+	"\x15amp/std/amp.std.proto\x12\x03std\x1a\x12amp/amp.core.proto\x1a google/protobuf/descriptor.proto\"\xd1\x01\n" +
 	"\x03TRS\x12\x0e\n" +
 	"\x02Sx\x18\x01 \x01(\x01R\x02Sx\x12$\n" +
 	"\x05Flags\x18\x02 \x01(\x0e2\x0e.std.TRS_FlagsR\x05Flags\x12\x0e\n" +
@@ -3983,7 +4651,39 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x10DefaultSkyboxURI\x18\x01 \x01(\tR\x10DefaultSkyboxURI\x127\n" +
 	"\fReticleStyle\x18\x02 \x01(\x0e2\x13.std.ReticleStyleIDR\fReticleStyle\x12,\n" +
 	"\x11ReticleOverlayURI\x18\x03 \x01(\tR\x11ReticleOverlayURI\x12 \n" +
-	"\vVJDwellSecs\x18\x04 \x01(\x02R\vVJDwellSecs\"\xba\x01\n" +
+	"\vVJDwellSecs\x18\x04 \x01(\x02R\vVJDwellSecs\"\xd5\x01\n" +
+	"\n" +
+	"FieldRange\x12\x10\n" +
+	"\x03Min\x18\x01 \x01(\x01R\x03Min\x12\x10\n" +
+	"\x03Max\x18\x02 \x01(\x01R\x03Max\x12\x12\n" +
+	"\x04Step\x18\x03 \x01(\x01R\x04Step\x12%\n" +
+	"\x05Scale\x18\x04 \x01(\x0e2\x0f.std.RangeScaleR\x05Scale\x12(\n" +
+	"\x06Format\x18\x05 \x01(\x0e2\x10.std.RangeFormatR\x06Format\x12 \n" +
+	"\x05Units\x18\x06 \x01(\x0e2\n" +
+	".amp.UnitsR\x05Units\x12\x1c\n" +
+	"\tUnitLabel\x18\a \x01(\tR\tUnitLabel\"v\n" +
+	"\rControlChoice\x12#\n" +
+	"\x06Labels\x18\x01 \x01(\v2\v.std.LabelsR\x06Labels\x12$\n" +
+	"\x05Value\x18\x02 \x01(\v2\x0e.std.JsonValueR\x05Value\x12\x1a\n" +
+	"\bGlyphURI\x18\x03 \x01(\tR\bGlyphURI\"\x96\x04\n" +
+	"\vControlSpec\x12\x18\n" +
+	"\aValueID\x18\x01 \x01(\tR\aValueID\x12\x1a\n" +
+	"\bActionID\x18\x02 \x01(\tR\bActionID\x12#\n" +
+	"\x06Labels\x18\x03 \x01(\v2\v.std.LabelsR\x06Labels\x12\x1a\n" +
+	"\bGlyphURI\x18\x04 \x01(\tR\bGlyphURI\x12$\n" +
+	"\x04Kind\x18\x05 \x01(\x0e2\x10.std.ControlKindR\x04Kind\x12%\n" +
+	"\x05Range\x18\x06 \x01(\v2\x0f.std.FieldRangeR\x05Range\x12(\n" +
+	"\aDefault\x18\a \x01(\v2\x0e.std.JsonValueR\aDefault\x12(\n" +
+	"\x06Access\x18\b \x01(\x0e2\x10.std.FieldAccessR\x06Access\x12\x1e\n" +
+	"\n" +
+	"AccessNote\x18\t \x01(\tR\n" +
+	"AccessNote\x12,\n" +
+	"\aChoices\x18\n" +
+	" \x03(\v2\x12.std.ControlChoiceR\aChoices\x12)\n" +
+	"\x06Layers\x18\v \x03(\x0e2\x11.std.SettingLayerR\x06Layers\x12,\n" +
+	"\bChildren\x18\f \x03(\v2\x10.std.ControlSpecR\bChildren\x12,\n" +
+	"\bTemplate\x18\r \x01(\v2\x10.std.ControlSpecR\bTemplate\x12\x1a\n" +
+	"\bStyleURI\x18\x0e \x01(\tR\bStyleURI\"\xba\x01\n" +
 	"\tLoginForm\x12-\n" +
 	"\bEncoding\x18\x01 \x01(\x0e2\x11.std.BodyEncodingR\bEncoding\x12\x1c\n" +
 	"\tUserField\x18\x02 \x01(\tR\tUserField\x12\x1c\n" +
@@ -4088,10 +4788,48 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x11ReticleStyleUnset\x10\x00\x12\x0f\n" +
 	"\vReticleLine\x10\x01\x12\x17\n" +
 	"\x13ReticleAngleBracket\x10\x02\x12\x17\n" +
-	"\x13ReticleSideBrackets\x10\x03*\"\n" +
+	"\x13ReticleSideBrackets\x10\x03*\xab\x01\n" +
+	"\vFieldAccess\x12\x18\n" +
+	"\x14FieldAccess_Editable\x10\x00\x12\x19\n" +
+	"\x15FieldAccess_Immutable\x10\x01\x12\x19\n" +
+	"\x15FieldAccess_Generated\x10\x02\x12\x16\n" +
+	"\x12FieldAccess_Locked\x10\x03\x12\x1c\n" +
+	"\x18FieldAccess_Unauthorized\x10\x04\x12\x16\n" +
+	"\x12FieldAccess_Hidden\x10\x05*7\n" +
+	"\n" +
+	"RangeScale\x12\x15\n" +
+	"\x11RangeScale_Linear\x10\x00\x12\x12\n" +
+	"\x0eRangeScale_Log\x10\x01*?\n" +
+	"\vRangeFormat\x12\x16\n" +
+	"\x12RangeFormat_Number\x10\x00\x12\x18\n" +
+	"\x14RangeFormat_Duration\x10\x01*9\n" +
+	"\x06Switch\x12\x10\n" +
+	"\fSwitch_Unset\x10\x00\x12\x0e\n" +
+	"\n" +
+	"Switch_Off\x10\x01\x12\r\n" +
+	"\tSwitch_On\x10\x02*\xc4\x01\n" +
+	"\vControlKind\x12\x13\n" +
+	"\x0fControlKind_Nil\x10\x00\x12\x14\n" +
+	"\x10ControlKind_Menu\x10\x01\x12\x16\n" +
+	"\x12ControlKind_Toggle\x10\x02\x12\x16\n" +
+	"\x12ControlKind_Number\x10\x03\x12\x16\n" +
+	"\x12ControlKind_Choice\x10\x04\x12\x14\n" +
+	"\x10ControlKind_Text\x10\x05\x12\x16\n" +
+	"\x12ControlKind_Action\x10\x06\x12\x14\n" +
+	"\x10ControlKind_List\x10\a*\xd0\x01\n" +
+	"\fSettingLayer\x12\x14\n" +
+	"\x10SettingLayer_Nil\x10\x00\x12\x18\n" +
+	"\x14SettingLayer_Channel\x10\x01\x12\x17\n" +
+	"\x13SettingLayer_Device\x10\x02\x12\x17\n" +
+	"\x13SettingLayer_Member\x10\x03\x12\x16\n" +
+	"\x12SettingLayer_Brand\x10\x04\x12\x17\n" +
+	"\x13SettingLayer_Planet\x10\x05\x12\x16\n" +
+	"\x12SettingLayer_Local\x10\x06\x12\x15\n" +
+	"\x11SettingLayer_Host\x10\a*\"\n" +
 	"\fBodyEncoding\x12\b\n" +
 	"\x04JSON\x10\x00\x12\b\n" +
-	"\x04Form\x10\x01BHZ-github.com/art-media-platform/amp.SDK/amp/std\xaa\x02\x16art.media.platform.stdb\x06proto3"
+	"\x04Form\x10\x01:K\n" +
+	"\aControl\x12\x1d.google.protobuf.FieldOptions\x18ц\x03 \x01(\v2\x10.std.ControlSpecR\aControlBHZ-github.com/art-media-platform/amp.SDK/amp/std\xaa\x02\x16art.media.platform.stdb\x06proto3"
 
 var (
 	file_amp_std_amp_std_proto_rawDescOnce sync.Once
@@ -4105,111 +4843,137 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 	return file_amp_std_amp_std_proto_rawDescData
 }
 
-var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 16)
-var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 22)
+var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_amp_std_amp_std_proto_goTypes = []any{
-	(TRS_Flags)(0),           // 0: std.TRS_Flags
-	(CameraModeID)(0),        // 1: std.CameraModeID
-	(ValueKind)(0),           // 2: std.ValueKind
-	(PointFormat)(0),         // 3: std.PointFormat
-	(MediaFlags)(0),          // 4: std.MediaFlags
-	(ColormapFlags)(0),       // 5: std.ColormapFlags
-	(SensorFlags)(0),         // 6: std.SensorFlags
-	(AudioFlags)(0),          // 7: std.AudioFlags
-	(TileEase)(0),            // 8: std.TileEase
-	(TileServerKind)(0),      // 9: std.TileServerKind
-	(TileProjection)(0),      // 10: std.TileProjection
-	(TileServerScheme)(0),    // 11: std.TileServerScheme
-	(TileServerAuth)(0),      // 12: std.TileServerAuth
-	(ReticleStyleID)(0),      // 13: std.ReticleStyleID
-	(BodyEncoding)(0),        // 14: std.BodyEncoding
-	(GeoPath_RenderType)(0),  // 15: std.GeoPath.RenderType
-	(*TRS)(nil),              // 16: std.TRS
-	(*Matrix4X4)(nil),        // 17: std.Matrix4x4
-	(*CameraState)(nil),      // 18: std.CameraState
-	(*CameraOptions)(nil),    // 19: std.CameraOptions
-	(*FileInfo)(nil),         // 20: std.FileInfo
-	(*JsonValue)(nil),        // 21: std.JsonValue
-	(*Report)(nil),           // 22: std.Report
-	(*Labels)(nil),           // 23: std.Labels
-	(*ModuleRef)(nil),        // 24: std.ModuleRef
-	(*Rect)(nil),             // 25: std.Rect
-	(*GeoPath)(nil),          // 26: std.GeoPath
-	(*MediaInfo)(nil),        // 27: std.MediaInfo
-	(*MediaTags)(nil),        // 28: std.MediaTags
-	(*MediaTag)(nil),         // 29: std.MediaTag
-	(*MediaEntry)(nil),       // 30: std.MediaEntry
-	(*MediaRank)(nil),        // 31: std.MediaRank
-	(*Segment)(nil),          // 32: std.Segment
-	(*Arg)(nil),              // 33: std.Arg
-	(*VisPreset)(nil),        // 34: std.VisPreset
-	(*TileBand)(nil),         // 35: std.TileBand
-	(*TileMeshSpec)(nil),     // 36: std.TileMeshSpec
-	(*SkinSpec)(nil),         // 37: std.SkinSpec
-	(*AtmosphereEffect)(nil), // 38: std.AtmosphereEffect
-	(*AtmosphereSpec)(nil),   // 39: std.AtmosphereSpec
-	(*TileServer)(nil),       // 40: std.TileServer
-	(*DeviceVars)(nil),       // 41: std.DeviceVars
-	(*MemberVars)(nil),       // 42: std.MemberVars
-	(*LoginForm)(nil),        // 43: std.LoginForm
-	(*Credentials)(nil),      // 44: std.Credentials
-	(*amp.Tag)(nil),          // 45: amp.Tag
-	(*amp.Tags)(nil),         // 46: amp.Tags
-	(amp.Units)(0),           // 47: amp.Units
-	(*amp.BlobRef)(nil),      // 48: amp.BlobRef
+	(TRS_Flags)(0),                    // 0: std.TRS_Flags
+	(CameraModeID)(0),                 // 1: std.CameraModeID
+	(ValueKind)(0),                    // 2: std.ValueKind
+	(PointFormat)(0),                  // 3: std.PointFormat
+	(MediaFlags)(0),                   // 4: std.MediaFlags
+	(ColormapFlags)(0),                // 5: std.ColormapFlags
+	(SensorFlags)(0),                  // 6: std.SensorFlags
+	(AudioFlags)(0),                   // 7: std.AudioFlags
+	(TileEase)(0),                     // 8: std.TileEase
+	(TileServerKind)(0),               // 9: std.TileServerKind
+	(TileProjection)(0),               // 10: std.TileProjection
+	(TileServerScheme)(0),             // 11: std.TileServerScheme
+	(TileServerAuth)(0),               // 12: std.TileServerAuth
+	(ReticleStyleID)(0),               // 13: std.ReticleStyleID
+	(FieldAccess)(0),                  // 14: std.FieldAccess
+	(RangeScale)(0),                   // 15: std.RangeScale
+	(RangeFormat)(0),                  // 16: std.RangeFormat
+	(Switch)(0),                       // 17: std.Switch
+	(ControlKind)(0),                  // 18: std.ControlKind
+	(SettingLayer)(0),                 // 19: std.SettingLayer
+	(BodyEncoding)(0),                 // 20: std.BodyEncoding
+	(GeoPath_RenderType)(0),           // 21: std.GeoPath.RenderType
+	(*TRS)(nil),                       // 22: std.TRS
+	(*Matrix4X4)(nil),                 // 23: std.Matrix4x4
+	(*CameraState)(nil),               // 24: std.CameraState
+	(*CameraOptions)(nil),             // 25: std.CameraOptions
+	(*FileInfo)(nil),                  // 26: std.FileInfo
+	(*JsonValue)(nil),                 // 27: std.JsonValue
+	(*Report)(nil),                    // 28: std.Report
+	(*Labels)(nil),                    // 29: std.Labels
+	(*ModuleRef)(nil),                 // 30: std.ModuleRef
+	(*Rect)(nil),                      // 31: std.Rect
+	(*GeoPath)(nil),                   // 32: std.GeoPath
+	(*MediaInfo)(nil),                 // 33: std.MediaInfo
+	(*MediaTags)(nil),                 // 34: std.MediaTags
+	(*MediaTag)(nil),                  // 35: std.MediaTag
+	(*MediaEntry)(nil),                // 36: std.MediaEntry
+	(*MediaRank)(nil),                 // 37: std.MediaRank
+	(*Segment)(nil),                   // 38: std.Segment
+	(*Arg)(nil),                       // 39: std.Arg
+	(*VisPreset)(nil),                 // 40: std.VisPreset
+	(*TileBand)(nil),                  // 41: std.TileBand
+	(*TileMeshSpec)(nil),              // 42: std.TileMeshSpec
+	(*SkinSpec)(nil),                  // 43: std.SkinSpec
+	(*AtmosphereEffect)(nil),          // 44: std.AtmosphereEffect
+	(*AtmosphereSpec)(nil),            // 45: std.AtmosphereSpec
+	(*TileServer)(nil),                // 46: std.TileServer
+	(*DeviceVars)(nil),                // 47: std.DeviceVars
+	(*MemberVars)(nil),                // 48: std.MemberVars
+	(*FieldRange)(nil),                // 49: std.FieldRange
+	(*ControlChoice)(nil),             // 50: std.ControlChoice
+	(*ControlSpec)(nil),               // 51: std.ControlSpec
+	(*LoginForm)(nil),                 // 52: std.LoginForm
+	(*Credentials)(nil),               // 53: std.Credentials
+	(*amp.Tag)(nil),                   // 54: amp.Tag
+	(*amp.Tags)(nil),                  // 55: amp.Tags
+	(amp.Units)(0),                    // 56: amp.Units
+	(*amp.BlobRef)(nil),               // 57: amp.BlobRef
+	(*descriptorpb.FieldOptions)(nil), // 58: google.protobuf.FieldOptions
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
-	16, // 1: std.CameraState.Placement:type_name -> std.TRS
+	22, // 1: std.CameraState.Placement:type_name -> std.TRS
 	1,  // 2: std.CameraState.ModeID:type_name -> std.CameraModeID
 	2,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
-	21, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	45, // 5: std.Report.Title:type_name -> amp.Tag
-	45, // 6: std.Report.Caption:type_name -> amp.Tag
-	45, // 7: std.Report.Errors:type_name -> amp.Tag
-	45, // 8: std.Report.Warnings:type_name -> amp.Tag
-	45, // 9: std.Report.Messages:type_name -> amp.Tag
-	45, // 10: std.Report.Debug:type_name -> amp.Tag
-	45, // 11: std.ModuleRef.Module:type_name -> amp.Tag
-	23, // 12: std.ModuleRef.Labels:type_name -> std.Labels
-	46, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
+	27, // 4: std.JsonValue.Array:type_name -> std.JsonValue
+	54, // 5: std.Report.Title:type_name -> amp.Tag
+	54, // 6: std.Report.Caption:type_name -> amp.Tag
+	54, // 7: std.Report.Errors:type_name -> amp.Tag
+	54, // 8: std.Report.Warnings:type_name -> amp.Tag
+	54, // 9: std.Report.Messages:type_name -> amp.Tag
+	54, // 10: std.Report.Debug:type_name -> amp.Tag
+	54, // 11: std.ModuleRef.Module:type_name -> amp.Tag
+	29, // 12: std.ModuleRef.Labels:type_name -> std.Labels
+	55, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
 	3,  // 14: std.Rect.Format:type_name -> std.PointFormat
-	15, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	21, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	3,  // 16: std.GeoPath.Format:type_name -> std.PointFormat
 	4,  // 17: std.MediaInfo.Flags:type_name -> std.MediaFlags
-	45, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
-	29, // 19: std.MediaTags.Extra:type_name -> std.MediaTag
-	47, // 20: std.MediaTag.Units:type_name -> amp.Units
-	45, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
-	23, // 22: std.MediaEntry.Labels:type_name -> std.Labels
-	27, // 23: std.MediaEntry.Info:type_name -> std.MediaInfo
-	46, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
-	47, // 25: std.Segment.Units:type_name -> amp.Units
-	48, // 26: std.Segment.Blob:type_name -> amp.BlobRef
-	21, // 27: std.Arg.Value:type_name -> std.JsonValue
-	45, // 28: std.VisPreset.Title:type_name -> amp.Tag
-	45, // 29: std.VisPreset.Collection:type_name -> amp.Tag
-	45, // 30: std.VisPreset.Credits:type_name -> amp.Tag
+	54, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
+	35, // 19: std.MediaTags.Extra:type_name -> std.MediaTag
+	56, // 20: std.MediaTag.Units:type_name -> amp.Units
+	54, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
+	29, // 22: std.MediaEntry.Labels:type_name -> std.Labels
+	33, // 23: std.MediaEntry.Info:type_name -> std.MediaInfo
+	55, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
+	56, // 25: std.Segment.Units:type_name -> amp.Units
+	57, // 26: std.Segment.Blob:type_name -> amp.BlobRef
+	27, // 27: std.Arg.Value:type_name -> std.JsonValue
+	54, // 28: std.VisPreset.Title:type_name -> amp.Tag
+	54, // 29: std.VisPreset.Collection:type_name -> amp.Tag
+	54, // 30: std.VisPreset.Credits:type_name -> amp.Tag
 	5,  // 31: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
 	6,  // 32: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
 	7,  // 33: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	33, // 34: std.VisPreset.Args:type_name -> std.Arg
+	39, // 34: std.VisPreset.Args:type_name -> std.Arg
 	8,  // 35: std.TileBand.YEase:type_name -> std.TileEase
-	35, // 36: std.TileMeshSpec.Bands:type_name -> std.TileBand
-	36, // 37: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
-	34, // 38: std.SkinSpec.Layers:type_name -> std.VisPreset
-	38, // 39: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	41, // 36: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	42, // 37: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	40, // 38: std.SkinSpec.Layers:type_name -> std.VisPreset
+	44, // 39: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
 	9,  // 40: std.TileServer.Kind:type_name -> std.TileServerKind
 	10, // 41: std.TileServer.Projection:type_name -> std.TileProjection
 	11, // 42: std.TileServer.Scheme:type_name -> std.TileServerScheme
 	12, // 43: std.TileServer.AuthMethod:type_name -> std.TileServerAuth
 	13, // 44: std.MemberVars.ReticleStyle:type_name -> std.ReticleStyleID
-	14, // 45: std.LoginForm.Encoding:type_name -> std.BodyEncoding
-	46, // [46:46] is the sub-list for method output_type
-	46, // [46:46] is the sub-list for method input_type
-	46, // [46:46] is the sub-list for extension type_name
-	46, // [46:46] is the sub-list for extension extendee
-	0,  // [0:46] is the sub-list for field type_name
+	15, // 45: std.FieldRange.Scale:type_name -> std.RangeScale
+	16, // 46: std.FieldRange.Format:type_name -> std.RangeFormat
+	56, // 47: std.FieldRange.Units:type_name -> amp.Units
+	29, // 48: std.ControlChoice.Labels:type_name -> std.Labels
+	27, // 49: std.ControlChoice.Value:type_name -> std.JsonValue
+	29, // 50: std.ControlSpec.Labels:type_name -> std.Labels
+	18, // 51: std.ControlSpec.Kind:type_name -> std.ControlKind
+	49, // 52: std.ControlSpec.Range:type_name -> std.FieldRange
+	27, // 53: std.ControlSpec.Default:type_name -> std.JsonValue
+	14, // 54: std.ControlSpec.Access:type_name -> std.FieldAccess
+	50, // 55: std.ControlSpec.Choices:type_name -> std.ControlChoice
+	19, // 56: std.ControlSpec.Layers:type_name -> std.SettingLayer
+	51, // 57: std.ControlSpec.Children:type_name -> std.ControlSpec
+	51, // 58: std.ControlSpec.Template:type_name -> std.ControlSpec
+	20, // 59: std.LoginForm.Encoding:type_name -> std.BodyEncoding
+	58, // 60: std.Control:extendee -> google.protobuf.FieldOptions
+	51, // 61: std.Control:type_name -> std.ControlSpec
+	62, // [62:62] is the sub-list for method output_type
+	62, // [62:62] is the sub-list for method input_type
+	61, // [61:62] is the sub-list for extension type_name
+	60, // [60:61] is the sub-list for extension extendee
+	0,  // [0:60] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -4222,15 +4986,16 @@ func file_amp_std_amp_std_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
-			NumEnums:      16,
-			NumMessages:   29,
-			NumExtensions: 0,
+			NumEnums:      22,
+			NumMessages:   32,
+			NumExtensions: 1,
 			NumServices:   0,
 		},
 		GoTypes:           file_amp_std_amp_std_proto_goTypes,
 		DependencyIndexes: file_amp_std_amp_std_proto_depIdxs,
 		EnumInfos:         file_amp_std_amp_std_proto_enumTypes,
 		MessageInfos:      file_amp_std_amp_std_proto_msgTypes,
+		ExtensionInfos:    file_amp_std_amp_std_proto_extTypes,
 	}.Build()
 	File_amp_std_amp_std_proto = out.File
 	file_amp_std_amp_std_proto_goTypes = nil

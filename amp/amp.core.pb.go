@@ -97,18 +97,24 @@ func (UriScheme) EnumDescriptor() ([]byte, []int) {
 type Units int32
 
 const (
-	Units_Unitless    Units = 0  // units not specified
-	Units_Operations  Units = 1  // total operation count
-	Units_Bytes       Units = 2  // any byte offset
-	Units_Pixels      Units = 3  // texels or device pixels; not for typographic sizes
-	Units_Seconds     Units = 4  // elapsed time
-	Units_Planck      Units = 5  // Planck length
-	Units_Samples     Units = 6  // one media sample (e.g. an audio frame); rate is samples per second
-	Units_BitrateKbps Units = 7  // kilobits per second (1000 bits/s)
-	Units_Nanometers  Units = 8  // 10^9 nm == 1 m
-	Units_Millimeters Units = 10 // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
-	Units_Meters      Units = 11 // length for humans
-	Units_LightYears  Units = 16 // 1 light year == 9460730472580800. meters
+	Units_Unitless        Units = 0  // units not specified
+	Units_Operations      Units = 1  // total operation count
+	Units_Bytes           Units = 2  // any byte offset
+	Units_Pixels          Units = 3  // texels or device pixels; not for typographic sizes
+	Units_Seconds         Units = 4  // elapsed time
+	Units_Planck          Units = 5  // Planck length
+	Units_Samples         Units = 6  // one media sample (e.g. an audio frame); rate is samples per second
+	Units_BitrateKbps     Units = 7  // kilobits per second (1000 bits/s)
+	Units_Nanometers      Units = 8  // 10^9 nm == 1 m
+	Units_Millimeters     Units = 10 // 10^3 mm == 1 m; 1 point == 1/72 inches == 0.3527777778 mm
+	Units_Meters          Units = 11 // length for humans
+	Units_LightYears      Units = 16 // 1 light year == 9460730472580800. meters
+	Units_Percent         Units = 20 // hundredths of a whole
+	Units_Milliseconds    Units = 21 // 10^3 ms == 1 s
+	Units_Hertz           Units = 22 // cycles per second
+	Units_FramesPerSecond Units = 23 // rendered frames per second
+	Units_Degrees         Units = 24 // 360 degrees == 1 turn
+	Units_Decibels        Units = 25 // a power ratio, 10·log10
 )
 
 // Enum value maps for Units.
@@ -126,20 +132,32 @@ var (
 		10: "Millimeters",
 		11: "Meters",
 		16: "LightYears",
+		20: "Percent",
+		21: "Milliseconds",
+		22: "Hertz",
+		23: "FramesPerSecond",
+		24: "Degrees",
+		25: "Decibels",
 	}
 	Units_value = map[string]int32{
-		"Unitless":    0,
-		"Operations":  1,
-		"Bytes":       2,
-		"Pixels":      3,
-		"Seconds":     4,
-		"Planck":      5,
-		"Samples":     6,
-		"BitrateKbps": 7,
-		"Nanometers":  8,
-		"Millimeters": 10,
-		"Meters":      11,
-		"LightYears":  16,
+		"Unitless":        0,
+		"Operations":      1,
+		"Bytes":           2,
+		"Pixels":          3,
+		"Seconds":         4,
+		"Planck":          5,
+		"Samples":         6,
+		"BitrateKbps":     7,
+		"Nanometers":      8,
+		"Millimeters":     10,
+		"Meters":          11,
+		"LightYears":      16,
+		"Percent":         20,
+		"Milliseconds":    21,
+		"Hertz":           22,
+		"FramesPerSecond": 23,
+		"Degrees":         24,
+		"Decibels":        25,
 	}
 )
 
@@ -9474,7 +9492,7 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\x04Data\x10\a\x12\b\n" +
 	"\x04File\x10\t\x12\t\n" +
 	"\x05Asset\x10\x0f\x12\r\n" +
-	"\tAppNative\x10\x10*\xb0\x01\n" +
+	"\tAppNative\x10\x10*\x8a\x02\n" +
 	"\x05Units\x12\f\n" +
 	"\bUnitless\x10\x00\x12\x0e\n" +
 	"\n" +
@@ -9494,7 +9512,13 @@ const file_amp_amp_core_proto_rawDesc = "" +
 	"\n" +
 	"\x06Meters\x10\v\x12\x0e\n" +
 	"\n" +
-	"LightYears\x10\x10*?\n" +
+	"LightYears\x10\x10\x12\v\n" +
+	"\aPercent\x10\x14\x12\x10\n" +
+	"\fMilliseconds\x10\x15\x12\t\n" +
+	"\x05Hertz\x10\x16\x12\x13\n" +
+	"\x0fFramesPerSecond\x10\x17\x12\v\n" +
+	"\aDegrees\x10\x18\x12\f\n" +
+	"\bDecibels\x10\x19*?\n" +
 	"\tTxOpFlags\x12\x0e\n" +
 	"\n" +
 	"Unassigned\x10\x00\x12\n" +
