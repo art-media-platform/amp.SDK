@@ -604,7 +604,13 @@ enum ReticleStyleID {
 // (std.HomeVars defaults), never in a field initializer.
 message DeviceVars {
     float UIScale   = 1; // item size scale; 0 → derived from display DPI
-    int32 TargetFPS = 2; // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
+    int32 TargetFPS = 2 [(Control) = {   // target frame rate; 0 → (Control).Default
+        ValueID: "frame.target.fps"
+        Labels:  {Title: "Target FPS"}
+        Range:   {Min: 15 Max: 120 Step: 1 Units: FramesPerSecond}
+        Default: {Kind: Number Number: 60}
+        Layers:  [SettingLayer_Channel, SettingLayer_Device]
+    }];
     // output latency: how long this device's output route and speaker take
     // past FMOD's mixer, ms; the vis delay is the mixer's measured lead plus
     // this; 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice

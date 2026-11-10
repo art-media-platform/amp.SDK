@@ -484,11 +484,8 @@ export const Theme = {
     UnknownSlot:  "sys/unknown",
 } as const;
 
-// ─── DeviceVars / MemberVars defaults. ──────────────────────────
+// ─── DeviceVars / MemberVars defaults (a field with a (Control) option keeps its own). ───
 export const HomeVars = {
-    DefaultTargetFPS:   60,
-    MinTargetFPS:       15,
-    MaxTargetFPS:       120,
     DefaultAVLatencyMS: 60,  // the output path past FMOD's mixer (ms), added to its measured lead for the vis delay; a set std.DeviceVars.AVLatencyMS overrides
 } as const;
 

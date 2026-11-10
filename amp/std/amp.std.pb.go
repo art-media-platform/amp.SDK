@@ -3771,8 +3771,8 @@ func (x *TileServer) GetElevationEncoding() string {
 // (std.HomeVars defaults), never in a field initializer.
 type DeviceVars struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
-	UIScale   float32                `protobuf:"fixed32,1,opt,name=UIScale,proto3" json:"UIScale,omitempty"`    // item size scale; 0 → derived from display DPI
-	TargetFPS int32                  `protobuf:"varint,2,opt,name=TargetFPS,proto3" json:"TargetFPS,omitempty"` // target frame rate; 0 → std.HomeVars.DefaultTargetFPS
+	UIScale   float32                `protobuf:"fixed32,1,opt,name=UIScale,proto3" json:"UIScale,omitempty"` // item size scale; 0 → derived from display DPI
+	TargetFPS int32                  `protobuf:"varint,2,opt,name=TargetFPS,proto3" json:"TargetFPS,omitempty"`
 	// output latency: how long this device's output route and speaker take
 	// past FMOD's mixer, ms; the vis delay is the mixer's measured lead plus
 	// this; 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice
@@ -4640,11 +4640,14 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"TileSizePx\x12$\n" +
 	"\rMinIntervalMs\x18\x17 \x01(\x05R\rMinIntervalMs\x12 \n" +
 	"\vContentType\x18\x1e \x01(\tR\vContentType\x12,\n" +
-	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"f\n" +
+	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"\xbc\x01\n" +
 	"\n" +
 	"DeviceVars\x12\x18\n" +
-	"\aUIScale\x18\x01 \x01(\x02R\aUIScale\x12\x1c\n" +
-	"\tTargetFPS\x18\x02 \x01(\x05R\tTargetFPS\x12 \n" +
+	"\aUIScale\x18\x01 \x01(\x02R\aUIScale\x12r\n" +
+	"\tTargetFPS\x18\x02 \x01(\x05BT\x8a\xb5\x18P\n" +
+	"\x10frame.target.fps\x1a\f\n" +
+	"\n" +
+	"Target FPS2\x1d\t\x00\x00\x00\x00\x00\x00.@\x11\x00\x00\x00\x00\x00\x00^@\x19\x00\x00\x00\x00\x00\x00\xf0?0\x17:\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@Z\x02\x01\x02R\tTargetFPS\x12 \n" +
 	"\vAVLatencyMS\x18\x03 \x01(\x05R\vAVLatencyMS\"\xc1\x01\n" +
 	"\n" +
 	"MemberVars\x12*\n" +

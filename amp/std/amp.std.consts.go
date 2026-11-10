@@ -643,11 +643,8 @@ const (
 	ThemeUnknownSlot = "sys/unknown"
 )
 
-// ─── DeviceVars / MemberVars defaults. ──────────────────────────
+// ─── DeviceVars / MemberVars defaults (a field with a (Control) option keeps its own). ───
 const (
-	HomeVarsDefaultTargetFPS   = int32(60)
-	HomeVarsMinTargetFPS       = int32(15)
-	HomeVarsMaxTargetFPS       = int32(120)
 	HomeVarsDefaultAVLatencyMS = int32(60) // the output path past FMOD's mixer (ms), added to its measured lead for the vis delay; a set std.DeviceVars.AVLatencyMS overrides
 )
 
