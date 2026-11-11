@@ -3765,20 +3765,19 @@ func (x *TileServer) GetElevationEncoding() string {
 }
 
 // DeviceVars is the device-class client vars group — settings tied to one
-// device's display and performance envelope.  Stored as one item on the
-// member's device node in the home planet (std.Attr.HomeDeviceVars).
+// device's display, audio output and performance envelope.  Stored as one
+// item on the member's device node in the home planet (std.Attr.HomeDeviceVars).
 // A zero field is the "unset" sentinel; resolution happens at point of use
-// (std.HomeVars defaults), never in a field initializer.
+// (each field states its rule), never in a field initializer.
 type DeviceVars struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	UIScale   float32                `protobuf:"fixed32,1,opt,name=UIScale,proto3" json:"UIScale,omitempty"` // item size scale; 0 → derived from display DPI
 	TargetFPS int32                  `protobuf:"varint,2,opt,name=TargetFPS,proto3" json:"TargetFPS,omitempty"`
 	// output latency: how long this device's output route and speaker take
-	// past FMOD's mixer, ms; the vis delay is the mixer's measured lead plus
-	// this; 0 → std.HomeVars.DefaultAVLatencyMS, and 0 ms is not a choice
-	AVLatencyMS   int32 `protobuf:"varint,3,opt,name=AVLatencyMS,proto3" json:"AVLatencyMS,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// past FMOD's mixer; the vis delay is the mixer's measured lead plus this
+	AudioLatencyMS int32 `protobuf:"varint,3,opt,name=AudioLatencyMS,proto3" json:"AudioLatencyMS,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *DeviceVars) Reset() {
@@ -3825,9 +3824,9 @@ func (x *DeviceVars) GetTargetFPS() int32 {
 	return 0
 }
 
-func (x *DeviceVars) GetAVLatencyMS() int32 {
+func (x *DeviceVars) GetAudioLatencyMS() int32 {
 	if x != nil {
-		return x.AVLatencyMS
+		return x.AudioLatencyMS
 	}
 	return 0
 }
@@ -4640,15 +4639,17 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"TileSizePx\x12$\n" +
 	"\rMinIntervalMs\x18\x17 \x01(\x05R\rMinIntervalMs\x12 \n" +
 	"\vContentType\x18\x1e \x01(\tR\vContentType\x12,\n" +
-	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"\xbc\x01\n" +
+	"\x11ElevationEncoding\x18\x1f \x01(\tR\x11ElevationEncoding\"\x95\x02\n" +
 	"\n" +
 	"DeviceVars\x12\x18\n" +
 	"\aUIScale\x18\x01 \x01(\x02R\aUIScale\x12r\n" +
 	"\tTargetFPS\x18\x02 \x01(\x05BT\x8a\xb5\x18P\n" +
 	"\x10frame.target.fps\x1a\f\n" +
 	"\n" +
-	"Target FPS2\x1d\t\x00\x00\x00\x00\x00\x00.@\x11\x00\x00\x00\x00\x00\x00^@\x19\x00\x00\x00\x00\x00\x00\xf0?0\x17:\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@Z\x02\x01\x02R\tTargetFPS\x12 \n" +
-	"\vAVLatencyMS\x18\x03 \x01(\x05R\vAVLatencyMS\"\xc1\x01\n" +
+	"Target FPS2\x1d\t\x00\x00\x00\x00\x00\x00.@\x11\x00\x00\x00\x00\x00\x00^@\x19\x00\x00\x00\x00\x00\x00\xf0?0\x17:\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@Z\x02\x01\x02R\tTargetFPS\x12y\n" +
+	"\x0eAudioLatencyMS\x18\x03 \x01(\x05BQ\x8a\xb5\x18M\n" +
+	"\raudio.latency\x1a\r\n" +
+	"\vA/V Latency2\x1d\t\x00\x00\x00\x00\x00\x00\x14@\x11\x00\x00\x00\x00\x00@\x7f@\x19\x00\x00\x00\x00\x00\x00\x14@0\x15:\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@Z\x01\x02R\x0eAudioLatencyMS\"\xc1\x01\n" +
 	"\n" +
 	"MemberVars\x12*\n" +
 	"\x10DefaultSkyboxURI\x18\x01 \x01(\tR\x10DefaultSkyboxURI\x127\n" +

@@ -643,11 +643,6 @@ const (
 	ThemeUnknownSlot = "sys/unknown"
 )
 
-// ─── DeviceVars / MemberVars defaults (a field with a (Control) option keeps its own). ───
-const (
-	HomeVarsDefaultAVLatencyMS = int32(60) // the output path past FMOD's mixer (ms), added to its measured lead for the vis delay; a set std.DeviceVars.AVLatencyMS overrides
-)
-
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───
 const (
 	// The ContentType of a terminal session's MediaLink Tag; a transport
