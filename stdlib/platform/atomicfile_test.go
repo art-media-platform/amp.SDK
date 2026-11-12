@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestWriteFileAtomic: a write creates the file with perm, a rewrite replaces
@@ -54,6 +55,55 @@ func TestWriteFileAtomic(t *testing.T) {
 	for _, entry := range entries {
 		if strings.Contains(entry.Name(), atomicTempInfix) {
 			t.Fatalf("a failed write left its temp %s", entry.Name())
+		}
+	}
+}
+
+// TestWriteFileAtomic_ReapsOrphanTemps: a target's write removes a temp sibling
+// past the grace whose lock no process holds (a killed writer's), and leaves a
+// locked one (a live writer's) and one within the grace.
+func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
+	if !fileLocks {
+		t.Skip("no file lock on this platform")
+	}
+	dir := t.TempDir()
+	target := filepath.Join(dir, "epoch-keys.tome")
+	old := time.Now().Add(-2 * orphanTempGrace)
+	temps := map[string]time.Time{
+		"orphan": old,
+		"live":   old,
+		"fresh":  time.Now(),
+	}
+	for name, mtime := range temps {
+		path := target + atomicTempInfix + name
+		if err := os.WriteFile(path, []byte(name), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chtimes(path, mtime, mtime); err != nil {
+			t.Fatal(err)
+		}
+	}
+	liveWriter, err := os.Open(target + atomicTempInfix + "live")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer liveWriter.Close()
+	if !tryLock(liveWriter) {
+		t.Fatal("could not lock the live writer's temp")
+	}
+
+	if err := WriteFileAtomic(target, []byte("tome"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]bool{
+		"orphan": false,
+		"live":   true,
+		"fresh":  true,
+	}
+	for name, kept := range want {
+		_, err := os.Stat(target + atomicTempInfix + name)
+		if (err == nil) != kept {
+			t.Errorf("temp %q present = %v, want %v", name, err == nil, kept)
 		}
 	}
 }
