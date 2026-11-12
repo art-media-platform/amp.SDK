@@ -42,7 +42,7 @@ const Tx {
 const Lib {
     // The libampd ABI version ampd_ABIVersion returns; a client refuses a
     // mismatch.
-    const int32 ABIVersion       = 4;
+    const int32 ABIVersion       = 5;
     const int32 RecordHeaderSize = 8;
     // payload = one TxMsg wire frame (Tx.PreambleSize preamble + head/ops +
     // data)

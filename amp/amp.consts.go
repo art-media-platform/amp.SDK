@@ -70,7 +70,7 @@ const (
 const (
 	// The libampd ABI version ampd_ABIVersion returns; a client refuses a
 	// mismatch.
-	LibABIVersion       = int32(4)
+	LibABIVersion       = int32(5)
 	LibRecordHeaderSize = int32(8)
 	// payload = one TxMsg wire frame (Tx.PreambleSize preamble + head/ops +
 	// data)
