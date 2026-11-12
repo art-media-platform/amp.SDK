@@ -475,13 +475,16 @@ export const Actor = {
 // atlas.  A theme = ONE atlas crate (DefaultAtlas) whose named sub-sprites
 // match the slots; a mod ships its own atlas crate and points selection there.
 export const Theme = {
-    SlotPrefix:   "asset:theme/",  // ThemeMap owns this namespace
+    SlotPrefix:           "asset:theme/",  // ThemeMap owns this namespace
     // Factory atlas (in Crates.BaseAssets).
-    DefaultAtlas: "asset:crates.planet.tools/amp.3D.base.assets/theme.default",
+    DefaultAtlas:         "asset:crates.planet.tools/amp.3D.base.assets/theme.default",
     // The slot a theme or glyph URI that does not resolve falls back to: the
     // unknown-asset glyph, shown in place of an empty image, with one damped
     // warning per URI.
-    UnknownSlot:  "sys/unknown",
+    UnknownSlot:          "sys/unknown",
+    // A read-only (view-mode) setting cell's opacity, SoundSpectrum's ×0.65; a
+    // theme's CmdrMarks.ReadOnlyAlpha overrides.
+    DefaultReadOnlyAlpha: 0.65,
 } as const;
 
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───

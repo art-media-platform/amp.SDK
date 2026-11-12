@@ -641,6 +641,9 @@ const (
 	// unknown-asset glyph, shown in place of an empty image, with one damped
 	// warning per URI.
 	ThemeUnknownSlot = "sys/unknown"
+	// A read-only (view-mode) setting cell's opacity, SoundSpectrum's ×0.65; a
+	// theme's CmdrMarks.ReadOnlyAlpha overrides.
+	ThemeDefaultReadOnlyAlpha = float32(0.65)
 )
 
 // ─── amp.Terminal emulator / grid + shuttle transport defaults. ───
