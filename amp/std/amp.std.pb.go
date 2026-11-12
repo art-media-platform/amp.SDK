@@ -2966,7 +2966,16 @@ func (x *Arg) GetValue() *JsonValue {
 }
 
 // VisPreset is one named visual-layer preset: its presentation labels, the
-// input axes it consumes, its aspect-ratio pegs, and the layer asset it drives.
+// input axes it consumes, its aspect-ratio pegs, its seed, and the layer asset
+// it drives.  Seed is each load's seed for a VisShader layer's draws (the vis
+// library's seed word, iRandUniform, the frame randoms) and for Mandelbulb's
+// species, palette and flight; an engine with randomness of its own (G-Force,
+// VisPlexus, SwarmVis) does not take it yet.  A positive Seed is a hand seed:
+// every load replays the same draws.  Otherwise Seed names how each load's seed
+// is chosen (std.Vis, amp.std.consts.sdl): Vis.SeedEachLoad, the default, rolls
+// fresh at every load; Vis.SeedPlaylistPosition takes the vis's position in the
+// playlist it plays from; Vis.SeedNode takes the node's ItemID.  An undefined
+// negative rolls fresh.
 type VisPreset struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`           // label — preset display name
@@ -2977,6 +2986,7 @@ type VisPreset struct {
 	AudioFlags    AudioFlags             `protobuf:"varint,8,opt,name=AudioFlags,proto3,enum=std.AudioFlags" json:"AudioFlags,omitempty"`
 	AspectMin     float32                `protobuf:"fixed32,10,opt,name=AspectMin,proto3" json:"AspectMin,omitempty"` // y/x lower peg; 0 denotes no min
 	AspectMax     float32                `protobuf:"fixed32,11,opt,name=AspectMax,proto3" json:"AspectMax,omitempty"` // y/x upper peg; 0 denotes no max
+	Seed          int64                  `protobuf:"varint,12,opt,name=Seed,proto3" json:"Seed,omitempty"`            // > 0 a hand seed; else a Vis.Seed* sentinel (above)
 	AssetURI      string                 `protobuf:"bytes,20,opt,name=AssetURI,proto3" json:"AssetURI,omitempty"`     // VisualLayer asset URI (VisShader / VisPlexus / GForce / …)
 	Args          []*Arg                 `protobuf:"bytes,21,rep,name=Args,proto3" json:"Args,omitempty"`             // free use arguments passed to the asset
 	unknownFields protoimpl.UnknownFields
@@ -3065,6 +3075,13 @@ func (x *VisPreset) GetAspectMin() float32 {
 func (x *VisPreset) GetAspectMax() float32 {
 	if x != nil {
 		return x.AspectMax
+	}
+	return 0
+}
+
+func (x *VisPreset) GetSeed() int64 {
+	if x != nil {
+		return x.Seed
 	}
 	return 0
 }
@@ -4554,7 +4571,7 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x04Blob\x18\a \x01(\v2\f.amp.BlobRefR\x04Blob\"=\n" +
 	"\x03Arg\x12\x10\n" +
 	"\x03Key\x18\x01 \x01(\tR\x03Key\x12$\n" +
-	"\x05Value\x18\x02 \x01(\v2\x0e.std.JsonValueR\x05Value\"\x8e\x03\n" +
+	"\x05Value\x18\x02 \x01(\v2\x0e.std.JsonValueR\x05Value\"\xa2\x03\n" +
 	"\tVisPreset\x12\x1e\n" +
 	"\x05Title\x18\x01 \x01(\v2\b.amp.TagR\x05Title\x12(\n" +
 	"\n" +
@@ -4568,7 +4585,8 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"AudioFlags\x12\x1c\n" +
 	"\tAspectMin\x18\n" +
 	" \x01(\x02R\tAspectMin\x12\x1c\n" +
-	"\tAspectMax\x18\v \x01(\x02R\tAspectMax\x12\x1a\n" +
+	"\tAspectMax\x18\v \x01(\x02R\tAspectMax\x12\x12\n" +
+	"\x04Seed\x18\f \x01(\x03R\x04Seed\x12\x1a\n" +
 	"\bAssetURI\x18\x14 \x01(\tR\bAssetURI\x12\x1c\n" +
 	"\x04Args\x18\x15 \x03(\v2\b.std.ArgR\x04Args\"\xe9\x05\n" +
 	"\bTileBand\x12\x14\n" +

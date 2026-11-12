@@ -407,6 +407,15 @@ export const VJ = {
     DefaultFadeSecs:    3,  // seconds of crossfade between the two slots
 } as const;
 
+// ─── Vis — the seed of a vis layer's load (std.VisPreset.Seed; VisPreset names ───
+// what takes it): a positive Seed is a hand seed (each load the same); these
+// sentinels name a source instead, resolved where the layer installs.
+export const Vis = {
+    SeedEachLoad:         0n,  // a fresh roll at every load (the default)
+    SeedPlaylistPosition: -1n,  // the vis's position in the playlist it plays from: each pass replays the same show; with no playlist (a Mantle), SeedNode
+    SeedNode:             -2n,  // the node's ItemID: the node looks the same on every client and surface
+} as const;
+
 // ─── Atmosphere — stock URIs for the four-category (sky / sun / night / fog) ───
 // atmosphere composition.  AtmosphereEffect.Enabled is the per-category
 // off-switch (std.AtmosphereSpec).

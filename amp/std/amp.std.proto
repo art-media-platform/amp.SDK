@@ -376,7 +376,16 @@ enum AudioFlags {
 }
 
 // VisPreset is one named visual-layer preset: its presentation labels, the
-// input axes it consumes, its aspect-ratio pegs, and the layer asset it drives.
+// input axes it consumes, its aspect-ratio pegs, its seed, and the layer asset
+// it drives.  Seed is each load's seed for a VisShader layer's draws (the vis
+// library's seed word, iRandUniform, the frame randoms) and for Mandelbulb's
+// species, palette and flight; an engine with randomness of its own (G-Force,
+// VisPlexus, SwarmVis) does not take it yet.  A positive Seed is a hand seed:
+// every load replays the same draws.  Otherwise Seed names how each load's seed
+// is chosen (std.Vis, amp.std.consts.sdl): Vis.SeedEachLoad, the default, rolls
+// fresh at every load; Vis.SeedPlaylistPosition takes the vis's position in the
+// playlist it plays from; Vis.SeedNode takes the node's ItemID.  An undefined
+// negative rolls fresh.
 message VisPreset {
     amp.Tag         Title       = 1; // label — preset display name
     amp.Tag         Collection  = 2; // label — the pack/collection the preset ships in
@@ -388,6 +397,8 @@ message VisPreset {
 
     float           AspectMin = 10; // y/x lower peg; 0 denotes no min
     float           AspectMax = 11; // y/x upper peg; 0 denotes no max
+
+    int64           Seed = 12; // > 0 a hand seed; else a Vis.Seed* sentinel (above)
 
     string          AssetURI = 20; // VisualLayer asset URI (VisShader / VisPlexus / GForce / …)
     repeated Arg    Args     = 21; // free use arguments passed to the asset
