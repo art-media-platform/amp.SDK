@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/art-media-platform/amp.SDK/stdlib/platform"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -184,32 +185,11 @@ func (s *localTomeStore) Save(_ context.Context, sealed *SealedTome) error {
 		}
 	}
 
-	// Write to a unique temp file in the same directory, then atomically rename it
-	// over the target.  A plain truncate-then-write lets a concurrent Load — another
-	// session opening the same member tome — read a torn file and unmarshal a tome
-	// with a nil WrappedDEK; rename publishes the new bytes in one step, so a reader
-	// sees either the complete old file or the complete new one, never a tear.
-	tmp, err := os.CreateTemp(dir, filepath.Base(s.pathname)+".tmp-*")
-	if err != nil {
-		return fmt.Errorf("safe: failed to create temp tome in %q: %w", dir, err)
+	// A plain truncate-then-write lets a concurrent Load — another session
+	// opening the same member tome — or a kill mid-write leave a torn tome with
+	// a nil WrappedDEK; the atomic replace leaves the old tome or the new one.
+	if err := platform.WriteFileAtomic(s.pathname, buf, 0o600); err != nil {
+		return fmt.Errorf("safe: failed to save tome: %w", err)
 	}
-	tmpName := tmp.Name()
-	defer os.Remove(tmpName) // no-op once renamed; cleans up on any error path
-
-	if _, err := tmp.Write(buf); err != nil {
-		tmp.Close()
-		return fmt.Errorf("safe: failed to write temp tome %q: %w", tmpName, err)
-	}
-	if err := tmp.Sync(); err != nil {
-		tmp.Close()
-		return fmt.Errorf("safe: failed to sync temp tome %q: %w", tmpName, err)
-	}
-	if err := tmp.Close(); err != nil {
-		return fmt.Errorf("safe: failed to close temp tome %q: %w", tmpName, err)
-	}
-	if err := os.Rename(tmpName, s.pathname); err != nil {
-		return fmt.Errorf("safe: failed to publish tome %q: %w", s.pathname, err)
-	}
-
 	return nil
 }
