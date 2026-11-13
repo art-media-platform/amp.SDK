@@ -4328,9 +4328,12 @@ func (x *LoginForm) GetTokenField() string {
 // (amp.SealValueBox; the box's ContentType is amp.ProtoContentType of this
 // message), never a plaintext attr.
 type Credentials struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	User          string                 `protobuf:"bytes,1,opt,name=User,proto3" json:"User,omitempty"`
-	Secret        string                 `protobuf:"bytes,2,opt,name=Secret,proto3" json:"Secret,omitempty"`
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	User   string                 `protobuf:"bytes,1,opt,name=User,proto3" json:"User,omitempty"`
+	Secret string                 `protobuf:"bytes,2,opt,name=Secret,proto3" json:"Secret,omitempty"`
+	// The login URL (scheme://host[:port]/path) this secret may be posted to.
+	// A holder that exchanges the pair for a token refuses any other endpoint.
+	Endpoint      string `protobuf:"bytes,3,opt,name=Endpoint,proto3" json:"Endpoint,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4375,6 +4378,13 @@ func (x *Credentials) GetUser() string {
 func (x *Credentials) GetSecret() string {
 	if x != nil {
 		return x.Secret
+	}
+	return ""
+}
+
+func (x *Credentials) GetEndpoint() string {
+	if x != nil {
+		return x.Endpoint
 	}
 	return ""
 }
@@ -4721,10 +4731,11 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\fTokenPostURL\x18\x06 \x01(\tR\fTokenPostURL\x12\x1e\n" +
 	"\n" +
 	"TokenField\x18\b \x01(\tR\n" +
-	"TokenField\"9\n" +
+	"TokenField\"U\n" +
 	"\vCredentials\x12\x12\n" +
 	"\x04User\x18\x01 \x01(\tR\x04User\x12\x16\n" +
-	"\x06Secret\x18\x02 \x01(\tR\x06Secret**\n" +
+	"\x06Secret\x18\x02 \x01(\tR\x06Secret\x12\x1a\n" +
+	"\bEndpoint\x18\x03 \x01(\tR\bEndpoint**\n" +
 	"\tTRS_Flags\x12\x0e\n" +
 	"\n" +
 	"FixedScale\x10\x00\x12\r\n" +

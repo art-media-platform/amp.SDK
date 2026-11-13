@@ -796,4 +796,8 @@ message LoginForm {
 message Credentials {
     string User   = 1;
     string Secret = 2;
+
+    // The login URL (scheme://host[:port]/path) this secret may be posted to.
+    // A holder that exchanges the pair for a token refuses any other endpoint.
+    string Endpoint = 3;
 }
