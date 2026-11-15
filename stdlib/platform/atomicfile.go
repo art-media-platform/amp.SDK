@@ -17,6 +17,10 @@ const atomicTempInfix = ".tmp-"
 // live writer in another process between creating its temp and locking it.
 const orphanTempGrace = time.Minute
 
+// testHookBeforeRename, when set, runs with the temp written and synced and
+// before its rename: atomicfile_test.go's kill point.
+var testHookBeforeRename func(tmpName string)
+
 // targetLocks serializes this process's writers of one target (pathname →
 // *sync.Mutex), so a write never reaps a temp this process is still filling.
 var targetLocks sync.Map
@@ -61,6 +65,9 @@ func WriteFileAtomic(pathname string, data []byte, perm os.FileMode) error {
 		if err := tmp.Close(); err != nil {
 			return fmt.Errorf("platform: close temp %q: %w", tmpName, err)
 		}
+	}
+	if testHookBeforeRename != nil {
+		testHookBeforeRename(tmpName)
 	}
 	if err := os.Rename(tmpName, pathname); err != nil {
 		tmp.Close()

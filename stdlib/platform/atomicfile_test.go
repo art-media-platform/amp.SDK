@@ -1,8 +1,11 @@
 package platform
 
 import (
+	"bufio"
 	"bytes"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -167,5 +170,81 @@ func TestReapOrphanTemps(t *testing.T) {
 		if (err == nil) != kept {
 			t.Errorf("%q present = %v, want %v", name, err == nil, kept)
 		}
+	}
+}
+
+const atomicKillTargetEnv = "AMP_PLATFORM_ATOMIC_KILL_TARGET"
+
+var (
+	atomicKillOld = bytes.Repeat([]byte("old content "), 1000)
+	atomicKillNew = bytes.Repeat([]byte("the new content, longer "), 4000)
+)
+
+// TestWriteFileAtomicKillHelper is the child of TestWriteFileAtomic_KilledBeforeRename:
+// it writes the new content to the target and, with its temp written and synced
+// but not yet renamed, reports the temp and waits to be killed.
+func TestWriteFileAtomicKillHelper(t *testing.T) {
+	target := os.Getenv(atomicKillTargetEnv)
+	if target == "" {
+		t.Skip("the child process of TestWriteFileAtomic_KilledBeforeRename")
+	}
+	testHookBeforeRename = func(tmpName string) {
+		fmt.Println("TEMP", tmpName)
+		time.Sleep(time.Hour)
+	}
+	err := WriteFileAtomic(target, atomicKillNew, 0o600)
+	fmt.Println("ERR returned:", err)
+	os.Exit(1)
+}
+
+// TestWriteFileAtomic_KilledBeforeRename: a writer killed (SIGKILL: no handler,
+// no cleanup) between its temp write and the rename leaves the target whole and
+// old, with the new bytes whole in the temp alone; the next write replaces it.
+func TestWriteFileAtomic_KilledBeforeRename(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "role.member")
+	if err := WriteFileAtomic(target, atomicKillOld, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	child := exec.Command(os.Args[0], "-test.run=^TestWriteFileAtomicKillHelper$")
+	child.Env = append(os.Environ(), atomicKillTargetEnv+"="+target)
+	childErr := &bytes.Buffer{}
+	child.Stderr = childErr
+	stdout, err := child.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := child.Start(); err != nil {
+		t.Fatal(err)
+	}
+	report := "ERR no report"
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		if line := scanner.Text(); strings.HasPrefix(line, "TEMP ") || strings.HasPrefix(line, "ERR ") {
+			report = line
+			break
+		}
+	}
+	child.Process.Kill()
+	waitErr := child.Wait()
+	if !strings.HasPrefix(report, "TEMP ") {
+		t.Fatalf("child: %s (exit: %v; stderr: %s)", report, waitErr, childErr)
+	}
+	tmpName := strings.TrimPrefix(report, "TEMP ")
+
+	raw, err := os.ReadFile(target)
+	if err != nil || !bytes.Equal(raw, atomicKillOld) {
+		t.Fatalf("after the kill the target holds %d bytes (err %v), want the old %d whole", len(raw), err, len(atomicKillOld))
+	}
+	raw, err = os.ReadFile(tmpName)
+	if err != nil || !bytes.Equal(raw, atomicKillNew) {
+		t.Fatalf("after the kill the temp holds %d bytes (err %v), want the new %d whole", len(raw), err, len(atomicKillNew))
+	}
+	if err := WriteFileAtomic(target, atomicKillNew, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if raw, err := os.ReadFile(target); err != nil || !bytes.Equal(raw, atomicKillNew) {
+		t.Fatalf("the write after the kill: %d bytes (err %v), want the new %d whole", len(raw), err, len(atomicKillNew))
 	}
 }
