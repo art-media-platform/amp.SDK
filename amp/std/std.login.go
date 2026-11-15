@@ -20,15 +20,30 @@ import (
 // distinctly from a transport or decode error.
 var ErrLoginRejected = status.Code_LoginFailed.Error("std: login rejected (bad credentials or no access)")
 
-// loginClient bounds the credential->token exchange so a hung auth endpoint cannot
-// wedge the caller.
-var loginClient = &http.Client{Timeout: 30 * time.Second}
+// ErrLoginRedirected is returned by ResolveLoginToken when the login endpoint
+// answers with a redirect: the user and password go to the form's TokenPostURL
+// and nowhere else, so no redirect is followed.
+var ErrLoginRedirected = status.Code_LoginFailed.Error("std: login endpoint answered with a redirect; refused")
+
+// loginResponseMaxBytes bounds a login response; a longer one is refused.
+const loginResponseMaxBytes = 1 << 20
+
+// loginClient bounds the credential->token exchange in time and follows no
+// redirect: the response to the one POST is the answer.
+var loginClient = &http.Client{
+	Timeout: 30 * time.Second,
+	CheckRedirect: func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
+}
 
 // ResolveLoginToken performs a LoginForm's credential->token exchange: it POSTs the
 // user + password to form.TokenPostURL (encoded per form.Encoding) and returns the
 // form.TokenField value from the JSON response.  The password is used only for this
 // request — never stored, logged, or returned.  On HTTP 401/403 it returns a wrapped
-// ErrLoginRejected so the caller can report an auth failure precisely.
+// ErrLoginRejected so the caller can report an auth failure precisely.  A redirect
+// is never followed (ErrLoginRedirected), and the response is read to at most
+// loginResponseMaxBytes.
 func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) (string, error) {
 	if form == nil || form.TokenPostURL == "" {
 		return "", fmt.Errorf("std: login form has no token endpoint")
@@ -67,11 +82,21 @@ func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) 
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		return "", fmt.Errorf("%w (HTTP %d)", ErrLoginRejected, resp.StatusCode)
 	}
+	if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+		return "", fmt.Errorf("%w (HTTP %d)", ErrLoginRedirected, resp.StatusCode)
+	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return "", fmt.Errorf("std: login endpoint returned HTTP %d", resp.StatusCode)
 	}
 
-	token, err := decodeJSONField(resp.Body, tokenField)
+	answer, err := io.ReadAll(io.LimitReader(resp.Body, loginResponseMaxBytes+1))
+	if err != nil {
+		return "", fmt.Errorf("std: read login response: %w", err)
+	}
+	if len(answer) > loginResponseMaxBytes {
+		return "", fmt.Errorf("std: login response exceeds %d bytes", loginResponseMaxBytes)
+	}
+	token, err := decodeJSONField(bytes.NewReader(answer), tokenField)
 	if err != nil {
 		return "", err
 	}
