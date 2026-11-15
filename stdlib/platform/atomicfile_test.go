@@ -107,3 +107,65 @@ func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
 		}
 	}
 }
+
+// TestReapOrphanTemps: the boot pass removes every target's temp in the
+// directory that a killed writer left (past the grace, lock unheld), and leaves
+// a live writer's temp, a fresh temp, a temp-named directory and other files.
+func TestReapOrphanTemps(t *testing.T) {
+	if !fileLocks {
+		t.Skip("no file lock on this platform")
+	}
+	dir := t.TempDir()
+	old := time.Now().Add(-2 * orphanTempGrace)
+	files := map[string]time.Time{
+		"role.member":                            old,
+		"role.member" + atomicTempInfix + "1":    old,
+		"activation.key" + atomicTempInfix + "2": old,
+		"live.key" + atomicTempInfix + "3":       old,
+		"fresh.key" + atomicTempInfix + "4":      time.Now(),
+		"unrelated":                              old,
+	}
+	for name, mtime := range files {
+		path := filepath.Join(dir, name)
+		if err := os.WriteFile(path, []byte(name), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chtimes(path, mtime, mtime); err != nil {
+			t.Fatal(err)
+		}
+	}
+	subdir := filepath.Join(dir, "sub"+atomicTempInfix+"5")
+	if err := os.Mkdir(subdir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(subdir, old, old); err != nil {
+		t.Fatal(err)
+	}
+	liveWriter, err := os.Open(filepath.Join(dir, "live.key"+atomicTempInfix+"3"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer liveWriter.Close()
+	if tryLock(liveWriter) != nil {
+		t.Fatal("could not lock the live writer's temp")
+	}
+
+	if reaped := ReapOrphanTemps(dir); reaped != 2 {
+		t.Errorf("reaped %d, want the two orphans", reaped)
+	}
+	want := map[string]bool{
+		"role.member":                            true,
+		"role.member" + atomicTempInfix + "1":    false,
+		"activation.key" + atomicTempInfix + "2": false,
+		"live.key" + atomicTempInfix + "3":       true,
+		"fresh.key" + atomicTempInfix + "4":      true,
+		"unrelated":                              true,
+		"sub" + atomicTempInfix + "5":            true,
+	}
+	for name, kept := range want {
+		_, err := os.Stat(filepath.Join(dir, name))
+		if (err == nil) != kept {
+			t.Errorf("%q present = %v, want %v", name, err == nil, kept)
+		}
+	}
+}

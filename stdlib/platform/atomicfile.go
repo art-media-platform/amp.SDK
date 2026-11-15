@@ -26,8 +26,8 @@ var targetLocks sync.Map
 // one, never a truncation or a mix.  The bytes go to a unique temp sibling,
 // locked while it is written, synced and renamed over pathname; the directory
 // is synced after, where the platform can sync a directory.  A temp a killed
-// writer left behind is removed by the target's next write (reapOrphanTemps).
-// The directory must exist.
+// writer left behind is removed by the target's next write (reapOrphanTemps)
+// or by a boot pass (ReapOrphanTemps).  The directory must exist.
 func WriteFileAtomic(pathname string, data []byte, perm os.FileMode) error {
 	lock, _ := targetLocks.LoadOrStore(pathname, &sync.Mutex{})
 	lock.(*sync.Mutex).Lock()
@@ -76,30 +76,49 @@ func WriteFileAtomic(pathname string, data []byte, perm os.FileMode) error {
 	return nil
 }
 
-// reapOrphanTemps removes pathname's temp siblings that a killed writer left:
-// one past orphanTempGrace whose lock no process holds.  A live writer holds
+// reapOrphanTemps removes pathname's temp siblings that a killed writer left.
+func reapOrphanTemps(pathname string) {
+	prefix := filepath.Base(pathname) + atomicTempInfix
+	reapTemps(filepath.Dir(pathname), func(name string) bool {
+		return strings.HasPrefix(name, prefix)
+	})
+}
+
+// ReapOrphanTemps removes the temps directly in dir that killed WriteFileAtomic
+// writers left, whatever their target, and returns how many it removed: a boot
+// pass for a target written once, whose own next write never comes.
+func ReapOrphanTemps(dir string) int {
+	return reapTemps(dir, func(name string) bool {
+		return strings.Contains(name, atomicTempInfix)
+	})
+}
+
+// reapTemps removes each regular file in dir whose name matches, past
+// orphanTempGrace and with no process holding its lock.  A live writer holds
 // its temp's lock, so it is never touched; a platform with no file lock reaps
 // nothing.
-func reapOrphanTemps(pathname string) {
+func reapTemps(dir string, match func(name string) bool) int {
 	if !fileLocks {
-		return
+		return 0
 	}
-	dir := filepath.Dir(pathname)
-	prefix := filepath.Base(pathname) + atomicTempInfix
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return
+		return 0
 	}
+	reaped := 0
 	for _, entry := range entries {
-		if !strings.HasPrefix(entry.Name(), prefix) || !entry.Type().IsRegular() {
+		if !match(entry.Name()) || !entry.Type().IsRegular() {
 			continue
 		}
 		info, err := entry.Info()
 		if err != nil || time.Since(info.ModTime()) < orphanTempGrace {
 			continue
 		}
-		removeUnlocked(filepath.Join(dir, entry.Name()))
+		if removeUnlocked(filepath.Join(dir, entry.Name())) {
+			reaped++
+		}
 	}
+	return reaped
 }
 
 // removeUnlocked removes the file at pathname when no process holds its lock,
