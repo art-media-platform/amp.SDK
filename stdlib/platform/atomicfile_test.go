@@ -64,7 +64,8 @@ func TestWriteFileAtomic(t *testing.T) {
 
 // TestWriteFileAtomic_ReapsOrphanTemps: a target's write removes a temp sibling
 // past the grace whose lock no process holds (a killed writer's), and leaves a
-// locked one (a live writer's) and one within the grace.
+// locked one (a live writer's), one within the grace, a name of the temp
+// shape's prefix that os.CreateTemp never makes, and another target's temp.
 func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
 	if !fileLocks {
 		t.Skip("no file lock on this platform")
@@ -73,9 +74,10 @@ func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
 	target := filepath.Join(dir, "epoch-keys.tome")
 	old := time.Now().Add(-2 * orphanTempGrace)
 	temps := map[string]time.Time{
-		"orphan": old,
-		"live":   old,
-		"fresh":  time.Now(),
+		"101":    old,
+		"202":    old,
+		"303":    time.Now(),
+		"backup": old,
 	}
 	for name, mtime := range temps {
 		path := target + atomicTempInfix + name
@@ -86,7 +88,7 @@ func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	liveWriter, err := os.Open(target + atomicTempInfix + "live")
+	liveWriter, err := os.Open(target + atomicTempInfix + "202")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,13 +97,25 @@ func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
 		t.Fatal("could not lock the live writer's temp")
 	}
 
+	otherTarget := filepath.Join(dir, "other.key"+atomicTempInfix+"404")
+	if err := os.WriteFile(otherTarget, []byte("other"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(otherTarget, old, old); err != nil {
+		t.Fatal(err)
+	}
+
 	if err := WriteFileAtomic(target, []byte("tome"), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := os.Stat(otherTarget); err != nil {
+		t.Errorf("a target's write reaped another target's temp: %v", err)
+	}
 	want := map[string]bool{
-		"orphan": false,
-		"live":   true,
-		"fresh":  true,
+		"101":    false,
+		"202":    true,
+		"303":    true,
+		"backup": true,
 	}
 	for name, kept := range want {
 		_, err := os.Stat(target + atomicTempInfix + name)
@@ -113,7 +127,9 @@ func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
 
 // TestReapOrphanTemps: the boot pass removes every target's temp in the
 // directory that a killed writer left (past the grace, lock unheld), and leaves
-// a live writer's temp, a fresh temp, a temp-named directory and other files.
+// a live writer's temp, a fresh temp, a temp-named directory and every name
+// os.CreateTemp never makes for WriteFileAtomic (a person's or another
+// program's file).
 func TestReapOrphanTemps(t *testing.T) {
 	if !fileLocks {
 		t.Skip("no file lock on this platform")
@@ -127,6 +143,11 @@ func TestReapOrphanTemps(t *testing.T) {
 		"live.key" + atomicTempInfix + "3":       old,
 		"fresh.key" + atomicTempInfix + "4":      time.Now(),
 		"unrelated":                              old,
+		"notes.tmp-backup.txt":                   old,
+		"report.tmp-2026-11-01.pdf":              old,
+		".zsh_history.tmp-old":                   old,
+		"session.tmp-":                           old,
+		".tmp-12345":                             old,
 	}
 	for name, mtime := range files {
 		path := filepath.Join(dir, name)
@@ -164,6 +185,11 @@ func TestReapOrphanTemps(t *testing.T) {
 		"fresh.key" + atomicTempInfix + "4":      true,
 		"unrelated":                              true,
 		"sub" + atomicTempInfix + "5":            true,
+		"notes.tmp-backup.txt":                   true,
+		"report.tmp-2026-11-01.pdf":              true,
+		".zsh_history.tmp-old":                   true,
+		"session.tmp-":                           true,
+		".tmp-12345":                             true,
 	}
 	for name, kept := range want {
 		_, err := os.Stat(filepath.Join(dir, name))
@@ -232,6 +258,9 @@ func TestWriteFileAtomic_KilledBeforeRename(t *testing.T) {
 		t.Fatalf("child: %s (exit: %v; stderr: %s)", report, waitErr, childErr)
 	}
 	tmpName := strings.TrimPrefix(report, "TEMP ")
+	if base, ok := atomicTempTarget(filepath.Base(tmpName)); !ok || base != filepath.Base(target) {
+		t.Fatalf("the temp %s is not of the shape the reaps match", filepath.Base(tmpName))
+	}
 
 	raw, err := os.ReadFile(target)
 	if err != nil || !bytes.Equal(raw, atomicKillOld) {

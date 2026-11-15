@@ -10,8 +10,30 @@ import (
 )
 
 // atomicTempInfix joins a target's base name and the random suffix of its
-// WriteFileAtomic temp: <base>.tmp-<random>.
+// WriteFileAtomic temp: <base>.tmp-<random>, the decimal digits os.CreateTemp
+// puts for its "*" (atomicTempTarget).
 const atomicTempInfix = ".tmp-"
+
+// atomicTempTarget returns the target base name a WriteFileAtomic temp belongs
+// to: name is <base>.tmp-<digits> with base non-empty.  Any other name is not
+// ok, so no reap takes a file this code did not make (a person's
+// notes.tmp-backup.txt, another program's .zsh_history.tmp-old).
+func atomicTempTarget(name string) (target string, ok bool) {
+	at := strings.LastIndex(name, atomicTempInfix)
+	if at <= 0 {
+		return "", false
+	}
+	digits := name[at+len(atomicTempInfix):]
+	if digits == "" {
+		return "", false
+	}
+	for _, digit := range digits {
+		if digit < '0' || digit > '9' {
+			return "", false
+		}
+	}
+	return name[:at], true
+}
 
 // orphanTempGrace keeps a temp younger than this out of the reap: it covers a
 // live writer in another process between creating its temp and locking it.
@@ -85,9 +107,10 @@ func WriteFileAtomic(pathname string, data []byte, perm os.FileMode) error {
 
 // reapOrphanTemps removes pathname's temp siblings that a killed writer left.
 func reapOrphanTemps(pathname string) {
-	prefix := filepath.Base(pathname) + atomicTempInfix
+	base := filepath.Base(pathname)
 	reapTemps(filepath.Dir(pathname), func(name string) bool {
-		return strings.HasPrefix(name, prefix)
+		target, ok := atomicTempTarget(name)
+		return ok && target == base
 	})
 }
 
@@ -96,7 +119,8 @@ func reapOrphanTemps(pathname string) {
 // pass for a target written once, whose own next write never comes.
 func ReapOrphanTemps(dir string) int {
 	return reapTemps(dir, func(name string) bool {
-		return strings.Contains(name, atomicTempInfix)
+		_, ok := atomicTempTarget(name)
+		return ok
 	})
 }
 
