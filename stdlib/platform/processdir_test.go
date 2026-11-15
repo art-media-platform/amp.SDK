@@ -102,8 +102,58 @@ func TestProcessDir_KilledProcessReaped(t *testing.T) {
 	}
 }
 
-// TestProcessDir_UnlockedReaped: a directory whose creator ended before its
-// lock file existed is reaped too.
+// TestProcessDir_EmptiedLiveDirKept: a temp cleaner that removes every entry of
+// a live process's directory leaves nothing a reap reads as ended, so the
+// directory survives the reap.
+func TestProcessDir_EmptiedLiveDirKept(t *testing.T) {
+	if !fileLocks {
+		t.Skip("no file lock on this platform")
+	}
+	root := t.TempDir()
+	live, err := CreateProcessDir(root, "amp-test-")
+	if err != nil || live == "" {
+		t.Fatalf("CreateProcessDir = %q, %v", live, err)
+	}
+	entries, err := os.ReadDir(live)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if err := os.RemoveAll(filepath.Join(live, entry.Name())); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if reaped := ReapProcessDirs(root, "amp-test-"); reaped != 0 {
+		t.Fatalf("a reap after a temp cleaner emptied the live directory removed %d directories", reaped)
+	}
+	if _, err := os.Stat(live); err != nil {
+		t.Fatalf("the live directory: %v", err)
+	}
+}
+
+// TestProcessDir_SymlinkNotFollowed: a reap opens nothing through a symlink
+// planted in a process directory, so it creates no file outside the root.
+func TestProcessDir_SymlinkNotFollowed(t *testing.T) {
+	if !fileLocks {
+		t.Skip("no file lock on this platform")
+	}
+	root := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "victim")
+	planted := filepath.Join(root, "amp-test-planted")
+	if err := os.Mkdir(planted, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(outside, filepath.Join(planted, "LOCK")); err != nil {
+		t.Fatal(err)
+	}
+	ReapProcessDirs(root, "amp-test-")
+	if _, err := os.Lstat(outside); !os.IsNotExist(err) {
+		t.Fatalf("the reap created the symlink's target outside the root: %v", err)
+	}
+}
+
+// TestProcessDir_UnlockedReaped: a directory whose creator ended before
+// locking it is reaped too.
 func TestProcessDir_UnlockedReaped(t *testing.T) {
 	if !fileLocks {
 		t.Skip("no file lock on this platform")

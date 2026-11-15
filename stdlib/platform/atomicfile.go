@@ -110,7 +110,7 @@ func removeUnlocked(pathname string) bool {
 		return false
 	}
 	defer file.Close()
-	if !tryLock(file) {
+	if tryLock(file) != nil {
 		return false
 	}
 	return os.Remove(pathname) == nil

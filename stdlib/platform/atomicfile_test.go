@@ -88,7 +88,7 @@ func TestWriteFileAtomic_ReapsOrphanTemps(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer liveWriter.Close()
-	if !tryLock(liveWriter) {
+	if tryLock(liveWriter) != nil {
 		t.Fatal("could not lock the live writer's temp")
 	}
 
