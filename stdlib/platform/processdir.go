@@ -3,6 +3,7 @@ package platform
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,7 @@ var (
 // tells an ended process's directory from a live one's by the lock alone, with
 // no age, no process ID and no file inside the directory.  On a platform with
 // no file lock it returns "" and no error: the caller keeps its files where it
-// otherwise would.
+// otherwise would.  A failed attempt removes its directory.
 func CreateProcessDir(root, prefix string) (string, error) {
 	if !fileLocks {
 		return "", nil
@@ -38,19 +39,38 @@ func CreateProcessDir(root, prefix string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("platform: process dir under %q: %w", root, err)
 		}
-		dirFile, err := openDir(dir)
-		if err != nil {
-			continue // a reaper took the directory first
-		}
-		if tryLock(dirFile) == nil && sameFile(dirFile, dir) {
+		dirFile, reaped, err := lockProcessDir(dir)
+		if err == nil {
 			heldDirLocksMu.Lock()
 			heldDirLocks = append(heldDirLocks, dirFile)
 			heldDirLocksMu.Unlock()
 			return dir, nil
 		}
-		dirFile.Close()
+		os.Remove(dir) // empty; a no-op where a reap took it first
+		if !reaped {
+			return "", fmt.Errorf("platform: process dir %q: %w", dir, err)
+		}
 	}
 	return "", fmt.Errorf("platform: process dir under %q: lost %d attempts to a concurrent reap", root, processDirAttempts)
+}
+
+// lockProcessDir opens and locks the new directory at dir.  reaped reports that
+// a concurrent ReapProcessDirs took the directory first: it holds the lock, or
+// removed the directory before the open or between the open and the lock.
+func lockProcessDir(dir string) (dirFile *os.File, reaped bool, err error) {
+	dirFile, err = openDir(dir)
+	if err != nil {
+		return nil, errors.Is(err, fs.ErrNotExist), err
+	}
+	err = tryLock(dirFile)
+	if err == nil && !sameFile(dirFile, dir) {
+		err = fs.ErrNotExist
+	}
+	if err != nil {
+		dirFile.Close()
+		return nil, err == errLockHeld || err == fs.ErrNotExist, err
+	}
+	return dirFile, false, nil
 }
 
 // ReapProcessDirs removes each prefix+* directory under root whose lock no
