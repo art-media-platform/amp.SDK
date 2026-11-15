@@ -20,3 +20,7 @@ func tryLock(*os.File) error {
 func openDir(string) (*os.File, error) {
 	return nil, errNoFileLock
 }
+
+func openRegular(string) (*os.File, error) {
+	return nil, errNoFileLock
+}

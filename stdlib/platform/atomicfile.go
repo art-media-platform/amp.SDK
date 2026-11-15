@@ -152,10 +152,11 @@ func reapTemps(dir string, match func(name string) bool) int {
 	return reaped
 }
 
-// removeUnlocked removes the file at pathname when no process holds its lock,
-// taking the lock for the removal; it reports whether it removed the file.
+// removeUnlocked removes the regular file at pathname when no process holds
+// its lock, taking the lock for the removal; it reports whether it removed the
+// file.  A name swapped for a symlink or a FIFO is skipped (openRegular).
 func removeUnlocked(pathname string) bool {
-	file, err := os.Open(pathname)
+	file, err := openRegular(pathname)
 	if err != nil {
 		return false
 	}

@@ -62,6 +62,14 @@ func lockProcessDir(dir string) (dirFile *os.File, reaped bool, err error) {
 	if err != nil {
 		return nil, errors.Is(err, fs.ErrNotExist), err
 	}
+	return lockOpenedDir(dirFile, dir)
+}
+
+// lockOpenedDir locks dirFile, opened at dir, and checks that dir still names
+// it (sameFile): a reap that removed the directory between the open and the
+// lock leaves an unheld lock on an unlinked directory.  dirFile is closed on
+// failure.
+func lockOpenedDir(dirFile *os.File, dir string) (held *os.File, reaped bool, err error) {
 	err = tryLock(dirFile)
 	if err == nil && !sameFile(dirFile, dir) {
 		err = fs.ErrNotExist
