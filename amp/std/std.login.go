@@ -48,9 +48,7 @@ func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) 
 	if form == nil || form.TokenPostURL == "" {
 		return "", fmt.Errorf("std: login form has no token endpoint")
 	}
-	userField := orDefault(form.UserField, "username")
-	passField := orDefault(form.PassField, "password")
-	tokenField := orDefault(form.TokenField, "token")
+	userField, passField, tokenField := form.fieldNames()
 
 	var body io.Reader
 	contentType := "application/json"
@@ -122,6 +120,12 @@ func decodeJSONField(reader io.Reader, field string) (string, error) {
 		return asString, nil
 	}
 	return strings.Trim(string(raw), `"`), nil
+}
+
+// fieldNames returns the form's request and response field names, each its
+// default when unset: the one site of LoginForm's defaults.
+func (form *LoginForm) fieldNames() (userField, passField, tokenField string) {
+	return orDefault(form.GetUserField(), "username"), orDefault(form.GetPassField(), "password"), orDefault(form.GetTokenField(), "token")
 }
 
 // orDefault returns value, or fallback when value is empty.

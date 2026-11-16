@@ -114,6 +114,7 @@ func TestCredentialsFieldNumbers(t *testing.T) {
 		"Secret":     2,
 		"Endpoint":   3,
 		"TokenHosts": 4,
+		"Login":      5,
 	}
 	if fields.Len() != len(want) {
 		t.Errorf("Credentials has %d fields, want %d", fields.Len(), len(want))

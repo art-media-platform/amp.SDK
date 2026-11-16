@@ -4345,7 +4345,14 @@ type Credentials struct {
 	// is not implied: a token that goes there is listed here.  ParseTokenHosts is
 	// the one parser; an entry it refuses, or a list over TokenHosts.DefaultMax
 	// entries, refuses the record.
-	TokenHosts    []string `protobuf:"bytes,4,rep,name=TokenHosts,proto3" json:"TokenHosts,omitempty"`
+	TokenHosts []string `protobuf:"bytes,4,rep,name=TokenHosts,proto3" json:"TokenHosts,omitempty"`
+	// The shape of the login exchange at Endpoint: the body encoding and the
+	// request and response field names.  A holder posts this shape to Endpoint and
+	// takes neither from anywhere else; an unset field takes LoginForm's default.
+	// Login.TokenPostURL stays unset (Endpoint is the URL), and a Login needs an
+	// Endpoint.  CheckCredentials is the one check, at the record's writer and its
+	// reader alike.
+	Login         *LoginForm `protobuf:"bytes,5,opt,name=Login,proto3" json:"Login,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4404,6 +4411,13 @@ func (x *Credentials) GetEndpoint() string {
 func (x *Credentials) GetTokenHosts() []string {
 	if x != nil {
 		return x.TokenHosts
+	}
+	return nil
+}
+
+func (x *Credentials) GetLogin() *LoginForm {
+	if x != nil {
+		return x.Login
 	}
 	return nil
 }
@@ -4749,14 +4763,15 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\fTokenPostURL\x18\x06 \x01(\tR\fTokenPostURL\x12\x1e\n" +
 	"\n" +
 	"TokenField\x18\b \x01(\tR\n" +
-	"TokenField\"u\n" +
+	"TokenField\"\x9b\x01\n" +
 	"\vCredentials\x12\x12\n" +
 	"\x04User\x18\x01 \x01(\tR\x04User\x12\x16\n" +
 	"\x06Secret\x18\x02 \x01(\tR\x06Secret\x12\x1a\n" +
 	"\bEndpoint\x18\x03 \x01(\tR\bEndpoint\x12\x1e\n" +
 	"\n" +
 	"TokenHosts\x18\x04 \x03(\tR\n" +
-	"TokenHosts**\n" +
+	"TokenHosts\x12$\n" +
+	"\x05Login\x18\x05 \x01(\v2\x0e.std.LoginFormR\x05Login**\n" +
 	"\tTRS_Flags\x12\x0e\n" +
 	"\n" +
 	"FixedScale\x10\x00\x12\r\n" +
@@ -5029,13 +5044,14 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	51, // 57: std.ControlSpec.Children:type_name -> std.ControlSpec
 	51, // 58: std.ControlSpec.Template:type_name -> std.ControlSpec
 	20, // 59: std.LoginForm.Encoding:type_name -> std.BodyEncoding
-	58, // 60: std.Control:extendee -> google.protobuf.FieldOptions
-	51, // 61: std.Control:type_name -> std.ControlSpec
-	62, // [62:62] is the sub-list for method output_type
-	62, // [62:62] is the sub-list for method input_type
-	61, // [61:62] is the sub-list for extension type_name
-	60, // [60:61] is the sub-list for extension extendee
-	0,  // [0:60] is the sub-list for field type_name
+	52, // 60: std.Credentials.Login:type_name -> std.LoginForm
+	58, // 61: std.Control:extendee -> google.protobuf.FieldOptions
+	51, // 62: std.Control:type_name -> std.ControlSpec
+	63, // [63:63] is the sub-list for method output_type
+	63, // [63:63] is the sub-list for method input_type
+	62, // [62:63] is the sub-list for extension type_name
+	61, // [61:62] is the sub-list for extension extendee
+	0,  // [0:61] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }

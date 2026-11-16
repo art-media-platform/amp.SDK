@@ -813,4 +813,12 @@ message Credentials {
     // the one parser; an entry it refuses, or a list over TokenHosts.DefaultMax
     // entries, refuses the record.
     repeated string TokenHosts = 4;
+
+    // The shape of the login exchange at Endpoint: the body encoding and the
+    // request and response field names.  A holder posts this shape to Endpoint and
+    // takes neither from anywhere else; an unset field takes LoginForm's default.
+    // Login.TokenPostURL stays unset (Endpoint is the URL), and a Login needs an
+    // Endpoint.  CheckCredentials is the one check, at the record's writer and its
+    // reader alike.
+    LoginForm Login = 5;
 }

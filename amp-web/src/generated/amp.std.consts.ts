@@ -322,6 +322,13 @@ export const TokenHosts = {
     DefaultMax: 64,
 } as const;
 
+// ─── Credentials.Login: the most bytes of one field name (UserField, PassField, ───
+// TokenField).  CheckCredentials refuses a longer one, at the record's writer
+// and its reader alike.
+export const LoginFields = {
+    DefaultMaxBytes: 64,
+} as const;
+
 // ─── Amp URL parts (matches UriScheme.AppNative).  CabinetsURL is the ───
 // app.cabinets direct-commit endpoint every logged-in member's home planet
 // serves.
