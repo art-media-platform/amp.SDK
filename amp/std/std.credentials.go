@@ -115,10 +115,8 @@ func LoginEndpointKey(rawURL string, allowHTTP bool) (string, error) {
 	scheme := strings.ToLower(parsed.Scheme)
 	port := parsed.Port()
 	switch {
-	case scheme == "http" && !allowHTTP:
-		return "", errors.New("a login URL is https")
-	case scheme != "https" && scheme != "http":
-		return "", errors.New("a login URL is https")
+	case scheme == "http" && !allowHTTP, scheme != "https" && scheme != "http":
+		return "", errors.New("the login URL is not https")
 	case port == "" && scheme == "https":
 		port = "443"
 	case port == "":
