@@ -1019,7 +1019,7 @@ const (
 	ControlKind_ControlKind_Menu   ControlKind = 1 // a submenu (Children); Enter pushes
 	ControlKind_ControlKind_Toggle ControlKind = 2 // Enter flips
 	ControlKind_ControlKind_Number ControlKind = 3 // Enter captures the axis; ticks step; Enter commits; Back restores
-	ControlKind_ControlKind_Choice ControlKind = 4 // Enter pushes Choices; Enter on one sets it
+	ControlKind_ControlKind_Choice ControlKind = 4 // a short one captures the axis over its Choices, as a Number; a long one pushes them
 	ControlKind_ControlKind_Text   ControlKind = 5 // Enter pushes the editor
 	ControlKind_ControlKind_Action ControlKind = 6 // Enter invokes the handler bound to ActionID
 	ControlKind_ControlKind_List   ControlKind = 7 // an array or repeated field: Children are its elements

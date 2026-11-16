@@ -703,7 +703,7 @@ enum ControlKind {
     ControlKind_Menu   = 1; // a submenu (Children); Enter pushes
     ControlKind_Toggle = 2; // Enter flips
     ControlKind_Number = 3; // Enter captures the axis; ticks step; Enter commits; Back restores
-    ControlKind_Choice = 4; // Enter pushes Choices; Enter on one sets it
+    ControlKind_Choice = 4; // a short one captures the axis over its Choices, as a Number; a long one pushes them
     ControlKind_Text   = 5; // Enter pushes the editor
     ControlKind_Action = 6; // Enter invokes the handler bound to ActionID
     ControlKind_List   = 7; // an array or repeated field: Children are its elements
