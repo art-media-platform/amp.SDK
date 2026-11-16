@@ -16,6 +16,7 @@ func TestParseTokenHosts(t *testing.T) {
 		"api.example.org:8443",
 		"xn--bcher-kva.example",
 		"192.0.2.7",
+		"127.0.0.1", // parses; the public-address rule refuses it at dial
 		"[2001:db8::1]",
 		"[2001:db8::1]:8443",
 		"stream.example.org:443", // the same destination as the first
@@ -28,6 +29,7 @@ func TestParseTokenHosts(t *testing.T) {
 		"api.example.org:8443",
 		"xn--bcher-kva.example:443",
 		"192.0.2.7:443",
+		"127.0.0.1:443",
 		"[2001:db8::1]:443",
 		"[2001:db8::1]:8443",
 	}
@@ -70,6 +72,14 @@ func TestParseTokenHosts(t *testing.T) {
 		"stream.example.org?x", // a query
 		"stream.example.org#x",
 		strings.Repeat("a", 64) + ".example.org", // a label over 63 bytes
+		"2130706433",                             // an IPv4 address as one decimal number
+		"0x7f.0.0.1",                             // an IPv4 address with a hex part
+		"0x7f000001",                             // an IPv4 address as one hex number
+		"127.000.000.001",                        // an IPv4 address with leading zeros
+		"127.1",                                  // an IPv4 address in short form
+		"192.0.2.07",                             // a leading zero in one part
+		"1.2.3.4.5",                              // numeric labels that are no IPv4 address
+		"example.123",                            // a numeric last label
 	}
 	for _, entry := range refused {
 		// One entry outside the grammar refuses the whole list.

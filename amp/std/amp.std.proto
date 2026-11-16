@@ -804,9 +804,13 @@ message Credentials {
     // The hosts a token derived from this pair may be presented to; a holder
     // presents it nowhere else.  Each entry is `host` or `host:port` and nothing
     // more: no scheme, path, userinfo or wildcard.  The host is a DNS name in
-    // lower case — an IDN in its ASCII (punycode) form — or an IP literal, IPv6
-    // in brackets and in its canonical text.  A missing port is https's, 443.
-    // Endpoint's host is not implied: a token that goes there is listed here.
-    // ParseTokenHosts is the one parser; an entry it refuses refuses the record.
+    // lower case — an IDN in its ASCII (punycode) form — or an IP literal: IPv6
+    // in brackets and IPv4 bare, each in its canonical text (a host whose last
+    // label is numeric is an IPv4 literal or refused).  A missing port is https's,
+    // 443.  An entry that names a private or loopback address parses, and a holder
+    // refuses it at dial: a token goes to public addresses alone.  Endpoint's host
+    // is not implied: a token that goes there is listed here.  ParseTokenHosts is
+    // the one parser; an entry it refuses, or a list over TokenHosts.DefaultMax
+    // entries, refuses the record.
     repeated string TokenHosts = 4;
 }

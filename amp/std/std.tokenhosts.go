@@ -58,6 +58,9 @@ func parseTokenHost(entry string) (string, error) {
 		if !isTokenHostName(host) {
 			return "", fmt.Errorf("the host is a lower-case DNS name or an IP literal, with no scheme, path, userinfo or wildcard")
 		}
+		if isNumericLabel(host[strings.LastIndexByte(host, '.')+1:]) && !isCanonicalIPv4(host) {
+			return "", fmt.Errorf("a host whose last label is numeric is an IPv4 literal in its canonical text")
+		}
 	}
 	if !isTokenHostPort(port) {
 		return "", fmt.Errorf("the port is 1–65535 in plain digits")
@@ -84,6 +87,34 @@ func isTokenHostName(host string) bool {
 		}
 	}
 	return true
+}
+
+// isNumericLabel reports whether label reads as a number, decimal or 0x-hex, the
+// way a URL host parser takes a last label that makes the host an IPv4 address
+// (2130706433, 0x7f.0.0.1).  A DNS name's last label is never one.
+func isNumericLabel(label string) bool {
+	digits, hex := label, false
+	if rest, found := strings.CutPrefix(label, "0x"); found {
+		digits, hex = rest, true
+	}
+	if digits == "" {
+		return hex
+	}
+	for i := 0; i < len(digits); i++ {
+		char := digits[i]
+		isDecimal := char >= '0' && char <= '9'
+		if !isDecimal && !(hex && char >= 'a' && char <= 'f') {
+			return false
+		}
+	}
+	return true
+}
+
+// isCanonicalIPv4 reports whether host is an IPv4 address in the text
+// netip.ParseAddr gives back: four decimal parts, no leading zero.
+func isCanonicalIPv4(host string) bool {
+	parsed, err := netip.ParseAddr(host)
+	return err == nil && parsed.Is4() && parsed.String() == host
 }
 
 // isTokenHostPort reports whether port is 1–65535 in digits with no leading zero.
