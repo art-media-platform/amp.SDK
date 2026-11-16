@@ -1663,8 +1663,9 @@ message BlobRef {
     fixed64             PlanetID_0 = 1;
     fixed64             PlanetID_1 = 2;
 
-    // Hash kit used for blob integrity (0 = the epoch's default kit).
-    // Each BlobRef is self-describing — the validator reads this field
+    // HashKit for this blob's grains, chunk entries, BlobMeta root and content
+    // address; 0 = Blake2s_256, fixed for every planet (safe.HashKitID), never an
+    // epoch setting.  Each BlobRef is self-describing — the validator reads this field
     // to select the correct HashKit for verification.
     safe.HashKitID      HashKitID = 8;
 

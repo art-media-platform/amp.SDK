@@ -5938,8 +5938,9 @@ type BlobRef struct {
 	// Planet this blob belongs to.
 	PlanetID_0 uint64 `protobuf:"fixed64,1,opt,name=PlanetID_0,json=PlanetID0,proto3" json:"PlanetID_0,omitempty"`
 	PlanetID_1 uint64 `protobuf:"fixed64,2,opt,name=PlanetID_1,json=PlanetID1,proto3" json:"PlanetID_1,omitempty"`
-	// Hash kit used for blob integrity (0 = the epoch's default kit).
-	// Each BlobRef is self-describing — the validator reads this field
+	// HashKit for this blob's grains, chunk entries, BlobMeta root and content
+	// address; 0 = Blake2s_256, fixed for every planet (safe.HashKitID), never an
+	// epoch setting.  Each BlobRef is self-describing — the validator reads this field
 	// to select the correct HashKit for verification.
 	HashKitID safe.HashKitID `protobuf:"varint,8,opt,name=HashKitID,proto3,enum=safe.HashKitID" json:"HashKitID,omitempty"`
 	// HashKit digest of the PLAINTEXT blob content (4 x fixed64 = 32 bytes).
