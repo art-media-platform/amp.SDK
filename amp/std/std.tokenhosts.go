@@ -13,8 +13,12 @@ const tokenHostDefaultPort = "443"
 // ParseTokenHosts is the one parser of Credentials.TokenHosts, shared by the
 // writer of a record and its reader: it returns the set the entries name, each
 // as "host:port" (net.JoinHostPort), or an error naming the first entry outside
-// the grammar the field states.  A reader that gets an error refuses the record.
+// the grammar the field states, or a list over TokenHostsDefaultMax entries.  A
+// reader that gets an error refuses the record.
 func ParseTokenHosts(entries []string) (map[string]bool, error) {
+	if len(entries) > int(TokenHostsDefaultMax) {
+		return nil, fmt.Errorf("std: %d token hosts, over the %d entry bound", len(entries), TokenHostsDefaultMax)
+	}
 	hosts := make(map[string]bool, len(entries))
 	for _, entry := range entries {
 		key, err := parseTokenHost(entry)

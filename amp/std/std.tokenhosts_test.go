@@ -1,6 +1,7 @@
 package std
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -76,6 +77,22 @@ func TestParseTokenHosts(t *testing.T) {
 		if err == nil || set != nil {
 			t.Errorf("%q: set = %v, err = %v; want the list refused", entry, set, err)
 		}
+	}
+}
+
+// ParseTokenHosts takes at most TokenHostsDefaultMax entries; a longer list is
+// refused whole, so the writer and the reader of a record agree.
+func TestParseTokenHostsCountBound(t *testing.T) {
+	entries := make([]string, 0, TokenHostsDefaultMax+1)
+	for i := 0; i < int(TokenHostsDefaultMax); i++ {
+		entries = append(entries, fmt.Sprintf("stream%d.example.org", i))
+	}
+	if set, err := ParseTokenHosts(entries); err != nil || len(set) != int(TokenHostsDefaultMax) {
+		t.Errorf("%d entries: %d hosts, err = %v; want all of them", len(entries), len(set), err)
+	}
+	entries = append(entries, "one-more.example.org")
+	if set, err := ParseTokenHosts(entries); err == nil || set != nil {
+		t.Errorf("%d entries: set = %d hosts, err = %v; want the list refused", len(entries), len(set), err)
 	}
 }
 

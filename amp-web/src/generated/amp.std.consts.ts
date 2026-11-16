@@ -316,6 +316,12 @@ export const Session = {
     ContextID: [0x0n, 0x777n],
 } as const;
 
+// ─── Credentials.TokenHosts: the most entries one record lists.  ParseTokenHosts ───
+// refuses a longer list whole, at the record's writer and its reader alike.
+export const TokenHosts = {
+    DefaultMax: 64,
+} as const;
+
 // ─── Amp URL parts (matches UriScheme.AppNative).  CabinetsURL is the ───
 // app.cabinets direct-commit endpoint every logged-in member's home planet
 // serves.

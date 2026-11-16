@@ -475,6 +475,12 @@ var (
 	SessionContextID = tag.UID{0x0, 0x777}
 )
 
+// ─── Credentials.TokenHosts: the most entries one record lists.  ParseTokenHosts ───
+// refuses a longer list whole, at the record's writer and its reader alike.
+const (
+	TokenHostsDefaultMax = int32(64)
+)
+
 // ─── Amp URL parts (matches UriScheme.AppNative).  CabinetsURL is the ───
 // app.cabinets direct-commit endpoint every logged-in member's home planet
 // serves.
