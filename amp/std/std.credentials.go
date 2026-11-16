@@ -82,7 +82,7 @@ func checkLoginShape(shape *LoginForm) error {
 			return fmt.Errorf("%s holds a control character", field.name)
 		}
 	}
-	if userField, passField, _ := shape.fieldNames(); userField == passField {
+	if userField, passField, _ := shape.FieldNames(); userField == passField {
 		return fmt.Errorf("UserField and PassField are both %q", userField)
 	}
 	return nil

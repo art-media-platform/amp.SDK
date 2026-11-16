@@ -88,7 +88,7 @@ func TestCheckCredentials_FormIsTheSealedShape(t *testing.T) {
 	if !proto.Equal(sealed.Form, want) {
 		t.Errorf("Form = %v, want %v", sealed.Form, want)
 	}
-	if userField, passField, tokenField := sealed.Form.fieldNames(); userField != "email" || passField != "password" || tokenField != "token" {
+	if userField, passField, tokenField := sealed.Form.FieldNames(); userField != "email" || passField != "password" || tokenField != "token" {
 		t.Errorf("field names = %q %q %q, want email password token", userField, passField, tokenField)
 	}
 	if sealed.EndpointKey != "https://api.example.org:443/v3/auth/token" {
