@@ -617,15 +617,15 @@ message DeviceVars {
     float UIScale   = 1; // item size scale; 0 → derived from display DPI
     int32 TargetFPS = 2 [(Control) = {   // target frame rate, one of the Choices (the frame regulator's steps at 60 Hz); 0 → (Control).Default
         ValueID: "frame.target.fps"
-        Labels:  {Title: "Target FPS"}
+        Labels:  {Title: "Target Frame Rate"}
         Kind:    ControlKind_Choice
         Range:   {Min: 15 Max: 60 Step: 1 Units: FramesPerSecond}
         Default: {Kind: Number Number: 60}
         Choices: [
-            {Labels: {Title: "15 fps"} Value: {Kind: Number Number: 15}},
-            {Labels: {Title: "20 fps"} Value: {Kind: Number Number: 20}},
-            {Labels: {Title: "30 fps"} Value: {Kind: Number Number: 30}},
-            {Labels: {Title: "60 fps"} Value: {Kind: Number Number: 60}}
+            {Labels: {Title: "15"} Value: {Kind: Number Number: 15}},
+            {Labels: {Title: "20"} Value: {Kind: Number Number: 20}},
+            {Labels: {Title: "30"} Value: {Kind: Number Number: 30}},
+            {Labels: {Title: "60"} Value: {Kind: Number Number: 60}}
         ]
         Layers:  [SettingLayer_Channel, SettingLayer_Device]
     }];
