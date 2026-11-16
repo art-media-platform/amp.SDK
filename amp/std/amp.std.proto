@@ -622,10 +622,10 @@ message DeviceVars {
         Range:   {Min: 15 Max: 60 Step: 1 Units: FramesPerSecond}
         Default: {Kind: Number Number: 60}
         Choices: [
-            {Labels: {Title: "60 fps"} Value: {Kind: Number Number: 60}},
-            {Labels: {Title: "30 fps"} Value: {Kind: Number Number: 30}},
+            {Labels: {Title: "15 fps"} Value: {Kind: Number Number: 15}},
             {Labels: {Title: "20 fps"} Value: {Kind: Number Number: 20}},
-            {Labels: {Title: "15 fps"} Value: {Kind: Number Number: 15}}
+            {Labels: {Title: "30 fps"} Value: {Kind: Number Number: 30}},
+            {Labels: {Title: "60 fps"} Value: {Kind: Number Number: 60}}
         ]
         Layers:  [SettingLayer_Channel, SettingLayer_Device]
     }];
