@@ -25,6 +25,47 @@ var ErrLoginRejected = status.Code_LoginFailed.Error("std: login rejected (bad c
 // and nowhere else, so no redirect is followed.
 var ErrLoginRedirected = status.Code_LoginFailed.Error("std: login endpoint answered with a redirect; refused")
 
+// ErrLoginUnavailable is returned by ResolveLoginToken when the endpoint gave no
+// answer on the login itself: the request did not complete, the endpoint answered
+// a server error, 408 or 429 (LoginStatusError), its response could not be read,
+// or its 2xx body is not a JSON object (an overload page).  The login was neither
+// accepted nor rejected, so posting it again later is sound.
+var ErrLoginUnavailable = status.Code_NotReady.Error("std: login endpoint unavailable")
+
+// LoginStatusError is the answer of a login endpoint whose HTTP status is no
+// success, no rejection (ErrLoginRejected) and no redirect (ErrLoginRedirected).
+// It is ErrLoginUnavailable for a server error, 408 and 429; any other status
+// says the request itself is refused, and posting it again changes nothing.
+type LoginStatusError struct {
+	Code       int    // the HTTP status
+	RetryAfter string // the answer's Retry-After header as sent: delta-seconds or an HTTP-date; "" when none, or longer than either form
+}
+
+func (answer *LoginStatusError) Error() string {
+	return fmt.Sprintf("std: login endpoint returned HTTP %d", answer.Code)
+}
+
+// Is reports ErrLoginUnavailable for a status that another post can outlast.
+func (answer *LoginStatusError) Is(target error) bool {
+	if target != ErrLoginUnavailable {
+		return false
+	}
+	return answer.Code >= 500 || answer.Code == http.StatusTooManyRequests || answer.Code == http.StatusRequestTimeout
+}
+
+// loginUnavailable marks a failure as ErrLoginUnavailable and keeps its text.
+type loginUnavailable struct {
+	error
+}
+
+func (loginUnavailable) Is(target error) bool { return target == ErrLoginUnavailable }
+
+func (failure loginUnavailable) Unwrap() error { return failure.error }
+
+// retryAfterMaxBytes bounds the Retry-After value a LoginStatusError keeps: an
+// HTTP-date is 29 bytes.
+const retryAfterMaxBytes = 64
+
 // loginResponseMaxBytes bounds a login response; a longer one is refused.
 const loginResponseMaxBytes = 1 << 20
 
@@ -43,7 +84,9 @@ var loginClient = &http.Client{
 // request — never stored, logged, or returned.  On HTTP 401/403 it returns a wrapped
 // ErrLoginRejected so the caller can report an auth failure precisely.  A redirect
 // is never followed (ErrLoginRedirected), and the response is read to at most
-// loginResponseMaxBytes.
+// loginResponseMaxBytes.  Any other status that is no success is a
+// LoginStatusError, which carries the answer's Retry-After; an endpoint that gave
+// no answer on the login is ErrLoginUnavailable.
 func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) (string, error) {
 	if form == nil || form.TokenPostURL == "" {
 		return "", fmt.Errorf("std: login form has no token endpoint")
@@ -73,7 +116,7 @@ func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) 
 
 	resp, err := loginClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", loginUnavailable{err}
 	}
 	defer resp.Body.Close()
 
@@ -84,12 +127,19 @@ func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) 
 		return "", fmt.Errorf("%w (HTTP %d)", ErrLoginRedirected, resp.StatusCode)
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return "", fmt.Errorf("std: login endpoint returned HTTP %d", resp.StatusCode)
+		retryAfter := resp.Header.Get("Retry-After")
+		if len(retryAfter) > retryAfterMaxBytes {
+			retryAfter = ""
+		}
+		return "", &LoginStatusError{
+			Code:       resp.StatusCode,
+			RetryAfter: retryAfter,
+		}
 	}
 
 	answer, err := io.ReadAll(io.LimitReader(resp.Body, loginResponseMaxBytes+1))
 	if err != nil {
-		return "", fmt.Errorf("std: read login response: %w", err)
+		return "", loginUnavailable{fmt.Errorf("std: read login response: %w", err)}
 	}
 	if len(answer) > loginResponseMaxBytes {
 		return "", fmt.Errorf("std: login response exceeds %d bytes", loginResponseMaxBytes)
@@ -105,11 +155,13 @@ func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) 
 }
 
 // decodeJSONField decodes a JSON object and returns the named top-level field as a
-// string (a non-string value is returned as its raw JSON text).
+// string (a non-string value is returned as its raw JSON text).  A body that is
+// no JSON object is ErrLoginUnavailable: the endpoint answered with something
+// other than its login response.
 func decodeJSONField(reader io.Reader, field string) (string, error) {
 	object := map[string]json.RawMessage{}
 	if err := json.NewDecoder(reader).Decode(&object); err != nil {
-		return "", fmt.Errorf("std: decode login response: %w", err)
+		return "", loginUnavailable{fmt.Errorf("std: decode login response: %w", err)}
 	}
 	raw, ok := object[field]
 	if !ok {
