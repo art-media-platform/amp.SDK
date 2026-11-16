@@ -2967,15 +2967,16 @@ func (x *Arg) GetValue() *JsonValue {
 
 // VisPreset is one named visual-layer preset: its presentation labels, the
 // input axes it consumes, its aspect-ratio pegs, its seed, and the layer asset
-// it drives.  Seed is each load's seed for a VisShader layer's draws (the vis
-// library's seed word, iRandUniform, the frame randoms) and for Mandelbulb's
-// species, palette and flight; an engine with randomness of its own (G-Force,
-// VisPlexus, SwarmVis) does not take it yet.  A positive Seed is a hand seed:
-// every load replays the same draws.  Otherwise Seed names how each load's seed
-// is chosen (std.Vis, amp.std.consts.sdl): Vis.SeedEachLoad, the default, rolls
-// fresh at every load; Vis.SeedPlaylistPosition takes the vis's position in the
-// playlist it plays from; Vis.SeedNode takes the node's ItemID.  An undefined
-// negative rolls fresh.
+// it drives.  Seed is each load's seed, the source of every draw the load
+// makes: a VisShader layer's (the vis library's seed word, iRandUniform, the
+// frame randoms), Mandelbulb's species, palette and flight, and an engine's (a
+// G-Force or WhiteCap context's Seed, VisPlexus's layout, SwarmVis's config).
+// A positive Seed is a hand seed: every load replays the same draws.  Otherwise
+// Seed names how each load's seed is chosen (std.Vis, amp.std.consts.sdl):
+// Vis.SeedEachLoad, the default, rolls fresh at every load;
+// Vis.SeedPlaylistPosition takes the vis's position in the playlist it plays
+// from; Vis.SeedNode takes the node's ItemID.  An undefined negative rolls
+// fresh.
 type VisPreset struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Title         *amp.Tag               `protobuf:"bytes,1,opt,name=Title,proto3" json:"Title,omitempty"`           // label — preset display name
