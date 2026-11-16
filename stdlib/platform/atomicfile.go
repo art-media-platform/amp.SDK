@@ -15,9 +15,10 @@ import (
 const atomicTempInfix = ".tmp-"
 
 // atomicTempTarget returns the target base name a WriteFileAtomic temp belongs
-// to: name is <base>.tmp-<digits> with base non-empty.  Any other name is not
-// ok, so no reap takes a file this code did not make (a person's
-// notes.tmp-backup.txt, another program's .zsh_history.tmp-old).
+// to: name is <base>.tmp-<digits> with base non-empty, this code's temp shape.
+// Any other name is not ok (a person's notes.tmp-backup.txt, another program's
+// .zsh_history.tmp-old); a foreign file of exactly that shape in a reaped
+// directory is taken too.
 func atomicTempTarget(name string) (target string, ok bool) {
 	at := strings.LastIndex(name, atomicTempInfix)
 	if at <= 0 {
