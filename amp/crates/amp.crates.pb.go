@@ -36,22 +36,24 @@ const (
 	AssetKind_Sprite          AssetKind = 2
 	AssetKind_Material        AssetKind = 3
 	AssetKind_Skybox          AssetKind = 5
-	AssetKind_VisualLayer     AssetKind = 7 // self-contained visual effect layer (mirrors runtime VisualLayer)
-	AssetKind_VisualScope     AssetKind = 8 // self-contained visual effect scope (mirrors runtime VisualScope)
-	AssetKind_Model           AssetKind = 9 // placeable prefab / mesh (the common case)
+	AssetKind_VisualLayer     AssetKind = 7  // self-contained visual effect layer (mirrors runtime VisualLayer)
+	AssetKind_VisualScope     AssetKind = 8  // self-contained visual effect scope (mirrors runtime VisualScope)
+	AssetKind_Model           AssetKind = 9  // placeable prefab / mesh (the common case)
+	AssetKind_Theme           AssetKind = 11 // UI theme atlas (mirrors runtime ThemeAtlas; CD-crate-as-channel §5)
 )
 
 // Enum value maps for AssetKind.
 var (
 	AssetKind_name = map[int32]string{
-		0: "UnspecifiedKind",
-		1: "Texture",
-		2: "Sprite",
-		3: "Material",
-		5: "Skybox",
-		7: "VisualLayer",
-		8: "VisualScope",
-		9: "Model",
+		0:  "UnspecifiedKind",
+		1:  "Texture",
+		2:  "Sprite",
+		3:  "Material",
+		5:  "Skybox",
+		7:  "VisualLayer",
+		8:  "VisualScope",
+		9:  "Model",
+		11: "Theme",
 	}
 	AssetKind_value = map[string]int32{
 		"UnspecifiedKind": 0,
@@ -62,6 +64,7 @@ var (
 		"VisualLayer":     7,
 		"VisualScope":     8,
 		"Model":           9,
+		"Theme":           11,
 	}
 )
 
@@ -987,7 +990,7 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x05RevID\x18\x01 \x01(\x03R\x05RevID\x12 \n" +
 	"\vDownloadURL\x18\x03 \x01(\tR\vDownloadURL\x12)\n" +
 	"\x06Crates\x18\n" +
-	" \x03(\v2\x11.crates.CrateInfoR\x06Crates*\x92\x01\n" +
+	" \x03(\v2\x11.crates.CrateInfoR\x06Crates*\x9d\x01\n" +
 	"\tAssetKind\x12\x13\n" +
 	"\x0fUnspecifiedKind\x10\x00\x12\v\n" +
 	"\aTexture\x10\x01\x12\n" +
@@ -998,7 +1001,8 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x06Skybox\x10\x05\x12\x0f\n" +
 	"\vVisualLayer\x10\a\x12\x0f\n" +
 	"\vVisualScope\x10\b\x12\t\n" +
-	"\x05Model\x10\t\"\x04\b\x04\x10\x04\"\x04\b\x06\x10\x06\"\x04\b\n" +
+	"\x05Model\x10\t\x12\t\n" +
+	"\x05Theme\x10\v\"\x04\b\x04\x10\x04\"\x04\b\x06\x10\x06\"\x04\b\n" +
 	"\x10\n" +
 	"*7\n" +
 	"\vCrateSchema\x12\x13\n" +

@@ -24,6 +24,7 @@ enum AssetKind {
     VisualLayer         = 7;    // self-contained visual effect layer (mirrors runtime VisualLayer)
     VisualScope         = 8;    // self-contained visual effect scope (mirrors runtime VisualScope)
     Model               = 9;    // placeable prefab / mesh (the common case)
+    Theme               = 11;   // UI theme atlas (mirrors runtime ThemeAtlas; CD-crate-as-channel §5)
 }
 
 
