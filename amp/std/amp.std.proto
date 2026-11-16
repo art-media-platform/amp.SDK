@@ -800,4 +800,13 @@ message Credentials {
     // The login URL (scheme://host[:port]/path) this secret may be posted to.
     // A holder that exchanges the pair for a token refuses any other endpoint.
     string Endpoint = 3;
+
+    // The hosts a token derived from this pair may be presented to; a holder
+    // presents it nowhere else.  Each entry is `host` or `host:port` and nothing
+    // more: no scheme, path, userinfo or wildcard.  The host is a DNS name in
+    // lower case — an IDN in its ASCII (punycode) form — or an IP literal, IPv6
+    // in brackets and in its canonical text.  A missing port is https's, 443.
+    // Endpoint's host is not implied: a token that goes there is listed here.
+    // ParseTokenHosts is the one parser; an entry it refuses refuses the record.
+    repeated string TokenHosts = 4;
 }

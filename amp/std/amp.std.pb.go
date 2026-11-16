@@ -4333,7 +4333,15 @@ type Credentials struct {
 	Secret string                 `protobuf:"bytes,2,opt,name=Secret,proto3" json:"Secret,omitempty"`
 	// The login URL (scheme://host[:port]/path) this secret may be posted to.
 	// A holder that exchanges the pair for a token refuses any other endpoint.
-	Endpoint      string `protobuf:"bytes,3,opt,name=Endpoint,proto3" json:"Endpoint,omitempty"`
+	Endpoint string `protobuf:"bytes,3,opt,name=Endpoint,proto3" json:"Endpoint,omitempty"`
+	// The hosts a token derived from this pair may be presented to; a holder
+	// presents it nowhere else.  Each entry is `host` or `host:port` and nothing
+	// more: no scheme, path, userinfo or wildcard.  The host is a DNS name in
+	// lower case — an IDN in its ASCII (punycode) form — or an IP literal, IPv6
+	// in brackets and in its canonical text.  A missing port is https's, 443.
+	// Endpoint's host is not implied: a token that goes there is listed here.
+	// ParseTokenHosts is the one parser; an entry it refuses refuses the record.
+	TokenHosts    []string `protobuf:"bytes,4,rep,name=TokenHosts,proto3" json:"TokenHosts,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4387,6 +4395,13 @@ func (x *Credentials) GetEndpoint() string {
 		return x.Endpoint
 	}
 	return ""
+}
+
+func (x *Credentials) GetTokenHosts() []string {
+	if x != nil {
+		return x.TokenHosts
+	}
+	return nil
 }
 
 var file_amp_std_amp_std_proto_extTypes = []protoimpl.ExtensionInfo{
@@ -4731,11 +4746,14 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\fTokenPostURL\x18\x06 \x01(\tR\fTokenPostURL\x12\x1e\n" +
 	"\n" +
 	"TokenField\x18\b \x01(\tR\n" +
-	"TokenField\"U\n" +
+	"TokenField\"u\n" +
 	"\vCredentials\x12\x12\n" +
 	"\x04User\x18\x01 \x01(\tR\x04User\x12\x16\n" +
 	"\x06Secret\x18\x02 \x01(\tR\x06Secret\x12\x1a\n" +
-	"\bEndpoint\x18\x03 \x01(\tR\bEndpoint**\n" +
+	"\bEndpoint\x18\x03 \x01(\tR\bEndpoint\x12\x1e\n" +
+	"\n" +
+	"TokenHosts\x18\x04 \x03(\tR\n" +
+	"TokenHosts**\n" +
 	"\tTRS_Flags\x12\x0e\n" +
 	"\n" +
 	"FixedScale\x10\x00\x12\r\n" +
