@@ -58,6 +58,16 @@ type loginUnavailable struct {
 	error
 }
 
+// unanswered is the failure of a login the endpoint gave no answer on: ctx.Err()
+// when the caller's ctx has ended, since the caller left before the endpoint
+// was heard from; else err as ErrLoginUnavailable.
+func unanswered(ctx context.Context, err error) error {
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return ctxErr
+	}
+	return loginUnavailable{err}
+}
+
 func (loginUnavailable) Is(target error) bool { return target == ErrLoginUnavailable }
 
 func (failure loginUnavailable) Unwrap() error { return failure.error }
@@ -86,7 +96,8 @@ var loginClient = &http.Client{
 // is never followed (ErrLoginRedirected), and the response is read to at most
 // loginResponseMaxBytes.  Any other status that is no success is a
 // LoginStatusError, which carries the answer's Retry-After; an endpoint that gave
-// no answer on the login is ErrLoginUnavailable.
+// no answer on the login is ErrLoginUnavailable.  A ctx that ends before the
+// endpoint answers returns ctx.Err(), which is not ErrLoginUnavailable.
 func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) (string, error) {
 	if form == nil || form.TokenPostURL == "" {
 		return "", fmt.Errorf("std: login form has no token endpoint")
@@ -116,7 +127,7 @@ func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) 
 
 	resp, err := loginClient.Do(req)
 	if err != nil {
-		return "", loginUnavailable{err}
+		return "", unanswered(ctx, err)
 	}
 	defer resp.Body.Close()
 
@@ -139,7 +150,7 @@ func ResolveLoginToken(ctx context.Context, form *LoginForm, user, pass string) 
 
 	answer, err := io.ReadAll(io.LimitReader(resp.Body, loginResponseMaxBytes+1))
 	if err != nil {
-		return "", loginUnavailable{fmt.Errorf("std: read login response: %w", err)}
+		return "", unanswered(ctx, fmt.Errorf("std: read login response: %w", err))
 	}
 	if len(answer) > loginResponseMaxBytes {
 		return "", fmt.Errorf("std: login response exceeds %d bytes", loginResponseMaxBytes)

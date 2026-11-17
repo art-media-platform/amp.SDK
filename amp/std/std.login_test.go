@@ -155,3 +155,27 @@ func TestResolveLoginTokenTellsUnavailableFromRefused(t *testing.T) {
 		t.Errorf("a refused connection: err = %v, want ErrLoginUnavailable", err)
 	}
 }
+
+// A login whose caller leaves while it is in flight returns the caller's
+// ctx.Err(): the endpoint was not heard from, so the failure is no
+// ErrLoginUnavailable, which would space the login as an endpoint that gave no
+// answer.
+func TestResolveLoginTokenReturnsTheCallersEnd(t *testing.T) {
+	arrived := make(chan struct{})
+	endpoint := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		_, _ = io.Copy(io.Discard, request.Body) // the server notices a gone client only once the body is read
+		close(arrived)
+		<-request.Context().Done()
+	}))
+	defer endpoint.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		<-arrived
+		cancel()
+	}()
+	form := &LoginForm{TokenPostURL: endpoint.URL + "/v3/auth/token"}
+	token, err := ResolveLoginToken(ctx, form, "user@example.com", "hunter2")
+	if token != "" || err != context.Canceled || errors.Is(err, ErrLoginUnavailable) {
+		t.Errorf("token = %q, err = %v; want the caller's context.Canceled, which is no ErrLoginUnavailable", token, err)
+	}
+}
