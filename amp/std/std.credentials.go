@@ -67,7 +67,7 @@ func checkLoginShape(shape *LoginForm) error {
 		return errors.New("TokenPostURL stays unset: Endpoint is the URL")
 	}
 	if _, defined := BodyEncoding_name[int32(shape.GetEncoding())]; !defined {
-		return fmt.Errorf("Encoding %d is not defined", shape.GetEncoding())
+		return fmt.Errorf("undefined Encoding %d", shape.GetEncoding())
 	}
 	fields := []struct{ name, value string }{
 		{"UserField", shape.GetUserField()},
