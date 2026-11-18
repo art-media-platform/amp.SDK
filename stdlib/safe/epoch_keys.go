@@ -355,6 +355,12 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 	if compare && held != nil && (entry.CryptoKitID() != key.CryptoKitID || subtle.ConstantTimeCompare(held.Key, key.Bytes) != 1) {
 		return false, status.Code_AuthFailed.Error("safe: scoped epoch key conflicts with held material")
 	}
+	// A PutKey or StageKey that leaves the tome as loaded writes nothing: no
+	// save, no revision bump, no sibling reload; the handle serves the loaded
+	// tome.  An InstallKey always saves; a pending destruction elsewhere still
+	// saves.  A held role's kit already matched (refused below otherwise).
+	unchanged := !compare && held != nil && len(eks.shared.shredded) == 0 && subtle.ConstantTimeCompare(held.Key, key.Bytes) == 1
+	priorElection, priorElected := state.current[scope]
 	if entry == nil {
 		kind, container := scope.stored()
 		entry = &EpochKeyEntry{
@@ -392,6 +398,11 @@ func (eks *epochKeyStore) putKey(ctx context.Context, scope KeyScope, key SymKey
 		if current := state.current[scope]; current.IsNil() || key.EpochID.CompareTo(current) > 0 {
 			state.current[scope] = key.EpochID
 		}
+	}
+	if election, elected := state.current[scope]; unchanged && elected == priorElected && election == priorElection {
+		eks.publish(state)
+		state = nil
+		return installed, nil
 	}
 	state.rebuildOwners()
 	if err := eks.saveState(ctx, state); err != nil {
