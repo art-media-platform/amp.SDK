@@ -95,60 +95,6 @@ func (AssetKind) EnumDescriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{0}
 }
 
-// Enum values should be three base-10 digits corresponding to the major, minor,
-// and revision number.
-type CrateSchema int32
-
-const (
-	CrateSchema_UndefinedSchema CrateSchema = 0
-	// v100 should be used for CrateInfo.CrateSchema
-	CrateSchema_v100 CrateSchema = 100
-	// v300 — unified LiveCrate/LiveAsset authoring, tag.UID asset identity,
-	// content-addressed bundles.
-	CrateSchema_v300 CrateSchema = 300
-)
-
-// Enum value maps for CrateSchema.
-var (
-	CrateSchema_name = map[int32]string{
-		0:   "UndefinedSchema",
-		100: "v100",
-		300: "v300",
-	}
-	CrateSchema_value = map[string]int32{
-		"UndefinedSchema": 0,
-		"v100":            100,
-		"v300":            300,
-	}
-)
-
-func (x CrateSchema) Enum() *CrateSchema {
-	p := new(CrateSchema)
-	*p = x
-	return p
-}
-
-func (x CrateSchema) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (CrateSchema) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_crates_amp_crates_proto_enumTypes[1].Descriptor()
-}
-
-func (CrateSchema) Type() protoreflect.EnumType {
-	return &file_amp_crates_amp_crates_proto_enumTypes[1]
-}
-
-func (x CrateSchema) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use CrateSchema.Descriptor instead.
-func (CrateSchema) EnumDescriptor() ([]byte, []int) {
-	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{1}
-}
-
 // AssetEntry is one addressable asset within a crate's bundle.
 type AssetEntry struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -500,10 +446,6 @@ func (x *BundleManifest) GetBlobID_1() uint64 {
 // manager.
 type CrateInfo struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// CrateSchema communicates which build and packaging schema was used for
-	// this crate build.  This value should be the integer value of a valid
-	// CrateSchema.vNNN enum.
-	CrateSchema int32 `protobuf:"varint,1,opt,name=CrateSchema,proto3" json:"CrateSchema,omitempty"`
 	// InstID is 0 by default and reserved for a runtime manager to reference a
 	// crate via issuing integers.  If non-zero, it will not change and no other
 	// instance will have the same value.
@@ -543,6 +485,10 @@ type CrateInfo struct {
 	MajorVersion int32 `protobuf:"varint,40,opt,name=MajorVersion,proto3" json:"MajorVersion,omitempty"`
 	MinorVersion int32 `protobuf:"varint,41,opt,name=MinorVersion,proto3" json:"MinorVersion,omitempty"`
 	BuildNumber  int32 `protobuf:"varint,42,opt,name=BuildNumber,proto3" json:"BuildNumber,omitempty"`
+	// ContractLevel is the least client contract level that loads this build
+	// (0 = baseline): the highest need over its entries and its packaging.  A
+	// client never takes a build above its own level (CD-crate-as-channel §6.6).
+	ContractLevel int32 `protobuf:"varint,43,opt,name=ContractLevel,proto3" json:"ContractLevel,omitempty"`
 	// BuildID uniquely identifies a particular crate build/version.  This value
 	// should have no spaces and only have '.', '_', or '-' (and starts and ends
 	// with an alphanumeric character).  By convention, the format is "yyMMdd-"
@@ -592,13 +538,6 @@ func (x *CrateInfo) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CrateInfo.ProtoReflect.Descriptor instead.
 func (*CrateInfo) Descriptor() ([]byte, []int) {
 	return file_amp_crates_amp_crates_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *CrateInfo) GetCrateSchema() int32 {
-	if x != nil {
-		return x.CrateSchema
-	}
-	return 0
 }
 
 func (x *CrateInfo) GetInstID() uint32 {
@@ -674,6 +613,13 @@ func (x *CrateInfo) GetMinorVersion() int32 {
 func (x *CrateInfo) GetBuildNumber() int32 {
 	if x != nil {
 		return x.BuildNumber
+	}
+	return 0
+}
+
+func (x *CrateInfo) GetContractLevel() int32 {
+	if x != nil {
+		return x.ContractLevel
 	}
 	return 0
 }
@@ -955,9 +901,8 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	" \x03(\v2\x12.crates.AssetEntryR\x06Assets\x12 \n" +
 	"\vLoadAllHint\x18\x14 \x01(\bR\vLoadAllHint\x12\x19\n" +
 	"\bBlobID_0\x18\x1e \x01(\x06R\aBlobID0\x12\x19\n" +
-	"\bBlobID_1\x18\x1f \x01(\x06R\aBlobID1\"\x99\x04\n" +
-	"\tCrateInfo\x12 \n" +
-	"\vCrateSchema\x18\x01 \x01(\x05R\vCrateSchema\x12\x16\n" +
+	"\bBlobID_1\x18\x1f \x01(\x06R\aBlobID1\"\x9d\x04\n" +
+	"\tCrateInfo\x12\x16\n" +
 	"\x06InstID\x18\x02 \x01(\rR\x06InstID\x12\x1a\n" +
 	"\bCrateURI\x18\x04 \x01(\tR\bCrateURI\x12$\n" +
 	"\rPublisherName\x18\x06 \x01(\tR\rPublisherName\x12\x1c\n" +
@@ -969,7 +914,8 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\tTimeBuilt\x18\x1f \x01(\x03R\tTimeBuilt\x12\"\n" +
 	"\fMajorVersion\x18( \x01(\x05R\fMajorVersion\x12\"\n" +
 	"\fMinorVersion\x18) \x01(\x05R\fMinorVersion\x12 \n" +
-	"\vBuildNumber\x18* \x01(\x05R\vBuildNumber\x12\x18\n" +
+	"\vBuildNumber\x18* \x01(\x05R\vBuildNumber\x12$\n" +
+	"\rContractLevel\x18+ \x01(\x05R\rContractLevel\x12\x18\n" +
 	"\aBuildID\x18- \x01(\tR\aBuildID\x12\x18\n" +
 	"\aHomeURL\x182 \x01(\tR\aHomeURL\x12\x10\n" +
 	"\x03URL\x187 \x01(\tR\x03URL\x12\x1e\n" +
@@ -1004,11 +950,7 @@ const file_amp_crates_amp_crates_proto_rawDesc = "" +
 	"\x05Model\x10\t\x12\t\n" +
 	"\x05Theme\x10\v\"\x04\b\x04\x10\x04\"\x04\b\x06\x10\x06\"\x04\b\n" +
 	"\x10\n" +
-	"*7\n" +
-	"\vCrateSchema\x12\x13\n" +
-	"\x0fUndefinedSchema\x10\x00\x12\b\n" +
-	"\x04v100\x10d\x12\t\n" +
-	"\x04v300\x10\xac\x02BGZ0github.com/art-media-platform/amp.SDK/amp/crates\xaa\x02\x12art.media.platformb\x06proto3"
+	"BGZ0github.com/art-media-platform/amp.SDK/amp/crates\xaa\x02\x12art.media.platformb\x06proto3"
 
 var (
 	file_amp_crates_amp_crates_proto_rawDescOnce sync.Once
@@ -1022,27 +964,26 @@ func file_amp_crates_amp_crates_proto_rawDescGZIP() []byte {
 	return file_amp_crates_amp_crates_proto_rawDescData
 }
 
-var file_amp_crates_amp_crates_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_amp_crates_amp_crates_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_amp_crates_amp_crates_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_amp_crates_amp_crates_proto_goTypes = []any{
 	(AssetKind)(0),         // 0: crates.AssetKind
-	(CrateSchema)(0),       // 1: crates.CrateSchema
-	(*AssetEntry)(nil),     // 2: crates.AssetEntry
-	(*BundleManifest)(nil), // 3: crates.BundleManifest
-	(*CrateInfo)(nil),      // 4: crates.CrateInfo
-	(*CrateVariant)(nil),   // 5: crates.CrateVariant
-	(*CrateManifest)(nil),  // 6: crates.CrateManifest
-	(*CrateSnapshot)(nil),  // 7: crates.CrateSnapshot
-	(amp.PlatformID)(0),    // 8: amp.PlatformID
+	(*AssetEntry)(nil),     // 1: crates.AssetEntry
+	(*BundleManifest)(nil), // 2: crates.BundleManifest
+	(*CrateInfo)(nil),      // 3: crates.CrateInfo
+	(*CrateVariant)(nil),   // 4: crates.CrateVariant
+	(*CrateManifest)(nil),  // 5: crates.CrateManifest
+	(*CrateSnapshot)(nil),  // 6: crates.CrateSnapshot
+	(amp.PlatformID)(0),    // 7: amp.PlatformID
 }
 var file_amp_crates_amp_crates_proto_depIdxs = []int32{
 	0, // 0: crates.AssetEntry.Kind:type_name -> crates.AssetKind
-	2, // 1: crates.BundleManifest.Assets:type_name -> crates.AssetEntry
-	5, // 2: crates.CrateInfo.Variants:type_name -> crates.CrateVariant
-	8, // 3: crates.CrateVariant.Platform:type_name -> amp.PlatformID
-	4, // 4: crates.CrateManifest.Info:type_name -> crates.CrateInfo
-	3, // 5: crates.CrateManifest.Bundles:type_name -> crates.BundleManifest
-	4, // 6: crates.CrateSnapshot.Crates:type_name -> crates.CrateInfo
+	1, // 1: crates.BundleManifest.Assets:type_name -> crates.AssetEntry
+	4, // 2: crates.CrateInfo.Variants:type_name -> crates.CrateVariant
+	7, // 3: crates.CrateVariant.Platform:type_name -> amp.PlatformID
+	3, // 4: crates.CrateManifest.Info:type_name -> crates.CrateInfo
+	2, // 5: crates.CrateManifest.Bundles:type_name -> crates.BundleManifest
+	3, // 6: crates.CrateSnapshot.Crates:type_name -> crates.CrateInfo
 	7, // [7:7] is the sub-list for method output_type
 	7, // [7:7] is the sub-list for method input_type
 	7, // [7:7] is the sub-list for extension type_name
@@ -1060,7 +1001,7 @@ func file_amp_crates_amp_crates_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_crates_amp_crates_proto_rawDesc), len(file_amp_crates_amp_crates_proto_rawDesc)),
-			NumEnums:      2,
+			NumEnums:      1,
 			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,

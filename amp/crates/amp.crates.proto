@@ -127,10 +127,7 @@ message BundleManifest {
 // manager.
 message CrateInfo {
 
-    // CrateSchema communicates which build and packaging schema was used for
-    // this crate build.  This value should be the integer value of a valid
-    // CrateSchema.vNNN enum.
-    int32                   CrateSchema = 1;
+    // Field 1 stays unassigned: older crate builds carry a value there.
 
     // InstID is 0 by default and reserved for a runtime manager to reference a
     // crate via issuing integers.  If non-zero, it will not change and no other
@@ -178,6 +175,11 @@ message CrateInfo {
     int32                   MajorVersion = 40;
     int32                   MinorVersion = 41;
     int32                   BuildNumber  = 42;
+
+    // ContractLevel is the least client contract level that loads this build
+    // (0 = baseline): the highest need over its entries and its packaging.  A
+    // client never takes a build above its own level (CD-crate-as-channel §6.6).
+    int32                   ContractLevel = 43;
 
     // BuildID uniquely identifies a particular crate build/version.  This value
     // should have no spaces and only have '.', '_', or '-' (and starts and ends
@@ -251,18 +253,4 @@ message CrateSnapshot {
     string                  DownloadURL = 3;
 
     repeated CrateInfo      Crates = 10;
-}
-
-
-// Enum values should be three base-10 digits corresponding to the major, minor,
-// and revision number.
-enum CrateSchema {
-    UndefinedSchema         = 0;
-
-    // v100 should be used for CrateInfo.CrateSchema
-    v100                    = 100;
-
-    // v300 — unified LiveCrate/LiveAsset authoring, tag.UID asset identity,
-    // content-addressed bundles.
-    v300                    = 300;
 }
