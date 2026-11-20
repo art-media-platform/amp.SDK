@@ -710,6 +710,12 @@ enum ControlKind {
     ControlKind_List   = 7; // an array or repeated field: Children are its elements
 }
 
+// TextLines is a Text control's line shape.
+enum TextLines {
+    TextLines_Single = 0; // one line
+    TextLines_Multi  = 1; // several lines: Enter types a newline
+}
+
 // SettingLayer names where a setting's value may live, nearest first.
 enum SettingLayer {
     SettingLayer_Nil     = 0;
@@ -757,6 +763,7 @@ message ControlSpec {
     repeated ControlSpec   Children   = 12; // Menu, List
     ControlSpec            Template   = 13; // List: a new element's spec
     string                 StyleURI   = 14; // a look other than the kind's default, e.g. "cell/number.knob"
+    TextLines              Lines      = 15; // Text
 }
 
 // Control is a ControlSpec beside a proto field.  Every option states its

@@ -1076,6 +1076,53 @@ func (ControlKind) EnumDescriptor() ([]byte, []int) {
 	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{18}
 }
 
+// TextLines is a Text control's line shape.
+type TextLines int32
+
+const (
+	TextLines_TextLines_Single TextLines = 0 // one line
+	TextLines_TextLines_Multi  TextLines = 1 // several lines: Enter types a newline
+)
+
+// Enum value maps for TextLines.
+var (
+	TextLines_name = map[int32]string{
+		0: "TextLines_Single",
+		1: "TextLines_Multi",
+	}
+	TextLines_value = map[string]int32{
+		"TextLines_Single": 0,
+		"TextLines_Multi":  1,
+	}
+)
+
+func (x TextLines) Enum() *TextLines {
+	p := new(TextLines)
+	*p = x
+	return p
+}
+
+func (x TextLines) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TextLines) Descriptor() protoreflect.EnumDescriptor {
+	return file_amp_std_amp_std_proto_enumTypes[19].Descriptor()
+}
+
+func (TextLines) Type() protoreflect.EnumType {
+	return &file_amp_std_amp_std_proto_enumTypes[19]
+}
+
+func (x TextLines) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TextLines.Descriptor instead.
+func (TextLines) EnumDescriptor() ([]byte, []int) {
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{19}
+}
+
 // SettingLayer names where a setting's value may live, nearest first.
 type SettingLayer int32
 
@@ -1125,11 +1172,11 @@ func (x SettingLayer) String() string {
 }
 
 func (SettingLayer) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[19].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[20].Descriptor()
 }
 
 func (SettingLayer) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[19]
+	return &file_amp_std_amp_std_proto_enumTypes[20]
 }
 
 func (x SettingLayer) Number() protoreflect.EnumNumber {
@@ -1138,7 +1185,7 @@ func (x SettingLayer) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SettingLayer.Descriptor instead.
 func (SettingLayer) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{19}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{20}
 }
 
 // BodyEncoding is how an HTTP request body is encoded.
@@ -1172,11 +1219,11 @@ func (x BodyEncoding) String() string {
 }
 
 func (BodyEncoding) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[20].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[21].Descriptor()
 }
 
 func (BodyEncoding) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[20]
+	return &file_amp_std_amp_std_proto_enumTypes[21]
 }
 
 func (x BodyEncoding) Number() protoreflect.EnumNumber {
@@ -1185,7 +1232,7 @@ func (x BodyEncoding) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BodyEncoding.Descriptor instead.
 func (BodyEncoding) EnumDescriptor() ([]byte, []int) {
-	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{20}
+	return file_amp_std_amp_std_proto_rawDescGZIP(), []int{21}
 }
 
 type GeoPath_RenderType int32
@@ -1221,11 +1268,11 @@ func (x GeoPath_RenderType) String() string {
 }
 
 func (GeoPath_RenderType) Descriptor() protoreflect.EnumDescriptor {
-	return file_amp_std_amp_std_proto_enumTypes[21].Descriptor()
+	return file_amp_std_amp_std_proto_enumTypes[22].Descriptor()
 }
 
 func (GeoPath_RenderType) Type() protoreflect.EnumType {
-	return &file_amp_std_amp_std_proto_enumTypes[21]
+	return &file_amp_std_amp_std_proto_enumTypes[22]
 }
 
 func (x GeoPath_RenderType) Number() protoreflect.EnumNumber {
@@ -4107,6 +4154,7 @@ type ControlSpec struct {
 	Children      []*ControlSpec         `protobuf:"bytes,12,rep,name=Children,proto3" json:"Children,omitempty"`                           // Menu, List
 	Template      *ControlSpec           `protobuf:"bytes,13,opt,name=Template,proto3" json:"Template,omitempty"`                           // List: a new element's spec
 	StyleURI      string                 `protobuf:"bytes,14,opt,name=StyleURI,proto3" json:"StyleURI,omitempty"`                           // a look other than the kind's default, e.g. "cell/number.knob"
+	Lines         TextLines              `protobuf:"varint,15,opt,name=Lines,proto3,enum=std.TextLines" json:"Lines,omitempty"`             // Text
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4237,6 +4285,13 @@ func (x *ControlSpec) GetStyleURI() string {
 		return x.StyleURI
 	}
 	return ""
+}
+
+func (x *ControlSpec) GetLines() TextLines {
+	if x != nil {
+		return x.Lines
+	}
+	return TextLines_TextLines_Single
 }
 
 // LoginForm is the recipe for exchanging a username + password for a session
@@ -4738,7 +4793,7 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\rControlChoice\x12#\n" +
 	"\x06Labels\x18\x01 \x01(\v2\v.std.LabelsR\x06Labels\x12$\n" +
 	"\x05Value\x18\x02 \x01(\v2\x0e.std.JsonValueR\x05Value\x12\x1a\n" +
-	"\bGlyphURI\x18\x03 \x01(\tR\bGlyphURI\"\x96\x04\n" +
+	"\bGlyphURI\x18\x03 \x01(\tR\bGlyphURI\"\xbc\x04\n" +
 	"\vControlSpec\x12\x18\n" +
 	"\aValueID\x18\x01 \x01(\tR\aValueID\x12\x1a\n" +
 	"\bActionID\x18\x02 \x01(\tR\bActionID\x12#\n" +
@@ -4756,7 +4811,8 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x06Layers\x18\v \x03(\x0e2\x11.std.SettingLayerR\x06Layers\x12,\n" +
 	"\bChildren\x18\f \x03(\v2\x10.std.ControlSpecR\bChildren\x12,\n" +
 	"\bTemplate\x18\r \x01(\v2\x10.std.ControlSpecR\bTemplate\x12\x1a\n" +
-	"\bStyleURI\x18\x0e \x01(\tR\bStyleURI\"\xba\x01\n" +
+	"\bStyleURI\x18\x0e \x01(\tR\bStyleURI\x12$\n" +
+	"\x05Lines\x18\x0f \x01(\x0e2\x0e.std.TextLinesR\x05Lines\"\xba\x01\n" +
 	"\tLoginForm\x12-\n" +
 	"\bEncoding\x18\x01 \x01(\x0e2\x11.std.BodyEncodingR\bEncoding\x12\x1c\n" +
 	"\tUserField\x18\x02 \x01(\tR\tUserField\x12\x1c\n" +
@@ -4894,7 +4950,10 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x12ControlKind_Choice\x10\x04\x12\x14\n" +
 	"\x10ControlKind_Text\x10\x05\x12\x16\n" +
 	"\x12ControlKind_Action\x10\x06\x12\x14\n" +
-	"\x10ControlKind_List\x10\a*\xd0\x01\n" +
+	"\x10ControlKind_List\x10\a*6\n" +
+	"\tTextLines\x12\x14\n" +
+	"\x10TextLines_Single\x10\x00\x12\x13\n" +
+	"\x0fTextLines_Multi\x10\x01*\xd0\x01\n" +
 	"\fSettingLayer\x12\x14\n" +
 	"\x10SettingLayer_Nil\x10\x00\x12\x18\n" +
 	"\x14SettingLayer_Channel\x10\x01\x12\x17\n" +
@@ -4921,7 +4980,7 @@ func file_amp_std_amp_std_proto_rawDescGZIP() []byte {
 	return file_amp_std_amp_std_proto_rawDescData
 }
 
-var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 22)
+var file_amp_std_amp_std_proto_enumTypes = make([]protoimpl.EnumInfo, 23)
 var file_amp_std_amp_std_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_amp_std_amp_std_proto_goTypes = []any{
 	(TRS_Flags)(0),                    // 0: std.TRS_Flags
@@ -4943,88 +5002,89 @@ var file_amp_std_amp_std_proto_goTypes = []any{
 	(RangeFormat)(0),                  // 16: std.RangeFormat
 	(Switch)(0),                       // 17: std.Switch
 	(ControlKind)(0),                  // 18: std.ControlKind
-	(SettingLayer)(0),                 // 19: std.SettingLayer
-	(BodyEncoding)(0),                 // 20: std.BodyEncoding
-	(GeoPath_RenderType)(0),           // 21: std.GeoPath.RenderType
-	(*TRS)(nil),                       // 22: std.TRS
-	(*Matrix4X4)(nil),                 // 23: std.Matrix4x4
-	(*CameraState)(nil),               // 24: std.CameraState
-	(*CameraOptions)(nil),             // 25: std.CameraOptions
-	(*FileInfo)(nil),                  // 26: std.FileInfo
-	(*JsonValue)(nil),                 // 27: std.JsonValue
-	(*Report)(nil),                    // 28: std.Report
-	(*Labels)(nil),                    // 29: std.Labels
-	(*ModuleRef)(nil),                 // 30: std.ModuleRef
-	(*Rect)(nil),                      // 31: std.Rect
-	(*GeoPath)(nil),                   // 32: std.GeoPath
-	(*MediaInfo)(nil),                 // 33: std.MediaInfo
-	(*MediaTags)(nil),                 // 34: std.MediaTags
-	(*MediaTag)(nil),                  // 35: std.MediaTag
-	(*MediaEntry)(nil),                // 36: std.MediaEntry
-	(*MediaRank)(nil),                 // 37: std.MediaRank
-	(*Segment)(nil),                   // 38: std.Segment
-	(*Arg)(nil),                       // 39: std.Arg
-	(*VisPreset)(nil),                 // 40: std.VisPreset
-	(*TileBand)(nil),                  // 41: std.TileBand
-	(*TileMeshSpec)(nil),              // 42: std.TileMeshSpec
-	(*SkinSpec)(nil),                  // 43: std.SkinSpec
-	(*AtmosphereEffect)(nil),          // 44: std.AtmosphereEffect
-	(*AtmosphereSpec)(nil),            // 45: std.AtmosphereSpec
-	(*TileServer)(nil),                // 46: std.TileServer
-	(*DeviceVars)(nil),                // 47: std.DeviceVars
-	(*MemberVars)(nil),                // 48: std.MemberVars
-	(*FieldRange)(nil),                // 49: std.FieldRange
-	(*ControlChoice)(nil),             // 50: std.ControlChoice
-	(*ControlSpec)(nil),               // 51: std.ControlSpec
-	(*LoginForm)(nil),                 // 52: std.LoginForm
-	(*Credentials)(nil),               // 53: std.Credentials
-	(*amp.Tag)(nil),                   // 54: amp.Tag
-	(*amp.Tags)(nil),                  // 55: amp.Tags
-	(amp.Units)(0),                    // 56: amp.Units
-	(*amp.BlobRef)(nil),               // 57: amp.BlobRef
-	(*descriptorpb.FieldOptions)(nil), // 58: google.protobuf.FieldOptions
+	(TextLines)(0),                    // 19: std.TextLines
+	(SettingLayer)(0),                 // 20: std.SettingLayer
+	(BodyEncoding)(0),                 // 21: std.BodyEncoding
+	(GeoPath_RenderType)(0),           // 22: std.GeoPath.RenderType
+	(*TRS)(nil),                       // 23: std.TRS
+	(*Matrix4X4)(nil),                 // 24: std.Matrix4x4
+	(*CameraState)(nil),               // 25: std.CameraState
+	(*CameraOptions)(nil),             // 26: std.CameraOptions
+	(*FileInfo)(nil),                  // 27: std.FileInfo
+	(*JsonValue)(nil),                 // 28: std.JsonValue
+	(*Report)(nil),                    // 29: std.Report
+	(*Labels)(nil),                    // 30: std.Labels
+	(*ModuleRef)(nil),                 // 31: std.ModuleRef
+	(*Rect)(nil),                      // 32: std.Rect
+	(*GeoPath)(nil),                   // 33: std.GeoPath
+	(*MediaInfo)(nil),                 // 34: std.MediaInfo
+	(*MediaTags)(nil),                 // 35: std.MediaTags
+	(*MediaTag)(nil),                  // 36: std.MediaTag
+	(*MediaEntry)(nil),                // 37: std.MediaEntry
+	(*MediaRank)(nil),                 // 38: std.MediaRank
+	(*Segment)(nil),                   // 39: std.Segment
+	(*Arg)(nil),                       // 40: std.Arg
+	(*VisPreset)(nil),                 // 41: std.VisPreset
+	(*TileBand)(nil),                  // 42: std.TileBand
+	(*TileMeshSpec)(nil),              // 43: std.TileMeshSpec
+	(*SkinSpec)(nil),                  // 44: std.SkinSpec
+	(*AtmosphereEffect)(nil),          // 45: std.AtmosphereEffect
+	(*AtmosphereSpec)(nil),            // 46: std.AtmosphereSpec
+	(*TileServer)(nil),                // 47: std.TileServer
+	(*DeviceVars)(nil),                // 48: std.DeviceVars
+	(*MemberVars)(nil),                // 49: std.MemberVars
+	(*FieldRange)(nil),                // 50: std.FieldRange
+	(*ControlChoice)(nil),             // 51: std.ControlChoice
+	(*ControlSpec)(nil),               // 52: std.ControlSpec
+	(*LoginForm)(nil),                 // 53: std.LoginForm
+	(*Credentials)(nil),               // 54: std.Credentials
+	(*amp.Tag)(nil),                   // 55: amp.Tag
+	(*amp.Tags)(nil),                  // 56: amp.Tags
+	(amp.Units)(0),                    // 57: amp.Units
+	(*amp.BlobRef)(nil),               // 58: amp.BlobRef
+	(*descriptorpb.FieldOptions)(nil), // 59: google.protobuf.FieldOptions
 }
 var file_amp_std_amp_std_proto_depIdxs = []int32{
 	0,  // 0: std.TRS.Flags:type_name -> std.TRS_Flags
-	22, // 1: std.CameraState.Placement:type_name -> std.TRS
+	23, // 1: std.CameraState.Placement:type_name -> std.TRS
 	1,  // 2: std.CameraState.ModeID:type_name -> std.CameraModeID
 	2,  // 3: std.JsonValue.Kind:type_name -> std.ValueKind
-	27, // 4: std.JsonValue.Array:type_name -> std.JsonValue
-	54, // 5: std.Report.Title:type_name -> amp.Tag
-	54, // 6: std.Report.Caption:type_name -> amp.Tag
-	54, // 7: std.Report.Errors:type_name -> amp.Tag
-	54, // 8: std.Report.Warnings:type_name -> amp.Tag
-	54, // 9: std.Report.Messages:type_name -> amp.Tag
-	54, // 10: std.Report.Debug:type_name -> amp.Tag
-	54, // 11: std.ModuleRef.Module:type_name -> amp.Tag
-	29, // 12: std.ModuleRef.Labels:type_name -> std.Labels
-	55, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
+	28, // 4: std.JsonValue.Array:type_name -> std.JsonValue
+	55, // 5: std.Report.Title:type_name -> amp.Tag
+	55, // 6: std.Report.Caption:type_name -> amp.Tag
+	55, // 7: std.Report.Errors:type_name -> amp.Tag
+	55, // 8: std.Report.Warnings:type_name -> amp.Tag
+	55, // 9: std.Report.Messages:type_name -> amp.Tag
+	55, // 10: std.Report.Debug:type_name -> amp.Tag
+	55, // 11: std.ModuleRef.Module:type_name -> amp.Tag
+	30, // 12: std.ModuleRef.Labels:type_name -> std.Labels
+	56, // 13: std.ModuleRef.Tags:type_name -> amp.Tags
 	3,  // 14: std.Rect.Format:type_name -> std.PointFormat
-	21, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
+	22, // 15: std.GeoPath.Type:type_name -> std.GeoPath.RenderType
 	3,  // 16: std.GeoPath.Format:type_name -> std.PointFormat
 	4,  // 17: std.MediaInfo.Flags:type_name -> std.MediaFlags
-	54, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
-	35, // 19: std.MediaTags.Extra:type_name -> std.MediaTag
-	56, // 20: std.MediaTag.Units:type_name -> amp.Units
-	54, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
-	29, // 22: std.MediaEntry.Labels:type_name -> std.Labels
-	33, // 23: std.MediaEntry.Info:type_name -> std.MediaInfo
-	55, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
-	56, // 25: std.Segment.Units:type_name -> amp.Units
-	57, // 26: std.Segment.Blob:type_name -> amp.BlobRef
-	27, // 27: std.Arg.Value:type_name -> std.JsonValue
-	54, // 28: std.VisPreset.Title:type_name -> amp.Tag
-	54, // 29: std.VisPreset.Collection:type_name -> amp.Tag
-	54, // 30: std.VisPreset.Credits:type_name -> amp.Tag
+	55, // 18: std.MediaInfo.Tag:type_name -> amp.Tag
+	36, // 19: std.MediaTags.Extra:type_name -> std.MediaTag
+	57, // 20: std.MediaTag.Units:type_name -> amp.Units
+	55, // 21: std.MediaEntry.Ref:type_name -> amp.Tag
+	30, // 22: std.MediaEntry.Labels:type_name -> std.Labels
+	34, // 23: std.MediaEntry.Info:type_name -> std.MediaInfo
+	56, // 24: std.MediaEntry.Cover:type_name -> amp.Tags
+	57, // 25: std.Segment.Units:type_name -> amp.Units
+	58, // 26: std.Segment.Blob:type_name -> amp.BlobRef
+	28, // 27: std.Arg.Value:type_name -> std.JsonValue
+	55, // 28: std.VisPreset.Title:type_name -> amp.Tag
+	55, // 29: std.VisPreset.Collection:type_name -> amp.Tag
+	55, // 30: std.VisPreset.Credits:type_name -> amp.Tag
 	5,  // 31: std.VisPreset.ColormapFlags:type_name -> std.ColormapFlags
 	6,  // 32: std.VisPreset.SensorFlags:type_name -> std.SensorFlags
 	7,  // 33: std.VisPreset.AudioFlags:type_name -> std.AudioFlags
-	39, // 34: std.VisPreset.Args:type_name -> std.Arg
+	40, // 34: std.VisPreset.Args:type_name -> std.Arg
 	8,  // 35: std.TileBand.YEase:type_name -> std.TileEase
-	41, // 36: std.TileMeshSpec.Bands:type_name -> std.TileBand
-	42, // 37: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
-	40, // 38: std.SkinSpec.Layers:type_name -> std.VisPreset
-	44, // 39: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
+	42, // 36: std.TileMeshSpec.Bands:type_name -> std.TileBand
+	43, // 37: std.SkinSpec.TileMesh:type_name -> std.TileMeshSpec
+	41, // 38: std.SkinSpec.Layers:type_name -> std.VisPreset
+	45, // 39: std.AtmosphereSpec.Effects:type_name -> std.AtmosphereEffect
 	9,  // 40: std.TileServer.Kind:type_name -> std.TileServerKind
 	10, // 41: std.TileServer.Projection:type_name -> std.TileProjection
 	11, // 42: std.TileServer.Scheme:type_name -> std.TileServerScheme
@@ -5032,27 +5092,28 @@ var file_amp_std_amp_std_proto_depIdxs = []int32{
 	13, // 44: std.MemberVars.ReticleStyle:type_name -> std.ReticleStyleID
 	15, // 45: std.FieldRange.Scale:type_name -> std.RangeScale
 	16, // 46: std.FieldRange.Format:type_name -> std.RangeFormat
-	56, // 47: std.FieldRange.Units:type_name -> amp.Units
-	29, // 48: std.ControlChoice.Labels:type_name -> std.Labels
-	27, // 49: std.ControlChoice.Value:type_name -> std.JsonValue
-	29, // 50: std.ControlSpec.Labels:type_name -> std.Labels
+	57, // 47: std.FieldRange.Units:type_name -> amp.Units
+	30, // 48: std.ControlChoice.Labels:type_name -> std.Labels
+	28, // 49: std.ControlChoice.Value:type_name -> std.JsonValue
+	30, // 50: std.ControlSpec.Labels:type_name -> std.Labels
 	18, // 51: std.ControlSpec.Kind:type_name -> std.ControlKind
-	49, // 52: std.ControlSpec.Range:type_name -> std.FieldRange
-	27, // 53: std.ControlSpec.Default:type_name -> std.JsonValue
+	50, // 52: std.ControlSpec.Range:type_name -> std.FieldRange
+	28, // 53: std.ControlSpec.Default:type_name -> std.JsonValue
 	14, // 54: std.ControlSpec.Access:type_name -> std.FieldAccess
-	50, // 55: std.ControlSpec.Choices:type_name -> std.ControlChoice
-	19, // 56: std.ControlSpec.Layers:type_name -> std.SettingLayer
-	51, // 57: std.ControlSpec.Children:type_name -> std.ControlSpec
-	51, // 58: std.ControlSpec.Template:type_name -> std.ControlSpec
-	20, // 59: std.LoginForm.Encoding:type_name -> std.BodyEncoding
-	52, // 60: std.Credentials.Login:type_name -> std.LoginForm
-	58, // 61: std.Control:extendee -> google.protobuf.FieldOptions
-	51, // 62: std.Control:type_name -> std.ControlSpec
-	63, // [63:63] is the sub-list for method output_type
-	63, // [63:63] is the sub-list for method input_type
-	62, // [62:63] is the sub-list for extension type_name
-	61, // [61:62] is the sub-list for extension extendee
-	0,  // [0:61] is the sub-list for field type_name
+	51, // 55: std.ControlSpec.Choices:type_name -> std.ControlChoice
+	20, // 56: std.ControlSpec.Layers:type_name -> std.SettingLayer
+	52, // 57: std.ControlSpec.Children:type_name -> std.ControlSpec
+	52, // 58: std.ControlSpec.Template:type_name -> std.ControlSpec
+	19, // 59: std.ControlSpec.Lines:type_name -> std.TextLines
+	21, // 60: std.LoginForm.Encoding:type_name -> std.BodyEncoding
+	53, // 61: std.Credentials.Login:type_name -> std.LoginForm
+	59, // 62: std.Control:extendee -> google.protobuf.FieldOptions
+	52, // 63: std.Control:type_name -> std.ControlSpec
+	64, // [64:64] is the sub-list for method output_type
+	64, // [64:64] is the sub-list for method input_type
+	63, // [63:64] is the sub-list for extension type_name
+	62, // [62:63] is the sub-list for extension extendee
+	0,  // [0:62] is the sub-list for field type_name
 }
 
 func init() { file_amp_std_amp_std_proto_init() }
@@ -5065,7 +5126,7 @@ func file_amp_std_amp_std_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_amp_std_amp_std_proto_rawDesc), len(file_amp_std_amp_std_proto_rawDesc)),
-			NumEnums:      22,
+			NumEnums:      23,
 			NumMessages:   32,
 			NumExtensions: 1,
 			NumServices:   0,
