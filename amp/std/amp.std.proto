@@ -651,7 +651,23 @@ message MemberVars {
     string         DefaultSkyboxURI  = 1;
     ReticleStyleID ReticleStyle      = 2; // center reticle style; 0 → ReticleLine
     string         ReticleOverlayURI = 3; // center reticle overlay sprite URI; empty → overlay hidden
-    float          VJDwellSecs       = 4; // seconds each vis holds in the player's vis walk; 0 → std.VJ.DefaultDwellSecs
+    // Vis Duration: the seconds each vis holds in the player's vis walk, one of
+    // the Choices; 0 → (Control).Default, whose 0 is Recommended: each entry's
+    // MediaInfo.Seconds, else std.VJ.DefaultDwellSecs.
+    float          VJDwellSecs       = 4 [(Control) = {
+        ValueID: "vis.duration.secs"
+        Labels:  {Title: "Vis Duration"}
+        Kind:    ControlKind_Choice
+        Default: {Kind: Number Number: 0}
+        Choices: [
+            {Labels: {Title: "Recommended" Caption: "Each vis's own duration"} Value: {Kind: Number Number: 0}},
+            {Labels: {Title: "15 s"} Value: {Kind: Number Number: 15}},
+            {Labels: {Title: "30 s"} Value: {Kind: Number Number: 30}},
+            {Labels: {Title: "1 min"} Value: {Kind: Number Number: 60}},
+            {Labels: {Title: "5 min"} Value: {Kind: Number Number: 300}}
+        ]
+        Layers:  [SettingLayer_Member]
+    }];
 }
 
 // ─── Settings controls: definitions a menu, a web card or a script renders ───

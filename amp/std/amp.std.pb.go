@@ -3907,9 +3907,12 @@ type MemberVars struct {
 	DefaultSkyboxURI  string         `protobuf:"bytes,1,opt,name=DefaultSkyboxURI,proto3" json:"DefaultSkyboxURI,omitempty"`
 	ReticleStyle      ReticleStyleID `protobuf:"varint,2,opt,name=ReticleStyle,proto3,enum=std.ReticleStyleID" json:"ReticleStyle,omitempty"` // center reticle style; 0 → ReticleLine
 	ReticleOverlayURI string         `protobuf:"bytes,3,opt,name=ReticleOverlayURI,proto3" json:"ReticleOverlayURI,omitempty"`                // center reticle overlay sprite URI; empty → overlay hidden
-	VJDwellSecs       float32        `protobuf:"fixed32,4,opt,name=VJDwellSecs,proto3" json:"VJDwellSecs,omitempty"`                          // seconds each vis holds in the player's vis walk; 0 → std.VJ.DefaultDwellSecs
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// Vis Duration: the seconds each vis holds in the player's vis walk, one of
+	// the Choices; 0 → (Control).Default, whose 0 is Recommended: each entry's
+	// MediaInfo.Seconds, else std.VJ.DefaultDwellSecs.
+	VJDwellSecs   float32 `protobuf:"fixed32,4,opt,name=VJDwellSecs,proto3" json:"VJDwellSecs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *MemberVars) Reset() {
@@ -4773,13 +4776,25 @@ const file_amp_std_amp_std_proto_rawDesc = "" +
 	"\x0260\x12\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@Z\x02\x01\x02R\tTargetFPS\x12y\n" +
 	"\x0eAudioLatencyMS\x18\x03 \x01(\x05BQ\x8a\xb5\x18M\n" +
 	"\raudio.latency\x1a\r\n" +
-	"\vA/V Latency2\x1d\t\x00\x00\x00\x00\x00\x00\x14@\x11\x00\x00\x00\x00\x00@\x7f@\x19\x00\x00\x00\x00\x00\x00\x14@0\x15:\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@Z\x01\x02R\x0eAudioLatencyMS\"\xc1\x01\n" +
+	"\vA/V Latency2\x1d\t\x00\x00\x00\x00\x00\x00\x14@\x11\x00\x00\x00\x00\x00@\x7f@\x19\x00\x00\x00\x00\x00\x00\x14@0\x15:\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@Z\x01\x02R\x0eAudioLatencyMS\"\x82\x03\n" +
 	"\n" +
 	"MemberVars\x12*\n" +
 	"\x10DefaultSkyboxURI\x18\x01 \x01(\tR\x10DefaultSkyboxURI\x127\n" +
 	"\fReticleStyle\x18\x02 \x01(\x0e2\x13.std.ReticleStyleIDR\fReticleStyle\x12,\n" +
-	"\x11ReticleOverlayURI\x18\x03 \x01(\tR\x11ReticleOverlayURI\x12 \n" +
-	"\vVJDwellSecs\x18\x04 \x01(\x02R\vVJDwellSecs\"\xd5\x01\n" +
+	"\x11ReticleOverlayURI\x18\x03 \x01(\tR\x11ReticleOverlayURI\x12\xe0\x01\n" +
+	"\vVJDwellSecs\x18\x04 \x01(\x02B\xbd\x01\x8a\xb5\x18\xb8\x01\n" +
+	"\x11vis.duration.secs\x1a\x0e\n" +
+	"\fVis Duration(\x04:\x02\b\x03R,\n" +
+	"&\n" +
+	"\vRecommended\x12\x17Each vis's own duration\x12\x02\b\x03R\x15\n" +
+	"\x06\n" +
+	"\x0415 s\x12\v\b\x03\x19\x00\x00\x00\x00\x00\x00.@R\x15\n" +
+	"\x06\n" +
+	"\x0430 s\x12\v\b\x03\x19\x00\x00\x00\x00\x00\x00>@R\x16\n" +
+	"\a\n" +
+	"\x051 min\x12\v\b\x03\x19\x00\x00\x00\x00\x00\x00N@R\x16\n" +
+	"\a\n" +
+	"\x055 min\x12\v\b\x03\x19\x00\x00\x00\x00\x00\xc0r@Z\x01\x03R\vVJDwellSecs\"\xd5\x01\n" +
 	"\n" +
 	"FieldRange\x12\x10\n" +
 	"\x03Min\x18\x01 \x01(\x01R\x03Min\x12\x10\n" +

@@ -102,6 +102,9 @@ tags Attr {
             // The vis playlist a channel's player walks behind audio (an amp://
             // URL; empty = std.VJ.DefaultPlaylistURL).
             ChannelPropertyVisPlaylist    "vis.playlist"
+            // A vis playlist's crossfade between two vis, in seconds (a JSON
+            // number, on the playlist's own node); 0 or absent = std.VJ.DefaultFadeSecs.
+            ChannelPropertyVisFadeSecs    "vis.fade.secs"
         }
         // `: vocab` (a declared flag): these leaves mint UIDs used
         // as VALUES (a Tag field resolves to one), never as AttrIDs —
@@ -431,8 +434,8 @@ const Mantle {
 // playlist.  0 = unset → these defaults.
 const VJ {
     string DefaultPlaylistURL = "amp://~/mandelship/presets/"; // the factory pack, served by app.mandelship
-    float  DefaultDwellSecs   = 15;   // seconds a vis holds before the walk advances; a set std.MemberVars.VJDwellSecs overrides
-    float  DefaultFadeSecs    = 3;    // seconds of crossfade between the two slots
+    float  DefaultDwellSecs   = 15;   // seconds a vis holds when neither std.MemberVars.VJDwellSecs nor its entry's MediaInfo.Seconds sets one
+    float  DefaultFadeSecs    = 3;    // seconds of crossfade between the two slots when the playlist's vis.fade.secs is unset
 }
 
 // Vis — the seed of a vis layer's load (std.VisPreset.Seed; VisPreset names

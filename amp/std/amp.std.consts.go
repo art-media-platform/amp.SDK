@@ -71,6 +71,7 @@ var Attr = struct {
 	ChannelPropertyGrid                tag.Name
 	ChannelPropertyCameraControls      tag.Name
 	ChannelPropertyVisPlaylist         tag.Name
+	ChannelPropertyVisFadeSecs         tag.Name
 	ChannelType                        tag.Name
 	ChannelTypeSpreadsheet             tag.Name
 	ChannelTypeMessages                tag.Name
@@ -255,6 +256,9 @@ var Attr = struct {
 	// The vis playlist a channel's player walks behind audio (an amp://
 	// URL; empty = std.VJ.DefaultPlaylistURL).
 	ChannelPropertyVisPlaylist: tag.Name{ID: tag.UID{0xF7E6BA82895C346B, 0x82755CD465CD4DC9}, Text: "channel.property.vis.playlist"}, // 7rwux-852bw-6jps4x-bwujk-wumf9
+	// A vis playlist's crossfade between two vis, in seconds (a JSON
+	// number, on the playlist's own node); 0 or absent = std.VJ.DefaultFadeSecs.
+	ChannelPropertyVisFadeSecs: tag.Name{ID: tag.UID{0x0CA17AE9E262C34A, 0x865C76491B7EC7D3}, Text: "channel.property.vis.fade.secs"}, // 0dn5x-fmsm2-se58dr-3q94e-rxjym
 	// `: vocab` (a declared flag): these leaves mint UIDs used
 	// as VALUES (a Tag field resolves to one), never as AttrIDs —
 	// exempt from the generated attr registration.
@@ -575,8 +579,8 @@ const (
 // playlist.  0 = unset → these defaults.
 const (
 	VJDefaultPlaylistURL = "amp://~/mandelship/presets/" // the factory pack, served by app.mandelship
-	VJDefaultDwellSecs   = float32(15)                   // seconds a vis holds before the walk advances; a set std.MemberVars.VJDwellSecs overrides
-	VJDefaultFadeSecs    = float32(3)                    // seconds of crossfade between the two slots
+	VJDefaultDwellSecs   = float32(15)                   // seconds a vis holds when neither std.MemberVars.VJDwellSecs nor its entry's MediaInfo.Seconds sets one
+	VJDefaultFadeSecs    = float32(3)                    // seconds of crossfade between the two slots when the playlist's vis.fade.secs is unset
 )
 
 // ─── Vis — the seed of a vis layer's load (std.VisPreset.Seed; VisPreset names ───
